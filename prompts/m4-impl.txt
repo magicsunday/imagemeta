@@ -1,27 +1,46 @@
-Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M4 – TIFF/EXIF Tag-Registry & Convenience“.
+Repo: MagicSunday/ImageMeta
+Task: Implementiere „M4 – TIFF/EXIF Tag-Registry & Convenience“ und erstelle einen Pull Request.
 
-Kontext:
-- TiffExifReader unterstützt classic + BigTIFF (bereit).
-- Wir brauchen Tag-Registry + stabile Convenience-Felder.
+Kontext / Leitplanken
+- PHP 8.4, strict_types=1, PSR-12.
+- TIFF/EXIF-Reader (Classic+BigTIFF) ist vorhanden; Convenience-API existiert.
+- Ziel: konsistente Tag-Registry & stabile Convenience-Getter (inkl. GPS).
 
-Aufgabe:
-- Neue Map (Tag→Name/Typ/Semantik) für zentrale Tags:
-  Make(0x010F), Model(0x0110), Orientation(0x0112),
-  DateTimeOriginal(0x9003), OffsetTimeOriginal(0x9011),
-  FNumber(0x829D), ExposureTime(0x829A), ISO(0x8827), PhotographicSensitivity(0x8833),
-  FocalLength(0x920A), LensModel(0xA434)
-- GPS komplett (Ref/Coords/Altitude, optional Date/TimeStamp).
-- ExifConvenience: rationals→float verlässlich, toArray() stabil.
+Ziel (Issue M4)
+1) Neue Tag-Registry mit Namen/Typ/Semantik für Kerntags:
+   - 0x010F Make, 0x0110 Model, 0x0112 Orientation,
+   - 0x9003 DateTimeOriginal, 0x9011 OffsetTimeOriginal,
+   - 0x829D FNumber, 0x829A ExposureTime,
+   - 0x8827 ISO, 0x8833 PhotographicSensitivity,
+   - 0x920A FocalLength, 0xA434 LensModel,
+   - GPS komplett (Koordinaten inkl. Ref, Altitude, optional Date/TimeStamp).
+2) `ExifConvenience`: korrekte Rational→Float-Umwandlung, negatives GPS für S/W.
+3) Tests für Classic & BigTIFF; Endianness-Varianten; GPS-Vorzeichen.
 
-Akzeptanzkriterien:
-- Getter liefern konsistente Werte über Endianness/Classic+BigTIFF.
-- GPS-Koordinaten korrekt berechnet (S/W negativ).
+Änderungs-Scope
+- NEU: `src/Parse/Tiff/TagRegistry.php` (statische Map + Helper)
+- ÄNDERN: `src/Parse/Tiff/TiffExifReader.php` (kleine Helper/Hooks falls nötig)
+- ÄNDERN: `src/Convenience/ExifConvenience.php` (GPS & Numerik stabilisieren)
+- TESTS NEU:
+  - `tests/Tiff/TiffExifReaderTest.php`
+  - `tests/Convenience/ExifConvenienceTest.php`
 
-Beschränkungen:
-- ÄNDERN: src/Parse/Tiff/TiffExifReader.php (kleine Hook-Punkte/Helper)
-- NEU: src/Parse/Tiff/TagRegistry.php (statische Map + Hilfsfunktionen)
-- ÄNDERN: src/Convenience/ExifConvenience.php (kleine Ergänzungen)
-- Tests hinzufügen in folgendem Prompt.
+Tests (synthetische TIFF-Blobs)
+- `testCoreTagsParsedAcrossEndianness()` – Make/Model/Orientation/Exposure/FNumber/Focal/ISO/Lens.
+- `testDateTimeOriginalWithOffset()` – OffsetTimeOriginal angewandt.
+- `testGpsCoordinatesWithRefToSigned()` – S/W negativ; Altitude mit/ohne Ref.
+- `testBigTiffInlineAndOffsets()` – 64-bit Counts/Offsets, Inline ≤8 Bytes.
 
-Ergebnisformat: Unified Diff + Commit-Message:
-   feat(exif): tag registry and stable convenience (gps, iso, lens, dt)
+Qualität & Guards
+- Kein API-Break; `ExifConvenience::toArray()` stabil halten.
+- Nur `ParseError`/`BoundsError` verwenden.
+
+Arbeitsweise (Codex bitte automatisieren)
+1) Branch `feat/m4-exif-registry`.
+2) Registry & Anpassungen implementieren.
+3) Tests schreiben/ausführen; PHPStan fixen.
+4) PR erstellen:
+   - Title: `feat(exif): tag registry + stable convenience (gps, iso, lens, dt)`
+   - Body: Überblick, Details, „Closes #3“.
+   - Labels: `type:feature`, `area:exif`
+   - Milestone: `M4 – EXIF Tag-Registry & Convenience`

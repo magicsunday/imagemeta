@@ -1,23 +1,39 @@
-Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M5 – XMP Normalisierung (RDF/Alt/Bag/Seq)“.
+Repo: MagicSunday/ImageMeta
+Task: Implementiere „M5 – XMP Normalisierung (RDF/Alt/Bag/Seq)“ und erstelle einen Pull Request.
 
-Kontext:
-- XmpReader existiert (streamend via XMLReader). Wir erweitern um Container → Arrays, Namespace-Mapping, robustes Date-Handling.
+Kontext / Leitplanken
+- PHP 8.4, strict_types=1, PSR-12, Streaming.
+- Falls `Parse/Xmp/XmpReader.php`/`Model/Xmp/XmpDocument.php` noch nicht existieren, **neu anlegen**; ansonsten erweitern.
+- Sicherheit: `XMLReader` mit LIBXML_NONET; keine DTD/Entities.
 
-Aufgabe:
-- rdf:Alt/Bag/Seq als Arrays modellieren (dc:subject etc.).
-- Namespace-Shortcuts für xmp:, exif:, tiff:, dc:.
-- createDate(): ISO-8601 beibehalten/normalisieren (Zonenoffset).
-- Fehlerrobust bei defektem XML (Teilresultate statt Exceptions).
+Ziel (Issue M5)
+1) `XmpReader`: RDF-Container (`rdf:Alt/Bag/Seq`) zu **Arrays** normalisieren (z. B. `dc:subject: string[]`).
+2) Namespace-Mapping für `xmp:`, `exif:`, `tiff:`, `dc:` (qualifizierte Namen als Keys beibehalten).
+3) `XmpDocument`-Getter: `createDate()` als ISO-8601; `toArray()` für einfache Inspektion.
+4) Fehlerrobustheit: defektes/inkomplettes XML → Teilergebnisse, keine Fatals.
 
-Akzeptanzkriterien:
-- xmp:CreateDate wird als ISO-8601 String geliefert.
-- Listenfelder sind array<string>.
-- Kein Netz/DTD (LIBXML_NONET), keine Warnings.
+Änderungs-Scope
+- NEU/ÄNDERN: `src/Parse/Xmp/XmpReader.php`
+- NEU/ÄNDERN: `src/Model/Xmp/XmpDocument.php`
+- OPTIONAL: `MetadataReader` so erweitern, dass bei JPEG (APP1 XMP) & ISOBMFF (uuid/item) das **erste XMP-Paket** geparst und als `xmpDoc` bereitgestellt wird (ohne API zu brechen).
+- TESTS NEU: `tests/Xmp/XmpReaderTest.php`
 
-Beschränkungen:
-- ÄNDERN: src/Parse/Xmp/XmpReader.php
-- ÄNDERN/ERWEITERN: src/Model/Xmp/XmpDocument.php (Getter, toArray)
-- NEU: tests/Xmp/XmpReaderTest.php
+Tests
+- `testRdfBagSeqAltBecomeArrays()` – Bag/Seq als array<string>, Alt mit Sprachvarianten (mind. 2).
+- `testCreateDateIso8601()` – gültig/ungültig/fehlend; ISO-8601 Output.
+- `testMalformedXmlYieldsPartialResult()` – defektes XML → kein Fatal, Teilresultat.
+- (Optional) End-to-End: APP1 XMP in JPEG → XmpReader.parse(firstPacket).
 
-Ergebnisformat: Unified Diff + Commit-Message:
-   feat(xmp): normalize RDF containers to arrays; namespace mapping; robust dates
+Qualität & Guards
+- `LIBXML_NONET`, keine DTD/Entity-Expansion.
+- Große XMP-Pakete mit Größenlimit (konfigurierbar) schützen.
+
+Arbeitsweise (Codex bitte automatisieren)
+1) Branch `feat/m5-xmp-normalization`.
+2) Implementierung + Tests.
+3) PHPUnit/PHPStan fixen.
+4) PR erstellen:
+   - Title: `feat(xmp): normalize RDF containers to arrays; namespace mapping; robust dates`
+   - Body: Überblick; „Closes #4“.
+   - Labels: `type:feature`, `area:xmp`
+   - Milestone: `M5 – XMP Normalisierung`

@@ -1,26 +1,54 @@
-Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M3 – ISOBMFF (HEIC/MP4/MOV) abrunden“.
+Repo: MagicSunday/ImageMeta
+Task: Implementiere „M3 – ISOBMFF (HEIC/MP4/MOV) abrunden“ und erstelle einen Pull Request.
 
-Kontext:
-- PHP 8.4, strikt, Streaming.
-- Parser: IsoBmffExtractor muss EXIF via Exif-Box ODER via iinf/iloc (multi-extent) extrahieren.
-- XMP: uuid (Adobe GUID) + Item „application/rdf+xml“.
-- QuickTime-Keys: keys/ilst + mdta Varianten.
+Kontext / Leitplanken
+- PHP 8.4, strict_types=1, PSR-12.
+- Reines PHP; keine externen Tools.
+- Streaming-Parser: nur Core\Stream / StreamWindow; keine Ganzdatei-Reads.
+- Aktueller Stand (wichtig): TIFF/EXIF (inkl. BigTIFF) & JpegExtractor (EXIF) existieren; IsoBmffExtractor liefert [EXIF-Blobs, QuickTimeMeta] (siehe MetadataReader in Phase 3).
+- Ziel ist Abrundung des ISOBMFF-Pfads: iloc multi-extent, XMP, mdta/keys robuster.
 
-Aufgabe:
-- iloc: mehrere Extents korrekt KONKATENIEREN; Overflow/Bounds-Guards.
-- data_reference_index != 0 → Eintrag überspringen (klar dokumentieren).
-- XMP an drei Stellen erkennen (uuid, XMP-Box, Item).
-- QuickTime-Keys breiter parsen (keys/ilst und mdta).
-- Klare ParseErrors bei ungültigen Boxgrößen/Offests.
+Ziel (Issue M3)
+1) `iloc`-Items mit **mehreren Extents** korrekt **konkatenieren**; harte Bounds-/Overflow-Guards.
+2) `data_reference_index != 0` defensiv **skippen** (Out-of-scope dokumentieren).
+3) **XMP** extrahieren:
+   - `uuid`-Box mit Adobe GUID `BE7ACFCB-97A9-42E8-9C71-999491E3AFAC`,
+   - direkte `XMP `-Box (falls vorhanden),
+   - als Item via `iinf`/`infe` (content_type `application/rdf+xml`) + `iloc`-Auflösung.
+   → Rückgabe als `list<string>` (RDF/XML), primäres XMP zuerst.
+4) **QuickTime-Keys** verbreitern: `keys/ilst` + `mdta` Varianten so auslesen, dass `com.apple.quicktime.content.identifier` maximal robust gefunden wird.
+5) Präzise ParseErrors bei ungültigen Boxgrößen/Offsets; DoS-Schutz.
 
-Akzeptanzkriterien:
-- 95%+ HEIC/MOV-Testdateien liefern EXIF/XMP/Content-ID.
-- Keine Out-of-bounds Reads bei korrupten Boxen; Guards aktiv.
+Änderungs-Scope (nur diese Dateien anfassen/neu anlegen)
+- ÄNDERN: `src/Parse/IsoBmff/IsoBmffExtractor.php`
+- OPTIONAL NEU: `src/Parse/IsoBmff/BoxGuards.php` (Guards/Helper, wenn hilfreich)
+- TESTS NEU: `tests/IsoBmff/IsoBmffExtractorTest.php`
+- KEIN API-Break in `MetadataReader`/`Metadata`: Signatur von `IsoBmffExtractor::extract()` darf **erweitert** werden (z. B. return [exifs, xmps, qt]); `MetadataReader` entsprechend anpassen.
 
-Beschränkungen (nur diese Dateien anfassen/anlegen):
-- ÄNDERN: src/Parse/IsoBmff/IsoBmffExtractor.php
-- Optional NEU: src/Parse/IsoBmff/BoxGuards.php (Guards/Helper)
-- Keine API-Breaks.
+Öffentliche API-Ergänzungen
+- `IsoBmffExtractor::extract(): array{0:list<string> exif, 1:list<string> xmp, 2:?QuickTimeMeta}`
+- `Metadata` kann optional `xmpBlobs: list<string>` aufnehmen (nicht zwingend XMP parsen – nur durchreichen).
 
-Ergebnisformat: Unified Diff + Commit-Message:
-   feat(isobmff): multi-extent iloc concat, uuid/item XMP, mdta keys; add guards
+Tests (synthetisch & klein)
+- `testExtractExifFromExifBox()` – einfacher HEIC mit Exif-Box.
+- `testResolveIlocMultiExtent()` – Item mit 2–3 Extents → korrektes Concat.
+- `testExtractXmpFromUuidAndItem()` – XMP via uuid und via item/infe+iloc.
+- `testReadContentIdentifierFromKeysOrMdta()` – MOV/MP4-ähnliche Struktur mit mdta/keys.
+- `testSkipDataRefIndexNotZero()` – Item mit data_reference_index=1 → übersprungen, kein Fehler.
+- `testInvalidBoxSizesThrowParseError()` – zu kleine Boxen / OOB.
+
+Qualität & Guards
+- Boxgröße ≥ Header, 32/64-bit Größen beachten; Extent-Summe ≤ Datei-Größe; Offsets nicht negativ; int overflows vermeiden.
+- Nur `ParseError`/`BoundsError` werfen.
+
+Arbeitsweise (Codex bitte automatisieren)
+1) Branch `feat/m3-isobmff-rounded`.
+2) Implementiere Änderungen.
+3) Tests unter `tests/IsoBmff/IsoBmffExtractorTest.php`.
+4) PHPUnit & PHPStan ausführen, Findings fixen.
+5) Pull Request erstellen:
+   - Title: `feat(isobmff): multi-extent iloc, uuid/item XMP, robust mdta/keys; add guards`
+   - Body: kurzer Überblick; Liste der Änderungen; „Closes #2“ wenn vorhanden.
+   - Labels: `type:feature`, `area:isobmff`
+   - Milestone: `M3 – ISOBMFF abrunden`
+6) Im PR kurz dokumentieren, dass `data_reference_index != 0` explizit geskippt wird (Out-of-scope).
