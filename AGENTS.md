@@ -12,6 +12,12 @@
     * **Sicherheit**: harte Bounds-Checks, Längen/Offset-Guards, `LIBXML_NONET`.
     * **Stil/Qualität**: `strict_types=1`, PSR-12, PHPUnit 12, PHPStan 6.
     * **Konsistenz**: Patches als **Unified Diff**, minimalinvasiv, keine API-Breaks ohne Changelog.
+    * **kein** mixed, empty
+    * **PSR-12**: `strict_types=1`, `declare(strict_types=1);`
+    * folge und halte dich an KISS, SOLID, DRY, YAGNI, GRASP, LoD, SoC, CoC, ...
+    * Klassen/Methoden immer mit PHPdoc-Block versehen (in englisch) der beschreibt, was die Klasse/Methode macht, Parameter eine Methode beschreiben
+    * erklärende Inline-Kommentare im Code in Englisch an komplexen Code-Stellen
+    * PHPUnit mit Attributen verwenden
 
 ## 2) Agenten-Rollen
 
