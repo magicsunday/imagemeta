@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\IsoBmff;
 
-require_once __DIR__ . '/../../src/Core/Exceptions.php';
-
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
@@ -23,6 +21,7 @@ final class IsoBmffExtractorTest extends TestCase
     /**
      * Ensures EXIF blobs embedded directly in the meta box are returned.
      */
+    #[Test]
     public function testExtractExifFromExifBox(): void
     {
         $exifPayload = "Exif\0\0primary-exif";
@@ -41,6 +40,7 @@ final class IsoBmffExtractorTest extends TestCase
     /**
      * Verifies fragmented EXIF data referenced via iloc extents is reassembled.
      */
+    #[Test]
     public function testResolveIlocMultiExtent(): void
     {
         $exifBlob = "Exif\0\0" . 'segment-one' . 'segment-two';
@@ -87,6 +87,7 @@ final class IsoBmffExtractorTest extends TestCase
     /**
      * Ensures XMP payloads are collected from uuid boxes and item locations.
      */
+    #[Test]
     public function testExtractXmpFromUuidAndItem(): void
     {
         $uuidGuid = hex2bin('be7acfcb97a942e89c71999491e3afac');
@@ -136,6 +137,7 @@ final class IsoBmffExtractorTest extends TestCase
     /**
      * Confirms QuickTime identifiers are populated from keys and mdta boxes.
      */
+    #[Test]
     public function testReadContentIdentifierFromKeysOrMdta(): void
     {
         $keysValue = 'id-from-keys';
@@ -159,6 +161,7 @@ final class IsoBmffExtractorTest extends TestCase
     /**
      * Ensures items referencing external data are skipped.
      */
+    #[Test]
     public function testSkipDataRefIndexNotZero(): void
     {
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
@@ -190,6 +193,7 @@ final class IsoBmffExtractorTest extends TestCase
     /**
      * Verifies invalid extent definitions trigger a parse error.
      */
+    #[Test]
     public function testInvalidBoxSizesThrowParseError(): void
     {
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
