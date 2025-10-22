@@ -105,6 +105,48 @@ final class IsoBmffExtractor
             throw new ParseError('meta box truncated');
         }
 
+        $payloads = $this->collectDirectPayloads($meta);
+
+        foreach ($payloads['directExif'] as $blob) {
+            $exifBlobs[] = $blob;
+        }
+
+        [$exifItemIds, $xmpItemIds] = $this->gatherItemIds($payloads['itemInfos'], $payloads['primaryItemId']);
+
+        // Resolve EXIF item payloads and normalize leading headers.
+        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], fn (string $blob): string => $this->normalizeExifBlob($blob)) as $blob) {
+            $exifBlobs[] = $blob;
+        }
+
+        // Resolve referenced XMP payloads in declared priority order.
+        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], null) as $blob) {
+            $xmpBlobs[] = $blob;
+        }
+
+        foreach ($payloads['directXmp'] as $blob) {
+            $xmpBlobs[] = $blob;
+        }
+        foreach ($payloads['uuidXmp'] as $blob) {
+            $xmpBlobs[] = $blob;
+        }
+
+        $qtKeys = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes']);
+    }
+
+    /**
+     * @return array{
+     *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
+     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>,
+     *     primaryItemId: ?int,
+     *     directXmp: list<string>,
+     *     uuidXmp: list<string>,
+     *     directExif: list<string>,
+     *     keysMaps: list<array<int, string>>,
+     *     ilstBoxes: list<object>
+     * }
+     */
+    private function collectDirectPayloads(object $meta): array
+    {
         $itemInfos = [];
         $locations = [];
         $primaryItemId = null;
@@ -148,12 +190,28 @@ final class IsoBmffExtractor
             }
         }
 
-        foreach ($directExif as $blob) {
-            $exifBlobs[] = $blob;
-        }
+        return [
+            'itemInfos' => $itemInfos,
+            'locations' => $locations,
+            'primaryItemId' => $primaryItemId,
+            'directXmp' => $directXmp,
+            'uuidXmp' => $uuidXmp,
+            'directExif' => $directExif,
+            'keysMaps' => $keysMaps,
+            'ilstBoxes' => $ilstBoxes,
+        ];
+    }
 
+    /**
+     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos
+     * @return array{0: list<int>, 1: list<int>}
+     */
+    private function gatherItemIds(array $itemInfos, ?int $primaryItemId): array
+    {
         $exifItemIds = [];
         $xmpItemIds = [];
+
+        // Collect item IDs that advertise EXIF/XMP payloads via their metadata descriptors.
         foreach ($itemInfos as $info) {
             if ($this->isExifItem($info)) {
                 $exifItemIds[] = $info['id'];
@@ -163,44 +221,64 @@ final class IsoBmffExtractor
             }
         }
 
+        // Deduplicate while preserving encounter order to avoid processing the same item twice.
         $exifItemIds = array_values(array_unique($exifItemIds));
-        foreach ($exifItemIds as $itemId) {
-            $data = $this->resolveItemData($itemId, $locations);
-            if ($data !== null) {
-                $exifBlobs[] = $this->normalizeExifBlob($data);
-            }
-        }
-
         $xmpItemIds = array_values(array_unique($xmpItemIds));
+
         if ($primaryItemId !== null) {
+            // Ensure the declared primary item is considered first for XMP resolution.
             array_unshift($xmpItemIds, $primaryItemId);
             $xmpItemIds = array_values(array_unique($xmpItemIds));
         }
 
-        foreach ($xmpItemIds as $itemId) {
+        return [$exifItemIds, $xmpItemIds];
+    }
+
+    /**
+     * @param list<int> $itemIds
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
+     * @param (callable(string):string)|null $transform
+     * @return list<string>
+     */
+    private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform): array
+    {
+        $resolved = [];
+
+        // Pull data for each referenced item and optionally transform the payload.
+        foreach ($itemIds as $itemId) {
             $data = $this->resolveItemData($itemId, $locations);
-            if ($data !== null) {
-                $xmpBlobs[] = $data;
+            if ($data === null) {
+                continue;
             }
+            $resolved[] = $transform !== null ? $transform($data) : $data;
         }
 
-        foreach ($directXmp as $blob) {
-            $xmpBlobs[] = $blob;
-        }
-        foreach ($uuidXmp as $blob) {
-            $xmpBlobs[] = $blob;
-        }
+        return $resolved;
+    }
 
+    /**
+     * @param array<string, string> $existing
+     * @param list<array<int, string>> $keysMaps
+     * @param list<object> $ilstBoxes
+     * @return array<string, string>
+     */
+    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes): array
+    {
         $keyIndex = [];
+
+        // Flatten key maps so later entries override duplicate indexes.
         foreach ($keysMaps as $map) {
             foreach ($map as $idx => $name) {
                 $keyIndex[$idx] = $name;
             }
         }
 
+        // Merge all ilst entries into the cumulative QuickTime metadata set.
         foreach ($ilstBoxes as $ilst) {
-            $qtKeys = $this->mergeAssociative($qtKeys, $this->parseIlst($ilst, $keyIndex));
+            $existing = $this->mergeAssociative($existing, $this->parseIlst($ilst, $keyIndex));
         }
+
+        return $existing;
     }
 
     private function normalizeExifBlob(string $blob): string
