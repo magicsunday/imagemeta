@@ -1,0 +1,14 @@
+**Übersicht**
+XMP-Reader normalisiert RDF-Container zu Arrays und liefert stabile ISO-8601 Dates.
+
+**Details**
+- rdf:Alt/Bag/Seq → Arrays.
+- Namespace-Mapping & toArray() erweitert.
+- Robust gegen defektes XML.
+
+**Tests**
+- Container/Mehrsprachigkeit/Defekte abgedeckt, alle grün.
+
+**Changelog**
+- Added: XMP container normalization
+- Fixed: fragile string-concat in reader

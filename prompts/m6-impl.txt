@@ -1,0 +1,27 @@
+Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M6 – MakerNotes aktivieren (Registry + erste Decoder)“.
+
+Kontext:
+- Registry & AppleDecoder-Stub existieren.
+- MakerNotes-Tag: 0x927C; Offsets i. d. R. relativ zum MakerNote-Block.
+
+Aufgabe:
+- TiffExifReader: MakerNotes erkennen, Make/Model ermitteln, Registry-Decoder anwenden.
+- Decoder (best effort):
+  - AppleDecoder: nützliche Felder/Hints, sonst Roh-Digest.
+  - CanonDecoder, NikonDecoder, SonyDecoder: min. 3 Felder je Vendor.
+- Ort für Ergebnisse: exifDoc oder metadata → makerNotes (array<string,mixed>).
+- Fehlende/ungekannte Marken → Roh-Digest (Länge + SHA1), keine Exceptions.
+
+Akzeptanzkriterien:
+- Für iPhone/Canon/Nikon/Sony je mindestens einige sinnvolle Keys.
+- Unbekannter Hersteller → Roh-Digest, Tests grün.
+
+Beschränkungen:
+- ÄNDERN: src/Parse/Tiff/TiffExifReader.php (Hook für MakerNotes-Auswertung)
+- ÄNDERN: src/MakerNotes/Registry.php
+- NEU: src/MakerNotes/{CanonDecoder.php,NikonDecoder.php,SonyDecoder.php}
+- ÄNDERN: Model (ExifDocument) oder Metadata um makerNotes-Feld (entscheidbar)
+- NEU: tests/MakerNotes/*
+
+Ergebnisformat: Unified Diff + Commit-Message:
+   feat(makernotes): enable registry and add Apple/Canon/Nikon/Sony decoders
