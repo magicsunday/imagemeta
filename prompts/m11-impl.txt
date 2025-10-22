@@ -1,0 +1,33 @@
+Repo: MagicSunday/ImageMeta
+Task: Implementiere „M11 – Doku & Beispiele“ und erstelle einen Pull Request.
+
+Kontext / Leitplanken
+- Ziel: Onboarding-freundliche README, How-to-Guides, Beispiele.
+
+Ziel (Issue M11)
+1) README erweitern:
+   - Install, Support-Matrix (JPEG/HEIC/MOV; EXIF/XMP/QuickTime)
+   - 3 Minimalbeispiele (JPEG/HEIC/MOV)
+   - Known Limitations (data_reference_index≠0, exotische MakerNotes, etc.)
+2) docs/:
+   - docs/codex-workflow.md (liegt ggf. schon vor) verlinken
+   - docs/Agents.md verlinken
+   - How-to: Live-Photo-Paarung via content.identifier
+3) examples/:
+   - examples/print-exif.php
+   - examples/print-xmp.php
+   - examples/qt-content-id.php
+
+Änderungs-Scope
+- ÄNDERN: README.md
+- NEU: docs/{howto-live-photo.md}
+- NEU: examples/{print-exif.php,print-xmp.php,qt-content-id.php}
+
+Arbeitsweise
+1) Branch: docs/m11-examples-and-readme
+2) Inhalte schreiben; Code-Snippets lauffähig halten (require vendor/autoload.php).
+3) PR:
+   - Title: `docs: expand README, add how-to & examples`
+   - Body: Überblick; „Closes #<ISSUE_NR_M11>“
+   - Labels: `type:docs`
+   - Milestone: `M11 – Doku & Beispiele`

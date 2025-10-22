@@ -1,0 +1,28 @@
+Repo: MagicSunday/ImageMeta
+Task: Implementiere „M8 – Öffentliche API & Stabilität“ und erstelle einen Pull Request.
+
+Kontext / Leitplanken
+- Ziel: öffentliche API präzisieren, PHPDoc/typing härten, interne Klassen kennzeichnen.
+- Keine Breaking Changes (BC) ohne Deprecation-Hinweis.
+
+Ziel (Issue M8)
+1) Public API dokumentieren (PHPDoc): Metadata (exifBlobs, exifDoc, quickTime, optional xmpDoc/xmpBlobs/makerNotes), MetadataReader, ExifConvenience, CaptureDateResolver.
+2) Interne Klassen mit `@internal` markieren (Parser-Details, Models mit internem Status).
+3) Einheitliche Exceptions: Parserfehler = ParseError/BoundsError (Use-Statements + Doc).
+4) Psalm/PHPStan-Annotations dort ergänzen, wo hilfreich (array-shapes).
+5) README: 3 minimal Beispiele (JPEG, HEIC, MOV).
+
+Änderungs-Scope
+- ÄNDERN: src/** (nur PHPDoc/Annotations/visibility; keine Semantik ändern)
+- ÄNDERN: README.md (Beispiele)
+- TESTS: keine neuen, bestehende müssen grün bleiben.
+
+Arbeitsweise
+1) Branch: chore/m8-public-api
+2) Annotations/Docs ergänzen; README Beispielcode einfügen.
+3) PHPStan laufen lassen; keine neuen Findings.
+4) PR:
+   - Title: `docs(api): clarify public API surface; annotate exceptions; add examples`
+   - Body: Überblick; „Closes #<ISSUE_NR_M8>“
+   - Labels: `type:docs`, `area:api`
+   - Milestone: `M8 – Öffentliche API & Stabilität`

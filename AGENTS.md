@@ -10,7 +10,7 @@
 
     * **Streaming only**: `Core\Stream`/`StreamWindow` statt Ganzdatei-Reads.
     * **Sicherheit**: harte Bounds-Checks, Längen/Offset-Guards, `LIBXML_NONET`.
-    * **Stil/Qualität**: `strict_types=1`, PSR-12, PHPUnit 11, PHPStan max.
+    * **Stil/Qualität**: `strict_types=1`, PSR-12, PHPUnit 12, PHPStan 6.
     * **Konsistenz**: Patches als **Unified Diff**, minimalinvasiv, keine API-Breaks ohne Changelog.
 
 ## 2) Agenten-Rollen

@@ -1,0 +1,32 @@
+Repo: MagicSunday/ImageMeta
+Task: Implementiere „M9 – Test-Fixtures & CI“ und erstelle einen Pull Request.
+
+Kontext / Leitplanken
+- Ziel: stabile CI mit PHPUnit, PHPStan, PHPCS; synthetische Fixtures; Coverage-Artefakt.
+- Keine externen Secrets/Services nötig.
+
+Ziel (Issue M9)
+1) Tests/Struktur:
+   - tests/fast: synthetische Streams/Blobs (JPEG/HEIC/MOV minimal), keine großen Dateien.
+   - tests/slow (optional, @large): für größere synthetische Inputs.
+2) PHPUnit-Konfiguration aktualisieren (coverage-clover export).
+3) GitHub Actions Workflow:
+   - .github/workflows/ci.yml → Jobs: composer validate, phpcs, phpstan, phpunit (PHP 8.4)
+   - Cache für composer & vendor
+   - Artifacts: coverage.xml
+4) README Badge (lokal/neutral: Hinweis auf Coverage in CI-Artefakten).
+
+Änderungs-Scope
+- NEU/ÄNDERN: phpunit.xml(.dist)
+- NEU: .github/workflows/ci.yml
+- NEU: tests/{fast,slow}/… (Dummy-Beispiele)
+- ÄNDERN: README.md (CI-Badge/Abschnitt)
+
+Arbeitsweise
+1) Branch: chore/m9-ci-and-fixtures
+2) CI + Tests einrichten.
+3) PR:
+   - Title: `chore(ci): add GH Actions, synthetic fixtures, coverage artifacts`
+   - Body: Überblick; „Closes #<ISSUE_NR_M9>“
+   - Labels: `type:chore`, `area:ci`
+   - Milestone: `M9 – Test-Fixtures & CI`
