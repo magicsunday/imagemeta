@@ -10,435 +10,663 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
 /**
  * Streaming ISOBMFF reader for HEIC/AVIF/MP4/MOV.
- * - Extracts EXIF blob from 'meta' → 'Exif' box or via item ('iloc' referencing)
- * - Reads QuickTime key/value metadata (keys/ilst) to get content.identifier
+ * Extracts EXIF/XMP payloads and QuickTime metadata.
  */
 final class IsoBmffExtractor
 {
-    public function __construct(private readonly Stream $s) {}
+    private const XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
+
+    public function __construct(private readonly Stream $stream) {}
 
     /**
-     * @return array{0: list<string> EXIF, 1: list<string> XMP, 2: ?QuickTimeMeta}
+     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta}
      */
     public function extract(): array
     {
-        $exifs = [];
-        $xmps  = [];
+        $exifBlobs = [];
+        $xmpBlobs = [];
         $qtKeys = [];
+        $queuedUuidXmp = [];
 
-        foreach ($this->walkTopLevel() as $box) {
+        foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === 'meta') {
-                $exifBlob = $this->extractExifFromMeta($box->win);
-                if ($exifBlob !== null) $exifs[] = $exifBlob;
-                $xmps = array_merge($xmps, $this->extractXmpFromMeta($box->win));
-                $qtKeys += $this->readQuickTimeKeysUnderMeta($box->win);
+                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys);
             } elseif ($box->type === 'moov') {
-                $qtKeys += $this->readQuickTimeFromMoov($box->win);
-                $xmps = array_merge($xmps, $this->extractXmpFromMoov($box->win));
-            } elseif ($box->type === 'uuid') {
-                // XMP in uuid box? Adobe XMP UUID: BE7ACFCB-97A9-42E8-9C71-999491E3AFAC
-                $uuid = $box->win->read(16);
-                $xmpGuid = hex2bin('be7acfcb97a942e89c71999491e3afac');
-                if ($uuid === $xmpGuid) {
-                    $xmps[] = $this->readBoxPayload($box->win);
-                }
-            }
-        }
-        $qt = $qtKeys ? new QuickTimeMeta($qtKeys) : null;
-        return [$exifs, $xmps, $qt];
-    }
-
-    private function extractXmpFromMeta(StreamWindow $meta): array
-    {
-        $out = [];
-        $meta->seek(0);
-        if ($meta->size() < 4) return $out;
-        $meta->read(4);
-
-        // XMP als Item (infe: content_type application/rdf+xml) → iloc auflösen
-        $xmpItems = [];
-        $iloc = null;
-
-        foreach ($this->walkChildren($meta) as $child) {
-            if ($child->type === 'iinf') {
-                $xmpItems += $this->parseIinfForXmp($child->win);
-            } elseif ($child->type === 'iloc') {
-                $iloc = $child->win;
-            } elseif ($child->type === 'XMP ') {
-                $out[] = $this->readBoxPayload($child->win);
+                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys);
+            } elseif ($box->type === 'uuid' && $box->userType === self::XMP_UUID) {
+                $queuedUuidXmp[] = $this->readAll($box->window);
             }
         }
 
-        if ($iloc && $xmpItems) {
-            foreach ($xmpItems as $itemId) {
-                $blob = $this->resolveItemViaIloc($iloc, $itemId);
-                if ($blob !== null) $out[] = $blob;
-            }
+        if ($queuedUuidXmp !== []) {
+            $xmpBlobs = array_merge($xmpBlobs, $queuedUuidXmp);
         }
-        return $out;
+
+        $qt = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
+
+        return [$exifBlobs, $xmpBlobs, $qt];
     }
 
-    private function extractXmpFromMoov(StreamWindow $moov): array
+    /** @return iterable<object> */
+    private function walkTopLevelBoxes(): iterable
     {
-        return [];
-    }
+        $fileSize = $this->stream->size();
+        $offset = 0;
 
-    private function parseIinfForXmp(StreamWindow $iinf): array
-    {
-        $iinf->seek(0);
-        $iinf->read(4); // version/flags
-        $entryCount = $iinf->readU16BE();
-        $ids = [];
-        $pos = $iinf->tell();
-        for ($i = 0; $i < $entryCount; $i++) {
-            foreach ($this->walkChildren($iinf, $pos) as $box) {
-                if ($box->type !== 'infe') continue;
-                $box->win->seek(0);
-                $vf = $box->win->read(4);
-                $itemId = $box->win->readU16BE();
-                $box->win->read(2); // protection index
-                $rest = $this->readBoxPayload($box->win);
-                if (str_contains($rest, 'application/rdf+xml')) {
-                    $ids[] = $itemId;
-                }
-                $pos += $box->size;
-            }
+        while ($offset + 8 <= $fileSize) {
+            $box = $this->readBoxAt($offset, $fileSize);
+            yield $box;
+            $offset += $box->size;
         }
-        return $ids;
-    }
 
-    private function resolveItemViaIloc(StreamWindow $iloc, int $targetItemId): ?string
-    {
-        $iloc->seek(0);
-        $vf = $iloc->read(4); $version = ord($vf[0]);
-        $sizes = ord($iloc->read(1)); $offsetSize = ($sizes >> 4) & 0x0F; $lengthSize = $sizes & 0x0F;
-        $baseField = ord($iloc->read(1)); $baseOffsetSize = ($baseField >> 4) & 0x0F;
-        $indexSize = ($version === 1 || $version === 2) ? (ord($iloc->read(1)) & 0x0F) : 0;
-        $itemCount = $iloc->readU16BE();
-
-        for ($i = 0; $i < $itemCount; $i++) {
-            $itemId = ($version < 2) ? $iloc->readU16BE() : $this->readVar($iloc, 2);
-            $constructionMethod = 0;
-            if ($version >= 1) { $tmp = $iloc->readU16BE(); $constructionMethod = ($tmp >> 12) & 0x0F; }
-            $dataRefIdx = $iloc->readU16BE();
-            $baseOffset = $this->readVar($iloc, $baseOffsetSize ?: 0);
-            $extentCount = $iloc->readU16BE();
-
-            $payload = '';
-            for ($e = 0; $e < $extentCount; $e++) {
-                if ($indexSize) { $this->readVar($iloc, $indexSize); }
-                $extentOffset = $this->readVar($iloc, $offsetSize);
-                $extentLength = $this->readVar($iloc, $lengthSize);
-                if ($itemId === $targetItemId && $dataRefIdx === 0 && $constructionMethod === 0 && $extentLength > 0) {
-                    $abs = ($baseOffset ?: 0) + $extentOffset;
-                    $win = $this->s->window($abs, $extentLength);
-                    $payload .= $this->readBoxPayload($win);
-                }
-            }
-            if ($itemId === $targetItemId && $payload !== '') return $payload;
-        }
-        return null;
-    }
-    /** @return \Generator<object> yields (type, size, win) objects for top-level boxes */
-    private function walkTopLevel(): \Generator
-    {
-        $s = $this->s;
-        $s->seek(0);
-        $fileSize = $s->size();
-
-        $pos = 0;
-        while ($pos + 8 <= $fileSize) {
-            $s->seek($pos);
-            $size = $s->readU32BE();
-            $type = $s->read(4);
-            if ($size === 0) {
-                // box extends to EOF
-                $size = $fileSize - $pos;
-            } elseif ($size === 1) {
-                // largesize
-                $size = $s->readU64BE();
-            }
-            if ($size < 8) {
-                throw new ParseError("Invalid box size <$type>: $size");
-            }
-            $win = $s->window($pos + ($type === 'uuid' ? 24 : 8), $size - ($type === 'uuid' ? 24 : 8));
-            yield (object)['type' => $type, 'size' => $size, 'win' => $win];
-            $pos += $size;
+        if ($offset !== $fileSize) {
+            throw new ParseError('Top-level boxes do not align with file size');
         }
     }
 
-    private function extractExifFromMeta(StreamWindow $meta): ?string
+    /**
+     * @param list<string>              $exifBlobs
+     * @param list<string>              $xmpBlobs
+     * @param array<string, string>     $qtKeys
+     */
+    private function parseMoovBox(object $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
-        // meta box starts with FullBox header (version/flags) then nested boxes
-        $meta->seek(0);
-        if ($meta->size() < 4) return null;
-        $meta->read(4); // version/flags
-
-        // Strategy 1: direct 'Exif' child box under meta (common in HEIF)
-        foreach ($this->walkChildren($meta) as $child) {
-            if ($child->type === 'Exif') {
-                $b = $this->readBoxPayload($child->win);
-                // Some files include "Exif\0\0" prefix; normalize away if present
-                if (str_starts_with($b, "Exif\0\0")) {
-                    return substr($b, 6);
-                }
-                return $b;
+        foreach ($this->walkChildren($moov) as $child) {
+            if ($child->type === 'meta') {
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
+            } elseif ($child->type === 'udta') {
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
             }
         }
-
-        // Strategy 2: item-based ('iinf'/'iloc'): find an item of type 'Exif' and resolve location
-        $infeById = []; // itemID => itemType
-        $iloc = null;
-
-        foreach ($this->walkChildren($meta) as $child) {
-            if ($child->type === 'iinf') {
-                $infeById += $this->parseIinf($child->win);
-            } elseif ($child->type === 'iloc') {
-                $iloc = $child->win;
-            }
-        }
-        if ($iloc && $infeById) {
-            $blob = $this->resolveExifViaIloc($iloc, $infeById, $meta);
-            if ($blob !== null) {
-                if (str_starts_with($blob, "Exif\0\0")) {
-                    return substr($blob, 6);
-                }
-                return $blob;
-            }
-        }
-
-        return null;
     }
 
-    /** @return array<int, string> itemID => itemType */
-    private function parseIinf(StreamWindow $iinf): array
+    /**
+     * @param list<string>              $exifBlobs
+     * @param list<string>              $xmpBlobs
+     * @param array<string, string>     $qtKeys
+     */
+    private function parseUdtaBox(object $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
-        $iinf->seek(0);
-        $iinf->read(4); // version/flags
-        $entryCount = $iinf->readU16BE();
-        $out = [];
-        for ($i = 0; $i < $entryCount; $i++) {
-            foreach ($this->walkChildren($iinf) as $b) {
-                if ($b->type === 'infe') {
-                    $out += $this->parseInfe($b->win);
-                }
+        foreach ($this->walkChildren($udta) as $child) {
+            if ($child->type === 'meta') {
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
             }
         }
-        return $out;
     }
 
-    /** Parse an 'infe' entry (ItemInfoEntry) to map itemID → itemType (e.g., 'Exif') */
-    private function parseInfe(StreamWindow $infe): array
+    /**
+     * @param list<string>              $exifBlobs
+     * @param list<string>              $xmpBlobs
+     * @param array<string, string>     $qtKeys
+     */
+    private function parseMetaBox(object $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
-        $infe->seek(0);
-        $infe->read(4); // version/flags
-        $version = ord($infe->read(1)); // re-read last byte? Simpler:
-        $infe->seek(0);
-        $vf = $infe->read(4);
-        $version = ord($vf[0]);
+        if ($meta->contentSize < 4) {
+            throw new ParseError('meta box truncated');
+        }
 
-        // version 2/3/4 formats exist; we handle v2+ minimally
-        // v2: item_ID(2), item_protection_index(2), item_name, content_type, content_encoding
-        // v3/4: item_ID(2/4), item_protection_index(2), item_type(4), item_name, content_type...
-        $out = [];
+        $itemInfos = [];
+        $locations = [];
+        $primaryItemId = null;
+        $directXmp = [];
+        $uuidXmp = [];
+        $directExif = [];
+        $keysMaps = [];
+        $ilstBoxes = [];
 
-        if ($version >= 2) {
-            $itemId = $infe->readU16BE(); // ok for v2; for v3/4 it's 2 or 4, but we keep simple
-            $prot   = $infe->readU16BE();
-            // For v2 no explicit item_type; for v3/4 read type (4CC). We'll try both patterns:
-
-            // Try to sniff an 'Exif' 4CC in the remaining window:
-            $restWin = new StreamWindow($infe, $infe->tell(), $infe->size() - $infe->tell());
-            // naive scan for 4CC 'Exif' in rest (cheap heuristic)
-            $buf = $this->readBoxPayload($restWin);
-            $pos = strpos($buf, "Exif");
-            if ($pos !== false) {
-                $out[$itemId] = 'Exif';
+        foreach ($this->walkChildren($meta, 4) as $child) {
+            switch ($child->type) {
+                case 'Exif':
+                    $blob = $this->readAll($child->window);
+                    $directExif[] = $this->normalizeExifBlob($blob);
+                    break;
+                case 'iinf':
+                    foreach ($this->parseIinf($child) as $info) {
+                        $itemInfos[$info['id']] = $info;
+                    }
+                    break;
+                case 'iloc':
+                    $locations = $this->parseIloc($child);
+                    break;
+                case 'pitm':
+                    $primaryItemId = $this->parsePitm($child);
+                    break;
+                case 'XMP ':
+                    $directXmp[] = $this->readAll($child->window);
+                    break;
+                case 'uuid':
+                    if ($child->userType === self::XMP_UUID) {
+                        $uuidXmp[] = $this->readAll($child->window);
+                    }
+                    break;
+                case 'keys':
+                    $keysMaps[] = $this->parseKeys($child);
+                    break;
+                case 'ilst':
+                    $ilstBoxes[] = $child;
+                    break;
             }
         }
-        return $out;
+
+        foreach ($directExif as $blob) {
+            $exifBlobs[] = $blob;
+        }
+
+        $exifItemIds = [];
+        $xmpItemIds = [];
+        foreach ($itemInfos as $info) {
+            if ($this->isExifItem($info)) {
+                $exifItemIds[] = $info['id'];
+            }
+            if ($this->isXmpItem($info)) {
+                $xmpItemIds[] = $info['id'];
+            }
+        }
+
+        $exifItemIds = array_values(array_unique($exifItemIds));
+        foreach ($exifItemIds as $itemId) {
+            $data = $this->resolveItemData($itemId, $locations);
+            if ($data !== null) {
+                $exifBlobs[] = $this->normalizeExifBlob($data);
+            }
+        }
+
+        $xmpItemIds = array_values(array_unique($xmpItemIds));
+        if ($primaryItemId !== null) {
+            array_unshift($xmpItemIds, $primaryItemId);
+            $xmpItemIds = array_values(array_unique($xmpItemIds));
+        }
+
+        foreach ($xmpItemIds as $itemId) {
+            $data = $this->resolveItemData($itemId, $locations);
+            if ($data !== null) {
+                $xmpBlobs[] = $data;
+            }
+        }
+
+        foreach ($directXmp as $blob) {
+            $xmpBlobs[] = $blob;
+        }
+        foreach ($uuidXmp as $blob) {
+            $xmpBlobs[] = $blob;
+        }
+
+        $keyIndex = [];
+        foreach ($keysMaps as $map) {
+            foreach ($map as $idx => $name) {
+                $keyIndex[$idx] = $name;
+            }
+        }
+
+        foreach ($ilstBoxes as $ilst) {
+            $qtKeys = $this->mergeAssociative($qtKeys, $this->parseIlst($ilst, $keyIndex));
+        }
     }
 
-    /** Resolve EXIF item data via 'iloc' (highly simplified, single extent) */
-    private function resolveExifViaIloc(StreamWindow $iloc, array $infeById, StreamWindow $meta): ?string
+    private function normalizeExifBlob(string $blob): string
     {
-        $iloc->seek(0);
-        $header = $iloc->read(4); // version/flags
-        $version = ord($header[0]);
+        return str_starts_with($blob, "Exif\0\0") ? substr($blob, 6) : $blob;
+    }
 
-        // read offset/length size descriptors (4 bits each)
-        $sizes = unpack('C', $iloc->read(1))[1];
-        $offsetSize = ($sizes >> 4) & 0x0F;
-        $lengthSize = $sizes & 0x0F;
-        $baseOffsetSize = unpack('C', $iloc->read(1))[1] >> 4;
-        $indexSize = 0;
-        if ($version === 1 || $version === 2) {
-            $indexSize = unpack('C', $iloc->read(1))[1] & 0x0F;
-        }
-
-        $itemCount = $iloc->readU16BE();
-        for ($i = 0; $i < $itemCount; $i++) {
-            $itemId = $version < 2 ? $iloc->readU16BE() : $this->readVar($iloc, 2); // keep simple
-            // construction_method (v1+), data_reference_index, base_offset, extent_count, extents...
-            // We drastically simplify: assume single extent, no base/data ref.
-            if (!isset($infeById[$itemId]) || $infeById[$itemId] !== 'Exif') {
-                // skip this entry rudimentarily (not production-grade)
-                continue;
-            }
-            // Skip fields until we reach extents (heuristic for PoC)
-            // In practice you'd parse exactly by spec. For now, we try to find first extent pair.
-            // ...
-            // To keep this initial version pragmatic, we bail out to Strategy 1 unless files are simple.
-            // Return null and rely on direct 'Exif' box when unsure.
+    /**
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
+     */
+    private function resolveItemData(int $itemId, array $locations): ?string
+    {
+        if (!isset($locations[$itemId])) {
             return null;
         }
-        return null;
+
+        $location = $locations[$itemId];
+        if ($location['constructionMethod'] !== 0) {
+            return null;
+        }
+        if ($location['dataReferenceIndex'] !== 0) {
+            return null;
+        }
+
+        $blob = '';
+        $total = 0;
+        foreach ($location['extents'] as $extent) {
+            $length = $extent['length'];
+            if ($length === 0) {
+                continue;
+            }
+            $total += $length;
+            if ($total > $this->stream->size()) {
+                throw new ParseError('iloc extent length exceeds file size');
+            }
+
+            $baseOffset = $location['baseOffset'];
+            $extentOffset = $extent['offset'];
+            if ($baseOffset < 0 || $extentOffset < 0) {
+                throw new ParseError('iloc negative offset');
+            }
+            if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+                throw new ParseError('iloc offset overflow');
+            }
+            $offset = $baseOffset + $extentOffset;
+            if ($offset > $this->stream->size() - $length) {
+                throw new ParseError('iloc extent outside file');
+            }
+
+            $blob .= $this->readAll($this->stream->window($offset, $length));
+        }
+
+        return $blob === '' ? null : $blob;
     }
 
-    /** QuickTime keys under moov/udta/meta (keys/ilst) */
-    private function readQuickTimeFromMoov(StreamWindow $moov): array
+    /**
+     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string}>
+     */
+    private function parseIinf(object $iinf): array
     {
-        $keys = [];
-        foreach ($this->walkChildren($moov) as $udta) {
-            if ($udta->type !== 'udta') continue;
-            foreach ($this->walkChildren($udta->win) as $meta) {
-                if ($meta->type !== 'meta') continue;
-                $keys += $this->readQuickTimeKeysUnderMeta($meta->win);
-            }
-        }
-        return $keys;
-    }
+        $win = $iinf->window;
+        $win->seek(0);
+        $version = $win->readU8();
+        $this->readUInt24($win); // flags
 
-    /** Parse QuickTime meta fullbox: keys + ilst (common layout) */
-    private function readQuickTimeKeysUnderMeta(StreamWindow $meta): array
-    {
-        $out = [];
-        $meta->seek(0);
-        if ($meta->size() < 4) return $out;
-        $meta->read(4); // version/flags
-        $keyIndex = [];
-
-        foreach ($this->walkChildren($meta) as $child) {
-            if ($child->type === 'keys') {
-                $keyIndex = $this->parseKeys($child->win); // idx => name
+        $entryCount = $version === 0 ? $win->readU16BE() : $win->readU32BE();
+        $start = $win->tell();
+        $items = [];
+        $index = 0;
+        foreach ($this->walkChildren($iinf, $start) as $child) {
+            if ($child->type !== 'infe') {
+                continue;
             }
-        }
-        foreach ($this->walkChildren($meta) as $child) {
-            if ($child->type === 'ilst') {
-                $out += $this->parseIlst($child->win, $keyIndex);
-            }
-        }
-        return $out;
-    }
-
-    /** keys box: list of key names (1-based indexing) */
-    private function parseKeys(StreamWindow $keys): array
-    {
-        $keys->seek(0);
-        $keys->read(4); // version/flags
-        $entryCount = $keys->readU32BE();
-        $out = [];
-        $pos = $keys->tell();
-        for ($i = 1; $i <= $entryCount && $pos + 8 <= $keys->size(); $i++) {
-            $keys->seek($pos);
-            $size = $keys->readU32BE();
-            $namespace = $keys->read(4); // 'mdta' etc.
-            $nameLen = $size - 8;
-            if ($nameLen < 0 || $pos + $size > $keys->size()) {
+            $items[] = $this->parseInfe($child);
+            $index++;
+            if ($index >= $entryCount) {
                 break;
             }
-            $name = $keys->read($nameLen);
-            $out[$i] = $name;
-            $pos += $size;
         }
-        return $out;
+
+        return $items;
     }
 
-    /** ilst box: entries keyed by key index (atom type is index) → 'data' subbox value */
-    private function parseIlst(StreamWindow $ilst, array $keyIndex): array
+    /**
+     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string}
+     */
+    private function parseInfe(object $infe): array
     {
-        $out = [];
+        $win = $infe->window;
+        $win->seek(0);
+        $version = $win->readU8();
+        $flags = $this->readUInt24($win);
+
+        if ($version === 0 || $version === 1) {
+            $itemId = $win->readU16BE();
+            $win->readU16BE(); // protection index
+            $remaining = $infe->contentSize - $win->tell();
+            $payload = $remaining > 0 ? $win->read($remaining) : '';
+            $parts = $payload === '' ? [] : explode("\0", $payload);
+
+            $name = $parts[0] ?? null;
+            $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
+
+            return [
+                'id' => $itemId,
+                'itemType' => null,
+                'name' => $name !== '' ? $name : null,
+                'contentType' => $contentType,
+            ];
+        }
+
+        $id = ($flags & 0x0001) !== 0 ? $win->readU32BE() : $win->readU16BE();
+        $win->readU16BE(); // protection index
+        $itemType = $win->read(4);
+        $remaining = $infe->contentSize - $win->tell();
+        $payload = $remaining > 0 ? $win->read($remaining) : '';
+        $parts = $payload === '' ? [] : explode("\0", $payload);
+        $name = $parts[0] ?? null;
+        $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
+
+        return [
+            'id' => $id,
+            'itemType' => $itemType !== '' ? $itemType : null,
+            'name' => $name !== '' ? $name : null,
+            'contentType' => $contentType,
+        ];
+    }
+
+    /**
+     * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>
+     */
+    private function parseIloc(object $iloc): array
+    {
+        $win = $iloc->window;
+        $win->seek(0);
+        $version = $win->readU8();
+        $flags = $this->readUInt24($win);
+
+        $offsetLengthSizes = $win->readU8();
+        $offsetSize = $this->validateSizeNibble(($offsetLengthSizes >> 4) & 0x0F);
+        $lengthSize = $this->validateSizeNibble($offsetLengthSizes & 0x0F);
+
+        $baseField = $win->readU8();
+        $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & 0x0F);
+        $indexSize = 0;
+        if ($version === 1 || $version === 2) {
+            $indexSize = $this->validateSizeNibble($win->readU8() & 0x0F);
+        }
+
+        $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
+        $locations = [];
+
+        for ($i = 0; $i < $itemCount; $i++) {
+            $itemId = $version < 2 ? $win->readU16BE() : (($flags & 0x0001) !== 0 ? $win->readU32BE() : $win->readU16BE());
+            $constructionMethod = 0;
+            if ($version === 1 || $version === 2) {
+                $tmp = $win->readU16BE();
+                $constructionMethod = ($tmp >> 12) & 0x0F;
+            }
+            $dataReferenceIndex = $win->readU16BE();
+            $baseOffset = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
+            $extentCount = $win->readU16BE();
+            $extents = [];
+
+            for ($j = 0; $j < $extentCount; $j++) {
+                if ($indexSize > 0) {
+                    $this->readUInt($win, $indexSize); // extent_index, ignored
+                }
+                $extentOffset = $offsetSize > 0 ? $this->readUInt($win, $offsetSize) : 0;
+                $extentLength = $lengthSize > 0 ? $this->readUInt($win, $lengthSize) : 0;
+                $extents[] = ['offset' => $extentOffset, 'length' => $extentLength];
+            }
+
+            $locations[$itemId] = [
+                'dataReferenceIndex' => $dataReferenceIndex,
+                'constructionMethod' => $constructionMethod,
+                'baseOffset' => $baseOffset,
+                'extents' => $extents,
+            ];
+        }
+
+        return $locations;
+    }
+
+    private function parsePitm(object $pitm): ?int
+    {
+        $win = $pitm->window;
+        $win->seek(0);
+        $version = $win->readU8();
+        $this->readUInt24($win);
+
+        return $version === 0 ? $win->readU16BE() : $win->readU32BE();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function parseKeys(object $keys): array
+    {
+        $win = $keys->window;
+        $win->seek(0);
+        $win->read(4); // version/flags
+        $entryCount = $win->readU32BE();
+        $map = [];
+        $pos = $win->tell();
+
+        for ($i = 1; $i <= $entryCount; $i++) {
+            if ($pos + 8 > $keys->contentSize) {
+                throw new ParseError('keys entry truncated');
+            }
+            $win->seek($pos);
+            $size = $win->readU32BE();
+            $namespace = $win->read(4);
+            if ($size < 8 || $pos + $size > $keys->contentSize) {
+                throw new ParseError('invalid keys entry size');
+            }
+            $name = $win->read($size - 8);
+            $map[$i] = $name;
+            $pos += $size;
+        }
+
+        if ($pos !== $keys->contentSize) {
+            throw new ParseError('keys entries do not fill container');
+        }
+
+        return $map;
+    }
+
+    /**
+     * @param array<int, string> $keyIndex
+     * @return array<string, string>
+     */
+    private function parseIlst(object $ilst, array $keyIndex): array
+    {
+        $result = [];
         foreach ($this->walkChildren($ilst) as $entry) {
-            // atom type is 4 bytes; for mdta-keys Apple uses numeric indexes packed as int? In MOV it's often the key name 4CC; in mdta it's index.
-            $keyId = $this->fourccToIndex($entry->type);
-            if ($keyId !== null && isset($keyIndex[$keyId])) {
-                $keyName = $keyIndex[$keyId];
-                // find 'data' box inside entry
-                foreach ($this->walkChildren($entry->win) as $sub) {
-                    if ($sub->type === 'data') {
-                        $val = $this->parseDataBox($sub->win);
-                        if ($val !== null) {
-                            $out[$keyName] = $val;
-                        }
+            $keyName = null;
+            $index = $this->fourccToIndex($entry->type);
+            if ($index !== null && isset($keyIndex[$index])) {
+                $keyName = $keyIndex[$index];
+            } elseif ($entry->type === '----') {
+                $keyName = $this->parseFreeformKey($entry);
+            } elseif ($this->isPrintableFourcc($entry->type)) {
+                $keyName = $entry->type;
+            }
+
+            if ($keyName === null) {
+                continue;
+            }
+
+            foreach ($this->walkChildren($entry) as $sub) {
+                if ($sub->type === 'data') {
+                    $value = $this->parseDataBox($sub);
+                    if ($value !== null) {
+                        $result[$keyName] = $value;
                     }
                 }
             }
         }
-        return $out;
+
+        return $result;
     }
 
-    private function parseDataBox(StreamWindow $data): mixed
+    /**
+     * @return string|null
+     */
+    private function parseFreeformKey(object $entry): ?string
     {
-        // data box: 4 bytes type/flags(?), then value
-        $data->seek(0);
-        if ($data->size() < 8) return null;
-        $type = $data->readU32BE(); // data type indicator (1 = UTF-8 string, etc.)
-        $locale = $data->readU32BE();
-        $payload = $this->readBoxPayload($data);
-        // minimal: treat as UTF-8 string
-        $str = trim($payload, "\0");
-        if ($str !== '') return $str;
+        $mean = null;
+        $name = null;
+        foreach ($this->walkChildren($entry) as $child) {
+            if ($child->type === 'mean') {
+                $mean = $this->parseDataBox($child);
+            } elseif ($child->type === 'name') {
+                $name = $this->parseDataBox($child);
+            }
+        }
+
+        if ($mean === null || $name === null) {
+            return null;
+        }
+
+        return $mean . '.' . $name;
+    }
+
+    private function parseDataBox(object $data): ?string
+    {
+        $win = $data->window;
+        $win->seek(0);
+        if ($data->contentSize < 8) {
+            throw new ParseError('data box too small');
+        }
+        $type = $win->readU32BE();
+        $win->readU32BE(); // locale
+        $payloadSize = $data->contentSize - 8;
+        $payload = $payloadSize > 0 ? $win->read($payloadSize) : '';
+
+        if ($type === 1 || $type === 2 || $type === 7) {
+            return trim($payload, "\0");
+        }
+
         return $payload;
     }
 
-    /** Child walker for any container box window */
-    private function walkChildren(StreamWindow $win): \Generator
+    /**
+     * @param array<string, string> $left
+     * @param array<string, string> $right
+     * @return array<string, string>
+     */
+    private function mergeAssociative(array $left, array $right): array
     {
-        $pos = $win->tell();
-        while ($pos + 8 <= $win->size()) {
-            $win->seek($pos);
-            $size = $win->readU32BE();
-            $type = $win->read(4);
-            if ($size === 0) {
-                $size = $win->size() - $pos;
-            } elseif ($size === 1) {
-                $size = $win->readU64BE();
-            }
-            if ($size < 8 || $pos + $size > $win->size()) {
-                break;
-            }
-            $child = (object)[
-                'type' => $type,
-                'size' => $size,
-                'win'  => new StreamWindow($win, $pos + 8, $size - 8),
-            ];
-            yield $child;
-            $pos += $size;
+        foreach ($right as $key => $value) {
+            $left[$key] = $value;
         }
+
+        return $left;
     }
 
-    private function readBoxPayload(StreamWindow $box): string
+    /**
+     * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info
+     */
+    private function isExifItem(array $info): bool
     {
-        $box->seek(0);
-        return $box->read($box->size());
+        if (isset($info['itemType']) && strcasecmp((string)$info['itemType'], 'Exif') === 0) {
+            return true;
+        }
+        if (isset($info['name']) && strcasecmp((string)$info['name'], 'Exif') === 0) {
+            return true;
+        }
+        if (isset($info['contentType'])) {
+            $ct = strtolower((string)$info['contentType']);
+            return $ct === 'application/exif' || $ct === 'image/tiff';
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info
+     */
+    private function isXmpItem(array $info): bool
+    {
+        if (!isset($info['contentType'])) {
+            return false;
+        }
+
+        return strtolower((string)$info['contentType']) === 'application/rdf+xml';
+    }
+
+    private function readAll(StreamWindow $window): string
+    {
+        $window->seek(0);
+        $size = $window->size();
+        return $size > 0 ? $window->read($size) : '';
+    }
+
+    private function readUInt24(StreamWindow $window): int
+    {
+        return $this->readUInt($window, 3);
+    }
+
+    private function readUInt(StreamWindow $window, int $bytes): int
+    {
+        return match ($bytes) {
+            0 => 0,
+            1 => $window->readU8(),
+            2 => $window->readU16BE(),
+            3 => unpack('N', "\0" . $window->read(3))[1],
+            4 => $window->readU32BE(),
+            8 => $window->readU64BE(),
+            default => throw new ParseError("unsupported integer size $bytes"),
+        };
+    }
+
+    private function validateSizeNibble(int $nibble): int
+    {
+        return match ($nibble) {
+            0 => 0,
+            1, 2, 4, 8 => $nibble,
+            default => throw new ParseError('invalid length field size'),
+        };
+    }
+
+    private function isPrintableFourcc(string $fourcc): bool
+    {
+        return strlen($fourcc) === 4 && preg_match('/^[\x20-\x7E]{4}$/', $fourcc) === 1;
     }
 
     private function fourccToIndex(string $fourcc): ?int
     {
-        // interpret 4CC as big-endian 32-bit int (used by mdta key indexing)
-        if (strlen($fourcc) !== 4) return null;
-        $v = unpack('N', $fourcc)[1];
-        return $v > 0 ? $v : null;
+        if (strlen($fourcc) !== 4) {
+            return null;
+        }
+
+        $value = unpack('N', $fourcc)[1];
+        return $value > 0 ? $value : null;
     }
 
-    private function readVar(StreamWindow $w, int $bytes): int
+    /**
+     * @return iterable<object{type:string,size:int,offset:int,contentOffset:int,contentSize:int,window:StreamWindow,userType:?string}>
+     */
+    private function walkChildren(object $parent, int $offset = 0): iterable
     {
-        return match ($bytes) {
-            1 => $w->readU8(),
-            2 => $w->readU16BE(),
-            4 => $w->readU32BE(),
-            8 => $w->readU64BE(),
-            default => throw new ParseError("unsupported var size $bytes"),
-        };
+        if ($offset < 0 || $offset > $parent->contentSize) {
+            throw new ParseError('child offset outside container');
+        }
+
+        $limit = $parent->contentOffset + $parent->contentSize;
+        $cursor = $parent->contentOffset + $offset;
+        $end = $parent->contentOffset + $parent->contentSize;
+
+        while ($cursor + 8 <= $end) {
+            $box = $this->readBoxAt($cursor, $limit);
+            yield $box;
+            $cursor += $box->size;
+        }
+
+        if ($cursor !== $end) {
+            throw new ParseError('child boxes do not align with parent');
+        }
+    }
+
+    private function readBoxAt(int $offset, int $limit): object
+    {
+        if ($offset < 0 || $offset > $limit) {
+            throw new ParseError('box offset outside container');
+        }
+
+        $this->stream->seek($offset);
+        $size32 = $this->stream->readU32BE();
+        $type = $this->stream->read(4);
+        $headerSize = 8;
+        $size = $size32;
+
+        if ($size32 === 0) {
+            $size = $limit - $offset;
+        } elseif ($size32 === 1) {
+            $size = $this->stream->readU64BE();
+            $headerSize += 8;
+        }
+
+        $userType = null;
+        if ($type === 'uuid') {
+            $userType = $this->stream->read(16);
+            $headerSize += 16;
+        }
+
+        if ($size < $headerSize) {
+            throw new ParseError("invalid box size for $type");
+        }
+        if ($offset + $size > $limit) {
+            throw new ParseError("box $type exceeds container bounds");
+        }
+
+        $contentOffset = $offset + $headerSize;
+        $contentSize = $size - $headerSize;
+        $window = $this->stream->window($contentOffset, $contentSize);
+
+        return (object) [
+            'type' => $type,
+            'size' => $size,
+            'offset' => $offset,
+            'contentOffset' => $contentOffset,
+            'contentSize' => $contentSize,
+            'window' => $window,
+            'userType' => $userType,
+        ];
     }
 }
