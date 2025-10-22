@@ -6,12 +6,17 @@ namespace MagicSunday\ImageMeta\Parse\Xmp;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 
 /**
- * Minimaler XMP RDF/XML Parser via \XMLReader (streaming‑nah):
- *  - liest Dublin Core (dc:subject), xmp:*, exif:*, tiff:* u. a. simple text properties
- *  - ignoriert komplexe Strukturen zunächst (können iterativ ergänzt werden)
+ * Performs a lightweight XMP RDF/XML pass using \XMLReader to capture simple properties.
  */
 final class XmpReader
 {
+    /**
+     * Parses an XMP packet and returns a document containing discovered properties.
+     *
+     * @param string $xml Raw XMP packet contents.
+     *
+     * @return XmpDocument
+     */
     public function parse(string $xml): XmpDocument
     {
         $xr = new \XMLReader();
@@ -41,12 +46,26 @@ final class XmpReader
         return new XmpDocument($props);
     }
 
+    /**
+     * Builds the fully-qualified name for the current XML element.
+     *
+     * @param \XMLReader $xr Active XML reader instance.
+     *
+     * @return string
+     */
     private function qname(\XMLReader $xr): string
     {
         $prefix = $xr->prefix !== '' ? $xr->prefix . ':' : '';
         return $prefix . $xr->localName;
     }
 
+    /**
+     * Reads text content of the current element, flattening simple RDF containers.
+     *
+     * @param \XMLReader $xr Active XML reader instance positioned on an element.
+     *
+     * @return string|null
+     */
     private function readText(\XMLReader $xr): ?string
     {
         $depth = $xr->depth;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core;
 
 /**
- * Streaming, bounds-checked reader over a file handle.
+ * Provides a bounds-checked streaming reader over a binary resource handle.
  */
 final class Stream
 {
@@ -13,6 +13,13 @@ final class Stream
     private int $size;
     private int $pos = 0;
 
+    /**
+     * Opens the given path for binary reading and wraps it in a stream instance.
+     *
+     * @param string $path Absolute or relative file system path to open.
+     *
+     * @return self
+     */
     public static function fromPath(string $path): self
     {
         $fh = fopen($path, 'rb');
@@ -25,7 +32,10 @@ final class Stream
     }
 
     /**
-     * @param resource $fh
+     * Creates the stream around an existing resource and file size information.
+     *
+     * @param resource $fh   Open resource positioned at the beginning of the file.
+     * @param int      $size Total size of the readable data in bytes.
      */
     public function __construct($fh, int $size)
     {
@@ -33,9 +43,25 @@ final class Stream
         $this->size = $size;
     }
 
+    /**
+     * Returns the total size of the underlying data source in bytes.
+     *
+     * @return int
+     */
     public function size(): int { return $this->size; }
+
+    /**
+     * Returns the current cursor position relative to the start of the stream.
+     *
+     * @return int
+     */
     public function tell(): int { return $this->pos; }
 
+    /**
+     * Moves the read cursor to an absolute offset within the stream.
+     *
+     * @param int $offset Absolute zero-based byte offset to seek to.
+     */
     public function seek(int $offset): void
     {
         if ($offset < 0 || $offset > $this->size) {
@@ -45,6 +71,13 @@ final class Stream
         $this->pos = $offset;
     }
 
+    /**
+     * Reads a fixed number of bytes from the stream, advancing the cursor.
+     *
+     * @param int $len Number of bytes to read.
+     *
+     * @return string
+     */
     public function read(int $len): string
     {
         if ($len < 0 || $this->pos + $len > $this->size) {
@@ -58,9 +91,32 @@ final class Stream
         return $data;
     }
 
+    /**
+     * Reads a single unsigned byte from the stream.
+     *
+     * @return int
+     */
     public function readU8(): int   { return ord($this->read(1)); }
+
+    /**
+     * Reads an unsigned 16-bit big-endian integer from the stream.
+     *
+     * @return int
+     */
     public function readU16BE(): int { return unpack('n', $this->read(2))[1]; }
+
+    /**
+     * Reads an unsigned 32-bit big-endian integer from the stream.
+     *
+     * @return int
+     */
     public function readU32BE(): int { return unpack('N', $this->read(4))[1]; }
+
+    /**
+     * Reads an unsigned 64-bit big-endian integer from the stream.
+     *
+     * @return int
+     */
     public function readU64BE(): int
     {
         $hi = $this->readU32BE();
@@ -68,7 +124,12 @@ final class Stream
         return ($hi << 32) | $lo;
     }
 
-    /** Create a bounded view into this stream without copying bytes. */
+    /**
+     * Creates a bounded view into this stream without copying bytes.
+     *
+     * @param int $offset Starting byte offset for the window.
+     * @param int $length Maximum number of bytes readable from the window.
+     */
     public function window(int $offset, int $length): StreamWindow
     {
         if ($offset < 0 || $length < 0 || $offset + $length > $this->size) {

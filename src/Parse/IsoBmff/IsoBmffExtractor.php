@@ -19,6 +19,8 @@ final class IsoBmffExtractor
     public function __construct(private readonly Stream $stream) {}
 
     /**
+     * Extracts EXIF blobs, XMP packets, and QuickTime metadata from the stream.
+     *
      * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta}
      */
     public function extract(): array
@@ -47,7 +49,11 @@ final class IsoBmffExtractor
         return [$exifBlobs, $xmpBlobs, $qt];
     }
 
-    /** @return iterable<object> */
+    /**
+     * Walks each top-level box in the file and yields a descriptor object.
+     *
+     * @return iterable<object>
+     */
     private function walkTopLevelBoxes(): iterable
     {
         $fileSize = $this->stream->size();
@@ -65,9 +71,12 @@ final class IsoBmffExtractor
     }
 
     /**
-     * @param list<string>              $exifBlobs
-     * @param list<string>              $xmpBlobs
-     * @param array<string, string>     $qtKeys
+     * Parses the `moov` box, collecting nested metadata boxes of interest.
+     *
+     * @param object             $moov      Box descriptor for the movie box.
+     * @param list<string>          $exifBlobs
+     * @param list<string>          $xmpBlobs
+     * @param array<string, string> $qtKeys
      */
     private function parseMoovBox(object $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
@@ -81,9 +90,12 @@ final class IsoBmffExtractor
     }
 
     /**
-     * @param list<string>              $exifBlobs
-     * @param list<string>              $xmpBlobs
-     * @param array<string, string>     $qtKeys
+     * Parses the `udta` user data box for embedded metadata containers.
+     *
+     * @param object             $udta      Box descriptor for the user data box.
+     * @param list<string>          $exifBlobs
+     * @param list<string>          $xmpBlobs
+     * @param array<string, string> $qtKeys
      */
     private function parseUdtaBox(object $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
@@ -95,9 +107,12 @@ final class IsoBmffExtractor
     }
 
     /**
-     * @param list<string>              $exifBlobs
-     * @param list<string>              $xmpBlobs
-     * @param array<string, string>     $qtKeys
+     * Parses the ISO BMFF metadata box and resolves payload references.
+     *
+     * @param object             $meta      Box descriptor for the metadata box.
+     * @param list<string>          $exifBlobs
+     * @param list<string>          $xmpBlobs
+     * @param array<string, string> $qtKeys
      */
     private function parseMetaBox(object $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
@@ -203,13 +218,21 @@ final class IsoBmffExtractor
         }
     }
 
+    /**
+     * Strips redundant EXIF signatures so downstream parsers accept the blob.
+     */
     private function normalizeExifBlob(string $blob): string
     {
         return str_starts_with($blob, "Exif\0\0") ? substr($blob, 6) : $blob;
     }
 
     /**
+     * Resolves metadata item references described by an `iloc` box.
+     *
+     * @param int   $itemId    Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
+     *
+     * @return string|null
      */
     private function resolveItemData(int $itemId, array $locations): ?string
     {
@@ -257,6 +280,10 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Parses the item information box and returns descriptors for each entry.
+     *
+     * @param object $iinf Box descriptor containing the item information payload.
+     *
      * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string}>
      */
     private function parseIinf(object $iinf): array
@@ -285,6 +312,10 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Parses a single item information entry (`infe`).
+     *
+     * @param object $infe Box descriptor for the entry being parsed.
+     *
      * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string}
      */
     private function parseInfe(object $infe): array
@@ -330,6 +361,10 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Parses item locations and returns extent definitions keyed by item id.
+     *
+     * @param object $iloc Box descriptor representing the `iloc` payload.
+     *
      * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>
      */
     private function parseIloc(object $iloc): array
@@ -385,6 +420,13 @@ final class IsoBmffExtractor
         return $locations;
     }
 
+    /**
+     * Parses the primary item box (`pitm`) and returns the referenced item id.
+     *
+     * @param object $pitm Box descriptor containing the primary item payload.
+     *
+     * @return int|null
+     */
     private function parsePitm(object $pitm): ?int
     {
         $win = $pitm->window;
@@ -396,6 +438,10 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Parses the QuickTime keys box into an index of identifier strings.
+     *
+     * @param object $keys Box descriptor for the QuickTime `keys` box.
+     *
      * @return array<int, string>
      */
     private function parseKeys(object $keys): array
@@ -430,7 +476,11 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Parses the iTunes-style list (`ilst`) box using the discovered key index.
+     *
+     * @param object             $ilst     Box descriptor for the `ilst` container.
      * @param array<int, string> $keyIndex
+     *
      * @return array<string, string>
      */
     private function parseIlst(object $ilst, array $keyIndex): array
@@ -465,6 +515,10 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Parses a free-form metadata key (----) into a dotted namespace string.
+     *
+     * @param object $entry Box descriptor representing the free-form entry.
+     *
      * @return string|null
      */
     private function parseFreeformKey(object $entry): ?string
@@ -486,6 +540,13 @@ final class IsoBmffExtractor
         return $mean . '.' . $name;
     }
 
+    /**
+     * Extracts the payload from a `data` box, normalising known text encodings.
+     *
+     * @param object $data Box descriptor for the `data` box.
+     *
+     * @return string|null
+     */
     private function parseDataBox(object $data): ?string
     {
         $win = $data->window;
@@ -506,8 +567,11 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Merges two associative arrays while keeping values from the right-hand side.
+     *
      * @param array<string, string> $left
      * @param array<string, string> $right
+     *
      * @return array<string, string>
      */
     private function mergeAssociative(array $left, array $right): array
@@ -520,6 +584,8 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Determines whether the given item descriptor represents EXIF content.
+     *
      * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info
      */
     private function isExifItem(array $info): bool
@@ -539,6 +605,8 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Determines whether the given item descriptor represents XMP content.
+     *
      * @param array{id: int, itemType: ?string, name: ?string, contentType: ?string} $info
      */
     private function isXmpItem(array $info): bool
@@ -550,6 +618,13 @@ final class IsoBmffExtractor
         return strtolower((string)$info['contentType']) === 'application/rdf+xml';
     }
 
+    /**
+     * Reads the entire payload of a stream window.
+     *
+     * @param StreamWindow $window Window to consume.
+     *
+     * @return string
+     */
     private function readAll(StreamWindow $window): string
     {
         $window->seek(0);
@@ -557,11 +632,26 @@ final class IsoBmffExtractor
         return $size > 0 ? $window->read($size) : '';
     }
 
+    /**
+     * Reads an unsigned 24-bit integer from the provided window.
+     *
+     * @param StreamWindow $window Window to read from.
+     *
+     * @return int
+     */
     private function readUInt24(StreamWindow $window): int
     {
         return $this->readUInt($window, 3);
     }
 
+    /**
+     * Reads an unsigned integer using the specified byte width.
+     *
+     * @param StreamWindow $window Window to read from.
+     * @param int          $bytes  Number of bytes representing the integer.
+     *
+     * @return int
+     */
     private function readUInt(StreamWindow $window, int $bytes): int
     {
         return match ($bytes) {
@@ -575,6 +665,13 @@ final class IsoBmffExtractor
         };
     }
 
+    /**
+     * Validates ISO BMFF length-size nibbles and returns the byte width.
+     *
+     * @param int $nibble Raw nibble extracted from the length-size field.
+     *
+     * @return int
+     */
     private function validateSizeNibble(int $nibble): int
     {
         return match ($nibble) {
@@ -584,11 +681,25 @@ final class IsoBmffExtractor
         };
     }
 
+    /**
+     * Checks whether a four-character code contains printable ASCII.
+     *
+     * @param string $fourcc Four-character code to test.
+     *
+     * @return bool
+     */
     private function isPrintableFourcc(string $fourcc): bool
     {
         return strlen($fourcc) === 4 && preg_match('/^[\x20-\x7E]{4}$/', $fourcc) === 1;
     }
 
+    /**
+     * Converts a four-character code into its integer representation.
+     *
+     * @param string $fourcc Four-character code to convert.
+     *
+     * @return int|null
+     */
     private function fourccToIndex(string $fourcc): ?int
     {
         if (strlen($fourcc) !== 4) {
@@ -600,6 +711,11 @@ final class IsoBmffExtractor
     }
 
     /**
+     * Iterates through child boxes within a container, yielding descriptors.
+     *
+     * @param object $parent Parent box descriptor whose content is iterated.
+     * @param int    $offset Optional relative byte offset where iteration begins.
+     *
      * @return iterable<object{type:string,size:int,offset:int,contentOffset:int,contentSize:int,window:StreamWindow,userType:?string}>
      */
     private function walkChildren(object $parent, int $offset = 0): iterable
@@ -623,6 +739,14 @@ final class IsoBmffExtractor
         }
     }
 
+    /**
+     * Reads a box header at the given offset and returns a descriptor object.
+     *
+     * @param int $offset Absolute byte offset of the box within the stream.
+     * @param int $limit  Limit offset that bounds the container.
+     *
+     * @return object
+     */
     private function readBoxAt(int $offset, int $limit): object
     {
         if ($offset < 0 || $offset > $limit) {

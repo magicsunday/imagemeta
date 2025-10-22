@@ -6,11 +6,17 @@ namespace MagicSunday\ImageMeta\Model;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 
+/**
+ * Aggregates extracted metadata blobs alongside parsed representations.
+ */
 final class Metadata
 {
     /**
      * @param list<string> $exifBlobs   TIFF‑EXIF blobs (first is primary)
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata extracted from ISO BMFF containers.
      * @param list<string> $xmpBlobs    XMP packets (RDF/XML), first is primary
+     * @param ExifDocument|null $exifDoc Parsed representation of the primary EXIF document.
+     * @param XmpDocument|null  $xmpDoc  Parsed representation of the primary XMP packet.
      */
     public function __construct(
         public readonly array $exifBlobs,

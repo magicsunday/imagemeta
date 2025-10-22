@@ -7,6 +7,9 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 
+/**
+ * Parses JPEG streams to extract metadata-bearing APP segments.
+ */
 final class JpegExtractor
 {
     private const MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
@@ -31,9 +34,18 @@ final class JpegExtractor
     /** @var list<string> */
     private array $iptcPayloads = [];
 
+    /**
+     * Initialises the extractor with a seekable stream.
+     *
+     * @param Stream $s Stream representing the JPEG binary.
+     */
     public function __construct(private readonly Stream $s) {}
 
-    /** @return list<string> */
+    /**
+     * Returns all discovered EXIF payloads in the order they appeared.
+     *
+     * @return list<string>
+     */
     public function extractExifBlobs(): array
     {
         $this->parseIfNeeded();
@@ -41,7 +53,11 @@ final class JpegExtractor
         return $this->exifBlobs;
     }
 
-    /** @return list<string> */
+    /**
+     * Returns all discovered XMP packets in the order they appeared.
+     *
+     * @return list<string>
+     */
     public function extractXmpPackets(): array
     {
         $this->parseIfNeeded();
@@ -49,6 +65,11 @@ final class JpegExtractor
         return $this->xmpPackets;
     }
 
+    /**
+     * Returns the merged ICC profile when complete metadata segments were found.
+     *
+     * @return string|null
+     */
     public function getIccProfile(): ?string
     {
         $this->parseIfNeeded();
@@ -56,7 +77,11 @@ final class JpegExtractor
         return $this->iccProfile;
     }
 
-    /** @return list<string> */
+    /**
+     * Returns all ICC profile segments in the order encountered.
+     *
+     * @return list<string>
+     */
     public function getIccSegments(): array
     {
         $this->parseIfNeeded();
@@ -64,7 +89,11 @@ final class JpegExtractor
         return $this->iccSegments;
     }
 
-    /** @return list<string> */
+    /**
+     * Returns all IPTC payloads captured from APP13 segments.
+     *
+     * @return list<string>
+     */
     public function getIptcPayloads(): array
     {
         $this->parseIfNeeded();
@@ -72,6 +101,9 @@ final class JpegExtractor
         return $this->iptcPayloads;
     }
 
+    /**
+     * Lazily scans the JPEG structure the first time metadata is requested.
+     */
     private function parseIfNeeded(): void
     {
         if ($this->parsed) {
@@ -137,6 +169,8 @@ final class JpegExtractor
     }
 
     /**
+     * Finds the next JPEG marker and returns its code and byte offset.
+     *
      * @return array{0: int, 1: int}
      */
     private function nextMarkerWithOffset(): array
@@ -161,6 +195,15 @@ final class JpegExtractor
         }
     }
 
+    /**
+     * Reads and validates the length of a marker segment.
+     *
+     * @param int  $marker     Marker code currently being processed.
+     * @param int  $offset     Offset in the stream where the marker begins.
+     * @param bool $enforceMax Whether to enforce the APP segment size guard.
+     *
+     * @return int
+     */
     private function readSegmentLength(int $marker, int $offset, bool $enforceMax): int
     {
         $length = $this->s->readU16BE();
@@ -188,6 +231,15 @@ final class JpegExtractor
         return $length;
     }
 
+    /**
+     * Reads the payload of a segment while converting bounds errors to parse errors.
+     *
+     * @param int $marker Marker code currently being processed.
+     * @param int $offset Offset in the stream where the marker begins.
+     * @param int $length Number of bytes to read for the payload.
+     *
+     * @return string
+     */
     private function readSegmentPayload(int $marker, int $offset, int $length): string
     {
         if ($length === 0) {
@@ -205,6 +257,11 @@ final class JpegExtractor
         }
     }
 
+    /**
+     * Processes APP1 payloads for EXIF and XMP signatures.
+     *
+     * @param string $payload Raw APP1 payload including leading signature.
+     */
     private function handleApp1(string $payload): void
     {
         if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
@@ -218,6 +275,12 @@ final class JpegExtractor
         }
     }
 
+    /**
+     * Processes APP2 payloads containing ICC profile segments.
+     *
+     * @param string $payload Raw segment payload including signature.
+     * @param int    $offset  Offset in the stream where the marker begins.
+     */
     private function handleApp2(string $payload, int $offset): void
     {
         if (!str_starts_with($payload, self::ICC_SIGNATURE)) {
@@ -254,6 +317,11 @@ final class JpegExtractor
         }
     }
 
+    /**
+     * Processes APP13 payloads to capture IPTC data blocks.
+     *
+     * @param string $payload Raw APP13 payload including leading signature.
+     */
     private function handleApp13(string $payload): void
     {
         if (str_starts_with($payload, self::IPTC_SIGNATURE)) {
