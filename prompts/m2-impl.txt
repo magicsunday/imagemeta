@@ -1,0 +1,37 @@
+Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M2 – JPEG-Pfad finalisieren“ in magicsunday/imagemeta.
+
+Kontext:
+- PHP 8.4, PSR-12, strict_types=1. Reine PHP-Library.
+- Streaming: Nur Core\Stream/StreamWindow; keine Ganzdatei-Reads.
+- Ordnerstruktur: src/Core, src/Detect, src/Parse/{Jpeg,IsoBmff,Tiff,Xmp}, src/Model, src/Convenience, src/MakerNotes.
+- Tests: PHPUnit 12. Static: PHPStan 6
+
+Aufgabe:
+Härtung des JPEG-Parsers:
+- Mehrere APP1-Segmente (EXIF + XMP) in beliebiger Reihenfolge erkennen.
+- Restart-Marker (FFD0–FFD7) und Füll-Bytes sicher überspringen.
+- APP2 (ICC) und APP13 (IPTC) Payloads nur EXTRAHIEREN (Getter; noch kein Parser).
+- Segment-Limit/Guards (len≥2, konfigurierbares MAX pro Segment).
+- Präzise ParseError-Texte.
+
+Akzeptanzkriterien:
+- EXIF & XMP werden gefunden, egal in welcher APP1-Reihenfolge.
+- Defekte Längen/Marker → ParseError ohne PHP-Warnings.
+- Große EXIF-Segmente (>64 KB, verteilt) werden unterstützt.
+- Rohzugriff auf APP2/APP13 verfügbar (neue Getter).
+
+Testfälle (werden separat geliefert):
+- a) nur EXIF, b) nur XMP, c) EXIF+XMP (vertauscht), d) EXIF>64 KB
+- Restart-Marker vorhanden, defekte Längen/unerwartetes EOI, APP2+APP13 vorhanden.
+
+Beschränkungen (nur diese Dateien anfassen/anlegen):
+- ÄNDERN: src/Parse/Jpeg/JpegExtractor.php
+- NEU (optional): src/Parse/Jpeg/JpegPayloads.php (kleiner Container für ICC/IPTC)
+- NEU: public Getter in JpegExtractor für getIccPayloads()/getIptcPayloads()
+- NEU: Konstante/Guard für MAX_APP_SEGMENT_SIZE (z. B. 4MB)
+
+Ergebnisformat:
+1) Unified Diff (git patch) relativ zum Repo-Root, vollständige Hunks.
+2) Neue Dateien mit vollem Inhalt.
+3) Am Ende: Commit-Message (Conventional Commit), z. B.:
+   feat(jpeg): robust APP1 EXIF+XMP handling, extract ICC/IPTC, add guards

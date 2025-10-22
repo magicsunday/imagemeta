@@ -1,0 +1,26 @@
+Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M3 – ISOBMFF (HEIC/MP4/MOV) abrunden“.
+
+Kontext:
+- PHP 8.4, strikt, Streaming.
+- Parser: IsoBmffExtractor muss EXIF via Exif-Box ODER via iinf/iloc (multi-extent) extrahieren.
+- XMP: uuid (Adobe GUID) + Item „application/rdf+xml“.
+- QuickTime-Keys: keys/ilst + mdta Varianten.
+
+Aufgabe:
+- iloc: mehrere Extents korrekt KONKATENIEREN; Overflow/Bounds-Guards.
+- data_reference_index != 0 → Eintrag überspringen (klar dokumentieren).
+- XMP an drei Stellen erkennen (uuid, XMP-Box, Item).
+- QuickTime-Keys breiter parsen (keys/ilst und mdta).
+- Klare ParseErrors bei ungültigen Boxgrößen/Offests.
+
+Akzeptanzkriterien:
+- 95%+ HEIC/MOV-Testdateien liefern EXIF/XMP/Content-ID.
+- Keine Out-of-bounds Reads bei korrupten Boxen; Guards aktiv.
+
+Beschränkungen (nur diese Dateien anfassen/anlegen):
+- ÄNDERN: src/Parse/IsoBmff/IsoBmffExtractor.php
+- Optional NEU: src/Parse/IsoBmff/BoxGuards.php (Guards/Helper)
+- Keine API-Breaks.
+
+Ergebnisformat: Unified Diff + Commit-Message:
+   feat(isobmff): multi-extent iloc concat, uuid/item XMP, mdta keys; add guards

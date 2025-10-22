@@ -1,0 +1,27 @@
+Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M4 – TIFF/EXIF Tag-Registry & Convenience“.
+
+Kontext:
+- TiffExifReader unterstützt classic + BigTIFF (bereit).
+- Wir brauchen Tag-Registry + stabile Convenience-Felder.
+
+Aufgabe:
+- Neue Map (Tag→Name/Typ/Semantik) für zentrale Tags:
+  Make(0x010F), Model(0x0110), Orientation(0x0112),
+  DateTimeOriginal(0x9003), OffsetTimeOriginal(0x9011),
+  FNumber(0x829D), ExposureTime(0x829A), ISO(0x8827), PhotographicSensitivity(0x8833),
+  FocalLength(0x920A), LensModel(0xA434)
+- GPS komplett (Ref/Coords/Altitude, optional Date/TimeStamp).
+- ExifConvenience: rationals→float verlässlich, toArray() stabil.
+
+Akzeptanzkriterien:
+- Getter liefern konsistente Werte über Endianness/Classic+BigTIFF.
+- GPS-Koordinaten korrekt berechnet (S/W negativ).
+
+Beschränkungen:
+- ÄNDERN: src/Parse/Tiff/TiffExifReader.php (kleine Hook-Punkte/Helper)
+- NEU: src/Parse/Tiff/TagRegistry.php (statische Map + Hilfsfunktionen)
+- ÄNDERN: src/Convenience/ExifConvenience.php (kleine Ergänzungen)
+- Tests hinzufügen in folgendem Prompt.
+
+Ergebnisformat: Unified Diff + Commit-Message:
+   feat(exif): tag registry and stable convenience (gps, iso, lens, dt)

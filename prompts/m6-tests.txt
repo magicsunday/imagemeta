@@ -1,0 +1,12 @@
+Erzeuge ausschließlich PHPUnit-Tests für „M6 – MakerNotes aktivieren“.
+
+Fälle:
+- iPhone HEIC/DNG: AppleDecoder liefert Vendor-Infos/Hints.
+- Canon/Nikon/Sony: je 3+ Felder (synthetische MakerNote-Blöcke).
+- Unbekannter Hersteller: Roh-Digest (length + sha1).
+
+Ablage:
+- tests/MakerNotes/{AppleDecoderTest.php,CanonDecoderTest.php,NikonDecoderTest.php,SonyDecoderTest.php}
+- Nutze synthetische MakerNote-Blobs; Offsets relativ zum Block.
+
+Output: Unified Diff + kurze Erklärung.

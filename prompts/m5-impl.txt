@@ -1,0 +1,23 @@
+Rolle: Senior PHP-Engineer. Ziel: Erfülle Issue „M5 – XMP Normalisierung (RDF/Alt/Bag/Seq)“.
+
+Kontext:
+- XmpReader existiert (streamend via XMLReader). Wir erweitern um Container → Arrays, Namespace-Mapping, robustes Date-Handling.
+
+Aufgabe:
+- rdf:Alt/Bag/Seq als Arrays modellieren (dc:subject etc.).
+- Namespace-Shortcuts für xmp:, exif:, tiff:, dc:.
+- createDate(): ISO-8601 beibehalten/normalisieren (Zonenoffset).
+- Fehlerrobust bei defektem XML (Teilresultate statt Exceptions).
+
+Akzeptanzkriterien:
+- xmp:CreateDate wird als ISO-8601 String geliefert.
+- Listenfelder sind array<string>.
+- Kein Netz/DTD (LIBXML_NONET), keine Warnings.
+
+Beschränkungen:
+- ÄNDERN: src/Parse/Xmp/XmpReader.php
+- ÄNDERN/ERWEITERN: src/Model/Xmp/XmpDocument.php (Getter, toArray)
+- NEU: tests/Xmp/XmpReaderTest.php
+
+Ergebnisformat: Unified Diff + Commit-Message:
+   feat(xmp): normalize RDF containers to arrays; namespace mapping; robust dates

@@ -1,0 +1,15 @@
+**Übersicht**
+EXIF 2.2→3.0 Tag-Registry und Convenience-Getter stabilisiert.
+
+**Details**
+- TagRegistry mit Kern-Tags (Make/Model/DTOriginal/ISO/...).
+- GPS vollständig inkl. Vorzeichenlogik.
+- Convenience toArray() liefert normalisierte Werte.
+
+**Tests**
+- TIFF-Blobs synthetisch + realistische Samples (Classic + BigTIFF).
+- Alle grün.
+
+**Changelog**
+- Added: EXIF TagRegistry
+- Improved: GPS/ISO/Date/Lens convenience

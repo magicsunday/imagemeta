@@ -1,0 +1,11 @@
+Erzeuge ausschließlich PHPUnit-Tests für „M5 – XMP Normalisierung“.
+
+Fälle:
+- XMP mit rdf:Bag (3 Items), rdf:Alt (2 Sprachen), rdf:Seq.
+- createDate ISO-8601 vorhanden/fehlt/teilweise defekt.
+- Defektes/inkomplettes XML → Parser liefert Teilergebnisse ohne Exceptions.
+
+Ablage:
+- tests/Xmp/XmpReaderTest.php
+
+Output: Unified Diff + kurze Erklärung.
