@@ -10,6 +10,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class JpegExtractorTest extends TestCase
@@ -24,8 +25,9 @@ final class JpegExtractorTest extends TestCase
      * @param list<string> $expectedExif
      * @param list<string> $expectedXmp
      */
+    #[Test]
     #[DataProvider('provideApp1Variants')]
-    public function testExtractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
+    public function extractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
     {
         $jpeg = self::jpeg(...$segments);
         $extractor = $this->createExtractor($jpeg);
@@ -71,7 +73,8 @@ final class JpegExtractorTest extends TestCase
         ];
     }
 
-    public function testLargeExifOver64KBIsHandled(): void
+    #[Test]
+    public function largeExifOver64KBIsHandled(): void
     {
         $firstBlob = str_repeat('A', 40_000);
         $secondBlob = str_repeat('B', 30_000);
@@ -89,7 +92,8 @@ final class JpegExtractorTest extends TestCase
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
     }
 
-    public function testIccProfileSegmentsAreMerged(): void
+    #[Test]
+    public function iccProfileSegmentsAreMerged(): void
     {
         $iccPart1 = 'icc-part-one';
         $iccPart2 = 'icc-part-two';
@@ -107,7 +111,8 @@ final class JpegExtractorTest extends TestCase
         self::assertSame($iccPart1 . $iccPart2, $extractor->getIccProfile());
     }
 
-    public function testIptcIsCollectedRaw(): void
+    #[Test]
+    public function iptcIsCollectedRaw(): void
     {
         $iptcOne = self::IPTC_SIGNATURE . 'payload-one';
         $iptcTwo = self::IPTC_SIGNATURE . 'payload-two';
@@ -132,8 +137,9 @@ final class JpegExtractorTest extends TestCase
         yield 'truncated-payload' => [$truncatedPayload, '/truncated/i'];
     }
 
+    #[Test]
     #[DataProvider('provideInvalidSegments')]
-    public function testInvalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
+    public function invalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
     {
         $extractor = $this->createExtractor($jpeg);
 
@@ -143,7 +149,8 @@ final class JpegExtractorTest extends TestCase
         $extractor->extractExifBlobs();
     }
 
-    public function testStopsAtSosIgnoresRestartMarkers(): void
+    #[Test]
+    public function stopsAtSosIgnoresRestartMarkers(): void
     {
         $primaryExif = 'primary-before-sos';
         $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';

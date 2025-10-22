@@ -10,11 +10,13 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class IsoBmffExtractorTest extends TestCase
 {
-    public function testExtractExifFromExifBox(): void
+    #[Test]
+    public function extractExifFromExifBox(): void
     {
         $exifPayload = "Exif\0\0primary-exif";
         $meta = self::fullBox('meta', self::box('Exif', $exifPayload));
@@ -29,7 +31,8 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertNull($qt);
     }
 
-    public function testResolveIlocMultiExtent(): void
+    #[Test]
+    public function resolveIlocMultiExtent(): void
     {
         $exifBlob = "Exif\0\0" . 'segment-one' . 'segment-two';
         $part1 = substr($exifBlob, 0, 10);
@@ -72,7 +75,8 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame(['segment-one' . 'segment-two'], $exifs);
     }
 
-    public function testExtractXmpFromUuidAndItem(): void
+    #[Test]
+    public function extractXmpFromUuidAndItem(): void
     {
         $uuidGuid = hex2bin('be7acfcb97a942e89c71999491e3afac');
         $uuidXmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/">uuid</x:xmpmeta>';
@@ -118,7 +122,8 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame([$itemXmp, $directXmp, $uuidXmp], $xmps);
     }
 
-    public function testReadContentIdentifierFromKeysOrMdta(): void
+    #[Test]
+    public function readContentIdentifierFromKeysOrMdta(): void
     {
         $keysValue = 'id-from-keys';
         $mdtaValue = 'id-from-mdta';
@@ -138,7 +143,8 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame($mdtaValue, $mdtaMeta->contentIdentifier());
     }
 
-    public function testSkipDataRefIndexNotZero(): void
+    #[Test]
+    public function skipDataRefIndexNotZero(): void
     {
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $infe = self::box('infe', $infePayload);
@@ -166,7 +172,8 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame([], $exifs);
     }
 
-    public function testInvalidBoxSizesThrowParseError(): void
+    #[Test]
+    public function invalidBoxSizesThrowParseError(): void
     {
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $iinf = self::box('iinf', "\0\0\0\0" . pack('n', 1) . self::box('infe', $infePayload));
