@@ -1,25 +1,46 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Detect;
 
 use MagicSunday\ImageMeta\Core\Stream;
+use RuntimeException;
 
+/**
+ * Detects the container type of a binary stream based on magic numbers.
+ */
 final class FormatDetector
 {
-    public static function detect(Stream $s): ContainerType
+    /**
+     * Inspects the leading bytes of the stream and returns the detected container type.
+     *
+     * @param Stream $stream seekable stream positioned at an arbitrary offset
+     *
+     * @return ContainerType detected container format
+     *
+     * @throws RuntimeException when the signature does not match a known container
+     */
+    public static function detect(Stream $stream): ContainerType
     {
-        $s->seek(0);
-        $magic2 = $s->read(2);
+        $stream->seek(0);
+        $magic2 = $stream->read(2);
         if ($magic2 === "\xFF\xD8") {
             return ContainerType::JPEG;
         }
-        $s->seek(4);
-        $brand = $s->read(4); // 'ftyp'
+        $stream->seek(4);
+        $brand = $stream->read(4); // 'ftyp'
         if ($brand === 'ftyp') {
             return ContainerType::ISOBMFF;
         }
         // a few HEIC files may start with 0 size+ftyp; we already cover 'ftyp' at [4..8]
-        throw new \RuntimeException('Unsupported or unknown container');
+        throw new RuntimeException('Unsupported or unknown container');
     }
 }

@@ -1,10 +1,23 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Detect;
 
+/**
+ * Enumerates supported top-level container formats for image metadata extraction.
+ */
 enum ContainerType
 {
+    /** JPEG file interchange format. */
     case JPEG;
-    case ISOBMFF; // HEIC/AVIF/MP4/MOV
+    /** ISO Base Media File Format such as HEIC, AVIF, MP4, or MOV. */
+    case ISOBMFF;
 }
