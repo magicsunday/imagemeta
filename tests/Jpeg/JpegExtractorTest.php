@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Jpeg;
 
-require_once __DIR__ . '/../../src/Core/ParseError.php';
-require_once __DIR__ . '/../../src/Core/BoundsError.php';
-
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
@@ -88,6 +85,7 @@ final class JpegExtractorTest extends TestCase
     /**
      * Ensures multiple EXIF segments larger than 64KB are collected as-is.
      */
+    #[Test]
     public function testLargeExifOver64KBIsHandled(): void
     {
         $firstBlob = str_repeat('A', 40_000);
@@ -109,6 +107,7 @@ final class JpegExtractorTest extends TestCase
     /**
      * Confirms ICC profile fragments are reordered and merged into a single profile.
      */
+    #[Test]
     public function testIccProfileSegmentsAreMerged(): void
     {
         $iccPart1 = 'icc-part-one';
@@ -130,6 +129,7 @@ final class JpegExtractorTest extends TestCase
     /**
      * Ensures APP13 segments with the Photoshop signature are stored verbatim.
      */
+    #[Test]
     public function testIptcIsCollectedRaw(): void
     {
         $iptcOne = self::IPTC_SIGNATURE . 'payload-one';
@@ -180,6 +180,7 @@ final class JpegExtractorTest extends TestCase
     /**
      * Verifies scanning stops at SOS and ignores restart markers during search.
      */
+    #[Test]
     public function testStopsAtSosIgnoresRestartMarkers(): void
     {
         $primaryExif = 'primary-before-sos';
