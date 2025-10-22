@@ -14,126 +14,162 @@ use PHPUnit\Framework\TestCase;
 
 final class JpegExtractorTest extends TestCase
 {
-    private const XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
     private const EXIF_SIGNATURE = "Exif\0\0";
+    private const XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
+    private const ICC_SIGNATURE = "ICC_PROFILE\0";
+    private const IPTC_SIGNATURE = "Photoshop 3.0\0";
 
-    #[DataProvider('provideApp1Orders')]
-    public function testExtractsXmpRegardlessOfApp1Order(array $order, string $expectedXml): void
+    /**
+     * @param list<string> $segments
+     * @param list<string> $expectedExif
+     * @param list<string> $expectedXmp
+     */
+    #[DataProvider('provideApp1Variants')]
+    public function testExtractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
     {
-        $segments = [];
-        foreach ($order as $type) {
-            if ($type === 'exif') {
-                $segments[] = $this->segment(0xE1, self::EXIF_SIGNATURE . 'dummy-exif');
-            } elseif ($type === 'xmp') {
-                $segments[] = $this->segment(0xE1, self::XMP_SIGNATURE . $expectedXml);
-            }
-        }
-
-        $jpeg = $this->jpeg(...$segments);
+        $jpeg = self::jpeg(...$segments);
         $extractor = $this->createExtractor($jpeg);
 
-        self::assertSame([$expectedXml], $extractor->extractXmpPackets());
+        self::assertSame($expectedExif, $extractor->extractExifBlobs());
+        self::assertSame($expectedXmp, $extractor->extractXmpPackets());
     }
 
-    /** @return iterable<string, array{0: list<'exif'|'xmp'>, 1: string}> */
-    public static function provideApp1Orders(): iterable
+    /** @return iterable<string, array{0: list<string>, 1: list<string>, 2: list<string>}> */
+    public static function provideApp1Variants(): iterable
     {
-        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Test</x:xmpmeta>';
+        $exifPayload = 'primary-exif';
+        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
 
-        yield 'exif-before-xmp' => [['exif', 'xmp'], $xmpXml];
-        yield 'xmp-before-exif' => [['xmp', 'exif'], $xmpXml];
+        yield 'only-exif' => [
+            [self::segment(0xE1, self::EXIF_SIGNATURE . $exifPayload)],
+            [$exifPayload],
+            [],
+        ];
+
+        yield 'only-xmp' => [
+            [self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml)],
+            [],
+            [$xmpXml],
+        ];
+
+        yield 'xmp-before-exif' => [
+            [
+                self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
+                self::segment(0xE1, self::EXIF_SIGNATURE . $exifPayload),
+            ],
+            [$exifPayload],
+            [$xmpXml],
+        ];
+
+        yield 'exif-before-xmp' => [
+            [
+                self::segment(0xE1, self::EXIF_SIGNATURE . $exifPayload),
+                self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
+            ],
+            [$exifPayload],
+            [$xmpXml],
+        ];
     }
 
-    public function testSkipsRestartMarkersAndStuffedBytes(): void
+    public function testLargeExifOver64KBIsHandled(): void
     {
-        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Restart</x:xmpmeta>';
-
-        $jpeg = $this->jpeg(
-            $this->segment(0xE1, self::EXIF_SIGNATURE . 'preface'),
-            $this->segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
-            "\xFF\xDA" . pack('n', 8) . "\x01\x02\x00\x00\x3F\x00", // SOS marker with header
-            "\xFF\x00\xAA\xFF\xD0\xBB", // stuffed byte followed by restart marker
-        );
-
-        $extractor = $this->createExtractor($jpeg);
-
-        self::assertSame([$xmpXml], $extractor->extractXmpPackets());
-    }
-
-    public function testSupportsLargeExifSegment(): void
-    {
+        $firstBlob = str_repeat('A', 40_000);
+        $secondBlob = str_repeat('B', 30_000);
         $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Large</x:xmpmeta>';
-        $largeExifPayload = self::EXIF_SIGNATURE . str_repeat('A', 70_000);
 
-        $jpeg = $this->jpeg(
-            $this->segment(0xE1, $largeExifPayload),
-            $this->segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
+        $jpeg = self::jpeg(
+            self::segment(0xE1, self::EXIF_SIGNATURE . $firstBlob),
+            self::segment(0xE1, self::EXIF_SIGNATURE . $secondBlob),
+            self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
         );
 
         $extractor = $this->createExtractor($jpeg);
 
+        self::assertSame([$firstBlob, $secondBlob], $extractor->extractExifBlobs());
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
     }
 
-    public function testExtractsRawIccAndIptcPayloads(): void
+    public function testIccProfileSegmentsAreMerged(): void
     {
-        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Ancillary</x:xmpmeta>';
-        $iccPayload = "ICC_PROFILE\0\1\1" . 'icc-data';
-        $iptcPayload = 'Photoshop 3.0\0' . 'iptc-data';
+        $iccPart1 = 'icc-part-one';
+        $iccPart2 = 'icc-part-two';
+        $segment1Payload = self::ICC_SIGNATURE . "\x01\x02" . $iccPart1;
+        $segment2Payload = self::ICC_SIGNATURE . "\x02\x02" . $iccPart2;
 
-        $jpeg = $this->jpeg(
-            $this->segment(0xE2, $iccPayload),
-            $this->segment(0xED, $iptcPayload),
-            $this->segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
+        $jpeg = self::jpeg(
+            self::segment(0xE2, $segment1Payload),
+            self::segment(0xE2, $segment2Payload),
         );
 
         $extractor = $this->createExtractor($jpeg);
 
-        self::assertTrue(method_exists($extractor, 'getIccPayloads'), 'Expected getIccPayloads() accessor');
-        self::assertTrue(method_exists($extractor, 'getIptcPayloads'), 'Expected getIptcPayloads() accessor');
+        self::assertSame([$segment1Payload, $segment2Payload], $extractor->getIccSegments());
+        self::assertSame($iccPart1 . $iccPart2, $extractor->getIccProfile());
+    }
 
-        if (method_exists($extractor, 'getIccPayloads')) {
-            self::assertSame([$iccPayload], $extractor->getIccPayloads(), 'ICC payloads should be returned verbatim');
-        }
+    public function testIptcIsCollectedRaw(): void
+    {
+        $iptcOne = self::IPTC_SIGNATURE . 'payload-one';
+        $iptcTwo = self::IPTC_SIGNATURE . 'payload-two';
 
-        if (method_exists($extractor, 'getIptcPayloads')) {
-            self::assertSame([$iptcPayload], $extractor->getIptcPayloads(), 'IPTC payloads should be returned verbatim');
-        }
+        $jpeg = self::jpeg(
+            self::segment(0xED, $iptcOne),
+            self::segment(0xED, $iptcTwo),
+        );
 
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$iptcOne, $iptcTwo], $extractor->getIptcPayloads());
+    }
+
+    /** @return iterable<string, array{0: string, 1: string}> */
+    public static function provideInvalidSegments(): iterable
+    {
+        $lengthTooSmall = "\xFF\xD8" . "\xFF\xE1\x00\x01" . "\xFF\xD9";
+        $truncatedPayload = "\xFF\xD8" . "\xFF\xE1" . pack('n', 10) . 'abcde' . "\xFF\xD9";
+
+        yield 'length-smaller-than-two' => [$lengthTooSmall, '/length/i'];
+        yield 'truncated-payload' => [$truncatedPayload, '/truncated/i'];
+    }
+
+    #[DataProvider('provideInvalidSegments')]
+    public function testInvalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
+    {
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches($messagePattern);
+
+        $extractor->extractExifBlobs();
+    }
+
+    public function testStopsAtSosIgnoresRestartMarkers(): void
+    {
+        $primaryExif = 'primary-before-sos';
+        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
+        $ignoredExif = 'ignored-after-sos';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(0xE1, self::EXIF_SIGNATURE . $primaryExif)
+            . self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml)
+            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\x00" . 'A'
+            . "\xFF\xD0"
+            . "\xFF\xE1" . pack('n', strlen(self::EXIF_SIGNATURE . $ignoredExif) + 2) . self::EXIF_SIGNATURE . $ignoredExif
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$primaryExif], $extractor->extractExifBlobs());
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
     }
 
-    public function testInvalidSegmentLengthThrowsParseError(): void
-    {
-        $invalidSegment = "\xFF\xE1\x00\x01"; // length field smaller than minimum
-        $jpeg = $this->jpeg($invalidSegment);
-
-        $extractor = $this->createExtractor($jpeg);
-
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessageMatches('/length/i');
-        $extractor->extractXmpPackets();
-    }
-
-    public function testUnexpectedEndOfImageTriggersParseError(): void
-    {
-        $declaredLength = 10;
-        $payload = 'trunc'; // only 5 bytes available instead of 8 (=len-2)
-        $segment = "\xFF\xE1" . pack('n', $declaredLength) . $payload;
-        $jpeg = "\xFF\xD8" . $segment; // omit EOI entirely
-
-        $extractor = $this->createExtractor($jpeg);
-
-        $this->expectException(ParseError::class);
-        $extractor->extractXmpPackets();
-    }
-
-    private function jpeg(string ...$segments): string
+    private static function jpeg(string ...$segments): string
     {
         return "\xFF\xD8" . implode('', $segments) . "\xFF\xD9";
     }
 
-    private function segment(int $marker, string $payload): string
+    private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
     }
