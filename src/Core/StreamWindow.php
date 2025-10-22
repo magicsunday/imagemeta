@@ -4,21 +4,44 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core;
 
 /**
- * Bounded view into a Stream (independent cursor, enforced limits).
+ * Represents a bounded view into a parent stream with an independent cursor.
  */
 final class StreamWindow
 {
     private int $cursor = 0;
 
+    /**
+     * Creates a window that restricts reads to a fixed region of the parent stream.
+     *
+     * @param Stream $base   Underlying stream providing the bytes.
+     * @param int    $offset Start offset within the base stream.
+     * @param int    $length Maximum number of bytes accessible through the window.
+     */
     public function __construct(
         private readonly Stream $base,
         private readonly int $offset,
         private readonly int $length
     ) {}
 
+    /**
+     * Returns the number of bytes exposed through this window.
+     *
+     * @return int
+     */
     public function size(): int { return $this->length; }
+
+    /**
+     * Returns the cursor position relative to the start of the window.
+     *
+     * @return int
+     */
     public function tell(): int { return $this->cursor; }
 
+    /**
+     * Repositions the window cursor to an absolute offset inside the window.
+     *
+     * @param int $pos Byte offset relative to the window start.
+     */
     public function seek(int $pos): void
     {
         if ($pos < 0 || $pos > $this->length) {
@@ -27,6 +50,13 @@ final class StreamWindow
         $this->cursor = $pos;
     }
 
+    /**
+     * Reads bytes from the bounded region and advances the cursor.
+     *
+     * @param int $len Number of bytes to read.
+     *
+     * @return string
+     */
     public function read(int $len): string
     {
         if ($len < 0 || $this->cursor + $len > $this->length) {
@@ -38,9 +68,32 @@ final class StreamWindow
         return $data;
     }
 
+    /**
+     * Reads an unsigned byte from the window.
+     *
+     * @return int
+     */
     public function readU8(): int     { return ord($this->read(1)); }
+
+    /**
+     * Reads an unsigned 16-bit big-endian integer from the window.
+     *
+     * @return int
+     */
     public function readU16BE(): int  { return unpack('n', $this->read(2))[1]; }
+
+    /**
+     * Reads an unsigned 32-bit big-endian integer from the window.
+     *
+     * @return int
+     */
     public function readU32BE(): int  { return unpack('N', $this->read(4))[1]; }
+
+    /**
+     * Reads an unsigned 64-bit big-endian integer from the window.
+     *
+     * @return int
+     */
     public function readU64BE(): int
     {
         $hi = $this->readU32BE();

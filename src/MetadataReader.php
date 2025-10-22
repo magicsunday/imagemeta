@@ -12,8 +12,18 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpReader;
 
+/**
+ * Coordinates format detection and metadata extraction for supported containers.
+ */
 final class MetadataReader
 {
+    /**
+     * Reads metadata from the given file path by delegating to the appropriate parser.
+     *
+     * @param string $path Path to the image or media file being inspected.
+     *
+     * @return Metadata
+     */
     public function read(string $path): Metadata
     {
         $stream = Stream::fromPath($path);
@@ -25,6 +35,13 @@ final class MetadataReader
         };
     }
 
+    /**
+     * Extracts metadata from a JPEG container.
+     *
+     * @param Stream $stream Source stream positioned at the start of the file.
+     *
+     * @return Metadata
+     */
     private function fromJpeg(Stream $stream): Metadata
     {
         $jpeg = new JpegExtractor($stream);
@@ -38,6 +55,13 @@ final class MetadataReader
         return new Metadata($exifBlobs, null, $exifDoc, $xmpBlobs, $xmpDoc);
     }
 
+    /**
+     * Extracts metadata from an ISO Base Media File Format container.
+     *
+     * @param Stream $stream Source stream positioned at the start of the file.
+     *
+     * @return Metadata
+     */
     private function fromIsoBmff(Stream $stream): Metadata
     {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();

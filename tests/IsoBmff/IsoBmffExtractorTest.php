@@ -13,10 +13,17 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the ISO BMFF extractor against synthetic container layouts.
+ *
+ * @covers \MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor
+ */
 final class IsoBmffExtractorTest extends TestCase
 {
-    #[Test]
-    public function extractExifFromExifBox(): void
+    /**
+     * Ensures EXIF blobs embedded directly in the meta box are returned.
+     */
+    public function testExtractExifFromExifBox(): void
     {
         $exifPayload = "Exif\0\0primary-exif";
         $meta = self::fullBox('meta', self::box('Exif', $exifPayload));
@@ -31,8 +38,10 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertNull($qt);
     }
 
-    #[Test]
-    public function resolveIlocMultiExtent(): void
+    /**
+     * Verifies fragmented EXIF data referenced via iloc extents is reassembled.
+     */
+    public function testResolveIlocMultiExtent(): void
     {
         $exifBlob = "Exif\0\0" . 'segment-one' . 'segment-two';
         $part1 = substr($exifBlob, 0, 10);
@@ -75,8 +84,10 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame(['segment-one' . 'segment-two'], $exifs);
     }
 
-    #[Test]
-    public function extractXmpFromUuidAndItem(): void
+    /**
+     * Ensures XMP payloads are collected from uuid boxes and item locations.
+     */
+    public function testExtractXmpFromUuidAndItem(): void
     {
         $uuidGuid = hex2bin('be7acfcb97a942e89c71999491e3afac');
         $uuidXmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/">uuid</x:xmpmeta>';
@@ -122,8 +133,10 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame([$itemXmp, $directXmp, $uuidXmp], $xmps);
     }
 
-    #[Test]
-    public function readContentIdentifierFromKeysOrMdta(): void
+    /**
+     * Confirms QuickTime identifiers are populated from keys and mdta boxes.
+     */
+    public function testReadContentIdentifierFromKeysOrMdta(): void
     {
         $keysValue = 'id-from-keys';
         $mdtaValue = 'id-from-mdta';
@@ -143,8 +156,10 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame($mdtaValue, $mdtaMeta->contentIdentifier());
     }
 
-    #[Test]
-    public function skipDataRefIndexNotZero(): void
+    /**
+     * Ensures items referencing external data are skipped.
+     */
+    public function testSkipDataRefIndexNotZero(): void
     {
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $infe = self::box('infe', $infePayload);
@@ -172,8 +187,10 @@ final class IsoBmffExtractorTest extends TestCase
         self::assertSame([], $exifs);
     }
 
-    #[Test]
-    public function invalidBoxSizesThrowParseError(): void
+    /**
+     * Verifies invalid extent definitions trigger a parse error.
+     */
+    public function testInvalidBoxSizesThrowParseError(): void
     {
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $iinf = self::box('iinf', "\0\0\0\0" . pack('n', 1) . self::box('infe', $infePayload));
@@ -201,6 +218,11 @@ final class IsoBmffExtractorTest extends TestCase
         }
     }
 
+    /**
+     * Builds a QuickTime structure containing a `keys` metadata entry.
+     *
+     * @param string $value Identifier value stored under the QuickTime key.
+     */
     private function createFileWithQuickTimeKeys(string $value): string
     {
         $keysEntry = pack('N', 8 + strlen('com.apple.quicktime.content.identifier'))
@@ -219,6 +241,11 @@ final class IsoBmffExtractorTest extends TestCase
         return self::box('ftyp', 'isom') . $moov;
     }
 
+    /**
+     * Builds a QuickTime structure containing an mdta free-form identifier.
+     *
+     * @param string $value Identifier value encoded within the mdta structure.
+     */
     private function createFileWithMdtaIdentifier(string $value): string
     {
         $mean = self::box('mean', pack('N', 1) . pack('N', 0) . 'com.apple.quicktime');
@@ -234,6 +261,11 @@ final class IsoBmffExtractorTest extends TestCase
         return self::box('ftyp', 'isom') . $moov;
     }
 
+    /**
+     * Wraps raw bytes in a temporary stream-backed extractor.
+     *
+     * @param string $data Raw ISO BMFF file contents.
+     */
     private function createExtractor(string $data): IsoBmffExtractor
     {
         $fh = fopen('php://temp', 'wb+');
@@ -243,12 +275,26 @@ final class IsoBmffExtractorTest extends TestCase
         return new IsoBmffExtractor(new Stream($fh, strlen($data)));
     }
 
+    /**
+     * Creates a standard ISO BMFF box header around a payload.
+     *
+     * @param string $type    Four-character box type.
+     * @param string $payload Raw box payload.
+     */
     private static function box(string $type, string $payload): string
     {
         $size = 8 + strlen($payload);
         return pack('N', $size) . $type . $payload;
     }
 
+    /**
+     * Creates a full box including version and flags fields.
+     *
+     * @param string $type    Four-character box type.
+     * @param string $payload Raw box payload excluding version/flags.
+     * @param int    $version Box version field.
+     * @param int    $flags   Box flags field.
+     */
     private static function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
     {
         $header = chr($version) . chr(($flags >> 16) & 0xFF) . chr(($flags >> 8) & 0xFF) . chr($flags & 0xFF);

@@ -10,12 +10,22 @@ use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 
+/**
+ * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
+ */
 final class TiffExifReader
 {
     private MemoryBuffer $buf;
     private Endian $bo;
     private bool $bigTiff = false;
 
+    /**
+     * Parses an EXIF TIFF blob into a structured document model.
+     *
+     * @param string $tiffBlob Raw TIFF data including headers.
+     *
+     * @return ExifDocument
+     */
     public function parseFromBlob(string $tiffBlob): ExifDocument
     {
         $this->buf = new MemoryBuffer($tiffBlob);
@@ -61,6 +71,9 @@ final class TiffExifReader
         return new ExifDocument($ifd0, $exifIfd, $gpsIfd, $interopIfd, $ifd1);
     }
 
+    /**
+     * Validates the BigTIFF header following the magic identifier.
+     */
     private function parseBigTiffHeader(): void
     {
         // BigTIFF header after magic: 2 bytes: offset size (should be 8), 2 bytes: zero/reserved, then 8‑byte first IFD offset
@@ -72,6 +85,13 @@ final class TiffExifReader
         // $zero is usually 0; keep reading first IFD via caller
     }
 
+    /**
+     * Parses an image file directory starting at the given byte offset.
+     *
+     * @param int $offset Zero-based byte offset to the IFD structure.
+     *
+     * @return Ifd
+     */
     private function readIfd(int $offset): Ifd
     {
         if ($offset <= 0) {
@@ -87,7 +107,11 @@ final class TiffExifReader
         return new Ifd($entries, $next > 0 ? $next : null);
     }
 
-    /** @return array<int, IfdEntry> tagId => entry */
+    /**
+     * Reads a single directory entry and returns it keyed by tag identifier.
+     *
+     * @return array<int, IfdEntry> tagId => entry
+     */
     private function readDirEntry(): array
     {
         $tag  = $this->readU16();
@@ -99,6 +123,15 @@ final class TiffExifReader
         return [$tag => new IfdEntry($tag, $type, (int)$cnt, $value)];
     }
 
+    /**
+     * Decodes the value referenced by a directory entry.
+     *
+     * @param int $type          TIFF field type code.
+     * @param int $count         Number of values represented.
+     * @param int $valueOrOffset Inline value bytes or an offset into the blob.
+     *
+     * @return mixed
+     */
     private function decodeValue(int $type, int $count, int $valueOrOffset): mixed
     {
         $unitSize = match ($type) {
@@ -129,6 +162,15 @@ final class TiffExifReader
         return $this->decodeBytes($type, $count, $bytes);
     }
 
+    /**
+     * Converts raw bytes into PHP scalar values based on the TIFF type.
+     *
+     * @param int    $type  TIFF field type code.
+     * @param int    $count Number of values represented.
+     * @param string $bytes Raw value bytes read from the blob.
+     *
+     * @return mixed
+     */
     private function decodeBytes(int $type, int $count, string $bytes): mixed
     {
         if ($type === 2) { // ASCII
@@ -170,21 +212,44 @@ final class TiffExifReader
         return $count === 1 ? $vals[0] : $vals;
     }
 
+    /**
+     * Reads an unsigned 16-bit integer using the file byte order.
+     *
+     * @return int
+     */
     private function readU16(): int
     {
         return $this->bo === Endian::Little ? $this->buf->readU16LE() : $this->buf->readU16BE();
     }
 
+    /**
+     * Reads an unsigned 32-bit integer using the file byte order.
+     *
+     * @return int
+     */
     private function readU32(): int
     {
         return $this->bo === Endian::Little ? $this->buf->readU32LE() : $this->buf->readU32BE();
     }
 
+    /**
+     * Reads an unsigned 64-bit integer using the file byte order.
+     *
+     * @return int
+     */
     private function readU64(): int
     {
         return $this->bo === Endian::Little ? $this->buf->readU64LE() : $this->buf->readU64BE();
     }
 
+    /**
+     * Converts an integer into a byte string respecting the configured endianness.
+     *
+     * @param int $v     Integer value to convert.
+     * @param int $bytes Number of bytes to output.
+     *
+     * @return string
+     */
     private function uXToBytes(int $v, int $bytes): string
     {
         // Convert integer to a byte string of specific length using current endianness
@@ -203,44 +268,103 @@ final class TiffExifReader
         return $bin;
     }
 
+    /**
+     * Reads a 32-bit integer from a byte buffer using the configured endianness.
+     *
+     * @param string $bytes  Source buffer containing the integer.
+     * @param int    $offset Byte offset within the buffer.
+     * @param bool   $signed Whether to interpret the value as signed.
+     *
+     * @return int
+     */
     private function read32FromBytes(string $bytes, int $offset, bool $signed): int
     {
         $chunk = substr($bytes, $offset, 4);
         return $signed ? $this->unpackS32($chunk) : $this->unpackU32($chunk);
     }
 
+    /**
+     * Unpacks an unsigned 16-bit integer from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return int
+     */
     private function unpackU16(string $b): int
     {
         return $this->bo === Endian::Little ? unpack('v', $b)[1] : unpack('n', $b)[1];
     }
 
+    /**
+     * Unpacks a signed 16-bit integer from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return int
+     */
     private function unpackS16(string $b): int
     {
         $u = $this->unpackU16($b);
         return $u >= 0x8000 ? $u - 0x10000 : $u;
     }
 
+    /**
+     * Unpacks an unsigned 32-bit integer from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return int
+     */
     private function unpackU32(string $b): int
     {
         return $this->bo === Endian::Little ? unpack('V', $b)[1] : unpack('N', $b)[1];
     }
 
+    /**
+     * Unpacks a signed 32-bit integer from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return int
+     */
     private function unpackS32(string $b): int
     {
         $u = $this->unpackU32($b);
         return ($u & 0x80000000) ? -((~$u & 0xFFFFFFFF) + 1) : $u;
     }
 
+    /**
+     * Unpacks an IEEE-754 single-precision float from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return float
+     */
     private function unpackFloat(string $b): float
     {
         return (float)($this->bo === Endian::Little ? unpack('g', $b)[1] : unpack('G', $b)[1]);
     }
 
+    /**
+     * Unpacks an IEEE-754 double-precision float from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return float
+     */
     private function unpackDouble(string $b): float
     {
         return (float)($this->bo === Endian::Little ? unpack('e', $b)[1] : unpack('E', $b)[1]);
     }
 
+    /**
+     * Converts an unsigned integer to its signed representation for the given width.
+     *
+     * @param int $u    Unsigned integer value.
+     * @param int $bits Bit width of the target signed representation.
+     *
+     * @return int
+     */
     private static function toSigned(int $u, int $bits): int
     {
         $sign = 1 << ($bits - 1);

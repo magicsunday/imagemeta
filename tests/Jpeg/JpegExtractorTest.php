@@ -13,6 +13,11 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the JPEG extractor using synthetic marker segments.
+ *
+ * @covers \MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor
+ */
 final class JpegExtractorTest extends TestCase
 {
     private const EXIF_SIGNATURE = "Exif\0\0";
@@ -21,6 +26,8 @@ final class JpegExtractorTest extends TestCase
     private const IPTC_SIGNATURE = "Photoshop 3.0\0";
 
     /**
+     * Verifies APP1 segments yield EXIF and XMP payloads regardless of ordering.
+     *
      * @param list<string> $segments
      * @param list<string> $expectedExif
      * @param list<string> $expectedXmp
@@ -36,7 +43,11 @@ final class JpegExtractorTest extends TestCase
         self::assertSame($expectedXmp, $extractor->extractXmpPackets());
     }
 
-    /** @return iterable<string, array{0: list<string>, 1: list<string>, 2: list<string>}> */
+    /**
+     * Provides APP1 segment permutations mixing EXIF and XMP payloads.
+     *
+     * @return iterable<string, array{0: list<string>, 1: list<string>, 2: list<string>}>
+     */
     public static function provideApp1Variants(): iterable
     {
         $exifPayload = 'primary-exif';
@@ -73,8 +84,10 @@ final class JpegExtractorTest extends TestCase
         ];
     }
 
-    #[Test]
-    public function largeExifOver64KBIsHandled(): void
+    /**
+     * Ensures multiple EXIF segments larger than 64KB are collected as-is.
+     */
+    public function testLargeExifOver64KBIsHandled(): void
     {
         $firstBlob = str_repeat('A', 40_000);
         $secondBlob = str_repeat('B', 30_000);
@@ -92,8 +105,10 @@ final class JpegExtractorTest extends TestCase
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
     }
 
-    #[Test]
-    public function iccProfileSegmentsAreMerged(): void
+    /**
+     * Confirms ICC profile fragments are reordered and merged into a single profile.
+     */
+    public function testIccProfileSegmentsAreMerged(): void
     {
         $iccPart1 = 'icc-part-one';
         $iccPart2 = 'icc-part-two';
@@ -111,8 +126,10 @@ final class JpegExtractorTest extends TestCase
         self::assertSame($iccPart1 . $iccPart2, $extractor->getIccProfile());
     }
 
-    #[Test]
-    public function iptcIsCollectedRaw(): void
+    /**
+     * Ensures APP13 segments with the Photoshop signature are stored verbatim.
+     */
+    public function testIptcIsCollectedRaw(): void
     {
         $iptcOne = self::IPTC_SIGNATURE . 'payload-one';
         $iptcTwo = self::IPTC_SIGNATURE . 'payload-two';
@@ -127,7 +144,11 @@ final class JpegExtractorTest extends TestCase
         self::assertSame([$iptcOne, $iptcTwo], $extractor->getIptcPayloads());
     }
 
-    /** @return iterable<string, array{0: string, 1: string}> */
+    /**
+     * Provides malformed JPEG structures expected to raise parse errors.
+     *
+     * @return iterable<string, array{0: string, 1: string}>
+     */
     public static function provideInvalidSegments(): iterable
     {
         $lengthTooSmall = "\xFF\xD8" . "\xFF\xE1\x00\x01" . "\xFF\xD9";
@@ -139,7 +160,13 @@ final class JpegExtractorTest extends TestCase
 
     #[Test]
     #[DataProvider('provideInvalidSegments')]
-    public function invalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
+    /**
+     * Ensures invalid segment lengths and truncated payloads raise ParseError.
+     *
+     * @param string $jpeg            Binary JPEG fixture provided by the data set.
+     * @param string $messagePattern  Regular expression expected in the error message.
+     */
+    public function testInvalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
     {
         $extractor = $this->createExtractor($jpeg);
 
@@ -149,8 +176,10 @@ final class JpegExtractorTest extends TestCase
         $extractor->extractExifBlobs();
     }
 
-    #[Test]
-    public function stopsAtSosIgnoresRestartMarkers(): void
+    /**
+     * Verifies scanning stops at SOS and ignores restart markers during search.
+     */
+    public function testStopsAtSosIgnoresRestartMarkers(): void
     {
         $primaryExif = 'primary-before-sos';
         $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
@@ -171,16 +200,25 @@ final class JpegExtractorTest extends TestCase
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
     }
 
+    /**
+     * Builds a JPEG binary by wrapping payload segments with SOI/EOI markers.
+     */
     private static function jpeg(string ...$segments): string
     {
         return "\xFF\xD8" . implode('', $segments) . "\xFF\xD9";
     }
 
+    /**
+     * Wraps a payload with a JPEG marker and two-byte length field.
+     */
     private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
     }
 
+    /**
+     * Creates a stream-backed extractor for an in-memory JPEG binary.
+     */
     private function createExtractor(string $jpeg): JpegExtractor
     {
         $fh = fopen('php://temp', 'wb+');
