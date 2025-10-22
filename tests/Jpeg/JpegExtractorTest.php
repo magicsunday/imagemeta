@@ -10,6 +10,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -31,8 +32,9 @@ final class JpegExtractorTest extends TestCase
      * @param list<string> $expectedExif
      * @param list<string> $expectedXmp
      */
+    #[Test]
     #[DataProvider('provideApp1Variants')]
-    public function testExtractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
+    public function extractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
     {
         $jpeg = self::jpeg(...$segments);
         $extractor = $this->createExtractor($jpeg);
@@ -156,6 +158,7 @@ final class JpegExtractorTest extends TestCase
         yield 'truncated-payload' => [$truncatedPayload, '/truncated/i'];
     }
 
+    #[Test]
     #[DataProvider('provideInvalidSegments')]
     /**
      * Ensures invalid segment lengths and truncated payloads raise ParseError.
