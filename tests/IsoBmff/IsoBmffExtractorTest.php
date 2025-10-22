@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\IsoBmff;
 
-require_once __DIR__ . '/../../src/Core/Exceptions.php';
+require_once __DIR__ . '/../../src/Core/ParseError.php';
+require_once __DIR__ . '/../../src/Core/BoundsError.php';
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
