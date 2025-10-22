@@ -58,6 +58,7 @@ return (new PhpCsFixer\Config())
         ],
         'phpdoc_to_comment'               => false,
         'phpdoc_no_alias_tag'             => false,
+        'phpdoc_annotation_without_dot'   => false,
         'no_superfluous_phpdoc_tags'      => false,
         'phpdoc_separation'               => [
             'groups' => [
@@ -100,6 +101,6 @@ return (new PhpCsFixer\Config())
         PhpCsFixer\Finder::create()
             ->in([
                 __DIR__ . '/../src/',
-                __DIR__ . '/../test/',
+                __DIR__ . '/../tests/',
             ])
     );
