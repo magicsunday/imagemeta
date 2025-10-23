@@ -305,7 +305,9 @@ final class TiffExifReader
      */
     private function makerNotesDigest(): MakerNotesMetadata
     {
-        return new MakerNotesMetadata('Unknown', strlen($this->makerNoteRaw), sha1($this->makerNoteRaw));
+        $raw = $this->makerNoteRaw ?? '';
+
+        return new MakerNotesMetadata('Unknown', strlen($raw), sha1($raw));
     }
 
     /**
