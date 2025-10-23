@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use function ord;
+use function unpack;
+
 /**
  * Represents a bounded view into a parent stream with an independent cursor.
  */

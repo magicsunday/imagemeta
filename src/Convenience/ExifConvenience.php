@@ -17,6 +17,9 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use Throwable;
 
+use function is_string;
+use function strlen;
+
 /**
  * Helper routines that extract frequently-used EXIF values in a safe manner.
  */

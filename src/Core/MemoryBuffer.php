@@ -11,6 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use function ord;
+use function strlen;
+use function substr;
+use function unpack;
+
 /**
  * Provides a simple, bounds-checked in-memory buffer abstraction.
  *

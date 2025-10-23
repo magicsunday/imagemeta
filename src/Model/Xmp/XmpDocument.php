@@ -11,6 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
+use function array_find;
+use function is_array;
+use function is_string;
+use function sprintf;
+use function strpos;
+use function substr;
+
 /**
  * Immutable representation of an extracted XMP document keyed by Clark notation.
  */
