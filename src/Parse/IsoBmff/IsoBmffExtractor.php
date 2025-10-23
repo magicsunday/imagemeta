@@ -41,6 +41,86 @@ final readonly class IsoBmffExtractor
     private const string XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
 
     /**
+     * FourCC for QuickTime metadata box.
+     */
+    private const string BOX_META = 'meta';
+
+    /**
+     * FourCC for QuickTime movie box.
+     */
+    private const string BOX_MOOV = 'moov';
+
+    /**
+     * FourCC for UUID box used to store custom payloads.
+     */
+    private const string BOX_UUID = 'uuid';
+
+    /**
+     * FourCC for embedded EXIF box.
+     */
+    private const string BOX_EXIF = 'Exif';
+
+    /**
+     * FourCC for item information box.
+     */
+    private const string BOX_IINF = 'iinf';
+
+    /**
+     * FourCC for item location box.
+     */
+    private const string BOX_ILOC = 'iloc';
+
+    /**
+     * FourCC for primary item box.
+     */
+    private const string BOX_PITM = 'pitm';
+
+    /**
+     * FourCC for embedded XMP metadata box.
+     */
+    private const string BOX_XMP = 'XMP ';
+
+    /**
+     * FourCC for QuickTime metadata keys box.
+     */
+    private const string BOX_KEYS = 'keys';
+
+    /**
+     * FourCC for QuickTime item list box.
+     */
+    private const string BOX_ILST = 'ilst';
+
+    /**
+     * FourCC for QuickTime user data box.
+     */
+    private const string BOX_UDTA = 'udta';
+
+    /**
+     * FourCC for item information entry box.
+     */
+    private const string BOX_INFE = 'infe';
+
+    /**
+     * FourCC for QuickTime free-form metadata box.
+     */
+    private const string BOX_FREEFORM = '----';
+
+    /**
+     * FourCC for QuickTime data box.
+     */
+    private const string BOX_DATA = 'data';
+
+    /**
+     * FourCC for QuickTime mean payload in free-form metadata.
+     */
+    private const string FREEFORM_MEAN = 'mean';
+
+    /**
+     * FourCC for QuickTime name payload in free-form metadata.
+     */
+    private const string FREEFORM_NAME = 'name';
+
+    /**
      * Initialises the extractor with the source stream that contains the ISO BMFF structure.
      *
      * @param Stream $stream Stream positioned at the beginning of the media file to parse.
@@ -62,11 +142,11 @@ final readonly class IsoBmffExtractor
         $queuedUuidXmp = [];
 
         foreach ($this->walkTopLevelBoxes() as $box) {
-            if ($box->type === 'meta') {
+            if ($box->type === self::BOX_META) {
                 $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys);
-            } elseif ($box->type === 'moov') {
+            } elseif ($box->type === self::BOX_MOOV) {
                 $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys);
-            } elseif ($box->type === 'uuid' && $box->userType === self::XMP_UUID) {
+            } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
                 $queuedUuidXmp[] = $this->readAll($box->window);
             }
         }
@@ -112,9 +192,9 @@ final readonly class IsoBmffExtractor
     private function parseMoovBox(object $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
         foreach ($this->walkChildren($moov) as $child) {
-            if ($child->type === 'meta') {
+            if ($child->type === self::BOX_META) {
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
-            } elseif ($child->type === 'udta') {
+            } elseif ($child->type === self::BOX_UDTA) {
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
             }
         }
@@ -131,7 +211,7 @@ final readonly class IsoBmffExtractor
     private function parseUdtaBox(object $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
         foreach ($this->walkChildren($udta) as $child) {
-            if ($child->type === 'meta') {
+            if ($child->type === self::BOX_META) {
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
             }
         }
@@ -204,33 +284,33 @@ final readonly class IsoBmffExtractor
 
         foreach ($this->walkChildren($meta, 4) as $child) {
             switch ($child->type) {
-                case 'Exif':
+                case self::BOX_EXIF:
                     $blob         = $this->readAll($child->window);
                     $directExif[] = $this->normalizeExifBlob($blob);
                     break;
-                case 'iinf':
+                case self::BOX_IINF:
                     foreach ($this->parseIinf($child) as $info) {
                         $itemInfos[$info['id']] = $info;
                     }
                     break;
-                case 'iloc':
+                case self::BOX_ILOC:
                     $locations = $this->parseIloc($child);
                     break;
-                case 'pitm':
+                case self::BOX_PITM:
                     $primaryItemId = $this->parsePitm($child);
                     break;
-                case 'XMP ':
+                case self::BOX_XMP:
                     $directXmp[] = $this->readAll($child->window);
                     break;
-                case 'uuid':
+                case self::BOX_UUID:
                     if ($child->userType === self::XMP_UUID) {
                         $uuidXmp[] = $this->readAll($child->window);
                     }
                     break;
-                case 'keys':
+                case self::BOX_KEYS:
                     $keysMaps[] = $this->parseKeys($child);
                     break;
-                case 'ilst':
+                case self::BOX_ILST:
                     $ilstBoxes[] = $child;
                     break;
             }
@@ -410,7 +490,7 @@ final readonly class IsoBmffExtractor
         $items      = [];
         $index      = 0;
         foreach ($this->walkChildren($iinf, $start) as $child) {
-            if ($child->type !== 'infe') {
+            if ($child->type !== self::BOX_INFE) {
                 continue;
             }
             $items[] = $this->parseInfe($child);
@@ -603,7 +683,7 @@ final readonly class IsoBmffExtractor
             $index   = $this->fourccToIndex($entry->type);
             if ($index !== null && isset($keyIndex[$index])) {
                 $keyName = $keyIndex[$index];
-            } elseif ($entry->type === '----') {
+            } elseif ($entry->type === self::BOX_FREEFORM) {
                 $keyName = $this->parseFreeformKey($entry);
             } elseif ($this->isPrintableFourcc($entry->type)) {
                 $keyName = $entry->type;
@@ -614,7 +694,7 @@ final readonly class IsoBmffExtractor
             }
 
             foreach ($this->walkChildren($entry) as $sub) {
-                if ($sub->type === 'data') {
+                if ($sub->type === self::BOX_DATA) {
                     $value = $this->parseDataBox($sub);
                     if ($value !== null) {
                         $result[$keyName] = $value;
@@ -638,9 +718,9 @@ final readonly class IsoBmffExtractor
         $mean = null;
         $name = null;
         foreach ($this->walkChildren($entry) as $child) {
-            if ($child->type === 'mean') {
+            if ($child->type === self::FREEFORM_MEAN) {
                 $mean = $this->parseDataBox($child);
-            } elseif ($child->type === 'name') {
+            } elseif ($child->type === self::FREEFORM_NAME) {
                 $name = $this->parseDataBox($child);
             }
         }
@@ -702,10 +782,10 @@ final readonly class IsoBmffExtractor
      */
     private function isExifItem(array $info): bool
     {
-        if (isset($info['itemType']) && strcasecmp((string) $info['itemType'], 'Exif') === 0) {
+        if (isset($info['itemType']) && strcasecmp((string) $info['itemType'], self::BOX_EXIF) === 0) {
             return true;
         }
-        if (isset($info['name']) && strcasecmp((string) $info['name'], 'Exif') === 0) {
+        if (isset($info['name']) && strcasecmp((string) $info['name'], self::BOX_EXIF) === 0) {
             return true;
         }
         if (isset($info['contentType'])) {
@@ -882,7 +962,7 @@ final readonly class IsoBmffExtractor
         }
 
         $userType = null;
-        if ($type === 'uuid') {
+        if ($type === self::BOX_UUID) {
             $userType = $this->stream->read(16);
             $headerSize += 16;
         }
