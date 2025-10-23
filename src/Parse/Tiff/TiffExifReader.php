@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -31,7 +32,6 @@ use function rtrim;
 use function sprintf;
 use function strlen;
 use function substr;
-use function unpack;
 
 /**
  * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
@@ -365,18 +365,9 @@ final class TiffExifReader
      */
     private function unpackU16(string $b): int
     {
-        $result = $this->bo === Endian::Little ? unpack('v', $b) : unpack('n', $b);
+        $format = $this->bo === Endian::Little ? 'v' : 'n';
 
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack 16-bit value from TIFF bytes.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpacked 16-bit value is not numeric.');
-        }
-
-        return (int) $value;
+        return Unpack::int($format, $b, '16-bit value from TIFF bytes');
     }
 
     /**
@@ -402,18 +393,9 @@ final class TiffExifReader
      */
     private function unpackU32(string $b): int
     {
-        $result = $this->bo === Endian::Little ? unpack('V', $b) : unpack('N', $b);
+        $format = $this->bo === Endian::Little ? 'V' : 'N';
 
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack 32-bit value from TIFF bytes.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpacked 32-bit value is not numeric.');
-        }
-
-        return (int) $value;
+        return Unpack::int($format, $b, '32-bit value from TIFF bytes');
     }
 
     /**
@@ -439,18 +421,9 @@ final class TiffExifReader
      */
     private function unpackFloat(string $b): float
     {
-        $result = $this->bo === Endian::Little ? unpack('g', $b) : unpack('G', $b);
+        $format = $this->bo === Endian::Little ? 'g' : 'G';
 
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack 32-bit float from TIFF bytes.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpacked 32-bit float is not numeric.');
-        }
-
-        return (float) $value;
+        return Unpack::float($format, $b, '32-bit float from TIFF bytes');
     }
 
     /**
@@ -462,18 +435,9 @@ final class TiffExifReader
      */
     private function unpackDouble(string $b): float
     {
-        $result = $this->bo === Endian::Little ? unpack('e', $b) : unpack('E', $b);
+        $format = $this->bo === Endian::Little ? 'e' : 'E';
 
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack 64-bit float from TIFF bytes.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpacked 64-bit float is not numeric.');
-        }
-
-        return (float) $value;
+        return Unpack::float($format, $b, '64-bit float from TIFF bytes');
     }
 
     /**

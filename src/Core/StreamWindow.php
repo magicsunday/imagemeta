@@ -11,10 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use function is_float;
-use function is_int;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+
 use function ord;
-use function unpack;
 
 /**
  * Represents a bounded view into a parent stream with an independent cursor.
@@ -135,31 +134,21 @@ final class StreamWindow
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
 
-        return ($hi << 32) | $lo;
+        return Unpack::combineUint32($hi, $lo);
     }
 
     /**
      * Reads a fixed number of bytes from the window and unpacks the first value using the given format.
      *
-     * @param string $format Format string understood by {@see unpack}.
+     * @param string $format Format string understood by {@see Unpack::int}.
      * @param int    $length Number of bytes to read before unpacking.
      *
      * @return int
      */
     private function unpackInt(string $format, int $length): int
     {
-        $bytes  = $this->read($length);
-        $result = unpack($format, $bytes);
+        $bytes = $this->read($length);
 
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack integer from window.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpack returned a non-numeric value.');
-        }
-
-        return (int) $value;
+        return Unpack::int($format, $bytes, 'integer from window');
     }
 }

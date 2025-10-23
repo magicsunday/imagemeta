@@ -11,11 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use function is_float;
-use function is_int;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+
 use function ord;
 use function strlen;
-use function unpack;
 
 /**
  * Provides a simple, bounds-checked in-memory buffer abstraction.
@@ -165,7 +164,7 @@ final class MemoryBuffer
         $lo = $this->readU32LE();
         $hi = $this->readU32LE();
 
-        return ($hi << 32) | $lo;
+        return Unpack::combineUint32($hi, $lo);
     }
 
     /**
@@ -178,31 +177,21 @@ final class MemoryBuffer
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
 
-        return ($hi << 32) | $lo;
+        return Unpack::combineUint32($hi, $lo);
     }
 
     /**
      * Reads bytes from the buffer and unpacks the first value using the provided format.
      *
-     * @param string $format Format accepted by {@see unpack}.
+     * @param string $format Format accepted by {@see Unpack::int}.
      * @param int    $length Number of bytes to consume before unpacking.
      *
      * @return int
      */
     private function unpackInt(string $format, int $length): int
     {
-        $bytes  = $this->read($length);
-        $result = unpack($format, $bytes);
+        $bytes = $this->read($length);
 
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack integer from buffer.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpack returned a non-numeric value.');
-        }
-
-        return (int) $value;
+        return Unpack::int($format, $bytes, 'integer from buffer');
     }
 }

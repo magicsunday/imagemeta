@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
 use function array_merge;
@@ -22,8 +23,6 @@ use function array_unshift;
 use function array_values;
 use function explode;
 use function iconv;
-use function is_float;
-use function is_int;
 use function is_string;
 use function preg_match;
 use function rtrim;
@@ -34,7 +33,6 @@ use function strlen;
 use function strtolower;
 use function substr;
 use function trim;
-use function unpack;
 
 /**
  * Streaming ISOBMFF reader for HEIC/AVIF/MP4/MOV.
@@ -944,7 +942,7 @@ final readonly class IsoBmffExtractor
             0       => 0,
             1       => $window->readU8(),
             2       => $window->readU16BE(),
-            3       => $this->unpackInteger('N', "\0" . $window->read(3)),
+            3       => Unpack::int('N', "\0" . $window->read(3), '24-bit integer value'),
             4       => $window->readU32BE(),
             8       => $window->readU64BE(),
             default => throw new ParseError('unsupported integer size ' . $bytes),
@@ -992,31 +990,9 @@ final readonly class IsoBmffExtractor
             return null;
         }
 
-        $value = $this->unpackInteger('N', $fourcc);
+        $value = Unpack::int('N', $fourcc, 'four-character code');
 
         return $value > 0 ? $value : null;
-    }
-
-    /**
-     * @param string $format
-     * @param string $bytes
-     *
-     * @return int
-     */
-    private function unpackInteger(string $format, string $bytes): int
-    {
-        $result = unpack($format, $bytes);
-
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack integer value.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpacked value is not numeric.');
-        }
-
-        return (int) $value;
     }
 
     /**
