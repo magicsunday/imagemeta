@@ -14,8 +14,8 @@ namespace MagicSunday\ImageMeta;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
-use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
+use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
@@ -106,9 +106,6 @@ final class MetadataReader
      */
     private function createMakerNotesRegistry(): Registry
     {
-        $registry = new Registry();
-        $registry->register('Apple', new AppleDecoder());
-
-        return $registry;
+        return RegistryFactory::createDefault();
     }
 }

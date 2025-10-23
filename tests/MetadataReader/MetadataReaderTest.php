@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MetadataReader;
 
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -22,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 use function chr;
 use function file_put_contents;
 use function pack;
+use function sha1;
 use function strlen;
 use function sys_get_temp_dir;
 use function tempnam;
@@ -46,7 +49,8 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function testReadJpegPopulatesMetadata(): void
     {
-        $tiff = $this->littleEndianEmptyTiff();
+        $makerNote = 'synthetic-nikon-maker-note';
+        $tiff      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
         $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="Synthetic" />'
@@ -72,6 +76,10 @@ final class MetadataReaderTest extends TestCase
         self::assertNull($metadata->quickTime);
         self::assertInstanceOf(ExifDocument::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata->makerNotes);
+        self::assertSame('Nikon', $metadata->makerNotes->vendor());
+        self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
+        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
     }
 
     /**
@@ -80,7 +88,8 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function testReadIsoBmffPopulatesMetadata(): void
     {
-        $tiff = $this->littleEndianEmptyTiff();
+        $makerNote = 'synthetic-sony-maker-note';
+        $tiff      = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote);
         $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
@@ -108,6 +117,10 @@ final class MetadataReaderTest extends TestCase
         self::assertSame($identifier, $metadata->quickTime->contentIdentifier());
         self::assertInstanceOf(ExifDocument::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata->makerNotes);
+        self::assertSame('Sony', $metadata->makerNotes->vendor());
+        self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
+        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
     }
 
     /**
@@ -130,11 +143,60 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Builds a minimal little-endian TIFF header with no directory entries.
+     * Builds a minimal little-endian TIFF containing make/model strings and maker notes.
      */
-    private function littleEndianEmptyTiff(): string
+    private function littleEndianTiffWithMakerNote(string $make, string $model, string $makerNote): string
     {
-        return 'II' . pack('v', 0x2A) . pack('V', 8) . pack('v', 0) . pack('V', 0);
+        $makeData   = $make . "\0";
+        $modelData  = $model . "\0";
+        $ifd0Offset = 8;
+        $ifd0Count  = 3;
+        $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
+
+        $currentOffset = $ifd0Offset + $ifd0Size;
+
+        $makeOffset = $currentOffset;
+        $currentOffset += strlen($makeData);
+
+        $modelOffset = $currentOffset;
+        $currentOffset += strlen($modelData);
+
+        $exifIfdOffset = $currentOffset;
+        $exifIfdCount  = 1;
+        $exifIfdSize   = 2 + ($exifIfdCount * 12) + 4;
+
+        $makerNoteOffset = $exifIfdOffset + $exifIfdSize;
+
+        $ifd0 = pack('v', $ifd0Count)
+            . pack('v', ExifTag::MAKE)
+            . pack('v', 2)
+            . pack('V', strlen($makeData))
+            . pack('V', $makeOffset)
+            . pack('v', ExifTag::MODEL)
+            . pack('v', 2)
+            . pack('V', strlen($modelData))
+            . pack('V', $modelOffset)
+            . pack('v', ExifTag::EXIF_IFD_POINTER)
+            . pack('v', 4)
+            . pack('V', 1)
+            . pack('V', $exifIfdOffset)
+            . pack('V', 0);
+
+        $exifIfd = pack('v', $exifIfdCount)
+            . pack('v', ExifTag::MAKER_NOTE)
+            . pack('v', 7)
+            . pack('V', strlen($makerNote))
+            . pack('V', $makerNoteOffset)
+            . pack('V', 0);
+
+        return 'II'
+            . pack('v', 0x2A)
+            . pack('V', $ifd0Offset)
+            . $ifd0
+            . $makeData
+            . $modelData
+            . $exifIfd
+            . $makerNote;
     }
 
     /**
