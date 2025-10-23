@@ -23,6 +23,8 @@ use function chr;
 use function ord;
 use function pack;
 use function rtrim;
+use function sprintf;
+use function strlen;
 use function substr;
 use function unpack;
 
@@ -155,15 +157,7 @@ final class TiffExifReader
      */
     private function decodeValue(int $type, int $count, int $valueOrOffset): mixed
     {
-        $unitSize = match ($type) {
-            1, 2, 6, 7 => 1,           // BYTE, ASCII, SBYTE, UNDEFINED
-            3, 8 => 2,           // SHORT, SSHORT
-            4, 9 => 4,           // LONG, SLONG
-            5, 10 => 8,           // RATIONAL, SRATIONAL (two LONGs)
-            11      => 4,           // FLOAT
-            12      => 8,           // DOUBLE
-            default => throw new ParseError("Unsupported TIFF type: $type"),
-        };
+        $unitSize         = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
         $inlineThreshold = $this->bigTiff ? 8 : 4;
 
@@ -196,6 +190,21 @@ final class TiffExifReader
      */
     private function decodeBytes(int $type, int $count, string $bytes): mixed
     {
+        $componentSize = $this->bytesPerComponent($type);
+        $bytesLength   = strlen($bytes);
+        $expectedBytes = $componentSize * $count;
+
+        if ($bytesLength < $expectedBytes) {
+            throw new ParseError(
+                sprintf(
+                    'Truncated value for TIFF type %d (expected %d bytes, got %d)',
+                    $type,
+                    $expectedBytes,
+                    $bytesLength,
+                ),
+            );
+        }
+
         if ($type === 2) { // ASCII
             return rtrim($bytes, "\0");
         }
@@ -225,16 +234,28 @@ final class TiffExifReader
                 12      => $this->unpackDouble(substr($bytes, $cursor, 8)),    // DOUBLE
                 default => throw new ParseError("Unsupported type in decodeBytes: $type"),
             };
-            $cursor += match ($type) {
-                1,6,7 => 1,
-                3,8 => 2,
-                4,9,11 => 4,
-                12      => 8,
-                default => 0,
-            };
+            $cursor += $componentSize;
         }
 
         return $count === 1 ? $vals[0] : $vals;
+    }
+
+    /**
+     * Returns the number of bytes used per component for a TIFF field type.
+     *
+     * @param int $type TIFF field type code.
+     *
+     * @return int
+     */
+    private function bytesPerComponent(int $type): int
+    {
+        return match ($type) {
+            1, 2, 6, 7 => 1,           // BYTE, ASCII, SBYTE, UNDEFINED
+            3, 8 => 2,           // SHORT, SSHORT
+            4, 9, 11 => 4,           // LONG, SLONG, FLOAT
+            5, 10, 12 => 8,           // RATIONAL, SRATIONAL, DOUBLE
+            default => throw new ParseError("Unsupported TIFF type: $type"),
+        };
     }
 
     /**
