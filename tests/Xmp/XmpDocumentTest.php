@@ -26,6 +26,9 @@ final class XmpDocumentTest extends TestCase
     private const EXIF_NAMESPACE = 'http://ns.adobe.com/exif/1.0/';
 
     #[Test]
+    /**
+     * Ensures accessor methods expose values parsed by the XMP reader.
+     */
     public function testDocumentAccessorsWithReaderData(): void
     {
         $xml = <<<XML
@@ -54,6 +57,9 @@ XML;
     }
 
     #[Test]
+    /**
+     * Confirms parser-fed documents yield expected accessor results.
+     */
     public function testDocumentAccessorsWithParserData(): void
     {
         $xml = <<<XML
@@ -86,6 +92,9 @@ XML;
     }
 
     #[Test]
+    /**
+     * Validates external entity bag entries are ignored for safety.
+     */
     public function testExternalEntityBagIsIgnored(): void
     {
         $xml = <<<XML
