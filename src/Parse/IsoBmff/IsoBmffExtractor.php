@@ -141,6 +141,11 @@ final readonly class IsoBmffExtractor
     private const string FREEFORM_NAME = 'name';
 
     /**
+     * Maximum cumulative payload size allowed when assembling item extents.
+     */
+    public const int MAX_ITEM_PAYLOAD_SIZE = 8 * 1024 * 1024;
+
+    /**
      * Initialises the extractor with the source stream that contains the ISO BMFF structure.
      *
      * @param Stream $stream Stream positioned at the beginning of the media file to parse.
@@ -475,18 +480,24 @@ final readonly class IsoBmffExtractor
             return null;
         }
 
-        $blob  = '';
-        $total = 0;
+        $blob     = '';
+        $total    = 0;
+        $fileSize = $this->stream->size();
         foreach ($location['extents'] as $extent) {
             $length = $extent['length'];
             if ($length === 0) {
                 continue;
             }
 
-            $total += $length;
-            if ($total > $this->stream->size()) {
+            if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                throw new ParseError('iloc item payload exceeds configured limit');
+            }
+
+            if ($length > $fileSize - $total) {
                 throw new ParseError('iloc extent length exceeds file size');
             }
+
+            $total += $length;
 
             $baseOffset   = $location['baseOffset'];
             $extentOffset = $extent['offset'];
@@ -499,7 +510,7 @@ final readonly class IsoBmffExtractor
             }
 
             $offset = $baseOffset + $extentOffset;
-            if ($offset > $this->stream->size() - $length) {
+            if ($offset > $fileSize - $length) {
                 throw new ParseError('iloc extent outside file');
             }
 
