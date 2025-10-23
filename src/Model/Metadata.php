@@ -11,16 +11,20 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use WeakMap;
 
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
  */
 final readonly class Metadata
 {
+
     /**
      * @param list<string>            $exifBlobs  TIFF‑EXIF blobs (first is primary)
      * @param QuickTimeMeta|null      $quickTime  QuickTime metadata extracted from ISO BMFF containers.
@@ -58,5 +62,24 @@ final readonly class Metadata
         }
 
         return (new XmpParser())->parse($this->xmpBlobs[0]);
+    }
+
+    /**
+     * Returns curated structured metadata derived lazily from the available sources.
+     */
+    public function structured(): StructuredMetadata
+    {
+        static $cache;
+
+        if (!$cache instanceof WeakMap) {
+            $cache = new WeakMap();
+        }
+
+        if (!isset($cache[$this])) {
+            $builder       = new StructuredMetadataBuilder();
+            $cache[$this] = $builder->build($this);
+        }
+
+        return $cache[$this];
     }
 }
