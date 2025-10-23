@@ -36,6 +36,16 @@ final class JpegExtractor
     private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
 
     /**
+     * APP marker codes carrying metadata of interest.
+     *
+     * APP1  (0xE1) exposes EXIF and XMP metadata, APP2 (0xE2) carries ICC
+     * profile fragments, and APP13 (0xED) contains IPTC/Photoshop resources.
+     */
+    private const int MARKER_APP1  = 0xE1;
+    private const int MARKER_APP2  = 0xE2;
+    private const int MARKER_APP13 = 0xED;
+
+    /**
      * Signatures identifying metadata-bearing APP segments.
      */
     private const string EXIF_SIGNATURE = "Exif\0\0";
@@ -174,11 +184,11 @@ final class JpegExtractor
             $payloadLength = $segmentLength - 2;
             $payload       = $this->readSegmentPayload($marker, $offset, $payloadLength);
 
-            if ($marker === 0xE1) {
+            if ($marker === self::MARKER_APP1) {
                 $this->handleApp1($payload);
-            } elseif ($marker === 0xE2) {
+            } elseif ($marker === self::MARKER_APP2) {
                 $this->handleApp2($payload, $offset);
-            } elseif ($marker === 0xED) {
+            } elseif ($marker === self::MARKER_APP13) {
                 $this->handleApp13($payload);
             }
         }

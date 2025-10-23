@@ -29,6 +29,8 @@ final class MetadataReaderTest extends TestCase
     private const EXIF_SIGNATURE = "Exif\0\0";
     private const XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
 
+    private const int MARKER_APP1 = 0xE1;
+
     /**
      * Ensures JPEG detection extracts EXIF and XMP payloads with parsed documents.
      */
@@ -43,8 +45,8 @@ final class MetadataReaderTest extends TestCase
             . '</x:xmpmeta>';
 
         $jpeg = "\xFF\xD8"
-            . self::segment(0xE1, self::EXIF_SIGNATURE . $tiff)
-            . self::segment(0xE1, self::XMP_SIGNATURE . $xmp)
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
             . "\xFF\xD9";
 
         $path = $this->writeTempFile($jpeg);
