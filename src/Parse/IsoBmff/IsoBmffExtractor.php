@@ -125,7 +125,7 @@ final readonly class IsoBmffExtractor
      *
      * @param Stream $stream Stream positioned at the beginning of the media file to parse.
      */
-    public function __construct(private readonly Stream $stream)
+    public function __construct(private Stream $stream)
     {
     }
 
