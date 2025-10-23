@@ -29,11 +29,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ValueConverters::class)]
 final class ValueConvertersTest extends TestCase
 {
-    #[Test]
-    #[DataProvider('provideValidRationals')]
     /**
      * Ensures rational values represented as numerator/denominator pairs or lists are converted to floats.
      */
+    #[Test]
+    #[DataProvider('provideValidRationals')]
     public function convertsRationalPairsToFloat(ExifRational|ExifRationalList $value, float $expected): void
     {
         self::assertSame($expected, ValueConverters::rationalToFloat($value));
@@ -55,11 +55,11 @@ final class ValueConvertersTest extends TestCase
         ];
     }
 
-    #[Test]
-    #[DataProvider('provideScalarInputs')]
     /**
      * Ensures scalar values fall back to float conversion when no rational pair is provided.
      */
+    #[Test]
+    #[DataProvider('provideScalarInputs')]
     public function convertsScalarsToFloat(int|float $value, float $expected): void
     {
         self::assertSame($expected, ValueConverters::rationalToFloat($value));
@@ -74,11 +74,11 @@ final class ValueConvertersTest extends TestCase
         yield 'float' => [3.1415, 3.1415];
     }
 
-    #[Test]
-    #[DataProvider('provideInvalidInputs')]
     /**
      * Ensures invalid values cannot be converted and return null instead.
      */
+    #[Test]
+    #[DataProvider('provideInvalidInputs')]
     public function returnsNullForInvalidRationalInputs(array|null $value): void
     {
         self::assertNull(ValueConverters::rationalToFloat($value));
@@ -95,10 +95,10 @@ final class ValueConvertersTest extends TestCase
         yield 'null' => [null];
     }
 
-    #[Test]
     /**
      * Ensures GPS coordinates are converted to floats using degree-minute-second rationals with a positive altitude.
      */
+    #[Test]
     public function extractsGpsCoordinatesWithPositiveAltitude(): void
     {
         $gps = new Ifd([
@@ -140,10 +140,10 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(45.0, $result['alt'], 0.000001);
     }
 
-    #[Test]
     /**
      * Ensures GPS coordinates honour southern and western references and invert the altitude when required.
      */
+    #[Test]
     public function extractsGpsCoordinatesWithNegativeHemisphereAndAltitude(): void
     {
         $gps = new Ifd([
@@ -185,10 +185,10 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(-125.0, $result['alt'], 0.000001);
     }
 
-    #[Test]
     /**
      * Ensures missing altitude entries result in a null altitude while still returning latitude and longitude.
      */
+    #[Test]
     public function extractsGpsCoordinatesWithoutAltitude(): void
     {
         $gps = new Ifd([
