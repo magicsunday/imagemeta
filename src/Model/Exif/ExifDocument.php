@@ -32,11 +32,11 @@ final readonly class ExifDocument
      * @param Ifd|null $ifd1       Optional next IFD, typically thumbnails.
      */
     public function __construct(
-        public readonly Ifd $ifd0,
-        public readonly ?Ifd $exifIfd,
-        public readonly ?Ifd $gpsIfd,
-        public readonly ?Ifd $interopIfd,
-        public readonly ?Ifd $ifd1,
+        public Ifd $ifd0,
+        public ?Ifd $exifIfd,
+        public ?Ifd $gpsIfd,
+        public ?Ifd $interopIfd,
+        public ?Ifd $ifd1,
     ) {
     }
 

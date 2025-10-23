@@ -26,7 +26,7 @@ final readonly class XmpDocument
     /**
      * @param array<string, string|array<int, string>> $data Map of Clark notation => value
      */
-    public function __construct(public readonly array $data)
+    public function __construct(public array $data)
     {
     }
 

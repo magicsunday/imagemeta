@@ -21,8 +21,8 @@ final readonly class Ifd
      * @param int|null             $nextIfdOffset Optional offset to the next directory.
      */
     public function __construct(
-        public readonly array $entries,
-        public readonly ?int $nextIfdOffset = null,
+        public array $entries,
+        public ?int $nextIfdOffset = null,
     ) {
     }
 
