@@ -87,12 +87,29 @@ final class XmpParser
         return new XmpDocument($properties);
     }
 
+    /**
+     * Determines whether the current element should be captured as a scalar string property.
+     *
+     * @param string $namespace Namespace URI associated with the element.
+     * @param string $localName Local element name as read from the stream.
+     *
+     * @return bool True when the element maps to a scalar value in the resulting document.
+     */
     private function isStringProperty(string $namespace, string $localName): bool
     {
         return ($namespace === self::XMP_NAMESPACE && in_array($localName, ['CreateDate', 'ModifyDate'], true))
             || ($namespace === self::EXIF_NAMESPACE && in_array($localName, ['DateTimeOriginal', 'OffsetTimeOriginal'], true));
     }
 
+    /**
+     * Checks whether the current reader position matches the provided qualified name.
+     *
+     * @param XMLReader $reader    XML reader currently positioned on an element.
+     * @param string    $namespace Expected namespace URI.
+     * @param string    $localName Expected local element name.
+     *
+     * @return bool True when the reader points at an element with the provided name.
+     */
     private function matchesElement(XMLReader $reader, string $namespace, string $localName): bool
     {
         return ($reader->namespaceURI ?? '') === $namespace && $reader->localName === $localName;

@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
+/**
+ * Immutable representation of an extracted XMP document keyed by Clark notation.
+ */
 final readonly class XmpDocument
 {
     /**
@@ -47,6 +50,14 @@ final readonly class XmpDocument
         );
     }
 
+    /**
+     * Builds a Clark notation key for the given namespace/local name pair.
+     *
+     * @param string $namespaceUri Namespace URI that qualifies the property.
+     * @param string $localName    Local property name as declared in the document.
+     *
+     * @return string Fully-qualified Clark notation value.
+     */
     private function buildClarkName(string $namespaceUri, string $localName): string
     {
         return $namespaceUri !== ''
@@ -54,6 +65,14 @@ final readonly class XmpDocument
             : $localName;
     }
 
+    /**
+     * Checks whether the provided Clark notation belongs to the given local name.
+     *
+     * @param string $clark     Property key expressed in Clark notation.
+     * @param string $localName Local property name to compare against.
+     *
+     * @return bool True when the local name part of the key matches the provided name.
+     */
     private function matchesLocalName(string $clark, string $localName): bool
     {
         if ($clark === $localName) {
