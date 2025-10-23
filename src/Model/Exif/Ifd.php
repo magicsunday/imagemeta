@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 /**
  * Represents an image file directory (IFD) containing EXIF entries.
  */
-final class Ifd
+final readonly class Ifd
 {
     /**
      * @param array<int, IfdEntry> $entries       Map of tag identifiers to entries.

@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 /**
  * Represents a single entry within an image file directory (IFD).
  */
-final class IfdEntry
+final readonly class IfdEntry
 {
     /**
      * @param int   $tag   The numeric identifier of the entry.

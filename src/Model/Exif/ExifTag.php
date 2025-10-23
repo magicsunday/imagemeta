@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 /**
  * Centralised list of EXIF tag identifiers used throughout the library.
  */
-final class ExifTag
+final readonly class ExifTag
 {
     // Image file directory (IFD0)
     public const int MAKE        = 0x010F;

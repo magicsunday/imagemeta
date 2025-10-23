@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Model;
 /**
  * Holds QuickTime metadata keys that are extracted from QuickTime containers.
  */
-final class QuickTimeMeta
+final readonly class QuickTimeMeta
 {
     /**
      * Creates a new instance of QuickTime metadata information.

@@ -17,7 +17,7 @@ use DateTimeZone;
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
  */
-final class ExifDocument
+final readonly class ExifDocument
 {
     /**
      * @param Ifd      $ifd0       Root IFD of the TIFF structure.
