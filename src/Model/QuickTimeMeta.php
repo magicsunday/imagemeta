@@ -19,7 +19,7 @@ final readonly class QuickTimeMeta
     /**
      * QuickTime metadata key used for the content identifier value.
      */
-    public const CONTENT_IDENTIFIER_KEY = 'com.apple.quicktime.content.identifier';
+    public const string CONTENT_IDENTIFIER_KEY = 'com.apple.quicktime.content.identifier';
 
     /**
      * Creates a new instance of QuickTime metadata information.
