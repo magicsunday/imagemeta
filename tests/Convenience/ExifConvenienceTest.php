@@ -57,4 +57,43 @@ final class ExifConvenienceTest extends TestCase
 
         self::assertSame(100, ExifConvenience::iso($doc));
     }
+
+    #[Test]
+    public function captureDateTimeDelegatesToDocument(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL    => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01 12:34:56'),
+            ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
+        ]);
+
+        $doc     = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $captured = ExifConvenience::captureDateTime($doc);
+
+        self::assertNotNull($captured);
+        self::assertSame('2024-05-01T12:34:56+02:00', $captured->format(DATE_ATOM));
+    }
+
+    #[Test]
+    public function captureDateTimeReturnsNullWhenMissing(): void
+    {
+        $doc = new ExifDocument(new Ifd([]), new Ifd([]), null, null, null);
+
+        self::assertNull(ExifConvenience::captureDateTime($doc));
+    }
+
+    #[Test]
+    public function captureDateTimeReturnsNullForShortTimestamp(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertNull(ExifConvenience::captureDateTime($doc));
+    }
 }

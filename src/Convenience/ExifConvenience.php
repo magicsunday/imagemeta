@@ -47,7 +47,7 @@ final class ExifConvenience
      */
     public static function captureDateTime(ExifDocument $doc): ?DateTimeImmutable
     {
-        $rawDateTime = $doc->dateTimeOriginal(); // "YYYY:MM:DD HH:MM:SS"
+        $rawDateTime = $doc->dateTimeOriginalRaw(); // "YYYY:MM:DD HH:MM:SS"
 
         if (!is_string($rawDateTime) || $rawDateTime === '') {
             return null;
@@ -58,14 +58,8 @@ final class ExifConvenience
             return null;
         }
 
-        $rawOffset = $doc->offsetTimeOriginal(); // e.g. "+01:00" or "-05:30"
-
-        $datePart       = str_replace(':', '-', substr($rawDateTime, 0, 10));
-        $timePart       = substr($rawDateTime, 11, 8);
-        $timeZoneOffset = $rawOffset !== null && $rawOffset !== '' ? $rawOffset : '+00:00';
-
         try {
-            return new DateTimeImmutable(sprintf('%s %s%s', $datePart, $timePart, $timeZoneOffset));
+            return $doc->captureDateTime();
         } catch (Throwable) {
             return null;
         }
