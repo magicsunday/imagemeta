@@ -45,6 +45,8 @@ final readonly class ExifTag
 
     public const int FOCAL_LENGTH = 0x920A;
 
+    public const int MAKER_NOTE = 0x927C;
+
     public const int LENS_MODEL = 0xA434;
 
     // GPS sub IFD

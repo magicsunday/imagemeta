@@ -14,6 +14,8 @@ namespace MagicSunday\ImageMeta;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
@@ -56,17 +58,20 @@ final class MetadataReader
         $exifBlobs = $jpeg->extractExifBlobs();
         $xmpBlobs  = $jpeg->extractXmpPackets();
 
-        $exifDoc = null;
-        $xmpDoc  = null;
+        $exifDoc    = null;
+        $xmpDoc     = null;
+        $makerNotes = null;
         if ($exifBlobs !== []) {
-            $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]);
+            $registry = $this->createMakerNotesRegistry();
+            $exifDoc  = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
+            $makerNotes = $exifDoc->makerNotes();
         }
 
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
         }
 
-        return new Metadata($exifBlobs, null, $exifDoc, $xmpBlobs, $xmpDoc);
+        return new Metadata($exifBlobs, null, $exifDoc, $xmpBlobs, $xmpDoc, $makerNotes);
     }
 
     /**
@@ -80,16 +85,30 @@ final class MetadataReader
     {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
 
-        $exifDoc = null;
-        $xmpDoc  = null;
+        $exifDoc    = null;
+        $xmpDoc     = null;
+        $makerNotes = null;
         if ($exifBlobs !== []) {
-            $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]);
+            $registry = $this->createMakerNotesRegistry();
+            $exifDoc  = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
+            $makerNotes = $exifDoc->makerNotes();
         }
 
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
         }
 
-        return new Metadata($exifBlobs, $qt, $exifDoc, $xmpBlobs, $xmpDoc);
+        return new Metadata($exifBlobs, $qt, $exifDoc, $xmpBlobs, $xmpDoc, $makerNotes);
+    }
+
+    /**
+     * Builds the maker notes registry populated with the bundled decoders.
+     */
+    private function createMakerNotesRegistry(): Registry
+    {
+        $registry = new Registry();
+        $registry->register('Apple', new AppleDecoder());
+
+        return $registry;
     }
 }

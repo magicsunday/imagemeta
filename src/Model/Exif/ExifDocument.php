@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 
 use function is_float;
 use function is_int;
@@ -27,11 +28,12 @@ use function substr;
 final readonly class ExifDocument
 {
     /**
-     * @param Ifd      $ifd0       Root IFD of the TIFF structure.
-     * @param Ifd|null $exifIfd    Sub IFD containing EXIF-specific tags.
-     * @param Ifd|null $gpsIfd     Sub IFD containing GPS-related tags.
-     * @param Ifd|null $interopIfd Sub IFD containing interoperability tags.
-     * @param Ifd|null $ifd1       Optional next IFD, typically thumbnails.
+     * @param Ifd                    $ifd0       Root IFD of the TIFF structure.
+     * @param Ifd|null               $exifIfd    Sub IFD containing EXIF-specific tags.
+     * @param Ifd|null               $gpsIfd     Sub IFD containing GPS-related tags.
+     * @param Ifd|null               $interopIfd Sub IFD containing interoperability tags.
+     * @param Ifd|null               $ifd1       Optional next IFD, typically thumbnails.
+     * @param MakerNotesMetadata|null $makerNotes Decoded maker note metadata provided by vendor decoders.
      */
     public function __construct(
         public Ifd $ifd0,
@@ -39,7 +41,16 @@ final readonly class ExifDocument
         public ?Ifd $gpsIfd,
         public ?Ifd $interopIfd,
         public ?Ifd $ifd1,
+        public ?MakerNotesMetadata $makerNotes = null,
     ) {
+    }
+
+    /**
+     * Returns the decoded maker note metadata when a decoder is available.
+     */
+    public function makerNotes(): ?MakerNotesMetadata
+    {
+        return $this->makerNotes;
     }
 
     /**
