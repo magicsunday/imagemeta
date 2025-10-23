@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
@@ -21,11 +22,12 @@ use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 final readonly class Metadata
 {
     /**
-     * @param list<string>       $exifBlobs TIFF‑EXIF blobs (first is primary)
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata extracted from ISO BMFF containers.
-     * @param ExifDocument|null  $exifDoc   Parsed representation of the primary EXIF document.
-     * @param list<string>       $xmpBlobs  XMP packets (RDF/XML), first is primary
-     * @param XmpDocument|null   $xmpDoc    Parsed representation of the primary XMP packet.
+     * @param list<string>          $exifBlobs TIFF‑EXIF blobs (first is primary)
+     * @param QuickTimeMeta|null    $quickTime QuickTime metadata extracted from ISO BMFF containers.
+     * @param ExifDocument|null     $exifDoc   Parsed representation of the primary EXIF document.
+     * @param list<string>          $xmpBlobs  XMP packets (RDF/XML), first is primary
+     * @param XmpDocument|null      $xmpDoc    Parsed representation of the primary XMP packet.
+     * @param MakerNotesMetadata|null $makerNotes Decoded maker notes metadata for the primary EXIF blob.
      */
     public function __construct(
         public array $exifBlobs,
@@ -33,6 +35,7 @@ final readonly class Metadata
         public ?ExifDocument $exifDoc = null,
         public array $xmpBlobs = [],
         public ?XmpDocument $xmpDoc = null,
+        public ?MakerNotesMetadata $makerNotes = null,
     ) {
     }
 

@@ -15,6 +15,8 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -44,17 +46,21 @@ final class TiffExifReader
 
     private bool $bigTiff = false;
 
+    private ?string $makerNoteRaw = null;
+
     /**
      * Parses an EXIF TIFF blob into a structured document model.
      *
-     * @param string $tiffBlob Raw TIFF data including headers.
+     * @param string        $tiffBlob            Raw TIFF data including headers.
+     * @param Registry|null $makerNotesRegistry  Optional registry used to decode manufacturer-specific maker notes.
      *
      * @return ExifDocument
      */
-    public function parseFromBlob(string $tiffBlob): ExifDocument
+    public function parseFromBlob(string $tiffBlob, ?Registry $makerNotesRegistry = null): ExifDocument
     {
         $this->buf = new MemoryBuffer($tiffBlob);
         $this->buf->seek(0);
+        $this->makerNoteRaw = null;
 
         // byte order
         $boSig    = $this->buf->read(2);
@@ -104,7 +110,9 @@ final class TiffExifReader
             $ifd1 = $this->readIfd($nextOffset);
         }
 
-        return new ExifDocument($ifd0, $exifIfd, $gpsIfd, $interopIfd, $ifd1);
+        $makerNotes = $this->resolveMakerNotes($makerNotesRegistry, $ifd0, $exifIfd);
+
+        return new ExifDocument($ifd0, $exifIfd, $gpsIfd, $interopIfd, $ifd1, $makerNotes);
     }
 
     /**
@@ -159,42 +167,14 @@ final class TiffExifReader
         $cnt      = $this->bigTiff ? $this->readU64() : $this->readU32();
         $valOrOff = $this->bigTiff ? $this->readU64() : $this->readU32();
 
-        $value = $this->decodeValue($type, $cnt, $valOrOff);
+        [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff);
+        $value      = $this->decodeBytes($type, $cnt, $rawBytes);
 
-        return [$tag => new IfdEntry($tag, $type, $cnt, $value)];
-    }
-
-    /**
-     * Decodes the value referenced by a directory entry.
-     *
-     * @param int $type          TIFF field type code.
-     * @param int $count         Number of values represented.
-     * @param int $valueOrOffset Inline value bytes or an offset into the blob.
-     *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
-     */
-    private function decodeValue(int $type, int $count, int $valueOrOffset): int|float|string|ExifRational|ExifRationalList|ExifNumericList
-    {
-        $unitSize        = $this->bytesPerComponent($type);
-        $dataSize        = $unitSize * $count;
-        $inlineThreshold = $this->bigTiff ? 8 : 4;
-
-        if ($dataSize <= $inlineThreshold) {
-            // valueOrOffset is inline value area
-            $raw   = $this->uXToBytes($valueOrOffset, $inlineThreshold);
-            $bytes = substr($raw, 0, $dataSize);
-
-            return $this->decodeBytes($type, $count, $bytes);
+        if ($tag === ExifTag::MAKER_NOTE) {
+            $this->makerNoteRaw = $rawBytes;
         }
 
-        // valueOrOffset is an offset into the TIFF blob
-        $off = $valueOrOffset;
-        $cur = $this->buf->tell();
-        $this->buf->seek($off);
-        $bytes = $this->buf->read($dataSize);
-        $this->buf->seek($cur);
-
-        return $this->decodeBytes($type, $count, $bytes);
+        return [$tag => new IfdEntry($tag, $type, $cnt, $value)];
     }
 
     /**
@@ -259,6 +239,82 @@ final class TiffExifReader
         }
 
         return $count === 1 ? $vals[0] : new ExifNumericList($vals);
+    }
+
+    /**
+     * Extracts the raw bytes addressed by a directory entry.
+     *
+     * @param int $type          TIFF field type code.
+     * @param int $count         Number of values represented.
+     * @param int $valueOrOffset Inline value bytes or an offset into the blob.
+     *
+     * @return array{0: string, 1: int|null}
+     */
+    private function valueBytes(int $type, int $count, int $valueOrOffset): array
+    {
+        $unitSize        = $this->bytesPerComponent($type);
+        $dataSize        = $unitSize * $count;
+        $inlineThreshold = $this->bigTiff ? 8 : 4;
+
+        if ($dataSize <= $inlineThreshold) {
+            $raw = $this->uXToBytes($valueOrOffset, $inlineThreshold);
+
+            return [substr($raw, 0, $dataSize), null];
+        }
+
+        $offset   = $valueOrOffset;
+        $current  = $this->buf->tell();
+        $this->buf->seek($offset);
+        $bytes = $this->buf->read($dataSize);
+        $this->buf->seek($current);
+
+        return [$bytes, $offset];
+    }
+
+    /**
+     * Resolves maker note metadata using the provided registry when available.
+     */
+    private function resolveMakerNotes(?Registry $registry, Ifd $ifd0, ?Ifd $exifIfd): ?MakerNotesMetadata
+    {
+        if ($registry === null || !$exifIfd instanceof Ifd || $this->makerNoteRaw === null) {
+            return null;
+        }
+
+        $make = $this->stringFromIfd($ifd0, ExifTag::MAKE);
+        if ($make === null || $make === '') {
+            return null;
+        }
+
+        $decoder = $registry->find($make);
+        if ($decoder === null) {
+            return null;
+        }
+
+        $model = $this->stringFromIfd($ifd0, ExifTag::MODEL);
+
+        return $decoder->decode($this->makerNoteRaw, $make, $model);
+    }
+
+    /**
+     * Returns the trimmed string value for a specific tag within an IFD.
+     */
+    private function stringFromIfd(?Ifd $ifd, int $tag): ?string
+    {
+        if (!$ifd instanceof Ifd) {
+            return null;
+        }
+
+        $entry = $ifd->get($tag);
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        $value = $entry->value;
+        if (!is_string($value)) {
+            return null;
+        }
+
+        return rtrim($value, "\0");
     }
 
     /**

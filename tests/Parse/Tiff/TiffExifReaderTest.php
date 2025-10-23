@@ -14,6 +14,9 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -31,9 +34,12 @@ use function count;
 use function implode;
 use function ord;
 use function pack;
+use function sha1;
 use function str_pad;
 use function str_repeat;
 use function strlen;
+use function substr;
+use function unpack;
 
 /**
  * Exercises the TIFF EXIF reader with synthetic Classic TIFF and BigTIFF payloads.
@@ -140,6 +146,50 @@ final class TiffExifReaderTest extends TestCase
         $this->expectExceptionMessage('Truncated value for TIFF type 1');
 
         $decodeBytes->invoke($reader, 1, 2, "\x01");
+    }
+
+    /**
+     * Ensures maker note metadata is decoded when a matching decoder is registered.
+     */
+    #[Test]
+    public function decodesMakerNotesWithRegisteredDecoder(): void
+    {
+        [$blob, $makerNoteData] = self::buildClassicMakerNoteBlob();
+
+        $decoder = new class implements MakerNotesDecoderInterface {
+            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            {
+                $offset = unpack('Voffset', substr($raw, 0, 4));
+                $pointer = $offset['offset'] ?? 0;
+                $vendor  = substr($raw, $pointer, 4);
+
+                return new MakerNotesMetadata($vendor !== '' ? $vendor : 'Unknown', strlen($raw), sha1($raw));
+            }
+        };
+
+        $registry = new Registry();
+        $registry->register('Acme', $decoder);
+
+        $document   = (new TiffExifReader())->parseFromBlob($blob, $registry);
+        $makerNotes = $document->makerNotes();
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertSame('DATA', $makerNotes->vendor());
+        self::assertSame(strlen($makerNoteData), $makerNotes->length());
+        self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
+    }
+
+    /**
+     * Ensures maker note metadata remains null when no decoder is available for the camera make.
+     */
+    #[Test]
+    public function makerNotesRemainNullWithoutDecoder(): void
+    {
+        [$blob]    = self::buildClassicMakerNoteBlob();
+        $document  = (new TiffExifReader())->parseFromBlob($blob, new Registry());
+        $makerNote = $document->makerNotes();
+
+        self::assertNull($makerNote);
     }
 
     /**
@@ -380,6 +430,48 @@ final class TiffExifReaderTest extends TestCase
             . pack('v', $type)
             . pack('V', $count)
             . pack('V', $valueOrOffset);
+    }
+
+    /**
+     * Builds a Classic TIFF blob containing maker note data referenced from the EXIF IFD.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private static function buildClassicMakerNoteBlob(): array
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $makeString  = "AcmeCam\0";
+        $modelString = "ZX-1\0";
+        $makerNote   = pack('V', 8) . 'NOTE' . 'DATA';
+
+        $ifd0EntryCount = 3;
+        $ifd0Size       = 2 + $ifd0EntryCount * 12 + 4;
+        $makeOffset     = 8 + $ifd0Size;
+        $modelOffset    = $makeOffset + strlen($makeString);
+        $exifOffset     = $modelOffset + strlen($modelString);
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::MAKE, 2, strlen($makeString), $makeOffset),
+            self::packClassicEntry(ExifTag::MODEL, 2, strlen($modelString), $modelOffset),
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifOffset),
+        ];
+
+        $blob = $header;
+        $blob .= pack('v', $ifd0EntryCount) . implode('', $ifd0Entries) . pack('V', 0);
+        $blob .= $makeString;
+        $blob .= $modelString;
+
+        $exifEntryCount   = 1;
+        $exifIfdSize      = 2 + $exifEntryCount * 12 + 4;
+        $makerNoteOffset  = $exifOffset + $exifIfdSize;
+        $exifEntries      = [
+            self::packClassicEntry(ExifTag::MAKER_NOTE, 7, strlen($makerNote), $makerNoteOffset),
+        ];
+        $blob .= pack('v', $exifEntryCount) . implode('', $exifEntries) . pack('V', 0);
+        $blob .= $makerNote;
+
+        return [$blob, $makerNote];
     }
 
     /**
