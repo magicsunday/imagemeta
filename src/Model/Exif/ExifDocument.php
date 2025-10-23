@@ -14,10 +14,14 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 
+use function is_float;
+use function is_int;
 use function is_string;
 use function rtrim;
 use function str_replace;
 use function substr;
+
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
@@ -205,6 +209,18 @@ final readonly class ExifDocument
     private function int(?Ifd $ifd, int $tag): ?int
     {
         $v = $ifd?->get($tag)?->value ?? null;
+
+        if ($v instanceof ExifNumericList) {
+            $first = $v->values[0] ?? null;
+            if (is_int($first)) {
+                return $first;
+            }
+            if (is_float($first)) {
+                return (int) $first;
+            }
+
+            return null;
+        }
 
         if (is_int($v)) {
             return $v;

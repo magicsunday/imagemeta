@@ -13,6 +13,8 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use MagicSunday\ImageMeta\Convenience\ExifConvenience;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
@@ -57,8 +59,14 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function isoExtractsFirstEntryFromArray(): void
     {
+        $list = new ExifNumericList([100, 200, 400]);
         $ifd0 = new Ifd([
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 3, [100, 200, 400]),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                3,
+                count($list->values),
+                $list,
+            ),
         ]);
 
         $doc = new ExifDocument($ifd0, null, null, null, null);
@@ -72,8 +80,14 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function isoCastsFloatValuesToInteger(): void
     {
+        $list = new ExifNumericList([200.0, 400.0]);
         $ifd0 = new Ifd([
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 11, 2, [200.0, 400.0]),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                11,
+                count($list->values),
+                $list,
+            ),
         ]);
 
         $doc = new ExifDocument($ifd0, null, null, null, null);
@@ -88,7 +102,12 @@ final class ExifConvenienceTest extends TestCase
     public function isoDerivesValueFromRationalPair(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 5, 1, [320, 1]),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                5,
+                1,
+                new ExifRational(320, 1),
+            ),
         ]);
 
         $doc = new ExifDocument($ifd0, null, null, null, null);

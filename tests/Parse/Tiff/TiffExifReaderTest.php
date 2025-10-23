@@ -15,12 +15,16 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function array_map;
 use function call_user_func;
 use function count;
 use function implode;
@@ -113,7 +117,8 @@ final class TiffExifReaderTest extends TestCase
 
         $entry = $document->ifd0->get(ExifTag::GPS_ALTITUDE_REF);
         self::assertNotNull($entry);
-        self::assertSame([1, 2, 3], $entry->value);
+        self::assertInstanceOf(ExifNumericList::class, $entry->value);
+        self::assertSame([1, 2, 3], $entry->value->values);
     }
 
     /**
@@ -151,7 +156,10 @@ final class TiffExifReaderTest extends TestCase
         $exifIfd = $doc->exifIfd;
         self::assertNotNull($exifIfd);
         self::assertSame(200, $exifIfd->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY)?->value);
-        self::assertSame([28, 10], $exifIfd->get(ExifTag::F_NUMBER)?->value);
+        $fNumber = $exifIfd->get(ExifTag::F_NUMBER)?->value;
+        self::assertInstanceOf(ExifRational::class, $fNumber);
+        self::assertSame(28, $fNumber->numerator);
+        self::assertSame(10, $fNumber->denominator);
 
         $interop = $doc->interopIfd;
         self::assertNotNull($interop);
@@ -159,9 +167,24 @@ final class TiffExifReaderTest extends TestCase
 
         $gpsIfd = $doc->gpsIfd;
         self::assertNotNull($gpsIfd);
-        self::assertSame([[40, 1], [30, 1], [15, 1]], $gpsIfd->get(ExifTag::GPS_LATITUDE)?->value);
-        self::assertSame([[70, 1], [45, 1], [30, 1]], $gpsIfd->get(ExifTag::GPS_LONGITUDE)?->value);
-        self::assertSame([150, 1], $gpsIfd->get(ExifTag::GPS_ALTITUDE)?->value);
+        $lat = $gpsIfd->get(ExifTag::GPS_LATITUDE)?->value;
+        self::assertInstanceOf(ExifRationalList::class, $lat);
+        self::assertSame(
+            [[40, 1], [30, 1], [15, 1]],
+            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lat->values),
+        );
+
+        $lon = $gpsIfd->get(ExifTag::GPS_LONGITUDE)?->value;
+        self::assertInstanceOf(ExifRationalList::class, $lon);
+        self::assertSame(
+            [[70, 1], [45, 1], [30, 1]],
+            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lon->values),
+        );
+
+        $alt = $gpsIfd->get(ExifTag::GPS_ALTITUDE)?->value;
+        self::assertInstanceOf(ExifRational::class, $alt);
+        self::assertSame(150, $alt->numerator);
+        self::assertSame(1, $alt->denominator);
 
         $gps = $doc->gps();
         self::assertEqualsWithDelta(40.504166, $gps['lat'], 1e-6);
@@ -182,7 +205,10 @@ final class TiffExifReaderTest extends TestCase
         $exifIfd = $doc->exifIfd;
         self::assertNotNull($exifIfd);
         self::assertSame(320, $exifIfd->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY)?->value);
-        self::assertSame([35, 10], $exifIfd->get(ExifTag::FOCAL_LENGTH)?->value);
+        $focalLength = $exifIfd->get(ExifTag::FOCAL_LENGTH)?->value;
+        self::assertInstanceOf(ExifRational::class, $focalLength);
+        self::assertSame(35, $focalLength->numerator);
+        self::assertSame(10, $focalLength->denominator);
 
         $interop = $doc->interopIfd;
         self::assertNotNull($interop);
@@ -190,9 +216,24 @@ final class TiffExifReaderTest extends TestCase
 
         $gpsIfd = $doc->gpsIfd;
         self::assertNotNull($gpsIfd);
-        self::assertSame([[51, 1], [30, 1], [15, 1]], $gpsIfd->get(ExifTag::GPS_LATITUDE)?->value);
-        self::assertSame([[8, 1], [12, 1], [30, 1]], $gpsIfd->get(ExifTag::GPS_LONGITUDE)?->value);
-        self::assertSame([500, 10], $gpsIfd->get(ExifTag::GPS_ALTITUDE)?->value);
+        $lat = $gpsIfd->get(ExifTag::GPS_LATITUDE)?->value;
+        self::assertInstanceOf(ExifRationalList::class, $lat);
+        self::assertSame(
+            [[51, 1], [30, 1], [15, 1]],
+            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lat->values),
+        );
+
+        $lon = $gpsIfd->get(ExifTag::GPS_LONGITUDE)?->value;
+        self::assertInstanceOf(ExifRationalList::class, $lon);
+        self::assertSame(
+            [[8, 1], [12, 1], [30, 1]],
+            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lon->values),
+        );
+
+        $alt = $gpsIfd->get(ExifTag::GPS_ALTITUDE)?->value;
+        self::assertInstanceOf(ExifRational::class, $alt);
+        self::assertSame(500, $alt->numerator);
+        self::assertSame(10, $alt->denominator);
 
         $gps = $doc->gps();
         self::assertEqualsWithDelta(51.504167, $gps['lat'], 1e-6);
