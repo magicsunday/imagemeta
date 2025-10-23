@@ -1,0 +1,98 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Tests\Core\Stream;
+
+use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\Stream;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Unit tests verifying the behaviour of the bounds-checked stream wrapper.
+ */
+final class StreamTest extends TestCase
+{
+    #[Test]
+    public function testReadsUnsignedIntegersSequentially(): void
+    {
+        $payload = pack('n', 0xBEEF)
+            . pack('N', 0x10203040)
+            . pack('N2', 0x01234567, 0x89ABCDEF);
+
+        $fh = fopen('php://temp', 'r+b');
+        fwrite($fh, $payload);
+        rewind($fh);
+
+        $stream = new Stream($fh, strlen($payload));
+
+        self::assertSame(0, $stream->tell());
+        self::assertSame(0xBEEF, $stream->readU16BE());
+        self::assertSame(2, $stream->tell());
+        self::assertSame(0x10203040, $stream->readU32BE());
+        self::assertSame(6, $stream->tell());
+        self::assertSame(0x0123456789ABCDEF, $stream->readU64BE());
+        self::assertSame(14, $stream->tell());
+    }
+
+    #[Test]
+    public function testReadReturnsRequestedBytesAndAdvancesCursor(): void
+    {
+        $payload = 'MagicSunday';
+
+        $fh = fopen('php://temp', 'r+b');
+        fwrite($fh, $payload);
+        rewind($fh);
+
+        $stream = new Stream($fh, strlen($payload));
+
+        $chunk = $stream->read(5);
+
+        self::assertSame('Magic', $chunk);
+        self::assertSame(5, $stream->tell());
+
+        $stream->seek(5);
+        self::assertSame('Sunday', $stream->read(6));
+        self::assertSame(11, $stream->tell());
+    }
+
+    #[Test]
+    public function testReadThrowsBoundsErrorWhenRequestCrossesEnd(): void
+    {
+        $payload = 'Image';
+
+        $fh = fopen('php://temp', 'r+b');
+        fwrite($fh, $payload);
+        rewind($fh);
+
+        $stream = new Stream($fh, strlen($payload));
+
+        $stream->read(5);
+
+        $this->expectException(BoundsError::class);
+        $stream->read(1);
+    }
+
+    #[Test]
+    public function testSeekThrowsBoundsErrorWhenOffsetIsOutsideStream(): void
+    {
+        $payload = 'Meta';
+
+        $fh = fopen('php://temp', 'r+b');
+        fwrite($fh, $payload);
+        rewind($fh);
+
+        $stream = new Stream($fh, strlen($payload));
+
+        $this->expectException(BoundsError::class);
+        $stream->seek(8);
+    }
+}
