@@ -30,6 +30,10 @@ final class JpegExtractorTest extends TestCase
     private const ICC_SIGNATURE  = "ICC_PROFILE\0";
     private const IPTC_SIGNATURE = "Photoshop 3.0\0";
 
+    private const int MARKER_APP1  = 0xE1;
+    private const int MARKER_APP2  = 0xE2;
+    private const int MARKER_APP13 = 0xED;
+
     /**
      * Verifies APP1 segments yield EXIF and XMP payloads regardless of ordering.
      *
@@ -59,21 +63,21 @@ final class JpegExtractorTest extends TestCase
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
 
         yield 'only-exif' => [
-            [self::segment(0xE1, self::EXIF_SIGNATURE . $exifPayload)],
+            [self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)],
             [$exifPayload],
             [],
         ];
 
         yield 'only-xmp' => [
-            [self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml)],
+            [self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml)],
             [],
             [$xmpXml],
         ];
 
         yield 'xmp-before-exif' => [
             [
-                self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
-                self::segment(0xE1, self::EXIF_SIGNATURE . $exifPayload),
+                self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
+                self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             ],
             [$exifPayload],
             [$xmpXml],
@@ -81,8 +85,8 @@ final class JpegExtractorTest extends TestCase
 
         yield 'exif-before-xmp' => [
             [
-                self::segment(0xE1, self::EXIF_SIGNATURE . $exifPayload),
-                self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
+                self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+                self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
             ],
             [$exifPayload],
             [$xmpXml],
@@ -100,9 +104,9 @@ final class JpegExtractorTest extends TestCase
         $xmpXml     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Large</x:xmpmeta>';
 
         $jpeg = self::jpeg(
-            self::segment(0xE1, self::EXIF_SIGNATURE . $firstBlob),
-            self::segment(0xE1, self::EXIF_SIGNATURE . $secondBlob),
-            self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $firstBlob),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $secondBlob),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -123,8 +127,8 @@ final class JpegExtractorTest extends TestCase
         $segment2Payload = self::ICC_SIGNATURE . "\x02\x02" . $iccPart2;
 
         $jpeg = self::jpeg(
-            self::segment(0xE2, $segment1Payload),
-            self::segment(0xE2, $segment2Payload),
+            self::segment(self::MARKER_APP2, $segment1Payload),
+            self::segment(self::MARKER_APP2, $segment2Payload),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -143,8 +147,8 @@ final class JpegExtractorTest extends TestCase
         $iptcTwo = self::IPTC_SIGNATURE . 'payload-two';
 
         $jpeg = self::jpeg(
-            self::segment(0xED, $iptcOne),
-            self::segment(0xED, $iptcTwo),
+            self::segment(self::MARKER_APP13, $iptcOne),
+            self::segment(self::MARKER_APP13, $iptcTwo),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -195,12 +199,14 @@ final class JpegExtractorTest extends TestCase
         $ignoredExif = 'ignored-after-sos';
 
         $jpeg = "\xFF\xD8"
-            . self::segment(0xE1, self::EXIF_SIGNATURE . $primaryExif)
-            . self::segment(0xE1, self::XMP_SIGNATURE . $xmpXml)
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $primaryExif)
+            . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml)
             . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
             . "\xFF\x00" . 'A'
             . "\xFF\xD0"
-            . "\xFF\xE1" . pack('n', strlen(self::EXIF_SIGNATURE . $ignoredExif) + 2) . self::EXIF_SIGNATURE . $ignoredExif
+            . "\xFF" . chr(self::MARKER_APP1)
+            . pack('n', strlen(self::EXIF_SIGNATURE . $ignoredExif) + 2)
+            . self::EXIF_SIGNATURE . $ignoredExif
             . "\xFF\xD9";
 
         $extractor = $this->createExtractor($jpeg);
