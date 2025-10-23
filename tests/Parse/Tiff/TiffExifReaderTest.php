@@ -20,6 +20,15 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function call_user_func;
+use function count;
+use function implode;
+use function ord;
+use function pack;
+use function str_pad;
+use function str_repeat;
+use function strlen;
+
 /**
  * Exercises the TIFF EXIF reader with synthetic Classic TIFF and BigTIFF payloads.
  */
