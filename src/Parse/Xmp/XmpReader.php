@@ -14,6 +14,12 @@ namespace MagicSunday\ImageMeta\Parse\Xmp;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use XMLReader;
 
+use function array_filter;
+use function array_key_exists;
+use function array_values;
+use function sprintf;
+use function trim;
+
 /**
  * Performs a lightweight XMP RDF/XML pass using \XMLReader to capture simple properties.
  */
