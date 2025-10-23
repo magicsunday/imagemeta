@@ -23,10 +23,10 @@ final readonly class IfdEntry
      * @param mixed $value The raw value or values decoded from the IFD.
      */
     public function __construct(
-        public readonly int $tag,
-        public readonly int $type,
-        public readonly int $count,
-        public readonly mixed $value,
+        public int $tag,
+        public int $type,
+        public int $count,
+        public mixed $value,
     ) {
     }
 }

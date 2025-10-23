@@ -27,11 +27,11 @@ final readonly class Metadata
      * @param XmpDocument|null   $xmpDoc    Parsed representation of the primary XMP packet.
      */
     public function __construct(
-        public readonly array $exifBlobs,
-        public readonly ?QuickTimeMeta $quickTime,
-        public readonly ?ExifDocument $exifDoc = null,
-        public readonly array $xmpBlobs = [],
-        public readonly ?XmpDocument $xmpDoc = null,
+        public array $exifBlobs,
+        public ?QuickTimeMeta $quickTime,
+        public ?ExifDocument $exifDoc = null,
+        public array $xmpBlobs = [],
+        public ?XmpDocument $xmpDoc = null,
     ) {
     }
 }

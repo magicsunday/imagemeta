@@ -21,7 +21,7 @@ final readonly class QuickTimeMeta
      *
      * @param array<string, string|int|float|bool> $keys Map of QuickTime metadata keys and their values.
      */
-    public function __construct(public readonly array $keys)
+    public function __construct(public array $keys)
     {
     }
 
