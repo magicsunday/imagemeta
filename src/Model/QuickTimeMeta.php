@@ -11,18 +11,27 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+/**
+ * Holds QuickTime metadata keys that are extracted from QuickTime containers.
+ */
 final class QuickTimeMeta
 {
-    /** @param array<string, string|int|float|bool> $keys */
+    /**
+     * Creates a new instance of QuickTime metadata information.
+     *
+     * @param array<string, string|int|float|bool> $keys Map of QuickTime metadata keys and their values.
+     */
     public function __construct(public readonly array $keys)
     {
     }
 
+    /**
+     * Returns the QuickTime content identifier value when available.
+     */
     public function contentIdentifier(): ?string
     {
-        $k1 = 'com.apple.quicktime.content.identifier';
-        $k2 = 'com.apple.quicktime.live-photo.still-image-display-time'; // Beispiel, weitere Keys möglich
+        $key = 'com.apple.quicktime.content.identifier';
 
-        return isset($this->keys[$k1]) ? (string) $this->keys[$k1] : null;
+        return isset($this->keys[$key]) ? (string) $this->keys[$key] : null;
     }
 }
