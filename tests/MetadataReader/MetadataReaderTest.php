@@ -34,8 +34,8 @@ use function unlink;
  */
 final class MetadataReaderTest extends TestCase
 {
-    private const EXIF_SIGNATURE = "Exif\0\0";
-    private const XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
+    private const string EXIF_SIGNATURE = "Exif\0\0";
+    private const string XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
 
     private const int MARKER_APP1 = 0xE1;
 
