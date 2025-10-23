@@ -32,6 +32,10 @@ final class XmpReader
      *
      * The resulting document stores values keyed by Clark notation ("{namespace}local") and
      * flattens RDF containers (Bag/Seq/Alt) into PHP lists.
+     *
+     * @param string $xml The raw XML payload containing the XMP packet.
+     *
+     * @return XmpDocument Parsed XMP representation.
      */
     public function parse(string $xml): XmpDocument
     {
@@ -120,6 +124,8 @@ final class XmpReader
      * Finalises the collected container/list data for the current element.
      *
      * @param array<int, string> $items
+     *
+     * @return array|string|null
      */
     private function finalizeValue(array $items, string $text): array|string|null
     {

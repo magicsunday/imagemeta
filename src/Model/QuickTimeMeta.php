@@ -27,6 +27,8 @@ final readonly class QuickTimeMeta
 
     /**
      * Returns the QuickTime content identifier value when available.
+     *
+     * @return string|null
      */
     public function contentIdentifier(): ?string
     {

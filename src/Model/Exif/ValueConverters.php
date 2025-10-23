@@ -68,6 +68,8 @@ final readonly class ValueConverters
      *
      * @param string|null $ref Direction reference (N/E/S/W).
      * @param mixed       $val Rational triplet describing the coordinate.
+     *
+     * @return float|null
      */
     private static function dmsToFloat(?string $ref, mixed $val): ?float
     {
