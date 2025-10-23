@@ -208,9 +208,9 @@ final class ExifConvenience
             'fnumber'     => self::fNumber($doc),
             'focal_mm'    => self::focalLength($doc),
             'iso'         => self::iso($doc),
-            'gps_lat'     => $gps['lat'],
-            'gps_lon'     => $gps['lon'],
-            'gps_alt'     => $gps['alt'],
+            'gps_lat'     => $gps['lat'] !== null ? (float) $gps['lat'] : null,
+            'gps_lon'     => $gps['lon'] !== null ? (float) $gps['lon'] : null,
+            'gps_alt'     => $gps['alt'] !== null ? (float) $gps['alt'] : null,
         ];
     }
 

@@ -14,6 +14,10 @@ namespace MagicSunday\ImageMeta\Parse\Xmp;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use XMLReader;
 
+use function in_array;
+use function sprintf;
+use function trim;
+
 /**
  * Lightweight streaming XMP (RDF/XML) parser backed by XMLReader.
  * The parser extracts a curated subset of common fields and stores them

@@ -26,7 +26,12 @@ final readonly class XmpDocument
     /**
      * @param array<string, string|array<int, string>> $data Map of Clark notation => value
      */
-    public function __construct(public array $data)
+    public function __construct(
+        /**
+         * @var array<string, string|array<int, string>>
+         */
+        public array $data
+    )
     {
     }
 
@@ -58,9 +63,9 @@ final readonly class XmpDocument
         return array_find(
             $this->data,
             /**
-             * @param array<int, string>|string $value
+             * @param string|array<int, string> $value
              */
-            fn (array|string $value, int|string $key): bool => $this->matchesLocalName((string) $key, $localName)
+            fn (array|string $value, string $key): bool => $this->matchesLocalName($key, $localName)
                 && (is_string($value) || is_array($value))
         );
     }
