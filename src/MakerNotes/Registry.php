@@ -40,6 +40,7 @@ final class Registry
     public function find(string $make): ?MakerNotesDecoderInterface
     {
         $make = strtolower($make);
+
         return array_find(
             $this->decoders,
             fn (MakerNotesDecoderInterface $decoder, int|string $prefix): bool => $prefix !== ''
