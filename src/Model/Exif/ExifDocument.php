@@ -14,6 +14,8 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 
+use function is_float;
+use function is_int;
 use function is_string;
 use function rtrim;
 use function str_replace;
