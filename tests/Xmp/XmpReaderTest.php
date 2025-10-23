@@ -22,6 +22,8 @@ use PHPUnit\Framework\TestCase;
  */
 final class XmpReaderTest extends TestCase
 {
+    private const DC_NAMESPACE = 'http://purl.org/dc/elements/1.1/';
+
     /**
      * Ensures mixed text and CDATA nodes are concatenated verbatim.
      */
@@ -35,7 +37,10 @@ final class XmpReaderTest extends TestCase
         $reader   = new XmpReader();
         $document = $reader->parse($xml);
 
-        self::assertArrayHasKey('dc:title', $document->data);
-        self::assertSame('Prefix <tag> & middle suffix', $document->data['dc:title']);
+        $key = '{' . self::DC_NAMESPACE . '}title';
+        self::assertArrayHasKey($key, $document->data);
+        self::assertSame('Prefix <tag> & middle suffix', $document->data[$key]);
+        self::assertSame('Prefix <tag> & middle suffix', $document->get(self::DC_NAMESPACE, 'title'));
+        self::assertSame('Prefix <tag> & middle suffix', $document->find('title'));
     }
 }

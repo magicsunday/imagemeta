@@ -19,86 +19,118 @@ use XMLReader;
  */
 final class XmpReader
 {
+    private const RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+
     /**
      * Parses an XMP packet and returns a document containing discovered properties.
      *
-     * @param string $xml Raw XMP packet contents.
-     *
-     * @return XmpDocument
+     * The resulting document stores values keyed by Clark notation ("{namespace}local") and
+     * flattens RDF containers (Bag/Seq/Alt) into PHP lists.
      */
     public function parse(string $xml): XmpDocument
     {
-        $xr = new XMLReader();
-        if (!$xr->XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
+        $reader = new XMLReader();
+        if (!$reader->XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
             return new XmpDocument([]);
         }
-        $props = [];
-        $stack = [];
-        while ($xr->read()) {
-            if ($xr->nodeType === XMLReader::ELEMENT) {
-                $stack[] = $this->qname($xr);
-                // Simple property with text content
-                if (!$xr->isEmptyElement) {
-                    $text = $this->readText($xr);
-                    if ($text !== null) {
-                        $props[end($stack)] = $text;
+
+        $data        = [];
+        $elementPath = [];
+        $textBuffers = [];
+        $listBuffers = [];
+
+        while ($reader->read()) {
+            switch ($reader->nodeType) {
+                case XMLReader::ELEMENT:
+                    $depth     = $reader->depth;
+                    $namespace = $reader->namespaceURI ?? '';
+                    $localName = $reader->localName;
+
+                    $elementPath[$depth] = [$namespace, $localName];
+                    $textBuffers[$depth] = '';
+
+                    if ($namespace !== self::RDF_NAMESPACE) {
+                        $listBuffers[$depth] = [];
                     }
-                } else {
-                    // Empty element: could be a bag/seq container; keep marker if needed
-                    $props[end($stack)] ??= null;
-                }
-            } elseif ($xr->nodeType === XMLReader::END_ELEMENT) {
-                array_pop($stack);
+
+                    if ($reader->isEmptyElement) {
+                        if ($namespace !== self::RDF_NAMESPACE) {
+                            $value = $this->finalizeValue($listBuffers[$depth] ?? [], $textBuffers[$depth] ?? '');
+                            if ($value !== null) {
+                                $data[$this->buildClarkName($namespace, $localName)] = $value;
+                            }
+                        }
+
+                        unset($elementPath[$depth], $textBuffers[$depth], $listBuffers[$depth]);
+                    }
+                    break;
+
+                case XMLReader::TEXT:
+                case XMLReader::WHITESPACE:
+                case XMLReader::SIGNIFICANT_WHITESPACE:
+                case XMLReader::CDATA:
+                    $depth = $reader->depth - 1;
+                    if ($depth >= 0 && array_key_exists($depth, $textBuffers)) {
+                        $textBuffers[$depth] .= $reader->value;
+                    }
+                    break;
+
+                case XMLReader::END_ELEMENT:
+                    $depth = $reader->depth;
+                    $info  = $elementPath[$depth] ?? null;
+                    if ($info === null) {
+                        break;
+                    }
+
+                    [$namespace, $localName] = $info;
+                    if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
+                        $text = trim($textBuffers[$depth] ?? '');
+                        if ($text !== '') {
+                            for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
+                                if (isset($listBuffers[$parentDepth])) {
+                                    $listBuffers[$parentDepth][] = $text;
+                                    break;
+                                }
+                            }
+                        }
+                    } elseif ($namespace !== self::RDF_NAMESPACE) {
+                        $value = $this->finalizeValue($listBuffers[$depth] ?? [], $textBuffers[$depth] ?? '');
+                        if ($value !== null) {
+                            $data[$this->buildClarkName($namespace, $localName)] = $value;
+                        }
+                    }
+
+                    unset($elementPath[$depth], $textBuffers[$depth], $listBuffers[$depth]);
+                    break;
             }
         }
-        $xr->close();
 
-        return new XmpDocument($props);
+        $reader->close();
+
+        return new XmpDocument($data);
     }
 
     /**
-     * Builds the fully-qualified name for the current XML element.
+     * Finalises the collected container/list data for the current element.
      *
-     * @param XMLReader $xr Active XML reader instance.
-     *
-     * @return string
+     * @param array<int, string> $items
      */
-    private function qname(XMLReader $xr): string
+    private function finalizeValue(array $items, string $text): array|string|null
     {
-        $prefix = $xr->prefix !== '' ? $xr->prefix . ':' : '';
+        $items = array_values(array_filter($items, static fn (string $value): bool => $value !== ''));
+        if ($items !== []) {
+            return $items;
+        }
 
-        return $prefix . $xr->localName;
+        $text = trim($text);
+
+        return $text === '' ? null : $text;
     }
 
-    /**
-     * Reads text content of the current element, flattening simple RDF containers.
-     *
-     * @param XMLReader $xr Active XML reader instance positioned on an element.
-     *
-     * @return string|null
-     */
-    private function readText(XMLReader $xr): ?string
+    private function buildClarkName(string $namespaceUri, string $localName): string
     {
-        $depth = $xr->depth;
-        $txt   = '';
-        while ($xr->read()) {
-            if ($xr->nodeType === XMLReader::TEXT || $xr->nodeType === XMLReader::CDATA) {
-                $txt .= $xr->value;
-            } elseif ($xr->nodeType === XMLReader::END_ELEMENT && $xr->depth === $depth) {
-                break;
-            } elseif ($xr->nodeType === XMLReader::ELEMENT) {
-                // For simple containers (rdf:Alt/Bag/Seq with rdf:li children)
-                $name = $this->qname($xr);
-                if (str_ends_with($name, 'li') && !$xr->isEmptyElement) {
-                    $li = $this->readText($xr);
-                    if ($li !== null) {
-                        $txt .= ($txt !== '' ? ';' : '') . $li; // naive concat
-                    }
-                }
-            }
-        }
-        $txt = trim($txt);
-
-        return $txt === '' ? null : $txt;
+        return $namespaceUri !== ''
+            ? sprintf('{%s}%s', $namespaceUri, $localName)
+            : $localName;
     }
 }
