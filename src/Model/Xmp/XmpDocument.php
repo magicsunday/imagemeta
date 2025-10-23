@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
-final class XmpDocument
+final readonly class XmpDocument
 {
     /**
      * @param array<string, string|array<int, string>> $data Map of Clark notation => value

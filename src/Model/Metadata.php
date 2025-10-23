@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
  */
-final class Metadata
+final readonly class Metadata
 {
     /**
      * @param list<string>       $exifBlobs TIFF‑EXIF blobs (first is primary)

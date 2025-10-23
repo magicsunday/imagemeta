@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 /**
  * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
  */
-final class ValueConverters
+final readonly class ValueConverters
 {
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
