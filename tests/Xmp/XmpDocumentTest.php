@@ -84,4 +84,34 @@ XML;
         self::assertSame('2024-03-29T09:08:07Z', $document->find('DateTimeOriginal'));
         self::assertSame(['First', 'Second'], $document->find('subject'));
     }
+
+    #[Test]
+    public function testExternalEntityBagIsIgnored(): void
+    {
+        $xml = <<<XML
+<!DOCTYPE rdf:RDF [
+<!ENTITY ext SYSTEM "https://example.com/external">
+]>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:xmp="http://ns.adobe.com/xap/1.0/">
+  <rdf:Description>
+    <xmp:ModifyDate>2024-04-01T00:00:00Z</xmp:ModifyDate>
+    <dc:subject>
+      <rdf:Bag>
+        <rdf:li>&ext;</rdf:li>
+      </rdf:Bag>
+    </dc:subject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        $subjectKey = '{' . self::DC_NAMESPACE . '}subject';
+
+        self::assertArrayHasKey('{' . self::XMP_NAMESPACE . '}ModifyDate', $document->data);
+        self::assertArrayNotHasKey($subjectKey, $document->data);
+        self::assertNull($document->find('subject'));
+    }
 }
