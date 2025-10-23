@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Exif;
 
 use function array_values;
+use function count;
 use function is_array;
 use function is_float;
 use function is_int;

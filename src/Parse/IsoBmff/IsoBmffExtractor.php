@@ -24,8 +24,10 @@ use function explode;
 use function iconv;
 use function is_float;
 use function is_int;
+use function is_string;
 use function preg_match;
 use function rtrim;
+use function sprintf;
 use function str_starts_with;
 use function strcasecmp;
 use function strlen;
@@ -1084,7 +1086,8 @@ final readonly class IsoBmffExtractor
         }
 
         if ($offset + $size > $limit) {
-            throw new ParseError(sprintf('box %s exceeds container bounds', $type));
+            throw new ParseError(
+                sprintf('box %s exceeds container bounds', $type));
         }
 
         $contentOffset = $offset + $headerSize;
