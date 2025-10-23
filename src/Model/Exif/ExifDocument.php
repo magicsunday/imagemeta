@@ -42,7 +42,7 @@ final class ExifDocument
      */
     public function cameraMake(): ?string
     {
-        return $this->str($this->ifd0, 0x010F);
+        return $this->str($this->ifd0, ExifTag::MAKE);
     }
 
     /**
@@ -52,7 +52,7 @@ final class ExifDocument
      */
     public function cameraModel(): ?string
     {
-        return $this->str($this->ifd0, 0x0110);
+        return $this->str($this->ifd0, ExifTag::MODEL);
     }
 
     /**
@@ -62,7 +62,7 @@ final class ExifDocument
      */
     public function lensModel(): ?string
     {
-        return $this->str($this->exifIfd, 0xA434);
+        return $this->str($this->exifIfd, ExifTag::LENS_MODEL);
     }
 
     /**
@@ -72,7 +72,7 @@ final class ExifDocument
      */
     public function orientation(): ?int
     {
-        return $this->int($this->ifd0, 0x0112);
+        return $this->int($this->ifd0, ExifTag::ORIENTATION);
     }
 
     /**
@@ -82,8 +82,8 @@ final class ExifDocument
      */
     public function iso(): ?int
     {
-        // EXIF ISO tag (PhotographicSensitivity) 0x8827
-        return $this->int($this->exifIfd, 0x8827);
+        // EXIF ISO tag (PhotographicSensitivity)
+        return $this->int($this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
     }
 
     /**
@@ -93,8 +93,8 @@ final class ExifDocument
      */
     public function exposureTime(): ?float
     {
-        // Tag 0x829A RATIONAL
-        $v = $this->exifIfd?->get(0x829A)?->value ?? null;
+        // Tag ExifTag::EXPOSURE_TIME (RATIONAL)
+        $v = $this->exifIfd?->get(ExifTag::EXPOSURE_TIME)?->value ?? null;
 
         return ValueConverters::rationalToFloat($v);
     }
@@ -106,8 +106,8 @@ final class ExifDocument
      */
     public function fNumber(): ?float
     {
-        // Tag 0x829D RATIONAL
-        $v = $this->exifIfd?->get(0x829D)?->value ?? null;
+        // Tag ExifTag::F_NUMBER (RATIONAL)
+        $v = $this->exifIfd?->get(ExifTag::F_NUMBER)?->value ?? null;
 
         return ValueConverters::rationalToFloat($v);
     }
@@ -119,8 +119,8 @@ final class ExifDocument
      */
     public function focalLengthMm(): ?float
     {
-        // Tag 0x920A RATIONAL
-        $v = $this->exifIfd?->get(0x920A)?->value ?? null;
+        // Tag ExifTag::FOCAL_LENGTH (RATIONAL)
+        $v = $this->exifIfd?->get(ExifTag::FOCAL_LENGTH)?->value ?? null;
 
         return ValueConverters::rationalToFloat($v);
     }
@@ -132,7 +132,7 @@ final class ExifDocument
      */
     public function dateTimeOriginalRaw(): ?string
     {
-        return $this->str($this->exifIfd, 0x9003);
+        return $this->str($this->exifIfd, ExifTag::DATETIME_ORIGINAL);
     }
 
     /**
@@ -142,7 +142,7 @@ final class ExifDocument
      */
     public function offsetTimeOriginalRaw(): ?string
     {
-        return $this->str($this->exifIfd, 0x9011);
+        return $this->str($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
     }
 
     /**

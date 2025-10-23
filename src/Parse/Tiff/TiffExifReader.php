@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 
@@ -66,13 +67,13 @@ final class TiffExifReader
         $gpsIfd     = null;
         $interopIfd = null;
         $ifd1       = null;
-        if ($e = $ifd0->get(0x8769)) { // ExifIFDPointer
+        if ($e = $ifd0->get(ExifTag::EXIF_IFD_POINTER)) { // ExifIFDPointer
             $exifIfd = $this->readIfd((int) $e->value);
-            if ($e2 = $exifIfd->get(0xA005)) { // Interop IFD
+            if ($e2 = $exifIfd->get(ExifTag::INTEROPERABILITY_IFD_POINTER)) { // Interop IFD
                 $interopIfd = $this->readIfd((int) $e2->value);
             }
         }
-        if ($g = $ifd0->get(0x8825)) { // GPSInfoIFDPointer
+        if ($g = $ifd0->get(ExifTag::GPS_IFD_POINTER)) { // GPSInfoIFDPointer
             $gpsIfd = $this->readIfd((int) $g->value);
         }
         if ($ifd0->nextIfdOffset) {
