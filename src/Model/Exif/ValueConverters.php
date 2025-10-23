@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 use function count;
 use function is_float;
 use function is_int;
+use function is_string;
 
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -75,22 +76,33 @@ final readonly class ValueConverters
      */
     public static function gpsFromIfd(Ifd $gps): array
     {
-        $latRef = $gps->get(ExifTag::GPS_LATITUDE_REF)?->value ?? null;
-        $latVal = $gps->get(ExifTag::GPS_LATITUDE)?->value ?? null;
-        $lonRef = $gps->get(ExifTag::GPS_LONGITUDE_REF)?->value ?? null;
-        $lonVal = $gps->get(ExifTag::GPS_LONGITUDE)?->value ?? null;
+        $latRefEntry = $gps->get(ExifTag::GPS_LATITUDE_REF);
+        $latValEntry = $gps->get(ExifTag::GPS_LATITUDE);
+        $lonRefEntry = $gps->get(ExifTag::GPS_LONGITUDE_REF);
+        $lonValEntry = $gps->get(ExifTag::GPS_LONGITUDE);
+
+        $latRef = $latRefEntry?->value;
+        $latVal = $latValEntry?->value;
+        $lonRef = $lonRefEntry?->value;
+        $lonVal = $lonValEntry?->value;
 
         $latPairs = $latVal instanceof ExifRationalList ? $latVal : null;
         $lonPairs = $lonVal instanceof ExifRationalList ? $lonVal : null;
 
-        $lat = self::dmsToFloat($latRef, $latPairs);
-        $lon = self::dmsToFloat($lonRef, $lonPairs);
+        $lat = self::dmsToFloat(is_string($latRef) ? $latRef : null, $latPairs);
+        $lon = self::dmsToFloat(is_string($lonRef) ? $lonRef : null, $lonPairs);
 
         $alt = null;
-        if (($e = $gps->get(ExifTag::GPS_ALTITUDE)) && $e->value instanceof ExifRational) {
-            $alt = self::rationalToFloat($e->value);
-            if ($alt !== null && ($ref = $gps->get(ExifTag::GPS_ALTITUDE_REF)) && (int) ($ref->value ?? 0) === 1) {
-                $alt = -$alt;
+        $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
+        if ($altEntry !== null && $altEntry->value instanceof ExifRational) {
+            $alt = self::rationalToFloat($altEntry->value);
+
+            $altRef = $gps->get(ExifTag::GPS_ALTITUDE_REF);
+            if ($alt !== null && $altRef !== null) {
+                $refValue = $altRef->value;
+                if (is_int($refValue) && $refValue === 1) {
+                    $alt = -$alt;
+                }
             }
         }
 
@@ -110,9 +122,10 @@ final readonly class ValueConverters
         if (!is_string($ref) || $val === null || count($val->values) < 3) {
             return null;
         }
-        $deg = self::rationalToFloat($val->values[0] ?? null);
-        $min = self::rationalToFloat($val->values[1] ?? null);
-        $sec = self::rationalToFloat($val->values[2] ?? null);
+        $values = $val->values;
+        $deg    = self::rationalToFloat($values[0]);
+        $min    = self::rationalToFloat($values[1]);
+        $sec    = self::rationalToFloat($values[2]);
         if ($deg === null || $min === null || $sec === null) {
             return null;
         }

@@ -96,9 +96,11 @@ final class ExifConvenience
      */
     public static function exposureTime(ExifDocument $doc): ?float
     {
-        $e = self::find($doc, ExifTag::EXPOSURE_TIME); // ExposureTime (rational)
+        $entry = self::find($doc, ExifTag::EXPOSURE_TIME); // ExposureTime (rational)
 
-        return ValueConverters::rationalToFloat($e?->value ?? null);
+        return $entry !== null
+            ? ValueConverters::rationalToFloat($entry->value)
+            : null;
     }
 
     /**
@@ -110,9 +112,11 @@ final class ExifConvenience
      */
     public static function fNumber(ExifDocument $doc): ?float
     {
-        $e = self::find($doc, ExifTag::F_NUMBER); // FNumber (rational)
+        $entry = self::find($doc, ExifTag::F_NUMBER); // FNumber (rational)
 
-        return ValueConverters::rationalToFloat($e?->value ?? null);
+        return $entry !== null
+            ? ValueConverters::rationalToFloat($entry->value)
+            : null;
     }
 
     /**
@@ -124,9 +128,11 @@ final class ExifConvenience
      */
     public static function focalLength(ExifDocument $doc): ?float
     {
-        $e = self::find($doc, ExifTag::FOCAL_LENGTH); // FocalLength (rational)
+        $entry = self::find($doc, ExifTag::FOCAL_LENGTH); // FocalLength (rational)
 
-        return ValueConverters::rationalToFloat($e?->value ?? null);
+        return $entry !== null
+            ? ValueConverters::rationalToFloat($entry->value)
+            : null;
     }
 
     /**
@@ -219,9 +225,9 @@ final class ExifConvenience
             'fnumber'     => self::fNumber($doc),
             'focal_mm'    => self::focalLength($doc),
             'iso'         => self::iso($doc),
-            'gps_lat'     => $gps['lat'] !== null ? (float) $gps['lat'] : null,
-            'gps_lon'     => $gps['lon'] !== null ? (float) $gps['lon'] : null,
-            'gps_alt'     => $gps['alt'] !== null ? (float) $gps['alt'] : null,
+            'gps_lat'     => $gps['lat'],
+            'gps_lon'     => $gps['lon'],
+            'gps_alt'     => $gps['alt'],
         ];
     }
 
@@ -235,7 +241,12 @@ final class ExifConvenience
      */
     private static function find(ExifDocument $doc, int $tag): ?IfdEntry
     {
-        return $doc->exifIfd?->get($tag) ?? $doc->ifd0->get($tag) ?? null;
+        $exifEntry = $doc->exifIfd?->get($tag);
+        if ($exifEntry !== null) {
+            return $exifEntry;
+        }
+
+        return $doc->ifd0->get($tag);
     }
 
 }

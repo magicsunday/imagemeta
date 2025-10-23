@@ -39,8 +39,8 @@ final class XmpParser
      */
     public function parse(string $xmpXml): XmpDocument
     {
-        $reader = new XMLReader();
-        if (!$reader->XML($xmpXml, 'UTF-8', LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
+        $reader = XMLReader::XML($xmpXml, 'UTF-8', LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        if (!$reader instanceof XMLReader) {
             return new XmpDocument([]);
         }
 
@@ -61,7 +61,7 @@ final class XmpParser
                 continue;
             }
 
-            $namespace = $reader->namespaceURI ?? '';
+            $namespace = $reader->namespaceURI;
             $localName = $reader->localName;
 
             if ($namespace === self::RDF_NAMESPACE && $localName === 'Bag' && $pendingBag !== null) {
@@ -116,7 +116,7 @@ final class XmpParser
      */
     private function matchesElement(XMLReader $reader, string $namespace, string $localName): bool
     {
-        return ($reader->namespaceURI ?? '') === $namespace && $reader->localName === $localName;
+        return $reader->namespaceURI === $namespace && $reader->localName === $localName;
     }
 
     /**
@@ -181,7 +181,7 @@ final class XmpParser
             }
 
             if ($reader->nodeType === XMLReader::ELEMENT
-                && ($reader->namespaceURI ?? '') === self::RDF_NAMESPACE
+                && $reader->namespaceURI === self::RDF_NAMESPACE
                 && $reader->localName === 'li'
             ) {
                 $value = $this->readElementText($reader);

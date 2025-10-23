@@ -23,6 +23,8 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 
 use function chr;
+use function is_float;
+use function is_int;
 use function ord;
 use function pack;
 use function rtrim;
@@ -79,17 +81,25 @@ final class TiffExifReader
         $gpsIfd     = null;
         $interopIfd = null;
         $ifd1       = null;
-        if ($e = $ifd0->get(ExifTag::EXIF_IFD_POINTER)) { // ExifIFDPointer
-            $exifIfd = $this->readIfd((int) $e->value);
-            if ($e2 = $exifIfd->get(ExifTag::INTEROPERABILITY_IFD_POINTER)) { // Interop IFD
-                $interopIfd = $this->readIfd((int) $e2->value);
+
+        $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
+        if ($exifPointer !== null) {
+            $exifIfd = $this->readIfd($this->pointerOffset($exifPointer));
+
+            $interopPointer = $exifIfd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
+            if ($interopPointer !== null) {
+                $interopIfd = $this->readIfd($this->pointerOffset($interopPointer));
             }
         }
-        if ($g = $ifd0->get(ExifTag::GPS_IFD_POINTER)) { // GPSInfoIFDPointer
-            $gpsIfd = $this->readIfd((int) $g->value);
+
+        $gpsPointer = $ifd0->get(ExifTag::GPS_IFD_POINTER);
+        if ($gpsPointer !== null) {
+            $gpsIfd = $this->readIfd($this->pointerOffset($gpsPointer));
         }
-        if ($ifd0->nextIfdOffset) {
-            $ifd1 = $this->readIfd($ifd0->nextIfdOffset);
+
+        $nextOffset = $ifd0->nextIfdOffset;
+        if ($nextOffset !== null && $nextOffset > 0) {
+            $ifd1 = $this->readIfd($nextOffset);
         }
 
         return new ExifDocument($ifd0, $exifIfd, $gpsIfd, $interopIfd, $ifd1);
@@ -146,7 +156,7 @@ final class TiffExifReader
 
         $value = $this->decodeValue($type, $cnt, $valOrOff);
 
-        return [$tag => new IfdEntry($tag, $type, (int) $cnt, $value)];
+        return [$tag => new IfdEntry($tag, $type, $cnt, $value)];
     }
 
     /**
@@ -347,7 +357,17 @@ final class TiffExifReader
      */
     private function unpackU16(string $b): int
     {
-        return $this->bo === Endian::Little ? unpack('v', $b)[1] : unpack('n', $b)[1];
+        $result = $this->bo === Endian::Little ? unpack('v', $b) : unpack('n', $b);
+
+        if ($result === false || !isset($result[1])) {
+            throw new ParseError('Failed to unpack 16-bit value from TIFF bytes.');
+        }
+        $value = $result[1];
+        if (!is_int($value) && !is_float($value)) {
+            throw new ParseError('Unpacked 16-bit value is not numeric.');
+        }
+
+        return (int) $value;
     }
 
     /**
@@ -373,7 +393,17 @@ final class TiffExifReader
      */
     private function unpackU32(string $b): int
     {
-        return $this->bo === Endian::Little ? unpack('V', $b)[1] : unpack('N', $b)[1];
+        $result = $this->bo === Endian::Little ? unpack('V', $b) : unpack('N', $b);
+
+        if ($result === false || !isset($result[1])) {
+            throw new ParseError('Failed to unpack 32-bit value from TIFF bytes.');
+        }
+        $value = $result[1];
+        if (!is_int($value) && !is_float($value)) {
+            throw new ParseError('Unpacked 32-bit value is not numeric.');
+        }
+
+        return (int) $value;
     }
 
     /**
@@ -387,7 +417,7 @@ final class TiffExifReader
     {
         $u = $this->unpackU32($b);
 
-        return ($u & 0x80000000) ? -((~$u & 0xFFFFFFFF) + 1) : $u;
+        return (($u & 0x80000000) !== 0) ? -((~$u & 0xFFFFFFFF) + 1) : $u;
     }
 
     /**
@@ -399,7 +429,17 @@ final class TiffExifReader
      */
     private function unpackFloat(string $b): float
     {
-        return (float) ($this->bo === Endian::Little ? unpack('g', $b)[1] : unpack('G', $b)[1]);
+        $result = $this->bo === Endian::Little ? unpack('g', $b) : unpack('G', $b);
+
+        if ($result === false || !isset($result[1])) {
+            throw new ParseError('Failed to unpack 32-bit float from TIFF bytes.');
+        }
+        $value = $result[1];
+        if (!is_int($value) && !is_float($value)) {
+            throw new ParseError('Unpacked 32-bit float is not numeric.');
+        }
+
+        return (float) $value;
     }
 
     /**
@@ -411,7 +451,17 @@ final class TiffExifReader
      */
     private function unpackDouble(string $b): float
     {
-        return (float) ($this->bo === Endian::Little ? unpack('e', $b)[1] : unpack('E', $b)[1]);
+        $result = $this->bo === Endian::Little ? unpack('e', $b) : unpack('E', $b);
+
+        if ($result === false || !isset($result[1])) {
+            throw new ParseError('Failed to unpack 64-bit float from TIFF bytes.');
+        }
+        $value = $result[1];
+        if (!is_int($value) && !is_float($value)) {
+            throw new ParseError('Unpacked 64-bit float is not numeric.');
+        }
+
+        return (float) $value;
     }
 
     /**
@@ -426,6 +476,38 @@ final class TiffExifReader
     {
         $sign = 1 << ($bits - 1);
 
-        return ($u & $sign) ? $u - (1 << $bits) : $u;
+        return (($u & $sign) !== 0) ? $u - (1 << $bits) : $u;
+    }
+
+    /**
+     * Ensures that an IFD entry encodes a valid offset and returns it as an integer.
+     *
+     * @param IfdEntry $entry Entry that should contain a pointer/offset value.
+     *
+     * @return int
+     */
+    private function pointerOffset(IfdEntry $entry): int
+    {
+        $value = $entry->value;
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            return (int) $value;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+            if (is_int($first)) {
+                return $first;
+            }
+            if (is_float($first)) {
+                return (int) $first;
+            }
+        }
+
+        throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $entry->tag));
     }
 }

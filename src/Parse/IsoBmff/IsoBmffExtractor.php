@@ -21,6 +21,8 @@ use function array_unique;
 use function array_unshift;
 use function array_values;
 use function explode;
+use function is_float;
+use function is_int;
 use function preg_match;
 use function str_starts_with;
 use function strcasecmp;
@@ -179,7 +181,7 @@ final readonly class IsoBmffExtractor
     /**
      * Walks each top-level box in the file and yields a descriptor object.
      *
-     * @return iterable<object>
+     * @return iterable<BoxDescriptor>
      */
     private function walkTopLevelBoxes(): iterable
     {
@@ -200,12 +202,12 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the `moov` box, collecting nested metadata boxes of interest.
      *
-     * @param object                $moov      Box descriptor for the movie box.
+     * @param BoxDescriptor          $moov      Box descriptor for the movie box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
      */
-    private function parseMoovBox(object $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
+    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
@@ -219,12 +221,12 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param object                $udta      Box descriptor for the user data box.
+     * @param BoxDescriptor          $udta      Box descriptor for the user data box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
      */
-    private function parseUdtaBox(object $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
+    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
         foreach ($this->walkChildren($udta) as $child) {
             if ($child->type === self::BOX_META) {
@@ -236,12 +238,12 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param object                $meta      Box descriptor for the metadata box.
+     * @param BoxDescriptor          $meta      Box descriptor for the metadata box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
      */
-    private function parseMetaBox(object $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
+    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
     {
         if ($meta->contentSize < 4) {
             throw new ParseError('meta box truncated');
@@ -284,18 +286,22 @@ final readonly class IsoBmffExtractor
      *     uuidXmp: list<string>,
      *     directExif: list<string>,
      *     keysMaps: list<array<int, string>>,
-     *     ilstBoxes: list<object>
+     *     ilstBoxes: list<BoxDescriptor>
      * }
      */
-    private function collectDirectPayloads(object $meta): array
+    private function collectDirectPayloads(BoxDescriptor $meta): array
     {
+        /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos     = [];
+        /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations */
         $locations     = [];
         $primaryItemId = null;
         $directXmp     = [];
         $uuidXmp       = [];
         $directExif    = [];
+        /** @var list<array<int, string>> $keysMaps */
         $keysMaps      = [];
+        /** @var list<BoxDescriptor> $ilstBoxes */
         $ilstBoxes     = [];
 
         foreach ($this->walkChildren($meta, 4) as $child) {
@@ -386,6 +392,7 @@ final readonly class IsoBmffExtractor
      */
     private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform): array
     {
+        /** @var list<string> $resolved */
         $resolved = [];
 
         // Pull data for each referenced item and optionally transform the payload.
@@ -403,7 +410,7 @@ final readonly class IsoBmffExtractor
     /**
      * @param array<string, string>    $existing
      * @param list<array<int, string>> $keysMaps
-     * @param list<object>             $ilstBoxes
+     * @param list<BoxDescriptor>      $ilstBoxes
      *
      * @return array<string, string>
      */
@@ -494,11 +501,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the item information box and returns descriptors for each entry.
      *
-     * @param object $iinf Box descriptor containing the item information payload.
+     * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
      * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string}>
      */
-    private function parseIinf(object $iinf): array
+    private function parseIinf(BoxDescriptor $iinf): array
     {
         $win = $iinf->window;
         $win->seek(0);
@@ -526,11 +533,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses a single item information entry (`infe`).
      *
-     * @param object $infe Box descriptor for the entry being parsed.
+     * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
      * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string}
      */
-    private function parseInfe(object $infe): array
+    private function parseInfe(BoxDescriptor $infe): array
     {
         $win = $infe->window;
         $win->seek(0);
@@ -575,11 +582,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses item locations and returns extent definitions keyed by item id.
      *
-     * @param object $iloc Box descriptor representing the `iloc` payload.
+     * @param BoxDescriptor $iloc Box descriptor representing the `iloc` payload.
      *
      * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>
      */
-    private function parseIloc(object $iloc): array
+    private function parseIloc(BoxDescriptor $iloc): array
     {
         $win = $iloc->window;
         $win->seek(0);
@@ -618,6 +625,7 @@ final readonly class IsoBmffExtractor
             $dataReferenceIndex = $win->readU16BE();
             $baseOffset         = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
             $extentCount        = $win->readU16BE();
+            /** @var list<array{offset:int,length:int}> $extents */
             $extents            = [];
 
             for ($j = 0; $j < $extentCount; ++$j) {
@@ -643,11 +651,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the primary item box (`pitm`) and returns the referenced item id.
      *
-     * @param object $pitm Box descriptor containing the primary item payload.
+     * @param BoxDescriptor $pitm Box descriptor containing the primary item payload.
      *
-     * @return int|null
+     * @return int
      */
-    private function parsePitm(object $pitm): ?int
+    private function parsePitm(BoxDescriptor $pitm): int
     {
         $win = $pitm->window;
         $win->seek(0);
@@ -660,11 +668,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the QuickTime keys box into an index of identifier strings.
      *
-     * @param object $keys Box descriptor for the QuickTime `keys` box.
+     * @param BoxDescriptor $keys Box descriptor for the QuickTime `keys` box.
      *
      * @return array<int, string>
      */
-    private function parseKeys(object $keys): array
+    private function parseKeys(BoxDescriptor $keys): array
     {
         $win = $keys->window;
         $win->seek(0);
@@ -698,12 +706,12 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the iTunes-style list (`ilst`) box using the discovered key index.
      *
-     * @param object             $ilst     Box descriptor for the `ilst` container.
+     * @param BoxDescriptor       $ilst     Box descriptor for the `ilst` container.
      * @param array<int, string> $keyIndex
      *
      * @return array<string, string>
      */
-    private function parseIlst(object $ilst, array $keyIndex): array
+    private function parseIlst(BoxDescriptor $ilst, array $keyIndex): array
     {
         $result = [];
         foreach ($this->walkChildren($ilst) as $entry) {
@@ -723,10 +731,7 @@ final readonly class IsoBmffExtractor
 
             foreach ($this->walkChildren($entry) as $sub) {
                 if ($sub->type === self::BOX_DATA) {
-                    $value = $this->parseDataBox($sub);
-                    if ($value !== null) {
-                        $result[$keyName] = $value;
-                    }
+                    $result[$keyName] = $this->parseDataBox($sub);
                 }
             }
         }
@@ -737,11 +742,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses a free-form metadata key (----) into a dotted namespace string.
      *
-     * @param object $entry Box descriptor representing the free-form entry.
+     * @param BoxDescriptor $entry Box descriptor representing the free-form entry.
      *
      * @return string|null
      */
-    private function parseFreeformKey(object $entry): ?string
+    private function parseFreeformKey(BoxDescriptor $entry): ?string
     {
         $mean = null;
         $name = null;
@@ -753,7 +758,7 @@ final readonly class IsoBmffExtractor
             }
         }
 
-        if ($mean === null || $name === null) {
+        if (!is_string($mean) || $mean === '' || !is_string($name) || $name === '') {
             return null;
         }
 
@@ -769,11 +774,11 @@ final readonly class IsoBmffExtractor
      * trims the trailing terminators so that callers receive clean strings.
      * Binary payload types are returned untouched.
      *
-     * @param object $data Box descriptor for the `data` box.
+     * @param BoxDescriptor $data Box descriptor for the `data` box.
      *
-     * @return string|null
+     * @return string
      */
-    private function parseDataBox(object $data): ?string
+    private function parseDataBox(BoxDescriptor $data): string
     {
         $win = $data->window;
         $win->seek(0);
@@ -820,14 +825,17 @@ final readonly class IsoBmffExtractor
      */
     private function isExifItem(array $info): bool
     {
-        if (isset($info['itemType']) && strcasecmp((string) $info['itemType'], self::BOX_EXIF) === 0) {
+        $itemType = $info['itemType'] ?? null;
+        if (is_string($itemType) && strcasecmp($itemType, self::BOX_EXIF) === 0) {
             return true;
         }
-        if (isset($info['name']) && strcasecmp((string) $info['name'], self::BOX_EXIF) === 0) {
+        $name = $info['name'] ?? null;
+        if (is_string($name) && strcasecmp($name, self::BOX_EXIF) === 0) {
             return true;
         }
-        if (isset($info['contentType'])) {
-            $ct = strtolower((string) $info['contentType']);
+        $contentType = $info['contentType'] ?? null;
+        if (is_string($contentType)) {
+            $ct = strtolower($contentType);
 
             return $ct === 'application/exif' || $ct === 'image/tiff';
         }
@@ -842,11 +850,12 @@ final readonly class IsoBmffExtractor
      */
     private function isXmpItem(array $info): bool
     {
-        if (!isset($info['contentType'])) {
+        $contentType = $info['contentType'] ?? null;
+        if (!is_string($contentType)) {
             return false;
         }
 
-        return strtolower((string) $info['contentType']) === 'application/rdf+xml';
+        return strtolower($contentType) === 'application/rdf+xml';
     }
 
     /**
@@ -890,7 +899,7 @@ final readonly class IsoBmffExtractor
             0       => 0,
             1       => $window->readU8(),
             2       => $window->readU16BE(),
-            3       => unpack('N', "\0" . $window->read(3))[1],
+            3       => $this->unpackInteger('N', "\0" . $window->read(3)),
             4       => $window->readU32BE(),
             8       => $window->readU64BE(),
             default => throw new ParseError("unsupported integer size $bytes"),
@@ -938,20 +947,42 @@ final readonly class IsoBmffExtractor
             return null;
         }
 
-        $value = unpack('N', $fourcc)[1];
+        $value = $this->unpackInteger('N', $fourcc);
 
         return $value > 0 ? $value : null;
     }
 
     /**
+     * @param string $format
+     * @param string $bytes
+     *
+     * @return int
+     */
+    private function unpackInteger(string $format, string $bytes): int
+    {
+        $result = unpack($format, $bytes);
+
+        if ($result === false || !isset($result[1])) {
+            throw new ParseError('Failed to unpack integer value.');
+        }
+
+        $value = $result[1];
+        if (!is_int($value) && !is_float($value)) {
+            throw new ParseError('Unpacked value is not numeric.');
+        }
+
+        return (int) $value;
+    }
+
+    /**
      * Iterates through child boxes within a container, yielding descriptors.
      *
-     * @param object $parent Parent box descriptor whose content is iterated.
+     * @param BoxDescriptor $parent Parent box descriptor whose content is iterated.
      * @param int    $offset Optional relative byte offset where iteration begins.
      *
-     * @return iterable<object{type:string,size:int,offset:int,contentOffset:int,contentSize:int,window:StreamWindow,userType:?string}>
+     * @return iterable<BoxDescriptor>
      */
-    private function walkChildren(object $parent, int $offset = 0): iterable
+    private function walkChildren(BoxDescriptor $parent, int $offset = 0): iterable
     {
         if ($offset < 0 || $offset > $parent->contentSize) {
             throw new ParseError('child offset outside container');
@@ -978,9 +1009,9 @@ final readonly class IsoBmffExtractor
      * @param int $offset Absolute byte offset of the box within the stream.
      * @param int $limit  Limit offset that bounds the container.
      *
-     * @return object
+     * @return BoxDescriptor
      */
-    private function readBoxAt(int $offset, int $limit): object
+    private function readBoxAt(int $offset, int $limit): BoxDescriptor
     {
         if ($offset < 0 || $offset > $limit) {
             throw new ParseError('box offset outside container');
@@ -1016,14 +1047,14 @@ final readonly class IsoBmffExtractor
         $contentSize   = $size - $headerSize;
         $window        = $this->stream->window($contentOffset, $contentSize);
 
-        return (object) [
-            'type'          => $type,
-            'size'          => $size,
-            'offset'        => $offset,
-            'contentOffset' => $contentOffset,
-            'contentSize'   => $contentSize,
-            'window'        => $window,
-            'userType'      => $userType,
-        ];
+        return new BoxDescriptor(
+            $type,
+            $size,
+            $offset,
+            $contentOffset,
+            $contentSize,
+            $window,
+            $userType,
+        );
     }
 }

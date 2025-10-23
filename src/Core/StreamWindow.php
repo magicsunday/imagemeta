@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use function is_float;
+use function is_int;
 use function ord;
 use function unpack;
 
@@ -77,6 +79,10 @@ final class StreamWindow
      */
     public function read(int $len): string
     {
+        if ($len === 0) {
+            return '';
+        }
+
         if ($len < 0 || $this->cursor + $len > $this->length) {
             throw new BoundsError('window read out of range');
         }
@@ -104,7 +110,7 @@ final class StreamWindow
      */
     public function readU16BE(): int
     {
-        return unpack('n', $this->read(2))[1];
+        return $this->unpackInt('n', 2);
     }
 
     /**
@@ -114,7 +120,7 @@ final class StreamWindow
      */
     public function readU32BE(): int
     {
-        return unpack('N', $this->read(4))[1];
+        return $this->unpackInt('N', 4);
     }
 
     /**
@@ -128,5 +134,29 @@ final class StreamWindow
         $lo = $this->readU32BE();
 
         return ($hi << 32) | $lo;
+}
+
+    /**
+     * Reads a fixed number of bytes from the window and unpacks the first value using the given format.
+     *
+     * @param string $format Format string understood by {@see unpack}.
+     * @param int    $length Number of bytes to read before unpacking.
+     *
+     * @return int
+     */
+    private function unpackInt(string $format, int $length): int
+    {
+        $bytes  = $this->read($length);
+        $result = unpack($format, $bytes);
+
+        if ($result === false || !isset($result[1])) {
+            throw new ParseError('Failed to unpack integer from window.');
+        }
+        $value = $result[1];
+        if (!is_int($value) && !is_float($value)) {
+            throw new ParseError('Unpack returned a non-numeric value.');
+        }
+
+        return (int) $value;
     }
 }

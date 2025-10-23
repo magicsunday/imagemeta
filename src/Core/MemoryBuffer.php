@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use function is_float;
+use function is_int;
 use function ord;
 use function strlen;
 use function substr;
@@ -84,6 +86,10 @@ final class MemoryBuffer
      */
     public function read(int $length): string
     {
+        if ($length === 0) {
+            return '';
+        }
+
         $end = $this->pos + $length;
         if ($length < 0 || $end > $this->size()) {
             throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $length);
@@ -114,7 +120,7 @@ final class MemoryBuffer
      */
     public function readU16LE(): int
     {
-        return unpack('v', $this->read(2))[1];
+        return $this->unpackInt('v', 2);
     }
 
     /**
@@ -124,7 +130,7 @@ final class MemoryBuffer
      */
     public function readU16BE(): int
     {
-        return unpack('n', $this->read(2))[1];
+        return $this->unpackInt('n', 2);
     }
 
     /**
@@ -134,7 +140,7 @@ final class MemoryBuffer
      */
     public function readU32LE(): int
     {
-        return unpack('V', $this->read(4))[1];
+        return $this->unpackInt('V', 4);
     }
 
     /**
@@ -144,7 +150,7 @@ final class MemoryBuffer
      */
     public function readU32BE(): int
     {
-        return unpack('N', $this->read(4))[1];
+        return $this->unpackInt('N', 4);
     }
 
     /**
@@ -171,5 +177,29 @@ final class MemoryBuffer
         $lo = $this->readU32BE();
 
         return ($hi << 32) | $lo;
+}
+
+    /**
+     * Reads bytes from the buffer and unpacks the first value using the provided format.
+     *
+     * @param string $format Format accepted by {@see unpack}.
+     * @param int    $length Number of bytes to consume before unpacking.
+     *
+     * @return int
+     */
+    private function unpackInt(string $format, int $length): int
+    {
+        $bytes  = $this->read($length);
+        $result = unpack($format, $bytes);
+
+        if ($result === false || !isset($result[1])) {
+            throw new ParseError('Failed to unpack integer from buffer.');
+        }
+        $value = $result[1];
+        if (!is_int($value) && !is_float($value)) {
+            throw new ParseError('Unpack returned a non-numeric value.');
+        }
+
+        return (int) $value;
     }
 }

@@ -47,8 +47,8 @@ final class Registry
 
         return array_find(
             $this->decoders,
-            fn (MakerNotesDecoderInterface $decoder, int|string $prefix): bool => $prefix !== ''
-                && str_starts_with($make, (string) $prefix)
+            fn (MakerNotesDecoderInterface $decoder, string $prefix): bool => $prefix !== ''
+                && str_starts_with($make, $prefix)
         );
     }
 }
