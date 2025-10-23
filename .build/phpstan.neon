@@ -15,7 +15,3 @@ parameters:
     excludePaths:
         - %currentWorkingDirectory%/tests/
         - %currentWorkingDirectory%/.build/
-
-    ignoreErrors:
-        -
-            identifier: missingType.generics
