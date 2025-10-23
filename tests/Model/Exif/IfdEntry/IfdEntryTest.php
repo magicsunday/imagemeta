@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model\Exif\IfdEntry;
 
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -40,9 +41,9 @@ final class IfdEntryTest extends TestCase
     #[Test]
     public function testConstructorPreservesArrayValues(): void
     {
-        $value = [1, 2, 3];
+        $value = new ExifNumericList([1, 2, 3]);
 
-        $entry = new IfdEntry(0x8769, 3, count($value), $value);
+        $entry = new IfdEntry(0x8769, 3, count($value->values), $value);
 
         self::assertSame(0x8769, $entry->tag);
         self::assertSame(3, $entry->type);

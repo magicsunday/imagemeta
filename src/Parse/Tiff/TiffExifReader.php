@@ -15,6 +15,9 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
@@ -30,8 +33,6 @@ use function unpack;
 
 /**
  * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
- *
- * @phpstan-import-type ExifValue from IfdEntry
  */
 final class TiffExifReader
 {
@@ -155,9 +156,9 @@ final class TiffExifReader
      * @param int $count         Number of values represented.
      * @param int $valueOrOffset Inline value bytes or an offset into the blob.
      *
-     * @return ExifValue
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
      */
-    private function decodeValue(int $type, int $count, int $valueOrOffset): int|float|string|array
+    private function decodeValue(int $type, int $count, int $valueOrOffset): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
         $unitSize         = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
@@ -188,9 +189,9 @@ final class TiffExifReader
      * @param int    $count Number of values represented.
      * @param string $bytes Raw value bytes read from the blob.
      *
-     * @return ExifValue
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
      */
-    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|array
+    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
         $componentSize = $this->bytesPerComponent($type);
         $bytesLength   = strlen($bytes);
@@ -215,10 +216,12 @@ final class TiffExifReader
             for ($i = 0; $i < $count; ++$i) {
                 $num               = $this->read32FromBytes($bytes, $i * 8 + 0, $type === 10);
                 $den               = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
-                $rationalValues[] = [$num, $den];
+                $rationalValues[] = new ExifRational($num, $den);
             }
 
-            return $count === 1 ? $rationalValues[0] : $rationalValues;
+            return $count === 1
+                ? $rationalValues[0]
+                : new ExifRationalList($rationalValues);
         }
 
         $vals   = [];
@@ -239,7 +242,7 @@ final class TiffExifReader
             $cursor += $componentSize;
         }
 
-        return $count === 1 ? $vals[0] : $vals;
+        return $count === 1 ? $vals[0] : new ExifNumericList($vals);
     }
 
     /**
