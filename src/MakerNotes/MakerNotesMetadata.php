@@ -18,7 +18,7 @@ use function preg_match;
 /**
  * Immutable value object that describes normalised maker note metadata.
  */
-final class MakerNotesMetadata
+final readonly class MakerNotesMetadata
 {
     /**
      * @param string $vendor Vendor responsible for the maker note payload. Must not be empty.
