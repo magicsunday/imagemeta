@@ -18,6 +18,15 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
+use function fopen;
+use function fwrite;
+use function implode;
+use function pack;
+use function rewind;
+use function str_repeat;
+use function strlen;
+
 /**
  * Exercises the JPEG extractor using synthetic marker segments.
  *

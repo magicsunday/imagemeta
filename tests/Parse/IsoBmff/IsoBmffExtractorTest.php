@@ -18,6 +18,15 @@ use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
+use function fopen;
+use function fwrite;
+use function hex2bin;
+use function pack;
+use function rewind;
+use function strlen;
+use function substr;
+
 /**
  * Exercises the ISO BMFF extractor against synthetic container layouts.
  *
