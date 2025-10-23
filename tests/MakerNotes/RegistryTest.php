@@ -47,6 +47,15 @@ final class RegistryTest extends TestCase
     public function findsDecoderForRegisteredPrefix(string $make): void
     {
         $decoder = new class implements MakerNotesDecoderInterface {
+            /**
+             * Decodes the maker notes payload for the registered Apple decoder in this test.
+             *
+             * @param string      $raw   The raw maker notes data to decode.
+             * @param string      $make  The make string associated with the image metadata.
+             * @param string|null $model The optional model string associated with the image metadata.
+             *
+             * @return MakerNotesMetadata The decoded maker notes metadata instance.
+             */
             public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
             {
                 return new MakerNotesMetadata('Test', 0, '0000000000000000000000000000000000000000');
@@ -67,6 +76,15 @@ final class RegistryTest extends TestCase
     {
         $registry = new Registry();
         $registry->register('Canon', new class implements MakerNotesDecoderInterface {
+            /**
+             * Decodes the maker notes payload for the registered Canon decoder in this test.
+             *
+             * @param string      $raw   The raw maker notes data to decode.
+             * @param string      $make  The make string associated with the image metadata.
+             * @param string|null $model The optional model string associated with the image metadata.
+             *
+             * @return MakerNotesMetadata The decoded maker notes metadata instance.
+             */
             public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
             {
                 return new MakerNotesMetadata('Canon', 0, '0000000000000000000000000000000000000000');
