@@ -15,9 +15,9 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use XMLReader;
 
 /**
- * Lightweight streaming XMP (RDF/XML) parser via XMLReader.
- * - extrahiert gängige Properties (xmp:CreateDate, exif:DateTimeOriginal, dc:subject (Bag))
- * - belässt unbekannte Props als einfache textuelle Werte (Best-Effort).
+ * Lightweight streaming XMP (RDF/XML) parser backed by XMLReader.
+ * The parser extracts a curated subset of common fields and stores them
+ * using Clark notation while gracefully skipping everything else.
  */
 final class XmpParser
 {
@@ -27,7 +27,11 @@ final class XmpParser
     private const EXIF_NAMESPACE = 'http://ns.adobe.com/exif/1.0/';
 
     /**
-     * Parses a subset of XMP data and returns values keyed by Clark notation.
+     * Parses the provided XMP payload into a document object.
+     *
+     * @param string $xmpXml The raw XMP XML fragment.
+     *
+     * @return XmpDocument Parsed values keyed by Clark notation.
      */
     public function parse(string $xmpXml): XmpDocument
     {
@@ -37,7 +41,7 @@ final class XmpParser
         }
 
         $properties = [];
-        /** @var array{string, string}|null $pendingBag */
+        /** @var array{string, string}|null $pendingBag Tracks the surrounding element for dc:subject bags. */
         $pendingBag = null;
 
         while ($reader->read()) {
@@ -59,8 +63,8 @@ final class XmpParser
             if ($namespace === self::RDF_NAMESPACE && $localName === 'Bag' && $pendingBag !== null) {
                 $bag = $this->readBag($reader);
                 if ($bag !== []) {
-                    [$bagNs, $bagLocal]                                   = $pendingBag;
-                    $properties[$this->buildClarkName($bagNs, $bagLocal)] = $bag;
+                    [$bagNs, $bagLocal]                          = $pendingBag;
+                    $properties[$this->qname($bagNs, $bagLocal)] = $bag;
                 }
                 continue;
             }
@@ -73,7 +77,7 @@ final class XmpParser
             if ($this->isStringProperty($namespace, $localName)) {
                 $text = $this->readElementText($reader);
                 if ($text !== '') {
-                    $properties[$this->buildClarkName($namespace, $localName)] = $text;
+                    $properties[$this->qname($namespace, $localName)] = $text;
                 }
             }
         }
@@ -94,13 +98,28 @@ final class XmpParser
         return ($reader->namespaceURI ?? '') === $namespace && $reader->localName === $localName;
     }
 
-    private function buildClarkName(string $namespaceUri, string $localName): string
+    /**
+     * Builds a Clark notation qualified name for the provided pair.
+     *
+     * @param string $namespaceUri The element namespace URI.
+     * @param string $localName    The element's local name.
+     *
+     * @return string
+     */
+    private function qname(string $namespaceUri, string $localName): string
     {
         return $namespaceUri !== ''
             ? sprintf('{%s}%s', $namespaceUri, $localName)
             : $localName;
     }
 
+    /**
+     * Reads the concatenated text content of the current element.
+     *
+     * @param XMLReader $reader The active XML reader.
+     *
+     * @return string
+     */
     private function readElementText(XMLReader $reader): string
     {
         $text = '';
@@ -120,7 +139,13 @@ final class XmpParser
         return trim($text);
     }
 
-    /** @return list<string> */
+    /**
+     * Reads an rdf:Bag container into a list of items.
+     *
+     * @param XMLReader $reader The active XML reader.
+     *
+     * @return list<string>
+     */
     private function readBag(XMLReader $reader): array
     {
         $items = [];
