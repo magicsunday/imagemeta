@@ -15,6 +15,9 @@ use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function sha1;
+use function strlen;
+
 /**
  * Validates the Apple maker notes decoder implementation.
  *
