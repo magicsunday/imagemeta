@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Model;
 
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
@@ -33,5 +34,26 @@ final readonly class Metadata
         public array $xmpBlobs = [],
         public ?XmpDocument $xmpDoc = null,
     ) {
+    }
+
+    /**
+     * Returns the primary XMP document, optionally parsing it via the lightweight parser when
+     * no pre-parsed document has been supplied.
+     *
+     * The method keeps existing behaviour for callers that already provided an \MagicSunday\ImageMeta\Model\Xmp\XmpDocument
+     * instance while allowing consumers of the aggregate to obtain a curated subset of XMP data without having
+     * to instantiate the parser manually.
+     */
+    public function selectiveXmpDocument(): ?XmpDocument
+    {
+        if ($this->xmpDoc !== null) {
+            return $this->xmpDoc;
+        }
+
+        if ($this->xmpBlobs === []) {
+            return null;
+        }
+
+        return (new XmpParser())->parse($this->xmpBlobs[0]);
     }
 }

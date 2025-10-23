@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -67,6 +68,34 @@ final class FormatDetectorTest extends TestCase
         $this->expectException(ParseError::class);
 
         FormatDetector::detect($stream);
+    }
+
+    /**
+     * Ensures that too short streams raise a parse error because the signature cannot be read.
+     *
+     * @param string $bytes byte sequence to test
+     */
+    #[Test]
+    #[DataProvider('tooShortStreamProvider')]
+    public function detectThrowsWhenSignatureCannotBeRead(string $bytes): void
+    {
+        $stream = $this->createStream($bytes);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unable to read container signature');
+
+        FormatDetector::detect($stream);
+    }
+
+    /**
+     * Provides byte sequences that are insufficient to cover the signature reads.
+     *
+     * @return iterable<string, array{0: string}>
+     */
+    public static function tooShortStreamProvider(): iterable
+    {
+        yield 'empty stream' => [''];
+        yield 'single byte' => ["\xFF"];
     }
 
     /**

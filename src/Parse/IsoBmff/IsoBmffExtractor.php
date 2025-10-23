@@ -23,7 +23,9 @@ use function array_values;
 use function explode;
 use function is_float;
 use function is_int;
+use function iconv;
 use function preg_match;
+use function rtrim;
 use function str_starts_with;
 use function strcasecmp;
 use function strlen;
@@ -788,14 +790,33 @@ final readonly class IsoBmffExtractor
         $type = $win->readU32BE();
         $win->readU32BE(); // locale
         $payloadSize = $data->contentSize - 8;
-        $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
+        $payload = $payloadSize > 0 ? $win->read($payloadSize) : '';
 
-        if (
-            $type === self::DATA_TYPE_UTF8
-            || $type === self::DATA_TYPE_UTF16
-            || $type === self::DATA_TYPE_MAC_ROMAN
-        ) {
-            return trim($payload, "\0");
+        $trimmed = trim($payload, "\0");
+
+        if ($type === self::DATA_TYPE_UTF8) {
+            return $trimmed;
+        }
+
+        if ($type === self::DATA_TYPE_UTF16) {
+            $normalised = rtrim($payload, "\0");
+            $converted  = iconv('UTF-16BE', 'UTF-8//IGNORE', $normalised);
+
+            if ($converted !== false) {
+                return trim($converted, "\0");
+            }
+
+            return $trimmed;
+        }
+
+        if ($type === self::DATA_TYPE_MAC_ROMAN) {
+            $converted = iconv('macintosh', 'UTF-8//IGNORE', $trimmed);
+
+            if ($converted !== false) {
+                return trim($converted, "\0");
+            }
+
+            return $trimmed;
         }
 
         return $payload;

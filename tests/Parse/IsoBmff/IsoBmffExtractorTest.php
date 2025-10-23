@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function iconv;
 use function fopen;
 use function fwrite;
 use function hex2bin;
@@ -177,6 +178,40 @@ final class IsoBmffExtractorTest extends TestCase
     }
 
     /**
+     * Verifies UTF-16BE QuickTime data payloads are converted to UTF-8.
+     */
+    #[Test]
+    public function testDecodeUtf16DataBoxToUtf8(): void
+    {
+        $value         = 'Identifier UTF16';
+        $encoded       = iconv('UTF-8', 'UTF-16BE', $value);
+        self::assertIsString($encoded);
+        $utf16Payload  = $encoded . "\0\0";
+        $file          = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
+        $extractor     = $this->createExtractor($file);
+        [, , $qtMeta]  = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($value, $qtMeta->contentIdentifier());
+    }
+
+    /**
+     * Verifies MacRoman QuickTime data payloads are converted to UTF-8.
+     */
+    #[Test]
+    public function testDecodeMacRomanDataBoxToUtf8(): void
+    {
+        $value        = 'Café Society';
+        $macPayload   = 'Caf' . chr(0x8E) . ' Society' . "\0";
+        $file         = $this->createQuickTimeKeysFileWithData(7, $macPayload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($value, $qtMeta->contentIdentifier());
+    }
+
+    /**
      * Ensures items referencing external data are skipped.
      */
     #[Test]
@@ -247,12 +282,23 @@ final class IsoBmffExtractorTest extends TestCase
      */
     private function createFileWithQuickTimeKeys(string $value): string
     {
+        return $this->createQuickTimeKeysFileWithData(1, $value);
+    }
+
+    /**
+     * Builds a QuickTime `keys` metadata structure with a custom `data` payload.
+     *
+     * @param int    $type        Numeric QuickTime data type identifier.
+     * @param string $encodedData Raw payload bytes stored inside the `data` box.
+     */
+    private function createQuickTimeKeysFileWithData(int $type, string $encodedData): string
+    {
         $keysEntry = pack('N', 8 + strlen('com.apple.quicktime.content.identifier'))
             . 'mdta'
             . 'com.apple.quicktime.content.identifier';
         $keys = self::box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
 
-        $dataBox   = self::box('data', pack('N', 1) . pack('N', 0) . $value);
+        $dataBox   = self::box('data', pack('N', $type) . pack('N', 0) . $encodedData);
         $ilstEntry = self::box(pack('N', 1), $dataBox);
         $ilst      = self::box('ilst', $ilstEntry);
 
