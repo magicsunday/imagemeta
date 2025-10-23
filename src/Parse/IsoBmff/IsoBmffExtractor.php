@@ -33,7 +33,7 @@ use function unpack;
  * Streaming ISOBMFF reader for HEIC/AVIF/MP4/MOV.
  * Extracts EXIF/XMP payloads and QuickTime metadata.
  */
-final class IsoBmffExtractor
+final readonly class IsoBmffExtractor
 {
     /**
      * UUID identifying XMP payload boxes within ISO BMFF containers.
