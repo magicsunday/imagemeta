@@ -36,6 +36,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
+        self::assertSame(['_vendor', '_length', '_sha1'], array_keys($metadata));
         self::assertSame('Apple', $metadata['_vendor']);
         self::assertSame(strlen($raw), $metadata['_length']);
         self::assertSame(40, strlen($metadata['_sha1']));

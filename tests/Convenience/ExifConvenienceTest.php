@@ -67,6 +67,36 @@ final class ExifConvenienceTest extends TestCase
     }
 
     /**
+     * Ensures ISO values stored as floating point scalars are truncated to integers.
+     */
+    #[Test]
+    public function isoCastsFloatValuesToInteger(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 11, 2, [200.0, 400.0]),
+        ]);
+
+        $doc = new ExifDocument($ifd0, null, null, null, null);
+
+        self::assertSame(200, ExifConvenience::iso($doc));
+    }
+
+    /**
+     * Ensures ISO rational pairs are interpreted via their numerator/denominator representation.
+     */
+    #[Test]
+    public function isoDerivesValueFromRationalPair(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 5, 1, [320, 1]),
+        ]);
+
+        $doc = new ExifDocument($ifd0, null, null, null, null);
+
+        self::assertSame(320, ExifConvenience::iso($doc));
+    }
+
+    /**
      * Reads capture timestamp tags and verifies the helper delegates to the document parser to
      * return a timezone-aware DateTime.
      */

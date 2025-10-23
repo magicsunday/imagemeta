@@ -15,13 +15,13 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use Throwable;
 
-use function count;
+use function array_is_list;
 use function is_array;
 use function is_float;
 use function is_int;
-use function is_numeric;
 use function is_string;
 use function strlen;
 
@@ -96,7 +96,7 @@ final class ExifConvenience
     {
         $e = self::find($doc, ExifTag::EXPOSURE_TIME); // ExposureTime (rational)
 
-        return self::rationalToFloat($e?->value);
+        return ValueConverters::rationalToFloat($e?->value ?? null);
     }
 
     /**
@@ -110,7 +110,7 @@ final class ExifConvenience
     {
         $e = self::find($doc, ExifTag::F_NUMBER); // FNumber (rational)
 
-        return self::rationalToFloat($e?->value);
+        return ValueConverters::rationalToFloat($e?->value ?? null);
     }
 
     /**
@@ -124,7 +124,7 @@ final class ExifConvenience
     {
         $e = self::find($doc, ExifTag::FOCAL_LENGTH); // FocalLength (rational)
 
-        return self::rationalToFloat($e?->value);
+        return ValueConverters::rationalToFloat($e?->value ?? null);
     }
 
     /**
@@ -146,8 +146,20 @@ final class ExifConvenience
         $value = $entry->value;
 
         if (is_array($value)) {
-            // Some cameras store ISO as a list, keep the first element.
-            $value = $value[0] ?? null;
+            $first = self::firstNumericFromList($value);
+            if (is_int($first)) {
+                return $first;
+            }
+            if (is_float($first)) {
+                return (int) $first;
+            }
+
+            $rational = ValueConverters::rationalToFloat($value);
+            if ($rational !== null) {
+                return (int) $rational;
+            }
+
+            return null;
         }
 
         if (is_int($value)) {
@@ -203,27 +215,20 @@ final class ExifConvenience
     }
 
     /**
-     * Converts EXIF rational values (or lists of rationals) into a float.
+     * Extracts the first numeric value from a list of scalars.
      *
-     * @param mixed $v scalar, rational pair or list of rational pairs from an EXIF tag
+     * @param array<int, mixed> $value Potential list of numeric ISO values.
      *
-     * @return float|null normalised scalar value
+     * @return int|float|null
      */
-    private static function rationalToFloat(mixed $v): ?float
+    private static function firstNumericFromList(array $value): int|float|null
     {
-        if (is_array($v)) {
-            // [num, den] or list of rationals
-            if (count($v) === 2 && is_numeric($v[0] ?? null) && is_numeric($v[1] ?? null) && (int) $v[1] !== 0) {
-                return (float) $v[0] / (float) $v[1];
-            }
-            if (isset($v[0]) && is_array($v[0]) && count($v[0]) === 2) {
-                $n = $v[0][0] ?? 0;
-                $d = $v[0][1] ?? 1;
-
-                return (int) $d !== 0 ? (float) $n / (float) $d : null;
-            }
+        if (!array_is_list($value)) {
+            return null;
         }
 
-        return is_int($v) || is_float($v) ? (float) $v : null;
+        $first = $value[0] ?? null;
+
+        return is_int($first) || is_float($first) ? $first : null;
     }
 }

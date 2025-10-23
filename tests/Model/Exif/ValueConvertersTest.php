@@ -29,9 +29,9 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     #[DataProvider('provideValidRationals')]
     /**
-     * Ensures rational values represented as numerator/denominator pairs are converted to floats.
+     * Ensures rational values represented as numerator/denominator pairs or lists are converted to floats.
      *
-     * @param array{0:int,1:int} $value
+     * @param array{0:int,1:int}|list<array{0:int,1:int}> $value
      */
     public function convertsRationalPairsToFloat(array $value, float $expected): void
     {
@@ -39,12 +39,13 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{array{0:int,1:int}, float}>
+     * @return iterable<string, array{array{0:int,1:int}|list<array{0:int,1:int}>, float}>
      */
     public static function provideValidRationals(): iterable
     {
         yield 'positive integer' => [[3, 1], 3.0];
         yield 'fractional value' => [[5, 2], 2.5];
+        yield 'list of rationals' => [[[5, 2], [3, 1]], 2.5];
     }
 
     #[Test]
@@ -83,6 +84,7 @@ final class ValueConvertersTest extends TestCase
     {
         yield 'denominator zero' => [[[1, 0]]];
         yield 'not enough elements' => [[[1]]];
+        yield 'non rational list' => [[[1, 2, 3]]];
         yield 'string' => ['invalid'];
         yield 'null' => [null];
     }
