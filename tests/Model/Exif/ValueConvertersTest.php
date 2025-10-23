@@ -33,6 +33,9 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideValidRationals')]
     /**
      * Ensures rational values represented as numerator/denominator pairs or lists are converted to floats.
+     *
+     * @param ExifRational|ExifRationalList $value    The rational value to convert.
+     * @param float                         $expected The expected float representation.
      */
     public function convertsRationalPairsToFloat(ExifRational|ExifRationalList $value, float $expected): void
     {
@@ -59,6 +62,9 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideScalarInputs')]
     /**
      * Ensures scalar values fall back to float conversion when no rational pair is provided.
+     *
+     * @param int|float $value    The scalar input value.
+     * @param float     $expected The expected float representation.
      */
     public function convertsScalarsToFloat(int|float $value, float $expected): void
     {
@@ -78,6 +84,8 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideInvalidInputs')]
     /**
      * Ensures invalid values cannot be converted and return null instead.
+     *
+     * @param array|null $value The invalid rational input to convert.
      */
     public function returnsNullForInvalidRationalInputs(array|null $value): void
     {
