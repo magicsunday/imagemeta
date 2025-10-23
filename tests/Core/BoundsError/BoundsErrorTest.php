@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core\BoundsError;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -54,7 +55,7 @@ final class BoundsErrorTest extends TestCase
     #[Test]
     public function testMemoryBufferSeekOutsideRangeReportsAttemptedOffset(): void
     {
-        $buffer = new \MagicSunday\ImageMeta\Core\MemoryBuffer('guard');
+        $buffer = new MemoryBuffer('guard');
 
         $this->expectException(BoundsError::class);
         $this->expectExceptionMessage('MemoryBuffer seek out of range: 6');
