@@ -124,13 +124,16 @@ final class TiffExifReader
     private function parseBigTiffHeader(): void
     {
         // BigTIFF header after magic: 2 bytes: offset size (should be 8), 2 bytes: zero/reserved, then 8‑byte first IFD offset
-        $offSize = $this->readU16();
-        $this->readU16();
+        $offSize  = $this->readU16();
+        $reserved = $this->readU16();
+
         if ($offSize !== 8) {
             throw new ParseError('Unsupported BigTIFF offset size (expected 8)');
         }
 
-        // $zero is usually 0; keep reading first IFD via caller
+        if ($reserved !== 0) {
+            throw new ParseError('Bad BigTIFF header (reserved != 0)');
+        }
     }
 
     /**
