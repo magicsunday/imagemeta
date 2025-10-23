@@ -28,6 +28,9 @@ use function strlen;
  */
 final class StreamWindowTest extends TestCase
 {
+    /**
+     * Verifies that the window reports its configured length and initial cursor position.
+     */
     #[Test]
     public function testSizeReportsConfiguredLengthAndCursorStartsAtZero(): void
     {
@@ -37,6 +40,10 @@ final class StreamWindowTest extends TestCase
         self::assertSame(0, $window->tell());
     }
 
+    /**
+     * Seeks around inside the configured span and ensures the cursor reflects the requested
+     * positions.
+     */
     #[Test]
     public function testSeekMovesCursorWithinWindowBounds(): void
     {
@@ -49,6 +56,9 @@ final class StreamWindowTest extends TestCase
         self::assertSame(6, $window->tell());
     }
 
+    /**
+     * Attempts to seek beyond the window size to confirm a BoundsError is thrown.
+     */
     #[Test]
     public function testSeekThrowsBoundsErrorOutsideWindow(): void
     {
@@ -58,6 +68,9 @@ final class StreamWindowTest extends TestCase
         $window->seek(5);
     }
 
+    /**
+     * Reads bytes through the window and checks both the returned data and cursor advancement.
+     */
     #[Test]
     public function testReadReturnsRequestedBytesAndAdvancesCursor(): void
     {
@@ -67,6 +80,9 @@ final class StreamWindowTest extends TestCase
         self::assertSame(6, $window->tell());
     }
 
+    /**
+     * Ensures that read requests crossing the end of the window trigger a BoundsError.
+     */
     #[Test]
     public function testReadThrowsBoundsErrorWhenRequestCrossesEnd(): void
     {
@@ -76,6 +92,10 @@ final class StreamWindowTest extends TestCase
         $window->read(3);
     }
 
+    /**
+     * Reads sequential unsigned integers to verify the helpers decode packed big-endian values and
+     * advance the cursor appropriately.
+     */
     #[Test]
     public function testUnsignedIntegerHelpersReadSequentially(): void
     {
@@ -93,6 +113,9 @@ final class StreamWindowTest extends TestCase
         self::assertSame(strlen($payload), $window->tell());
     }
 
+    /**
+     * Confirms that insufficient remaining bytes cause the integer helper to raise a BoundsError.
+     */
     #[Test]
     public function testUnsignedIntegerHelpersThrowBoundsErrorOnShortData(): void
     {
@@ -110,7 +133,7 @@ final class StreamWindowTest extends TestCase
      *
      * @param string $payload Bytes to insert into the temporary stream.
      *
-     * @return Stream
+     * @return Stream Stream that exposes the payload for windowed reads.
      */
     private function createStream(string $payload): Stream
     {
