@@ -206,6 +206,14 @@ final readonly class ExifDocument
     {
         $v = $ifd?->get($tag)?->value ?? null;
 
-        return is_int($v) ? $v : (is_float($v) ? (int) $v : null);
+        if (is_int($v)) {
+            return $v;
+        }
+
+        if (is_float($v)) {
+            return (int) $v;
+        }
+
+        return null;
     }
 }
