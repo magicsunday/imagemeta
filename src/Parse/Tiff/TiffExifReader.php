@@ -214,9 +214,9 @@ final class TiffExifReader
         $cursor = 0;
         for ($i = 0; $i < $count; ++$i) {
             $vals[] = match ($type) {
-                1       => ord($bytes[$cursor++]),                              // BYTE
-                6       => self::toSigned(ord($bytes[$cursor++]), 8),          // SBYTE
-                7       => ord($bytes[$cursor++]),                              // UNDEFINED → return as byte
+                1       => ord($bytes[$cursor]),                                // BYTE
+                6       => self::toSigned(ord($bytes[$cursor]), 8),            // SBYTE
+                7       => ord($bytes[$cursor]),                                // UNDEFINED → return as byte
                 3       => $this->unpackU16(substr($bytes, $cursor, 2)),        // SHORT
                 8       => $this->unpackS16(substr($bytes, $cursor, 2)),        // SSHORT
                 4       => $this->unpackU32(substr($bytes, $cursor, 4)),        // LONG
