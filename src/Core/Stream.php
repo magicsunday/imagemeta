@@ -104,7 +104,7 @@ final class Stream
     public function read(int $len): string
     {
         if ($len < 0 || $this->pos + $len > $this->size) {
-            throw new BoundsError("read beyond EOF: {$this->pos}+{$len} > {$this->size}");
+            throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size);
         }
         $data = fread($this->fh, $len);
         if ($data === false || strlen($data) !== $len) {
