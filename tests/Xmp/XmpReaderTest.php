@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
  */
 final class XmpReaderTest extends TestCase
 {
-    private const DC_NAMESPACE = 'http://purl.org/dc/elements/1.1/';
+    private const string DC_NAMESPACE = 'http://purl.org/dc/elements/1.1/';
 
     /**
      * Ensures mixed text and CDATA nodes are concatenated verbatim.

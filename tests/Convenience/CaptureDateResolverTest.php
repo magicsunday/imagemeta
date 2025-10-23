@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(CaptureDateResolver::class)]
 final class CaptureDateResolverTest extends TestCase
 {
-    private const XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';
+    private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';
 
     /**
      * Uses only XMP metadata to confirm the resolver falls back to the CreateDate string and
