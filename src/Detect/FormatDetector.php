@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Detect;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use RuntimeException;
 
 /**
  * Detects the container type of a binary stream based on magic numbers.
@@ -26,7 +26,7 @@ final class FormatDetector
      *
      * @return ContainerType detected container format
      *
-     * @throws RuntimeException when the signature does not match a known container
+     * @throws ParseError when the signature does not match a known container
      */
     public static function detect(Stream $stream): ContainerType
     {
@@ -41,6 +41,6 @@ final class FormatDetector
             return ContainerType::ISOBMFF;
         }
         // a few HEIC files may start with 0 size+ftyp; we already cover 'ftyp' at [4..8]
-        throw new RuntimeException('Unsupported or unknown container');
+        throw new ParseError('Unsupported or unknown container');
     }
 }
