@@ -25,10 +25,10 @@ final class XmpDocumentTest extends TestCase
     private const XMP_NAMESPACE  = 'http://ns.adobe.com/xap/1.0/';
     private const EXIF_NAMESPACE = 'http://ns.adobe.com/exif/1.0/';
 
-    #[Test]
     /**
-     * Ensures accessor methods expose values parsed by the XMP reader.
+     * Verifies reader-sourced documents expose their values through accessors.
      */
+    #[Test]
     public function testDocumentAccessorsWithReaderData(): void
     {
         $xml = <<<XML
@@ -56,10 +56,10 @@ XML;
         self::assertNull($document->get(self::DC_NAMESPACE, 'title'));
     }
 
-    #[Test]
     /**
-     * Confirms parser-fed documents yield expected accessor results.
+     * Checks parser-generated documents return the expected accessor values.
      */
+    #[Test]
     public function testDocumentAccessorsWithParserData(): void
     {
         $xml = <<<XML
@@ -91,10 +91,10 @@ XML;
         self::assertSame(['First', 'Second'], $document->find('subject'));
     }
 
-    #[Test]
     /**
-     * Validates external entity bag entries are ignored for safety.
+     * Ensures external entity bag entries are ignored to avoid unsafe values.
      */
+    #[Test]
     public function testExternalEntityBagIsIgnored(): void
     {
         $xml = <<<XML
