@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpReader;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -28,10 +27,10 @@ final class XmpDocumentTest extends TestCase
     private const string EXIF_NAMESPACE = 'http://ns.adobe.com/exif/1.0/';
 
     /**
-     * Verifies reader-sourced documents expose their values through accessors.
+     * Verifies parser-sourced documents expose their values through accessors.
      */
     #[Test]
-    public function testDocumentAccessorsWithReaderData(): void
+    public function testDocumentAccessorsWithRdfFragment(): void
     {
         $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -49,7 +48,7 @@ final class XmpDocumentTest extends TestCase
 </rdf:RDF>
 XML;
 
-        $document = (new XmpReader())->parse($xml);
+        $document = (new XmpParser())->parse($xml);
 
         self::assertSame('2024-03-30T12:34:56Z', $document->get(self::XMP_NAMESPACE, 'CreateDate'));
         self::assertSame('2024-03-30T12:34:56Z', $document->find('CreateDate'));

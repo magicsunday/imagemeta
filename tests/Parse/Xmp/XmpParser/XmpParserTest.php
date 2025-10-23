@@ -109,4 +109,22 @@ XML;
 
         self::assertSame('captured', $document->get('urn:example', 'value'));
     }
+
+    /**
+     * Ensures mixed text nodes and CDATA sections are concatenated verbatim.
+     */
+    #[Test]
+    public function parsePreservesMixedTextAndCdata(): void
+    {
+        $xml = '<dc:title xmlns:dc="http://purl.org/dc/elements/1.1/">'
+            . 'Prefix <![CDATA[<tag> & middle]]> suffix'
+            . '</dc:title>';
+
+        $document = (new XmpParser())->parse($xml);
+
+        $key = '{' . self::DC_NS . '}title';
+        self::assertSame('Prefix <tag> & middle suffix', $document->get(self::DC_NS, 'title'));
+        self::assertArrayHasKey($key, $document->data);
+        self::assertSame('Prefix <tag> & middle suffix', $document->find('title'));
+    }
 }
