@@ -11,12 +11,16 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Exif;
 
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRationalList;
+
 /**
  * Represents a single entry within an image file directory (IFD).
  *
- * @phpstan-type ExifRational array{0:int,1:int}
- * @phpstan-type ExifNumericList list<int|float>
- * @phpstan-type ExifRationalList list<ExifRational>
+ * @phpstan-type ExifRational \MagicSunday\ImageMeta\Model\Exif\Value\ExifRational
+ * @phpstan-type ExifRationalList \MagicSunday\ImageMeta\Model\Exif\Value\ExifRationalList
+ * @phpstan-type ExifNumericList \MagicSunday\ImageMeta\Model\Exif\Value\ExifNumericList
  * @phpstan-type ExifValue int|float|string|ExifRational|ExifRationalList|ExifNumericList
  */
 final readonly class IfdEntry
@@ -31,7 +35,7 @@ final readonly class IfdEntry
         public int $tag,
         public int $type,
         public int $count,
-        public int|float|string|array $value,
+        public int|float|string|ExifRational|ExifRationalList|ExifNumericList $value,
     ) {
     }
 }

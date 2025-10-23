@@ -15,6 +15,8 @@ use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRationalList;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -39,21 +41,24 @@ final class ExifDocumentTest extends TestCase
 
         $exifIfd = new Ifd([
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 200),
-            ExifTag::EXPOSURE_TIME            => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [1, 125]),
-            ExifTag::F_NUMBER                 => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [28, 10]),
-            ExifTag::FOCAL_LENGTH             => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, [50, 1]),
+            ExifTag::EXPOSURE_TIME            => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, new ExifRational(1, 125)),
+            ExifTag::F_NUMBER                 => new IfdEntry(ExifTag::F_NUMBER, 5, 1, new ExifRational(28, 10)),
+            ExifTag::FOCAL_LENGTH             => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, new ExifRational(50, 1)),
             ExifTag::LENS_MODEL               => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF50mm F1.2L USM'),
             ExifTag::DATETIME_ORIGINAL        => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01 12:34:56'),
             ExifTag::OFFSET_TIME_ORIGINAL     => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
         ]);
 
+        $gpsLat = ExifRationalList::fromPairs([[40, 1], [26, 1], [3000, 100]]);
+        $gpsLon = ExifRationalList::fromPairs([[79, 1], [58, 1], [6000, 100]]);
+
         $gpsIfd = new Ifd([
             ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, 3, [[40, 1], [26, 1], [3000, 100]]),
+            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, count($gpsLat), $gpsLat),
             ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
-            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, 3, [[79, 1], [58, 1], [6000, 100]]),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, count($gpsLon), $gpsLon),
             ExifTag::GPS_ALTITUDE_REF  => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
-            ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, [123, 1]),
+            ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(123, 1)),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);

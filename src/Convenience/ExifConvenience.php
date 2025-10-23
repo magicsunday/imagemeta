@@ -18,9 +18,6 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use Throwable;
 
-use function array_is_list;
-use function is_array;
-use function is_float;
 use function is_int;
 use function is_string;
 use function strlen;
@@ -145,29 +142,13 @@ final class ExifConvenience
 
         $value = $entry->value;
 
-        if (is_array($value)) {
-            $first = self::firstNumericFromList($value);
-            if (is_int($first)) {
-                return $first;
-            }
-            if (is_float($first)) {
-                return (int) $first;
-            }
-
-            $rational = ValueConverters::rationalToFloat($value);
-            if ($rational !== null) {
-                return (int) $rational;
-            }
-
-            return null;
-        }
-
         if (is_int($value)) {
             return $value;
         }
 
-        if (is_float($value)) {
-            return (int) $value;
+        $numeric = ValueConverters::rationalToFloat($value);
+        if ($numeric !== null) {
+            return (int) $numeric;
         }
 
         return null;
@@ -214,21 +195,4 @@ final class ExifConvenience
         return $doc->exifIfd?->get($tag) ?? $doc->ifd0->get($tag) ?? null;
     }
 
-    /**
-     * Extracts the first numeric value from a list of scalars.
-     *
-     * @param array<int, mixed> $value Potential list of numeric ISO values.
-     *
-     * @return int|float|null
-     */
-    private static function firstNumericFromList(array $value): int|float|null
-    {
-        if (!array_is_list($value)) {
-            return null;
-        }
-
-        $first = $value[0] ?? null;
-
-        return is_int($first) || is_float($first) ? $first : null;
-    }
 }

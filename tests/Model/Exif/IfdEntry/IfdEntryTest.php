@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Model\Exif\IfdEntry;
 
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifNumericList;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -35,12 +36,12 @@ final class IfdEntryTest extends TestCase
     }
 
     /**
-     * Verifies that complex values such as arrays are exposed unchanged.
+     * Verifies that complex value objects are exposed unchanged.
      */
     #[Test]
-    public function testConstructorPreservesArrayValues(): void
+    public function testConstructorPreservesComplexValues(): void
     {
-        $value = [1, 2, 3];
+        $value = new ExifNumericList([1, 2, 3]);
 
         $entry = new IfdEntry(0x8769, 3, count($value), $value);
 

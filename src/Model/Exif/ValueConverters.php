@@ -11,6 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Exif;
 
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRationalList;
+
 use function array_is_list;
 use function count;
 use function is_array;
@@ -34,17 +38,17 @@ final readonly class ValueConverters
      *
      * @return float|null
      */
-    public static function rationalToFloat(int|float|string|array|null $v): ?float
+    public static function rationalToFloat(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $v): ?float
     {
-        if (is_array($v)) {
-            $pair = self::normaliseRationalPair($v);
-            if ($pair !== null && $pair[1] !== 0) {
-                return (float) $pair[0] / (float) $pair[1];
-            }
+        $pair = self::extractRational($v);
+        if ($pair instanceof ExifRational) {
+            return $pair->asFloat();
+        }
 
-            $list = self::normaliseRationalList($v);
-            if ($list !== null && isset($list[0]) && $list[0][1] !== 0) {
-                return (float) $list[0][0] / (float) $list[0][1];
+        if ($v instanceof ExifNumericList) {
+            $first = $v->first();
+            if ($first !== null) {
+                return (float) $first;
             }
 
             return null;
@@ -71,18 +75,19 @@ final readonly class ValueConverters
         $lonRef = $gps->get(ExifTag::GPS_LONGITUDE_REF)?->value ?? null;
         $lonVal = $gps->get(ExifTag::GPS_LONGITUDE)?->value ?? null;
 
-        $latPairs = is_array($latVal) ? self::normaliseRationalList($latVal) : null;
-        $lonPairs = is_array($lonVal) ? self::normaliseRationalList($lonVal) : null;
+        $latPairs = self::extractRationalList($latVal);
+        $lonPairs = self::extractRationalList($lonVal);
 
         $lat = self::dmsToFloat($latRef, $latPairs);
         $lon = self::dmsToFloat($lonRef, $lonPairs);
 
         $alt = null;
-        if (($e = $gps->get(ExifTag::GPS_ALTITUDE)) && is_array($e->value)) {
-            $altPair = self::normaliseRationalPair($e->value);
-            if ($altPair !== null && $altPair[1] !== 0) {
-                $alt = $altPair[0] / $altPair[1];
+        if ($altEntry = $gps->get(ExifTag::GPS_ALTITUDE)) {
+            $altPair = self::extractRational($altEntry->value);
+            if ($altPair instanceof ExifRational) {
+                $alt = $altPair->asFloat();
             }
+
             if ($alt !== null && ($ref = $gps->get(ExifTag::GPS_ALTITUDE_REF)) && (int) ($ref->value ?? 0) === 1) {
                 $alt = -$alt;
             }
@@ -94,19 +99,21 @@ final readonly class ValueConverters
     /**
      * Converts EXIF GPS degrees/minutes/seconds to a float coordinate.
      *
-     * @param string|null        $ref   Direction reference (N/E/S/W).
+     * @param string|null          $ref Direction reference (N/E/S/W).
      * @param ExifRationalList|null $val Rational triplet describing the coordinate.
      *
      * @return float|null
      */
-    private static function dmsToFloat(?string $ref, ?array $val): ?float
+    private static function dmsToFloat(?string $ref, ?ExifRationalList $val): ?float
     {
-        if (!is_string($ref) || !is_array($val) || count($val) < 3) {
+        if (!is_string($ref) || $val === null || $val->count() < 3) {
             return null;
         }
-        $deg = self::rationalToFloat($val[0] ?? null);
-        $min = self::rationalToFloat($val[1] ?? null);
-        $sec = self::rationalToFloat($val[2] ?? null);
+
+        $deg = $val->get(0)?->asFloat();
+        $min = $val->get(1)?->asFloat();
+        $sec = $val->get(2)?->asFloat();
+
         if ($deg === null || $min === null || $sec === null) {
             return null;
         }
@@ -117,11 +124,59 @@ final readonly class ValueConverters
     }
 
     /**
+     * Extracts a rational pair from the provided EXIF value.
+     *
+     * @param ExifValue|null $value
+     */
+    private static function extractRational(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): ?ExifRational
+    {
+        if ($value instanceof ExifRational) {
+            return $value;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            return $value->first();
+        }
+
+        if (is_array($value)) {
+            $pair = self::normaliseRationalPair($value);
+
+            return $pair === null ? null : new ExifRational($pair[0], $pair[1]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Extracts a rational list from the provided EXIF value.
+     *
+     * @param ExifValue|null $value
+     */
+    private static function extractRationalList(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): ?ExifRationalList
+    {
+        if ($value instanceof ExifRationalList) {
+            return $value;
+        }
+
+        if ($value instanceof ExifRational) {
+            return new ExifRationalList([$value]);
+        }
+
+        if (is_array($value)) {
+            $pairs = self::normaliseRationalList($value);
+
+            return $pairs === null ? null : ExifRationalList::fromPairs($pairs);
+        }
+
+        return null;
+    }
+
+    /**
      * Normalises a potential rational pair into a strict two-element array.
      *
      * @param array<int, mixed> $value Candidate value from EXIF data.
      *
-     * @return ExifRational|null
+     * @return array{0:int,1:int}|null
      */
     private static function normaliseRationalPair(array $value): ?array
     {
@@ -144,7 +199,7 @@ final readonly class ValueConverters
      *
      * @param array<int, mixed> $value Candidate value from EXIF data.
      *
-     * @return ExifRationalList|null
+     * @return list<array{0:int,1:int}>|null
      */
     private static function normaliseRationalList(array $value): ?array
     {

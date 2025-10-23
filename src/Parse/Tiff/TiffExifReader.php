@@ -18,6 +18,9 @@ use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRationalList;
 
 use function chr;
 use function ord;
@@ -157,7 +160,7 @@ final class TiffExifReader
      *
      * @return ExifValue
      */
-    private function decodeValue(int $type, int $count, int $valueOrOffset): int|float|string|array
+    private function decodeValue(int $type, int $count, int $valueOrOffset): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
         $unitSize         = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
@@ -190,7 +193,7 @@ final class TiffExifReader
      *
      * @return ExifValue
      */
-    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|array
+    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
         $componentSize = $this->bytesPerComponent($type);
         $bytesLength   = strlen($bytes);
@@ -215,10 +218,10 @@ final class TiffExifReader
             for ($i = 0; $i < $count; ++$i) {
                 $num               = $this->read32FromBytes($bytes, $i * 8 + 0, $type === 10);
                 $den               = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
-                $rationalValues[] = [$num, $den];
+                $rationalValues[] = new ExifRational($num, $den);
             }
 
-            return $count === 1 ? $rationalValues[0] : $rationalValues;
+            return $count === 1 ? $rationalValues[0] : new ExifRationalList($rationalValues);
         }
 
         $vals   = [];
@@ -239,7 +242,7 @@ final class TiffExifReader
             $cursor += $componentSize;
         }
 
-        return $count === 1 ? $vals[0] : $vals;
+        return $count === 1 ? $vals[0] : new ExifNumericList($vals);
     }
 
     /**

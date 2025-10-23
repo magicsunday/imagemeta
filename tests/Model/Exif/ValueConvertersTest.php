@@ -14,6 +14,9 @@ namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\Value\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -30,22 +33,20 @@ final class ValueConvertersTest extends TestCase
     #[DataProvider('provideValidRationals')]
     /**
      * Ensures rational values represented as numerator/denominator pairs or lists are converted to floats.
-     *
-     * @param array{0:int,1:int}|list<array{0:int,1:int}> $value
      */
-    public function convertsRationalPairsToFloat(array $value, float $expected): void
+    public function convertsRationalPairsToFloat(ExifRational|ExifRationalList $value, float $expected): void
     {
         self::assertSame($expected, ValueConverters::rationalToFloat($value));
     }
 
     /**
-     * @return iterable<string, array{array{0:int,1:int}|list<array{0:int,1:int}>, float}>
+     * @return iterable<string, array{ExifRational|ExifRationalList, float}>
      */
     public static function provideValidRationals(): iterable
     {
-        yield 'positive integer' => [[3, 1], 3.0];
-        yield 'fractional value' => [[5, 2], 2.5];
-        yield 'list of rationals' => [[[5, 2], [3, 1]], 2.5];
+        yield 'positive integer' => [new ExifRational(3, 1), 3.0];
+        yield 'fractional value' => [new ExifRational(5, 2), 2.5];
+        yield 'list of rationals' => [ExifRationalList::fromPairs([[5, 2], [3, 1]]), 2.5];
     }
 
     #[Test]
@@ -82,9 +83,9 @@ final class ValueConvertersTest extends TestCase
      */
     public static function provideInvalidInputs(): iterable
     {
-        yield 'denominator zero' => [[[1, 0]]];
-        yield 'not enough elements' => [[[1]]];
-        yield 'non rational list' => [[[1, 2, 3]]];
+        yield 'denominator zero' => [new ExifRational(1, 0)];
+        yield 'empty rational list' => [new ExifRationalList([])];
+        yield 'empty numeric list' => [new ExifNumericList([])];
         yield 'string' => ['invalid'];
         yield 'null' => [null];
     }
@@ -95,13 +96,16 @@ final class ValueConvertersTest extends TestCase
      */
     public function extractsGpsCoordinatesWithPositiveAltitude(): void
     {
+        $lat = ExifRationalList::fromPairs([[51, 1], [30, 1], [0, 1]]);
+        $lon = ExifRationalList::fromPairs([[0, 1], [7, 1], [3000, 100]]);
+
         $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, 3, [[51, 1], [30, 1], [0, 1]]),
+            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, count($lat), $lat),
             ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
-            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, 3, [[0, 1], [7, 1], [3000, 100]]),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, count($lon), $lon),
             ExifTag::GPS_ALTITUDE_REF  => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
-            ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, [450, 10]),
+            ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(450, 10)),
         ]);
 
         $result = ValueConverters::gpsFromIfd($gps);
@@ -117,13 +121,16 @@ final class ValueConvertersTest extends TestCase
      */
     public function extractsGpsCoordinatesWithNegativeHemisphereAndAltitude(): void
     {
+        $lat = ExifRationalList::fromPairs([[33, 1], [15, 1], [1800, 100]]);
+        $lon = ExifRationalList::fromPairs([[70, 1], [45, 1], [0, 1]]);
+
         $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'S'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, 3, [[33, 1], [15, 1], [1800, 100]]),
+            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, count($lat), $lat),
             ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'W'),
-            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, 3, [[70, 1], [45, 1], [0, 1]]),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, count($lon), $lon),
             ExifTag::GPS_ALTITUDE_REF  => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 1),
-            ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, [250, 2]),
+            ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(250, 2)),
         ]);
 
         $result = ValueConverters::gpsFromIfd($gps);
@@ -139,11 +146,14 @@ final class ValueConvertersTest extends TestCase
      */
     public function extractsGpsCoordinatesWithoutAltitude(): void
     {
+        $lat = ExifRationalList::fromPairs([[10, 1], [0, 1], [0, 1]]);
+        $lon = ExifRationalList::fromPairs([[20, 1], [30, 1], [0, 1]]);
+
         $gps = new Ifd([
             ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, 3, [[10, 1], [0, 1], [0, 1]]),
+            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, count($lat), $lat),
             ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
-            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, 3, [[20, 1], [30, 1], [0, 1]]),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, count($lon), $lon),
         ]);
 
         $result = ValueConverters::gpsFromIfd($gps);
