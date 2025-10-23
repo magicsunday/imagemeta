@@ -27,6 +27,7 @@ use function strcasecmp;
 use function strlen;
 use function strtolower;
 use function substr;
+use function trim;
 use function unpack;
 
 /**
