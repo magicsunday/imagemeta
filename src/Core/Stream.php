@@ -11,6 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use function fopen;
+use function fread;
+use function fseek;
+use function fstat;
+use function ord;
+use function strlen;
+use function unpack;
+
 /**
  * Provides a bounds-checked streaming reader over a binary resource handle.
  */

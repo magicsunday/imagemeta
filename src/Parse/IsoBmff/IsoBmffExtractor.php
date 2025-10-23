@@ -16,6 +16,19 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
+use function array_merge;
+use function array_unique;
+use function array_unshift;
+use function array_values;
+use function explode;
+use function preg_match;
+use function str_starts_with;
+use function strcasecmp;
+use function strlen;
+use function strtolower;
+use function substr;
+use function unpack;
+
 /**
  * Streaming ISOBMFF reader for HEIC/AVIF/MP4/MOV.
  * Extracts EXIF/XMP payloads and QuickTime metadata.

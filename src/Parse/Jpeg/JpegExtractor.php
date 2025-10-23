@@ -15,6 +15,19 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 
+use function array_key_exists;
+use function array_keys;
+use function count;
+use function implode;
+use function ksort;
+use function ord;
+use function range;
+use function sort;
+use function sprintf;
+use function str_starts_with;
+use function strlen;
+use function substr;
+
 /**
  * Parses JPEG streams to extract metadata-bearing APP segments.
  */
