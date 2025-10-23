@@ -178,7 +178,20 @@ final class ExifConvenience
      *
      * @param ExifDocument $doc parsed EXIF metadata
      *
-     * @return array<string, mixed> normalised metadata values
+     * @return array{
+     *     make: ?string,
+     *     model: ?string,
+     *     lens: ?string,
+     *     orientation: ?int,
+     *     captured_at: ?string,
+     *     exposure_s: ?float,
+     *     fnumber: ?float,
+     *     focal_mm: ?float,
+     *     iso: ?int,
+     *     gps_lat: ?float,
+     *     gps_lon: ?float,
+     *     gps_alt: ?float,
+     * } normalised metadata values
      */
     public static function toArray(ExifDocument $doc): array
     {
@@ -195,9 +208,9 @@ final class ExifConvenience
             'fnumber'     => self::fNumber($doc),
             'focal_mm'    => self::focalLength($doc),
             'iso'         => self::iso($doc),
-            'gps_lat'     => $gps['lat'],
-            'gps_lon'     => $gps['lon'],
-            'gps_alt'     => $gps['alt'],
+            'gps_lat'     => $gps['lat'] !== null ? (float) $gps['lat'] : null,
+            'gps_lon'     => $gps['lon'] !== null ? (float) $gps['lon'] : null,
+            'gps_alt'     => $gps['alt'] !== null ? (float) $gps['alt'] : null,
         ];
     }
 
