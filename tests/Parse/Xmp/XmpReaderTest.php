@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Xmp;
+namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Parse\Xmp\XmpReader;
 use PHPUnit\Framework\Attributes\Test;

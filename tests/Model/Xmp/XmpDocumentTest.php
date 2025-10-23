@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Xmp;
+namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpReader;
