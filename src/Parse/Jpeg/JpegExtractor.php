@@ -22,6 +22,7 @@ use function implode;
 use function ksort;
 use function ord;
 use function range;
+use function sha1;
 use function sort;
 use function sprintf;
 use function str_starts_with;
@@ -72,6 +73,9 @@ final class JpegExtractor
 
     /** @var list<string> */
     private array $xmpPackets = [];
+
+    /** @var array<string, bool> */
+    private array $xmpPacketHashes = [];
 
     /** @var list<string> */
     private array $iccSegments = [];
@@ -176,6 +180,7 @@ final class JpegExtractor
         $this->iccExpectedCount = null;
         $this->iccProfile       = null;
         $this->iptcPayloads     = [];
+        $this->xmpPacketHashes  = [];
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -322,7 +327,13 @@ final class JpegExtractor
         }
 
         if (str_starts_with($payload, self::XMP_SIGNATURE)) {
-            $this->xmpPackets[] = substr($payload, strlen(self::XMP_SIGNATURE));
+            $packet   = substr($payload, strlen(self::XMP_SIGNATURE));
+            $hash     = sha1($packet);
+
+            if (!array_key_exists($hash, $this->xmpPacketHashes)) {
+                $this->xmpPacketHashes[$hash] = true;
+                $this->xmpPackets[]           = $packet;
+            }
         }
     }
 

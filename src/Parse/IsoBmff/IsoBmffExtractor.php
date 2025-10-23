@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
-use function array_merge;
+use function array_key_exists;
 use function array_unique;
 use function array_unshift;
 use function array_values;
@@ -33,6 +33,7 @@ use function strlen;
 use function strtolower;
 use function substr;
 use function trim;
+use function sha1;
 
 /**
  * Streaming ISOBMFF reader for HEIC/AVIF/MP4/MOV.
@@ -160,19 +161,22 @@ final readonly class IsoBmffExtractor
         $xmpBlobs      = [];
         $qtKeys        = [];
         $queuedUuidXmp = [];
+        $xmpHashes     = [];
 
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === self::BOX_META) {
-                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys);
+                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             } elseif ($box->type === self::BOX_MOOV) {
-                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys);
+                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
                 $queuedUuidXmp[] = $this->readAll($box->window);
             }
         }
 
         if ($queuedUuidXmp !== []) {
-            $xmpBlobs = array_merge($xmpBlobs, $queuedUuidXmp);
+            foreach ($queuedUuidXmp as $blob) {
+                $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
+            }
         }
 
         $qt = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
@@ -207,15 +211,16 @@ final readonly class IsoBmffExtractor
      * @param BoxDescriptor         $moov      Box descriptor for the movie box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
+     * @param array<string, bool>   $xmpHashes
      * @param array<string, string> $qtKeys
      */
-    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
+    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             } elseif ($child->type === self::BOX_UDTA) {
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             }
         }
     }
@@ -226,13 +231,14 @@ final readonly class IsoBmffExtractor
      * @param BoxDescriptor         $udta      Box descriptor for the user data box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
+     * @param array<string, bool>   $xmpHashes
      * @param array<string, string> $qtKeys
      */
-    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
+    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
         foreach ($this->walkChildren($udta) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             }
         }
     }
@@ -243,9 +249,10 @@ final readonly class IsoBmffExtractor
      * @param BoxDescriptor         $meta      Box descriptor for the metadata box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
+     * @param array<string, bool>   $xmpHashes
      * @param array<string, string> $qtKeys
      */
-    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys): void
+    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
         if ($meta->contentSize < 4) {
             throw new ParseError('meta box truncated');
@@ -266,15 +273,15 @@ final readonly class IsoBmffExtractor
 
         // Resolve referenced XMP payloads in declared priority order.
         foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], null) as $blob) {
-            $xmpBlobs[] = $blob;
+            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
         foreach ($payloads['directXmp'] as $blob) {
-            $xmpBlobs[] = $blob;
+            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
         foreach ($payloads['uuidXmp'] as $blob) {
-            $xmpBlobs[] = $blob;
+            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
         $qtKeys = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes']);
@@ -412,6 +419,25 @@ final readonly class IsoBmffExtractor
         }
 
         return $resolved;
+    }
+
+    /**
+     * Adds an XMP blob if it was not previously encountered.
+     *
+     * @param list<string>        $xmpBlobs
+     * @param array<string, bool> $xmpHashes
+     * @param string              $blob
+     */
+    private function appendUniqueXmp(array &$xmpBlobs, array &$xmpHashes, string $blob): void
+    {
+        $hash = sha1($blob);
+
+        if (array_key_exists($hash, $xmpHashes)) {
+            return;
+        }
+
+        $xmpHashes[$hash] = true;
+        $xmpBlobs[]       = $blob;
     }
 
     /**
