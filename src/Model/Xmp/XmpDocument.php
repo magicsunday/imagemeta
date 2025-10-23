@@ -33,6 +33,9 @@ final readonly class XmpDocument
     /**
      * Looks up a property by namespace URI and local name.
      *
+     * @param string $namespaceUri Namespace URI that scopes the property.
+     * @param string $localName    Local property name to retrieve.
+     *
      * @return array<int, string>|string|null
      */
     public function get(string $namespaceUri, string $localName): array|string|null
@@ -45,6 +48,8 @@ final readonly class XmpDocument
 
     /**
      * Finds the first property with the given local name independent of the namespace.
+     *
+     * @param string $localName Local property name to search for.
      *
      * @return array<int, string>|string|null
      */

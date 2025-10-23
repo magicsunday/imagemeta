@@ -61,6 +61,10 @@ final class CaptureDateResolver
 
     /**
      * Extracts the ISO 8601 create date from the XMP document.
+     *
+     * @param XmpDocument $document XMP document holding metadata properties.
+     *
+     * @return string|null ISO 8601 timestamp or null when unavailable.
      */
     private static function readXmpCreateDate(XmpDocument $document): ?string
     {
