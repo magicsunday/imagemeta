@@ -95,6 +95,18 @@ XML;
     public static function provideInvalidXmpFragments(): iterable
     {
         yield 'broken xml declaration' => ['<?xml version="1.0"?><rdf:RDF'];
-        yield 'unsupported namespace' => ['<root xmlns="urn:example"><value>ignored</value></root>'];
+    }
+
+    /**
+     * Ensures elements from arbitrary namespaces are preserved using Clark notation.
+     */
+    #[Test]
+    public function parseCapturesValuesFromGenericNamespaces(): void
+    {
+        $xml = '<root xmlns="urn:example"><value>captured</value></root>';
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame('captured', $document->get('urn:example', 'value'));
     }
 }
