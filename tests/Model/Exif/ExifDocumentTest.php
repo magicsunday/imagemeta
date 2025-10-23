@@ -27,10 +27,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExifDocument::class)]
 final class ExifDocumentTest extends TestCase
 {
-    #[Test]
     /**
      * Ensures an Exif document exposes representative camera, exposure, and GPS metadata values.
      */
+    #[Test]
     public function exposesRepresentativeExifValues(): void
     {
         $ifd0 = new Ifd([
