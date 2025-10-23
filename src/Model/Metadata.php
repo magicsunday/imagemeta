@@ -22,8 +22,8 @@ final readonly class Metadata
     /**
      * @param list<string>       $exifBlobs TIFF‑EXIF blobs (first is primary)
      * @param QuickTimeMeta|null $quickTime QuickTime metadata extracted from ISO BMFF containers.
-     * @param list<string>       $xmpBlobs  XMP packets (RDF/XML), first is primary
      * @param ExifDocument|null  $exifDoc   Parsed representation of the primary EXIF document.
+     * @param list<string>       $xmpBlobs  XMP packets (RDF/XML), first is primary
      * @param XmpDocument|null   $xmpDoc    Parsed representation of the primary XMP packet.
      */
     public function __construct(
