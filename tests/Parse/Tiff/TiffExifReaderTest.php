@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
@@ -113,6 +114,28 @@ final class TiffExifReaderTest extends TestCase
         $entry = $document->ifd0->get(ExifTag::GPS_ALTITUDE_REF);
         self::assertNotNull($entry);
         self::assertSame([1, 2, 3], $entry->value);
+    }
+
+    /**
+     * Ensures truncated byte payloads are converted into parse errors instead of PHP notices.
+     */
+    #[Test]
+    public function rejectsTruncatedBytePayload(): void
+    {
+        $reader = new TiffExifReader();
+
+        $refClass = new \ReflectionClass($reader);
+        $boProp   = $refClass->getProperty('bo');
+        $boProp->setAccessible(true);
+        $boProp->setValue($reader, Endian::Little);
+
+        $decodeBytes = $refClass->getMethod('decodeBytes');
+        $decodeBytes->setAccessible(true);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Truncated value for TIFF type 1');
+
+        $decodeBytes->invoke($reader, 1, 2, "\x01");
     }
 
     /**
