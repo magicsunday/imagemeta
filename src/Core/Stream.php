@@ -11,16 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+
 use function fopen;
 use function fread;
 use function fseek;
 use function fstat;
 use function is_array;
-use function is_float;
-use function is_int;
 use function ord;
 use function strlen;
-use function unpack;
 
 /**
  * Provides a bounds-checked streaming reader over a binary resource handle.
@@ -172,7 +171,7 @@ final class Stream
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
 
-        return ($hi << 32) | $lo;
+        return Unpack::combineUint32($hi, $lo);
     }
 
     /**
@@ -193,25 +192,15 @@ final class Stream
     /**
      * Reads the requested number of bytes and unpacks the first value using the provided format.
      *
-     * @param string $format Format string understood by {@see unpack}.
+     * @param string $format Format string understood by {@see Unpack::int}.
      * @param int    $length Number of bytes to consume from the stream.
      *
      * @return int
      */
     private function unpackInt(string $format, int $length): int
     {
-        $bytes  = $this->read($length);
-        $result = unpack($format, $bytes);
+        $bytes = $this->read($length);
 
-        if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack integer from stream.');
-        }
-
-        $value = $result[1];
-        if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpack returned a non-numeric value.');
-        }
-
-        return (int) $value;
+        return Unpack::int($format, $bytes, 'integer from stream');
     }
 }
