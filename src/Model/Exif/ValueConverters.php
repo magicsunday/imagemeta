@@ -90,11 +90,11 @@ final readonly class ValueConverters
 
         $alt      = null;
         $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
-        if ($altEntry !== null && $altEntry->value instanceof ExifRational) {
+        if ($altEntry instanceof IfdEntry && $altEntry->value instanceof ExifRational) {
             $alt = self::rationalToFloat($altEntry->value);
 
             $altRef = $gps->get(ExifTag::GPS_ALTITUDE_REF);
-            if ($alt !== null && $altRef !== null) {
+            if ($alt !== null && $altRef instanceof IfdEntry) {
                 $refValue = $altRef->value;
                 if (is_int($refValue) && $refValue === 1) {
                     $alt = -$alt;
@@ -115,9 +115,10 @@ final readonly class ValueConverters
      */
     private static function dmsToFloat(?string $ref, ?ExifRationalList $val): ?float
     {
-        if (!is_string($ref) || $val === null || count($val->values) < 3) {
+        if (!is_string($ref) || !$val instanceof ExifRationalList || count($val->values) < 3) {
             return null;
         }
+
         $values = $val->values;
         $deg    = self::rationalToFloat($values[0]);
         $min    = self::rationalToFloat($values[1]);

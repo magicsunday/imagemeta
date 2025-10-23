@@ -23,8 +23,10 @@ use PHPUnit\Framework\TestCase;
  */
 final class XmpParserTest extends TestCase
 {
-    private const string XMP_NS  = 'http://ns.adobe.com/xap/1.0/';
-    private const string DC_NS   = 'http://purl.org/dc/elements/1.1/';
+    private const string XMP_NS = 'http://ns.adobe.com/xap/1.0/';
+
+    private const string DC_NS = 'http://purl.org/dc/elements/1.1/';
+
     private const string EXIF_NS = 'http://ns.adobe.com/exif/1.0/';
 
     /**

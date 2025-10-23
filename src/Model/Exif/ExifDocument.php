@@ -103,7 +103,7 @@ final readonly class ExifDocument
         // Tag ExifTag::EXPOSURE_TIME (RATIONAL)
         $entry = $this->exifIfd?->get(ExifTag::EXPOSURE_TIME);
 
-        return $entry !== null ? ValueConverters::rationalToFloat($entry->value) : null;
+        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
     }
 
     /**
@@ -116,7 +116,7 @@ final readonly class ExifDocument
         // Tag ExifTag::F_NUMBER (RATIONAL)
         $entry = $this->exifIfd?->get(ExifTag::F_NUMBER);
 
-        return $entry !== null ? ValueConverters::rationalToFloat($entry->value) : null;
+        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
     }
 
     /**
@@ -129,7 +129,7 @@ final readonly class ExifDocument
         // Tag ExifTag::FOCAL_LENGTH (RATIONAL)
         $entry = $this->exifIfd?->get(ExifTag::FOCAL_LENGTH);
 
-        return $entry !== null ? ValueConverters::rationalToFloat($entry->value) : null;
+        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
     }
 
     /**
@@ -159,7 +159,7 @@ final readonly class ExifDocument
      */
     public function gps(): array
     {
-        if ($this->gpsIfd === null) {
+        if (!$this->gpsIfd instanceof Ifd) {
             return ['lat' => null, 'lon' => null, 'alt' => null];
         }
 
@@ -177,6 +177,7 @@ final readonly class ExifDocument
         if ($raw === null || $raw === '') {
             return null;
         }
+
         $offset = $this->offsetTimeOriginalRaw(); // like "+01:00"
         $tz     = ($offset !== null && $offset !== '') ? new DateTimeZone($offset) : new DateTimeZone('UTC');
 
@@ -194,12 +195,12 @@ final readonly class ExifDocument
      */
     private function str(?Ifd $ifd, int $tag): ?string
     {
-        if ($ifd === null) {
+        if (!$ifd instanceof Ifd) {
             return null;
         }
 
         $entry = $ifd->get($tag);
-        if ($entry === null) {
+        if (!$entry instanceof IfdEntry) {
             return null;
         }
 
@@ -218,12 +219,12 @@ final readonly class ExifDocument
      */
     private function int(?Ifd $ifd, int $tag): ?int
     {
-        if ($ifd === null) {
+        if (!$ifd instanceof Ifd) {
             return null;
         }
 
         $entry = $ifd->get($tag);
-        if ($entry === null) {
+        if (!$entry instanceof IfdEntry) {
             return null;
         }
 
@@ -234,6 +235,7 @@ final readonly class ExifDocument
             if (is_int($first)) {
                 return $first;
             }
+
             if (is_float($first)) {
                 return (int) $first;
             }

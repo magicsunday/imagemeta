@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use Throwable;
@@ -40,7 +41,7 @@ final class CaptureDateResolver
      */
     public static function bestCaptureDateTime(Metadata $metadata): ?DateTimeImmutable
     {
-        if ($metadata->exifDoc !== null) {
+        if ($metadata->exifDoc instanceof ExifDocument) {
             $dateTime = ExifConvenience::captureDateTime($metadata->exifDoc);
 
             if ($dateTime instanceof DateTimeImmutable) {
@@ -48,7 +49,7 @@ final class CaptureDateResolver
             }
         }
 
-        if ($metadata->xmpDoc !== null) {
+        if ($metadata->xmpDoc instanceof XmpDocument) {
             $createDate = self::readXmpCreateDate($metadata->xmpDoc);
 
             if ($createDate !== null) {

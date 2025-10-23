@@ -61,6 +61,7 @@ final class MetadataReader
         if ($exifBlobs !== []) {
             $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]);
         }
+
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpReader())->parse($xmpBlobs[0]);
         }
@@ -84,6 +85,7 @@ final class MetadataReader
         if ($exifBlobs !== []) {
             $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]);
         }
+
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpReader())->parse($xmpBlobs[0]);
         }

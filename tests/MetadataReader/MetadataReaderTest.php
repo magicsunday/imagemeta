@@ -35,7 +35,8 @@ use function unlink;
 final class MetadataReaderTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
-    private const string XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
+
+    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
     private const int MARKER_APP1 = 0xE1;
 
@@ -45,7 +46,7 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function testReadJpegPopulatesMetadata(): void
     {
-        $tiff = self::littleEndianEmptyTiff();
+        $tiff = $this->littleEndianEmptyTiff();
         $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="Synthetic" />'
@@ -53,8 +54,8 @@ final class MetadataReaderTest extends TestCase
             . '</x:xmpmeta>';
 
         $jpeg = "\xFF\xD8"
-            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
-            . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
             . "\xFF\xD9";
 
         $path = $this->writeTempFile($jpeg);
@@ -79,7 +80,7 @@ final class MetadataReaderTest extends TestCase
     #[Test]
     public function testReadIsoBmffPopulatesMetadata(): void
     {
-        $tiff = self::littleEndianEmptyTiff();
+        $tiff = $this->littleEndianEmptyTiff();
         $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
@@ -87,9 +88,9 @@ final class MetadataReaderTest extends TestCase
             . '</x:xmpmeta>';
         $identifier = 'qt-meta-identifier';
 
-        $ftyp       = self::box('ftyp', 'isom');
-        $meta       = self::fullBox('meta', self::box('Exif', self::EXIF_SIGNATURE . $tiff) . self::box('XMP ', $xmp));
-        $moov       = self::quickTimeMoov($identifier);
+        $ftyp       = $this->box('ftyp', 'isom');
+        $meta       = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp));
+        $moov       = $this->quickTimeMoov($identifier);
         $isoPayload = $ftyp . $meta . $moov;
 
         $path = $this->writeTempFile($isoPayload);
@@ -131,7 +132,7 @@ final class MetadataReaderTest extends TestCase
     /**
      * Builds a minimal little-endian TIFF header with no directory entries.
      */
-    private static function littleEndianEmptyTiff(): string
+    private function littleEndianEmptyTiff(): string
     {
         return 'II' . pack('v', 0x2A) . pack('V', 8) . pack('v', 0) . pack('V', 0);
     }
@@ -144,7 +145,7 @@ final class MetadataReaderTest extends TestCase
      *
      * @return string Serialized JPEG segment.
      */
-    private static function segment(int $marker, string $payload): string
+    private function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
     }
@@ -157,7 +158,7 @@ final class MetadataReaderTest extends TestCase
      *
      * @return string Serialized box bytes.
      */
-    private static function box(string $type, string $payload): string
+    private function box(string $type, string $payload): string
     {
         $size = 8 + strlen($payload);
 
@@ -174,14 +175,14 @@ final class MetadataReaderTest extends TestCase
      *
      * @return string Serialized full box bytes.
      */
-    private static function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
+    private function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
     {
         $header = chr($version)
             . chr(($flags >> 16) & 0xFF)
             . chr(($flags >> 8) & 0xFF)
             . chr($flags & 0xFF);
 
-        return self::box($type, $header . $payload);
+        return $this->box($type, $header . $payload);
     }
 
     /**
@@ -191,21 +192,21 @@ final class MetadataReaderTest extends TestCase
      *
      * @return string Serialized QuickTime `moov` box structure.
      */
-    private static function quickTimeMoov(string $value): string
+    private function quickTimeMoov(string $value): string
     {
         $keysEntry = pack('N', 8 + strlen('com.apple.quicktime.content.identifier'))
             . 'mdta'
             . 'com.apple.quicktime.content.identifier';
-        $keys = self::box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
+        $keys = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
 
-        $dataBox   = self::box('data', pack('N', 1) . pack('N', 0) . $value);
-        $ilstEntry = self::box(pack('N', 1), $dataBox);
-        $ilst      = self::box('ilst', $ilstEntry);
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
 
         $metaPayload = "\0\0\0\0" . $keys . $ilst;
-        $meta        = self::box('meta', $metaPayload);
-        $udta        = self::box('udta', $meta);
+        $meta        = $this->box('meta', $metaPayload);
+        $udta        = $this->box('udta', $meta);
 
-        return self::box('moov', $udta);
+        return $this->box('moov', $udta);
     }
 }

@@ -97,7 +97,7 @@ final class ExifConvenience
     {
         $entry = self::find($doc, ExifTag::EXPOSURE_TIME); // ExposureTime (rational)
 
-        return $entry !== null
+        return $entry instanceof IfdEntry
             ? ValueConverters::rationalToFloat($entry->value)
             : null;
     }
@@ -113,7 +113,7 @@ final class ExifConvenience
     {
         $entry = self::find($doc, ExifTag::F_NUMBER); // FNumber (rational)
 
-        return $entry !== null
+        return $entry instanceof IfdEntry
             ? ValueConverters::rationalToFloat($entry->value)
             : null;
     }
@@ -129,7 +129,7 @@ final class ExifConvenience
     {
         $entry = self::find($doc, ExifTag::FOCAL_LENGTH); // FocalLength (rational)
 
-        return $entry !== null
+        return $entry instanceof IfdEntry
             ? ValueConverters::rationalToFloat($entry->value)
             : null;
     }
@@ -146,7 +146,7 @@ final class ExifConvenience
         // ISO can be ExifIFD tag ExifTag::PHOTOGRAPHIC_SENSITIVITY or the newer ExifTag::ISO_SPEED
         $entry = self::find($doc, ExifTag::ISO_SPEED) ?? self::find($doc, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
 
-        if ($entry === null) {
+        if (!$entry instanceof IfdEntry) {
             return null;
         }
 
@@ -165,6 +165,7 @@ final class ExifConvenience
             if (is_int($first)) {
                 return $first;
             }
+
             if (is_float($first)) {
                 return (int) $first;
             }
@@ -241,7 +242,7 @@ final class ExifConvenience
     private static function find(ExifDocument $doc, int $tag): ?IfdEntry
     {
         $exifEntry = $doc->exifIfd?->get($tag);
-        if ($exifEntry !== null) {
+        if ($exifEntry instanceof IfdEntry) {
             return $exifEntry;
         }
 

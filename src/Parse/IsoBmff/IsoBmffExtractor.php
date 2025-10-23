@@ -260,7 +260,7 @@ final readonly class IsoBmffExtractor
         [$exifItemIds, $xmpItemIds] = $this->gatherItemIds($payloads['itemInfos'], $payloads['primaryItemId']);
 
         // Resolve EXIF item payloads and normalize leading headers.
-        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], fn (string $blob): string => $this->normalizeExifBlob($blob)) as $blob) {
+        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...)) as $blob) {
             $exifBlobs[] = $blob;
         }
 
@@ -272,6 +272,7 @@ final readonly class IsoBmffExtractor
         foreach ($payloads['directXmp'] as $blob) {
             $xmpBlobs[] = $blob;
         }
+
         foreach ($payloads['uuidXmp'] as $blob) {
             $xmpBlobs[] = $blob;
         }
@@ -316,6 +317,7 @@ final readonly class IsoBmffExtractor
                     foreach ($this->parseIinf($child) as $info) {
                         $itemInfos[$info['id']] = $info;
                     }
+
                     break;
                 case self::BOX_ILOC:
                     $locations = $this->parseIloc($child);
@@ -330,6 +332,7 @@ final readonly class IsoBmffExtractor
                     if ($child->userType === self::XMP_UUID) {
                         $uuidXmp[] = $this->readAll($child->window);
                     }
+
                     break;
                 case self::BOX_KEYS:
                     $keysMaps[] = $this->parseKeys($child);
@@ -367,6 +370,7 @@ final readonly class IsoBmffExtractor
             if ($this->isExifItem($info)) {
                 $exifItemIds[] = $info['id'];
             }
+
             if ($this->isXmpItem($info)) {
                 $xmpItemIds[] = $info['id'];
             }
@@ -403,6 +407,7 @@ final readonly class IsoBmffExtractor
             if ($data === null) {
                 continue;
             }
+
             $resolved[] = $transform !== null ? $transform($data) : $data;
         }
 
@@ -465,6 +470,7 @@ final readonly class IsoBmffExtractor
         if ($location['constructionMethod'] !== 0) {
             return null;
         }
+
         if ($location['dataReferenceIndex'] !== 0) {
             return null;
         }
@@ -476,6 +482,7 @@ final readonly class IsoBmffExtractor
             if ($length === 0) {
                 continue;
             }
+
             $total += $length;
             if ($total > $this->stream->size()) {
                 throw new ParseError('iloc extent length exceeds file size');
@@ -486,9 +493,11 @@ final readonly class IsoBmffExtractor
             if ($baseOffset < 0 || $extentOffset < 0) {
                 throw new ParseError('iloc negative offset');
             }
+
             if ($baseOffset > PHP_INT_MAX - $extentOffset) {
                 throw new ParseError('iloc offset overflow');
             }
+
             $offset = $baseOffset + $extentOffset;
             if ($offset > $this->stream->size() - $length) {
                 throw new ParseError('iloc extent outside file');
@@ -511,6 +520,7 @@ final readonly class IsoBmffExtractor
     {
         $win = $iinf->window;
         $win->seek(0);
+
         $version = $win->readU8();
         $this->readUInt24($win); // flags
 
@@ -522,6 +532,7 @@ final readonly class IsoBmffExtractor
             if ($child->type !== self::BOX_INFE) {
                 continue;
             }
+
             $items[] = $this->parseInfe($child);
             ++$index;
             if ($index >= $entryCount) {
@@ -543,6 +554,7 @@ final readonly class IsoBmffExtractor
     {
         $win = $infe->window;
         $win->seek(0);
+
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
@@ -592,6 +604,7 @@ final readonly class IsoBmffExtractor
     {
         $win = $iloc->window;
         $win->seek(0);
+
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
@@ -612,18 +625,18 @@ final readonly class IsoBmffExtractor
         for ($i = 0; $i < $itemCount; ++$i) {
             if ($version < 2) {
                 $itemId = $win->readU16BE();
+            } elseif (($flags & 0x0001) !== 0) {
+                $itemId = $win->readU32BE();
             } else {
-                if (($flags & 0x0001) !== 0) {
-                    $itemId = $win->readU32BE();
-                } else {
-                    $itemId = $win->readU16BE();
-                }
+                $itemId = $win->readU16BE();
             }
+
             $constructionMethod = 0;
             if ($version === 1 || $version === 2) {
                 $tmp                = $win->readU16BE();
                 $constructionMethod = ($tmp >> 12) & 0x0F;
             }
+
             $dataReferenceIndex = $win->readU16BE();
             $baseOffset         = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
             $extentCount        = $win->readU16BE();
@@ -634,6 +647,7 @@ final readonly class IsoBmffExtractor
                 if ($indexSize > 0) {
                     $this->readUInt($win, $indexSize); // extent_index, ignored
                 }
+
                 $extentOffset = $offsetSize > 0 ? $this->readUInt($win, $offsetSize) : 0;
                 $extentLength = $lengthSize > 0 ? $this->readUInt($win, $lengthSize) : 0;
                 $extents[]    = ['offset' => $extentOffset, 'length' => $extentLength];
@@ -661,6 +675,7 @@ final readonly class IsoBmffExtractor
     {
         $win = $pitm->window;
         $win->seek(0);
+
         $version = $win->readU8();
         $this->readUInt24($win);
 
@@ -678,7 +693,9 @@ final readonly class IsoBmffExtractor
     {
         $win = $keys->window;
         $win->seek(0);
-        $win->read(4); // version/flags
+        // version/flags
+        $win->read(4);
+
         $entryCount = $win->readU32BE();
         $map        = [];
         $pos        = $win->tell();
@@ -687,12 +704,14 @@ final readonly class IsoBmffExtractor
             if ($pos + 8 > $keys->contentSize) {
                 throw new ParseError('keys entry truncated');
             }
+
             $win->seek($pos);
             $size      = $win->readU32BE();
             $namespace = $win->read(4);
             if ($size < 8 || $pos + $size > $keys->contentSize) {
                 throw new ParseError('invalid keys entry size');
             }
+
             $name    = $win->read($size - 8);
             $map[$i] = $name;
             $pos += $size;
@@ -787,6 +806,7 @@ final readonly class IsoBmffExtractor
         if ($data->contentSize < 8) {
             throw new ParseError('data box too small');
         }
+
         $type = $win->readU32BE();
         $win->readU32BE(); // locale
         $payloadSize = $data->contentSize - 8;
@@ -850,10 +870,12 @@ final readonly class IsoBmffExtractor
         if (is_string($itemType) && strcasecmp($itemType, self::BOX_EXIF) === 0) {
             return true;
         }
+
         $name = $info['name'] ?? null;
         if (is_string($name) && strcasecmp($name, self::BOX_EXIF) === 0) {
             return true;
         }
+
         $contentType = $info['contentType'] ?? null;
         if (is_string($contentType)) {
             $ct = strtolower($contentType);
@@ -923,7 +945,7 @@ final readonly class IsoBmffExtractor
             3       => $this->unpackInteger('N', "\0" . $window->read(3)),
             4       => $window->readU32BE(),
             8       => $window->readU64BE(),
-            default => throw new ParseError("unsupported integer size $bytes"),
+            default => throw new ParseError('unsupported integer size ' . $bytes),
         };
     }
 
@@ -1058,10 +1080,11 @@ final readonly class IsoBmffExtractor
         }
 
         if ($size < $headerSize) {
-            throw new ParseError("invalid box size for $type");
+            throw new ParseError('invalid box size for ' . $type);
         }
+
         if ($offset + $size > $limit) {
-            throw new ParseError("box $type exceeds container bounds");
+            throw new ParseError(sprintf('box %s exceeds container bounds', $type));
         }
 
         $contentOffset = $offset + $headerSize;

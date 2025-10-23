@@ -29,7 +29,9 @@ final class Stream
 {
     /** @var resource */
     private $fh;
-    private int $size;
+
+    private readonly int $size;
+
     private int $pos = 0;
 
     /**
@@ -43,11 +45,12 @@ final class Stream
     {
         $fh = fopen($path, 'rb');
         if ($fh === false) {
-            throw new ParseError("Cannot open: $path");
+            throw new ParseError('Cannot open: ' . $path);
         }
+
         $stat = fstat($fh);
         if (!is_array($stat)) {
-            throw new ParseError("Cannot determine size of: $path");
+            throw new ParseError('Cannot determine size of: ' . $path);
         }
 
         $size = $stat['size'];
@@ -95,8 +98,9 @@ final class Stream
     public function seek(int $offset): void
     {
         if ($offset < 0 || $offset > $this->size) {
-            throw new BoundsError("seek out of range: $offset");
+            throw new BoundsError('seek out of range: ' . $offset);
         }
+
         fseek($this->fh, $offset);
         $this->pos = $offset;
     }
@@ -117,10 +121,12 @@ final class Stream
         if ($len < 0 || $this->pos + $len > $this->size) {
             throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size);
         }
+
         $data = fread($this->fh, $len);
         if ($data === false || strlen($data) !== $len) {
             throw new ParseError('short read');
         }
+
         $this->pos += $len;
 
         return $data;
@@ -200,6 +206,7 @@ final class Stream
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack integer from stream.');
         }
+
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpack returned a non-numeric value.');

@@ -76,6 +76,7 @@ final class XmpReader
 
                         unset($elementPath[$depth], $textBuffers[$depth], $listBuffers[$depth]);
                     }
+
                     break;
 
                 case XMLReader::TEXT:
@@ -86,6 +87,7 @@ final class XmpReader
                     if ($depth >= 0 && array_key_exists($depth, $textBuffers)) {
                         $textBuffers[$depth] .= $reader->value;
                     }
+
                     break;
 
                 case XMLReader::END_ELEMENT:

@@ -112,7 +112,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function preservesMultiValueByteTags(): void
     {
-        $blob = self::buildClassicMultiByteTagBlob();
+        $blob = $this->buildClassicMultiByteTagBlob();
 
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
@@ -132,11 +132,9 @@ final class TiffExifReaderTest extends TestCase
 
         $refClass = new ReflectionClass($reader);
         $boProp   = $refClass->getProperty('bo');
-        $boProp->setAccessible(true);
         $boProp->setValue($reader, Endian::Little);
 
         $decodeBytes = $refClass->getMethod('decodeBytes');
-        $decodeBytes->setAccessible(true);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Truncated value for TIFF type 1');
@@ -294,11 +292,11 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Builds a Classic TIFF blob containing a multi-value BYTE tag.
      */
-    private static function buildClassicMultiByteTagBlob(): string
+    private function buildClassicMultiByteTagBlob(): string
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
-        $inlineValue = self::inlineBytes([1, 2, 3], 4);
+        $inlineValue = $this->inlineBytes([1, 2, 3], 4);
         $entry       = self::packClassicEntry(ExifTag::GPS_ALTITUDE_REF, 1, 3, $inlineValue);
         $ifd0        = pack('v', 1) . $entry . pack('V', 0);
 
@@ -424,7 +422,7 @@ final class TiffExifReaderTest extends TestCase
      * @param array<int, int> $values Byte values to encode.
      * @param int             $width  Inline storage width.
      */
-    private static function inlineBytes(array $values, int $width): int
+    private function inlineBytes(array $values, int $width): int
     {
         $bytes = pack('C*', ...$values);
         $bytes = str_pad($bytes, $width, "\0");

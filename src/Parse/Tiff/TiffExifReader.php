@@ -39,7 +39,9 @@ use function unpack;
 final class TiffExifReader
 {
     private MemoryBuffer $buf;
+
     private Endian $bo;
+
     private bool $bigTiff = false;
 
     /**
@@ -83,17 +85,17 @@ final class TiffExifReader
         $ifd1       = null;
 
         $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
-        if ($exifPointer !== null) {
+        if ($exifPointer instanceof IfdEntry) {
             $exifIfd = $this->readIfd($this->pointerOffset($exifPointer));
 
             $interopPointer = $exifIfd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
-            if ($interopPointer !== null) {
+            if ($interopPointer instanceof IfdEntry) {
                 $interopIfd = $this->readIfd($this->pointerOffset($interopPointer));
             }
         }
 
         $gpsPointer = $ifd0->get(ExifTag::GPS_IFD_POINTER);
-        if ($gpsPointer !== null) {
+        if ($gpsPointer instanceof IfdEntry) {
             $gpsIfd = $this->readIfd($this->pointerOffset($gpsPointer));
         }
 
@@ -112,10 +114,11 @@ final class TiffExifReader
     {
         // BigTIFF header after magic: 2 bytes: offset size (should be 8), 2 bytes: zero/reserved, then 8‑byte first IFD offset
         $offSize = $this->readU16();
-        $zero    = $this->readU16();
+        $this->readU16();
         if ($offSize !== 8) {
             throw new ParseError('Unsupported BigTIFF offset size (expected 8)');
         }
+
         // $zero is usually 0; keep reading first IFD via caller
     }
 
@@ -131,12 +134,14 @@ final class TiffExifReader
         if ($offset <= 0) {
             return new Ifd([]);
         }
+
         $this->buf->seek($offset);
         $entryCount = $this->bigTiff ? $this->readU64() : $this->readU16();
         $entries    = [];
         for ($i = 0; $i < $entryCount; ++$i) {
             $entries += $this->readDirEntry();
         }
+
         $next = $this->bigTiff ? $this->readU64() : $this->readU32();
 
         return new Ifd($entries, $next > 0 ? $next : null);
@@ -221,10 +226,11 @@ final class TiffExifReader
         if ($type === 2) { // ASCII
             return rtrim($bytes, "\0");
         }
+
         if ($type === 5 || $type === 10) { // RATIONAL / SRATIONAL
             $rationalValues = [];
             for ($i = 0; $i < $count; ++$i) {
-                $num              = $this->read32FromBytes($bytes, $i * 8 + 0, $type === 10);
+                $num              = $this->read32FromBytes($bytes, $i * 8, $type === 10);
                 $den              = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
                 $rationalValues[] = new ExifRational($num, $den);
             }
@@ -239,7 +245,7 @@ final class TiffExifReader
         for ($i = 0; $i < $count; ++$i) {
             $vals[] = match ($type) {
                 1       => ord($bytes[$cursor]),                                // BYTE
-                6       => self::toSigned(ord($bytes[$cursor]), 8),            // SBYTE
+                6       => $this->toSigned(ord($bytes[$cursor]), 8),            // SBYTE
                 7       => ord($bytes[$cursor]),                                // UNDEFINED → return as byte
                 3       => $this->unpackU16(substr($bytes, $cursor, 2)),        // SHORT
                 8       => $this->unpackS16(substr($bytes, $cursor, 2)),        // SSHORT
@@ -247,7 +253,7 @@ final class TiffExifReader
                 9       => $this->unpackS32(substr($bytes, $cursor, 4)),        // SLONG
                 11      => $this->unpackFloat(substr($bytes, $cursor, 4)),     // FLOAT
                 12      => $this->unpackDouble(substr($bytes, $cursor, 8)),    // DOUBLE
-                default => throw new ParseError("Unsupported type in decodeBytes: $type"),
+                default => throw new ParseError('Unsupported type in decodeBytes: ' . $type),
             };
             $cursor += $componentSize;
         }
@@ -269,7 +275,7 @@ final class TiffExifReader
             3, 8 => 2,           // SHORT, SSHORT
             4, 9, 11 => 4,           // LONG, SLONG, FLOAT
             5, 10, 12 => 8,           // RATIONAL, SRATIONAL, DOUBLE
-            default => throw new ParseError("Unsupported TIFF type: $type"),
+            default => throw new ParseError('Unsupported TIFF type: ' . $type),
         };
     }
 
@@ -317,12 +323,14 @@ final class TiffExifReader
         if ($bytes === 4) {
             return $this->bo === Endian::Little ? pack('V', $v) : pack('N', $v);
         }
+
         if ($bytes === 8) {
             $hi = ($v >> 32) & 0xFFFFFFFF;
             $lo = $v & 0xFFFFFFFF;
 
             return $this->bo === Endian::Little ? pack('V2', $lo, $hi) : pack('N2', $hi, $lo);
         }
+
         // fallback (shouldn't happen here)
         $bin = '';
         for ($i = 0; $i < $bytes; ++$i) {
@@ -362,6 +370,7 @@ final class TiffExifReader
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack 16-bit value from TIFF bytes.');
         }
+
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpacked 16-bit value is not numeric.');
@@ -398,6 +407,7 @@ final class TiffExifReader
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack 32-bit value from TIFF bytes.');
         }
+
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpacked 32-bit value is not numeric.');
@@ -434,6 +444,7 @@ final class TiffExifReader
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack 32-bit float from TIFF bytes.');
         }
+
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpacked 32-bit float is not numeric.');
@@ -456,6 +467,7 @@ final class TiffExifReader
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack 64-bit float from TIFF bytes.');
         }
+
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpacked 64-bit float is not numeric.');
@@ -472,7 +484,7 @@ final class TiffExifReader
      *
      * @return int
      */
-    private static function toSigned(int $u, int $bits): int
+    private function toSigned(int $u, int $bits): int
     {
         $sign = 1 << ($bits - 1);
 
@@ -503,6 +515,7 @@ final class TiffExifReader
             if (is_int($first)) {
                 return $first;
             }
+
             if (is_float($first)) {
                 return (int) $first;
             }

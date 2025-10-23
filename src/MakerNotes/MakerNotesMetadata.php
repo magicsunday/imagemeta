@@ -26,9 +26,9 @@ final readonly class MakerNotesMetadata
      * @param string $sha1   Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
      */
     public function __construct(
-        private readonly string $vendor,
-        private readonly int $length,
-        private readonly string $sha1,
+        private string $vendor,
+        private int $length,
+        private string $sha1,
     ) {
         if ($vendor === '') {
             throw new InvalidArgumentException('The vendor must not be empty.');

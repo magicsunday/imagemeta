@@ -9,13 +9,17 @@
 
 declare(strict_types=1);
 
+use Rector\CodeQuality\Rector\FunctionLike\SimplifyUselessVariableRector;
 use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
 use Rector\Config\RectorConfig;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodParameterRector;
+use Rector\DeadCode\Rector\ClassMethod\RemoveUnusedPrivateMethodRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\DeadCode\Rector\Property\RemoveUselessVarTagRector;
 use Rector\Php80\Rector\Class_\ClassPropertyAssignToConstructorPromotionRector;
+use Rector\Php84\Rector\MethodCall\NewMethodCallWithoutParenthesesRector;
+use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 
@@ -75,9 +79,13 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->skip([
         CatchExceptionNameMatchingTypeRector::class,
         ClassPropertyAssignToConstructorPromotionRector::class,
+        NewMethodCallWithoutParenthesesRector::class,
+        PrivatizeFinalClassMethodRector::class,
+        RemoveUnusedPrivateMethodParameterRector::class,
+        RemoveUnusedPrivateMethodRector::class,
         RemoveUselessParamTagRector::class,
         RemoveUselessReturnTagRector::class,
         RemoveUselessVarTagRector::class,
-        RemoveUnusedPrivateMethodParameterRector::class,
+        SimplifyUselessVariableRector::class,
     ]);
 };

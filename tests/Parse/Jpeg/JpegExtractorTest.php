@@ -35,12 +35,17 @@ use function strlen;
 final class JpegExtractorTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
-    private const string XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
-    private const string ICC_SIGNATURE  = "ICC_PROFILE\0";
+
+    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
+
+    private const string ICC_SIGNATURE = "ICC_PROFILE\0";
+
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
-    private const int MARKER_APP1  = 0xE1;
-    private const int MARKER_APP2  = 0xE2;
+    private const int MARKER_APP1 = 0xE1;
+
+    private const int MARKER_APP2 = 0xE2;
+
     private const int MARKER_APP13 = 0xED;
 
     /**
@@ -54,7 +59,7 @@ final class JpegExtractorTest extends TestCase
     #[DataProvider('provideApp1Variants')]
     public function extractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
     {
-        $jpeg      = self::jpeg(...$segments);
+        $jpeg      = $this->jpeg(...$segments);
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame($expectedExif, $extractor->extractExifBlobs());
@@ -112,11 +117,7 @@ final class JpegExtractorTest extends TestCase
         $secondBlob = str_repeat('B', 30_000);
         $xmpXml     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Large</x:xmpmeta>';
 
-        $jpeg = self::jpeg(
-            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $firstBlob),
-            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $secondBlob),
-            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
-        );
+        $jpeg = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $firstBlob), self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $secondBlob), self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml));
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -135,10 +136,7 @@ final class JpegExtractorTest extends TestCase
         $segment1Payload = self::ICC_SIGNATURE . "\x01\x02" . $iccPart1;
         $segment2Payload = self::ICC_SIGNATURE . "\x02\x02" . $iccPart2;
 
-        $jpeg = self::jpeg(
-            self::segment(self::MARKER_APP2, $segment1Payload),
-            self::segment(self::MARKER_APP2, $segment2Payload),
-        );
+        $jpeg = $this->jpeg(self::segment(self::MARKER_APP2, $segment1Payload), self::segment(self::MARKER_APP2, $segment2Payload));
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -155,10 +153,7 @@ final class JpegExtractorTest extends TestCase
         $iptcOne = self::IPTC_SIGNATURE . 'payload-one';
         $iptcTwo = self::IPTC_SIGNATURE . 'payload-two';
 
-        $jpeg = self::jpeg(
-            self::segment(self::MARKER_APP13, $iptcOne),
-            self::segment(self::MARKER_APP13, $iptcTwo),
-        );
+        $jpeg = $this->jpeg(self::segment(self::MARKER_APP13, $iptcOne), self::segment(self::MARKER_APP13, $iptcTwo));
 
         $extractor = $this->createExtractor($jpeg);
 
@@ -231,7 +226,7 @@ final class JpegExtractorTest extends TestCase
      *
      * @return string
      */
-    private static function jpeg(string ...$segments): string
+    private function jpeg(string ...$segments): string
     {
         return "\xFF\xD8" . implode('', $segments) . "\xFF\xD9";
     }

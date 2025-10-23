@@ -37,7 +37,11 @@ final readonly class ExifNumericList
         }
 
         foreach ($values as $value) {
-            if (is_int($value) || is_float($value)) {
+            if (is_int($value)) {
+                continue;
+            }
+
+            if (is_float($value)) {
                 continue;
             }
 

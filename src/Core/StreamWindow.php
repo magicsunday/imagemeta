@@ -67,6 +67,7 @@ final class StreamWindow
         if ($pos < 0 || $pos > $this->length) {
             throw new BoundsError('window seek out of range');
         }
+
         $this->cursor = $pos;
     }
 
@@ -86,6 +87,7 @@ final class StreamWindow
         if ($len < 0 || $this->cursor + $len > $this->length) {
             throw new BoundsError('window read out of range');
         }
+
         $this->base->seek($this->offset + $this->cursor);
         $data = $this->base->read($len);
         $this->cursor += $len;
@@ -152,6 +154,7 @@ final class StreamWindow
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack integer from window.');
         }
+
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpack returned a non-numeric value.');

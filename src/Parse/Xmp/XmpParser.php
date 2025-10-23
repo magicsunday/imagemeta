@@ -25,9 +25,12 @@ use function trim;
  */
 final class XmpParser
 {
-    private const string RDF_NAMESPACE  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
-    private const string DC_NAMESPACE   = 'http://purl.org/dc/elements/1.1/';
-    private const string XMP_NAMESPACE  = 'http://ns.adobe.com/xap/1.0/';
+    private const string RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+
+    private const string DC_NAMESPACE = 'http://purl.org/dc/elements/1.1/';
+
+    private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';
+
     private const string EXIF_NAMESPACE = 'http://ns.adobe.com/exif/1.0/';
 
     /**
@@ -70,6 +73,7 @@ final class XmpParser
                     [$bagNs, $bagLocal]                          = $pendingBag;
                     $properties[$this->qname($bagNs, $bagLocal)] = $bag;
                 }
+
                 continue;
             }
 

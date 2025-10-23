@@ -46,7 +46,7 @@ final readonly class Metadata
      */
     public function selectiveXmpDocument(): ?XmpDocument
     {
-        if ($this->xmpDoc !== null) {
+        if ($this->xmpDoc instanceof XmpDocument) {
             return $this->xmpDoc;
         }
 

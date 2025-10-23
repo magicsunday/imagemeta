@@ -37,18 +37,22 @@ final class FormatDetector
         } catch (BoundsError $exception) {
             throw new ParseError('Unable to read container signature', 0, $exception);
         }
+
         if ($magic2 === "\xFF\xD8") {
             return ContainerType::JPEG;
         }
+
         try {
             $stream->seek(4);
             $brand = $stream->read(4); // 'ftyp'
         } catch (BoundsError $exception) {
             throw new ParseError('Unable to read container signature', 0, $exception);
         }
+
         if ($brand === 'ftyp') {
             return ContainerType::ISOBMFF;
         }
+
         // a few HEIC files may start with 0 size+ftyp; we already cover 'ftyp' at [4..8]
         throw new ParseError('Unsupported or unknown container');
     }

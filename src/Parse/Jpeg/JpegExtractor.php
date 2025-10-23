@@ -41,35 +41,48 @@ final class JpegExtractor
      * APP1  (0xE1) exposes EXIF and XMP metadata, APP2 (0xE2) carries ICC
      * profile fragments, and APP13 (0xED) contains IPTC/Photoshop resources.
      */
-    private const int MARKER_APP1  = 0xE1;
-    private const int MARKER_APP2  = 0xE2;
+    private const int MARKER_APP1 = 0xE1;
+
+    private const int MARKER_APP2 = 0xE2;
+
     private const int MARKER_APP13 = 0xED;
 
     /**
      * Signatures identifying metadata-bearing APP segments.
      */
     private const string EXIF_SIGNATURE = "Exif\0\0";
-    private const string XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
-    private const string ICC_SIGNATURE  = "ICC_PROFILE\0";
+
+    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
+
+    private const string ICC_SIGNATURE = "ICC_PROFILE\0";
+
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
     /**
      * Scan and termination markers that end metadata scanning.
      */
     private const int MARKER_SOS = 0xDA;
+
     private const int MARKER_EOI = 0xD9;
 
     private bool $parsed = false;
+
     /** @var list<string> */
     private array $exifBlobs = [];
+
     /** @var list<string> */
     private array $xmpPackets = [];
+
     /** @var list<string> */
     private array $iccSegments = [];
+
     /** @var array<int, string> */
-    private array $iccSequence     = [];
+    private array $iccSequence = [];
+
     private ?int $iccExpectedCount = null;
-    private ?string $iccProfile    = null;
+
+    private ?string $iccProfile = null;
+
     /** @var list<string> */
     private array $iptcPayloads = [];
 
@@ -193,16 +206,13 @@ final class JpegExtractor
             }
         }
 
-        if ($this->iccExpectedCount !== null && $this->iccExpectedCount > 0) {
-            if (count($this->iccSequence) === $this->iccExpectedCount) {
-                $expectedSequence = range(1, $this->iccExpectedCount);
-                $presentSequence  = array_keys($this->iccSequence);
-                sort($presentSequence);
-
-                if ($presentSequence === $expectedSequence) {
-                    ksort($this->iccSequence);
-                    $this->iccProfile = implode('', $this->iccSequence);
-                }
+        if ($this->iccExpectedCount !== null && $this->iccExpectedCount > 0 && count($this->iccSequence) === $this->iccExpectedCount) {
+            $expectedSequence = range(1, $this->iccExpectedCount);
+            $presentSequence  = array_keys($this->iccSequence);
+            sort($presentSequence);
+            if ($presentSequence === $expectedSequence) {
+                ksort($this->iccSequence);
+                $this->iccProfile = implode('', $this->iccSequence);
             }
         }
 

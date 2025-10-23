@@ -66,8 +66,9 @@ final class MemoryBuffer
     public function seek(int $offset): void
     {
         if ($offset < 0 || $offset > $this->size()) {
-            throw new BoundsError("MemoryBuffer seek out of range: $offset");
+            throw new BoundsError('MemoryBuffer seek out of range: ' . $offset);
         }
+
         $this->pos = $offset;
     }
 
@@ -93,10 +94,12 @@ final class MemoryBuffer
         if ($length < 0 || $end > $this->size()) {
             throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $length);
         }
+
         $chunk = substr($this->data, $this->pos, $length);
         if (strlen($chunk) !== $length) {
             throw new ParseError('MemoryBuffer short read');
         }
+
         $this->pos = $end;
 
         return $chunk;
@@ -194,6 +197,7 @@ final class MemoryBuffer
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack integer from buffer.');
         }
+
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
             throw new ParseError('Unpack returned a non-numeric value.');
