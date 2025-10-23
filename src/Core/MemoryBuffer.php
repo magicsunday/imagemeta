@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\Core;
 
 use function ord;
 use function strlen;
-use function substr;
 use function unpack;
 
 /**
