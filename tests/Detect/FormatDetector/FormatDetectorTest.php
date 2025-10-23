@@ -11,12 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Detect\FormatDetector;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 use function fopen;
 use function fwrite;
@@ -57,14 +57,14 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Ensures that an unsupported signature results in a runtime exception.
+     * Ensures that an unsupported signature results in a parse error.
      */
     #[Test]
     public function detectThrowsForUnsupportedSignature(): void
     {
         $stream = $this->createStream('UNSUPPORTED');
 
-        $this->expectException(RuntimeException::class);
+        $this->expectException(ParseError::class);
 
         FormatDetector::detect($stream);
     }
