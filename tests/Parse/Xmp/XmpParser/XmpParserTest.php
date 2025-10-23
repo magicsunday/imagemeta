@@ -93,6 +93,6 @@ XML;
     public static function provideInvalidXmpFragments(): iterable
     {
         yield 'broken xml declaration' => ['<?xml version="1.0"?><rdf:RDF'];
-        yield 'unsupported namespace'  => ['<root xmlns="urn:example"><value>ignored</value></root>'];
+        yield 'unsupported namespace' => ['<root xmlns="urn:example"><value>ignored</value></root>'];
     }
 }

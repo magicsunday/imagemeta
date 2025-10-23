@@ -429,6 +429,7 @@ final readonly class IsoBmffExtractor
      * Strips redundant EXIF signatures so downstream parsers accept the blob.
      *
      * @param string $blob Raw EXIF payload that may still include the "Exif\0\0" signature prefix.
+     *
      * @return string EXIF payload trimmed to the TIFF header when a redundant signature is detected.
      */
     private function normalizeExifBlob(string $blob): string

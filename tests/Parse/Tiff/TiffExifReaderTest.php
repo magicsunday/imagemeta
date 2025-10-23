@@ -357,7 +357,7 @@ final class TiffExifReaderTest extends TestCase
      * Packs raw bytes into an inline integer value for Classic TIFF entries.
      *
      * @param array<int, int> $values Byte values to encode.
-     * @param int              $width Inline storage width.
+     * @param int             $width  Inline storage width.
      */
     private static function inlineBytes(array $values, int $width): int
     {

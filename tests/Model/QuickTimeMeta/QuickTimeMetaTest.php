@@ -29,7 +29,7 @@ final class QuickTimeMetaTest extends TestCase
     public function returnsStoredContentIdentifier(): void
     {
         $identifier = 'abc-123';
-        $keys = [
+        $keys       = [
             'com.apple.quicktime.content.identifier' => $identifier,
             'com.apple.quicktime.location.ISO6709'   => '+12.345-067.890/',
         ];
