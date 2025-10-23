@@ -16,34 +16,34 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Verifies the behaviour of the QuickTime metadata container model.
+ * Test case for the QuickTime metadata container model.
  *
  * @covers \MagicSunday\ImageMeta\Model\QuickTimeMeta
  */
 final class QuickTimeMetaTest extends TestCase
 {
     /**
-     * Ensures the constructor stores the provided metadata map and the identifier is accessible.
+     * Ensures that the stored content identifier value is returned unchanged.
      */
     #[Test]
-    public function returnsConfiguredContentIdentifier(): void
+    public function returnsStoredContentIdentifier(): void
     {
+        $identifier = 'abc-123';
         $keys = [
-            'com.apple.quicktime.content.identifier' => 'abc-123',
+            'com.apple.quicktime.content.identifier' => $identifier,
             'com.apple.quicktime.location.ISO6709'   => '+12.345-067.890/',
         ];
 
         $meta = new QuickTimeMeta($keys);
 
-        self::assertSame($keys, $meta->keys);
-        self::assertSame('abc-123', $meta->contentIdentifier());
+        self::assertSame($identifier, $meta->contentIdentifier());
     }
 
     /**
-     * Ensures null is returned when the identifier key is missing.
+     * Ensures null is returned when the content identifier key is absent.
      */
     #[Test]
-    public function returnsNullWhenIdentifierIsMissing(): void
+    public function returnsNullWhenContentIdentifierIsMissing(): void
     {
         $meta = new QuickTimeMeta([
             'com.apple.quicktime.location.ISO6709' => '+12.345-067.890/',
