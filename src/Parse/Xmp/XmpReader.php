@@ -127,6 +127,14 @@ final class XmpReader
         return $text === '' ? null : $text;
     }
 
+    /**
+     * Combines namespace URI and local name into a Clark notation key.
+     *
+     * @param string $namespaceUri Namespace URI assigned to the element.
+     * @param string $localName    Element name without namespace prefix.
+     *
+     * @return string Clark notation string representing the element.
+     */
     private function buildClarkName(string $namespaceUri, string $localName): string
     {
         return $namespaceUri !== ''
