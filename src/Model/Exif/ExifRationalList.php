@@ -26,7 +26,7 @@ final readonly class ExifRationalList
     public array $values;
 
     /**
-     * @param list<ExifRational> $values Ordered list of rational components.
+     * @param array<int|string, mixed> $values Ordered list of rational components.
      */
     public function __construct(array $values)
     {
@@ -40,6 +40,7 @@ final readonly class ExifRationalList
             }
         }
 
+        /** @var list<ExifRational> $values */
         $this->values = $values;
     }
 

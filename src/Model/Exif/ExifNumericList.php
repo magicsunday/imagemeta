@@ -28,7 +28,7 @@ final readonly class ExifNumericList
     public array $values;
 
     /**
-     * @param list<int|float> $values Ordered list of numeric components.
+     * @param array<int|string, mixed> $values Ordered list of numeric components.
      */
     public function __construct(array $values)
     {
@@ -37,11 +37,14 @@ final readonly class ExifNumericList
         }
 
         foreach ($values as $value) {
-            if (!is_int($value) && !is_float($value)) {
-                throw new InvalidArgumentException('Numeric EXIF lists may only contain integers or floats.');
+            if (is_int($value) || is_float($value)) {
+                continue;
             }
+
+            throw new InvalidArgumentException('Numeric EXIF lists may only contain integers or floats.');
         }
 
+        /** @var list<int|float> $values */
         $this->values = $values;
     }
 

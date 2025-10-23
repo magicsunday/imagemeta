@@ -48,7 +48,16 @@ final readonly class XmpDocument
         $key   = $this->buildClarkName($namespaceUri, $localName);
         $value = $this->data[$key] ?? null;
 
-        return is_string($value) || is_array($value) ? $value : null;
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_array($value)) {
+            /** @var array<int, string> $value */
+            return $value;
+        }
+
+        return null;
     }
 
     /**
@@ -66,7 +75,6 @@ final readonly class XmpDocument
              * @param string|array<int, string> $value
              */
             fn (array|string $value, string $key): bool => $this->matchesLocalName($key, $localName)
-                && (is_string($value) || is_array($value))
         );
     }
 

@@ -39,21 +39,24 @@ final class XmpReader
      */
     public function parse(string $xml): XmpDocument
     {
-        $reader = new XMLReader();
-        if (!$reader->XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
+        $reader = XMLReader::XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+        if (!$reader instanceof XMLReader) {
             return new XmpDocument([]);
         }
 
         $data        = [];
+        /** @var array<int, array{string, string}> $elementPath */
         $elementPath = [];
+        /** @var array<int, string> $textBuffers */
         $textBuffers = [];
+        /** @var array<int, list<string>> $listBuffers */
         $listBuffers = [];
 
         while ($reader->read()) {
             switch ($reader->nodeType) {
                 case XMLReader::ELEMENT:
                     $depth     = $reader->depth;
-                    $namespace = $reader->namespaceURI ?? '';
+                    $namespace = $reader->namespaceURI;
                     $localName = $reader->localName;
 
                     $elementPath[$depth] = [$namespace, $localName];
@@ -65,7 +68,7 @@ final class XmpReader
 
                     if ($reader->isEmptyElement) {
                         if ($namespace !== self::RDF_NAMESPACE) {
-                            $value = $this->finalizeValue($listBuffers[$depth] ?? [], $textBuffers[$depth] ?? '');
+                            $value = $this->finalizeValue($listBuffers[$depth], $textBuffers[$depth]);
                             if ($value !== null) {
                                 $data[$this->buildClarkName($namespace, $localName)] = $value;
                             }
@@ -104,7 +107,7 @@ final class XmpReader
                             }
                         }
                     } elseif ($namespace !== self::RDF_NAMESPACE) {
-                        $value = $this->finalizeValue($listBuffers[$depth] ?? [], $textBuffers[$depth] ?? '');
+                        $value = $this->finalizeValue($listBuffers[$depth], $textBuffers[$depth]);
                         if ($value !== null) {
                             $data[$this->buildClarkName($namespace, $localName)] = $value;
                         }
@@ -123,10 +126,10 @@ final class XmpReader
     /**
      * Finalises the collected container/list data for the current element.
      *
-     * @param array<int, string> $items
-     * @param string             $text
+     * @param list<string> $items
+     * @param string       $text
      *
-     * @return array|string|null
+     * @return list<string>|string|null
      */
     private function finalizeValue(array $items, string $text): array|string|null
     {

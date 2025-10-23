@@ -103,9 +103,9 @@ final readonly class ExifDocument
     public function exposureTime(): ?float
     {
         // Tag ExifTag::EXPOSURE_TIME (RATIONAL)
-        $v = $this->exifIfd?->get(ExifTag::EXPOSURE_TIME)?->value ?? null;
+        $entry = $this->exifIfd?->get(ExifTag::EXPOSURE_TIME);
 
-        return ValueConverters::rationalToFloat($v);
+        return $entry !== null ? ValueConverters::rationalToFloat($entry->value) : null;
     }
 
     /**
@@ -116,9 +116,9 @@ final readonly class ExifDocument
     public function fNumber(): ?float
     {
         // Tag ExifTag::F_NUMBER (RATIONAL)
-        $v = $this->exifIfd?->get(ExifTag::F_NUMBER)?->value ?? null;
+        $entry = $this->exifIfd?->get(ExifTag::F_NUMBER);
 
-        return ValueConverters::rationalToFloat($v);
+        return $entry !== null ? ValueConverters::rationalToFloat($entry->value) : null;
     }
 
     /**
@@ -129,9 +129,9 @@ final readonly class ExifDocument
     public function focalLengthMm(): ?float
     {
         // Tag ExifTag::FOCAL_LENGTH (RATIONAL)
-        $v = $this->exifIfd?->get(ExifTag::FOCAL_LENGTH)?->value ?? null;
+        $entry = $this->exifIfd?->get(ExifTag::FOCAL_LENGTH);
 
-        return ValueConverters::rationalToFloat($v);
+        return $entry !== null ? ValueConverters::rationalToFloat($entry->value) : null;
     }
 
     /**
@@ -161,7 +161,7 @@ final readonly class ExifDocument
      */
     public function gps(): array
     {
-        if (!$this->gpsIfd) {
+        if ($this->gpsIfd === null) {
             return ['lat' => null, 'lon' => null, 'alt' => null];
         }
 
@@ -176,17 +176,17 @@ final readonly class ExifDocument
     public function captureDateTime(): ?DateTimeImmutable
     {
         $raw = $this->dateTimeOriginalRaw();
-        if (!$raw) {
+        if ($raw === null || $raw === '') {
             return null;
         }
         $offset = $this->offsetTimeOriginalRaw(); // like "+01:00"
-        $tz     = $offset ? new DateTimeZone($offset) : new DateTimeZone('UTC');
+        $tz     = ($offset !== null && $offset !== '') ? new DateTimeZone($offset) : new DateTimeZone('UTC');
 
         // EXIF uses "YYYY:MM:DD HH:MM:SS"
         $normalized = str_replace(':', '-', substr($raw, 0, 10)) . substr($raw, 10); // YYYY-MM-DD HH:MM:SS
         $dt         = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $normalized, $tz);
 
-        return $dt ?: null;
+        return $dt !== false ? $dt : null;
     }
 
     /**
@@ -196,9 +196,21 @@ final readonly class ExifDocument
      */
     private function str(?Ifd $ifd, int $tag): ?string
     {
-        $e = $ifd?->get($tag);
+        if ($ifd === null) {
+            return null;
+        }
 
-        return is_string($e?->value) ? rtrim($e->value, "\0") : null;
+        $entry = $ifd->get($tag);
+        if ($entry === null) {
+            return null;
+        }
+
+        $value = $entry->value;
+        if (!is_string($value)) {
+            return null;
+        }
+
+        return rtrim($value, "\0");
     }
 
     /**
@@ -208,7 +220,16 @@ final readonly class ExifDocument
      */
     private function int(?Ifd $ifd, int $tag): ?int
     {
-        $v = $ifd?->get($tag)?->value ?? null;
+        if ($ifd === null) {
+            return null;
+        }
+
+        $entry = $ifd->get($tag);
+        if ($entry === null) {
+            return null;
+        }
+
+        $v = $entry->value;
 
         if ($v instanceof ExifNumericList) {
             $first = $v->values[0] ?? null;
