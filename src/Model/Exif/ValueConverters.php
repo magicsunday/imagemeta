@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 use function count;
 use function is_float;
 use function is_int;
-use function is_string;
 
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;

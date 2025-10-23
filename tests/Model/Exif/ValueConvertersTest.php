@@ -79,13 +79,13 @@ final class ValueConvertersTest extends TestCase
     /**
      * Ensures invalid values cannot be converted and return null instead.
      */
-    public function returnsNullForInvalidRationalInputs(mixed $value): void
+    public function returnsNullForInvalidRationalInputs(array|null $value): void
     {
         self::assertNull(ValueConverters::rationalToFloat($value));
     }
 
     /**
-     * @return iterable<string, array{mixed}>
+     * @return iterable<string, array{array|null}>
      */
     public static function provideInvalidInputs(): iterable
     {
