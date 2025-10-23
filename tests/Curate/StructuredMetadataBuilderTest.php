@@ -56,6 +56,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::MAKE        => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
             ExifTag::MODEL       => new IfdEntry(ExifTag::MODEL, 2, 5, 'EOS R5'),
             ExifTag::ORIENTATION => new IfdEntry(ExifTag::ORIENTATION, 3, 1, 6),
+            ExifTag::ARTIST      => new IfdEntry(ExifTag::ARTIST, 2, 5, 'Canon'),
         ]);
 
         $exifIfd = new Ifd([
@@ -63,6 +64,13 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::EXPOSURE_TIME            => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 125]]),
             ExifTag::F_NUMBER                 => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[9, 2]]),
             ExifTag::FOCAL_LENGTH             => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, [[85, 1]]),
+            ExifTag::EXPOSURE_PROGRAM        => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, 3),
+            ExifTag::METERING_MODE           => new IfdEntry(ExifTag::METERING_MODE, 3, 1, 5),
+            ExifTag::WHITE_BALANCE           => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, 1),
+            ExifTag::FLASH                   => new IfdEntry(ExifTag::FLASH, 3, 1, 127),
+            ExifTag::DATETIME_ORIGINAL       => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:03:01 12:34:56'),
+            ExifTag::OFFSET_TIME_ORIGINAL    => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+02:00'),
+            ExifTag::COLOR_SPACE              => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, 1),
         ]);
 
         $gpsIfd = new Ifd([
@@ -96,6 +104,15 @@ final class StructuredMetadataBuilderTest extends TestCase
             '{http://ns.adobe.com/xap/1.0/}CreatorTool'      => 'Lightroom Classic',
             '{http://ns.adobe.com/tiff/1.0/}Make'            => 'Canon',
             '{http://ns.adobe.com/tiff/1.0/}Model'           => 'EOS R5',
+            '{http://purl.org/dc/elements/1.1/}subject'      => ['keyword1', 'keyword2'],
+            '{http://purl.org/dc/elements/1.1/}rights'       => 'Copyright ACME',
+            '{http://ns.adobe.com/xap/1.0/rights/}UsageTerms' => 'Editorial use only',
+            '{http://ns.adobe.com/xap/1.0/rights/}WebStatement' => 'https://example.com/license',
+            '{http://ns.adobe.com/photoshop/1.0/}Credit'     => 'ACME Press',
+            '{http://purl.org/dc/elements/1.1/}creator'      => ['Jane Doe'],
+            '{http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/}CreatorContactInfo/Iptc4xmpCore:CiEmailWork' => 'jane@example.com',
+            '{http://ns.adobe.com/tiff/1.0/}OriginalFileName' => 'IMG_0001.HEIC',
+            '{http://ns.adobe.com/xap/1.0/mm/}History'       => 'edited',
         ]);
 
         $quickTime = new QuickTimeMeta([
@@ -103,6 +120,24 @@ final class StructuredMetadataBuilderTest extends TestCase
             'com.apple.quicktime.make'            => 'Apple',
             'com.apple.quicktime.model'           => 'iPhone 15',
             'com.apple.quicktime.software'        => '17.4.1',
+            'MajorBrand'                          => 'heic',
+            'Encoder'                             => 'Apple AVFoundation',
+            'AvgBitrate'                          => 12000000,
+            'CompressorID'                        => 'hvc1',
+            'AudioFormat'                         => 'aac',
+            'AudioChannels'                       => 2,
+            'AudioSampleRate'                     => 48000,
+            'AudioBitsPerSample'                  => 16,
+            'Duration'                            => 3.5,
+            'VideoFrameRate'                      => 59.94,
+            'ImageWidth'                          => 4032,
+            'ImageHeight'                         => 3024,
+            'HDRFormat'                           => 'true',
+            'TransferFunction'                    => 'PQ',
+            'ColorPrimaries'                      => 'P3',
+            'BurstUUID'                           => 'burst-123',
+            'BurstSelected'                       => 1,
+            'DepthData'                           => 'depth-asset',
         ]);
 
         $metadata = new Metadata([
@@ -111,26 +146,26 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame('Canon', $structured->camera?->make);
-        self::assertSame('EOS R5', $structured->camera?->model);
-        self::assertSame('12345', $structured->camera?->serialNumber);
-        self::assertSame('Lightroom Classic', $structured->camera?->software);
+        self::assertSame('Canon', $structured->camera->make);
+        self::assertSame('EOS R5', $structured->camera->model);
+        self::assertSame('12345', $structured->camera->serialNumber);
+        self::assertSame('Lightroom Classic', $structured->camera->software);
 
-        self::assertSame('RF 50mm F1.2L', $structured->lens?->model);
-        self::assertSame(85.0, $structured->lens?->focalLengthMm);
+        self::assertSame('RF 50mm F1.2L', $structured->lens->model);
+        self::assertSame(85.0, $structured->lens->focalLengthMm);
 
-        self::assertSame(Orientation::RIGHT_TOP, $structured->image?->orientation);
-        self::assertSame(ColorSpace::SRGB, $structured->image?->colorSpace);
+        self::assertSame(Orientation::RIGHT_TOP, $structured->image->orientation);
+        self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
 
-        self::assertSame(400, $structured->exposure?->iso);
-        self::assertSame(0.008, $structured->exposure?->exposureTimeSeconds);
-        self::assertSame(4.5, $structured->exposure?->apertureFNumber);
-        self::assertSame(85.0, $structured->exposure?->focalLengthMm);
-        self::assertSame(ExposureProgram::APERTURE_PRIORITY, $structured->exposure?->program);
-        self::assertSame(MeteringMode::PATTERN, $structured->exposure?->meteringMode);
-        self::assertSame(WhiteBalance::MANUAL, $structured->exposure?->whiteBalance);
+        self::assertSame(400, $structured->exposure->iso);
+        self::assertSame(0.008, $structured->exposure->exposureTimeSeconds);
+        self::assertSame(4.5, $structured->exposure->apertureFNumber);
+        self::assertSame(85.0, $structured->exposure->focalLengthMm);
+        self::assertSame(ExposureProgram::APERTURE_PRIORITY, $structured->exposure->program);
+        self::assertSame(MeteringMode::PATTERN, $structured->exposure->meteringMode);
+        self::assertSame(WhiteBalance::MANUAL, $structured->exposure->whiteBalance);
 
-        $flash = $structured->exposure?->flash;
+        $flash = $structured->exposure->flash;
         self::assertNotNull($flash);
         self::assertTrue($flash->fired);
         self::assertSame(FlashMode::AUTO, $flash->mode);
@@ -138,7 +173,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(FlashFunction::ABSENT, $flash->functionPresence);
         self::assertTrue($flash->redEyeReduction);
 
-        $capture = $structured->capture?->dateTime;
+        $capture = $structured->capture->dateTime;
         self::assertInstanceOf(DateTimeImmutable::class, $capture);
         self::assertSame('2024-03-01T12:34:56+02:00', $capture->format('c'));
 
@@ -149,13 +184,55 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(120.0, $gps->altitude);
 
         $device = $structured->device;
-        self::assertNotNull($device);
         self::assertSame('Apple', $device->manufacturer);
         self::assertSame('iPhone 15', $device->model);
         self::assertSame('17.4.1', $device->software);
 
-        self::assertSame('asset-id', $structured->apple?->contentIdentifier);
-        self::assertSame($xmpDocument, $structured->xmp?->document);
+        self::assertSame('asset-id', $structured->apple->contentIdentifier);
+        self::assertSame($xmpDocument, $structured->xmp->document);
+
+        self::assertSame('heic', $structured->container->format);
+        self::assertSame('Apple AVFoundation', $structured->container->encoder);
+        self::assertSame(12000000, $structured->container->bitrate);
+        self::assertSame('hvc1', $structured->container->videoCodec);
+        self::assertSame('aac', $structured->container->audioCodec);
+
+        self::assertSame(3.5, $structured->video->durationSec);
+        self::assertSame(59.94, $structured->video->frameRate);
+        self::assertSame(4032, $structured->video->width);
+        self::assertSame(3024, $structured->video->height);
+        self::assertTrue($structured->video->hdr);
+        self::assertSame('PQ', $structured->video->transferFunction);
+        self::assertSame('P3', $structured->video->colorPrimaries);
+
+        self::assertSame(2, $structured->audio->channels);
+        self::assertSame(48000, $structured->audio->sampleRate);
+        self::assertSame(16, $structured->audio->bitDepth);
+
+        self::assertSame(['keyword1', 'keyword2'], $structured->keywords->flat);
+        self::assertNull($structured->keywords->hierarchical);
+
+        self::assertSame('Copyright ACME', $structured->rights->copyright);
+        self::assertSame('Editorial use only', $structured->rights->usageTerms);
+        self::assertSame('https://example.com/license', $structured->rights->licenseUrl);
+        self::assertSame('ACME Press', $structured->rights->creditLine);
+
+        self::assertSame('Jane Doe', $structured->author->creator);
+        self::assertSame('jane@example.com', $structured->author->creatorEmail);
+        self::assertSame('Canon', $structured->author->artist);
+
+        self::assertNotNull($structured->temporal->original);
+        self::assertSame('EXIF', $structured->temporal->tzSource);
+
+        self::assertSame('burst-123', $structured->related->burstId);
+        self::assertTrue($structured->related->isPrimaryInBurst);
+        self::assertSame('depth-asset', $structured->related->depthDataId);
+
+        self::assertNull($structured->file->mimeType);
+        self::assertNull($structured->processing->pictureStyle);
+
+        self::assertSame('IMG_0001.HEIC', $structured->integrity->originalFileName);
+        self::assertTrue($structured->integrity->edited);
     }
 
     /**

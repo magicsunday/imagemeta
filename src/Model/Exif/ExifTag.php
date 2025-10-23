@@ -25,6 +25,8 @@ final readonly class ExifTag
 
     public const int MODEL = 0x0110;
 
+    public const int ARTIST = 0x013B;
+
     public const int DATETIME = 0x0132;
 
     public const int ORIENTATION = 0x0112;
@@ -66,6 +68,10 @@ final readonly class ExifTag
     public const int METERING_MODE = 0x9207;
 
     public const int FLASH = 0x9209;
+
+    public const int SUBJECT_DISTANCE = 0x9206;
+
+    public const int SUBJECT_AREA = 0x9214;
 
     public const int FOCAL_LENGTH = 0x920A;
 

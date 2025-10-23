@@ -17,13 +17,13 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
-use WeakMap;
 
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
  */
 final readonly class Metadata
 {
+    private ?StructuredMetadata $structured;
 
     /**
      * @param list<string>            $exifBlobs  TIFF‑EXIF blobs (first is primary)
@@ -69,17 +69,11 @@ final readonly class Metadata
      */
     public function structured(): StructuredMetadata
     {
-        static $cache;
-
-        if (!$cache instanceof WeakMap) {
-            $cache = new WeakMap();
+        if (!isset($this->structured)) {
+            $builder           = new StructuredMetadataBuilder();
+            $this->structured = $builder->build($this);
         }
 
-        if (!isset($cache[$this])) {
-            $builder       = new StructuredMetadataBuilder();
-            $cache[$this] = $builder->build($this);
-        }
-
-        return $cache[$this];
+        return $this->structured;
     }
 }

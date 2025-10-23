@@ -14,20 +14,88 @@ namespace MagicSunday\ImageMeta\Curate\Resolver;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Xmp;
 
+use function is_array;
+use function is_string;
+use function strtolower;
+use function trim;
+
 /**
- * Wraps the parsed XMP document inside a value object.
+ * Provides convenient accessors for parsed XMP documents.
  */
 final readonly class XmpResolver
 {
-    /**
-     * Builds the XMP value object when a document is available.
-     */
-    public function resolve(?XmpDocument $xmpDocument): ?Xmp
+    public function __construct(private ?XmpDocument $document)
     {
-        if (!$xmpDocument instanceof XmpDocument) {
+    }
+
+    /**
+     * Returns the wrapped value object used in the public API.
+     */
+    public function value(): Xmp
+    {
+        return new Xmp($this->document);
+    }
+
+    /**
+     * Reads a string property from the document using the provided namespace and local name.
+     */
+    public function string(string $namespace, string $localName): ?string
+    {
+        $value = $this->document?->get($namespace, $localName);
+
+        return is_string($value) ? trim($value) : null;
+    }
+
+    /**
+     * Reads a bag/sequence of string values from the document.
+     *
+     * @return list<string>
+     */
+    public function stringList(string $namespace, string $localName): array
+    {
+        $value = $this->document?->get($namespace, $localName);
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $result = [];
+        foreach ($value as $item) {
+            if (is_string($item)) {
+                $result[] = trim($item);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Returns true when the document contains the specified property.
+     */
+    public function has(string $namespace, string $localName): bool
+    {
+        $value = $this->document?->get($namespace, $localName);
+
+        return $value !== null;
+    }
+
+    /**
+     * Interprets the property as a boolean flag.
+     */
+    public function bool(string $namespace, string $localName): ?bool
+    {
+        $value = $this->string($namespace, $localName);
+
+        if ($value === null) {
             return null;
         }
 
-        return new Xmp($xmpDocument);
+        $normalized = strtolower($value);
+
+        return match ($normalized) {
+            'true', '1'  => true,
+            'false', '0' => false,
+            default      => null,
+        };
     }
 }

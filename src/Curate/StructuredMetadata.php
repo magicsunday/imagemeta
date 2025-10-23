@@ -12,13 +12,35 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate;
 
 use MagicSunday\ImageMeta\Value\Apple;
+use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\File;
+use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
+use MagicSunday\ImageMeta\Value\Integrity;
+use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\Motion;
+use MagicSunday\ImageMeta\Value\Preview;
+use MagicSunday\ImageMeta\Value\ProcessingSettings;
+use MagicSunday\ImageMeta\Value\RawCharacteristics;
+use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\RelatedAssets;
+use MagicSunday\ImageMeta\Value\Rights;
+use MagicSunday\ImageMeta\Value\Scene;
+use MagicSunday\ImageMeta\Value\Sensor;
+use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\Uav;
+use MagicSunday\ImageMeta\Value\Video;
+use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
 
 /**
@@ -26,27 +48,38 @@ use MagicSunday\ImageMeta\Value\Xmp;
  */
 final readonly class StructuredMetadata
 {
-    /**
-     * @param Camera|null  $camera  Camera specific information.
-     * @param Lens|null    $lens    Lens information.
-     * @param Image|null   $image   Image level metadata.
-     * @param Exposure|null $exposure Exposure parameters used during capture.
-     * @param Capture|null $capture Capture timestamps.
-     * @param Gps|null     $gps     GPS coordinates.
-     * @param Device|null  $device  Device metadata from container sources.
-     * @param Apple|null   $apple   Apple specific metadata.
-     * @param Xmp|null     $xmp     Parsed XMP access wrapper.
-     */
     public function __construct(
-        public ?Camera $camera,
-        public ?Lens $lens,
-        public ?Image $image,
-        public ?Exposure $exposure,
-        public ?Capture $capture,
-        public ?Gps $gps,
-        public ?Device $device,
-        public ?Apple $apple,
-        public ?Xmp $xmp,
+        public Camera $camera,
+        public Lens $lens,
+        public Image $image,
+        public Exposure $exposure,
+        public Capture $capture,
+        public Gps $gps,
+        public Device $device,
+        public Apple $apple,
+        public Xmp $xmp,
+        public File $file,
+        public Container $container,
+        public Preview $preview,
+        public Video $video,
+        public Audio $audio,
+        public ColorProfile $colorProfile,
+        public ProcessingSettings $processing,
+        public WhiteBalanceDetails $whiteBalanceDetails,
+        public Focus $focus,
+        public Motion $motion,
+        public Scene $scene,
+        public Regions $regions,
+        public Keywords $keywords,
+        public Rights $rights,
+        public Author $author,
+        public Temporal $temporal,
+        public Derived $derived,
+        public RelatedAssets $related,
+        public RawCharacteristics $raw,
+        public Sensor $sensor,
+        public Uav $uav,
+        public Integrity $integrity,
     ) {
     }
 }
