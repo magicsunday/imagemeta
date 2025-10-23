@@ -22,7 +22,7 @@
 ## 2) Agenten-Rollen
 
 | Agent           | Verantwortung                                                                               | Ein-/Ausgabe                                               |
-| --------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+|-----------------|---------------------------------------------------------------------------------------------|------------------------------------------------------------|
 | **Planner**     | Issue/Milestone lesen, Arbeitsumfang präzisieren, Dateiliste & Guardrails definieren.       | In: Issue-Text; Out: feingranulare Sub-Tasks & Datei-Scope |
 | **Spec Writer** | Akzeptanzkriterien (AC), Testfälle, Fehlerbilder („rot“) präzisieren.                       | In: Planner-Ergebnis; Out: Test-Spezifikation              |
 | **Test Agent**  | **Tests zuerst** (PHPUnit): synthetische Fixtures, negative Pfade (ParseError/BoundsError). | In: Spec; Out: Unified Diff mit Tests                      |
