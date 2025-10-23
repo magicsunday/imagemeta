@@ -16,6 +16,11 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use Throwable;
 
+use function is_array;
+use function is_string;
+use function preg_match;
+use function trim;
+
 /**
  * Resolves the best available capture timestamp for an image asset.
  *
