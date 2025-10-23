@@ -327,8 +327,8 @@ final class JpegExtractor
         }
 
         if (str_starts_with($payload, self::XMP_SIGNATURE)) {
-            $packet   = substr($payload, strlen(self::XMP_SIGNATURE));
-            $hash     = sha1($packet);
+            $packet = substr($payload, strlen(self::XMP_SIGNATURE));
+            $hash   = sha1($packet);
 
             if (!array_key_exists($hash, $this->xmpPacketHashes)) {
                 $this->xmpPacketHashes[$hash] = true;

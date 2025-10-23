@@ -28,11 +28,11 @@ use function substr;
 final readonly class ExifDocument
 {
     /**
-     * @param Ifd                    $ifd0       Root IFD of the TIFF structure.
-     * @param Ifd|null               $exifIfd    Sub IFD containing EXIF-specific tags.
-     * @param Ifd|null               $gpsIfd     Sub IFD containing GPS-related tags.
-     * @param Ifd|null               $interopIfd Sub IFD containing interoperability tags.
-     * @param Ifd|null               $ifd1       Optional next IFD, typically thumbnails.
+     * @param Ifd                     $ifd0       Root IFD of the TIFF structure.
+     * @param Ifd|null                $exifIfd    Sub IFD containing EXIF-specific tags.
+     * @param Ifd|null                $gpsIfd     Sub IFD containing GPS-related tags.
+     * @param Ifd|null                $interopIfd Sub IFD containing interoperability tags.
+     * @param Ifd|null                $ifd1       Optional next IFD, typically thumbnails.
      * @param MakerNotesMetadata|null $makerNotes Decoded maker note metadata provided by vendor decoders.
      */
     public function __construct(

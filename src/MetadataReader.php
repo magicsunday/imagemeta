@@ -62,8 +62,8 @@ final class MetadataReader
         $xmpDoc     = null;
         $makerNotes = null;
         if ($exifBlobs !== []) {
-            $registry = $this->createMakerNotesRegistry();
-            $exifDoc  = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
+            $registry   = $this->createMakerNotesRegistry();
+            $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
             $makerNotes = $exifDoc->makerNotes();
         }
 
@@ -89,8 +89,8 @@ final class MetadataReader
         $xmpDoc     = null;
         $makerNotes = null;
         if ($exifBlobs !== []) {
-            $registry = $this->createMakerNotesRegistry();
-            $exifDoc  = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
+            $registry   = $this->createMakerNotesRegistry();
+            $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
             $makerNotes = $exifDoc->makerNotes();
         }
 

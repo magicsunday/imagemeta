@@ -154,12 +154,12 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function decodesMakerNotesWithRegisteredDecoder(): void
     {
-        [$blob, $makerNoteData] = self::buildClassicMakerNoteBlob();
+        [$blob, $makerNoteData] = $this->buildClassicMakerNoteBlob();
 
         $decoder = new class implements MakerNotesDecoderInterface {
             public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
             {
-                $offset = unpack('Voffset', substr($raw, 0, 4));
+                $offset  = unpack('Voffset', substr($raw, 0, 4));
                 $pointer = $offset['offset'] ?? 0;
                 $vendor  = substr($raw, $pointer, 4);
 
@@ -185,7 +185,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function makerNotesFallbackToDigestWithoutMatchingDecoder(): void
     {
-        [$blob, $makerNoteData] = self::buildClassicMakerNoteBlob();
+        [$blob, $makerNoteData] = $this->buildClassicMakerNoteBlob();
 
         $registry = new Registry();
         $registry->register('Other', new class implements MakerNotesDecoderInterface {
@@ -449,13 +449,13 @@ final class TiffExifReaderTest extends TestCase
      *
      * @return array{0: string, 1: string}
      */
-    private static function buildClassicMakerNoteBlob(): array
+    private function buildClassicMakerNoteBlob(): array
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
         $makeString  = "AcmeCam\0";
         $modelString = "ZX-1\0";
-        $makerNote   = pack('V', 8) . 'NOTE' . 'DATA';
+        $makerNote   = pack('V', 8) . 'NOTEDATA';
 
         $ifd0EntryCount = 3;
         $ifd0Size       = 2 + $ifd0EntryCount * 12 + 4;
@@ -474,10 +474,10 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $makeString;
         $blob .= $modelString;
 
-        $exifEntryCount   = 1;
-        $exifIfdSize      = 2 + $exifEntryCount * 12 + 4;
-        $makerNoteOffset  = $exifOffset + $exifIfdSize;
-        $exifEntries      = [
+        $exifEntryCount  = 1;
+        $exifIfdSize     = 2 + 12 + 4;
+        $makerNoteOffset = $exifOffset + $exifIfdSize;
+        $exifEntries     = [
             self::packClassicEntry(ExifTag::MAKER_NOTE, 7, strlen($makerNote), $makerNoteOffset),
         ];
         $blob .= pack('v', $exifEntryCount) . implode('', $exifEntries) . pack('V', 0);

@@ -26,6 +26,7 @@ use function iconv;
 use function is_string;
 use function preg_match;
 use function rtrim;
+use function sha1;
 use function sprintf;
 use function str_starts_with;
 use function strcasecmp;
@@ -33,7 +34,6 @@ use function strlen;
 use function strtolower;
 use function substr;
 use function trim;
-use function sha1;
 
 /**
  * Streaming ISOBMFF reader for HEIC/AVIF/MP4/MOV.
@@ -178,10 +178,8 @@ final readonly class IsoBmffExtractor
             }
         }
 
-        if ($queuedUuidXmp !== []) {
-            foreach ($queuedUuidXmp as $blob) {
-                $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
-            }
+        foreach ($queuedUuidXmp as $blob) {
+            $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
         $qt = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);

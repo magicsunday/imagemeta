@@ -26,7 +26,7 @@ final class RegistryFactory
         $appleDecoder = new AppleDecoder();
         $canonDecoder = new CanonDecoder();
         $nikonDecoder = new NikonDecoder();
-        $sonyDecoder = new SonyDecoder();
+        $sonyDecoder  = new SonyDecoder();
 
         $registry->register('Apple', $appleDecoder);
         $registry->register('Canon', $canonDecoder);

@@ -51,7 +51,7 @@ final class MetadataReaderTest extends TestCase
     {
         $makerNote = 'synthetic-nikon-maker-note';
         $tiff      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
-        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="Synthetic" />'
             . '</rdf:RDF>'
@@ -90,7 +90,7 @@ final class MetadataReaderTest extends TestCase
     {
         $makerNote = 'synthetic-sony-maker-note';
         $tiff      = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote);
-        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
             . '</rdf:RDF>'
@@ -163,7 +163,7 @@ final class MetadataReaderTest extends TestCase
 
         $exifIfdOffset = $currentOffset;
         $exifIfdCount  = 1;
-        $exifIfdSize   = 2 + ($exifIfdCount * 12) + 4;
+        $exifIfdSize   = 2 + 12 + 4;
 
         $makerNoteOffset = $exifIfdOffset + $exifIfdSize;
 

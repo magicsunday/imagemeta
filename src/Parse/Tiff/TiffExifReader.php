@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
@@ -52,8 +53,8 @@ final class TiffExifReader
     /**
      * Parses an EXIF TIFF blob into a structured document model.
      *
-     * @param string        $tiffBlob            Raw TIFF data including headers.
-     * @param Registry|null $makerNotesRegistry  Optional registry used to decode manufacturer-specific maker notes.
+     * @param string        $tiffBlob           Raw TIFF data including headers.
+     * @param Registry|null $makerNotesRegistry Optional registry used to decode manufacturer-specific maker notes.
      *
      * @return ExifDocument
      */
@@ -61,6 +62,7 @@ final class TiffExifReader
     {
         $this->buf = new MemoryBuffer($tiffBlob);
         $this->buf->seek(0);
+
         $this->makerNoteRaw = null;
 
         // byte order
@@ -263,8 +265,8 @@ final class TiffExifReader
             return [substr($raw, 0, $dataSize), null];
         }
 
-        $offset   = $valueOrOffset;
-        $current  = $this->buf->tell();
+        $offset  = $valueOrOffset;
+        $current = $this->buf->tell();
         $this->buf->seek($offset);
         $bytes = $this->buf->read($dataSize);
         $this->buf->seek($current);
@@ -281,7 +283,7 @@ final class TiffExifReader
             return null;
         }
 
-        if ($registry === null || !$exifIfd instanceof Ifd) {
+        if (!$registry instanceof Registry || !$exifIfd instanceof Ifd) {
             return $this->makerNotesDigest();
         }
 
@@ -291,7 +293,7 @@ final class TiffExifReader
         }
 
         $decoder = $registry->find($make);
-        if ($decoder === null) {
+        if (!$decoder instanceof MakerNotesDecoderInterface) {
             return $this->makerNotesDigest();
         }
 
