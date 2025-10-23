@@ -52,7 +52,10 @@ XML;
         self::assertSame('2024-03-30T12:34:56Z', $document->get(self::XMP_NAMESPACE, 'CreateDate'));
         self::assertSame('2024-03-30T12:34:56Z', $document->find('CreateDate'));
         self::assertSame(['First', 'Second'], $document->get(self::DC_NAMESPACE, 'subject'));
-        self::assertSame(['First', 'Second'], $document->find('subject'));
+        $subjects = $document->find('subject');
+        self::assertIsArray($subjects);
+        self::assertSame(['First', 'Second'], $subjects);
+        self::assertContainsOnlyString($subjects);
         self::assertNull($document->get(self::DC_NAMESPACE, 'title'));
     }
 

@@ -23,7 +23,7 @@ interface MakerNotesDecoderInterface
      * @param string      $make  Camera make identifier associated with the payload.
      * @param string|null $model Optional camera model identifier when available.
      *
-     * @return array<string, mixed> Decoded metadata map; may be partial depending on decoder coverage.
+     * @return array<string, int|float|string|bool|null> Decoded metadata map; may be partial depending on decoder coverage.
      */
     public function decode(string $raw, string $make, ?string $model): array;
 }

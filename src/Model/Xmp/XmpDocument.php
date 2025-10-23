@@ -57,7 +57,10 @@ final readonly class XmpDocument
     {
         return array_find(
             $this->data,
-            fn (mixed $value, int|string $key): bool => $this->matchesLocalName((string) $key, $localName)
+            /**
+             * @param array<int, string>|string $value
+             */
+            fn (array|string $value, int|string $key): bool => $this->matchesLocalName((string) $key, $localName)
                 && (is_string($value) || is_array($value))
         );
     }

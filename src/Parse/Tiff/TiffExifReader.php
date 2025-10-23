@@ -30,6 +30,8 @@ use function unpack;
 
 /**
  * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
+ *
+ * @phpstan-import-type ExifValue from IfdEntry
  */
 final class TiffExifReader
 {
@@ -153,9 +155,9 @@ final class TiffExifReader
      * @param int $count         Number of values represented.
      * @param int $valueOrOffset Inline value bytes or an offset into the blob.
      *
-     * @return mixed
+     * @return ExifValue
      */
-    private function decodeValue(int $type, int $count, int $valueOrOffset): mixed
+    private function decodeValue(int $type, int $count, int $valueOrOffset): int|float|string|array
     {
         $unitSize         = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
@@ -186,9 +188,9 @@ final class TiffExifReader
      * @param int    $count Number of values represented.
      * @param string $bytes Raw value bytes read from the blob.
      *
-     * @return mixed
+     * @return ExifValue
      */
-    private function decodeBytes(int $type, int $count, string $bytes): mixed
+    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|array
     {
         $componentSize = $this->bytesPerComponent($type);
         $bytesLength   = strlen($bytes);
@@ -209,14 +211,14 @@ final class TiffExifReader
             return rtrim($bytes, "\0");
         }
         if ($type === 5 || $type === 10) { // RATIONAL / SRATIONAL
-            $out = [];
+            $rationalValues = [];
             for ($i = 0; $i < $count; ++$i) {
-                $num   = $this->read32FromBytes($bytes, $i * 8 + 0, $type === 10);
-                $den   = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
-                $out[] = [$num, $den];
+                $num               = $this->read32FromBytes($bytes, $i * 8 + 0, $type === 10);
+                $den               = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
+                $rationalValues[] = [$num, $den];
             }
 
-            return $count === 1 ? $out[0] : $out;
+            return $count === 1 ? $rationalValues[0] : $rationalValues;
         }
 
         $vals   = [];
