@@ -34,12 +34,20 @@ use function substr;
 final class JpegExtractor
 {
     private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
-    private const string EXIF_SIGNATURE    = "Exif\0\0";
-    private const string XMP_SIGNATURE     = "http://ns.adobe.com/xap/1.0/\0";
-    private const string ICC_SIGNATURE     = "ICC_PROFILE\0";
-    private const string IPTC_SIGNATURE    = "Photoshop 3.0\0";
-    private const int MARKER_SOS           = 0xDA;
-    private const int MARKER_EOI           = 0xD9;
+
+    /**
+     * Signatures identifying metadata-bearing APP segments.
+     */
+    private const string EXIF_SIGNATURE = "Exif\0\0";
+    private const string XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
+    private const string ICC_SIGNATURE  = "ICC_PROFILE\0";
+    private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
+
+    /**
+     * Scan and termination markers that end metadata scanning.
+     */
+    private const int MARKER_SOS = 0xDA;
+    private const int MARKER_EOI = 0xD9;
 
     private bool $parsed = false;
     /** @var list<string> */
