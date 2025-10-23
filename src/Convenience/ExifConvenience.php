@@ -179,18 +179,18 @@ final class ExifConvenience
      * @param ExifDocument $doc parsed EXIF metadata
      *
      * @return array{
-     *     make: ?string,
-     *     model: ?string,
-     *     lens: ?string,
-     *     orientation: ?int,
-     *     captured_at: ?string,
-     *     exposure_s: ?float,
-     *     fnumber: ?float,
-     *     focal_mm: ?float,
-     *     iso: ?int,
-     *     gps_lat: ?float,
-     *     gps_lon: ?float,
-     *     gps_alt: ?float,
+     *     make:?string,
+     *     model:?string,
+     *     lens:?string,
+     *     orientation:?int,
+     *     captured_at:?string,
+     *     exposure_s:?float,
+     *     fnumber:?float,
+     *     focal_mm:?float,
+     *     iso:?int,
+     *     gps_lat:?float,
+     *     gps_lon:?float,
+     *     gps_alt:?float
      * } normalised metadata values
      */
     public static function toArray(ExifDocument $doc): array
@@ -230,9 +230,7 @@ final class ExifConvenience
     /**
      * Extracts the first numeric value from a list of scalars.
      *
-     * @param array<int, mixed> $value Potential list of numeric ISO values.
-     *
-     * @return int|float|null
+     * @param list<int|float> $value Potential list of numeric ISO values.
      */
     private static function firstNumericFromList(array $value): int|float|null
     {
