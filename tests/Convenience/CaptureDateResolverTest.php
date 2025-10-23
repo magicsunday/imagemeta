@@ -17,12 +17,15 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MagicSunday\ImageMeta\Convenience\CaptureDateResolver
  */
 #[CoversClass(CaptureDateResolver::class)]
+#[UsesClass(Metadata::class)]
+#[UsesClass(XmpDocument::class)]
 final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';

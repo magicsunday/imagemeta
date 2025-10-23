@@ -20,12 +20,20 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MagicSunday\ImageMeta\Convenience\ExifConvenience
  */
 #[CoversClass(ExifConvenience::class)]
+#[UsesClass(ExifDocument::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(ExifRational::class)]
+#[UsesClass(ExifRationalList::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(ValueConverters::class)]
 final class ExifConvenienceTest extends TestCase
 {
     /**
