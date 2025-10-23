@@ -22,6 +22,7 @@ composer.lock
 .phpunit.cache
 
 # Coverage reports
+.build/coverage
 coverage-report/
 coverage-report-xdebug/
 phpunit-*.xml
