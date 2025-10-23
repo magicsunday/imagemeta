@@ -21,62 +21,99 @@ use XMLReader;
  */
 final class XmpParser
 {
+    private const RDF_NAMESPACE  = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+    private const DC_NAMESPACE   = 'http://purl.org/dc/elements/1.1/';
+    private const XMP_NAMESPACE  = 'http://ns.adobe.com/xap/1.0/';
+    private const EXIF_NAMESPACE = 'http://ns.adobe.com/exif/1.0/';
+
+    /**
+     * Parses a subset of XMP data and returns values keyed by Clark notation.
+     */
     public function parse(string $xmpXml): XmpDocument
     {
-        $xr = new XMLReader();
-        $xr->XML($xmpXml, encoding: 'UTF-8', options: XMLReader::SUBST_ENTITIES);
+        $reader = new XMLReader();
+        if (!$reader->XML($xmpXml, 'UTF-8', LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING)) {
+            return new XmpDocument([]);
+        }
 
-        $props = [];
+        $properties = [];
+        /** @var array{string, string}|null $pendingBag */
+        $pendingBag = null;
 
-        while ($xr->read()) {
-            if ($xr->nodeType !== XMLReader::ELEMENT) {
+        while ($reader->read()) {
+            if ($reader->nodeType === XMLReader::END_ELEMENT) {
+                if ($pendingBag !== null && $this->matchesElement($reader, $pendingBag[0], $pendingBag[1])) {
+                    $pendingBag = null;
+                }
+
                 continue;
             }
 
-            $qname = $this->qname($xr);
-            if ($qname === 'rdf:Bag' && isset($props['_last_dc_subject'])) {
-                // parse list items into dc:subject
-                $props['dc:subject'] = $this->readBag($xr);
-                unset($props['_last_dc_subject']);
+            if ($reader->nodeType !== XMLReader::ELEMENT) {
                 continue;
             }
 
-            // capture strings for common props
-            if (in_array($qname, [
-                'xmp:CreateDate', 'xmp:ModifyDate',
-                'exif:DateTimeOriginal', 'exif:OffsetTimeOriginal',
-            ], true)) {
-                $props[$qname] = $this->readElementText($xr);
+            $namespace = $reader->namespaceURI ?? '';
+            $localName = $reader->localName;
+
+            if ($namespace === self::RDF_NAMESPACE && $localName === 'Bag' && $pendingBag !== null) {
+                $bag = $this->readBag($reader);
+                if ($bag !== []) {
+                    [$bagNs, $bagLocal]                                   = $pendingBag;
+                    $properties[$this->buildClarkName($bagNs, $bagLocal)] = $bag;
+                }
+                continue;
             }
 
-            if ($qname === 'dc:subject') {
-                // the actual strings live in nested rdf:Bag/rdf:li
-                $props['_last_dc_subject'] = true;
+            if ($namespace === self::DC_NAMESPACE && $localName === 'subject') {
+                $pendingBag = $reader->isEmptyElement ? null : [$namespace, $localName];
+                continue;
+            }
+
+            if ($this->isStringProperty($namespace, $localName)) {
+                $text = $this->readElementText($reader);
+                if ($text !== '') {
+                    $properties[$this->buildClarkName($namespace, $localName)] = $text;
+                }
             }
         }
 
-        $xr->close();
+        $reader->close();
 
-        return new XmpDocument($props);
+        return new XmpDocument($properties);
     }
 
-    private function qname(XMLReader $xr): string
+    private function isStringProperty(string $namespace, string $localName): bool
     {
-        $prefix = $xr->prefix ? $xr->prefix . ':' : '';
-
-        return $prefix . $xr->localName;
+        return ($namespace === self::XMP_NAMESPACE && in_array($localName, ['CreateDate', 'ModifyDate'], true))
+            || ($namespace === self::EXIF_NAMESPACE && in_array($localName, ['DateTimeOriginal', 'OffsetTimeOriginal'], true));
     }
 
-    private function readElementText(XMLReader $xr): string
+    private function matchesElement(XMLReader $reader, string $namespace, string $localName): bool
+    {
+        return ($reader->namespaceURI ?? '') === $namespace && $reader->localName === $localName;
+    }
+
+    private function buildClarkName(string $namespaceUri, string $localName): string
+    {
+        return $namespaceUri !== ''
+            ? sprintf('{%s}%s', $namespaceUri, $localName)
+            : $localName;
+    }
+
+    private function readElementText(XMLReader $reader): string
     {
         $text = '';
-        if (!$xr->isEmptyElement) {
-            while ($xr->read()) {
-                if ($xr->nodeType === XMLReader::TEXT || $xr->nodeType === XMLReader::CDATA) {
-                    $text .= $xr->value;
-                } elseif ($xr->nodeType === XMLReader::END_ELEMENT) {
-                    break;
-                }
+        if ($reader->isEmptyElement) {
+            return $text;
+        }
+
+        $depth = $reader->depth;
+        while ($reader->read()) {
+            if ($reader->nodeType === XMLReader::TEXT || $reader->nodeType === XMLReader::CDATA) {
+                $text .= $reader->value;
+            } elseif ($reader->nodeType === XMLReader::END_ELEMENT && $reader->depth === $depth) {
+                break;
             }
         }
 
@@ -84,23 +121,30 @@ final class XmpParser
     }
 
     /** @return list<string> */
-    private function readBag(XMLReader $xr): array
+    private function readBag(XMLReader $reader): array
     {
         $items = [];
-        if ($xr->isEmptyElement) {
+        if ($reader->isEmptyElement) {
             return $items;
         }
 
-        $depth = $xr->depth;
-        while ($xr->read()) {
-            if ($xr->nodeType === XMLReader::END_ELEMENT && $xr->depth === $depth && $xr->localName === 'Bag') {
+        $depth = $reader->depth;
+        while ($reader->read()) {
+            if ($reader->nodeType === XMLReader::END_ELEMENT && $reader->depth === $depth) {
                 break;
             }
-            if ($xr->nodeType === XMLReader::ELEMENT && $xr->localName === 'li') {
-                $items[] = $this->readElementText($xr);
+
+            if ($reader->nodeType === XMLReader::ELEMENT
+                && ($reader->namespaceURI ?? '') === self::RDF_NAMESPACE
+                && $reader->localName === 'li'
+            ) {
+                $value = $this->readElementText($reader);
+                if ($value !== '') {
+                    $items[] = $value;
+                }
             }
         }
 
-        return array_values(array_filter($items, fn ($s) => $s !== ''));
+        return $items;
     }
 }
