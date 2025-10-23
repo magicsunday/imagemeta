@@ -599,7 +599,15 @@ final readonly class IsoBmffExtractor
         $locations = [];
 
         for ($i = 0; $i < $itemCount; ++$i) {
-            $itemId             = $version < 2 ? $win->readU16BE() : (($flags & 0x0001) !== 0 ? $win->readU32BE() : $win->readU16BE());
+            if ($version < 2) {
+                $itemId = $win->readU16BE();
+            } else {
+                if (($flags & 0x0001) !== 0) {
+                    $itemId = $win->readU32BE();
+                } else {
+                    $itemId = $win->readU16BE();
+                }
+            }
             $constructionMethod = 0;
             if ($version === 1 || $version === 2) {
                 $tmp                = $win->readU16BE();
