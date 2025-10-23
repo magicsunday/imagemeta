@@ -19,7 +19,7 @@ use XMLReader;
  */
 final class XmpReader
 {
-    private const RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
+    private const string RDF_NAMESPACE = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#';
 
     /**
      * Parses an XMP packet and returns a document containing discovered properties.
