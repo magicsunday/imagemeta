@@ -16,11 +16,20 @@ use MagicSunday\ImageMeta\Core\Stream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function fopen;
+use function fwrite;
+use function pack;
+use function rewind;
+use function strlen;
+
 /**
  * Unit tests verifying the behaviour of the bounds-checked stream wrapper.
  */
 final class StreamTest extends TestCase
 {
+    /**
+     * Ensures sequential big-endian integer reads advance the cursor as expected.
+     */
     #[Test]
     public function testReadsUnsignedIntegersSequentially(): void
     {
@@ -43,6 +52,9 @@ final class StreamTest extends TestCase
         self::assertSame(14, $stream->tell());
     }
 
+    /**
+     * Verifies chunked reads return the requested bytes and update the position.
+     */
     #[Test]
     public function testReadReturnsRequestedBytesAndAdvancesCursor(): void
     {
@@ -64,6 +76,9 @@ final class StreamTest extends TestCase
         self::assertSame(11, $stream->tell());
     }
 
+    /**
+     * Checks that requesting bytes past the end raises a BoundsError exception.
+     */
     #[Test]
     public function testReadThrowsBoundsErrorWhenRequestCrossesEnd(): void
     {
@@ -81,6 +96,9 @@ final class StreamTest extends TestCase
         $stream->read(1);
     }
 
+    /**
+     * Asserts seeking beyond the declared length triggers a BoundsError exception.
+     */
     #[Test]
     public function testSeekThrowsBoundsErrorWhenOffsetIsOutsideStream(): void
     {
