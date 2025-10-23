@@ -103,6 +103,10 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Writes the provided binary payload to a temporary file and returns its path.
+     *
+     * @param string $payload Binary payload to persist on disk.
+     *
+     * @return string Absolute path to the temporary file containing the payload.
      */
     private function writeTempFile(string $payload): string
     {
@@ -126,6 +130,11 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Wraps a payload with a JPEG marker and its big-endian length field.
+     *
+     * @param int    $marker  Marker identifier without the 0xFF prefix.
+     * @param string $payload Binary segment payload.
+     *
+     * @return string Serialized JPEG segment.
      */
     private static function segment(int $marker, string $payload): string
     {
@@ -134,6 +143,11 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Constructs a standard ISO BMFF box header around the provided payload.
+     *
+     * @param string $type    Four-character box type.
+     * @param string $payload Box payload data.
+     *
+     * @return string Serialized box bytes.
      */
     private static function box(string $type, string $payload): string
     {
@@ -144,6 +158,13 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Constructs a full box (including version and flags) around a payload.
+     *
+     * @param string $type    Four-character box type.
+     * @param string $payload Box payload data.
+     * @param int    $version Version byte to prepend to the payload.
+     * @param int    $flags   Three-byte flag field to prepend to the payload.
+     *
+     * @return string Serialized full box bytes.
      */
     private static function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
     {
@@ -157,6 +178,10 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Builds a QuickTime moov/udta/meta structure containing a content identifier.
+     *
+     * @param string $value Content identifier to store inside the structure.
+     *
+     * @return string Serialized QuickTime `moov` box structure.
      */
     private static function quickTimeMoov(string $value): string
     {
