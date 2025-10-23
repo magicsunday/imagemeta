@@ -26,6 +26,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExifConvenience::class)]
 final class ExifConvenienceTest extends TestCase
 {
+    /**
+     * Provides both modern and legacy ISO sensitivity tags to ensure the helper prefers the
+     * EXIF-specific entry and falls back when absent.
+     */
     #[Test]
     public function isoPrefersModernTagAndFallsBackToLegacy(): void
     {
@@ -46,6 +50,10 @@ final class ExifConvenienceTest extends TestCase
         self::assertSame(200, ExifConvenience::iso($docWithLegacy));
     }
 
+    /**
+     * Ensures the ISO helper returns the first value from array-based entries rather than the raw
+     * array.
+     */
     #[Test]
     public function isoExtractsFirstEntryFromArray(): void
     {
@@ -58,6 +66,10 @@ final class ExifConvenienceTest extends TestCase
         self::assertSame(100, ExifConvenience::iso($doc));
     }
 
+    /**
+     * Reads capture timestamp tags and verifies the helper delegates to the document parser to
+     * return a timezone-aware DateTime.
+     */
     #[Test]
     public function captureDateTimeDelegatesToDocument(): void
     {
@@ -75,6 +87,10 @@ final class ExifConvenienceTest extends TestCase
         self::assertSame('2024-05-01T12:34:56+02:00', $captured->format(DATE_ATOM));
     }
 
+    /**
+     * Confirms null is returned when neither the IFD0 nor EXIF IFD provide capture date
+     * information.
+     */
     #[Test]
     public function captureDateTimeReturnsNullWhenMissing(): void
     {
@@ -83,6 +99,10 @@ final class ExifConvenienceTest extends TestCase
         self::assertNull(ExifConvenience::captureDateTime($doc));
     }
 
+    /**
+     * Supplies an incomplete timestamp string to ensure the helper refuses values lacking time
+     * components.
+     */
     #[Test]
     public function captureDateTimeReturnsNullForShortTimestamp(): void
     {

@@ -27,6 +27,10 @@ final class CaptureDateResolverTest extends TestCase
 {
     private const XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';
 
+    /**
+     * Uses only XMP metadata to confirm the resolver falls back to the CreateDate string and
+     * returns a DateTimeImmutable instance.
+     */
     #[Test]
     public function returnsXmpCreateDateWhenExifIsMissing(): void
     {
@@ -46,6 +50,10 @@ final class CaptureDateResolverTest extends TestCase
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
     }
 
+    /**
+     * Provides an invalid CreateDate value to ensure the resolver rejects non-ISO formatted
+     * strings and returns null.
+     */
     #[Test]
     public function ignoresNonIsoCreateDateValues(): void
     {
@@ -62,6 +70,10 @@ final class CaptureDateResolverTest extends TestCase
         self::assertNull(CaptureDateResolver::bestCaptureDateTime($metadata));
     }
 
+    /**
+     * Supplies multiple XMP CreateDate entries and checks that the first ISO-8601 value is
+     * accepted and converted to a DateTimeImmutable instance.
+     */
     #[Test]
     public function acceptsFirstArrayElementWhenIsoString(): void
     {

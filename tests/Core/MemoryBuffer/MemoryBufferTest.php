@@ -40,6 +40,12 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
 
         /**
          * Delegates to the global \substr implementation while allowing tests to force short reads.
+         *
+         * @param string   $string Source string to slice.
+         * @param int      $offset Starting offset to read from.
+         * @param int|null $length Optional maximum number of bytes to read.
+         *
+         * @return string Portion of the input string returned by \substr.
          */
         public static function invokeSubstrProxy(string $string, int $offset, ?int $length = null): string
         {
@@ -58,12 +64,19 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
             return \substr($string, $offset, $length);
         }
 
+        /**
+         * Resets the short-read override flag after each test to avoid cross-test leakage.
+         */
         #[After]
         protected function resetOverrides(): void
         {
             self::$forceShortRead = false;
         }
 
+        /**
+         * Seeks to a position inside the buffer and verifies that the cursor reflects the move and
+         * subsequent reads advance it as expected.
+         */
         #[Test]
         public function testSeekMovesCursorWithinBounds(): void
         {
@@ -75,6 +88,9 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
             self::assertSame(5, $buffer->tell());
         }
 
+        /**
+         * Attempts to seek beyond the available bytes to ensure a BoundsError is raised.
+         */
         #[Test]
         public function testSeekThrowsBoundsErrorOutsideBuffer(): void
         {
@@ -84,6 +100,10 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
             $buffer->seek(4);
         }
 
+        /**
+         * Reads sequential slices and confirms both the returned data and cursor position match the
+         * requested byte count.
+         */
         #[Test]
         public function testReadReturnsRequestedBytes(): void
         {
@@ -95,6 +115,9 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
             self::assertSame(11, $buffer->tell());
         }
 
+        /**
+         * Ensures that reading past the end of the buffer throws a BoundsError.
+         */
         #[Test]
         public function testReadThrowsBoundsErrorWhenLengthTooLarge(): void
         {
@@ -106,6 +129,10 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
             $buffer->read(1);
         }
 
+        /**
+         * Forces the proxy \substr implementation to perform a short read so MemoryBuffer raises a
+         * ParseError as expected for truncated data.
+         */
         #[Test]
         public function testReadThrowsParseErrorOnShortRead(): void
         {
@@ -117,6 +144,10 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
             $buffer->read(2);
         }
 
+        /**
+         * Reads unsigned integers of varying widths to confirm endian-specific helpers decode the
+         * packed payload and advance the cursor correctly.
+         */
         #[Test]
         public function testReadUnsignedIntegersRespectEndianness(): void
         {
