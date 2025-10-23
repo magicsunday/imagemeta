@@ -268,10 +268,10 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Packs a Classic TIFF directory entry.
      *
-     * @param int $tag            TIFF tag identifier.
-     * @param int $type           TIFF field type code.
-     * @param int $count          Number of values represented.
-     * @param int $valueOrOffset  Inline value or data offset.
+     * @param int $tag           TIFF tag identifier.
+     * @param int $type          TIFF field type code.
+     * @param int $count         Number of values represented.
+     * @param int $valueOrOffset Inline value or data offset.
      */
     private static function packClassicEntry(int $tag, int $type, int $count, int $valueOrOffset): string
     {
@@ -284,10 +284,10 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Packs a BigTIFF directory entry in little-endian order.
      *
-     * @param int $tag            TIFF tag identifier.
-     * @param int $type           TIFF field type code.
-     * @param int $count          Number of values represented.
-     * @param int $valueOrOffset  Inline value or data offset.
+     * @param int $tag           TIFF tag identifier.
+     * @param int $type          TIFF field type code.
+     * @param int $count         Number of values represented.
+     * @param int $valueOrOffset Inline value or data offset.
      */
     private static function packBigTiffEntry(int $tag, int $type, int $count, int $valueOrOffset): string
     {
