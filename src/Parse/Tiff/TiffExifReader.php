@@ -31,6 +31,7 @@ use function is_int;
 use function ord;
 use function pack;
 use function rtrim;
+use function sha1;
 use function sprintf;
 use function strlen;
 use function substr;
@@ -276,23 +277,35 @@ final class TiffExifReader
      */
     private function resolveMakerNotes(?Registry $registry, Ifd $ifd0, ?Ifd $exifIfd): ?MakerNotesMetadata
     {
-        if ($registry === null || !$exifIfd instanceof Ifd || $this->makerNoteRaw === null) {
+        if ($this->makerNoteRaw === null) {
             return null;
+        }
+
+        if ($registry === null || !$exifIfd instanceof Ifd) {
+            return $this->makerNotesDigest();
         }
 
         $make = $this->stringFromIfd($ifd0, ExifTag::MAKE);
         if ($make === null || $make === '') {
-            return null;
+            return $this->makerNotesDigest();
         }
 
         $decoder = $registry->find($make);
         if ($decoder === null) {
-            return null;
+            return $this->makerNotesDigest();
         }
 
         $model = $this->stringFromIfd($ifd0, ExifTag::MODEL);
 
         return $decoder->decode($this->makerNoteRaw, $make, $model);
+    }
+
+    /**
+     * Creates a digest metadata instance for unknown maker notes.
+     */
+    private function makerNotesDigest(): MakerNotesMetadata
+    {
+        return new MakerNotesMetadata('Unknown', strlen($this->makerNoteRaw), sha1($this->makerNoteRaw));
     }
 
     /**

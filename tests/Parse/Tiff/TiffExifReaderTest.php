@@ -180,16 +180,28 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
-     * Ensures maker note metadata remains null when no decoder is available for the camera make.
+     * Ensures maker note metadata falls back to a digest when no decoder matches the make string.
      */
     #[Test]
-    public function makerNotesRemainNullWithoutDecoder(): void
+    public function makerNotesFallbackToDigestWithoutMatchingDecoder(): void
     {
-        [$blob]    = self::buildClassicMakerNoteBlob();
-        $document  = (new TiffExifReader())->parseFromBlob($blob, new Registry());
-        $makerNote = $document->makerNotes();
+        [$blob, $makerNoteData] = self::buildClassicMakerNoteBlob();
 
-        self::assertNull($makerNote);
+        $registry = new Registry();
+        $registry->register('Other', new class implements MakerNotesDecoderInterface {
+            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            {
+                return new MakerNotesMetadata('Other', strlen($raw), sha1($raw));
+            }
+        });
+
+        $document   = (new TiffExifReader())->parseFromBlob($blob, $registry);
+        $makerNotes = $document->makerNotes();
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertSame('Unknown', $makerNotes->vendor());
+        self::assertSame(strlen($makerNoteData), $makerNotes->length());
+        self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
     }
 
     /**
