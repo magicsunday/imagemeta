@@ -37,7 +37,7 @@ final class MemoryBuffer
      */
     public function size(): int
     {
-        return strlen($this->data);
+        return \strlen($this->data);
     }
 
     /**
@@ -83,8 +83,8 @@ final class MemoryBuffer
         if ($length < 0 || $end > $this->size()) {
             throw new BoundsError("MemoryBuffer read out of range: {$this->pos}+{$length}");
         }
-        $chunk = substr($this->data, $this->pos, $length);
-        if (strlen($chunk) !== $length) {
+        $chunk = \substr($this->data, $this->pos, $length);
+        if (\strlen($chunk) !== $length) {
             throw new ParseError('MemoryBuffer short read');
         }
         $this->pos = $end;
@@ -99,7 +99,7 @@ final class MemoryBuffer
      */
     public function readU8(): int
     {
-        return ord($this->read(1));
+        return \ord($this->read(1));
     }
 
     /**
@@ -109,7 +109,7 @@ final class MemoryBuffer
      */
     public function readU16LE(): int
     {
-        return unpack('v', $this->read(2))[1];
+        return \unpack('v', $this->read(2))[1];
     }
 
     /**
@@ -119,7 +119,7 @@ final class MemoryBuffer
      */
     public function readU16BE(): int
     {
-        return unpack('n', $this->read(2))[1];
+        return \unpack('n', $this->read(2))[1];
     }
 
     /**
@@ -129,7 +129,7 @@ final class MemoryBuffer
      */
     public function readU32LE(): int
     {
-        return unpack('V', $this->read(4))[1];
+        return \unpack('V', $this->read(4))[1];
     }
 
     /**
@@ -139,7 +139,7 @@ final class MemoryBuffer
      */
     public function readU32BE(): int
     {
-        return unpack('N', $this->read(4))[1];
+        return \unpack('N', $this->read(4))[1];
     }
 
     /**

@@ -49,23 +49,23 @@ final class ExifConvenience
     {
         $rawDateTime = $doc->dateTimeOriginal(); // "YYYY:MM:DD HH:MM:SS"
 
-        if (!is_string($rawDateTime) || $rawDateTime === '') {
+        if (!\is_string($rawDateTime) || $rawDateTime === '') {
             return null;
         }
 
         // Ensure that the timestamp contains both a date and a time component.
-        if (strlen($rawDateTime) < 19) {
+        if (\strlen($rawDateTime) < 19) {
             return null;
         }
 
         $rawOffset = $doc->offsetTimeOriginal(); // e.g. "+01:00" or "-05:30"
 
-        $datePart       = str_replace(':', '-', substr($rawDateTime, 0, 10));
-        $timePart       = substr($rawDateTime, 11, 8);
+        $datePart       = \str_replace(':', '-', \substr($rawDateTime, 0, 10));
+        $timePart       = \substr($rawDateTime, 11, 8);
         $timeZoneOffset = $rawOffset !== null && $rawOffset !== '' ? $rawOffset : '+00:00';
 
         try {
-            return new DateTimeImmutable(sprintf('%s %s%s', $datePart, $timePart, $timeZoneOffset));
+            return new DateTimeImmutable(\sprintf('%s %s%s', $datePart, $timePart, $timeZoneOffset));
         } catch (Throwable) {
             return null;
         }
@@ -143,16 +143,16 @@ final class ExifConvenience
 
         $value = $entry->value;
 
-        if (is_array($value)) {
+        if (\is_array($value)) {
             // Some cameras store ISO as a list, keep the first element.
             $value = $value[0] ?? null;
         }
 
-        if (is_int($value)) {
+        if (\is_int($value)) {
             return $value;
         }
 
-        if (is_float($value)) {
+        if (\is_float($value)) {
             return (int) $value;
         }
 
@@ -209,12 +209,12 @@ final class ExifConvenience
      */
     private static function rationalToFloat(mixed $v): ?float
     {
-        if (is_array($v)) {
+        if (\is_array($v)) {
             // [num, den] or list of rationals
-            if (count($v) === 2 && is_numeric($v[0] ?? null) && is_numeric($v[1] ?? null) && (int) $v[1] !== 0) {
+            if (\count($v) === 2 && \is_numeric($v[0] ?? null) && \is_numeric($v[1] ?? null) && (int) $v[1] !== 0) {
                 return (float) $v[0] / (float) $v[1];
             }
-            if (isset($v[0]) && is_array($v[0]) && count($v[0]) === 2) {
+            if (isset($v[0]) && \is_array($v[0]) && \count($v[0]) === 2) {
                 $n = $v[0][0] ?? 0;
                 $d = $v[0][1] ?? 1;
 
@@ -222,6 +222,6 @@ final class ExifConvenience
             }
         }
 
-        return is_int($v) || is_float($v) ? (float) $v : null;
+        return \is_int($v) || \is_float($v) ? (float) $v : null;
     }
 }

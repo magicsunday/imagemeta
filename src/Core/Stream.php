@@ -30,11 +30,11 @@ final class Stream
      */
     public static function fromPath(string $path): self
     {
-        $fh = fopen($path, 'rb');
+        $fh = \fopen($path, 'rb');
         if ($fh === false) {
             throw new ParseError("Cannot open: $path");
         }
-        $stat = fstat($fh);
+        $stat = \fstat($fh);
         $size = (int) ($stat['size'] ?? 0);
 
         return new self($fh, $size);
@@ -82,7 +82,7 @@ final class Stream
         if ($offset < 0 || $offset > $this->size) {
             throw new BoundsError("seek out of range: $offset");
         }
-        fseek($this->fh, $offset);
+        \fseek($this->fh, $offset);
         $this->pos = $offset;
     }
 
@@ -98,8 +98,8 @@ final class Stream
         if ($len < 0 || $this->pos + $len > $this->size) {
             throw new BoundsError("read beyond EOF: {$this->pos}+{$len} > {$this->size}");
         }
-        $data = fread($this->fh, $len);
-        if ($data === false || strlen($data) !== $len) {
+        $data = \fread($this->fh, $len);
+        if ($data === false || \strlen($data) !== $len) {
             throw new ParseError('short read');
         }
         $this->pos += $len;
@@ -114,7 +114,7 @@ final class Stream
      */
     public function readU8(): int
     {
-        return ord($this->read(1));
+        return \ord($this->read(1));
     }
 
     /**
@@ -124,7 +124,7 @@ final class Stream
      */
     public function readU16BE(): int
     {
-        return unpack('n', $this->read(2))[1];
+        return \unpack('n', $this->read(2))[1];
     }
 
     /**
@@ -134,7 +134,7 @@ final class Stream
      */
     public function readU32BE(): int
     {
-        return unpack('N', $this->read(4))[1];
+        return \unpack('N', $this->read(4))[1];
     }
 
     /**

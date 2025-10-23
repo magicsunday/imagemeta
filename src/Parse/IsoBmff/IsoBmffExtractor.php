@@ -51,7 +51,7 @@ final class IsoBmffExtractor
         }
 
         if ($queuedUuidXmp !== []) {
-            $xmpBlobs = array_merge($xmpBlobs, $queuedUuidXmp);
+            $xmpBlobs = \array_merge($xmpBlobs, $queuedUuidXmp);
         }
 
         $qt = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
@@ -248,13 +248,13 @@ final class IsoBmffExtractor
         }
 
         // Deduplicate while preserving encounter order to avoid processing the same item twice.
-        $exifItemIds = array_values(array_unique($exifItemIds));
-        $xmpItemIds  = array_values(array_unique($xmpItemIds));
+        $exifItemIds = \array_values(\array_unique($exifItemIds));
+        $xmpItemIds  = \array_values(\array_unique($xmpItemIds));
 
         if ($primaryItemId !== null) {
             // Ensure the declared primary item is considered first for XMP resolution.
-            array_unshift($xmpItemIds, $primaryItemId);
-            $xmpItemIds = array_values(array_unique($xmpItemIds));
+            \array_unshift($xmpItemIds, $primaryItemId);
+            $xmpItemIds = \array_values(\array_unique($xmpItemIds));
         }
 
         return [$exifItemIds, $xmpItemIds];
@@ -314,7 +314,7 @@ final class IsoBmffExtractor
      */
     private function normalizeExifBlob(string $blob): string
     {
-        return str_starts_with($blob, "Exif\0\0") ? substr($blob, 6) : $blob;
+        return \str_starts_with($blob, "Exif\0\0") ? \substr($blob, 6) : $blob;
     }
 
     /**
@@ -421,7 +421,7 @@ final class IsoBmffExtractor
             $win->readU16BE(); // protection index
             $remaining = $infe->contentSize - $win->tell();
             $payload   = $remaining > 0 ? $win->read($remaining) : '';
-            $parts     = $payload === '' ? [] : explode("\0", $payload);
+            $parts     = $payload === '' ? [] : \explode("\0", $payload);
 
             $name        = $parts[0] ?? null;
             $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
@@ -439,7 +439,7 @@ final class IsoBmffExtractor
         $itemType    = $win->read(4);
         $remaining   = $infe->contentSize - $win->tell();
         $payload     = $remaining > 0 ? $win->read($remaining) : '';
-        $parts       = $payload === '' ? [] : explode("\0", $payload);
+        $parts       = $payload === '' ? [] : \explode("\0", $payload);
         $name        = $parts[0] ?? null;
         $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
 
@@ -651,7 +651,7 @@ final class IsoBmffExtractor
         $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
 
         if ($type === 1 || $type === 2 || $type === 7) {
-            return trim($payload, "\0");
+            return \trim($payload, "\0");
         }
 
         return $payload;
@@ -681,14 +681,14 @@ final class IsoBmffExtractor
      */
     private function isExifItem(array $info): bool
     {
-        if (isset($info['itemType']) && strcasecmp((string) $info['itemType'], 'Exif') === 0) {
+        if (isset($info['itemType']) && \strcasecmp((string) $info['itemType'], 'Exif') === 0) {
             return true;
         }
-        if (isset($info['name']) && strcasecmp((string) $info['name'], 'Exif') === 0) {
+        if (isset($info['name']) && \strcasecmp((string) $info['name'], 'Exif') === 0) {
             return true;
         }
         if (isset($info['contentType'])) {
-            $ct = strtolower((string) $info['contentType']);
+            $ct = \strtolower((string) $info['contentType']);
 
             return $ct === 'application/exif' || $ct === 'image/tiff';
         }
@@ -707,7 +707,7 @@ final class IsoBmffExtractor
             return false;
         }
 
-        return strtolower((string) $info['contentType']) === 'application/rdf+xml';
+        return \strtolower((string) $info['contentType']) === 'application/rdf+xml';
     }
 
     /**
@@ -751,7 +751,7 @@ final class IsoBmffExtractor
             0       => 0,
             1       => $window->readU8(),
             2       => $window->readU16BE(),
-            3       => unpack('N', "\0" . $window->read(3))[1],
+            3       => \unpack('N', "\0" . $window->read(3))[1],
             4       => $window->readU32BE(),
             8       => $window->readU64BE(),
             default => throw new ParseError("unsupported integer size $bytes"),
@@ -783,7 +783,7 @@ final class IsoBmffExtractor
      */
     private function isPrintableFourcc(string $fourcc): bool
     {
-        return strlen($fourcc) === 4 && preg_match('/^[\x20-\x7E]{4}$/', $fourcc) === 1;
+        return \strlen($fourcc) === 4 && \preg_match('/^[\x20-\x7E]{4}$/', $fourcc) === 1;
     }
 
     /**
@@ -795,11 +795,11 @@ final class IsoBmffExtractor
      */
     private function fourccToIndex(string $fourcc): ?int
     {
-        if (strlen($fourcc) !== 4) {
+        if (\strlen($fourcc) !== 4) {
             return null;
         }
 
-        $value = unpack('N', $fourcc)[1];
+        $value = \unpack('N', $fourcc)[1];
 
         return $value > 0 ? $value : null;
     }

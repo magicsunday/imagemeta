@@ -163,14 +163,14 @@ final class JpegExtractor
         }
 
         if ($this->iccExpectedCount !== null && $this->iccExpectedCount > 0) {
-            if (count($this->iccSequence) === $this->iccExpectedCount) {
-                $expectedSequence = range(1, $this->iccExpectedCount);
-                $presentSequence  = array_keys($this->iccSequence);
-                sort($presentSequence);
+            if (\count($this->iccSequence) === $this->iccExpectedCount) {
+                $expectedSequence = \range(1, $this->iccExpectedCount);
+                $presentSequence  = \array_keys($this->iccSequence);
+                \sort($presentSequence);
 
                 if ($presentSequence === $expectedSequence) {
-                    ksort($this->iccSequence);
-                    $this->iccProfile = implode('', $this->iccSequence);
+                    \ksort($this->iccSequence);
+                    $this->iccProfile = \implode('', $this->iccSequence);
                 }
             }
         }
@@ -201,7 +201,7 @@ final class JpegExtractor
                 continue; // stuffed byte inside scan data
             }
 
-            return [ord($code), $markerOffset];
+            return [\ord($code), $markerOffset];
         }
     }
 
@@ -220,7 +220,7 @@ final class JpegExtractor
 
         if ($length < 2) {
             throw new ParseError(
-                sprintf('Segment length %d for marker 0x%02X at offset %d is invalid', $length, $marker, $offset)
+                \sprintf('Segment length %d for marker 0x%02X at offset %d is invalid', $length, $marker, $offset)
             );
         }
 
@@ -228,7 +228,7 @@ final class JpegExtractor
             $payloadLength = $length - 2;
             if ($payloadLength > self::MAX_APP_SEGMENT_SIZE) {
                 throw new ParseError(
-                    sprintf(
+                    \sprintf(
                         'APP segment 0x%02X at offset %d exceeds maximum payload of %d bytes',
                         $marker,
                         $offset,
@@ -260,7 +260,7 @@ final class JpegExtractor
             return $this->s->read($length);
         } catch (BoundsError $exception) {
             throw new ParseError(
-                sprintf('Truncated segment for marker 0x%02X at offset %d', $marker, $offset),
+                \sprintf('Truncated segment for marker 0x%02X at offset %d', $marker, $offset),
                 0,
                 $exception
             );
@@ -274,14 +274,14 @@ final class JpegExtractor
      */
     private function handleApp1(string $payload): void
     {
-        if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
-            $this->exifBlobs[] = substr($payload, strlen(self::EXIF_SIGNATURE));
+        if (\str_starts_with($payload, self::EXIF_SIGNATURE)) {
+            $this->exifBlobs[] = \substr($payload, \strlen(self::EXIF_SIGNATURE));
 
             return;
         }
 
-        if (str_starts_with($payload, self::XMP_SIGNATURE)) {
-            $this->xmpPackets[] = substr($payload, strlen(self::XMP_SIGNATURE));
+        if (\str_starts_with($payload, self::XMP_SIGNATURE)) {
+            $this->xmpPackets[] = \substr($payload, \strlen(self::XMP_SIGNATURE));
         }
     }
 
@@ -293,18 +293,18 @@ final class JpegExtractor
      */
     private function handleApp2(string $payload, int $offset): void
     {
-        if (!str_starts_with($payload, self::ICC_SIGNATURE)) {
+        if (!\str_starts_with($payload, self::ICC_SIGNATURE)) {
             return;
         }
 
-        $signatureLength = strlen(self::ICC_SIGNATURE);
-        if (strlen($payload) < $signatureLength + 2) {
-            throw new ParseError(sprintf('ICC segment at offset %d is too short', $offset));
+        $signatureLength = \strlen(self::ICC_SIGNATURE);
+        if (\strlen($payload) < $signatureLength + 2) {
+            throw new ParseError(\sprintf('ICC segment at offset %d is too short', $offset));
         }
 
-        $sequenceNumber = ord($payload[$signatureLength]);
-        $sequenceCount  = ord($payload[$signatureLength + 1]);
-        $iccData        = substr($payload, $signatureLength + 2);
+        $sequenceNumber = \ord($payload[$signatureLength]);
+        $sequenceCount  = \ord($payload[$signatureLength + 1]);
+        $iccData        = \substr($payload, $signatureLength + 2);
 
         $this->iccSegments[] = $payload;
 
@@ -322,7 +322,7 @@ final class JpegExtractor
             return;
         }
 
-        if (!array_key_exists($sequenceNumber, $this->iccSequence)) {
+        if (!\array_key_exists($sequenceNumber, $this->iccSequence)) {
             $this->iccSequence[$sequenceNumber] = $iccData;
         }
     }
@@ -334,7 +334,7 @@ final class JpegExtractor
      */
     private function handleApp13(string $payload): void
     {
-        if (str_starts_with($payload, self::IPTC_SIGNATURE)) {
+        if (\str_starts_with($payload, self::IPTC_SIGNATURE)) {
             $this->iptcPayloads[] = $payload;
         }
     }

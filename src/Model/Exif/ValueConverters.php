@@ -25,10 +25,10 @@ final class ValueConverters
      */
     public static function rationalToFloat(mixed $v): ?float
     {
-        if (is_array($v) && count($v) === 2 && (int) $v[1] !== 0) {
+        if (\is_array($v) && \count($v) === 2 && (int) $v[1] !== 0) {
             return (float) $v[0] / (float) $v[1];
         }
-        if (is_int($v) || is_float($v)) {
+        if (\is_int($v) || \is_float($v)) {
             return (float) $v;
         }
 
@@ -53,7 +53,7 @@ final class ValueConverters
         $lon = self::dmsToFloat($lonRef, $lonVal);
 
         $alt = null;
-        if (($e = $gps->get(ExifTag::GPS_ALTITUDE)) && is_array($e->value) && count($e->value) === 2 && (int) $e->value[1] !== 0) {
+        if (($e = $gps->get(ExifTag::GPS_ALTITUDE)) && \is_array($e->value) && \count($e->value) === 2 && (int) $e->value[1] !== 0) {
             $alt = $e->value[0] / $e->value[1];
             if (($ref = $gps->get(ExifTag::GPS_ALTITUDE_REF)) && (int) ($ref->value ?? 0) === 1) {
                 $alt = -$alt;
@@ -71,7 +71,7 @@ final class ValueConverters
      */
     private static function dmsToFloat(?string $ref, mixed $val): ?float
     {
-        if (!is_string($ref) || !is_array($val) || count($val) < 3) {
+        if (!\is_string($ref) || !\is_array($val) || \count($val) < 3) {
             return null;
         }
         $deg = self::rationalToFloat($val[0] ?? null);

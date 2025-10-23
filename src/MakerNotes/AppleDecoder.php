@@ -29,8 +29,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     {
         return [
             '_vendor' => 'Apple',
-            '_length' => strlen($raw),
-            '_sha1'   => sha1($raw, false),
+            '_length' => \strlen($raw),
+            '_sha1'   => \sha1($raw, false),
         ];
     }
 }
