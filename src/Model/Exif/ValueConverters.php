@@ -44,18 +44,18 @@ final class ValueConverters
      */
     public static function gpsFromIfd(Ifd $gps): array
     {
-        $latRef = $gps->get(0x0001)?->value ?? null;
-        $latVal = $gps->get(0x0002)?->value ?? null;
-        $lonRef = $gps->get(0x0003)?->value ?? null;
-        $lonVal = $gps->get(0x0004)?->value ?? null;
+        $latRef = $gps->get(ExifTag::GPS_LATITUDE_REF)?->value ?? null;
+        $latVal = $gps->get(ExifTag::GPS_LATITUDE)?->value ?? null;
+        $lonRef = $gps->get(ExifTag::GPS_LONGITUDE_REF)?->value ?? null;
+        $lonVal = $gps->get(ExifTag::GPS_LONGITUDE)?->value ?? null;
 
         $lat = self::dmsToFloat($latRef, $latVal);
         $lon = self::dmsToFloat($lonRef, $lonVal);
 
         $alt = null;
-        if (($e = $gps->get(0x0006)) && is_array($e->value) && count($e->value) === 2 && (int) $e->value[1] !== 0) {
+        if (($e = $gps->get(ExifTag::GPS_ALTITUDE)) && is_array($e->value) && count($e->value) === 2 && (int) $e->value[1] !== 0) {
             $alt = $e->value[0] / $e->value[1];
-            if (($ref = $gps->get(0x0005)) && (int) ($ref->value ?? 0) === 1) {
+            if (($ref = $gps->get(ExifTag::GPS_ALTITUDE_REF)) && (int) ($ref->value ?? 0) === 1) {
                 $alt = -$alt;
             }
         }

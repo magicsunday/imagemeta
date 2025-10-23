@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use Throwable;
 
@@ -91,7 +92,7 @@ final class ExifConvenience
      */
     public static function exposureTime(ExifDocument $doc): ?float
     {
-        $e = self::find($doc, 0x829A); // ExposureTime (rational)
+        $e = self::find($doc, ExifTag::EXPOSURE_TIME); // ExposureTime (rational)
 
         return self::rationalToFloat($e?->value);
     }
@@ -105,7 +106,7 @@ final class ExifConvenience
      */
     public static function fNumber(ExifDocument $doc): ?float
     {
-        $e = self::find($doc, 0x829D); // FNumber (rational)
+        $e = self::find($doc, ExifTag::F_NUMBER); // FNumber (rational)
 
         return self::rationalToFloat($e?->value);
     }
@@ -119,7 +120,7 @@ final class ExifConvenience
      */
     public static function focalLength(ExifDocument $doc): ?float
     {
-        $e = self::find($doc, 0x920A); // FocalLength (rational)
+        $e = self::find($doc, ExifTag::FOCAL_LENGTH); // FocalLength (rational)
 
         return self::rationalToFloat($e?->value);
     }
@@ -133,8 +134,8 @@ final class ExifConvenience
      */
     public static function iso(ExifDocument $doc): ?int
     {
-        // ISO can be ExifIFD tag 0x8827 (old) or PhotographicSensitivity 0x8833
-        $entry = self::find($doc, 0x8833) ?? self::find($doc, 0x8827);
+        // ISO can be ExifIFD tag ExifTag::PHOTOGRAPHIC_SENSITIVITY or the newer ExifTag::ISO_SPEED
+        $entry = self::find($doc, ExifTag::ISO_SPEED) ?? self::find($doc, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
 
         if ($entry === null) {
             return null;
