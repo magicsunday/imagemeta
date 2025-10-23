@@ -22,7 +22,7 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
  */
 final class IsoBmffExtractor
 {
-    private const XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
+    private const string XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
 
     /**
      * Initialises the extractor with the source stream that contains the ISO BMFF structure.

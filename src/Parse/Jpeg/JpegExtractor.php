@@ -20,13 +20,13 @@ use MagicSunday\ImageMeta\Core\Stream;
  */
 final class JpegExtractor
 {
-    private const MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
-    private const EXIF_SIGNATURE       = "Exif\0\0";
-    private const XMP_SIGNATURE        = "http://ns.adobe.com/xap/1.0/\0";
-    private const ICC_SIGNATURE        = "ICC_PROFILE\0";
-    private const IPTC_SIGNATURE       = "Photoshop 3.0\0";
-    private const MARKER_SOS           = 0xDA;
-    private const MARKER_EOI           = 0xD9;
+    private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
+    private const string EXIF_SIGNATURE    = "Exif\0\0";
+    private const string XMP_SIGNATURE     = "http://ns.adobe.com/xap/1.0/\0";
+    private const string ICC_SIGNATURE     = "ICC_PROFILE\0";
+    private const string IPTC_SIGNATURE    = "Photoshop 3.0\0";
+    private const int MARKER_SOS           = 0xDA;
+    private const int MARKER_EOI           = 0xD9;
 
     private bool $parsed = false;
     /** @var list<string> */
