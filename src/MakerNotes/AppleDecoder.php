@@ -31,7 +31,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return new MakerNotesMetadata(
             'Apple',
             strlen($raw),
-            sha1($raw, false)
+            sha1($raw)
         );
     }
 }
