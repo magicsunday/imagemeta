@@ -26,14 +26,17 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier.
      *
-     * @return array{_vendor: string, _length: int, _sha1: string} Normalised metadata describing the vendor, payload length, and hash.
+     * @return array{_vendor: 'Apple', _length: int, _sha1: non-empty-string} Normalised metadata describing the vendor, payload length, and hash.
      */
     public function decode(string $raw, string $make, ?string $model): array
     {
+        $payloadLength = strlen($raw);
+        $payloadHash   = sha1($raw, false);
+
         return [
             '_vendor' => 'Apple',
-            '_length' => strlen($raw),
-            '_sha1'   => sha1($raw, false),
+            '_length' => $payloadLength,
+            '_sha1'   => $payloadHash,
         ];
     }
 }
