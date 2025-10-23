@@ -11,9 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
+use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\NikonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
+use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
+use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -92,5 +96,18 @@ final class RegistryTest extends TestCase
         });
 
         self::assertNull($registry->find('Nikon Corporation'));
+    }
+
+    /**
+     * Ensures the factory registers the built-in decoders for common vendor prefixes.
+     */
+    #[Test]
+    public function factoryRegistersBuiltInDecoders(): void
+    {
+        $registry = RegistryFactory::createDefault();
+
+        self::assertInstanceOf(CanonDecoder::class, $registry->find('Canon Inc.'));
+        self::assertInstanceOf(NikonDecoder::class, $registry->find('Nikon Corporation'));
+        self::assertInstanceOf(SonyDecoder::class, $registry->find('Sony Corporation'));
     }
 }
