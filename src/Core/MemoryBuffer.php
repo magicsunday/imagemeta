@@ -65,7 +65,7 @@ final class MemoryBuffer
     public function seek(int $offset): void
     {
         if ($offset < 0 || $offset > $this->size()) {
-            throw new BoundsError("MemoryBuffer seek out of range: {$offset}");
+            throw new BoundsError("MemoryBuffer seek out of range: $offset");
         }
         $this->pos = $offset;
     }
@@ -86,7 +86,7 @@ final class MemoryBuffer
     {
         $end = $this->pos + $length;
         if ($length < 0 || $end > $this->size()) {
-            throw new BoundsError("MemoryBuffer read out of range: {$this->pos}+{$length}");
+            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $length);
         }
         $chunk = substr($this->data, $this->pos, $length);
         if (strlen($chunk) !== $length) {
