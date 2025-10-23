@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
@@ -27,7 +35,8 @@ final class Stream
             throw new ParseError("Cannot open: $path");
         }
         $stat = fstat($fh);
-        $size = (int)($stat['size'] ?? 0);
+        $size = (int) ($stat['size'] ?? 0);
+
         return new self($fh, $size);
     }
 
@@ -39,7 +48,7 @@ final class Stream
      */
     public function __construct($fh, int $size)
     {
-        $this->fh = $fh;
+        $this->fh   = $fh;
         $this->size = $size;
     }
 
@@ -48,14 +57,20 @@ final class Stream
      *
      * @return int
      */
-    public function size(): int { return $this->size; }
+    public function size(): int
+    {
+        return $this->size;
+    }
 
     /**
      * Returns the current cursor position relative to the start of the stream.
      *
      * @return int
      */
-    public function tell(): int { return $this->pos; }
+    public function tell(): int
+    {
+        return $this->pos;
+    }
 
     /**
      * Moves the read cursor to an absolute offset within the stream.
@@ -88,6 +103,7 @@ final class Stream
             throw new ParseError('short read');
         }
         $this->pos += $len;
+
         return $data;
     }
 
@@ -96,21 +112,30 @@ final class Stream
      *
      * @return int
      */
-    public function readU8(): int   { return ord($this->read(1)); }
+    public function readU8(): int
+    {
+        return ord($this->read(1));
+    }
 
     /**
      * Reads an unsigned 16-bit big-endian integer from the stream.
      *
      * @return int
      */
-    public function readU16BE(): int { return unpack('n', $this->read(2))[1]; }
+    public function readU16BE(): int
+    {
+        return unpack('n', $this->read(2))[1];
+    }
 
     /**
      * Reads an unsigned 32-bit big-endian integer from the stream.
      *
      * @return int
      */
-    public function readU32BE(): int { return unpack('N', $this->read(4))[1]; }
+    public function readU32BE(): int
+    {
+        return unpack('N', $this->read(4))[1];
+    }
 
     /**
      * Reads an unsigned 64-bit big-endian integer from the stream.
@@ -121,6 +146,7 @@ final class Stream
     {
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
+
         return ($hi << 32) | $lo;
     }
 
@@ -135,6 +161,7 @@ final class Stream
         if ($offset < 0 || $length < 0 || $offset + $length > $this->size) {
             throw new BoundsError('window out of range');
         }
+
         return new StreamWindow($this, $offset, $length);
     }
 }

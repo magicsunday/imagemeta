@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
@@ -20,22 +28,29 @@ final class StreamWindow
     public function __construct(
         private readonly Stream $base,
         private readonly int $offset,
-        private readonly int $length
-    ) {}
+        private readonly int $length,
+    ) {
+    }
 
     /**
      * Returns the number of bytes exposed through this window.
      *
      * @return int
      */
-    public function size(): int { return $this->length; }
+    public function size(): int
+    {
+        return $this->length;
+    }
 
     /**
      * Returns the cursor position relative to the start of the window.
      *
      * @return int
      */
-    public function tell(): int { return $this->cursor; }
+    public function tell(): int
+    {
+        return $this->cursor;
+    }
 
     /**
      * Repositions the window cursor to an absolute offset inside the window.
@@ -65,6 +80,7 @@ final class StreamWindow
         $this->base->seek($this->offset + $this->cursor);
         $data = $this->base->read($len);
         $this->cursor += $len;
+
         return $data;
     }
 
@@ -73,21 +89,30 @@ final class StreamWindow
      *
      * @return int
      */
-    public function readU8(): int     { return ord($this->read(1)); }
+    public function readU8(): int
+    {
+        return ord($this->read(1));
+    }
 
     /**
      * Reads an unsigned 16-bit big-endian integer from the window.
      *
      * @return int
      */
-    public function readU16BE(): int  { return unpack('n', $this->read(2))[1]; }
+    public function readU16BE(): int
+    {
+        return unpack('n', $this->read(2))[1];
+    }
 
     /**
      * Reads an unsigned 32-bit big-endian integer from the window.
      *
      * @return int
      */
-    public function readU32BE(): int  { return unpack('N', $this->read(4))[1]; }
+    public function readU32BE(): int
+    {
+        return unpack('N', $this->read(4))[1];
+    }
 
     /**
      * Reads an unsigned 64-bit big-endian integer from the window.
@@ -98,6 +123,7 @@ final class StreamWindow
     {
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
+
         return ($hi << 32) | $lo;
     }
 }

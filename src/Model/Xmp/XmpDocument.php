@@ -1,22 +1,28 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
-
 namespace MagicSunday\ImageMeta\Model\Xmp;
-
 
 final class XmpDocument
 {
     /** @param array<string, array<string, mixed>> $data nsUri => [prop => value] */
-    public function __construct(public readonly array $data) {}
-
+    public function __construct(public readonly array $data)
+    {
+    }
 
     /** Convenient flat lookup: nsUri + prop */
     public function get(string $nsUri, string $prop): mixed
     {
         return $this->data[$nsUri][$prop] ?? null;
     }
-
 
     /** Namespace‑agnostic helper (first match by local name) */
     public function find(string $localName): mixed
@@ -25,10 +31,13 @@ final class XmpDocument
             foreach ($props as $k => $v) {
                 if (str_contains($k, ':')) {
                     [$prefix, $ln] = explode(':', $k, 2);
-                    if ($ln === $localName) return $v;
+                    if ($ln === $localName) {
+                        return $v;
+                    }
                 }
             }
         }
+
         return null;
     }
 }

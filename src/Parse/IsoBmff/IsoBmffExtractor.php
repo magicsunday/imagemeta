@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
@@ -16,7 +24,9 @@ final class IsoBmffExtractor
 {
     private const XMP_UUID = "\xBE\x7A\xCF\xCB\x97\xA9\x42\xE8\x9C\x71\x99\x94\x91\xE3\xAF\xAC";
 
-    public function __construct(private readonly Stream $stream) {}
+    public function __construct(private readonly Stream $stream)
+    {
+    }
 
     /**
      * Extracts EXIF blobs, XMP packets, and QuickTime metadata from the stream.
@@ -25,9 +35,9 @@ final class IsoBmffExtractor
      */
     public function extract(): array
     {
-        $exifBlobs = [];
-        $xmpBlobs = [];
-        $qtKeys = [];
+        $exifBlobs     = [];
+        $xmpBlobs      = [];
+        $qtKeys        = [];
         $queuedUuidXmp = [];
 
         foreach ($this->walkTopLevelBoxes() as $box) {
@@ -57,7 +67,7 @@ final class IsoBmffExtractor
     private function walkTopLevelBoxes(): iterable
     {
         $fileSize = $this->stream->size();
-        $offset = 0;
+        $offset   = 0;
 
         while ($offset + 8 <= $fileSize) {
             $box = $this->readBoxAt($offset, $fileSize);
@@ -73,7 +83,7 @@ final class IsoBmffExtractor
     /**
      * Parses the `moov` box, collecting nested metadata boxes of interest.
      *
-     * @param object             $moov      Box descriptor for the movie box.
+     * @param object                $moov      Box descriptor for the movie box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
@@ -92,7 +102,7 @@ final class IsoBmffExtractor
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param object             $udta      Box descriptor for the user data box.
+     * @param object                $udta      Box descriptor for the user data box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
@@ -109,7 +119,7 @@ final class IsoBmffExtractor
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param object             $meta      Box descriptor for the metadata box.
+     * @param object                $meta      Box descriptor for the metadata box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
@@ -162,19 +172,19 @@ final class IsoBmffExtractor
      */
     private function collectDirectPayloads(object $meta): array
     {
-        $itemInfos = [];
-        $locations = [];
+        $itemInfos     = [];
+        $locations     = [];
         $primaryItemId = null;
-        $directXmp = [];
-        $uuidXmp = [];
-        $directExif = [];
-        $keysMaps = [];
-        $ilstBoxes = [];
+        $directXmp     = [];
+        $uuidXmp       = [];
+        $directExif    = [];
+        $keysMaps      = [];
+        $ilstBoxes     = [];
 
         foreach ($this->walkChildren($meta, 4) as $child) {
             switch ($child->type) {
                 case 'Exif':
-                    $blob = $this->readAll($child->window);
+                    $blob         = $this->readAll($child->window);
                     $directExif[] = $this->normalizeExifBlob($blob);
                     break;
                 case 'iinf':
@@ -206,25 +216,26 @@ final class IsoBmffExtractor
         }
 
         return [
-            'itemInfos' => $itemInfos,
-            'locations' => $locations,
+            'itemInfos'     => $itemInfos,
+            'locations'     => $locations,
             'primaryItemId' => $primaryItemId,
-            'directXmp' => $directXmp,
-            'uuidXmp' => $uuidXmp,
-            'directExif' => $directExif,
-            'keysMaps' => $keysMaps,
-            'ilstBoxes' => $ilstBoxes,
+            'directXmp'     => $directXmp,
+            'uuidXmp'       => $uuidXmp,
+            'directExif'    => $directExif,
+            'keysMaps'      => $keysMaps,
+            'ilstBoxes'     => $ilstBoxes,
         ];
     }
 
     /**
      * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos
+     *
      * @return array{0: list<int>, 1: list<int>}
      */
     private function gatherItemIds(array $itemInfos, ?int $primaryItemId): array
     {
         $exifItemIds = [];
-        $xmpItemIds = [];
+        $xmpItemIds  = [];
 
         // Collect item IDs that advertise EXIF/XMP payloads via their metadata descriptors.
         foreach ($itemInfos as $info) {
@@ -238,7 +249,7 @@ final class IsoBmffExtractor
 
         // Deduplicate while preserving encounter order to avoid processing the same item twice.
         $exifItemIds = array_values(array_unique($exifItemIds));
-        $xmpItemIds = array_values(array_unique($xmpItemIds));
+        $xmpItemIds  = array_values(array_unique($xmpItemIds));
 
         if ($primaryItemId !== null) {
             // Ensure the declared primary item is considered first for XMP resolution.
@@ -250,9 +261,10 @@ final class IsoBmffExtractor
     }
 
     /**
-     * @param list<int> $itemIds
+     * @param list<int>                                                                                                                     $itemIds
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
-     * @param (callable(string):string)|null $transform
+     * @param (callable(string):string)|null                                                                                                $transform
+     *
      * @return list<string>
      */
     private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform): array
@@ -272,9 +284,10 @@ final class IsoBmffExtractor
     }
 
     /**
-     * @param array<string, string> $existing
+     * @param array<string, string>    $existing
      * @param list<array<int, string>> $keysMaps
-     * @param list<object> $ilstBoxes
+     * @param list<object>             $ilstBoxes
+     *
      * @return array<string, string>
      */
     private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes): array
@@ -307,7 +320,7 @@ final class IsoBmffExtractor
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int   $itemId    Identifier of the item to resolve.
+     * @param int                                                                                                                           $itemId    Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
      *
      * @return string|null
@@ -326,7 +339,7 @@ final class IsoBmffExtractor
             return null;
         }
 
-        $blob = '';
+        $blob  = '';
         $total = 0;
         foreach ($location['extents'] as $extent) {
             $length = $extent['length'];
@@ -338,7 +351,7 @@ final class IsoBmffExtractor
                 throw new ParseError('iloc extent length exceeds file size');
             }
 
-            $baseOffset = $location['baseOffset'];
+            $baseOffset   = $location['baseOffset'];
             $extentOffset = $extent['offset'];
             if ($baseOffset < 0 || $extentOffset < 0) {
                 throw new ParseError('iloc negative offset');
@@ -372,15 +385,15 @@ final class IsoBmffExtractor
         $this->readUInt24($win); // flags
 
         $entryCount = $version === 0 ? $win->readU16BE() : $win->readU32BE();
-        $start = $win->tell();
-        $items = [];
-        $index = 0;
+        $start      = $win->tell();
+        $items      = [];
+        $index      = 0;
         foreach ($this->walkChildren($iinf, $start) as $child) {
             if ($child->type !== 'infe') {
                 continue;
             }
             $items[] = $this->parseInfe($child);
-            $index++;
+            ++$index;
             if ($index >= $entryCount) {
                 break;
             }
@@ -401,39 +414,39 @@ final class IsoBmffExtractor
         $win = $infe->window;
         $win->seek(0);
         $version = $win->readU8();
-        $flags = $this->readUInt24($win);
+        $flags   = $this->readUInt24($win);
 
         if ($version === 0 || $version === 1) {
             $itemId = $win->readU16BE();
             $win->readU16BE(); // protection index
             $remaining = $infe->contentSize - $win->tell();
-            $payload = $remaining > 0 ? $win->read($remaining) : '';
-            $parts = $payload === '' ? [] : explode("\0", $payload);
+            $payload   = $remaining > 0 ? $win->read($remaining) : '';
+            $parts     = $payload === '' ? [] : explode("\0", $payload);
 
-            $name = $parts[0] ?? null;
+            $name        = $parts[0] ?? null;
             $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
 
             return [
-                'id' => $itemId,
-                'itemType' => null,
-                'name' => $name !== '' ? $name : null,
+                'id'          => $itemId,
+                'itemType'    => null,
+                'name'        => $name !== '' ? $name : null,
                 'contentType' => $contentType,
             ];
         }
 
         $id = ($flags & 0x0001) !== 0 ? $win->readU32BE() : $win->readU16BE();
         $win->readU16BE(); // protection index
-        $itemType = $win->read(4);
-        $remaining = $infe->contentSize - $win->tell();
-        $payload = $remaining > 0 ? $win->read($remaining) : '';
-        $parts = $payload === '' ? [] : explode("\0", $payload);
-        $name = $parts[0] ?? null;
+        $itemType    = $win->read(4);
+        $remaining   = $infe->contentSize - $win->tell();
+        $payload     = $remaining > 0 ? $win->read($remaining) : '';
+        $parts       = $payload === '' ? [] : explode("\0", $payload);
+        $name        = $parts[0] ?? null;
         $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
 
         return [
-            'id' => $id,
-            'itemType' => $itemType !== '' ? $itemType : null,
-            'name' => $name !== '' ? $name : null,
+            'id'          => $id,
+            'itemType'    => $itemType !== '' ? $itemType : null,
+            'name'        => $name !== '' ? $name : null,
             'contentType' => $contentType,
         ];
     }
@@ -450,15 +463,15 @@ final class IsoBmffExtractor
         $win = $iloc->window;
         $win->seek(0);
         $version = $win->readU8();
-        $flags = $this->readUInt24($win);
+        $flags   = $this->readUInt24($win);
 
         $offsetLengthSizes = $win->readU8();
-        $offsetSize = $this->validateSizeNibble(($offsetLengthSizes >> 4) & 0x0F);
-        $lengthSize = $this->validateSizeNibble($offsetLengthSizes & 0x0F);
+        $offsetSize        = $this->validateSizeNibble(($offsetLengthSizes >> 4) & 0x0F);
+        $lengthSize        = $this->validateSizeNibble($offsetLengthSizes & 0x0F);
 
-        $baseField = $win->readU8();
+        $baseField      = $win->readU8();
         $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & 0x0F);
-        $indexSize = 0;
+        $indexSize      = 0;
         if ($version === 1 || $version === 2) {
             $indexSize = $this->validateSizeNibble($win->readU8() & 0x0F);
         }
@@ -466,32 +479,32 @@ final class IsoBmffExtractor
         $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
         $locations = [];
 
-        for ($i = 0; $i < $itemCount; $i++) {
-            $itemId = $version < 2 ? $win->readU16BE() : (($flags & 0x0001) !== 0 ? $win->readU32BE() : $win->readU16BE());
+        for ($i = 0; $i < $itemCount; ++$i) {
+            $itemId             = $version < 2 ? $win->readU16BE() : (($flags & 0x0001) !== 0 ? $win->readU32BE() : $win->readU16BE());
             $constructionMethod = 0;
             if ($version === 1 || $version === 2) {
-                $tmp = $win->readU16BE();
+                $tmp                = $win->readU16BE();
                 $constructionMethod = ($tmp >> 12) & 0x0F;
             }
             $dataReferenceIndex = $win->readU16BE();
-            $baseOffset = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
-            $extentCount = $win->readU16BE();
-            $extents = [];
+            $baseOffset         = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
+            $extentCount        = $win->readU16BE();
+            $extents            = [];
 
-            for ($j = 0; $j < $extentCount; $j++) {
+            for ($j = 0; $j < $extentCount; ++$j) {
                 if ($indexSize > 0) {
                     $this->readUInt($win, $indexSize); // extent_index, ignored
                 }
                 $extentOffset = $offsetSize > 0 ? $this->readUInt($win, $offsetSize) : 0;
                 $extentLength = $lengthSize > 0 ? $this->readUInt($win, $lengthSize) : 0;
-                $extents[] = ['offset' => $extentOffset, 'length' => $extentLength];
+                $extents[]    = ['offset' => $extentOffset, 'length' => $extentLength];
             }
 
             $locations[$itemId] = [
                 'dataReferenceIndex' => $dataReferenceIndex,
                 'constructionMethod' => $constructionMethod,
-                'baseOffset' => $baseOffset,
-                'extents' => $extents,
+                'baseOffset'         => $baseOffset,
+                'extents'            => $extents,
             ];
         }
 
@@ -528,20 +541,20 @@ final class IsoBmffExtractor
         $win->seek(0);
         $win->read(4); // version/flags
         $entryCount = $win->readU32BE();
-        $map = [];
-        $pos = $win->tell();
+        $map        = [];
+        $pos        = $win->tell();
 
-        for ($i = 1; $i <= $entryCount; $i++) {
+        for ($i = 1; $i <= $entryCount; ++$i) {
             if ($pos + 8 > $keys->contentSize) {
                 throw new ParseError('keys entry truncated');
             }
             $win->seek($pos);
-            $size = $win->readU32BE();
+            $size      = $win->readU32BE();
             $namespace = $win->read(4);
             if ($size < 8 || $pos + $size > $keys->contentSize) {
                 throw new ParseError('invalid keys entry size');
             }
-            $name = $win->read($size - 8);
+            $name    = $win->read($size - 8);
             $map[$i] = $name;
             $pos += $size;
         }
@@ -566,7 +579,7 @@ final class IsoBmffExtractor
         $result = [];
         foreach ($this->walkChildren($ilst) as $entry) {
             $keyName = null;
-            $index = $this->fourccToIndex($entry->type);
+            $index   = $this->fourccToIndex($entry->type);
             if ($index !== null && isset($keyIndex[$index])) {
                 $keyName = $keyIndex[$index];
             } elseif ($entry->type === '----') {
@@ -635,7 +648,7 @@ final class IsoBmffExtractor
         $type = $win->readU32BE();
         $win->readU32BE(); // locale
         $payloadSize = $data->contentSize - 8;
-        $payload = $payloadSize > 0 ? $win->read($payloadSize) : '';
+        $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
 
         if ($type === 1 || $type === 2 || $type === 7) {
             return trim($payload, "\0");
@@ -668,14 +681,15 @@ final class IsoBmffExtractor
      */
     private function isExifItem(array $info): bool
     {
-        if (isset($info['itemType']) && strcasecmp((string)$info['itemType'], 'Exif') === 0) {
+        if (isset($info['itemType']) && strcasecmp((string) $info['itemType'], 'Exif') === 0) {
             return true;
         }
-        if (isset($info['name']) && strcasecmp((string)$info['name'], 'Exif') === 0) {
+        if (isset($info['name']) && strcasecmp((string) $info['name'], 'Exif') === 0) {
             return true;
         }
         if (isset($info['contentType'])) {
-            $ct = strtolower((string)$info['contentType']);
+            $ct = strtolower((string) $info['contentType']);
+
             return $ct === 'application/exif' || $ct === 'image/tiff';
         }
 
@@ -693,7 +707,7 @@ final class IsoBmffExtractor
             return false;
         }
 
-        return strtolower((string)$info['contentType']) === 'application/rdf+xml';
+        return strtolower((string) $info['contentType']) === 'application/rdf+xml';
     }
 
     /**
@@ -707,6 +721,7 @@ final class IsoBmffExtractor
     {
         $window->seek(0);
         $size = $window->size();
+
         return $size > 0 ? $window->read($size) : '';
     }
 
@@ -733,12 +748,12 @@ final class IsoBmffExtractor
     private function readUInt(StreamWindow $window, int $bytes): int
     {
         return match ($bytes) {
-            0 => 0,
-            1 => $window->readU8(),
-            2 => $window->readU16BE(),
-            3 => unpack('N', "\0" . $window->read(3))[1],
-            4 => $window->readU32BE(),
-            8 => $window->readU64BE(),
+            0       => 0,
+            1       => $window->readU8(),
+            2       => $window->readU16BE(),
+            3       => unpack('N', "\0" . $window->read(3))[1],
+            4       => $window->readU32BE(),
+            8       => $window->readU64BE(),
             default => throw new ParseError("unsupported integer size $bytes"),
         };
     }
@@ -785,6 +800,7 @@ final class IsoBmffExtractor
         }
 
         $value = unpack('N', $fourcc)[1];
+
         return $value > 0 ? $value : null;
     }
 
@@ -802,9 +818,9 @@ final class IsoBmffExtractor
             throw new ParseError('child offset outside container');
         }
 
-        $limit = $parent->contentOffset + $parent->contentSize;
+        $limit  = $parent->contentOffset + $parent->contentSize;
         $cursor = $parent->contentOffset + $offset;
-        $end = $parent->contentOffset + $parent->contentSize;
+        $end    = $parent->contentOffset + $parent->contentSize;
 
         while ($cursor + 8 <= $end) {
             $box = $this->readBoxAt($cursor, $limit);
@@ -832,10 +848,10 @@ final class IsoBmffExtractor
         }
 
         $this->stream->seek($offset);
-        $size32 = $this->stream->readU32BE();
-        $type = $this->stream->read(4);
+        $size32     = $this->stream->readU32BE();
+        $type       = $this->stream->read(4);
         $headerSize = 8;
-        $size = $size32;
+        $size       = $size32;
 
         if ($size32 === 0) {
             $size = $limit - $offset;
@@ -858,17 +874,17 @@ final class IsoBmffExtractor
         }
 
         $contentOffset = $offset + $headerSize;
-        $contentSize = $size - $headerSize;
-        $window = $this->stream->window($contentOffset, $contentSize);
+        $contentSize   = $size - $headerSize;
+        $window        = $this->stream->window($contentOffset, $contentSize);
 
         return (object) [
-            'type' => $type,
-            'size' => $size,
-            'offset' => $offset,
+            'type'          => $type,
+            'size'          => $size,
+            'offset'        => $offset,
             'contentOffset' => $contentOffset,
-            'contentSize' => $contentSize,
-            'window' => $window,
-            'userType' => $userType,
+            'contentSize'   => $contentSize,
+            'window'        => $window,
+            'userType'      => $userType,
         ];
     }
 }

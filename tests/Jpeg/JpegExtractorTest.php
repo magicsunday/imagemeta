@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Jpeg;
@@ -19,8 +26,8 @@ use PHPUnit\Framework\TestCase;
 final class JpegExtractorTest extends TestCase
 {
     private const EXIF_SIGNATURE = "Exif\0\0";
-    private const XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
-    private const ICC_SIGNATURE = "ICC_PROFILE\0";
+    private const XMP_SIGNATURE  = "http://ns.adobe.com/xap/1.0/\0";
+    private const ICC_SIGNATURE  = "ICC_PROFILE\0";
     private const IPTC_SIGNATURE = "Photoshop 3.0\0";
 
     /**
@@ -34,7 +41,7 @@ final class JpegExtractorTest extends TestCase
     #[DataProvider('provideApp1Variants')]
     public function extractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
     {
-        $jpeg = self::jpeg(...$segments);
+        $jpeg      = self::jpeg(...$segments);
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame($expectedExif, $extractor->extractExifBlobs());
@@ -49,7 +56,7 @@ final class JpegExtractorTest extends TestCase
     public static function provideApp1Variants(): iterable
     {
         $exifPayload = 'primary-exif';
-        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
+        $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
 
         yield 'only-exif' => [
             [self::segment(0xE1, self::EXIF_SIGNATURE . $exifPayload)],
@@ -88,9 +95,9 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testLargeExifOver64KBIsHandled(): void
     {
-        $firstBlob = str_repeat('A', 40_000);
+        $firstBlob  = str_repeat('A', 40_000);
         $secondBlob = str_repeat('B', 30_000);
-        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Large</x:xmpmeta>';
+        $xmpXml     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Large</x:xmpmeta>';
 
         $jpeg = self::jpeg(
             self::segment(0xE1, self::EXIF_SIGNATURE . $firstBlob),
@@ -110,8 +117,8 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testIccProfileSegmentsAreMerged(): void
     {
-        $iccPart1 = 'icc-part-one';
-        $iccPart2 = 'icc-part-two';
+        $iccPart1        = 'icc-part-one';
+        $iccPart2        = 'icc-part-two';
         $segment1Payload = self::ICC_SIGNATURE . "\x01\x02" . $iccPart1;
         $segment2Payload = self::ICC_SIGNATURE . "\x02\x02" . $iccPart2;
 
@@ -152,8 +159,8 @@ final class JpegExtractorTest extends TestCase
      */
     public static function provideInvalidSegments(): iterable
     {
-        $lengthTooSmall = "\xFF\xD8" . "\xFF\xE1\x00\x01" . "\xFF\xD9";
-        $truncatedPayload = "\xFF\xD8" . "\xFF\xE1" . pack('n', 10) . 'abcde' . "\xFF\xD9";
+        $lengthTooSmall   = "\xFF\xD8\xFF\xE1\x00\x01\xFF\xD9";
+        $truncatedPayload = "\xFF\xD8\xFF\xE1" . pack('n', 10) . 'abcde' . "\xFF\xD9";
 
         yield 'length-smaller-than-two' => [$lengthTooSmall, '/length/i'];
         yield 'truncated-payload' => [$truncatedPayload, '/truncated/i'];
@@ -164,8 +171,8 @@ final class JpegExtractorTest extends TestCase
     /**
      * Ensures invalid segment lengths and truncated payloads raise ParseError.
      *
-     * @param string $jpeg            Binary JPEG fixture provided by the data set.
-     * @param string $messagePattern  Regular expression expected in the error message.
+     * @param string $jpeg           Binary JPEG fixture provided by the data set.
+     * @param string $messagePattern Regular expression expected in the error message.
      */
     public function testInvalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
     {
@@ -184,7 +191,7 @@ final class JpegExtractorTest extends TestCase
     public function testStopsAtSosIgnoresRestartMarkers(): void
     {
         $primaryExif = 'primary-before-sos';
-        $xmpXml = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
+        $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
         $ignoredExif = 'ignored-after-sos';
 
         $jpeg = "\xFF\xD8"
