@@ -111,6 +111,21 @@ final readonly class IsoBmffExtractor
     private const string BOX_DATA = 'data';
 
     /**
+     * QuickTime `data` box type code for UTF-8 encoded text payloads.
+     */
+    private const int DATA_TYPE_UTF8 = 1;
+
+    /**
+     * QuickTime `data` box type code for UTF-16 (big-endian) encoded text payloads.
+     */
+    private const int DATA_TYPE_UTF16 = 2;
+
+    /**
+     * QuickTime `data` box type code for classic MacRoman encoded text payloads.
+     */
+    private const int DATA_TYPE_MAC_ROMAN = 7;
+
+    /**
      * FourCC for QuickTime mean payload in free-form metadata.
      */
     private const string FREEFORM_MEAN = 'mean';
@@ -735,6 +750,12 @@ final readonly class IsoBmffExtractor
     /**
      * Extracts the payload from a `data` box, normalising known text encodings.
      *
+     * QuickTime metadata stores textual values using numeric type codes inside the
+     * `data` box header. The parser treats UTF-8 (1), UTF-16 big-endian (2), and
+     * MacRoman (7) values as text payloads with optional NUL-termination and
+     * trims the trailing terminators so that callers receive clean strings.
+     * Binary payload types are returned untouched.
+     *
      * @param object $data Box descriptor for the `data` box.
      *
      * @return string|null
@@ -751,7 +772,11 @@ final readonly class IsoBmffExtractor
         $payloadSize = $data->contentSize - 8;
         $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
 
-        if ($type === 1 || $type === 2 || $type === 7) {
+        if (
+            $type === self::DATA_TYPE_UTF8
+            || $type === self::DATA_TYPE_UTF16
+            || $type === self::DATA_TYPE_MAC_ROMAN
+        ) {
             return trim($payload, "\0");
         }
 
