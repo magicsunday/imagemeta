@@ -40,13 +40,11 @@ final class XmpDocument
      */
     public function find(string $localName): array|string|null
     {
-        foreach ($this->data as $key => $value) {
-            if ($this->matchesLocalName($key, $localName) && (is_string($value) || is_array($value))) {
-                return $value;
-            }
-        }
-
-        return null;
+        return array_find(
+            $this->data,
+            fn (mixed $value, int|string $key): bool => $this->matchesLocalName((string) $key, $localName)
+                && (is_string($value) || is_array($value))
+        );
     }
 
     private function buildClarkName(string $namespaceUri, string $localName): string

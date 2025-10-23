@@ -40,12 +40,10 @@ final class Registry
     public function find(string $make): ?MakerNotesDecoderInterface
     {
         $make = strtolower($make);
-        foreach ($this->decoders as $pref => $dec) {
-            if ($pref !== '' && str_starts_with($make, $pref)) {
-                return $dec;
-            }
-        }
-
-        return null;
+        return array_find(
+            $this->decoders,
+            fn (MakerNotesDecoderInterface $decoder, int|string $prefix): bool => $prefix !== ''
+                && str_starts_with($make, (string) $prefix)
+        );
     }
 }
