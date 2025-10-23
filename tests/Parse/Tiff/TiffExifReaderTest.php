@@ -92,6 +92,21 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures BYTE tags with multiple values preserve each byte.
+     */
+    #[Test]
+    public function preservesMultiValueByteTags(): void
+    {
+        $blob = self::buildClassicMultiByteTagBlob();
+
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $entry = $document->ifd0->get(ExifTag::GPS_ALTITUDE_REF);
+        self::assertNotNull($entry);
+        self::assertSame([1, 2, 3], $entry->value);
+    }
+
+    /**
      * Asserts the decoded values of the synthetic Classic TIFF payload.
      *
      * @param ExifDocument $doc Parsed document returned by the TIFF reader.
@@ -203,6 +218,20 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Builds a Classic TIFF blob containing a multi-value BYTE tag.
+     */
+    private static function buildClassicMultiByteTagBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $inlineValue = self::inlineBytes([1, 2, 3], 4);
+        $entry       = self::packClassicEntry(ExifTag::GPS_ALTITUDE_REF, 1, 3, $inlineValue);
+        $ifd0        = pack('v', 1) . $entry . pack('V', 0);
+
+        return $header . $ifd0;
+    }
+
+    /**
      * Builds a BigTIFF little-endian EXIF payload with nested IFDs.
      */
     private static function buildBigTiffBlob(): string
@@ -311,6 +340,20 @@ final class TiffExifReaderTest extends TestCase
     private static function inlineAsciiToInt(string $ascii, int $width): int
     {
         $bytes = str_pad($ascii, $width, "\0");
+
+        return self::toLittleEndianInteger($bytes);
+    }
+
+    /**
+     * Packs raw bytes into an inline integer value for Classic TIFF entries.
+     *
+     * @param array<int, int> $values Byte values to encode.
+     * @param int              $width Inline storage width.
+     */
+    private static function inlineBytes(array $values, int $width): int
+    {
+        $bytes = pack('C*', ...$values);
+        $bytes = str_pad($bytes, $width, "\0");
 
         return self::toLittleEndianInteger($bytes);
     }
