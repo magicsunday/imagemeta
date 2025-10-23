@@ -6,7 +6,7 @@ Kontext / Leitplanken
 - Reines PHP, keine externen Tools/CLI (kein exiftool, kein exif_read_data()).
 - Streaming-Parser: nur über Core\Stream / StreamWindow arbeiten; keine Ganzdatei-Reads.
 - Bestehender Stand (wichtig): In src/Parse/Tiff/TiffExifReader.php ist BigTIFF (0x2B) + Classic TIFF (0x2A) bereits umgesetzt; ExifConvenience + MetadataReader existieren. Erhalte API und Stil.
-- Tests: PHPUnit 12; PHPStan 6. Wenn composer.json bereits Scripts „test“/„stan“ enthält, nutze sie.
+- Tests: PHPUnit 12; PHPStan max. Wenn composer.json bereits Scripts „test“/„stan“ enthält, nutze sie.
 
 Ziel (Issue M2)
 - JpegExtractor robust machen:
