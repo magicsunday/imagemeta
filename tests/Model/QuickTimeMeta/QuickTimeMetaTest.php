@@ -30,8 +30,8 @@ final class QuickTimeMetaTest extends TestCase
     {
         $identifier = 'abc-123';
         $keys       = [
-            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => $identifier,
-            'com.apple.quicktime.location.ISO6709'   => '+12.345-067.890/',
+            QuickTimeMeta::CONTENT_IDENTIFIER_KEY  => $identifier,
+            'com.apple.quicktime.location.ISO6709' => '+12.345-067.890/',
         ];
 
         $meta = new QuickTimeMeta($keys);

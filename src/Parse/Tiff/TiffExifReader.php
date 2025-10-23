@@ -170,7 +170,7 @@ final class TiffExifReader
      */
     private function decodeValue(int $type, int $count, int $valueOrOffset): int|float|string|ExifRational|ExifRationalList|ExifNumericList
     {
-        $unitSize         = $this->bytesPerComponent($type);
+        $unitSize        = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
         $inlineThreshold = $this->bigTiff ? 8 : 4;
 
@@ -224,8 +224,8 @@ final class TiffExifReader
         if ($type === 5 || $type === 10) { // RATIONAL / SRATIONAL
             $rationalValues = [];
             for ($i = 0; $i < $count; ++$i) {
-                $num               = $this->read32FromBytes($bytes, $i * 8 + 0, $type === 10);
-                $den               = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
+                $num              = $this->read32FromBytes($bytes, $i * 8 + 0, $type === 10);
+                $den              = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
                 $rationalValues[] = new ExifRational($num, $den);
             }
 

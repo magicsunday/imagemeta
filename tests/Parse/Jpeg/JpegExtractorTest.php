@@ -228,6 +228,7 @@ final class JpegExtractorTest extends TestCase
      * Builds a JPEG binary by wrapping payload segments with SOI/EOI markers.
      *
      * @param list<string> $segments
+     *
      * @return string
      */
     private static function jpeg(string ...$segments): string
@@ -240,6 +241,7 @@ final class JpegExtractorTest extends TestCase
      *
      * @param int    $marker
      * @param string $payload
+     *
      * @return string
      */
     private static function segment(int $marker, string $payload): string
@@ -250,7 +252,8 @@ final class JpegExtractorTest extends TestCase
     /**
      * Creates a stream-backed extractor for an in-memory JPEG binary.
      *
-     * @param string        $jpeg
+     * @param string $jpeg
+     *
      * @return JpegExtractor
      */
     private function createExtractor(string $jpeg): JpegExtractor

@@ -30,9 +30,8 @@ final readonly class XmpDocument
         /**
          * @var array<string, string|array<int, string>>
          */
-        public array $data
-    )
-    {
+        public array $data,
+    ) {
     }
 
     /**

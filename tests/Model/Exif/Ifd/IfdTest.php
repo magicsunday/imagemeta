@@ -28,7 +28,7 @@ final class IfdTest extends TestCase
     public function testConstructorStoresEntriesAndNextOffset(): void
     {
         $entry = new IfdEntry(0x010F, 2, 1, 'MagicSunday');
-        $ifd = new Ifd([$entry->tag => $entry], 256);
+        $ifd   = new Ifd([$entry->tag => $entry], 256);
 
         self::assertSame([$entry->tag => $entry], $ifd->entries);
         self::assertSame(256, $ifd->nextIfdOffset);
@@ -41,7 +41,7 @@ final class IfdTest extends TestCase
     public function testConstructorDefaultsNextOffsetToNull(): void
     {
         $entry = new IfdEntry(0x0110, 2, 1, 'Camera Model');
-        $ifd = new Ifd([$entry->tag => $entry]);
+        $ifd   = new Ifd([$entry->tag => $entry]);
 
         self::assertSame([$entry->tag => $entry], $ifd->entries);
         self::assertNull($ifd->nextIfdOffset);
@@ -71,7 +71,7 @@ final class IfdTest extends TestCase
     public function testGetReturnsNullForUnknownTag(): void
     {
         $cameraEntry = new IfdEntry(0x0110, 2, 1, 'Camera Model');
-        $ifd = new Ifd([$cameraEntry->tag => $cameraEntry]);
+        $ifd         = new Ifd([$cameraEntry->tag => $cameraEntry]);
 
         self::assertNull($ifd->get(0x010F));
     }

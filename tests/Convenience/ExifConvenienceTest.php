@@ -179,13 +179,13 @@ final class ExifConvenienceTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::LENS_MODEL            => new IfdEntry(ExifTag::LENS_MODEL, 2, 7, 'EF 50mm'),
-            ExifTag::EXPOSURE_TIME         => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [1, 2]),
-            ExifTag::F_NUMBER              => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [18, 10]),
-            ExifTag::FOCAL_LENGTH          => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, [50, 1]),
-            ExifTag::ISO_SPEED             => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 200),
-            ExifTag::DATETIME_ORIGINAL     => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:05:01 12:34:56'),
-            ExifTag::OFFSET_TIME_ORIGINAL  => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+02:00'),
+            ExifTag::LENS_MODEL           => new IfdEntry(ExifTag::LENS_MODEL, 2, 7, 'EF 50mm'),
+            ExifTag::EXPOSURE_TIME        => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [1, 2]),
+            ExifTag::F_NUMBER             => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [18, 10]),
+            ExifTag::FOCAL_LENGTH         => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, [50, 1]),
+            ExifTag::ISO_SPEED            => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 200),
+            ExifTag::DATETIME_ORIGINAL    => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:05:01 12:34:56'),
+            ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+02:00'),
         ]);
 
         $gpsIfd = new Ifd([

@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 use function array_map;
 use function call_user_func;
@@ -129,7 +130,7 @@ final class TiffExifReaderTest extends TestCase
     {
         $reader = new TiffExifReader();
 
-        $refClass = new \ReflectionClass($reader);
+        $refClass = new ReflectionClass($reader);
         $boProp   = $refClass->getProperty('bo');
         $boProp->setAccessible(true);
         $boProp->setValue($reader, Endian::Little);
@@ -171,14 +172,14 @@ final class TiffExifReaderTest extends TestCase
         self::assertInstanceOf(ExifRationalList::class, $lat);
         self::assertSame(
             [[40, 1], [30, 1], [15, 1]],
-            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lat->values),
+            array_map(static fn (ExifRational $r): array => [$r->numerator, $r->denominator], $lat->values),
         );
 
         $lon = $gpsIfd->get(ExifTag::GPS_LONGITUDE)?->value;
         self::assertInstanceOf(ExifRationalList::class, $lon);
         self::assertSame(
             [[70, 1], [45, 1], [30, 1]],
-            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lon->values),
+            array_map(static fn (ExifRational $r): array => [$r->numerator, $r->denominator], $lon->values),
         );
 
         $alt = $gpsIfd->get(ExifTag::GPS_ALTITUDE)?->value;
@@ -220,14 +221,14 @@ final class TiffExifReaderTest extends TestCase
         self::assertInstanceOf(ExifRationalList::class, $lat);
         self::assertSame(
             [[51, 1], [30, 1], [15, 1]],
-            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lat->values),
+            array_map(static fn (ExifRational $r): array => [$r->numerator, $r->denominator], $lat->values),
         );
 
         $lon = $gpsIfd->get(ExifTag::GPS_LONGITUDE)?->value;
         self::assertInstanceOf(ExifRationalList::class, $lon);
         self::assertSame(
             [[8, 1], [12, 1], [30, 1]],
-            array_map(static fn(ExifRational $r): array => [$r->numerator, $r->denominator], $lon->values),
+            array_map(static fn (ExifRational $r): array => [$r->numerator, $r->denominator], $lon->values),
         );
 
         $alt = $gpsIfd->get(ExifTag::GPS_ALTITUDE)?->value;

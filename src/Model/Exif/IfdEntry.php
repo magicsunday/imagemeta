@@ -32,10 +32,10 @@ final readonly class IfdEntry
     /**
      * Normalises raw decoded values so callers may provide convenient array representations.
      *
-     * @param int                                                                                   $tag   The numeric identifier of the entry.
-     * @param int                                                                                   $type  The TIFF field type code.
-     * @param int                                                                                   $count The number of values stored in the entry.
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|array<int, int|float|array<int, int|float>> $value  The raw value or values decoded from the IFD.
+     * @param int                                                                                                        $tag   The numeric identifier of the entry.
+     * @param int                                                                                                        $type  The TIFF field type code.
+     * @param int                                                                                                        $count The number of values stored in the entry.
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|array<int, int|float|array<int, int|float>> $value The raw value or values decoded from the IFD.
      */
     public function __construct(
         int $tag,
@@ -52,8 +52,8 @@ final readonly class IfdEntry
     /**
      * Converts shorthand array inputs into strongly typed EXIF value objects.
      *
-     * @param int                                                                                   $type  TIFF field type code describing the payload.
-     * @param int                                                                                   $count Number of values stored for the entry.
+     * @param int                                                                                                        $type  TIFF field type code describing the payload.
+     * @param int                                                                                                        $count Number of values stored for the entry.
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|array<int, int|float|array<int, int|float>> $value Raw value passed to the constructor.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
@@ -158,7 +158,7 @@ final readonly class IfdEntry
             return null;
         }
 
-        $numerator = $components[0];
+        $numerator   = $components[0];
         $denominator = $components[1];
 
         if ((!is_int($numerator) && !is_float($numerator)) || (!is_int($denominator) && !is_float($denominator))) {
@@ -171,7 +171,7 @@ final readonly class IfdEntry
     /**
      * Converts a numerator/denominator array into an {@see ExifRational} instance.
      *
-     * @param int|float $numerator Numerator value.
+     * @param int|float $numerator   Numerator value.
      * @param int|float $denominator Denominator value.
      */
     private function pairToRational(int|float $numerator, int|float $denominator): ExifRational

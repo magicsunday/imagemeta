@@ -16,10 +16,6 @@ use function is_float;
 use function is_int;
 use function is_string;
 
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-
 /**
  * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
  */
@@ -92,7 +88,7 @@ final readonly class ValueConverters
         $lat = self::dmsToFloat(is_string($latRef) ? $latRef : null, $latPairs);
         $lon = self::dmsToFloat(is_string($lonRef) ? $lonRef : null, $lonPairs);
 
-        $alt = null;
+        $alt      = null;
         $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
         if ($altEntry !== null && $altEntry->value instanceof ExifRational) {
             $alt = self::rationalToFloat($altEntry->value);
@@ -112,7 +108,7 @@ final readonly class ValueConverters
     /**
      * Converts EXIF GPS degrees/minutes/seconds to a float coordinate.
      *
-     * @param string|null          $ref   Direction reference (N/E/S/W).
+     * @param string|null           $ref Direction reference (N/E/S/W).
      * @param ExifRationalList|null $val Rational triplet describing the coordinate.
      *
      * @return float|null

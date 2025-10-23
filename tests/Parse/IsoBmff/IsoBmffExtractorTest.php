@@ -19,10 +19,10 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
-use function iconv;
 use function fopen;
 use function fwrite;
 use function hex2bin;
+use function iconv;
 use function pack;
 use function rewind;
 use function strlen;
@@ -183,13 +183,13 @@ final class IsoBmffExtractorTest extends TestCase
     #[Test]
     public function testDecodeUtf16DataBoxToUtf8(): void
     {
-        $value         = 'Identifier UTF16';
-        $encoded       = iconv('UTF-8', 'UTF-16BE', $value);
+        $value   = 'Identifier UTF16';
+        $encoded = iconv('UTF-8', 'UTF-16BE', $value);
         self::assertIsString($encoded);
-        $utf16Payload  = $encoded . "\0\0";
-        $file          = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
-        $extractor     = $this->createExtractor($file);
-        [, , $qtMeta]  = $extractor->extract();
+        $utf16Payload = $encoded . "\0\0";
+        $file         = $this->createQuickTimeKeysFileWithData(2, $utf16Payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame($value, $qtMeta->contentIdentifier());

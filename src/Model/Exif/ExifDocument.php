@@ -21,8 +21,6 @@ use function rtrim;
 use function str_replace;
 use function substr;
 
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
  */

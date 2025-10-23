@@ -176,7 +176,7 @@ final class MemoryBuffer
         $lo = $this->readU32BE();
 
         return ($hi << 32) | $lo;
-}
+    }
 
     /**
      * Reads bytes from the buffer and unpacks the first value using the provided format.

@@ -47,26 +47,26 @@ final class ExifDocumentTest extends TestCase
                 1,
                 new ExifRational(1, 125),
             ),
-            ExifTag::F_NUMBER                 => new IfdEntry(
+            ExifTag::F_NUMBER => new IfdEntry(
                 ExifTag::F_NUMBER,
                 5,
                 1,
                 new ExifRational(28, 10),
             ),
-            ExifTag::FOCAL_LENGTH             => new IfdEntry(
+            ExifTag::FOCAL_LENGTH => new IfdEntry(
                 ExifTag::FOCAL_LENGTH,
                 5,
                 1,
                 new ExifRational(50, 1),
             ),
-            ExifTag::LENS_MODEL               => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF50mm F1.2L USM'),
-            ExifTag::DATETIME_ORIGINAL        => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01 12:34:56'),
-            ExifTag::OFFSET_TIME_ORIGINAL     => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
+            ExifTag::LENS_MODEL           => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF50mm F1.2L USM'),
+            ExifTag::DATETIME_ORIGINAL    => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01 12:34:56'),
+            ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
         ]);
 
         $gpsIfd = new Ifd([
-            ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
                 5,
                 3,
@@ -87,8 +87,8 @@ final class ExifDocumentTest extends TestCase
                     new ExifRational(6000, 100),
                 ]),
             ),
-            ExifTag::GPS_ALTITUDE_REF  => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
-            ExifTag::GPS_ALTITUDE      => new IfdEntry(
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
                 ExifTag::GPS_ALTITUDE,
                 5,
                 1,

@@ -134,7 +134,7 @@ final class StreamWindow
         $lo = $this->readU32BE();
 
         return ($hi << 32) | $lo;
-}
+    }
 
     /**
      * Reads a fixed number of bytes from the window and unpacks the first value using the given format.

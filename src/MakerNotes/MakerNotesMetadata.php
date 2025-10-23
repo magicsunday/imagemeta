@@ -28,7 +28,7 @@ final readonly class MakerNotesMetadata
     public function __construct(
         private readonly string $vendor,
         private readonly int $length,
-        private readonly string $sha1
+        private readonly string $sha1,
     ) {
         if ($vendor === '') {
             throw new InvalidArgumentException('The vendor must not be empty.');

@@ -13,6 +13,9 @@ namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
@@ -22,10 +25,6 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function strlen;
-
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 
 /**
  * Helper routines that extract frequently-used EXIF values in a safe manner.
@@ -248,5 +247,4 @@ final class ExifConvenience
 
         return $doc->ifd0->get($tag);
     }
-
 }

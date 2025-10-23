@@ -21,9 +21,9 @@ use function array_unique;
 use function array_unshift;
 use function array_values;
 use function explode;
+use function iconv;
 use function is_float;
 use function is_int;
-use function iconv;
 use function preg_match;
 use function rtrim;
 use function str_starts_with;
@@ -204,7 +204,7 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the `moov` box, collecting nested metadata boxes of interest.
      *
-     * @param BoxDescriptor          $moov      Box descriptor for the movie box.
+     * @param BoxDescriptor         $moov      Box descriptor for the movie box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
@@ -223,7 +223,7 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param BoxDescriptor          $udta      Box descriptor for the user data box.
+     * @param BoxDescriptor         $udta      Box descriptor for the user data box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
@@ -240,7 +240,7 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param BoxDescriptor          $meta      Box descriptor for the metadata box.
+     * @param BoxDescriptor         $meta      Box descriptor for the metadata box.
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, string> $qtKeys
@@ -294,7 +294,7 @@ final readonly class IsoBmffExtractor
     private function collectDirectPayloads(BoxDescriptor $meta): array
     {
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
-        $itemInfos     = [];
+        $itemInfos = [];
         /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations */
         $locations     = [];
         $primaryItemId = null;
@@ -302,9 +302,9 @@ final readonly class IsoBmffExtractor
         $uuidXmp       = [];
         $directExif    = [];
         /** @var list<array<int, string>> $keysMaps */
-        $keysMaps      = [];
+        $keysMaps = [];
         /** @var list<BoxDescriptor> $ilstBoxes */
-        $ilstBoxes     = [];
+        $ilstBoxes = [];
 
         foreach ($this->walkChildren($meta, 4) as $child) {
             switch ($child->type) {
@@ -628,7 +628,7 @@ final readonly class IsoBmffExtractor
             $baseOffset         = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
             $extentCount        = $win->readU16BE();
             /** @var list<array{offset:int,length:int}> $extents */
-            $extents            = [];
+            $extents = [];
 
             for ($j = 0; $j < $extentCount; ++$j) {
                 if ($indexSize > 0) {
@@ -708,7 +708,7 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the iTunes-style list (`ilst`) box using the discovered key index.
      *
-     * @param BoxDescriptor       $ilst     Box descriptor for the `ilst` container.
+     * @param BoxDescriptor      $ilst     Box descriptor for the `ilst` container.
      * @param array<int, string> $keyIndex
      *
      * @return array<string, string>
@@ -790,7 +790,7 @@ final readonly class IsoBmffExtractor
         $type = $win->readU32BE();
         $win->readU32BE(); // locale
         $payloadSize = $data->contentSize - 8;
-        $payload = $payloadSize > 0 ? $win->read($payloadSize) : '';
+        $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
 
         $trimmed = trim($payload, "\0");
 
@@ -999,7 +999,7 @@ final readonly class IsoBmffExtractor
      * Iterates through child boxes within a container, yielding descriptors.
      *
      * @param BoxDescriptor $parent Parent box descriptor whose content is iterated.
-     * @param int    $offset Optional relative byte offset where iteration begins.
+     * @param int           $offset Optional relative byte offset where iteration begins.
      *
      * @return iterable<BoxDescriptor>
      */

@@ -44,7 +44,7 @@ final class XmpReader
             return new XmpDocument([]);
         }
 
-        $data        = [];
+        $data = [];
         /** @var array<int, array{string, string}> $elementPath */
         $elementPath = [];
         /** @var array<int, string> $textBuffers */

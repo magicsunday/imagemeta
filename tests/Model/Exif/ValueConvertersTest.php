@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
@@ -110,8 +110,8 @@ final class ValueConvertersTest extends TestCase
     public function extractsGpsCoordinatesWithPositiveAltitude(): void
     {
         $gps = new Ifd([
-            ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
                 5,
                 3,
@@ -132,8 +132,8 @@ final class ValueConvertersTest extends TestCase
                     new ExifRational(3000, 100),
                 ]),
             ),
-            ExifTag::GPS_ALTITUDE_REF  => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
-            ExifTag::GPS_ALTITUDE      => new IfdEntry(
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
                 ExifTag::GPS_ALTITUDE,
                 5,
                 1,
@@ -155,8 +155,8 @@ final class ValueConvertersTest extends TestCase
     public function extractsGpsCoordinatesWithNegativeHemisphereAndAltitude(): void
     {
         $gps = new Ifd([
-            ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'S'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'S'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
                 5,
                 3,
@@ -177,8 +177,8 @@ final class ValueConvertersTest extends TestCase
                     new ExifRational(0, 1),
                 ]),
             ),
-            ExifTag::GPS_ALTITUDE_REF  => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 1),
-            ExifTag::GPS_ALTITUDE      => new IfdEntry(
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 1),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
                 ExifTag::GPS_ALTITUDE,
                 5,
                 1,
@@ -200,8 +200,8 @@ final class ValueConvertersTest extends TestCase
     public function extractsGpsCoordinatesWithoutAltitude(): void
     {
         $gps = new Ifd([
-            ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
                 5,
                 3,

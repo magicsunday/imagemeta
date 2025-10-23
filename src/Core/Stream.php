@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use function array_key_exists;
 use function fopen;
 use function fread;
 use function fseek;
@@ -183,7 +182,7 @@ final class Stream
         }
 
         return new StreamWindow($this, $offset, $length);
-}
+    }
 
     /**
      * Reads the requested number of bytes and unpacks the first value using the provided format.
