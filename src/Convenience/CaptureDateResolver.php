@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use Throwable;
 
 /**
@@ -43,9 +44,9 @@ final class CaptureDateResolver
         }
 
         if ($metadata->xmpDoc !== null) {
-            $createDate = $metadata->xmpDoc->createDate();
+            $createDate = self::readXmpCreateDate($metadata->xmpDoc);
 
-            if (is_string($createDate) && $createDate !== '') {
+            if ($createDate !== null) {
                 try {
                     // XMP createDate is already ISO 8601, so we can consume it directly.
                     return new DateTimeImmutable($createDate);
@@ -56,5 +57,36 @@ final class CaptureDateResolver
         }
 
         return null;
+    }
+
+    /**
+     * Extracts the ISO 8601 create date from the XMP document.
+     */
+    private static function readXmpCreateDate(XmpDocument $document): ?string
+    {
+        $value = $document->get('http://ns.adobe.com/xap/1.0/', 'CreateDate');
+
+        if (is_array($value)) {
+            $value = $value[0] ?? null;
+        }
+
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (preg_match(
+            '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:?\d{2})$/',
+            $value
+        ) !== 1) {
+            return null;
+        }
+
+        return $value;
     }
 }
