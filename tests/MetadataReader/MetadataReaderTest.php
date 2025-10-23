@@ -19,6 +19,14 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
+use function file_put_contents;
+use function pack;
+use function strlen;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
+
 /**
  * Integration coverage for the convenience metadata reader.
  *
