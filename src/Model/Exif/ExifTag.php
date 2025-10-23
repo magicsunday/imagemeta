@@ -44,6 +44,9 @@ final readonly class ExifTag
     public const int GPS_ALTITUDE_REF  = 0x0005;
     public const int GPS_ALTITUDE      = 0x0006;
 
+    /**
+     * Prevent instantiation of this constants-only utility class.
+     */
     private function __construct()
     {
     }
