@@ -26,6 +26,9 @@ use PHPUnit\Framework\TestCase;
 final class ExifDocumentTest extends TestCase
 {
     #[Test]
+    /**
+     * Ensures an Exif document exposes representative camera, exposure, and GPS metadata values.
+     */
     public function exposesRepresentativeExifValues(): void
     {
         $ifd0 = new Ifd([
