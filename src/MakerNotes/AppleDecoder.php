@@ -20,23 +20,18 @@ use function strlen;
 final class AppleDecoder implements MakerNotesDecoderInterface
 {
     /**
-     * Creates a metadata map describing the Apple maker note payload.
+     * Creates a metadata value object describing the Apple maker note payload.
      *
      * @param string      $raw   Raw maker note data stream.
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier.
-     *
-     * @return array{_vendor: 'Apple', _length: int, _sha1: non-empty-string} Normalised metadata describing the vendor, payload length, and hash.
      */
-    public function decode(string $raw, string $make, ?string $model): array
+    public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
     {
-        $payloadLength = strlen($raw);
-        $payloadHash   = sha1($raw, false);
-
-        return [
-            '_vendor' => 'Apple',
-            '_length' => $payloadLength,
-            '_sha1'   => $payloadHash,
-        ];
+        return new MakerNotesMetadata(
+            'Apple',
+            strlen($raw),
+            sha1($raw, false)
+        );
     }
 }

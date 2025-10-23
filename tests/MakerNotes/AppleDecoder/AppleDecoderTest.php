@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\AppleDecoder;
 
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -26,7 +27,7 @@ use function strlen;
 final class AppleDecoderTest extends TestCase
 {
     /**
-     * Ensures the decoder returns the expected metadata map including vendor, length, and SHA1 hash.
+     * Ensures the decoder returns the expected metadata value object including vendor, length, and SHA-1 hash.
      */
     #[Test]
     public function decodeReturnsExpectedMetadata(): void
@@ -36,12 +37,9 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        $expected = [
-            '_vendor' => 'Apple',
-            '_length' => strlen($raw),
-            '_sha1'   => sha1($raw),
-        ];
-
-        self::assertSame($expected, $metadata);
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertSame('Apple', $metadata->vendor());
+        self::assertSame(strlen($raw), $metadata->length());
+        self::assertSame(sha1($raw), $metadata->sha1());
     }
 }

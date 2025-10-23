@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -46,9 +47,9 @@ final class RegistryTest extends TestCase
     public function findsDecoderForRegisteredPrefix(string $make): void
     {
         $decoder = new class implements MakerNotesDecoderInterface {
-            public function decode(string $raw, string $make, ?string $model): array
+            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
             {
-                return [];
+                return new MakerNotesMetadata('Test', 0, '0000000000000000000000000000000000000000');
             }
         };
 
@@ -66,9 +67,9 @@ final class RegistryTest extends TestCase
     {
         $registry = new Registry();
         $registry->register('Canon', new class implements MakerNotesDecoderInterface {
-            public function decode(string $raw, string $make, ?string $model): array
+            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
             {
-                return [];
+                return new MakerNotesMetadata('Canon', 0, '0000000000000000000000000000000000000000');
             }
         });
 
