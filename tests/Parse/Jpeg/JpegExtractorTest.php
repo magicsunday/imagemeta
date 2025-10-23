@@ -126,6 +126,30 @@ final class JpegExtractorTest extends TestCase
     }
 
     /**
+     * Ensures duplicate XMP APP1 segments are ignored while keeping order stable.
+     */
+    #[Test]
+    public function testDuplicateXmpSegmentsAreDeduplicated(): void
+    {
+        $xmpOne   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
+        $xmpTwo   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Two</x:xmpmeta>';
+        $exifBlob = 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifBlob),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpTwo),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpTwo)
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifBlob], $extractor->extractExifBlobs());
+        self::assertSame([$xmpOne, $xmpTwo], $extractor->extractXmpPackets());
+    }
+
+    /**
      * Confirms ICC profile fragments are reordered and merged into a single profile.
      */
     #[Test]
