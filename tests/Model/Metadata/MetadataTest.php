@@ -81,4 +81,46 @@ final class MetadataTest extends TestCase
         self::assertSame([], $metadata->xmpBlobs);
         self::assertNull($metadata->xmpDoc);
     }
+
+    /**
+     * Demonstrates a typical consumer flow where typed metadata is accessed via the aggregates.
+     */
+    #[Test]
+    public function allowsConsumingAggregatedMetadata(): void
+    {
+        $exifBlobs = [
+            'primary-exif-blob',
+            'alternate-exif-blob',
+        ];
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.content.identifier' => 'clip-42',
+        ]);
+
+        $ifd0 = new Ifd([
+            ExifTag::MAKE  => new IfdEntry(ExifTag::MAKE, 2, 1, 'Fujifilm'),
+            ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 2, 1, 'X-T5'),
+        ]);
+
+        $exifDoc = new ExifDocument($ifd0, null, null, null, null);
+
+        $xmpBlobs = [
+            '<x:xmpmeta>\n  <photoshop:DateCreated>2024-06-01</photoshop:DateCreated>\n</x:xmpmeta>',
+        ];
+
+        $xmpDoc = new XmpDocument([
+            '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2024-06-01',
+        ]);
+
+        $metadata = new Metadata($exifBlobs, $quickTime, $exifDoc, $xmpBlobs, $xmpDoc);
+
+        self::assertSame('primary-exif-blob', $metadata->exifBlobs[0]);
+        self::assertSame('clip-42', $metadata->quickTime?->contentIdentifier());
+        self::assertSame('Fujifilm', $metadata->exifDoc?->cameraMake());
+        self::assertSame('X-T5', $metadata->exifDoc?->cameraModel());
+        self::assertSame(
+            '2024-06-01',
+            $metadata->xmpDoc?->get('http://ns.adobe.com/photoshop/1.0/', 'DateCreated')
+        );
+    }
 }
