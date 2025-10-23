@@ -11,10 +11,28 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Exif;
 
+use MagicSunday\ImageMeta\Value\FlashInfo;
+
+use function abs;
 use function count;
+use function ctype_digit;
+use function explode;
+use function floor;
 use function is_float;
 use function is_int;
+use function is_numeric;
 use function is_string;
+use function ltrim;
+use function preg_match;
+use function round;
+use function sprintf;
+use function str_contains;
+use function str_replace;
+use function str_starts_with;
+use function strlen;
+use function substr;
+use function strtoupper;
+use function trim;
 
 /**
  * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
@@ -61,6 +79,137 @@ final readonly class ValueConverters
         }
 
         return null;
+    }
+
+    /**
+     * Converts a stored APEX aperture value into a traditional f-number.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value The APEX value to convert.
+     */
+    public static function apexToFNumber(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): ?float
+    {
+        $apex = self::rationalToFloat($value);
+
+        if ($apex === null && is_string($value) && is_numeric($value)) {
+            $apex = (float) $value;
+        }
+
+        if ($apex === null) {
+            return null;
+        }
+
+        return 2 ** ($apex / 2.0);
+    }
+
+    /**
+     * Converts a GPS speed measurement into metres per second.
+     *
+     * @param string|null                                                 $ref   Speed reference (K, M or N).
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value The measured value.
+     */
+    public static function gpsSpeedToMs(
+        ?string $ref,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?float {
+        if (!is_string($ref)) {
+            return null;
+        }
+
+        $numeric = self::rationalToFloat($value);
+        if ($numeric === null && is_string($value) && is_numeric($value)) {
+            $numeric = (float) $value;
+        }
+
+        if ($numeric === null) {
+            return null;
+        }
+
+        $normalizedRef = strtoupper(trim($ref));
+
+        return match ($normalizedRef) {
+            'K' => $numeric / 3.6,
+            'M' => $numeric * 0.44704,
+            'N' => $numeric * 0.5144444444444444,
+            default => null,
+        };
+    }
+
+    /**
+     * Converts the EXIF flash bit field into a typed value object.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Flash tag value representation.
+     */
+    public static function flashFromShort(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?FlashInfo {
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+            if ($first === null) {
+                return null;
+            }
+
+            $value = $first;
+        }
+
+        if ($value instanceof ExifRational) {
+            if ($value->denominator === 0) {
+                return null;
+            }
+
+            $value = (int) round((float) $value->numerator / (float) $value->denominator);
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            return self::flashFromShort($first);
+        }
+
+        if (is_float($value) || is_int($value)) {
+            return FlashInfo::fromExifValue((int) $value);
+        }
+
+        if (is_string($value) && is_numeric($value)) {
+            return FlashInfo::fromExifValue((int) $value);
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalises EXIF offset time values to a canonical "+HH:MM" representation.
+     *
+     * @param int|float|string|null $value The raw offset value.
+     */
+    public static function parseOffsetString(int|float|string|null $value): ?string
+    {
+        $components = self::parseOffsetComponents($value);
+
+        if ($components === null) {
+            return null;
+        }
+
+        $sign = $components['sign'] < 0 ? '-' : '+';
+
+        return sprintf('%s%02d:%02d', $sign, $components['hours'], $components['minutes']);
+    }
+
+    /**
+     * Converts an EXIF offset time value to minutes relative to UTC.
+     *
+     * @param int|float|string|null $value The raw offset value.
+     */
+    public static function offsetToMinutes(int|float|string|null $value): ?int
+    {
+        $components = self::parseOffsetComponents($value);
+
+        if ($components === null) {
+            return null;
+        }
+
+        $minutes = $components['hours'] * 60 + $components['minutes'];
+
+        return $components['sign'] < 0 ? -$minutes : $minutes;
     }
 
     /**
@@ -130,5 +279,129 @@ final readonly class ValueConverters
         $sign = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
 
         return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+    }
+
+    /**
+     * Parses numeric and textual offset encodings into sign, hour and minute components.
+     *
+     * @param int|float|string|null $value The raw value to parse.
+     *
+     * @return array{sign:int, hours:int, minutes:int}|null
+     */
+    private static function parseOffsetComponents(int|float|string|null $value): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $raw = is_string($value) ? trim($value) : (string) $value;
+        $raw = str_replace(["−", '–', '—'], '-', $raw);
+        $raw = str_replace(['＋'], '+', $raw);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $upper = strtoupper($raw);
+        if ($upper === 'Z' || $upper === 'UTC' || $upper === 'GMT') {
+            return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
+        }
+
+        if (str_starts_with($upper, 'UTC') || str_starts_with($upper, 'GMT')) {
+            $raw = trim(substr($raw, 3));
+            $upper = strtoupper($raw);
+            if ($raw === '') {
+                return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
+            }
+        }
+
+        $sign = 1;
+        $raw  = ltrim($raw);
+
+        if ($raw === '') {
+            return null;
+        }
+
+        $firstChar = $raw[0];
+        if ($firstChar === '+' || $firstChar === '-') {
+            $sign = $firstChar === '-' ? -1 : 1;
+            $raw  = substr($raw, 1);
+        }
+
+        $raw = trim($raw);
+        if ($raw === '') {
+            return null;
+        }
+
+        $normalized = str_replace([' ', '\t'], '', $raw);
+        $normalized = str_replace(',', '.', $normalized);
+
+        $hours   = null;
+        $minutes = null;
+
+        if (str_contains($normalized, ':')) {
+            $parts = explode(':', $normalized, 3);
+            if (count($parts) < 2) {
+                return null;
+            }
+
+            $hoursPart   = $parts[0];
+            $minutesPart = $parts[1];
+
+            if ($hoursPart === '' || $minutesPart === '') {
+                return null;
+            }
+
+            if (!ctype_digit($hoursPart) || !ctype_digit($minutesPart)) {
+                return null;
+            }
+
+            $hours   = (int) $hoursPart;
+            $minutes = (int) substr($minutesPart, 0, 2);
+        } elseif (preg_match('/^\d+(?:\.\d+)?$/', $normalized) === 1) {
+            if (str_contains($normalized, '.')) {
+                $floatHours = (float) $normalized;
+                $hours      = (int) floor(abs($floatHours));
+                $minutes    = (int) round((abs($floatHours) - $hours) * 60);
+            } else {
+                if (!ctype_digit($normalized)) {
+                    return null;
+                }
+
+                $length = strlen($normalized);
+                if ($length <= 2) {
+                    $hours   = (int) $normalized;
+                    $minutes = 0;
+                } else {
+                    $hours   = (int) substr($normalized, 0, $length - 2);
+                    $minutes = (int) substr($normalized, -2);
+                }
+            }
+        } else {
+            return null;
+        }
+
+        if ($hours === null || $minutes === null) {
+            return null;
+        }
+
+        if ($minutes >= 60) {
+            $hours  += (int) floor($minutes / 60);
+            $minutes = $minutes % 60;
+        }
+
+        if ($hours > 14) {
+            return null;
+        }
+
+        if ($minutes < 0 || $minutes > 59) {
+            return null;
+        }
+
+        return [
+            'sign'    => $sign,
+            'hours'   => $hours,
+            'minutes' => $minutes,
+        ];
     }
 }

@@ -18,6 +18,10 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
+use MagicSunday\ImageMeta\Value\Enum\FlashMode;
+use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
+use MagicSunday\ImageMeta\Value\FlashInfo;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifRationalList::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
+#[UsesClass(FlashInfo::class)]
 final class ValueConvertersTest extends TestCase
 {
     /**
@@ -106,6 +111,146 @@ final class ValueConvertersTest extends TestCase
         yield 'empty numeric list' => [new ExifNumericList([])];
         yield 'string' => ['invalid'];
         yield 'null' => [null];
+    }
+
+    /**
+     * @param mixed       $value    The APEX encoded value.
+     * @param float|null  $expected The expected f-number.
+     */
+    #[Test]
+    #[DataProvider('provideApexValues')]
+    public function convertsApexValuesToFNumber(mixed $value, ?float $expected): void
+    {
+        $result = ValueConverters::apexToFNumber($value);
+
+        if ($expected === null) {
+            self::assertNull($result);
+
+            return;
+        }
+
+        self::assertNotNull($result);
+        self::assertEqualsWithDelta($expected, $result, 0.000001);
+    }
+
+    /**
+     * @return iterable<string, array{mixed, float|null}>
+     */
+    public static function provideApexValues(): iterable
+    {
+        yield 'zero apex results in f1' => [new ExifRational(0, 1), 1.0];
+        yield 'positive apex rational' => [new ExifRational(5, 1), 2 ** (5 / 2)];
+        yield 'numeric string apex' => ['3', 2 ** 1.5];
+        yield 'invalid rational' => [new ExifRational(1, 0), null];
+    }
+
+    /**
+     * @param string|null $ref      The speed reference.
+     * @param mixed       $value    The raw speed value.
+     * @param float|null  $expected The expected metres per second.
+     */
+    #[Test]
+    #[DataProvider('provideGpsSpeedValues')]
+    public function convertsGpsSpeedToMetresPerSecond(?string $ref, mixed $value, ?float $expected): void
+    {
+        $result = ValueConverters::gpsSpeedToMs($ref, $value);
+
+        if ($expected === null) {
+            self::assertNull($result);
+
+            return;
+        }
+
+        self::assertNotNull($result);
+        self::assertEqualsWithDelta($expected, $result, 0.000001);
+    }
+
+    /**
+     * @return iterable<string, array{string|null, mixed, float|null}>
+     */
+    public static function provideGpsSpeedValues(): iterable
+    {
+        yield 'kilometres per hour' => ['K', new ExifRational(360, 10), 10.0];
+        yield 'miles per hour' => ['M', new ExifRational(223, 10), 22.3 * 0.44704];
+        yield 'knots' => ['N', new ExifRational(40, 1), 20.577777777777776];
+        yield 'string numeric value' => ['K', '54', 15.0];
+        yield 'unknown reference' => ['X', new ExifRational(36, 1), null];
+        yield 'null reference' => [null, new ExifRational(36, 1), null];
+        yield 'invalid rational value' => ['K', new ExifRational(1, 0), null];
+    }
+
+    /**
+     * Ensures flash bit fields are converted into value objects.
+     */
+    #[Test]
+    public function convertsFlashShortToValueObject(): void
+    {
+        $info = ValueConverters::flashFromShort(new ExifNumericList([63]));
+
+        self::assertInstanceOf(FlashInfo::class, $info);
+        self::assertTrue($info->fired);
+        self::assertSame(FlashMode::AUTO, $info->mode);
+        self::assertSame(FlashReturn::DETECTED, $info->returnDetection);
+        self::assertSame(FlashFunction::ABSENT, $info->functionPresence);
+        self::assertFalse($info->redEyeReduction);
+    }
+
+    /**
+     * Ensures invalid flash values return null to avoid runtime errors.
+     */
+    #[Test]
+    public function returnsNullForInvalidFlashValue(): void
+    {
+        self::assertNull(ValueConverters::flashFromShort(new ExifRational(1, 0)));
+        self::assertNull(ValueConverters::flashFromShort('invalid'));
+    }
+
+    /**
+     * @param mixed       $value    The raw offset representation.
+     * @param string|null $expected The expected canonical offset string.
+     */
+    #[Test]
+    #[DataProvider('provideOffsetStrings')]
+    public function normalisesOffsetStrings(mixed $value, ?string $expected): void
+    {
+        self::assertSame($expected, ValueConverters::parseOffsetString($value));
+    }
+
+    /**
+     * @return iterable<string, array{mixed, string|null}>
+     */
+    public static function provideOffsetStrings(): iterable
+    {
+        yield 'already normalised' => ['+01:30', '+01:30'];
+        yield 'missing sign with colon' => ['05:45', '+05:45'];
+        yield 'compact digits' => ['0530', '+05:30'];
+        yield 'decimal hours' => ['-5.5', '-05:30'];
+        yield 'utc prefix' => ['UTC-4', '-04:00'];
+        yield 'zulu designator' => ['Z', '+00:00'];
+        yield 'invalid string' => ['abc', null];
+        yield 'out of range' => ['+15:00', null];
+    }
+
+    /**
+     * @param mixed     $value    The raw offset value.
+     * @param int|null  $expected Expected minutes from UTC.
+     */
+    #[Test]
+    #[DataProvider('provideOffsetMinutes')]
+    public function convertsOffsetToMinutes(mixed $value, ?int $expected): void
+    {
+        self::assertSame($expected, ValueConverters::offsetToMinutes($value));
+    }
+
+    /**
+     * @return iterable<string, array{mixed, int|null}>
+     */
+    public static function provideOffsetMinutes(): iterable
+    {
+        yield 'positive offset' => ['+01:30', 90];
+        yield 'negative compact' => ['-0330', -210];
+        yield 'decimal hours' => ['2.25', 135];
+        yield 'invalid input' => ['invalid', null];
     }
 
     /**
