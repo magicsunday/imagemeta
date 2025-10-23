@@ -124,6 +124,7 @@ final class XmpReader
      * Finalises the collected container/list data for the current element.
      *
      * @param array<int, string> $items
+     * @param string             $text
      *
      * @return array|string|null
      */
