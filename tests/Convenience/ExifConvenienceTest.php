@@ -68,7 +68,7 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
         ]);
 
-        $doc     = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc      = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $captured = ExifConvenience::captureDateTime($doc);
 
         self::assertNotNull($captured);

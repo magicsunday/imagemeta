@@ -14,6 +14,11 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 
+use function is_string;
+use function rtrim;
+use function str_replace;
+use function substr;
+
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
  */

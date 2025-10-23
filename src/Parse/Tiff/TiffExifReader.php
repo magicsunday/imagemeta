@@ -19,6 +19,13 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 
+use function chr;
+use function ord;
+use function pack;
+use function rtrim;
+use function substr;
+use function unpack;
+
 /**
  * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
  */

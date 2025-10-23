@@ -11,6 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
+use function array_find;
+use function str_starts_with;
+use function strtolower;
+
 /**
  * Registry that stores maker note decoders by vendor prefixes and allows lookups.
  */
@@ -40,6 +44,7 @@ final class Registry
     public function find(string $make): ?MakerNotesDecoderInterface
     {
         $make = strtolower($make);
+
         return array_find(
             $this->decoders,
             fn (MakerNotesDecoderInterface $decoder, int|string $prefix): bool => $prefix !== ''

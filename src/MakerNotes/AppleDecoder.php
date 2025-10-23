@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
+use function sha1;
+use function strlen;
+
 /**
  * Decoder that returns basic metadata about the raw maker notes produced by Apple devices.
  */
