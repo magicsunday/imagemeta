@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -29,6 +30,13 @@ use PHPUnit\Framework\TestCase;
  * @covers \MagicSunday\ImageMeta\Model\Metadata
  */
 #[CoversClass(Metadata::class)]
+#[UsesClass(ExifDocument::class)]
+#[UsesClass(ExifTag::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(QuickTimeMeta::class)]
+#[UsesClass(XmpDocument::class)]
+#[UsesClass(XmpParser::class)]
 final class MetadataTest extends TestCase
 {
     /**

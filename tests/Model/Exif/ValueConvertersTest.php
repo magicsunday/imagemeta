@@ -21,12 +21,17 @@ use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MagicSunday\ImageMeta\Model\Exif\ValueConverters
  */
 #[CoversClass(ValueConverters::class)]
+#[UsesClass(ExifRational::class)]
+#[UsesClass(ExifRationalList::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
 final class ValueConvertersTest extends TestCase
 {
     /**
