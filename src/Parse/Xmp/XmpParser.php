@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Xmp;
@@ -9,7 +17,7 @@ use XMLReader;
 /**
  * Lightweight streaming XMP (RDF/XML) parser via XMLReader.
  * - extrahiert gängige Properties (xmp:CreateDate, exif:DateTimeOriginal, dc:subject (Bag))
- * - belässt unbekannte Props als einfache textuelle Werte (Best-Effort)
+ * - belässt unbekannte Props als einfache textuelle Werte (Best-Effort).
  */
 final class XmpParser
 {
@@ -21,7 +29,9 @@ final class XmpParser
         $props = [];
 
         while ($xr->read()) {
-            if ($xr->nodeType !== XMLReader::ELEMENT) continue;
+            if ($xr->nodeType !== XMLReader::ELEMENT) {
+                continue;
+            }
 
             $qname = $this->qname($xr);
             if ($qname === 'rdf:Bag' && isset($props['_last_dc_subject'])) {
@@ -33,8 +43,8 @@ final class XmpParser
 
             // capture strings for common props
             if (in_array($qname, [
-                'xmp:CreateDate','xmp:ModifyDate',
-                'exif:DateTimeOriginal','exif:OffsetTimeOriginal'
+                'xmp:CreateDate', 'xmp:ModifyDate',
+                'exif:DateTimeOriginal', 'exif:OffsetTimeOriginal',
             ], true)) {
                 $props[$qname] = $this->readElementText($xr);
             }
@@ -46,12 +56,14 @@ final class XmpParser
         }
 
         $xr->close();
+
         return new XmpDocument($props);
     }
 
     private function qname(XMLReader $xr): string
     {
         $prefix = $xr->prefix ? $xr->prefix . ':' : '';
+
         return $prefix . $xr->localName;
     }
 
@@ -67,6 +79,7 @@ final class XmpParser
                 }
             }
         }
+
         return trim($text);
     }
 
@@ -74,7 +87,9 @@ final class XmpParser
     private function readBag(XMLReader $xr): array
     {
         $items = [];
-        if ($xr->isEmptyElement) return $items;
+        if ($xr->isEmptyElement) {
+            return $items;
+        }
 
         $depth = $xr->depth;
         while ($xr->read()) {
@@ -85,6 +100,7 @@ final class XmpParser
                 $items[] = $this->readElementText($xr);
             }
         }
-        return array_values(array_filter($items, fn($s) => $s !== ''));
+
+        return array_values(array_filter($items, fn ($s) => $s !== ''));
     }
 }

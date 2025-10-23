@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta;
@@ -7,8 +15,8 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpReader;
 
@@ -27,7 +35,7 @@ final class MetadataReader
     public function read(string $path): Metadata
     {
         $stream = Stream::fromPath($path);
-        $type = FormatDetector::detect($stream);
+        $type   = FormatDetector::detect($stream);
 
         return match ($type) {
             ContainerType::JPEG    => $this->fromJpeg($stream),
@@ -44,13 +52,18 @@ final class MetadataReader
      */
     private function fromJpeg(Stream $stream): Metadata
     {
-        $jpeg = new JpegExtractor($stream);
+        $jpeg      = new JpegExtractor($stream);
         $exifBlobs = $jpeg->extractExifBlobs();
         $xmpBlobs  = $jpeg->extractXmpPackets();
 
-        $exifDoc = null; $xmpDoc = null;
-        if ($exifBlobs !== []) { $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]); }
-        if ($xmpBlobs !== [])  { $xmpDoc  = (new XmpReader())->parse($xmpBlobs[0]); }
+        $exifDoc = null;
+        $xmpDoc  = null;
+        if ($exifBlobs !== []) {
+            $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]);
+        }
+        if ($xmpBlobs !== []) {
+            $xmpDoc = (new XmpReader())->parse($xmpBlobs[0]);
+        }
 
         return new Metadata($exifBlobs, null, $exifDoc, $xmpBlobs, $xmpDoc);
     }
@@ -66,9 +79,14 @@ final class MetadataReader
     {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
 
-        $exifDoc = null; $xmpDoc = null;
-        if ($exifBlobs !== []) { $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]); }
-        if ($xmpBlobs !== [])  { $xmpDoc  = (new XmpReader())->parse($xmpBlobs[0]); }
+        $exifDoc = null;
+        $xmpDoc  = null;
+        if ($exifBlobs !== []) {
+            $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]);
+        }
+        if ($xmpBlobs !== []) {
+            $xmpDoc = (new XmpReader())->parse($xmpBlobs[0]);
+        }
 
         return new Metadata($exifBlobs, $qt, $exifDoc, $xmpBlobs, $xmpDoc);
     }

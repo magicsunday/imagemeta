@@ -1,4 +1,12 @@
 <?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
@@ -13,12 +21,12 @@ use MagicSunday\ImageMeta\Core\Stream;
 final class JpegExtractor
 {
     private const MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
-    private const EXIF_SIGNATURE = "Exif\0\0";
-    private const XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
-    private const ICC_SIGNATURE = "ICC_PROFILE\0";
-    private const IPTC_SIGNATURE = "Photoshop 3.0\0";
-    private const MARKER_SOS = 0xDA;
-    private const MARKER_EOI = 0xD9;
+    private const EXIF_SIGNATURE       = "Exif\0\0";
+    private const XMP_SIGNATURE        = "http://ns.adobe.com/xap/1.0/\0";
+    private const ICC_SIGNATURE        = "ICC_PROFILE\0";
+    private const IPTC_SIGNATURE       = "Photoshop 3.0\0";
+    private const MARKER_SOS           = 0xDA;
+    private const MARKER_EOI           = 0xD9;
 
     private bool $parsed = false;
     /** @var list<string> */
@@ -28,9 +36,9 @@ final class JpegExtractor
     /** @var list<string> */
     private array $iccSegments = [];
     /** @var array<int, string> */
-    private array $iccSequence = [];
+    private array $iccSequence     = [];
     private ?int $iccExpectedCount = null;
-    private ?string $iccProfile = null;
+    private ?string $iccProfile    = null;
     /** @var list<string> */
     private array $iptcPayloads = [];
 
@@ -39,7 +47,9 @@ final class JpegExtractor
      *
      * @param Stream $s Stream representing the JPEG binary.
      */
-    public function __construct(private readonly Stream $s) {}
+    public function __construct(private readonly Stream $s)
+    {
+    }
 
     /**
      * Returns all discovered EXIF payloads in the order they appeared.
@@ -115,13 +125,13 @@ final class JpegExtractor
             throw new ParseError('Not a JPEG (missing SOI marker)');
         }
 
-        $this->exifBlobs = [];
-        $this->xmpPackets = [];
-        $this->iccSegments = [];
-        $this->iccSequence = [];
+        $this->exifBlobs        = [];
+        $this->xmpPackets       = [];
+        $this->iccSegments      = [];
+        $this->iccSequence      = [];
         $this->iccExpectedCount = null;
-        $this->iccProfile = null;
-        $this->iptcPayloads = [];
+        $this->iccProfile       = null;
+        $this->iptcPayloads     = [];
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -138,10 +148,10 @@ final class JpegExtractor
                 continue; // markers without payload
             }
 
-            $isAppSegment = $marker >= 0xE0 && $marker <= 0xEF;
+            $isAppSegment  = $marker >= 0xE0 && $marker <= 0xEF;
             $segmentLength = $this->readSegmentLength($marker, $offset, $isAppSegment);
             $payloadLength = $segmentLength - 2;
-            $payload = $this->readSegmentPayload($marker, $offset, $payloadLength);
+            $payload       = $this->readSegmentPayload($marker, $offset, $payloadLength);
 
             if ($marker === 0xE1) {
                 $this->handleApp1($payload);
@@ -155,7 +165,7 @@ final class JpegExtractor
         if ($this->iccExpectedCount !== null && $this->iccExpectedCount > 0) {
             if (count($this->iccSequence) === $this->iccExpectedCount) {
                 $expectedSequence = range(1, $this->iccExpectedCount);
-                $presentSequence = array_keys($this->iccSequence);
+                $presentSequence  = array_keys($this->iccSequence);
                 sort($presentSequence);
 
                 if ($presentSequence === $expectedSequence) {
@@ -293,8 +303,8 @@ final class JpegExtractor
         }
 
         $sequenceNumber = ord($payload[$signatureLength]);
-        $sequenceCount = ord($payload[$signatureLength + 1]);
-        $iccData = substr($payload, $signatureLength + 2);
+        $sequenceCount  = ord($payload[$signatureLength + 1]);
+        $iccData        = substr($payload, $signatureLength + 2);
 
         $this->iccSegments[] = $payload;
 
