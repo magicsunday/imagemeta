@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use Exception;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 
 use function is_float;
@@ -20,6 +21,7 @@ use function is_int;
 use function is_string;
 use function rtrim;
 use function str_replace;
+use function strlen;
 use function substr;
 
 /**
@@ -84,6 +86,36 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera owner name if present.
+     *
+     * @return string|null
+     */
+    public function ownerName(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::CAMERA_OWNER_NAME);
+    }
+
+    /**
+     * Returns the camera body serial number if present.
+     *
+     * @return string|null
+     */
+    public function bodySerialNumber(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::BODY_SERIAL_NUMBER);
+    }
+
+    /**
+     * Returns the lens serial number if present.
+     *
+     * @return string|null
+     */
+    public function lensSerialNumber(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::LENS_SERIAL_NUMBER);
+    }
+
+    /**
      * Returns the EXIF orientation value if present.
      *
      * @return int|null
@@ -94,14 +126,67 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the image width, preferring the EXIF-specific tag and falling back to IFD0.
+     *
+     * @return int|null
+     */
+    public function imageWidth(): ?int
+    {
+        $width = $this->int($this->exifIfd, ExifTag::EXIF_IMAGE_WIDTH);
+
+        return $width ?? $this->int($this->ifd0, ExifTag::IMAGE_WIDTH);
+    }
+
+    /**
+     * Returns the image height, preferring the EXIF-specific tag and falling back to IFD0.
+     *
+     * @return int|null
+     */
+    public function imageHeight(): ?int
+    {
+        $height = $this->int($this->exifIfd, ExifTag::EXIF_IMAGE_HEIGHT);
+
+        return $height ?? $this->int($this->ifd0, ExifTag::IMAGE_HEIGHT);
+    }
+
+    /**
+     * Returns the colour space identifier if present.
+     *
+     * @return int|null
+     */
+    public function colorSpace(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::COLOR_SPACE);
+    }
+
+    /**
+     * Returns the image unique identifier if present.
+     *
+     * @return string|null
+     */
+    public function imageUniqueId(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::IMAGE_UNIQUE_ID);
+    }
+
+    /**
      * Returns the ISO sensitivity value if present.
      *
      * @return int|null
      */
     public function iso(): ?int
     {
-        // EXIF ISO tag (PhotographicSensitivity)
-        return $this->int($this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
+        $iso = $this->int($this->exifIfd, ExifTag::ISO_SPEED);
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        $iso = $this->int($this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        return $this->int($this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
     }
 
     /**
@@ -111,10 +196,7 @@ final readonly class ExifDocument
      */
     public function exposureTime(): ?float
     {
-        // Tag ExifTag::EXPOSURE_TIME (RATIONAL)
-        $entry = $this->exifIfd?->get(ExifTag::EXPOSURE_TIME);
-
-        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
+        return $this->rational($this->exifIfd, ExifTag::EXPOSURE_TIME);
     }
 
     /**
@@ -124,10 +206,7 @@ final readonly class ExifDocument
      */
     public function fNumber(): ?float
     {
-        // Tag ExifTag::F_NUMBER (RATIONAL)
-        $entry = $this->exifIfd?->get(ExifTag::F_NUMBER);
-
-        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
+        return $this->rational($this->exifIfd, ExifTag::F_NUMBER);
     }
 
     /**
@@ -137,10 +216,87 @@ final readonly class ExifDocument
      */
     public function focalLengthMm(): ?float
     {
-        // Tag ExifTag::FOCAL_LENGTH (RATIONAL)
-        $entry = $this->exifIfd?->get(ExifTag::FOCAL_LENGTH);
+        return $this->rational($this->exifIfd, ExifTag::FOCAL_LENGTH);
+    }
 
-        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
+    /**
+     * Returns the focal length in 35mm equivalent if available.
+     *
+     * @return int|null
+     */
+    public function focalLength35Mm(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::FOCAL_LENGTH_IN_35MM_FILM);
+    }
+
+    /**
+     * Returns the camera exposure program code if present.
+     *
+     * @return int|null
+     */
+    public function exposureProgram(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::EXPOSURE_PROGRAM);
+    }
+
+    /**
+     * Returns the metering mode code if present.
+     *
+     * @return int|null
+     */
+    public function meteringMode(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::METERING_MODE);
+    }
+
+    /**
+     * Returns the flash status flags if present.
+     *
+     * @return int|null
+     */
+    public function flash(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::FLASH);
+    }
+
+    /**
+     * Returns the white balance mode if present.
+     *
+     * @return int|null
+     */
+    public function whiteBalance(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::WHITE_BALANCE);
+    }
+
+    /**
+     * Returns the exposure bias value in EV if present.
+     *
+     * @return float|null
+     */
+    public function exposureBias(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::EXPOSURE_BIAS_VALUE);
+    }
+
+    /**
+     * Returns the scene brightness value (APEX) if present.
+     *
+     * @return float|null
+     */
+    public function brightnessValue(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+    }
+
+    /**
+     * Returns the maximum aperture value (APEX) if present.
+     *
+     * @return float|null
+     */
+    public function maxApertureApex(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::MAX_APERTURE_VALUE);
     }
 
     /**
@@ -154,6 +310,26 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the raw DateTimeDigitized tag value.
+     *
+     * @return string|null
+     */
+    public function dateTimeDigitizedRaw(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::DATETIME_DIGITIZED);
+    }
+
+    /**
+     * Returns the raw DateTime tag value from IFD0.
+     *
+     * @return string|null
+     */
+    public function dateTimeRaw(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::DATETIME);
+    }
+
+    /**
      * Returns the raw offset time for DateTimeOriginal.
      *
      * @return string|null
@@ -161,6 +337,26 @@ final readonly class ExifDocument
     public function offsetTimeOriginalRaw(): ?string
     {
         return $this->str($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
+    }
+
+    /**
+     * Returns the raw offset time for DateTimeDigitized.
+     *
+     * @return string|null
+     */
+    public function offsetTimeDigitizedRaw(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
+    }
+
+    /**
+     * Returns the raw offset time for the DateTime tag.
+     *
+     * @return string|null
+     */
+    public function offsetTimeRaw(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::OFFSET_TIME);
     }
 
     /**
@@ -184,19 +380,27 @@ final readonly class ExifDocument
      */
     public function captureDateTime(): ?DateTimeImmutable
     {
-        $raw = $this->dateTimeOriginalRaw();
-        if ($raw === null || $raw === '') {
-            return null;
-        }
+        return $this->parseExifDateTime($this->dateTimeOriginalRaw(), $this->offsetTimeOriginalRaw());
+    }
 
-        $offset = $this->offsetTimeOriginalRaw(); // like "+01:00"
-        $tz     = ($offset !== null && $offset !== '') ? new DateTimeZone($offset) : new DateTimeZone('UTC');
+    /**
+     * Returns the digitised timestamp combining the raw value and offset tags.
+     *
+     * @return DateTimeImmutable|null
+     */
+    public function dateTimeDigitized(): ?DateTimeImmutable
+    {
+        return $this->parseExifDateTime($this->dateTimeDigitizedRaw(), $this->offsetTimeDigitizedRaw());
+    }
 
-        // EXIF uses "YYYY:MM:DD HH:MM:SS"
-        $normalized = str_replace(':', '-', substr($raw, 0, 10)) . substr($raw, 10); // YYYY-MM-DD HH:MM:SS
-        $dt         = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $normalized, $tz);
-
-        return $dt !== false ? $dt : null;
+    /**
+     * Returns the DateTime tag combined with its optional offset.
+     *
+     * @return DateTimeImmutable|null
+     */
+    public function dateTime(): ?DateTimeImmutable
+    {
+        return $this->parseExifDateTime($this->dateTimeRaw(), $this->offsetTimeRaw());
     }
 
     /**
@@ -263,5 +467,47 @@ final readonly class ExifDocument
         }
 
         return null;
+    }
+
+    /**
+     * Returns a rational or numeric value converted to float if present in the given IFD.
+     *
+     * @return float|null
+     */
+    private function rational(?Ifd $ifd, int $tag): ?float
+    {
+        if (!$ifd instanceof Ifd) {
+            return null;
+        }
+
+        $entry = $ifd->get($tag);
+
+        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
+    }
+
+    /**
+     * Normalises EXIF timestamp strings and optional offsets into immutable datetime instances.
+     *
+     * @param string|null $rawDateTime Raw EXIF datetime formatted as "YYYY:MM:DD HH:MM:SS".
+     * @param string|null $rawOffset   Optional timezone offset such as "+01:00".
+     */
+    private function parseExifDateTime(?string $rawDateTime, ?string $rawOffset): ?DateTimeImmutable
+    {
+        if ($rawDateTime === null || $rawDateTime === '' || strlen($rawDateTime) < 19) {
+            return null;
+        }
+
+        try {
+            $tz = ($rawOffset !== null && $rawOffset !== '')
+                ? new DateTimeZone($rawOffset)
+                : new DateTimeZone('UTC');
+        } catch (Exception) {
+            return null;
+        }
+
+        $normalized = str_replace(':', '-', substr($rawDateTime, 0, 10)) . substr($rawDateTime, 10);
+        $dt         = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $normalized, $tz);
+
+        return $dt !== false ? $dt : null;
     }
 }
