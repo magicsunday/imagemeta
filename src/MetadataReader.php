@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpReader;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
 /**
  * Coordinates format detection and metadata extraction for supported containers.
@@ -63,7 +63,7 @@ final class MetadataReader
         }
 
         if ($xmpBlobs !== []) {
-            $xmpDoc = (new XmpReader())->parse($xmpBlobs[0]);
+            $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
         }
 
         return new Metadata($exifBlobs, null, $exifDoc, $xmpBlobs, $xmpDoc);
@@ -87,7 +87,7 @@ final class MetadataReader
         }
 
         if ($xmpBlobs !== []) {
-            $xmpDoc = (new XmpReader())->parse($xmpBlobs[0]);
+            $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
         }
 
         return new Metadata($exifBlobs, $qt, $exifDoc, $xmpBlobs, $xmpDoc);
