@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -122,5 +123,52 @@ final class MetadataTest extends TestCase
             '2024-06-01',
             $metadata->xmpDoc?->get('http://ns.adobe.com/photoshop/1.0/', 'DateCreated')
         );
+    }
+
+    /**
+     * Ensures consumers can obtain a selectively parsed XMP document without pre-populating it.
+     */
+    #[Test]
+    public function exposesSelectiveXmpDocumentWhenUnavailable(): void
+    {
+        $xmp = <<<XML
+<x:xmpmeta xmlns:x="adobe:ns:meta/"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:RDF>
+    <rdf:Description>
+      <xmp:ModifyDate>2024-04-02T01:02:03Z</xmp:ModifyDate>
+      <dc:subject>
+        <rdf:Bag>
+          <rdf:li>One</rdf:li>
+          <rdf:li>Two</rdf:li>
+        </rdf:Bag>
+      </dc:subject>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $metadata = new Metadata([], null, null, [$xmp]);
+
+        $document = $metadata->selectiveXmpDocument();
+
+        self::assertInstanceOf(XmpDocument::class, $document);
+        self::assertSame('2024-04-02T01:02:03Z', $document->get('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
+        self::assertSame(['One', 'Two'], $document->find('subject'));
+    }
+
+    /**
+     * Ensures the already supplied XMP document is reused without invoking the parser again.
+     */
+    #[Test]
+    public function reusesExistingXmpDocument(): void
+    {
+        $xmpDoc = (new XmpParser())->parse('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"></rdf:RDF>');
+
+        $metadata = new Metadata([], null, null, [], $xmpDoc);
+
+        self::assertSame($xmpDoc, $metadata->selectiveXmpDocument());
     }
 }
