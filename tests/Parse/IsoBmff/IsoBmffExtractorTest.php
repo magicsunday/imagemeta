@@ -302,6 +302,8 @@ final class IsoBmffExtractorTest extends TestCase
      *
      * @param string $type    Four-character box type.
      * @param string $payload Raw box payload.
+     *
+     * @return string Serialized box bytes containing the header and payload.
      */
     private static function box(string $type, string $payload): string
     {
@@ -317,6 +319,8 @@ final class IsoBmffExtractorTest extends TestCase
      * @param string $payload Raw box payload excluding version/flags.
      * @param int    $version Box version field.
      * @param int    $flags   Box flags field.
+     *
+     * @return string Serialized full box bytes with version and flags header.
      */
     private static function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
     {
