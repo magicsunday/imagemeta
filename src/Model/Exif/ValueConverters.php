@@ -16,25 +16,20 @@ use function count;
 use function is_array;
 use function is_float;
 use function is_int;
-use function is_string;
 
 /**
  * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
- *
- * @phpstan-import-type ExifRational from IfdEntry
- * @phpstan-import-type ExifRationalList from IfdEntry
- * @phpstan-import-type ExifValue from IfdEntry
  */
 final readonly class ValueConverters
 {
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
-     * @param ExifValue|null $v The value to convert.
-     *
-     * @return float|null
+     * @param int|float|array{0:int,1:int}
+     *        |list<int|float>
+     *        |list<array{0:int,1:int}>|null $v The value to convert.
      */
-    public static function rationalToFloat(int|float|string|array|null $v): ?float
+    public static function rationalToFloat(int|float|array|null $v): ?float
     {
         if (is_array($v)) {
             $pair = self::normaliseRationalPair($v);
@@ -94,14 +89,12 @@ final readonly class ValueConverters
     /**
      * Converts EXIF GPS degrees/minutes/seconds to a float coordinate.
      *
-     * @param string|null        $ref   Direction reference (N/E/S/W).
-     * @param ExifRationalList|null $val Rational triplet describing the coordinate.
-     *
-     * @return float|null
+     * @param string|null $ref  Direction reference (N/E/S/W).
+     * @param list<array{0:int,1:int}>|null $val Rational triplet describing the coordinate.
      */
     private static function dmsToFloat(?string $ref, ?array $val): ?float
     {
-        if (!is_string($ref) || !is_array($val) || count($val) < 3) {
+        if ($ref === null || $val === null || count($val) < 3) {
             return null;
         }
         $deg = self::rationalToFloat($val[0] ?? null);
@@ -119,9 +112,11 @@ final readonly class ValueConverters
     /**
      * Normalises a potential rational pair into a strict two-element array.
      *
-     * @param array<int, mixed> $value Candidate value from EXIF data.
+     * @param array{0:int|float|array{0:int,1:int},1?:int|float|array{0:int,1:int}}
+     *        |list<int|float>
+     *        |list<array{0:int,1:int}> $value Candidate value from EXIF data.
      *
-     * @return ExifRational|null
+     * @return array{0:int,1:int}|null
      */
     private static function normaliseRationalPair(array $value): ?array
     {
@@ -142,9 +137,9 @@ final readonly class ValueConverters
     /**
      * Validates that the provided value is a list of rational pairs.
      *
-     * @param array<int, mixed> $value Candidate value from EXIF data.
+     * @param list<array{0:int,1:int}>|list<int|float> $value Candidate value from EXIF data.
      *
-     * @return ExifRationalList|null
+     * @return list<array{0:int,1:int}>|null
      */
     private static function normaliseRationalList(array $value): ?array
     {
