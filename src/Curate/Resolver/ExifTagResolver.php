@@ -354,7 +354,16 @@ final readonly class ExifTagResolver
      */
     public function ycbcrSubSampling(): ?array
     {
-        $values = $this->normalizeNumericList($this->getValue($this->document?->ifd0, ExifTag::YCBCR_SUB_SAMPLING));
+        $entry = $this->getEntry($this->document?->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        if (is_string($entry->value)) {
+            return CoreValueConverters::ycbcrSubSamplingToPair($entry->value);
+        }
+
+        $values = $this->normalizeNumericList($entry->value);
         if (count($values) !== 2) {
             return null;
         }
@@ -384,12 +393,9 @@ final readonly class ExifTagResolver
      */
     public function whitePoint(): ?array
     {
-        $values = $this->normalizeRationalList($this->getValue($this->document?->ifd0, ExifTag::WHITE_POINT));
-        if (count($values) !== 2) {
-            return null;
-        }
+        $value = $this->getValue($this->document?->ifd0, ExifTag::WHITE_POINT);
 
-        return $values;
+        return CoreValueConverters::toWhitePoint($value);
     }
 
     /**
@@ -399,12 +405,9 @@ final readonly class ExifTagResolver
      */
     public function primaryChromaticities(): ?array
     {
-        $values = $this->normalizeRationalList($this->getValue($this->document?->ifd0, ExifTag::PRIMARY_CHROMATICITIES));
-        if (count($values) !== 6) {
-            return null;
-        }
+        $value = $this->getValue($this->document?->ifd0, ExifTag::PRIMARY_CHROMATICITIES);
 
-        return $values;
+        return CoreValueConverters::toPrimaryChromaticities($value);
     }
 
     /**
