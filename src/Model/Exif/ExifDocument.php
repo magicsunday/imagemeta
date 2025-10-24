@@ -196,7 +196,19 @@ final readonly class ExifDocument
      */
     public function imageTitle(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
+        $value = $this->str($this->exifIfd, ExifTag::IMAGE_TITLE);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->str($this->ifd0, ExifTag::IMAGE_DESCRIPTION);
     }
 
     /**
@@ -204,7 +216,19 @@ final readonly class ExifDocument
      */
     public function photographer(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::PHOTOGRAPHER);
+        $value = $this->str($this->exifIfd, ExifTag::PHOTOGRAPHER);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $this->str($this->ifd0, ExifTag::PHOTOGRAPHER);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->str($this->ifd0, ExifTag::ARTIST);
     }
 
     /**
@@ -212,7 +236,9 @@ final readonly class ExifDocument
      */
     public function imageEditor(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
+        $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITOR);
+
+        return $value ?? $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
     }
 
     /**

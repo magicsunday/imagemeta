@@ -184,10 +184,13 @@ final class TiffExifReaderTest extends TestCase
         } else {
             self::assertSame("\x00\x01\x02\x03", $cfaPattern);
         }
-        self::assertSame('FW', rtrim($exifIfd->get(ExifTag::CAMERA_FIRMWARE)?->value ?? ''));
-        self::assertSame('RAW', rtrim($exifIfd->get(ExifTag::RAW_DEVELOPING_SOFTWARE)?->value ?? ''));
-        self::assertSame('IMG', rtrim($exifIfd->get(ExifTag::IMAGE_EDITING_SOFTWARE)?->value ?? ''));
-        self::assertSame('META', rtrim($exifIfd->get(ExifTag::METADATA_EDITING_SOFTWARE)?->value ?? ''));
+        self::assertSame('Cliffside Dusk', rtrim($exifIfd->get(ExifTag::IMAGE_TITLE)?->value ?? ''));
+        self::assertSame('Alex Light', rtrim($exifIfd->get(ExifTag::PHOTOGRAPHER)?->value ?? ''));
+        self::assertSame('Chris Edit', rtrim($exifIfd->get(ExifTag::IMAGE_EDITOR)?->value ?? ''));
+        self::assertSame('Firmware 2.0', rtrim($exifIfd->get(ExifTag::CAMERA_FIRMWARE)?->value ?? ''));
+        self::assertSame('RawLab Studio', rtrim($exifIfd->get(ExifTag::RAW_DEVELOPING_SOFTWARE)?->value ?? ''));
+        self::assertSame('EditLab Pro', rtrim($exifIfd->get(ExifTag::IMAGE_EDITING_SOFTWARE)?->value ?? ''));
+        self::assertSame('MetaLab Suite', rtrim($exifIfd->get(ExifTag::METADATA_EDITING_SOFTWARE)?->value ?? ''));
     }
 
     /**
@@ -579,20 +582,89 @@ final class TiffExifReaderTest extends TestCase
         ];
         $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
 
-        $exifEntries = [
-            self::packClassicEntry(ExifTag::SCENE_TYPE, 7, 1, self::inlineAsciiToInt("\x01", 4)),
-            self::packClassicEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
-            self::packClassicEntry(ExifTag::CFA_PATTERN, 7, 4, self::inlineAsciiToInt("\x00\x01\x02\x03", 4)),
-            self::packClassicEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, self::inlineAsciiToInt("\x01\x02\x03\x00", 4)),
-            self::packClassicEntry(ExifTag::CAMERA_FIRMWARE, 2, 4, self::inlineAsciiToInt('FW', 4)),
-            self::packClassicEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 4, self::inlineAsciiToInt('RAW', 4)),
-            self::packClassicEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 4, self::inlineAsciiToInt('IMG', 4)),
-            self::packClassicEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 4, self::inlineAsciiToInt('META', 4)),
+        $entries = [
+            [
+                'tag'   => ExifTag::SCENE_TYPE,
+                'type'  => 7,
+                'count' => 1,
+                'value' => self::inlineAsciiToInt("\x01", 4),
+            ],
+            [
+                'tag'   => ExifTag::CUSTOM_RENDERED,
+                'type'  => 3,
+                'count' => 1,
+                'value' => 1,
+            ],
+            [
+                'tag'   => ExifTag::CFA_PATTERN,
+                'type'  => 7,
+                'count' => 4,
+                'value' => self::inlineAsciiToInt("\x00\x01\x02\x03", 4),
+            ],
+            [
+                'tag'   => ExifTag::COMPONENTS_CONFIGURATION,
+                'type'  => 7,
+                'count' => 4,
+                'value' => self::inlineAsciiToInt("\x01\x02\x03\x00", 4),
+            ],
         ];
+
+        $asciiTags = [
+            ExifTag::IMAGE_TITLE               => 'Cliffside Dusk',
+            ExifTag::PHOTOGRAPHER              => 'Alex Light',
+            ExifTag::IMAGE_EDITOR              => 'Chris Edit',
+            ExifTag::CAMERA_FIRMWARE           => 'Firmware 2.0',
+            ExifTag::RAW_DEVELOPING_SOFTWARE   => 'RawLab Studio',
+            ExifTag::IMAGE_EDITING_SOFTWARE    => 'EditLab Pro',
+            ExifTag::METADATA_EDITING_SOFTWARE => 'MetaLab Suite',
+        ];
+
+        $entryCount       = count($entries) + count($asciiTags);
+        $exifIfdSize      = 2 + ($entryCount * 12) + 4;
+        $nextDataOffset   = $exifIfdOffset + $exifIfdSize;
+        $stringDataBuffer = '';
+
+        foreach ($asciiTags as $tag => $value) {
+            $encoded = $value . "\0";
+            $length  = strlen($encoded);
+
+            if ($length <= 4) {
+                $entries[] = [
+                    'tag'   => $tag,
+                    'type'  => 2,
+                    'count' => $length,
+                    'value' => self::inlineAsciiToInt($encoded, 4),
+                ];
+
+                continue;
+            }
+
+            $entries[] = [
+                'tag'   => $tag,
+                'type'  => 2,
+                'count' => $length,
+                'value' => $nextDataOffset,
+            ];
+
+            $stringDataBuffer .= $encoded;
+            $nextDataOffset   += $length;
+        }
+
+        usort($entries, static fn (array $left, array $right): int => $left['tag'] <=> $right['tag']);
+
+        $exifEntries = array_map(
+            static fn (array $entry): string => self::packClassicEntry(
+                $entry['tag'],
+                $entry['type'],
+                $entry['count'],
+                $entry['value'],
+            ),
+            $entries,
+        );
 
         $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
 
-        return $header . $ifd0 . $exifIfd;
+        return $header . $ifd0 . $exifIfd . $stringDataBuffer;
     }
 
     /**
