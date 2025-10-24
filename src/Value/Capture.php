@@ -26,6 +26,7 @@ final readonly class Capture
      * @param float|null             $waterDepthM           Water depth in metres.
      * @param float|null             $accelerationMs2       Camera acceleration in metres per second squared.
      * @param float|null             $cameraElevationAngleDeg Camera elevation angle in degrees.
+     * @param int|null               $selfTimerModeSeconds  Configured self timer delay in seconds.
      */
     public function __construct(
         public ?DateTimeImmutable $dateTime,
@@ -35,6 +36,7 @@ final readonly class Capture
         public ?float $waterDepthM,
         public ?float $accelerationMs2,
         public ?float $cameraElevationAngleDeg,
+        public ?int $selfTimerModeSeconds,
     ) {
     }
 }

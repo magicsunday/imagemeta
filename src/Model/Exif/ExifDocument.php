@@ -16,8 +16,11 @@ use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 
 use function array_map;
+use function array_values;
 use function is_float;
 use function is_int;
 use function is_string;
@@ -200,6 +203,30 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the sequential image number when provided by the camera.
+     */
+    public function imageNumber(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::IMAGE_NUMBER);
+    }
+
+    /**
+     * Returns the security classification label recorded in the metadata.
+     */
+    public function securityClassification(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::SECURITY_CLASSIFICATION);
+    }
+
+    /**
+     * Returns the free-form image history string when present.
+     */
+    public function imageHistory(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::IMAGE_HISTORY);
+    }
+
+    /**
      * Returns the components configuration array when present.
      *
      * @return list<int>|null
@@ -207,6 +234,18 @@ final readonly class ExifDocument
     public function componentsConfiguration(): ?array
     {
         return $this->numericList($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
+    }
+
+    /**
+     * Returns the TIFF/EP standard identifier as a list of bytes.
+     *
+     * @return list<int>|null
+     */
+    public function tiffEpStandardId(): ?array
+    {
+        $values = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
+
+        return $values !== null ? array_values($values) : null;
     }
 
     /**
@@ -225,6 +264,14 @@ final readonly class ExifDocument
         $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
 
         return $raw !== null ? $this->decodeUserComment($raw) : null;
+    }
+
+    /**
+     * Returns the interlace flag when recorded.
+     */
+    public function interlace(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::INTERLACE);
     }
 
     /**
@@ -522,6 +569,14 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the self timer mode in seconds when available.
+     */
+    public function selfTimerModeSeconds(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::SELF_TIMER_MODE);
+    }
+
+    /**
      * Returns the recorded temperature in Celsius.
      */
     public function temperatureCelsius(): ?float
@@ -656,6 +711,42 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the EXIF time zone offset values expressed in minutes from UTC.
+     *
+     * @return list<int>|null
+     */
+    public function timeZoneOffsetMinutes(): ?array
+    {
+        $values = $this->numericList($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
+
+        return $values !== null ? array_values($values) : null;
+    }
+
+    /**
+     * Returns the normalized offset time for DateTimeOriginal.
+     */
+    public function offsetTimeOriginal(): ?string
+    {
+        return $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
+    }
+
+    /**
+     * Returns the normalized offset time for DateTimeDigitized.
+     */
+    public function offsetTimeDigitized(): ?string
+    {
+        return $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
+    }
+
+    /**
+     * Returns the normalized offset time for the IFD0 DateTime tag.
+     */
+    public function offsetTime(): ?string
+    {
+        return $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME);
+    }
+
+    /**
      * Returns the raw offset time for DateTimeOriginal.
      *
      * @return string|null
@@ -742,7 +833,7 @@ final readonly class ExifDocument
     {
         return $this->parseExifDateTime(
             $this->dateTimeOriginalRaw(),
-            $this->offsetTimeOriginalRaw(),
+            $this->offsetTimeOriginal(),
             $this->subSecTimeOriginal(),
         );
     }
@@ -756,7 +847,7 @@ final readonly class ExifDocument
     {
         return $this->parseExifDateTime(
             $this->dateTimeDigitizedRaw(),
-            $this->offsetTimeDigitizedRaw(),
+            $this->offsetTimeDigitized(),
             $this->subSecTimeDigitized(),
         );
     }
@@ -770,7 +861,7 @@ final readonly class ExifDocument
     {
         return $this->parseExifDateTime(
             $this->dateTimeRaw(),
-            $this->offsetTimeRaw(),
+            $this->offsetTime(),
             $this->subSecTime(),
         );
     }
@@ -961,6 +1052,35 @@ final readonly class ExifDocument
         $stripped = trim($stripped, "\0");
 
         return $stripped === '' ? null : $stripped;
+    }
+
+    /**
+     * Normalises textual and numeric offset encodings to a canonical string representation.
+     */
+    private function normalizedOffset(?Ifd $ifd, int $tag): ?string
+    {
+        $value = $this->value($ifd, $tag);
+
+        if ($value instanceof ExifNumericList) {
+            $value = $value->values[0] ?? null;
+        } elseif ($value instanceof ExifRationalList || $value instanceof ExifRational) {
+            $value = ValueConverters::rationalToFloat($value);
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                return null;
+            }
+
+            $value = $trimmed;
+        }
+
+        if (!is_int($value) && !is_float($value) && !is_string($value)) {
+            return null;
+        }
+
+        return ValueConverters::parseOffsetString($value);
     }
 
     /**

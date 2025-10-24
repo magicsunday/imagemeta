@@ -141,6 +141,42 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the sequential image number captured by the camera.
+     */
+    public function imageNumber(): ?int
+    {
+        return $this->document?->imageNumber();
+    }
+
+    /**
+     * Returns the security classification string if provided.
+     */
+    public function securityClassification(): ?string
+    {
+        return $this->document?->securityClassification();
+    }
+
+    /**
+     * Returns the recorded image history text.
+     */
+    public function imageHistory(): ?string
+    {
+        return $this->document?->imageHistory();
+    }
+
+    /**
+     * Returns the TIFF/EP standard identifier bytes.
+     *
+     * @return list<int>|null
+     */
+    public function tiffEpStandardId(): ?array
+    {
+        $values = $this->document?->tiffEpStandardId();
+
+        return $values !== null ? array_values($values) : null;
+    }
+
+    /**
      * Returns the lens model description when available.
      */
     public function lensModel(): ?string
@@ -309,6 +345,14 @@ final readonly class ExifTagResolver
     public function userComment(): ?string
     {
         return $this->document?->userComment();
+    }
+
+    /**
+     * Returns the interlace flag from the EXIF IFD.
+     */
+    public function interlace(): ?int
+    {
+        return $this->document?->interlace();
     }
 
     /**
@@ -904,11 +948,71 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the sanitized OffsetTime tag value.
+     */
+    public function offsetTime(): ?string
+    {
+        return $this->document?->offsetTime();
+    }
+
+    /**
+     * Returns the sanitized OffsetTimeOriginal tag value.
+     */
+    public function offsetTimeOriginal(): ?string
+    {
+        return $this->document?->offsetTimeOriginal();
+    }
+
+    /**
+     * Returns the sanitized OffsetTimeDigitized tag value.
+     */
+    public function offsetTimeDigitized(): ?string
+    {
+        return $this->document?->offsetTimeDigitized();
+    }
+
+    /**
+     * Returns the fractional seconds associated with the DateTime tag.
+     */
+    public function subSecTime(): ?string
+    {
+        return $this->document?->subSecTime();
+    }
+
+    /**
+     * Returns the fractional seconds associated with DateTimeOriginal.
+     */
+    public function subSecTimeOriginal(): ?string
+    {
+        return $this->document?->subSecTimeOriginal();
+    }
+
+    /**
+     * Returns the fractional seconds associated with DateTimeDigitized.
+     */
+    public function subSecTimeDigitized(): ?string
+    {
+        return $this->document?->subSecTimeDigitized();
+    }
+
+    /**
+     * Returns the EXIF time zone offsets expressed in minutes.
+     *
+     * @return list<int>|null
+     */
+    public function timeZoneOffsetMinutes(): ?array
+    {
+        $offsets = $this->document?->timeZoneOffsetMinutes();
+
+        return $offsets !== null ? array_values($offsets) : null;
+    }
+
+    /**
      * Returns the raw offset from DateTimeOriginal.
      */
     public function originalOffset(): ?string
     {
-        return $this->document?->offsetTimeOriginalRaw();
+        return $this->offsetTimeOriginal();
     }
 
     /**
@@ -1283,6 +1387,14 @@ final readonly class ExifTagResolver
         $gps = $this->gps();
 
         return $gps[$key] ?? null;
+    }
+
+    /**
+     * Returns the recorded self timer delay in seconds.
+     */
+    public function selfTimerModeSeconds(): ?int
+    {
+        return $this->document?->selfTimerModeSeconds();
     }
 
     /**

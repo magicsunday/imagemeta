@@ -21,12 +21,14 @@ final readonly class Integrity
      * @param string|null $originalDigest      Digest identifying the original asset.
      * @param bool|null   $edited              Indicates whether editing history is present.
      * @param string|null $historyLastSoftware Last software reported in the editing history.
+     * @param string|null $imageHistory        Free-form history description recorded in EXIF.
      */
     public function __construct(
         public ?string $originalFileName,
         public ?string $originalDigest,
         public ?bool $edited,
         public ?string $historyLastSoftware,
+        public ?string $imageHistory,
     ) {
     }
 }

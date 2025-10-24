@@ -291,6 +291,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::FOCAL_LENGTH              => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, new ExifRational(85, 1)),
             ExifTag::FOCAL_LENGTH_IN_35MM_FILM => new IfdEntry(ExifTag::FOCAL_LENGTH_IN_35MM_FILM, 3, 1, 85),
             ExifTag::EXPOSURE_PROGRAM          => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, 3),
+            ExifTag::INTERLACE                 => new IfdEntry(ExifTag::INTERLACE, 3, 1, 1),
             ExifTag::METERING_MODE             => new IfdEntry(ExifTag::METERING_MODE, 3, 1, 5),
             ExifTag::FLASH                     => new IfdEntry(ExifTag::FLASH, 3, 1, 0x5F),
             ExifTag::WHITE_BALANCE             => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, 1),
@@ -305,6 +306,8 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME_DIGITIZED     => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+01:30'),
             ExifTag::OFFSET_TIME               => new IfdEntry(ExifTag::OFFSET_TIME, 2, 1, '+01:30'),
             ExifTag::SUB_SEC_TIME              => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '500'),
+            ExifTag::TIME_ZONE_OFFSET          => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-90])),
+            ExifTag::SELF_TIMER_MODE           => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 10),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -328,6 +331,15 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(-0.5, $doc->exposureBias(), 0.000000000000001);
         self::assertEqualsWithDelta(5.5, $doc->brightnessValue(), 0.000000000000001);
         self::assertEqualsWithDelta(2.8, $doc->maxApertureApex(), 0.000000000000001);
+        self::assertSame('500', $doc->subSecTime());
+        self::assertSame('125', $doc->subSecTimeOriginal());
+        self::assertSame('250', $doc->subSecTimeDigitized());
+        self::assertSame('+01:30', $doc->offsetTime());
+        self::assertSame('+01:30', $doc->offsetTimeOriginal());
+        self::assertSame('+01:30', $doc->offsetTimeDigitized());
+        self::assertSame([-90], $doc->timeZoneOffsetMinutes());
+        self::assertSame(10, $doc->selfTimerModeSeconds());
+        self::assertSame(1, $doc->interlace());
 
         $captured = $doc->captureDateTime();
         self::assertNotNull($captured);
@@ -363,6 +375,9 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OECF                       => new IfdEntry(ExifTag::OECF, 7, 1, 'OECF Blob'),
             ExifTag::ISO_SPEED_LATITUDE_YYY     => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 3, 1, 200),
             ExifTag::ISO_SPEED_LATITUDE_ZZZ     => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 3, 1, 400),
+            ExifTag::IMAGE_NUMBER               => new IfdEntry(ExifTag::IMAGE_NUMBER, 3, 1, 512),
+            ExifTag::SECURITY_CLASSIFICATION    => new IfdEntry(ExifTag::SECURITY_CLASSIFICATION, 2, 1, 'Confidential'),
+            ExifTag::IMAGE_HISTORY              => new IfdEntry(ExifTag::IMAGE_HISTORY, 2, 1, 'Processed in RawLab'),
             ExifTag::TEMPERATURE                => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(200, 10)),
             ExifTag::HUMIDITY                   => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(550, 10)),
             ExifTag::PRESSURE                   => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(100000, 100)),
@@ -375,6 +390,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::FOCAL_PLANE_X_RESOLUTION   => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(8000, 100)),
             ExifTag::FOCAL_PLANE_Y_RESOLUTION   => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(7900, 100)),
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, 2),
+            ExifTag::TIFF_EP_STANDARD_ID        => new IfdEntry(ExifTag::TIFF_EP_STANDARD_ID, 1, 4, new ExifNumericList([2, 0, 0, 0])),
             ExifTag::SUBJECT_LOCATION           => new IfdEntry(ExifTag::SUBJECT_LOCATION, 3, 2, new ExifNumericList([1024, 768])),
             ExifTag::EXPOSURE_INDEX             => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(320, 1)),
             ExifTag::SCENE_TYPE                 => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
@@ -396,6 +412,9 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('OECF Blob', $doc->oecf());
         self::assertSame(200, $doc->isoSpeedLatitudeYyy());
         self::assertSame(400, $doc->isoSpeedLatitudeZzz());
+        self::assertSame(512, $doc->imageNumber());
+        self::assertSame('Confidential', $doc->securityClassification());
+        self::assertSame('Processed in RawLab', $doc->imageHistory());
         self::assertEqualsWithDelta(20.0, $doc->temperatureCelsius(), 0.0001);
         self::assertEqualsWithDelta(55.0, $doc->humidityPercent(), 0.0001);
         self::assertEqualsWithDelta(1000.0, $doc->pressureHPa(), 0.0001);
@@ -408,6 +427,7 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(80.0, $doc->focalPlaneXResolution() ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(79.0, $doc->focalPlaneYResolution() ?? 0.0, 0.0001);
         self::assertSame(2, $doc->focalPlaneResolutionUnit());
+        self::assertSame([2, 0, 0, 0], $doc->tiffEpStandardId());
         self::assertSame([1024, 768], $doc->subjectLocation());
         self::assertSame(320.0, $doc->exposureIndex());
         self::assertSame(1, $doc->sceneType());

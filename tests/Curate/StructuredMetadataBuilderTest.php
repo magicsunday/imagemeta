@@ -99,6 +99,10 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::SHUTTER_SPEED_VALUE       => new IfdEntry(ExifTag::SHUTTER_SPEED_VALUE, 10, 1, new ExifRational(697, 100)),
             ExifTag::APERTURE_VALUE            => new IfdEntry(ExifTag::APERTURE_VALUE, 5, 1, new ExifRational(497, 100)),
             ExifTag::EXPOSURE_PROGRAM          => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, ExposureProgram::APERTURE_PRIORITY->value),
+            ExifTag::IMAGE_NUMBER              => new IfdEntry(ExifTag::IMAGE_NUMBER, 4, 1, 128),
+            ExifTag::SECURITY_CLASSIFICATION   => new IfdEntry(ExifTag::SECURITY_CLASSIFICATION, 2, 1, 'Restricted'),
+            ExifTag::IMAGE_HISTORY             => new IfdEntry(ExifTag::IMAGE_HISTORY, 2, 1, 'Developed in Raw Studio'),
+            ExifTag::INTERLACE                 => new IfdEntry(ExifTag::INTERLACE, 3, 1, 1),
             ExifTag::EXPOSURE_BIAS_VALUE       => new IfdEntry(ExifTag::EXPOSURE_BIAS_VALUE, 10, 1, [[-2, 1]]),
             ExifTag::METERING_MODE             => new IfdEntry(ExifTag::METERING_MODE, 3, 1, MeteringMode::PATTERN->value),
             ExifTag::LIGHT_SOURCE              => new IfdEntry(ExifTag::LIGHT_SOURCE, 3, 1, LightSource::DAYLIGHT->value),
@@ -127,6 +131,11 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::SUB_SEC_TIME              => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 3, '321'),
             ExifTag::SUB_SEC_TIME_ORIGINAL     => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '123'),
             ExifTag::SUB_SEC_TIME_DIGITIZED    => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '456'),
+            ExifTag::OFFSET_TIME_ORIGINAL      => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:30'),
+            ExifTag::OFFSET_TIME_DIGITIZED     => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 6, '+01:30'),
+            ExifTag::OFFSET_TIME               => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+01:30'),
+            ExifTag::TIME_ZONE_OFFSET          => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-90, -60])),
+            ExifTag::SELF_TIMER_MODE           => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 10),
             ExifTag::TEMPERATURE               => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(215, 10)),
             ExifTag::HUMIDITY                  => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(600, 10)),
             ExifTag::PRESSURE                  => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(101325, 100)),
@@ -139,6 +148,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::FOCAL_PLANE_X_RESOLUTION  => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(4321, 100)),
             ExifTag::FOCAL_PLANE_Y_RESOLUTION  => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(4300, 100)),
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, ResolutionUnit::CENTIMETER->value),
+            ExifTag::TIFF_EP_STANDARD_ID       => new IfdEntry(ExifTag::TIFF_EP_STANDARD_ID, 1, 4, new ExifNumericList([1, 0, 0, 0])),
             ExifTag::SUBJECT_LOCATION          => new IfdEntry(ExifTag::SUBJECT_LOCATION, 3, 2, new ExifNumericList([1600, 1700])),
             ExifTag::EXPOSURE_INDEX            => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(400, 1)),
             ExifTag::SCENE_CAPTURE_TYPE        => new IfdEntry(ExifTag::SCENE_CAPTURE_TYPE, 3, 1, SceneCaptureType::STANDARD->value),
@@ -200,6 +210,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('Canon', $structured->camera->make);
         self::assertSame('EOS R6 II', $structured->camera->model);
         self::assertSame('Jane Doe', $structured->author->artist);
+        self::assertSame('Restricted', $structured->rights->securityClassification);
         self::assertSame('1.2.3', $structured->camera->firmware);
         self::assertSame(FileSource::DIGITAL_CAMERA, $structured->camera->fileSource);
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $structured->camera->sensingMethod);
@@ -217,12 +228,15 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(4480, $structured->image->height);
         self::assertSame(Orientation::RIGHT_TOP, $structured->image->orientation);
         self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
+        self::assertSame(128, $structured->image->imageNumber);
         self::assertSame('IMG_5123.CR3', $structured->image->documentName);
         self::assertSame('Sunset over Alps', $structured->image->description);
         self::assertSame('Sunset Title', $structured->image->title);
         self::assertSame([1, 2, 3, 0], $structured->image->componentsConfiguration);
         self::assertSame(4.5, $structured->image->compressedBitsPerPixel);
+        self::assertSame(1, $structured->image->interlace);
         self::assertSame('Shot with ND filter', $structured->image->userComment);
+        self::assertSame('Developed in Raw Studio', $structured->integrity->imageHistory);
 
         self::assertSame(400, $structured->exposure->iso);
         self::assertSame(0.008, $structured->exposure->exposureTimeSec);
@@ -252,6 +266,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('3.00', $structured->standards->exifVersion);
         self::assertSame('0100', $structured->standards->flashpixVersion);
+        self::assertSame([1, 0, 0, 0], $structured->standards->tiffEpStandardId);
 
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
@@ -261,6 +276,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(15.0, $structured->capture->waterDepthM, 0.001);
         self::assertEqualsWithDelta(9.8, $structured->capture->accelerationMs2, 0.001);
         self::assertEqualsWithDelta(15.0, $structured->capture->cameraElevationAngleDeg, 0.001);
+        self::assertSame(10, $structured->capture->selfTimerModeSeconds);
 
         self::assertSame('sound.wav', $structured->related->relatedSoundFile);
 
@@ -280,6 +296,15 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('Raw Studio', $structured->device->rawDevelopingSoftware);
         self::assertSame('Image Studio', $structured->device->imageEditingSoftware);
         self::assertSame('Metadata Studio', $structured->device->metadataEditingSoftware);
+
+        self::assertSame('321', $structured->temporal->subSecTime);
+        self::assertSame('123', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('456', $structured->temporal->subSecTimeDigitized);
+        self::assertSame('+01:30', $structured->temporal->offsetTime);
+        self::assertSame('+01:30', $structured->temporal->offsetTimeOriginal);
+        self::assertSame('+01:30', $structured->temporal->offsetTimeDigitized);
+        self::assertSame([-90, -60], $structured->temporal->timeZoneOffsetMinutes);
+        self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
     }
 
     /**
@@ -306,6 +331,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
             ExifTag::DATETIME_ORIGINAL              => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
             ExifTag::OFFSET_TIME_ORIGINAL           => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
+            ExifTag::OFFSET_TIME                    => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+01:30'),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -376,5 +402,29 @@ final class StructuredMetadataBuilderTest extends TestCase
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
         self::assertSame(640, $structured->exposure->iso);
+    }
+
+    /**
+     * Ensures the TimeZoneOffset tag provides a timezone when offset strings are absent.
+     */
+    #[Test]
+    public function usesTimeZoneOffsetWhenOffsetTagsMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:02 12:00:00'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:02 12:00:00'),
+            ExifTag::TIME_ZONE_OFFSET => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-120])),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
+        self::assertSame('-02:00', $structured->temporal->original?->format('P'));
     }
 }

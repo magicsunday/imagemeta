@@ -172,35 +172,35 @@ final class ExifTagResolverTest extends TestCase
     }
 
     /**
-     * Ensures EXIF 3.0 tags expose both new accessors and their deprecated aliases.
+     * Ensures temporal helper methods expose fractional seconds and offsets.
      */
     #[Test]
-    public function exposesExif30LensAndCompositeMetadataWithAliases(): void
+    public function exposesTemporalMetadata(): void
     {
         $exifIfd = new Ifd([
-            ExifTag::LENS_SPECIFICATION                        => new IfdEntry(ExifTag::LENS_SPECIFICATION, 5, 4, [[35, 1], [20, 5], [150, 1], [28, 5]]),
-            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE    => new IfdEntry(ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE, 3, 2, new ExifNumericList([9, 4])),
-            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE  => new IfdEntry(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
+            ExifTag::SUB_SEC_TIME           => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 3, '987'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL  => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '123'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '456'),
+            ExifTag::OFFSET_TIME            => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+00:30'),
+            ExifTag::OFFSET_TIME_ORIGINAL   => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '-01:30'),
+            ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 6, '+01:45'),
+            ExifTag::TIME_ZONE_OFFSET       => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-90, 120])),
+            ExifTag::SELF_TIMER_MODE        => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 7),
+            ExifTag::INTERLACE              => new IfdEntry(ExifTag::INTERLACE, 3, 1, 1),
         ]);
 
         $document = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
         $resolver = new ExifTagResolver($document);
 
-        self::assertSame([35.0, 4.0, 150.0, 5.6], $resolver->lensSpecification());
-        self::assertSame($resolver->lensSpecification(), $resolver->lensInfo());
-
-        self::assertSame([9, 4], $resolver->sourceImageNumberOfCompositeImage());
-        self::assertSame(
-            $resolver->sourceImageNumberOfCompositeImage(),
-            $resolver->compositeImageCount(),
-        );
-
-        $exposureTimes = $resolver->sourceExposureTimesOfCompositeImage();
-        self::assertSame($exposureTimes, $resolver->compositeExposureTimes());
-        self::assertNotNull($exposureTimes);
-        self::assertCount(4, $exposureTimes);
-        self::assertEqualsWithDelta(0.008333333333333333, $exposureTimes[0], 1e-12);
-        self::assertEqualsWithDelta(0.06666666666666667, $exposureTimes[3], 1e-12);
+        self::assertSame('987', $resolver->subSecTime());
+        self::assertSame('123', $resolver->subSecTimeOriginal());
+        self::assertSame('456', $resolver->subSecTimeDigitized());
+        self::assertSame('+00:30', $resolver->offsetTime());
+        self::assertSame('-01:30', $resolver->offsetTimeOriginal());
+        self::assertSame('+01:45', $resolver->offsetTimeDigitized());
+        self::assertSame([-90, 120], $resolver->timeZoneOffsetMinutes());
+        self::assertSame(7, $resolver->selfTimerModeSeconds());
+        self::assertSame(1, $resolver->interlace());
     }
 }
 
