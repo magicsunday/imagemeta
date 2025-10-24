@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
+use function array_key_exists;
 use function array_map;
 use function iconv;
 use function is_float;
@@ -941,7 +942,23 @@ final readonly class ExifDocument
     {
         $values = $this->numericList($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
 
-        return $values;
+        if ($values === null || $values === []) {
+            return null;
+        }
+
+        $minutes = [];
+
+        foreach ($values as $value) {
+            $converted = ValueConverters::offsetToMinutes($value);
+
+            if ($converted === null) {
+                return null;
+            }
+
+            $minutes[] = $converted;
+        }
+
+        return $minutes;
     }
 
     /**
@@ -1269,19 +1286,27 @@ final readonly class ExifDocument
      */
     public function captureDateTime(): ?DateTimeImmutable
     {
-        $offsetOriginal = $this->offsetTimeOriginal();
+        $offsetOriginal  = $this->offsetTimeOriginal();
         $offsetDigitized = $this->offsetTimeDigitized();
-        $offset = $this->offsetTime();
-        $fallbackOffset = null;
+        $offset          = $this->offsetTime();
+
+        $fallbackOriginal  = null;
+        $fallbackDigitized = null;
+        $fallbackModify    = null;
 
         if ($offsetOriginal === null && $offsetDigitized === null && $offset === null) {
-            $fallbackOffset = $this->derivedOffsetFromTimeZoneOffset();
+            $primaryOffset   = $this->derivedOffsetFromTimeZoneOffset(0);
+            $secondaryOffset = $this->derivedOffsetFromTimeZoneOffset(1);
+
+            $fallbackOriginal  = $primaryOffset;
+            $fallbackDigitized = $secondaryOffset ?? $primaryOffset;
+            $fallbackModify    = $primaryOffset;
         }
 
         $attempts = [
-            [$this->dateTimeOriginalRaw(), $offsetOriginal ?? $fallbackOffset, $this->subSecTimeOriginal()],
-            [$this->dateTimeDigitizedRaw(), $offsetDigitized ?? $fallbackOffset, $this->subSecTimeDigitized()],
-            [$this->dateTimeRaw(), $offset ?? $fallbackOffset, $this->subSecTime()],
+            [$this->dateTimeOriginalRaw(), $offsetOriginal ?? $fallbackOriginal, $this->subSecTimeOriginal()],
+            [$this->dateTimeDigitizedRaw(), $offsetDigitized ?? $fallbackDigitized, $this->subSecTimeDigitized()],
+            [$this->dateTimeRaw(), $offset ?? $fallbackModify, $this->subSecTime()],
         ];
 
         foreach ($attempts as [$raw, $rawOffset, $subSeconds]) {
@@ -1560,22 +1585,15 @@ final readonly class ExifDocument
     /**
      * Derives a canonical offset string from the legacy TimeZoneOffset tag when available.
      */
-    private function derivedOffsetFromTimeZoneOffset(): ?string
+    private function derivedOffsetFromTimeZoneOffset(int $component = 0): ?string
     {
-        $offsets = $this->timeZoneOffsetMinutes();
+        $values = $this->numericList($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
 
-        if ($offsets === null || $offsets === []) {
+        if ($values === null || !array_key_exists($component, $values)) {
             return null;
         }
 
-        $minutes = $offsets[0];
-        $sign = $minutes < 0 ? '-' : '+';
-        $absolute = abs($minutes);
-        $hours = intdiv($absolute, 60);
-        $remainingMinutes = $absolute % 60;
-        $composed = sprintf('%s%02d:%02d', $sign, $hours, $remainingMinutes);
-
-        return ValueConverters::parseOffsetString($composed);
+        return ValueConverters::parseOffsetString($values[$component]);
     }
 
     /**
