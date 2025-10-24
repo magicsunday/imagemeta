@@ -308,6 +308,7 @@ final class StructuredMetadataBuilder
         $scene = $this->buildScene(
             $exifResolver,
             $quickTimeResolver,
+            $apple,
             $this->countFaceRegions($regions),
         );
 
@@ -606,17 +607,37 @@ final class StructuredMetadataBuilder
     /**
      * Builds the scene value object incorporating EXIF and container hints.
      */
-    private function buildScene(ExifTagResolver $exif, QuickTimeResolver $quickTime, ?int $faceCount): Scene
+    private function buildScene(
+        ExifTagResolver $exif,
+        QuickTimeResolver $quickTime,
+        Apple $apple,
+        ?int $faceCount,
+    ): Scene
     {
         $hdr   = $quickTime->string('HDRImageType');
         $night = $quickTime->bool('NightMode');
+
+        $hdrScene = null;
+        if ($hdr !== null) {
+            $hdrScene = true;
+        } else {
+            $hdrHeadroom = $apple->hdrHeadroom;
+            if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
+                $hdrScene = true;
+            } else {
+                $flags = $apple->flags;
+                if (($flags['hdrEnabled'] ?? false) || ($flags['hdrAuto'] ?? false)) {
+                    $hdrScene = true;
+                }
+            }
+        }
 
         return new Scene(
             type: $exif->sceneCaptureType(),
             sceneType: $exif->sceneType()?->value,
             light: $exif->lightSource(),
             faceCount: $faceCount,
-            hdrScene: $hdr !== null ? true : null,
+            hdrScene: $hdrScene,
             nightMode: $night,
             subjectDistanceRange: $exif->subjectDistanceRange(),
         );
