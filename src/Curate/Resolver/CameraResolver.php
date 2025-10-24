@@ -35,7 +35,7 @@ final readonly class CameraResolver
         $model      = $exifDocument?->cameraModel() ?? $this->xmpString($xmpDocument, self::NS_TIFF, 'Model');
         $owner      = $exifDocument?->ownerName() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'OwnerName');
         $serial     = $exifDocument?->bodySerialNumber() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'SerialNumber');
-        $firmware   = $exifDocument?->cameraFirmware() ?? $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
+        $firmware   = $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
 
         if ($make === null && $model === null && $owner === null && $serial === null && $firmware === null) {
             return null;

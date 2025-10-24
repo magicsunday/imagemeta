@@ -54,9 +54,6 @@ final readonly class DeviceResolver
         return new Device(
             software: $software,
             hostComputer: $hostComputer,
-            rawDevelopingSoftware: null,
-            imageEditingSoftware: null,
-            metadataEditingSoftware: null,
         );
     }
 

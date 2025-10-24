@@ -165,18 +165,6 @@ final readonly class ExifTag
 
     public const int LENS_SERIAL_NUMBER = 0xA435;
 
-    public const int PHOTOGRAPHER_NAME = 0xA437;
-
-    public const int IMAGE_EDITOR = 0xA438;
-
-    public const int RAW_DEVELOPING_SOFTWARE = 0xA439;
-
-    public const int IMAGE_EDITING_SOFTWARE = 0xA43A;
-
-    public const int METADATA_EDITING_SOFTWARE = 0xA43B;
-
-    public const int CAMERA_FIRMWARE_VERSION = 0xA43C;
-
     public const int FLASHPIX_VERSION = 0xA000;
 
     public const int COMPOSITE_IMAGE = 0xA460;

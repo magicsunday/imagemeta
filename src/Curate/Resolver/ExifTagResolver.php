@@ -104,14 +104,6 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the camera firmware version string when present.
-     */
-    public function cameraFirmware(): ?string
-    {
-        return $this->stringValue($this->document?->exifIfd, ExifTag::CAMERA_FIRMWARE_VERSION);
-    }
-
-    /**
      * Returns the software tag value.
      */
     public function software(): ?string
@@ -773,46 +765,6 @@ final readonly class ExifTagResolver
         }
 
         return array_values($values);
-    }
-
-    /**
-     * Returns the photographer name.
-     */
-    public function photographer(): ?string
-    {
-        return $this->stringValue($this->document?->exifIfd, ExifTag::PHOTOGRAPHER_NAME);
-    }
-
-    /**
-     * Returns the image editor name.
-     */
-    public function imageEditor(): ?string
-    {
-        return $this->stringValue($this->document?->exifIfd, ExifTag::IMAGE_EDITOR);
-    }
-
-    /**
-     * Returns the RAW developing software string.
-     */
-    public function rawDevelopingSoftware(): ?string
-    {
-        return $this->stringValue($this->document?->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
-    }
-
-    /**
-     * Returns the image editing software string.
-     */
-    public function imageEditingSoftware(): ?string
-    {
-        return $this->stringValue($this->document?->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
-    }
-
-    /**
-     * Returns the metadata editing software string.
-     */
-    public function metadataEditingSoftware(): ?string
-    {
-        return $this->stringValue($this->document?->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
     }
 
     /**
