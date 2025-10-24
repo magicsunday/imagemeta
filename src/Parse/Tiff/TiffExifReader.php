@@ -29,6 +29,7 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use function chr;
 use function is_float;
 use function is_int;
+use function is_string;
 use function ord;
 use function pack;
 use function rtrim;
@@ -243,11 +244,13 @@ final class TiffExifReader
             );
         }
 
-        if ($type === self::TYPE_ASCII) { // ASCII
+        // ASCII
+        if ($type === self::TYPE_ASCII) {
             return rtrim($bytes, "\0");
         }
 
-        if ($type === self::TYPE_RATIONAL || $type === self::TYPE_SRATIONAL) { // RATIONAL / SRATIONAL
+        // RATIONAL / SRATIONAL
+        if ($type === self::TYPE_RATIONAL || $type === self::TYPE_SRATIONAL) {
             $rationalValues = [];
             for ($i = 0; $i < $count; ++$i) {
                 $num              = $this->read32FromBytes($bytes, $i * 8, $type === self::TYPE_SRATIONAL);
@@ -264,15 +267,25 @@ final class TiffExifReader
         $cursor = 0;
         for ($i = 0; $i < $count; ++$i) {
             $vals[] = match ($type) {
-                self::TYPE_BYTE      => ord($bytes[$cursor]),                          // BYTE
-                self::TYPE_SBYTE     => $this->toSigned(ord($bytes[$cursor]), 8),      // SBYTE
-                self::TYPE_UNDEFINED => ord($bytes[$cursor]),                          // UNDEFINED → return as byte
-                self::TYPE_SHORT     => $this->unpackU16(substr($bytes, $cursor, 2)),  // SHORT
-                self::TYPE_SSHORT    => $this->unpackS16(substr($bytes, $cursor, 2)),  // SSHORT
-                self::TYPE_LONG      => $this->unpackU32(substr($bytes, $cursor, 4)),  // LONG
-                self::TYPE_SLONG     => $this->unpackS32(substr($bytes, $cursor, 4)),  // SLONG
-                self::TYPE_FLOAT     => $this->unpackFloat(substr($bytes, $cursor, 4)), // FLOAT
-                self::TYPE_DOUBLE    => $this->unpackDouble(substr($bytes, $cursor, 8)), // DOUBLE
+                // BYTE
+                self::TYPE_BYTE,
+                // UNDEFINED → return as byte
+                self::TYPE_UNDEFINED => ord($bytes[$cursor]),
+                // SBYTE
+                self::TYPE_SBYTE     => $this->toSigned(ord($bytes[$cursor]), 8),
+                // SHORT
+                self::TYPE_SHORT     => $this->unpackU16(substr($bytes, $cursor, 2)),
+                // SSHORT
+                self::TYPE_SSHORT    => $this->unpackS16(substr($bytes, $cursor, 2)),
+                // LONG
+                self::TYPE_LONG      => $this->unpackU32(substr($bytes, $cursor, 4)),
+                // SLONG
+                self::TYPE_SLONG     => $this->unpackS32(substr($bytes, $cursor, 4)),
+                // FLOAT
+                self::TYPE_FLOAT     => $this->unpackFloat(substr($bytes, $cursor, 4)),
+                // DOUBLE
+                self::TYPE_DOUBLE    => $this->unpackDouble(substr($bytes, $cursor, 8)),
+
                 default => throw new ParseError('Unsupported type in decodeBytes: ' . $type),
             };
             $cursor += $componentSize;
@@ -381,10 +394,26 @@ final class TiffExifReader
     private function bytesPerComponent(int $type): int
     {
         return match ($type) {
-            self::TYPE_BYTE, self::TYPE_ASCII, self::TYPE_SBYTE, self::TYPE_UNDEFINED => 1,           // BYTE, ASCII, SBYTE, UNDEFINED
-            self::TYPE_SHORT, self::TYPE_SSHORT => 2,           // SHORT, SSHORT
-            self::TYPE_LONG, self::TYPE_SLONG, self::TYPE_FLOAT => 4,           // LONG, SLONG, FLOAT
-            self::TYPE_RATIONAL, self::TYPE_SRATIONAL, self::TYPE_DOUBLE => 8,           // RATIONAL, SRATIONAL, DOUBLE
+            // BYTE, ASCII, SBYTE, UNDEFINED
+            self::TYPE_BYTE,
+            self::TYPE_ASCII,
+            self::TYPE_SBYTE,
+            self::TYPE_UNDEFINED => 1,
+
+            // SHORT, SSHORT
+            self::TYPE_SHORT,
+            self::TYPE_SSHORT => 2,
+
+            // LONG, SLONG, FLOAT
+            self::TYPE_LONG,
+            self::TYPE_SLONG,
+            self::TYPE_FLOAT => 4,
+
+            // RATIONAL, SRATIONAL, DOUBLE
+            self::TYPE_RATIONAL,
+            self::TYPE_SRATIONAL,
+            self::TYPE_DOUBLE => 8,
+
             default => throw new ParseError('Unsupported TIFF type: ' . $type),
         };
     }
