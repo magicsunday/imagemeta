@@ -225,6 +225,18 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
 
             $value = $dictionary[$key];
+            if (is_float($value)) {
+                return [$value];
+            }
+
+            if (is_int($value)) {
+                return [(float) $value];
+            }
+
+            if (is_string($value) && is_numeric($value)) {
+                return [(float) $value];
+            }
+
             if (!is_array($value)) {
                 continue;
             }
