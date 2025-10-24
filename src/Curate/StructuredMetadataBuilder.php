@@ -35,10 +35,10 @@ use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
-use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
@@ -56,12 +56,10 @@ use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
-use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 
 use function array_map;
 use function explode;
 use function is_numeric;
-use function is_string;
 use function str_contains;
 use function sprintf;
 use function strtoupper;
@@ -113,7 +111,13 @@ final class StructuredMetadataBuilder
         );
 
         $exifVersion = $exifResolver->exifVersion();
-        $profile     = ExifCapabilities::fromVersion($exifVersion);
+        $profile = null;
+        if ($exifVersion !== null) {
+            $derived = ExifCapabilities::fromVersion($exifVersion);
+            if ($derived !== '2.2') {
+                $profile = $derived;
+            }
+        }
 
         $standards = new Standards(
             exifVersion: $exifVersion,
@@ -125,29 +129,6 @@ final class StructuredMetadataBuilder
         $camera = $this->buildCamera($exifResolver, $xmpResolver, $quickTimeResolver);
         $lens   = $this->buildLens($exifResolver, $xmpResolver);
         $image  = $this->buildImage($exifResolver, $xmpResolver, $quickTimeResolver, $interop);
-
-        if (
-            $image->colorSpace === ColorSpace::UNCALIBRATED
-            && $interop->index !== null
-            && strtoupper($interop->index) === 'R03'
-        ) {
-            $image = new Image(
-                width: $image->width,
-                height: $image->height,
-                orientation: $image->orientation,
-                bitsPerSample: $image->bitsPerSample,
-                colorSpace: ColorSpace::SRGB,
-                imageUniqueId: $image->imageUniqueId,
-                imageNumber: $image->imageNumber,
-                documentName: $image->documentName,
-                description: $image->description,
-                title: $image->title,
-                componentsConfiguration: $image->componentsConfiguration,
-                compressedBitsPerPixel: $image->compressedBitsPerPixel,
-                interlace: $image->interlace,
-                userComment: $image->userComment,
-            );
-        }
 
         $exposure = new Exposure(
             iso: CompositeResolver::intISO([
@@ -449,23 +430,63 @@ final class StructuredMetadataBuilder
         $exifCreate = $resolver->digitizedDateTime();
         $exifModify = $resolver->fileDateTime();
 
-        $exifOriginal = CompositeResolver::dateOriginal([
-            'DateTimeOriginal'  => fn () => $resolver->captureDateTime(),
-            'DateTimeDigitized' => fn () => $exifCreate,
-            'DateTime'          => fn () => $exifModify,
-        ]);
-
-        $original         = $exifOriginal['date'];
-        $fallbackTz       = $original instanceof DateTimeImmutable ? $original->getTimezone() : null;
-        $fallbackTzSource = is_string($exifOriginal['source']) ? $exifOriginal['source'] : null;
-
         $offsetTime          = $resolver->offsetTime();
         $offsetTimeOriginal  = $resolver->offsetTimeOriginal();
         $offsetTimeDigitized = $resolver->offsetTimeDigitized();
-        $subSecTime          = $resolver->subSecTime();
-        $subSecTimeOriginal  = $resolver->subSecTimeOriginal();
-        $subSecTimeDigitized = $resolver->subSecTimeDigitized();
+
+        $subSecTime = $resolver->subSecTime();
+        if ($subSecTime === '') {
+            $subSecTime = null;
+        }
+
+        $subSecOriginalRaw = $resolver->subSecTimeOriginal();
+        if ($subSecOriginalRaw === '') {
+            $subSecOriginalRaw = null;
+        }
+
+        $subSecDigitizedRaw = $resolver->subSecTimeDigitized();
+        if ($subSecDigitizedRaw === '') {
+            $subSecDigitizedRaw = null;
+        }
         $timeZoneOffsets     = $resolver->timeZoneOffsetMinutes();
+
+        $exifOriginal = CompositeResolver::dateOriginal([
+            'DateTimeOriginal' => fn () => [
+                'date'   => $resolver->captureDateTime(),
+                'tz'     => ValueConverters::parseOffset($offsetTimeOriginal),
+                'subSec' => $subSecOriginalRaw,
+            ],
+            'DateTimeDigitized' => fn () => [
+                'date'   => $exifCreate,
+                'tz'     => ValueConverters::parseOffset($offsetTimeDigitized),
+                'subSec' => $subSecDigitizedRaw,
+            ],
+            'DateTime' => fn () => [
+                'date'   => $exifModify,
+                'tz'     => ValueConverters::parseOffset($offsetTime),
+                'subSec' => $subSecTime,
+            ],
+        ]);
+
+        $original           = $exifOriginal['date'];
+        $subSecTimeOriginal = $exifOriginal['subSec'] ?? $subSecOriginalRaw;
+        $tz                 = $exifOriginal['tz'];
+        $tzSource           = null;
+
+        if ($tz instanceof DateTimeZone) {
+            $source   = $exifOriginal['source'] ?? null;
+            $tzSource = match ($source) {
+                'DateTimeOriginal' => 'OffsetTimeOriginal',
+                'DateTimeDigitized' => 'OffsetTimeDigitized',
+                'DateTime' => 'OffsetTime',
+                default => $source,
+            };
+        } else {
+            $tz = null;
+        }
+
+        $fallbackTz       = $original instanceof DateTimeImmutable ? $original->getTimezone() : null;
+        $fallbackTzSource = $original !== null ? ($exifOriginal['source'] ?? null) : null;
 
         $create = $exifCreate ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $create = $create ?? $this->parseFlexibleDate($quickTime->string('CreationDate'));
@@ -502,21 +523,20 @@ final class StructuredMetadataBuilder
             $fallbackTzSource = 'DateTime';
         }
 
-        $tz       = null;
-        $tzSource = null;
+        if ($tz === null) {
+            $offsetCandidates = [
+                'OffsetTimeOriginal'  => $offsetTimeOriginal,
+                'OffsetTimeDigitized' => $offsetTimeDigitized,
+                'OffsetTime'          => $offsetTime,
+            ];
 
-        $offsetCandidates = [
-            'OffsetTimeOriginal'  => $offsetTimeOriginal,
-            'OffsetTimeDigitized' => $offsetTimeDigitized,
-            'OffsetTime'          => $offsetTime,
-        ];
-
-        foreach ($offsetCandidates as $source => $offset) {
-            $candidate = ValueConverters::parseOffset($offset);
-            if ($candidate instanceof DateTimeZone) {
-                $tz       = $candidate;
-                $tzSource = $source;
-                break;
+            foreach ($offsetCandidates as $source => $offset) {
+                $candidate = ValueConverters::parseOffset($offset);
+                if ($candidate instanceof DateTimeZone) {
+                    $tz       = $candidate;
+                    $tzSource = $source;
+                    break;
+                }
             }
         }
 
@@ -548,7 +568,7 @@ final class StructuredMetadataBuilder
             offsetTimeDigitized: $offsetTimeDigitized,
             subSecTime: $subSecTime,
             subSecTimeOriginal: $subSecTimeOriginal,
-            subSecTimeDigitized: $subSecTimeDigitized,
+            subSecTimeDigitized: $subSecDigitizedRaw,
             timeZoneOffsetMinutes: $timeZoneOffsets,
         );
     }
@@ -694,7 +714,11 @@ final class StructuredMetadataBuilder
      */
     private function normalizedColorSpace(?ColorSpace $colorSpace, Interop $interop): ?ColorSpace
     {
-        if ($colorSpace === ColorSpace::UNCALIBRATED && $interop->index === 'R03') {
+        if (
+            $colorSpace === ColorSpace::UNCALIBRATED
+            && $interop->index !== null
+            && strtoupper($interop->index) === 'R03'
+        ) {
             return ColorSpace::ADOBE_RGB;
         }
 

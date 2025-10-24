@@ -386,7 +386,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
         self::assertSame('2.20', $structured->standards->exifVersion);
-        self::assertSame('2.2', $structured->standards->profile);
+        self::assertNull($structured->standards->profile);
     }
 
     /**
@@ -422,7 +422,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(['index' => null], get_object_vars($structured->interop));
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
-        self::assertSame('2.2', $structured->standards->profile);
+        self::assertNull($structured->standards->profile);
     }
 
     /**
@@ -562,7 +562,7 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
-     * Verifies that the color space falls back to sRGB when tagged as uncalibrated with an R03 interop index.
+     * Verifies that the color space upgrades to Adobe RGB when tagged as uncalibrated with an R03 interop index.
      */
     #[Test]
     public function normalizesUncalibratedColorSpaceViaInteropR03(): void
@@ -585,7 +585,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
+        self::assertSame(ColorSpace::ADOBE_RGB, $structured->image->colorSpace);
     }
 
     /**
