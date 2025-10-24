@@ -72,7 +72,6 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::MAKE                       => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
             ExifTag::MODEL                      => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
             ExifTag::SOFTWARE                   => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
-            ExifTag::DOCUMENT_NAME              => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 12, 'IMG_5123.CR3'),
             ExifTag::IMAGE_DESCRIPTION          => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 16, 'Sunset over Alps'),
             ExifTag::ORIENTATION                => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::RIGHT_TOP->value),
             ExifTag::ARTIST                     => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
@@ -124,6 +123,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             '{http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/}CreatorContactInfo/Iptc4xmpCore:CiEmailWork' => 'jane@example.com',
             '{http://ns.adobe.com/tiff/1.0/}Make'                                                      => 'Canon',
             '{http://ns.adobe.com/tiff/1.0/}Model'                                                     => 'EOS R6 II',
+            '{http://ns.adobe.com/tiff/1.0/}DocumentName'                                              => 'IMG_5123.CR3',
         ]);
 
         $quickTime = new QuickTimeMeta([

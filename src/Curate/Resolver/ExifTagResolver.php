@@ -235,14 +235,6 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the document name value.
-     */
-    public function documentName(): ?string
-    {
-        return $this->stringValue($this->document?->ifd0, ExifTag::DOCUMENT_NAME);
-    }
-
-    /**
      * Returns the image description field.
      */
     public function imageDescription(): ?string

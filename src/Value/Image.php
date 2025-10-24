@@ -26,7 +26,7 @@ final readonly class Image
      * @param int|null         $bitsPerSample Bits per colour channel.
      * @param ColorSpace|null  $colorSpace    Colour space used for the pixel data.
      * @param string|null      $imageUniqueId Globally unique image identifier.
-     * @param string|null      $documentName  Optional document or file name from the container.
+     * @param string|null      $documentName  Optional document or file name derived from metadata sources.
      * @param string|null      $description   Free-form description provided by the camera.
      */
     public function __construct(
