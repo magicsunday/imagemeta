@@ -102,8 +102,8 @@ final class StructuredMetadataBuilder
 
         $composite = new CompositeImageInfo(
             type: $exifResolver->compositeImage(),
-            counts: $exifResolver->compositeImageCount(),
-            exposureTimesTotal: $exifResolver->compositeExposureTimes(),
+            counts: $exifResolver->sourceImageNumberOfCompositeImage(),
+            exposureTimesTotal: $exifResolver->sourceExposureTimesOfCompositeImage(),
         );
 
         $standards = new Standards(
@@ -494,9 +494,9 @@ final class StructuredMetadataBuilder
         $focalLength = $exif->focalLength();
         $focalLength ??= $this->parseRationalString($xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'FocalLength'));
 
-        $lensInfo = $exif->lensInfo();
-        if ($lensInfo === null) {
-            $lensInfo = $this->parseLensInfoString($xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'LensInfo'));
+        $lensSpecification = $exif->lensSpecification();
+        if ($lensSpecification === null) {
+            $lensSpecification = $this->parseLensInfoString($xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'LensInfo'));
         }
 
         return new Lens(
@@ -515,7 +515,7 @@ final class StructuredMetadataBuilder
             focalLengthMm: $focalLength,
             focalLengthIn35mm: $exif->focalLength35mm(),
             maxApertureFNumber: $exif->maxApertureFNumber(),
-            lensInfo: $lensInfo,
+            lensSpecification: $lensSpecification,
         );
     }
 

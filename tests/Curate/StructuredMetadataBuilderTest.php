@@ -117,7 +117,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::FOCAL_LENGTH              => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, [[85, 1]]),
             ExifTag::FOCAL_LENGTH_IN_35MM_FILM => new IfdEntry(ExifTag::FOCAL_LENGTH_IN_35MM_FILM, 3, 1, 85),
             ExifTag::MAX_APERTURE_VALUE        => new IfdEntry(ExifTag::MAX_APERTURE_VALUE, 5, 1, [[1995, 1000]]),
-            ExifTag::LENS_INFO                 => new IfdEntry(ExifTag::LENS_INFO, 5, 4, [[35, 1], [40, 10], [150, 1], [56, 10]]),
+            ExifTag::LENS_SPECIFICATION        => new IfdEntry(ExifTag::LENS_SPECIFICATION, 5, 4, [[35, 1], [40, 10], [150, 1], [56, 10]]),
             ExifTag::LENS_MODEL                => new IfdEntry(ExifTag::LENS_MODEL, 2, 15, 'EF 85mm f/1.4L'),
             ExifTag::LENS_MAKE                 => new IfdEntry(ExifTag::LENS_MAKE, 2, 5, 'Canon'),
             ExifTag::LENS_SERIAL_NUMBER        => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 10, '1234ABC'),
@@ -207,7 +207,10 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('EF 85mm f/1.4L', $structured->lens->lensModel);
         self::assertSame(85.0, $structured->lens->focalLengthMm);
         self::assertSame(85, $structured->lens->focalLengthIn35mm);
-        self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensInfo);
+        self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensSpecification);
+        // Deprecated alias retained for BC to ease migration to EXIF 3.0 terminology.
+        /** @phpstan-ignore-next-line deprecated alias exercised intentionally */
+        self::assertSame($structured->lens->lensSpecification, $structured->lens->lensInfo);
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
         self::assertSame(6720, $structured->image->width);
@@ -299,8 +302,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::EXPOSURE_TIME                  => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 120]]),
             ExifTag::F_NUMBER                       => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[19, 10]]),
             ExifTag::COMPOSITE_IMAGE                => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
-            ExifTag::COMPOSITE_IMAGE_COUNT          => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
-            ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES => new IfdEntry(ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
+            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE   => new IfdEntry(ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE, 3, 2, new ExifNumericList([9, 4])),
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
             ExifTag::DATETIME_ORIGINAL              => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
             ExifTag::OFFSET_TIME_ORIGINAL           => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
         ]);

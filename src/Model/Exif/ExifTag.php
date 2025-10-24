@@ -207,7 +207,12 @@ final readonly class ExifTag
 
     public const int BODY_SERIAL_NUMBER = 0xA431;
 
-    public const int LENS_INFO = 0xA432;
+    public const int LENS_SPECIFICATION = 0xA432;
+
+    /**
+     * @deprecated Use self::LENS_SPECIFICATION instead.
+     */
+    public const int LENS_INFO = self::LENS_SPECIFICATION;
 
     public const int LENS_MAKE = 0xA433;
 
@@ -217,9 +222,19 @@ final readonly class ExifTag
 
     public const int COMPOSITE_IMAGE = 0xA460;
 
-    public const int COMPOSITE_IMAGE_COUNT = 0xA461;
+    public const int SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE = 0xA461;
 
-    public const int COMPOSITE_IMAGE_EXPOSURE_TIMES = 0xA462;
+    /**
+     * @deprecated Use self::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE instead.
+     */
+    public const int COMPOSITE_IMAGE_COUNT = self::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE;
+
+    public const int SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE = 0xA462;
+
+    /**
+     * @deprecated Use self::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE instead.
+     */
+    public const int COMPOSITE_IMAGE_EXPOSURE_TIMES = self::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE;
 
     public const int GAMMA = 0xA500;
 

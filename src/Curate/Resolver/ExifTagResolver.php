@@ -169,9 +169,9 @@ final readonly class ExifTagResolver
      *
      * @return array{0:float,1:float,2:float,3:float}|null
      */
-    public function lensInfo(): ?array
+    public function lensSpecification(): ?array
     {
-        $entry = $this->getEntry($this->document?->exifIfd, ExifTag::LENS_INFO);
+        $entry = $this->getEntry($this->document?->exifIfd, ExifTag::LENS_SPECIFICATION);
         if (!$entry instanceof IfdEntry) {
             return null;
         }
@@ -182,6 +182,18 @@ final readonly class ExifTagResolver
         }
 
         return $values;
+    }
+
+    /**
+     * Returns the lens specification array describing focal and aperture range.
+     *
+     * @deprecated Use lensSpecification() instead.
+     *
+     * @return array{0:float,1:float,2:float,3:float}|null
+     */
+    public function lensInfo(): ?array
+    {
+        return $this->lensSpecification();
     }
 
     /**
@@ -1439,13 +1451,15 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the composite image counts.
+     * Returns the composite image source counts.
      *
      * @return array{0:int,1:int}|null
      */
-    public function compositeImageCount(): ?array
+    public function sourceImageNumberOfCompositeImage(): ?array
     {
-        $values = $this->normalizeNumericList($this->getValue($this->document?->exifIfd, ExifTag::COMPOSITE_IMAGE_COUNT));
+        $values = $this->normalizeNumericList(
+            $this->getValue($this->document?->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE),
+        );
         if (count($values) !== 2) {
             return null;
         }
@@ -1458,14 +1472,40 @@ final readonly class ExifTagResolver
      *
      * @return list<float>|null
      */
-    public function compositeExposureTimes(): ?array
+    public function sourceExposureTimesOfCompositeImage(): ?array
     {
-        $values = $this->normalizeRationalList($this->getValue($this->document?->exifIfd, ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES));
+        $values = $this->normalizeRationalList(
+            $this->getValue($this->document?->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE),
+        );
         if ($values === []) {
             return null;
         }
 
         return array_values($values);
+    }
+
+    /**
+     * Returns the composite image counts.
+     *
+     * @deprecated Use sourceImageNumberOfCompositeImage() instead.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    public function compositeImageCount(): ?array
+    {
+        return $this->sourceImageNumberOfCompositeImage();
+    }
+
+    /**
+     * Returns the exposure times for composite image sources.
+     *
+     * @deprecated Use sourceExposureTimesOfCompositeImage() instead.
+     *
+     * @return list<float>|null
+     */
+    public function compositeExposureTimes(): ?array
+    {
+        return $this->sourceExposureTimesOfCompositeImage();
     }
 
     /**
