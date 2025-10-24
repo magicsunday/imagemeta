@@ -17,14 +17,18 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Device
 {
     /**
-     * @param string|null $manufacturer Device manufacturer as reported by the container.
-     * @param string|null $model        Device model.
-     * @param string|null $software     Software version or build identifier.
+     * @param string|null $software                Software version or build identifier.
+     * @param string|null $hostComputer            Host computer string.
+     * @param string|null $rawDevelopingSoftware   RAW developing software identifier.
+     * @param string|null $imageEditingSoftware    Image editing software identifier.
+     * @param string|null $metadataEditingSoftware Metadata editing software identifier.
      */
     public function __construct(
-        public ?string $manufacturer,
-        public ?string $model,
         public ?string $software,
+        public ?string $hostComputer,
+        public ?string $rawDevelopingSoftware,
+        public ?string $imageEditingSoftware,
+        public ?string $metadataEditingSoftware,
     ) {
     }
 }

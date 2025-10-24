@@ -17,7 +17,9 @@ use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\Depth;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
@@ -26,6 +28,7 @@ use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
+use MagicSunday\ImageMeta\Value\Interop;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
@@ -37,7 +40,9 @@ use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
+use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\TiffData;
 use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
@@ -49,6 +54,11 @@ use MagicSunday\ImageMeta\Value\Xmp;
 final readonly class StructuredMetadata
 {
     public function __construct(
+        public Interop $interop,
+        public TiffData $tiff,
+        public Depth $depth,
+        public CompositeImageInfo $composite,
+        public Standards $standards,
         public Camera $camera,
         public Lens $lens,
         public Image $image,
