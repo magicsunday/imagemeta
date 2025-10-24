@@ -55,8 +55,6 @@ final readonly class ExifTag
 
     public const int ARTIST = 0x013B;
 
-    public const int HOST_COMPUTER = 0x013C;
-
     public const int WHITE_POINT = 0x013E;
 
     public const int PRIMARY_CHROMATICITIES = 0x013F;

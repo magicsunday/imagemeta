@@ -17,12 +17,10 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Device
 {
     /**
-     * @param string|null $software     Software version or build identifier.
-     * @param string|null $hostComputer Host computer string.
+     * @param string|null $software Software version or build identifier.
      */
     public function __construct(
         public ?string $software,
-        public ?string $hostComputer,
     ) {
     }
 }

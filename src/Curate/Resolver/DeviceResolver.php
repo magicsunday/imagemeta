@@ -47,13 +47,17 @@ final readonly class DeviceResolver
         $software ??= $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
         $hostComputer ??= $this->xmpString($xmpDocument, self::NS_TIFF, 'HostComputer');
 
-        if ($software === null && $hostComputer === null) {
+        if ($software === null) {
+            // Preserve host computer details from XMP as a best-effort fallback for the software chain.
+            $software = $hostComputer;
+        }
+
+        if ($software === null) {
             return null;
         }
 
         return new Device(
             software: $software,
-            hostComputer: $hostComputer,
         );
     }
 
