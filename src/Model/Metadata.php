@@ -51,6 +51,16 @@ final class Metadata
     /** @var array{0:int,1:int}|null */
     public readonly ?array $jpegYCbCrSubSampling;
 
+    public readonly ?string $mimeType;
+
+    public readonly ?int $fileSize;
+
+    public readonly ?string $extension;
+
+    public readonly ?string $digestSha1;
+
+    public readonly ?string $digestMd5;
+
     private ?StructuredMetadata $structured = null;
 
     /**
@@ -66,6 +76,11 @@ final class Metadata
      * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by
      *                                                                                       identifier.
      * @param array{0:int,1:int}|null $jpegYCbCrSubSampling Derived YCbCr subsampling from the JPEG frame header.
+     * @param string|null             $mimeType Detected mime type for the source file.
+     * @param int|null                $fileSize Size of the source file in bytes.
+     * @param string|null             $extension Lowercase file extension extracted from the path.
+     * @param string|null             $digestSha1 Lowercase hexadecimal SHA-1 digest of the payload.
+     * @param string|null             $digestMd5 Lowercase hexadecimal MD5 digest of the payload.
      */
     public function __construct(
         array $exifBlobs,
@@ -79,6 +94,11 @@ final class Metadata
         ?int $jpegBitsPerSample = null,
         ?array $jpegFrameSamplingFactors = null,
         ?array $jpegYCbCrSubSampling = null,
+        ?string $mimeType = null,
+        ?int $fileSize = null,
+        ?string $extension = null,
+        ?string $digestSha1 = null,
+        ?string $digestMd5 = null,
     ) {
         $this->exifBlobs   = $exifBlobs;
         $this->quickTime   = $quickTime;
@@ -91,6 +111,11 @@ final class Metadata
         $this->jpegBitsPerSample        = $jpegBitsPerSample;
         $this->jpegFrameSamplingFactors = $jpegFrameSamplingFactors;
         $this->jpegYCbCrSubSampling     = $jpegYCbCrSubSampling;
+        $this->mimeType  = $mimeType;
+        $this->fileSize  = $fileSize;
+        $this->extension = $extension;
+        $this->digestSha1 = $digestSha1;
+        $this->digestMd5  = $digestMd5;
     }
 
     /**

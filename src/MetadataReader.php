@@ -22,6 +22,14 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
+use const FILEINFO_MIME_TYPE;
+use const PATHINFO_EXTENSION;
+use function filesize;
+use function hash_file;
+use function is_string;
+use function pathinfo;
+use function strtolower;
+
 /**
  * Coordinates format detection and metadata extraction for supported containers.
  */
@@ -30,18 +38,26 @@ final class MetadataReader
     /**
      * Reads metadata from the given file path by delegating to the appropriate parser.
      *
-     * @param string $path Path to the image or media file being inspected.
+     * @param string $path        Path to the image or media file being inspected.
+     * @param bool   $withDigests When true the SHA-1 and MD5 digests are calculated as part of the
+     *                            returned metadata aggregate.
      *
      * @return Metadata
      */
-    public function read(string $path): Metadata
+    public function read(string $path, bool $withDigests = false): Metadata
     {
+        $mimeType  = $this->detectMimeType($path);
+        $fileSize  = $this->detectFileSize($path);
+        $extension = $this->detectExtension($path);
+
+        [$sha1, $md5] = $withDigests ? $this->calculateDigests($path) : [null, null];
+
         $stream = Stream::fromPath($path);
         $type   = FormatDetector::detect($stream);
 
         return match ($type) {
-            ContainerType::JPEG    => $this->fromJpeg($stream),
-            ContainerType::ISOBMFF => $this->fromIsoBmff($stream),
+            ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
+            ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
         };
     }
 
@@ -52,7 +68,14 @@ final class MetadataReader
      *
      * @return Metadata
      */
-    private function fromJpeg(Stream $stream): Metadata
+    private function fromJpeg(
+        Stream $stream,
+        ?string $mimeType,
+        ?int $fileSize,
+        ?string $extension,
+        ?string $digestSha1,
+        ?string $digestMd5,
+    ): Metadata
     {
         $jpeg        = new JpegExtractor($stream);
         $exifBlobs   = $jpeg->extractExifBlobs();
@@ -88,6 +111,11 @@ final class MetadataReader
             $bitsPerSample,
             $sampling,
             $subSampling,
+            $mimeType,
+            $fileSize,
+            $extension,
+            $digestSha1,
+            $digestMd5,
         );
     }
 
@@ -98,7 +126,14 @@ final class MetadataReader
      *
      * @return Metadata
      */
-    private function fromIsoBmff(Stream $stream): Metadata
+    private function fromIsoBmff(
+        Stream $stream,
+        ?string $mimeType,
+        ?int $fileSize,
+        ?string $extension,
+        ?string $digestSha1,
+        ?string $digestMd5,
+    ): Metadata
     {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
 
@@ -115,7 +150,83 @@ final class MetadataReader
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
         }
 
-        return new Metadata($exifBlobs, $qt, $exifDoc, $xmpBlobs, $xmpDoc, $makerNotes);
+        return new Metadata(
+            $exifBlobs,
+            $qt,
+            $exifDoc,
+            $xmpBlobs,
+            $xmpDoc,
+            $makerNotes,
+            null,
+            [],
+            null,
+            null,
+            null,
+            $mimeType,
+            $fileSize,
+            $extension,
+            $digestSha1,
+            $digestMd5,
+        );
+    }
+
+    /**
+     * Attempts to detect the mime type of the provided path using the file information extension.
+     */
+    private function detectMimeType(string $path): ?string
+    {
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime  = $finfo->file($path);
+
+        if (!is_string($mime) || $mime === '') {
+            return null;
+        }
+
+        return $mime;
+    }
+
+    /**
+     * Returns the filesize in bytes or null when not available.
+     */
+    private function detectFileSize(string $path): ?int
+    {
+        $size = filesize($path);
+
+        if ($size === false) {
+            return null;
+        }
+
+        return $size;
+    }
+
+    /**
+     * Extracts the file extension from the provided path.
+     */
+    private function detectExtension(string $path): ?string
+    {
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+        if ($extension === '') {
+            return null;
+        }
+
+        return strtolower($extension);
+    }
+
+    /**
+     * Calculates the SHA-1 and MD5 digests for the provided path.
+     *
+     * @return array{0:?string,1:?string}
+     */
+    private function calculateDigests(string $path): array
+    {
+        $sha1 = hash_file('sha1', $path);
+        $md5  = hash_file('md5', $path);
+
+        return [
+            is_string($sha1) ? $sha1 : null,
+            is_string($md5) ? $md5 : null,
+        ];
     }
 
     /**
