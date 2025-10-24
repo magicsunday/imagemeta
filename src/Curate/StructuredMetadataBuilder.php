@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters;
 use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
+use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -73,6 +74,7 @@ final class StructuredMetadataBuilder
         $xmpDocument       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $xmpResolver       = new XmpResolver($xmpDocument);
         $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
+        $gpsResolver       = new GpsResolver();
 
         $interop = new Interop(index: $exifResolver->interopIndex());
 
@@ -154,13 +156,7 @@ final class StructuredMetadataBuilder
             selfTimerModeSeconds: $exifResolver->selfTimerModeSeconds(),
         );
 
-        $gpsCoords = $exifResolver->gps();
-        $gps       = new Gps(
-            $gpsCoords['lat'],
-            $gpsCoords['lon'],
-            $gpsCoords['alt'],
-            $gpsCoords['speed_ms'] ?? null,
-        );
+        $gps = $gpsResolver->resolve($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
         $device = $this->buildDevice($exifResolver, $quickTimeResolver);
 
