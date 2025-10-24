@@ -422,7 +422,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(['index' => null], get_object_vars($structured->interop));
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
-        self::assertSame('2.2', $structured->standards->profile);
+        self::assertNull($structured->standards->profile);
     }
 
     /**

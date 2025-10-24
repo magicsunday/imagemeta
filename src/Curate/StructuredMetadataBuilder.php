@@ -56,7 +56,6 @@ use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
-use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 
 use function array_map;
 use function explode;
@@ -113,7 +112,7 @@ final class StructuredMetadataBuilder
         );
 
         $exifVersion = $exifResolver->exifVersion();
-        $profile     = ExifCapabilities::fromVersion($exifVersion);
+        $profile     = $exifVersion !== null ? ExifCapabilities::fromVersion($exifVersion) : null;
 
         $standards = new Standards(
             exifVersion: $exifVersion,
@@ -150,9 +149,7 @@ final class StructuredMetadataBuilder
         }
 
         $exposure = new Exposure(
-            iso: CompositeResolver::intISO([
-                fn () => $exifResolver->iso(),
-            ]),
+            iso: CompositeResolver::intISO($exifResolver),
             exposureTimeSec: $exifResolver->exposureTime(),
             fNumber: $exifResolver->fNumber(),
             exposureBiasEv: $exifResolver->exposureBias(),
@@ -449,11 +446,23 @@ final class StructuredMetadataBuilder
         $exifCreate = $resolver->digitizedDateTime();
         $exifModify = $resolver->fileDateTime();
 
-        $exifOriginal = CompositeResolver::dateOriginal([
-            'DateTimeOriginal'  => fn () => $resolver->captureDateTime(),
-            'DateTimeDigitized' => fn () => $exifCreate,
-            'DateTime'          => fn () => $exifModify,
-        ]);
+        $xmpDateCreated    = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
+        $quickTimeCreated  = $this->parseFlexibleDate($quickTime->string('CreationDate'));
+        $quickTimeModified = $this->parseFlexibleDate($quickTime->string('ModifyDate'));
+
+        $create = $exifCreate ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
+        $create = $create ?? $quickTimeCreated;
+
+        $modify = $exifModify ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
+        $modify = $modify ?? $quickTimeModified;
+
+        $exifOriginal = CompositeResolver::dateOriginal(
+            $resolver,
+            fn () => CompositeResolver::dateCandidate($xmpDateCreated, 'XMP'),
+            fn () => CompositeResolver::dateCandidate($quickTimeCreated, 'QuickTime'),
+            fn () => CompositeResolver::dateCandidate($create, 'DateTimeDigitized'),
+            fn () => CompositeResolver::dateCandidate($modify, 'DateTime'),
+        );
 
         $original         = $exifOriginal['date'];
         $fallbackTz       = $original instanceof DateTimeImmutable ? $original->getTimezone() : null;
@@ -466,41 +475,6 @@ final class StructuredMetadataBuilder
         $subSecTimeOriginal  = $resolver->subSecTimeOriginal();
         $subSecTimeDigitized = $resolver->subSecTimeDigitized();
         $timeZoneOffsets     = $resolver->timeZoneOffsetMinutes();
-
-        $create = $exifCreate ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
-        $create = $create ?? $this->parseFlexibleDate($quickTime->string('CreationDate'));
-
-        $modify = $exifModify ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
-        $modify = $modify ?? $this->parseFlexibleDate($quickTime->string('ModifyDate'));
-
-        if ($original === null) {
-            $original = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
-            if ($original instanceof DateTimeImmutable) {
-                $fallbackTz       = $original->getTimezone();
-                $fallbackTzSource = 'XMP';
-            }
-        }
-
-        if ($original === null) {
-            $quickTimeDate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
-            if ($quickTimeDate instanceof DateTimeImmutable) {
-                $original        = $quickTimeDate;
-                $fallbackTz       = $quickTimeDate->getTimezone();
-                $fallbackTzSource = 'QuickTime';
-            }
-        }
-
-        if ($original === null && $create instanceof DateTimeImmutable) {
-            $original         = $create;
-            $fallbackTz       = $create->getTimezone();
-            $fallbackTzSource = 'DateTimeDigitized';
-        }
-
-        if ($original === null && $modify instanceof DateTimeImmutable) {
-            $original         = $modify;
-            $fallbackTz       = $modify->getTimezone();
-            $fallbackTzSource = 'DateTime';
-        }
 
         $tz       = null;
         $tzSource = null;
@@ -627,17 +601,15 @@ final class StructuredMetadataBuilder
     private function buildImage(ExifTagResolver $exif, XmpResolver $xmp, QuickTimeResolver $quickTime, Interop $interop): Image
     {
         $dimensions = CompositeResolver::dimensions(
-            fn () => $exif->imageWidth(),
-            fn () => $exif->imageHeight(),
+            $exif,
+            fn () => [
+                'width' => $quickTime->int('ImageWidth'),
+                'height' => $quickTime->int('ImageHeight'),
+            ],
         );
 
         $width  = $dimensions['width'];
         $height = $dimensions['height'];
-
-        if ($width === null && $height === null) {
-            $width  = $quickTime->int('ImageWidth');
-            $height = $quickTime->int('ImageHeight');
-        }
 
         $documentName = CompositeResolver::first([
             fn () => $xmp->string('http://ns.adobe.com/tiff/1.0/', 'DocumentName'),
@@ -694,8 +666,12 @@ final class StructuredMetadataBuilder
      */
     private function normalizedColorSpace(?ColorSpace $colorSpace, Interop $interop): ?ColorSpace
     {
-        if ($colorSpace === ColorSpace::UNCALIBRATED && $interop->index === 'R03') {
-            return ColorSpace::ADOBE_RGB;
+        if (
+            $colorSpace === ColorSpace::UNCALIBRATED
+            && is_string($interop->index)
+            && strtoupper($interop->index) === 'R03'
+        ) {
+            return ColorSpace::SRGB;
         }
 
         return $colorSpace;
