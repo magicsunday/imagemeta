@@ -22,7 +22,9 @@ use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\Apple;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -61,6 +63,10 @@ use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
 
+use function array_key_exists;
+use function array_is_list;
+use function is_numeric;
+use function preg_split;
 use function strtoupper;
 
 /**
@@ -68,6 +74,21 @@ use function strtoupper;
  */
 final class StructuredMetadataBuilder
 {
+    /**
+     * @var array<string, string>
+     */
+    private const APPLE_FLAG_KEYS = [
+        'LivePhotoAuto'         => 'livePhotoAuto',
+        'LivePhotoEnabled'      => 'livePhotoEnabled',
+        'LivePhotoActive'       => 'livePhotoActive',
+        'LivePhotoLongExposure' => 'livePhotoLongExposure',
+        'LivePhoto'             => 'livePhoto',
+        'HdrAuto'               => 'hdrAuto',
+        'HdrEnabled'            => 'hdrEnabled',
+        'NightMode'             => 'nightMode',
+        'LongExposure'          => 'longExposure',
+    ];
+
     /**
      * Builds the structured metadata aggregate from the supplied metadata container.
      */
@@ -77,6 +98,7 @@ final class StructuredMetadataBuilder
         $xmpDocument       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $xmpResolver       = new XmpResolver($xmpDocument);
         $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
+        $appleMakerNotes   = $metadata->makerNotes?->apple();
         $gpsResolver       = new GpsResolver();
         $regionsResolver   = new RegionsResolver();
 
@@ -164,7 +186,7 @@ final class StructuredMetadataBuilder
 
         $device = $this->buildDevice($exifResolver, $quickTimeResolver);
 
-        $apple = new Apple($metadata->quickTime?->contentIdentifier());
+        $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime);
         $xmp   = $xmpResolver->value();
 
         $file = new File(null, null, null, null, null);
@@ -240,9 +262,14 @@ final class StructuredMetadataBuilder
             deviceSettingDescription: $exifResolver->deviceSettingDescription(),
         );
 
+        $whiteBalanceKelvin = $apple->colorTemperature;
+        if ($whiteBalanceKelvin === null) {
+            $whiteBalanceKelvin = $this->quickTimeInt($quickTimeResolver, 'ColorTemperature');
+        }
+
         $whiteBalanceDetails = new WhiteBalanceDetails(
             mode: $exifResolver->whiteBalance(),
-            kelvin: null,
+            kelvin: $whiteBalanceKelvin,
             rgGain: null,
             bgGain: null,
         );
@@ -268,7 +295,7 @@ final class StructuredMetadataBuilder
             afMode: null,
         );
 
-        $motion = new Motion(null, null, null, null, null, null, null, null, null);
+        $motion = $this->buildMotion($appleMakerNotes);
 
         $regions = $regionsResolver->resolve($xmpDocument);
 
@@ -580,6 +607,145 @@ final class StructuredMetadataBuilder
             nightMode: $night,
             subjectDistanceRange: $exif->subjectDistanceRange(),
         );
+    }
+
+    private function buildApple(
+        ?AppleMakerNotes $makerNotes,
+        QuickTimeResolver $quickTimeResolver,
+        ?QuickTimeMeta $quickTimeMeta,
+    ): Apple {
+        $contentIdentifier = $makerNotes?->contentIdentifier ?? $quickTimeMeta?->contentIdentifier();
+        $cameraType        = $makerNotes?->cameraType ?? $this->quickTimeString($quickTimeResolver, 'CameraType');
+        $hdrHeadroom       = $makerNotes?->hdrHeadroom ?? $this->quickTimeFloat($quickTimeResolver, 'HdrHeadroom', 'HDRHeadroom');
+        $hdrGain           = $makerNotes?->hdrGain ?? $this->quickTimeFloatList($quickTimeResolver, 'HdrGain', 'HDRGain');
+        $snr               = $makerNotes?->snr ?? $this->quickTimeFloat($quickTimeResolver, 'SNRSetting', 'SNR');
+        $focusPosition     = $makerNotes?->focusPosition ?? $this->quickTimeFloat($quickTimeResolver, 'FocusPosition');
+        $livePhotoIndex    = $makerNotes?->livePhotoIndex ?? $this->quickTimeInt($quickTimeResolver, 'LivePhotoVideoIndex');
+        $colorTemperature  = $makerNotes?->colorTemperature ?? $this->quickTimeInt($quickTimeResolver, 'ColorTemperature');
+        $semanticPreset    = $makerNotes?->semanticStylePreset ?? $this->quickTimeString($quickTimeResolver, 'SemanticStylePreset');
+        $semanticWarmth    = $makerNotes?->semanticStyleWarmth ?? $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleWarmth');
+        $semanticTone      = $makerNotes?->semanticStyleTone ?? $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleTone');
+
+        $flags         = $makerNotes?->flags ?? [];
+        $quickTimeFlags = $this->quickTimeFlags($quickTimeResolver);
+        foreach ($quickTimeFlags as $key => $value) {
+            if (!array_key_exists($key, $flags)) {
+                $flags[$key] = $value;
+            }
+        }
+
+        return new Apple(
+            $contentIdentifier,
+            $cameraType,
+            $hdrHeadroom,
+            $hdrGain,
+            $snr,
+            $focusPosition,
+            $livePhotoIndex,
+            $colorTemperature,
+            $semanticPreset,
+            $semanticWarmth,
+            $semanticTone,
+            $flags,
+        );
+    }
+
+    private function buildMotion(?AppleMakerNotes $makerNotes): Motion
+    {
+        $vector = $makerNotes?->accelerationVector;
+
+        $accelX = null;
+        $accelY = null;
+        $accelZ = null;
+
+        if ($vector !== null && array_is_list($vector)) {
+            $accelX = $vector[0] ?? null;
+            $accelY = $vector[1] ?? null;
+            $accelZ = $vector[2] ?? null;
+        }
+
+        return new Motion(null, null, null, $accelX, $accelY, $accelZ, null, null, null);
+    }
+
+    private function quickTimeString(QuickTimeResolver $resolver, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = $resolver->string($key);
+            if ($value !== null && $value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function quickTimeFloat(QuickTimeResolver $resolver, string ...$keys): ?float
+    {
+        foreach ($keys as $key) {
+            $value = $resolver->float($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function quickTimeInt(QuickTimeResolver $resolver, string ...$keys): ?int
+    {
+        foreach ($keys as $key) {
+            $value = $resolver->int($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<float>|null
+     */
+    private function quickTimeFloatList(QuickTimeResolver $resolver, string ...$keys): ?array
+    {
+        $raw = $this->quickTimeString($resolver, ...$keys);
+        if ($raw === null) {
+            return null;
+        }
+
+        $parts = preg_split('/[\\s,]+/', $raw);
+        if ($parts === false) {
+            return null;
+        }
+
+        $values = [];
+        foreach ($parts as $part) {
+            if ($part === '') {
+                continue;
+            }
+
+            if (is_numeric($part)) {
+                $values[] = (float) $part;
+            }
+        }
+
+        return $values !== [] ? $values : null;
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    private function quickTimeFlags(QuickTimeResolver $resolver): array
+    {
+        $flags = [];
+        foreach (self::APPLE_FLAG_KEYS as $key => $normalized) {
+            $value = $resolver->bool($key);
+            if ($value !== null) {
+                $flags[$normalized] = $value;
+            }
+        }
+
+        return $flags;
     }
 
     /**

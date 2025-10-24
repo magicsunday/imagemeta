@@ -13,6 +13,8 @@ namespace MagicSunday\ImageMeta\Tests\Curate;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -46,6 +48,8 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+
+use function str_repeat;
 
 /**
  * @covers \MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder
@@ -396,6 +400,72 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
         self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal->original);
         self::assertSame('+01:00', $structured->temporal->original?->format('P'));
+    }
+
+    /**
+     * Ensures maker notes Apple data is preferred over QuickTime metadata and propagates to white balance and motion.
+     */
+    #[Test]
+    public function prefersMakerNotesAppleData(): void
+    {
+        $appleMakerNotes = new AppleMakerNotes(
+            contentIdentifier: 'maker-content',
+            cameraType: 'Maker Wide',
+            hdrHeadroom: 3.0,
+            hdrGain: [2.1, 2.2, 2.3],
+            snr: 18.5,
+            focusPosition: 0.5,
+            livePhotoIndex: 4,
+            colorTemperature: 4300,
+            semanticStylePreset: 'MakerPreset',
+            semanticStyleWarmth: 0.3,
+            semanticStyleTone: -0.2,
+            flags: ['livePhotoAuto' => false, 'nightMode' => true],
+            accelerationVector: [0.05, 0.1, -0.1],
+        );
+
+        $makerNotes = new MakerNotesMetadata('Apple', 64, str_repeat('a', 40), $appleMakerNotes);
+
+        $ifd0         = new Ifd([]);
+        $exifDocument = new ExifDocument($ifd0, null, null, null, null, $makerNotes);
+
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
+            'CameraType'                          => 'QuickTime Camera',
+            'HdrHeadroom'                         => 1.0,
+            'HdrGain'                             => '0.5 0.6 0.7',
+            'SNRSetting'                          => 9.0,
+            'FocusPosition'                       => 0.2,
+            'LivePhotoVideoIndex'                 => 1,
+            'ColorTemperature'                    => 6500,
+            'SemanticStylePreset'                 => 'QuickPreset',
+            'SemanticStyleWarmth'                 => 0.1,
+            'SemanticStyleTone'                   => 0.15,
+            'LivePhotoAuto'                       => 1,
+            'NightMode'                           => 0,
+        ]);
+
+        $metadata   = new Metadata(['primary'], $quickTime, $exifDocument, [], null, $makerNotes);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('maker-content', $structured->apple->contentIdentifier);
+        self::assertSame('Maker Wide', $structured->apple->cameraType);
+        self::assertSame([2.1, 2.2, 2.3], $structured->apple->hdrGain);
+        self::assertEqualsWithDelta(3.0, $structured->apple->hdrHeadroom, 1e-12);
+        self::assertEqualsWithDelta(18.5, $structured->apple->snr, 1e-12);
+        self::assertEqualsWithDelta(0.5, $structured->apple->focusPosition, 1e-12);
+        self::assertSame(4, $structured->apple->livePhotoIndex);
+        self::assertSame(4300, $structured->apple->colorTemperature);
+        self::assertSame('MakerPreset', $structured->apple->semanticStylePreset);
+        self::assertEqualsWithDelta(0.3, $structured->apple->semanticStyleWarmth, 1e-12);
+        self::assertEqualsWithDelta(-0.2, $structured->apple->semanticStyleTone, 1e-12);
+        self::assertFalse($structured->apple->flags['livePhotoAuto']);
+        self::assertTrue($structured->apple->flags['nightMode']);
+
+        self::assertSame(4300, $structured->whiteBalanceDetails->kelvin);
+        self::assertEqualsWithDelta(0.05, $structured->motion->accelX, 1e-12);
+        self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
+        self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
     }
 
     /**
