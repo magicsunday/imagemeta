@@ -122,27 +122,11 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the camera firmware version string when recorded.
-     */
-    public function cameraFirmwareVersion(): ?string
-    {
-        return $this->document?->cameraFirmwareVersion();
-    }
-
-    /**
      * Returns the raw developing software string.
      */
     public function rawDevelopingSoftware(): ?string
     {
         return $this->document?->rawDevelopingSoftware();
-    }
-
-    /**
-     * Returns the raw developing software version string.
-     */
-    public function rawDevelopingSoftwareVersion(): ?string
-    {
-        return $this->document?->rawDevelopingSoftwareVersion();
     }
 
     /**
@@ -159,14 +143,6 @@ final readonly class ExifTagResolver
     public function metadataEditingSoftware(): ?string
     {
         return $this->document?->metadataEditingSoftware();
-    }
-
-    /**
-     * Returns the metadata editing software version string.
-     */
-    public function metadataEditingSoftwareVersion(): ?string
-    {
-        return $this->document?->metadataEditingSoftwareVersion();
     }
 
     /**

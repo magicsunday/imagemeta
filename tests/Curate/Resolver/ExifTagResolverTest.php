@@ -269,13 +269,10 @@ final class ExifTagResolverTest extends TestCase
             ExifTag::SCENE_TYPE                 => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
             ExifTag::CFA_PATTERN                => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x00\x01\x02\x03"),
             ExifTag::CUSTOM_RENDERED            => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
-            ExifTag::CAMERA_FIRMWARE_VERSION    => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION, 2, 1, '4.0.0'),
             ExifTag::CAMERA_FIRMWARE            => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW Main'),
             ExifTag::RAW_DEVELOPING_SOFTWARE    => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Studio'),
-            ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION, 2, 1, '2024.1'),
             ExifTag::IMAGE_EDITING_SOFTWARE     => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Pixel Edit'),
             ExifTag::METADATA_EDITING_SOFTWARE  => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Desk'),
-            ExifTag::METADATA_EDITING_SOFTWARE_VERSION => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION, 2, 1, '2.5'),
         ]);
 
         $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -291,13 +288,10 @@ final class ExifTagResolverTest extends TestCase
             CfaPatternColor::CYAN,
         ], $resolver->cfaPatternColors());
         self::assertSame(CustomRendered::CUSTOM_PROCESS, $resolver->customRendered());
-        self::assertSame('4.0.0', $resolver->cameraFirmwareVersion());
         self::assertSame('FW Main', $resolver->cameraFirmware());
         self::assertSame('Raw Studio', $resolver->rawDevelopingSoftware());
-        self::assertSame('2024.1', $resolver->rawDevelopingSoftwareVersion());
         self::assertSame('Pixel Edit', $resolver->imageEditingSoftware());
         self::assertSame('Meta Desk', $resolver->metadataEditingSoftware());
-        self::assertSame('2.5', $resolver->metadataEditingSoftwareVersion());
     }
 }
 

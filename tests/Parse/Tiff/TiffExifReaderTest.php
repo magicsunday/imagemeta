@@ -184,13 +184,10 @@ final class TiffExifReaderTest extends TestCase
         } else {
             self::assertSame("\x00\x01\x02\x03", $cfaPattern);
         }
-        self::assertSame('4.0', rtrim($exifIfd->get(ExifTag::CAMERA_FIRMWARE_VERSION)?->value ?? ''));
         self::assertSame('FW', rtrim($exifIfd->get(ExifTag::CAMERA_FIRMWARE)?->value ?? ''));
         self::assertSame('RAW', rtrim($exifIfd->get(ExifTag::RAW_DEVELOPING_SOFTWARE)?->value ?? ''));
-        self::assertSame('1.0', rtrim($exifIfd->get(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION)?->value ?? ''));
         self::assertSame('IMG', rtrim($exifIfd->get(ExifTag::IMAGE_EDITING_SOFTWARE)?->value ?? ''));
         self::assertSame('META', rtrim($exifIfd->get(ExifTag::METADATA_EDITING_SOFTWARE)?->value ?? ''));
-        self::assertSame('2.5', rtrim($exifIfd->get(ExifTag::METADATA_EDITING_SOFTWARE_VERSION)?->value ?? ''));
     }
 
     /**
@@ -587,13 +584,10 @@ final class TiffExifReaderTest extends TestCase
             self::packClassicEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
             self::packClassicEntry(ExifTag::CFA_PATTERN, 7, 4, self::inlineAsciiToInt("\x00\x01\x02\x03", 4)),
             self::packClassicEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, self::inlineAsciiToInt("\x01\x02\x03\x00", 4)),
-            self::packClassicEntry(ExifTag::CAMERA_FIRMWARE_VERSION, 2, 4, self::inlineAsciiToInt('4.0', 4)),
             self::packClassicEntry(ExifTag::CAMERA_FIRMWARE, 2, 4, self::inlineAsciiToInt('FW', 4)),
             self::packClassicEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 4, self::inlineAsciiToInt('RAW', 4)),
-            self::packClassicEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION, 2, 4, self::inlineAsciiToInt('1.0', 4)),
             self::packClassicEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 4, self::inlineAsciiToInt('IMG', 4)),
             self::packClassicEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 4, self::inlineAsciiToInt('META', 4)),
-            self::packClassicEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION, 2, 4, self::inlineAsciiToInt('2.5', 4)),
         ];
 
         $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);

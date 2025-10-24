@@ -29,7 +29,7 @@ final readonly class ExifTag
 
     public const int IMAGE_DESCRIPTION = 0x010E;
 
-    public const int IMAGE_TITLE = 0x0320;
+    public const int IMAGE_TITLE = 0xA436;
 
     public const int MAKE = 0x010F;
 
@@ -61,9 +61,9 @@ final readonly class ExifTag
 
     public const int ARTIST = 0x013B;
 
-    public const int PHOTOGRAPHER = 0xE92D;
+    public const int PHOTOGRAPHER = 0xA437;
 
-    public const int IMAGE_EDITOR = 0xE92E;
+    public const int IMAGE_EDITOR = 0xA438;
 
     public const int WHITE_POINT = 0x013E;
 
@@ -219,19 +219,13 @@ final readonly class ExifTag
 
     public const int LENS_SERIAL_NUMBER = 0xA435;
 
-    public const int CAMERA_FIRMWARE_VERSION = 0xA436;
+    public const int CAMERA_FIRMWARE = 0xA439;
 
-    public const int CAMERA_FIRMWARE = 0xA437;
+    public const int RAW_DEVELOPING_SOFTWARE = 0xA43A;
 
-    public const int RAW_DEVELOPING_SOFTWARE = 0xA438;
+    public const int IMAGE_EDITING_SOFTWARE = 0xA43B;
 
-    public const int RAW_DEVELOPING_SOFTWARE_VERSION = 0xA439;
-
-    public const int IMAGE_EDITING_SOFTWARE = 0xA43A;
-
-    public const int METADATA_EDITING_SOFTWARE = 0xA43B;
-
-    public const int METADATA_EDITING_SOFTWARE_VERSION = 0xA43C;
+    public const int METADATA_EDITING_SOFTWARE = 0xA43C;
 
     public const int COMPOSITE_IMAGE = 0xA460;
 
