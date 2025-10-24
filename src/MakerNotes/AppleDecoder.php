@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 
@@ -69,7 +70,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
     private function parseAppleData(string $raw): ?AppleMakerNotes
     {
-        $decoded = (new BinaryPlistDecoder())->decode($raw);
+        try {
+            $decoded = (new BinaryPlistDecoder())->decode($raw);
+        } catch (ParseError) {
+            return null;
+        }
         if (!is_array($decoded) || array_is_list($decoded)) {
             return null;
         }
