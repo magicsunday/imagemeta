@@ -433,6 +433,16 @@ final readonly class ExifDocument
             return $iso;
         }
 
+        $iso = $this->int($this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY);
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        $iso = $this->int($this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX);
+        if ($iso !== null) {
+            return $iso;
+        }
+
         $iso = $this->int($this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
         if ($iso !== null) {
             return $iso;
