@@ -18,6 +18,14 @@ $structured->temporal->original;
 $structured->keywords->flat;
 $structured->derived->ev100;
 $structured->related->livePhotoPairId;
+$structured->derived->fovDiagonalDeg;     // Diagonal field of view (formerly fovDeg)
+$structured->derived->fovHorizontalDeg;   // Horizontal field of view in degrees
+$structured->derived->fovVerticalDeg;     // Vertical field of view in degrees
+$structured->temporal->tz?->getName();    // Resolved capture time zone source
+$structured->temporal->offsetTimeOriginal;
+$structured->file->fileSize;              // File level metadata (size, digests, extension)
+$structured->apple->flags['livePhotoEnabled'];
+$structured->gps->horizontalPositioningError;
 ```
 
 ### Mapping overview
@@ -72,3 +80,9 @@ $s->standards->exifVersion;         // "3.00"
 ```
 
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.
+
+The diagonal field of view exposed via `fovDiagonalDeg` corresponds to the value previously documented as `fovDeg`. The new `fovHorizontalDeg` and `fovVerticalDeg` helpers provide axis-specific angles so clients can present per-dimension compositions without additional trigonometry.
+
+The expanded temporal aggregate surfaces raw EXIF offset tags alongside a resolved `DateTimeZone` instance. This makes it possible to reconstruct original capture times even when the offset varies between creation, digitisation and modification steps. File level metadata now reports size, extension and cryptographic digests to help consumers correlate assets or detect tampering.
+
+Apple maker note data now includes semantic style parameters, colour temperature and Live Photo flags from both maker notes and QuickTime metadata. GPS coverage has been widened with horizontal positioning error and full destination navigation metrics from EXIF 2.32 table 66.
