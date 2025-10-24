@@ -15,6 +15,7 @@ use BackedEnum;
 use DateTimeZone;
 use Exception;
 use JsonException;
+use Throwable;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
@@ -24,7 +25,6 @@ use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use UnitEnum;
-use ValueError;
 
 use function array_filter;
 use function array_slice;
@@ -48,6 +48,7 @@ use function rad2deg;
 use function sprintf;
 use function str_replace;
 use function strlen;
+use function substr;
 use function trim;
 
 use const JSON_PRESERVE_ZERO_FRACTION;
@@ -137,15 +138,34 @@ final readonly class ValueConverters
             $trimmed = '+00:00';
         }
 
-        if (preg_match('/^([+-])(\d{1,2})(?::?(\d{2}))?$/', $trimmed, $matches) === 1) {
-            $hours   = (int) $matches[2];
-            $minutes = isset($matches[3]) ? (int) $matches[3] : 0;
+        if ($trimmed[0] === '+' || $trimmed[0] === '-') {
+            $sign = $trimmed[0];
+            $body = substr($trimmed, 1);
+            $body = str_replace(':', '', $body);
+
+            if ($body === '' || !ctype_digit($body)) {
+                return null;
+            }
+
+            $length = strlen($body);
+            if ($length <= 2) {
+                $hours   = (int) $body;
+                $minutes = 0;
+            } elseif ($length === 3) {
+                $hours   = (int) $body[0];
+                $minutes = (int) substr($body, 1, 2);
+            } elseif ($length === 4) {
+                $hours   = (int) substr($body, 0, 2);
+                $minutes = (int) substr($body, 2, 2);
+            } else {
+                return null;
+            }
 
             if ($hours > 14 || $minutes >= 60 || ($hours === 14 && $minutes !== 0)) {
                 return null;
             }
 
-            $trimmed = sprintf('%s%02d:%02d', $matches[1], $hours, $minutes);
+            $trimmed = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
         }
 
         try {
@@ -341,10 +361,6 @@ final readonly class ValueConverters
             return null;
         }
 
-        if (!enum_exists($enumClass)) {
-            return null;
-        }
-
         $value = $raw;
         if (is_string($raw) && ctype_digit($raw)) {
             $value = (int) $raw;
@@ -353,7 +369,7 @@ final readonly class ValueConverters
         /** @var class-string<T> $enumClass */
         try {
             return $enumClass::from($value);
-        } catch (ValueError) {
+        } catch (Throwable) {
             return null;
         }
     }

@@ -16,7 +16,6 @@ use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Core\ValueConverters;
 
-use function array_key_exists;
 use function abs;
 use function intdiv;
 use function is_array;
@@ -71,246 +70,79 @@ final readonly class CompositeResolver
     }
 
     /**
-     * Resolves the ISO sensitivity using the EXIF resolver and optional fallback values.
-     *
-     * @param list<Closure():int|float|string|null|int|float|string|null> $fallbacks
+     * Resolves the ISO sensitivity using EXIF fallbacks.
      */
-    public static function intISO(ExifTagResolver $exif, array $fallbacks = []): ?int
+    public static function intISO(ExifTagResolver $resolver): ?int
     {
-        $candidates = [
-            static fn () => $exif->iso(),
-        ];
-
-        foreach ($fallbacks as $fallback) {
-            $candidates[] = $fallback;
-        }
-
-        return self::firstInt($candidates);
+        return self::firstInt([
+            static fn () => $resolver->int('ISO'),
+            static fn () => $resolver->int('ISOSpeed'),
+            static fn () => $resolver->int('StandardOutputSensitivity'),
+            static fn () => $resolver->int('RecommendedExposureIndex'),
+        ]);
     }
 
     /**
-     * Resolves image dimensions falling back to optional providers when EXIF lacks values.
+     * Resolves the image dimensions using EXIF fallbacks.
      *
-     * @param list<array{width:int|float|string|null|Closure,height:int|float|string|null|Closure}|Closure():array{
-     *     width:int|float|string|null|Closure,
-     *     height:int|float|string|null|Closure
-     * }|null> $fallbacks
-     *
-     * @return array{width:?int,height:?int}
+     * @return array{0:?int,1:?int}
      */
-    public static function dimensions(ExifTagResolver $exif, array $fallbacks = []): array
+    public static function dimensions(ExifTagResolver $resolver): array
     {
-        $widthCandidates = [
-            static fn () => $exif->imageWidth(),
-        ];
+        $width = self::firstInt([
+            static fn () => $resolver->int('ExifImageWidth'),
+            static fn () => $resolver->int('ImageWidth'),
+        ]);
 
-        $heightCandidates = [
-            static fn () => $exif->imageHeight(),
-        ];
+        $height = self::firstInt([
+            static fn () => $resolver->int('ExifImageHeight'),
+            static fn () => $resolver->int('ImageLength'),
+        ]);
 
-        foreach ($fallbacks as $fallback) {
-            if ($fallback instanceof Closure) {
-                $fallback = $fallback();
-            }
-
-            if (!is_array($fallback)) {
-                continue;
-            }
-
-            if (array_key_exists('width', $fallback)) {
-                $widthCandidates[] = $fallback['width'];
-            }
-
-            if (array_key_exists('height', $fallback)) {
-                $heightCandidates[] = $fallback['height'];
-            }
-        }
-
-        return [
-            'width' => self::firstInt($widthCandidates),
-            'height' => self::firstInt($heightCandidates),
-        ];
+        return [$width, $height];
     }
 
     /**
-     * Resolves the primary capture date along with timezone metadata and fractional seconds.
+     * Resolves the original capture timestamp along with timezone and sub-second components.
      *
-     * Each fallback entry may be either {@see DateTimeImmutable} directly or an associative array
-     * containing the keys `date`, `tz`, `subSec`, `source`, and `tzSource`.
+     * @param class-string<ValueConverters> $converterClass
      *
-     * @param list<DateTimeImmutable|Closure():DateTimeImmutable|Closure():array{
-     *     date:?DateTimeImmutable,
-     *     tz:?DateTimeZone,
-     *     subSec:?string,
-     *     source?:string,
-     *     tzSource?:string
-     * }|array{
-     *     date:?DateTimeImmutable,
-     *     tz:?DateTimeZone,
-     *     subSec:?string,
-     *     source?:string,
-     *     tzSource?:string
-     * }> $fallbacks
-     *
-     * @return array{
-     *     date:?DateTimeImmutable,
-     *     tz:?DateTimeZone,
-     *     subSec:?string,
-     *     source:?string,
-     *     tzSource:?string
-     * }
+     * @return array{0:?DateTimeImmutable,1:?DateTimeZone,2:?string}
      */
-    public static function dateOriginal(ExifTagResolver $exif, array $fallbacks = []): array
+    public static function dateOriginal(ExifTagResolver $resolver, string $converterClass): array
     {
-        $offsetTimeOriginal  = $exif->offsetTimeOriginal();
-        $offsetTimeDigitized = $exif->offsetTimeDigitized();
-        $offsetTime          = $exif->offsetTime();
+        $dateTime = $resolver->date('DateTimeOriginal');
 
-        $subSecOriginal  = self::normalizeSubSeconds($exif->subSecTimeOriginal());
-        $subSecDigitized = self::normalizeSubSeconds($exif->subSecTimeDigitized());
-        $subSec          = self::normalizeSubSeconds($exif->subSecTime());
-
-        $candidates = [
-            [
-                'source'   => 'DateTimeOriginal',
-                'date'     => $exif->captureDateTime(),
-                'tz'       => ValueConverters::parseOffset($offsetTimeOriginal),
-                'subSec'   => $subSecOriginal,
-                'tzSource' => 'OffsetTimeOriginal',
-            ],
-            [
-                'source'   => 'DateTimeDigitized',
-                'date'     => $exif->digitizedDateTime(),
-                'tz'       => ValueConverters::parseOffset($offsetTimeDigitized),
-                'subSec'   => $subSecDigitized,
-                'tzSource' => 'OffsetTimeDigitized',
-            ],
-            [
-                'source'   => 'DateTime',
-                'date'     => $exif->fileDateTime(),
-                'tz'       => ValueConverters::parseOffset($offsetTime),
-                'subSec'   => $subSec,
-                'tzSource' => 'OffsetTime',
-            ],
-        ];
-
-        foreach ($fallbacks as $index => $fallback) {
-            $label = sprintf('fallback-%d', $index + 1);
-
-            if ($fallback instanceof Closure) {
-                $fallback = $fallback();
-            }
-
-            if ($fallback instanceof DateTimeImmutable) {
-                $candidates[] = [
-                    'source'   => $label,
-                    'date'     => $fallback,
-                    'tz'       => $fallback->getTimezone(),
-                    'subSec'   => null,
-                    'tzSource' => $label,
-                ];
-
-                continue;
-            }
-
-            if (!is_array($fallback)) {
-                continue;
-            }
-
-            $date   = $fallback['date'] ?? null;
-            $tz     = $fallback['tz'] ?? null;
-            $sub    = $fallback['subSec'] ?? null;
-            $source = $fallback['source'] ?? null;
-            $tzSrc  = $fallback['tzSource'] ?? null;
-            $name   = is_string($source) && $source !== '' ? $source : $label;
-
-            $candidates[] = [
-                'source'   => $name,
-                'date'     => $date instanceof DateTimeImmutable ? $date : null,
-                'tz'       => $tz instanceof DateTimeZone ? $tz : null,
-                'subSec'   => is_string($sub) ? self::normalizeSubSeconds($sub) : null,
-                'tzSource' => is_string($tzSrc) && $tzSrc !== '' ? $tzSrc : $name,
-            ];
+        $offset = $resolver->string('OffsetTimeOriginal');
+        if ($offset === null) {
+            $zoneOffsets = $resolver->ints('TimeZoneOffset');
+            $offset      = is_array($zoneOffsets) && isset($zoneOffsets[0]) ? $zoneOffsets[0] : null;
         }
 
-        $selected = null;
-        foreach ($candidates as $candidate) {
-            if ($candidate['date'] instanceof DateTimeImmutable) {
-                $selected = $candidate;
-                break;
+        if (is_int($offset)) {
+            $absOffset = abs($offset);
+            $hours     = $absOffset;
+            $minutes   = 0;
+
+            if ($absOffset > 14) {
+                $hours   = intdiv($absOffset, 60);
+                $minutes = $absOffset % 60;
+            }
+
+            if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
+                $offset = null;
+            } else {
+                $sign   = $offset < 0 ? '-' : '+';
+                $offset = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
             }
         }
 
-        if ($selected === null) {
-            $selected = [
-                'source'   => null,
-                'date'     => null,
-                'tz'       => null,
-                'subSec'   => null,
-                'tzSource' => null,
-            ];
-        }
-
-        $tz       = $selected['tz'] instanceof DateTimeZone ? $selected['tz'] : null;
-        $tzSource = $selected['tz'] instanceof DateTimeZone ? $selected['tzSource'] : null;
-
-        if (!$tz instanceof DateTimeZone) {
-            $offsetCandidates = [
-                'OffsetTimeOriginal'  => $offsetTimeOriginal,
-                'OffsetTimeDigitized' => $offsetTimeDigitized,
-                'OffsetTime'          => $offsetTime,
-            ];
-
-            foreach ($offsetCandidates as $source => $offset) {
-                $candidateTz = ValueConverters::parseOffset($offset);
-                if ($candidateTz instanceof DateTimeZone) {
-                    $tz       = $candidateTz;
-                    $tzSource = $source;
-                    break;
-                }
-            }
-        }
-
-        if (!$tz instanceof DateTimeZone) {
-            $minutes = $exif->timeZoneOffsetMinutes();
-            if (is_array($minutes) && isset($minutes[0])) {
-                $candidateTz = self::timeZoneFromMinutes($minutes[0]);
-                if ($candidateTz instanceof DateTimeZone) {
-                    $tz       = $candidateTz;
-                    $tzSource = 'TimeZoneOffset';
-                }
-            }
-        }
-
-        if (!$tz instanceof DateTimeZone && $selected['date'] instanceof DateTimeImmutable) {
-            $candidateTz     = $selected['date']->getTimezone();
-            $selectedTzSource = is_string($selected['tzSource']) && $selected['tzSource'] !== ''
-                ? $selected['tzSource']
-                : null;
-
-            $offsetSources = ['OffsetTimeOriginal', 'OffsetTimeDigitized', 'OffsetTime', 'TimeZoneOffset'];
-
-            if (
-                $candidateTz instanceof DateTimeZone
-                && ($selectedTzSource === null || !in_array($selectedTzSource, $offsetSources, true))
-            ) {
-                $tz       = $candidateTz;
-                $tzSource = $selectedTzSource
-                    ?? (is_string($selected['source']) && $selected['source'] !== '' ? $selected['source'] : null);
-            }
-        }
-
-        $date = $selected['date'];
-        if ($date instanceof DateTimeImmutable && $tz instanceof DateTimeZone) {
-            $date = $date->setTimezone($tz);
-        }
+        $timezone = $converterClass::parseOffset(is_string($offset) ? $offset : null);
 
         return [
-            'date'     => $date instanceof DateTimeImmutable ? $date : null,
-            'tz'       => $tz instanceof DateTimeZone ? $tz : null,
-            'subSec'   => $selected['subSec'] ?? $subSecOriginal,
-            'source'   => $selected['source'],
-            'tzSource' => $tzSource,
+            $dateTime,
+            $timezone,
+            $resolver->string('SubSecTimeOriginal'),
         ];
     }
 
@@ -334,32 +166,4 @@ final readonly class CompositeResolver
         return null;
     }
 
-    /**
-     * Converts empty fractional second strings to null.
-     */
-    private static function normalizeSubSeconds(?string $value): ?string
-    {
-        return $value === null || $value === '' ? null : $value;
-    }
-
-    /**
-     * Converts a minute offset into a timezone object while validating its bounds.
-     */
-    private static function timeZoneFromMinutes(?int $minutes): ?DateTimeZone
-    {
-        if (!is_int($minutes)) {
-            return null;
-        }
-
-        if ($minutes < -14 * 60 || $minutes > 14 * 60) {
-            return null;
-        }
-
-        $absolute = abs($minutes);
-        $hours    = intdiv($absolute, 60);
-        $mins     = $absolute % 60;
-        $prefix   = $minutes < 0 ? '-' : '+';
-
-        return ValueConverters::parseOffset(sprintf('%s%02d:%02d', $prefix, $hours, $mins));
-    }
 }

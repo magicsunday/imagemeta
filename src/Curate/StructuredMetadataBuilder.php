@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters;
@@ -116,7 +117,7 @@ final class StructuredMetadataBuilder
 
         $camera = $this->buildCamera($exifResolver);
         $lens   = $this->buildLens($exifResolver);
-        $image  = $this->buildImage($exifResolver, $interop);
+        $image  = $this->buildImage($exifResolver);
 
         $exposure = new Exposure(
             iso: CompositeResolver::intISO($exifResolver),
@@ -413,8 +414,8 @@ final class StructuredMetadataBuilder
      */
     private function buildTemporal(ExifTagResolver $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
     {
-        $exifCreate = $resolver->digitizedDateTime();
-        $exifModify = $resolver->fileDateTime();
+        $exifCreate = $resolver->date('DateTimeDigitized');
+        $exifModify = $resolver->date('DateTime');
 
         $xmpCreate       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $xmpModify       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
@@ -422,80 +423,46 @@ final class StructuredMetadataBuilder
         $quickTimeCreate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
         $quickTimeModify = $this->parseFlexibleDate($quickTime->string('ModifyDate'));
 
-        $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate;
+        $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
 
-        $offsetTime          = $resolver->offsetTime();
-        $offsetTimeOriginal  = $resolver->offsetTimeOriginal();
-        $offsetTimeDigitized = $resolver->offsetTimeDigitized();
+        [$original, $tz, $subOriginalRaw] = CompositeResolver::dateOriginal($resolver, ValueConverters::class);
 
-        $subSecTime         = $this->sanitizeSubSeconds($resolver->subSecTime());
-        $subSecOriginalRaw  = $this->sanitizeSubSeconds($resolver->subSecTimeOriginal());
-        $subSecDigitizedRaw = $this->sanitizeSubSeconds($resolver->subSecTimeDigitized());
-
-        $timeZoneOffsets = $resolver->timeZoneOffsetMinutes();
-
-        $fallbackDates = [
-            [
-                'date' => $xmpDateCreated,
-                'tz' => null,
-                'subSec' => null,
-                'source' => 'XMP',
-                'tzSource' => 'XMP',
-            ],
-            [
-                'date' => $quickTimeCreate,
-                'tz' => null,
-                'subSec' => null,
-                'source' => 'QuickTime',
-                'tzSource' => 'QuickTime',
-            ],
-        ];
-
-        if (
-            $exifCreate === null
-            && ($xmpCreate instanceof DateTimeImmutable || $quickTimeCreate instanceof DateTimeImmutable)
-        ) {
-            $fallbackDates[] = [
-                'date' => $xmpCreate ?? $quickTimeCreate,
-                'tz' => null,
-                'subSec' => $subSecDigitizedRaw,
-                'source' => 'DateTimeDigitized',
-                'tzSource' => 'DateTimeDigitized',
-            ];
+        $originalWithTz = $original;
+        if ($original instanceof DateTimeImmutable && $tz instanceof DateTimeZone) {
+            $originalWithTz = $original->setTimezone($tz);
         }
 
-        if (
-            $exifModify === null
-            && ($xmpModify instanceof DateTimeImmutable || $quickTimeModify instanceof DateTimeImmutable)
-        ) {
-            $fallbackDates[] = [
-                'date' => $xmpModify ?? $quickTimeModify,
-                'tz' => null,
-                'subSec' => $subSecTime,
-                'source' => 'DateTime',
-                'tzSource' => 'DateTime',
-            ];
+        $offsetTime          = $resolver->string('OffsetTime');
+        $offsetTimeOriginal  = $resolver->string('OffsetTimeOriginal');
+        $offsetTimeDigitized = $resolver->string('OffsetTimeDigitized');
+
+        $subSecTime         = $this->sanitizeSubSeconds($resolver->string('SubSecTime'));
+        $subSecDigitizedRaw = $this->sanitizeSubSeconds($resolver->string('SubSecTimeDigitized'));
+        $subSecOriginal     = $this->sanitizeSubSeconds($subOriginalRaw);
+
+        $timeZoneOffsets = $resolver->ints('TimeZoneOffset');
+
+        $tzSource = null;
+        if ($tz instanceof DateTimeZone) {
+            if ($offsetTimeOriginal !== null && ValueConverters::parseOffset($offsetTimeOriginal) instanceof DateTimeZone) {
+                $tzSource = 'OffsetTimeOriginal';
+            } elseif (is_array($timeZoneOffsets) && $timeZoneOffsets !== []) {
+                $tzSource = 'TimeZoneOffset';
+            }
         }
-
-        $exifOriginal = CompositeResolver::dateOriginal($resolver, $fallbackDates);
-
-        $original           = $exifOriginal['date'];
-        $tz                 = $exifOriginal['tz'];
-        $tzSource           = $exifOriginal['tzSource'] ?? null;
-        $subSecTimeOriginal = $exifOriginal['subSec'] ?? $subSecOriginalRaw;
 
         return new Temporal(
             create: $create,
             modify: $modify,
-            original: $original,
+            original: $originalWithTz,
             tz: $tz,
             tzSource: $tzSource,
             offsetTime: $offsetTime,
             offsetTimeOriginal: $offsetTimeOriginal,
             offsetTimeDigitized: $offsetTimeDigitized,
             subSecTime: $subSecTime,
-            subSecTimeOriginal: $subSecTimeOriginal,
+            subSecTimeOriginal: $subSecOriginal,
             subSecTimeDigitized: $subSecDigitizedRaw,
             timeZoneOffsetMinutes: $timeZoneOffsets,
         );
@@ -526,13 +493,16 @@ final class StructuredMetadataBuilder
      */
     private function buildLens(ExifTagResolver $exif): Lens
     {
+        $maxApex = ValueConverters::rationalToFloat($exif->rational('MaxApertureValue'));
+        $maxF    = $maxApex !== null ? ValueConverters::apexToFNumber($maxApex) : null;
+
         return new Lens(
             lensMake: $exif->lensMake(),
             lensModel: $exif->lensModel(),
             lensSerialNumber: $exif->lensSerialNumber(),
             focalLengthMm: $exif->focalLength(),
             focalLengthIn35mm: $exif->focalLength35mm(),
-            maxApertureFNumber: $exif->maxApertureFNumber(),
+            maxApertureFNumber: $maxF,
             lensSpecification: $exif->lensSpecification(),
         );
     }
@@ -540,19 +510,16 @@ final class StructuredMetadataBuilder
     /**
      * Builds the image value object using EXIF metadata.
      */
-    private function buildImage(ExifTagResolver $exif, Interop $interop): Image
+    private function buildImage(ExifTagResolver $exif): Image
     {
-        $dimensions = CompositeResolver::dimensions($exif);
-
-        $width  = $dimensions['width'];
-        $height = $dimensions['height'];
+        [$width, $height] = CompositeResolver::dimensions($exif);
 
         return new Image(
             width: $width,
             height: $height,
             orientation: $exif->orientation(),
             bitsPerSample: $exif->bitsPerSample(),
-            colorSpace: $this->normalizedColorSpace($exif->colorSpace(), $interop),
+            colorSpace: $this->normalizedColorSpace($exif),
             imageUniqueId: $exif->imageUniqueId(),
             imageNumber: $exif->imageNumber(),
             documentName: null,
@@ -587,14 +554,15 @@ final class StructuredMetadataBuilder
     /**
      * Normalises the colour space based on interoperability metadata hints.
      */
-    private function normalizedColorSpace(?ColorSpace $colorSpace, Interop $interop): ?ColorSpace
+    private function normalizedColorSpace(ExifTagResolver $resolver): ?ColorSpace
     {
-        if (
-            $colorSpace === ColorSpace::UNCALIBRATED
-            && $interop->index !== null
-            && strtoupper($interop->index) === 'R03'
-        ) {
-            return ColorSpace::ADOBE_RGB;
+        $colorSpace = $resolver->enum('ColorSpace', ColorSpace::class);
+
+        if ($colorSpace === ColorSpace::UNCALIBRATED) {
+            $interopIndex = $resolver->string('InteropIndex');
+            if ($interopIndex !== null && strtoupper($interopIndex) === 'R03') {
+                return ColorSpace::ADOBE_RGB;
+            }
         }
 
         return $colorSpace;
