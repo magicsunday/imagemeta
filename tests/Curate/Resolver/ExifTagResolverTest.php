@@ -234,7 +234,7 @@ final class ExifTagResolverTest extends TestCase
             ExifTag::OFFSET_TIME            => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+00:30'),
             ExifTag::OFFSET_TIME_ORIGINAL   => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '-01:30'),
             ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 6, '+01:45'),
-            ExifTag::TIME_ZONE_OFFSET       => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-90, 120])),
+            ExifTag::TIME_ZONE_OFFSET       => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-1, 2])),
             ExifTag::SELF_TIMER_MODE        => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 7),
             ExifTag::INTERLACE              => new IfdEntry(ExifTag::INTERLACE, 3, 1, 1),
         ]);
@@ -248,7 +248,7 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('+00:30', $resolver->offsetTime());
         self::assertSame('-01:30', $resolver->offsetTimeOriginal());
         self::assertSame('+01:45', $resolver->offsetTimeDigitized());
-        self::assertSame([-90, 120], $resolver->timeZoneOffsetMinutes());
+        self::assertSame([-60, 120], $resolver->timeZoneOffsetMinutes());
         self::assertSame(7, $resolver->selfTimerModeSeconds());
         self::assertSame(1, $resolver->interlace());
     }

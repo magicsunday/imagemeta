@@ -175,7 +175,7 @@ final class ExifDocumentTest extends TestCase
                 ExifTag::TIME_ZONE_OFFSET,
                 3,
                 1,
-                new ExifNumericList([90]),
+                new ExifNumericList([9]),
             ),
         ]);
 
@@ -183,7 +183,30 @@ final class ExifDocumentTest extends TestCase
 
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
-        self::assertSame('2021-02-03T04:05:06.789+01:30', $capture->format(self::ISO_8601_MILLISECONDS));
+        self::assertSame('2021-02-03T04:05:06.789+09:00', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    #[Test]
+    public function usesSecondTimeZoneOffsetComponentForDigitizedFallback(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_DIGITIZED     => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2022:08:09 10:11:12'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '321'),
+            ExifTag::TIME_ZONE_OFFSET       => new IfdEntry(
+                ExifTag::TIME_ZONE_OFFSET,
+                3,
+                2,
+                new ExifNumericList([9, -3]),
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $capture = $doc->captureDateTime();
+        self::assertNotNull($capture);
+        self::assertSame('2022-08-09T10:11:12.321-03:00', $capture->format(self::ISO_8601_MILLISECONDS));
     }
 
     /**
@@ -432,7 +455,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME_DIGITIZED     => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+01:30'),
             ExifTag::OFFSET_TIME               => new IfdEntry(ExifTag::OFFSET_TIME, 2, 1, '+01:30'),
             ExifTag::SUB_SEC_TIME              => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '500'),
-            ExifTag::TIME_ZONE_OFFSET          => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-90])),
+            ExifTag::TIME_ZONE_OFFSET          => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-130])),
             ExifTag::SELF_TIMER_MODE           => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 10),
         ]);
 

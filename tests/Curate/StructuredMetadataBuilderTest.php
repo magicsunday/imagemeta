@@ -135,7 +135,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::OFFSET_TIME_ORIGINAL        => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:30'),
             ExifTag::OFFSET_TIME_DIGITIZED       => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 6, '+01:30'),
             ExifTag::OFFSET_TIME                 => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+01:30'),
-            ExifTag::TIME_ZONE_OFFSET            => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-90, -60])),
+            ExifTag::TIME_ZONE_OFFSET            => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-2, -1])),
             ExifTag::SELF_TIMER_MODE             => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 10),
             ExifTag::TEMPERATURE                 => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(215, 10)),
             ExifTag::HUMIDITY                    => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(600, 10)),
@@ -309,7 +309,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('+01:30', $structured->temporal->offsetTime);
         self::assertSame('+01:30', $structured->temporal->offsetTimeOriginal);
         self::assertSame('+01:30', $structured->temporal->offsetTimeDigitized);
-        self::assertSame([-90, -60], $structured->temporal->timeZoneOffsetMinutes);
+        self::assertSame([-120, -60], $structured->temporal->timeZoneOffsetMinutes);
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
     }
 
@@ -515,7 +515,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $exifIfd = new Ifd([
             ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:02 12:00:00'),
-            ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-120])),
+            ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-2])),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -627,7 +627,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::EXIF_VERSION      => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0230'),
             ExifTag::ISO_SPEED         => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 320),
             ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:03:10 10:15:30'),
-            ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-90])),
+            ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-130])),
         ]);
 
         $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
