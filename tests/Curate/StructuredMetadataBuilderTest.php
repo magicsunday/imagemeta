@@ -653,6 +653,28 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures JPEG containers (ContainerType::JPEG) do not populate video dimensions without QuickTime metadata.
+     */
+    #[Test]
+    public function doesNotExposeVideoDimensionsForJpegContainers(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 5472),
+            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3648),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(5472, $structured->image->width);
+        self::assertSame(3648, $structured->image->height);
+        self::assertNull($structured->video->width);
+        self::assertNull($structured->video->height);
+    }
+
+    /**
      * Ensures legacy PhotographicSensitivity data stored in IFD0 is used when EXIF tags are absent.
      */
     #[Test]
