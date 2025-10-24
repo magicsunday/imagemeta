@@ -258,8 +258,6 @@ final class StructuredMetadataBuilder
                 fn () => $this->firstListValue($xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'creator')),
             ]),
             creatorEmail: $xmpResolver->string('http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
-            photographer: $exifResolver->photographer(),
-            imageEditor: $exifResolver->imageEditor(),
         );
 
         $temporal = $this->buildTemporal($exifResolver, $quickTimeResolver, $xmpResolver);
@@ -351,9 +349,6 @@ final class StructuredMetadataBuilder
         return new Device(
             software: $softwareChain,
             hostComputer: $exif->hostComputer(),
-            rawDevelopingSoftware: $exif->rawDevelopingSoftware(),
-            imageEditingSoftware: $exif->imageEditingSoftware(),
-            metadataEditingSoftware: $exif->metadataEditingSoftware(),
         );
     }
 
@@ -443,7 +438,6 @@ final class StructuredMetadataBuilder
                 fn () => $xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'SerialNumber'),
             ]),
             firmware: CompositeResolver::first([
-                fn () => $exif->cameraFirmware(),
                 fn () => $quickTime->string('CameraFirmwareVersion'),
                 fn () => $exif->software(),
                 fn () => $quickTime->string('com.apple.quicktime.software'),

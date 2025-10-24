@@ -212,13 +212,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::COMPOSITE_IMAGE                => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
             ExifTag::COMPOSITE_IMAGE_COUNT          => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
             ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES => new IfdEntry(ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
-            ExifTag::RAW_DEVELOPING_SOFTWARE        => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 10, 'Photos 1.0'),
-            ExifTag::IMAGE_EDITING_SOFTWARE         => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 10, 'Pixelmator'),
-            ExifTag::METADATA_EDITING_SOFTWARE      => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 8, 'MetadataX'),
-            ExifTag::PHOTOGRAPHER_NAME              => new IfdEntry(ExifTag::PHOTOGRAPHER_NAME, 2, 11, 'John Appleseed'),
-            ExifTag::IMAGE_EDITOR                   => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 8, 'iOS Edit'),
-            ExifTag::DATETIME_ORIGINAL              => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
-            ExifTag::OFFSET_TIME_ORIGINAL           => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
+            ExifTag::DATETIME_ORIGINAL             => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
+            ExifTag::OFFSET_TIME_ORIGINAL          => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -253,12 +248,6 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertNull($structured->depth->measureType);
 
         self::assertSame('17.3', $structured->device->software);
-        self::assertSame('Photos 1.0', $structured->device->rawDevelopingSoftware);
-        self::assertSame('Pixelmator', $structured->device->imageEditingSoftware);
-        self::assertSame('MetadataX', $structured->device->metadataEditingSoftware);
-
-        self::assertSame('John Appleseed', $structured->author->photographer);
-        self::assertSame('iOS Edit', $structured->author->imageEditor);
 
         self::assertTrue($structured->scene->hdrScene);
         self::assertTrue($structured->scene->nightMode);
