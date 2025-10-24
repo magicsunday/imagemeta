@@ -17,16 +17,18 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ColorProfile
 {
     /**
-     * @param string|null $profileName    Human readable profile description.
-     * @param string|null $profileVersion Profile version string.
-     * @param string|null $pcs            Profile connection space.
+     * @param string|null $profileName     Human readable profile description.
+     * @param string|null $profileVersion  Profile version string.
+     * @param string|null $pcs             Profile connection space.
      * @param string|null $renderingIntent Rendering intent description.
+     * @param float|null  $gamma           Scene gamma value when provided by EXIF.
      */
     public function __construct(
         public ?string $profileName,
         public ?string $profileVersion,
         public ?string $pcs,
         public ?string $renderingIntent,
+        public ?float $gamma,
     ) {
     }
 }

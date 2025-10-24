@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use BackedEnum;
 use DateTimeZone;
 use Exception;
+use JsonException;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
@@ -21,16 +23,35 @@ use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use UnitEnum;
+use ValueError;
 
+use function array_filter;
+use function array_map;
+use function array_slice;
 use function array_values;
 use function atan;
+use function bin2hex;
 use function count;
+use function ctype_digit;
+use function ctype_print;
+use function explode;
+use function implode;
 use function is_array;
 use function is_float;
 use function is_int;
+use function is_numeric;
+use function json_encode;
 use function log;
 use function pow;
 use function rad2deg;
+use function sprintf;
+use function str_replace;
+use function strlen;
+use function strtoupper;
+use function trim;
+use const JSON_PRESERVE_ZERO_FRACTION;
+use const JSON_THROW_ON_ERROR;
 
 /**
  * Collection of helper methods that translate raw metadata values into domain specific scalars.
@@ -195,5 +216,189 @@ final readonly class ValueConverters
         }
 
         return null;
+    }
+
+    /**
+     * Normalises a raw EXIF version byte string into a dotted decimal representation.
+     */
+    public static function toExifVersion(?string $bytes): ?string
+    {
+        if ($bytes === null || $bytes === '') {
+            return null;
+        }
+
+        $trimmed = trim($bytes, "\0");
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (ctype_digit($trimmed) && strlen($trimmed) === 4) {
+            $major = (int) substr($trimmed, 0, 2);
+            $minor = (int) substr($trimmed, 2, 2);
+
+            return sprintf('%d.%02d', $major, $minor);
+        }
+
+        if (ctype_print($trimmed)) {
+            return $trimmed;
+        }
+
+        return strtoupper(bin2hex($trimmed));
+    }
+
+    /**
+     * Converts a textual YCbCr subsampling representation into integer pairs.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    public static function ycbcrSubSamplingToPair(?string $val): ?array
+    {
+        if ($val === null || $val === '') {
+            return null;
+        }
+
+        $parts = array_values(array_filter(explode(' ', str_replace([',', ';'], ' ', $val))));
+        if (count($parts) !== 2) {
+            return null;
+        }
+
+        if (!is_numeric($parts[0]) || !is_numeric($parts[1])) {
+            return null;
+        }
+
+        return [(int) $parts[0], (int) $parts[1]];
+    }
+
+    /**
+     * Attempts to map a raw value to a backed enum instance.
+     *
+     * @template T of UnitEnum
+     *
+     * @param class-string<T> $enumClass
+     * @param int|string|null $raw
+     *
+     * @return T|null
+     */
+    public static function toEnumOrNull(string $enumClass, int|string|null $raw): ?UnitEnum
+    {
+        if ($raw === null || ($raw === '' && is_string($raw))) {
+            return null;
+        }
+
+        if (!enum_exists($enumClass)) {
+            return null;
+        }
+
+        $value = $raw;
+        if (is_string($raw) && ctype_digit($raw)) {
+            $value = (int) $raw;
+        }
+
+        if (is_subclass_of($enumClass, BackedEnum::class)) {
+            /** @var class-string<BackedEnum> $enumClass */
+            try {
+                return $enumClass::from($value);
+            } catch (ValueError) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts a rational pair into a white point array.
+     *
+     * @param array<int, mixed>|ExifRationalList|ExifNumericList|null $rational
+     *
+     * @return array{0:float,1:float}|null
+     */
+    public static function toWhitePoint(ExifRationalList|ExifNumericList|array|null $rational): ?array
+    {
+        if ($rational === null) {
+            return null;
+        }
+
+        $values = $rational instanceof ExifRationalList || $rational instanceof ExifNumericList
+            ? array_values($rational->values)
+            : array_values((array) $rational);
+
+        if (count($values) < 2) {
+            return null;
+        }
+
+        $x = self::rationalToFloat($values[0]);
+        $y = self::rationalToFloat($values[1]);
+
+        return $x !== null && $y !== null ? [$x, $y] : null;
+    }
+
+    /**
+     * Converts a rational list into primary chromaticity coordinates.
+     *
+     * @param array<int, mixed>|ExifRationalList|ExifNumericList|null $rational
+     *
+     * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     */
+    public static function toPrimaryChromaticities(ExifRationalList|ExifNumericList|array|null $rational): ?array
+    {
+        if ($rational === null) {
+            return null;
+        }
+
+        $values = $rational instanceof ExifRationalList || $rational instanceof ExifNumericList
+            ? array_values($rational->values)
+            : array_values((array) $rational);
+
+        if (count($values) < 6) {
+            return null;
+        }
+
+        $result = [];
+        foreach (array_slice($values, 0, 6) as $component) {
+            $float = self::rationalToFloat($component);
+            if ($float === null) {
+                return null;
+            }
+
+            $result[] = $float;
+        }
+
+        /** @var array{0:float,1:float,2:float,3:float,4:float,5:float} $result */
+        return $result;
+    }
+
+    /**
+     * Serialises a DNG matrix or CFA pattern into a reproducible string representation.
+     */
+    public static function dngMatrixToString(ExifRationalList|ExifNumericList|array|null $matrix): ?string
+    {
+        if ($matrix === null) {
+            return null;
+        }
+
+        $raw = $matrix instanceof ExifRationalList || $matrix instanceof ExifNumericList
+            ? array_values($matrix->values)
+            : $matrix;
+
+        if ($raw === []) {
+            return null;
+        }
+
+        $values = [];
+        foreach ($raw as $component) {
+            $float = self::rationalToFloat($component);
+            if ($float === null) {
+                return null;
+            }
+
+            $values[] = $float;
+        }
+
+        try {
+            return json_encode($values, JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return implode(',', $values);
+        }
     }
 }

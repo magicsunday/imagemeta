@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
+use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 
@@ -21,24 +23,38 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 final readonly class Exposure
 {
     /**
-     * @param int|null           $iso                 ISO sensitivity.
-     * @param float|null         $exposureTimeSeconds Exposure time in seconds.
-     * @param float|null         $apertureFNumber     Aperture (f-number).
-     * @param float|null         $focalLengthMm       Focal length used in millimetres.
-     * @param ExposureProgram|null $program           Selected exposure program.
-     * @param MeteringMode|null    $meteringMode      Metering mode.
-     * @param WhiteBalance|null    $whiteBalance      White balance setting.
-     * @param FlashInfo|null       $flash             Flash details.
+     * @param int|null              $iso                ISO sensitivity.
+     * @param float|null            $exposureTimeSec    Exposure time in seconds.
+     * @param float|null            $fNumber            Aperture (f-number).
+     * @param float|null            $exposureBiasEv     Exposure compensation in EV.
+     * @param ExposureProgram|null  $program            Selected exposure program.
+     * @param MeteringMode|null     $meteringMode       Metering mode.
+     * @param FlashInfo|null        $flash              Flash details.
+     * @param WhiteBalance|null     $whiteBalance       White balance setting.
+     * @param float|null            $brightnessEv       Scene brightness value in EV.
+     * @param ExposureMode|null     $exposureMode       Exposure mode selection.
+     * @param GainControl|null      $gainControl        Applied gain control.
+     * @param int|null              $contrast           Contrast processing setting.
+     * @param int|null              $saturation         Saturation processing setting.
+     * @param int|null              $sharpness          Sharpness processing setting.
+     * @param float|null            $digitalZoomRatio   Applied digital zoom ratio.
      */
     public function __construct(
         public ?int $iso,
-        public ?float $exposureTimeSeconds,
-        public ?float $apertureFNumber,
-        public ?float $focalLengthMm,
-        public ?ExposureProgram $program = null,
-        public ?MeteringMode $meteringMode = null,
-        public ?WhiteBalance $whiteBalance = null,
-        public ?FlashInfo $flash = null,
+        public ?float $exposureTimeSec,
+        public ?float $fNumber,
+        public ?float $exposureBiasEv,
+        public ?ExposureProgram $program,
+        public ?MeteringMode $meteringMode,
+        public ?FlashInfo $flash,
+        public ?WhiteBalance $whiteBalance,
+        public ?float $brightnessEv,
+        public ?ExposureMode $exposureMode,
+        public ?GainControl $gainControl,
+        public ?int $contrast,
+        public ?int $saturation,
+        public ?int $sharpness,
+        public ?float $digitalZoomRatio,
     ) {
     }
 }

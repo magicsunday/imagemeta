@@ -22,6 +22,9 @@ final readonly class RawCharacteristics
      * @param int|null    $whiteLevel                 White level saturation point.
      * @param string|null $colorMatrix                Colour transformation matrix serialized form.
      * @param int|null    $linearizationTableEntries  Number of entries in the linearisation table.
+     * @param int|null    $calibrationIlluminant1     First calibration illuminant identifier.
+     * @param int|null    $calibrationIlluminant2     Second calibration illuminant identifier.
+     * @param int|null    $calibrationIlluminant3     Third calibration illuminant identifier.
      */
     public function __construct(
         public ?string $cfaPattern,
@@ -29,6 +32,9 @@ final readonly class RawCharacteristics
         public ?int $whiteLevel,
         public ?string $colorMatrix,
         public ?int $linearizationTableEntries,
+        public ?int $calibrationIlluminant1,
+        public ?int $calibrationIlluminant2,
+        public ?int $calibrationIlluminant3,
     ) {
     }
 }

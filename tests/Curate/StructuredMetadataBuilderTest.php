@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Curate;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
@@ -21,231 +22,312 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
+use MagicSunday\ImageMeta\Value\Enum\DepthFormat;
+use MagicSunday\ImageMeta\Value\Enum\DepthMeasureType;
+use MagicSunday\ImageMeta\Value\Enum\DepthUnits;
+use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
-use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
-use MagicSunday\ImageMeta\Value\Enum\FlashMode;
-use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
+use MagicSunday\ImageMeta\Value\Enum\FileSource;
+use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
+use MagicSunday\ImageMeta\Value\Enum\Photometric;
+use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
+use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
+use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
+use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder
  * @covers \MagicSunday\ImageMeta\Curate\StructuredMetadata
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\CameraResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\LensResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\ImageResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\ExposureResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\CaptureResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\GpsResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\DeviceResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\AppleResolver
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\XmpResolver
  */
 final class StructuredMetadataBuilderTest extends TestCase
 {
     /**
-     * Ensures the builder combines EXIF, XMP and QuickTime data into a typed structure.
+     * Ensures DSLR style EXIF data is mapped to the extended value objects.
      */
     #[Test]
-    public function buildsStructuredAggregateFromAvailableSources(): void
+    public function buildsStructuredAggregateForDslrJpeg(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::MAKE        => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
-            ExifTag::MODEL       => new IfdEntry(ExifTag::MODEL, 2, 5, 'EOS R5'),
-            ExifTag::ORIENTATION => new IfdEntry(ExifTag::ORIENTATION, 3, 1, 6),
-            ExifTag::ARTIST      => new IfdEntry(ExifTag::ARTIST, 2, 5, 'Canon'),
+            ExifTag::IMAGE_WIDTH               => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 6720),
+            ExifTag::IMAGE_HEIGHT              => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 4480),
+            ExifTag::BITS_PER_SAMPLE           => new IfdEntry(ExifTag::BITS_PER_SAMPLE, 3, 3, new ExifNumericList([14, 14, 14])),
+            ExifTag::COMPRESSION               => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, 3, 1, Photometric::YCBCR->value),
+            ExifTag::PLANAR_CONFIGURATION      => new IfdEntry(ExifTag::PLANAR_CONFIGURATION, 3, 1, PlanarConfiguration::CHUNKY->value),
+            ExifTag::RESOLUTION_UNIT           => new IfdEntry(ExifTag::RESOLUTION_UNIT, 3, 1, ResolutionUnit::INCHES->value),
+            ExifTag::X_RESOLUTION              => new IfdEntry(ExifTag::X_RESOLUTION, 5, 1, [[300, 1]]),
+            ExifTag::Y_RESOLUTION              => new IfdEntry(ExifTag::Y_RESOLUTION, 5, 1, [[300, 1]]),
+            ExifTag::YCBCR_POSITIONING         => new IfdEntry(ExifTag::YCBCR_POSITIONING, 3, 1, YCbCrPositioning::CENTERED->value),
+            ExifTag::YCBCR_SUB_SAMPLING        => new IfdEntry(ExifTag::YCBCR_SUB_SAMPLING, 3, 2, new ExifNumericList([2, 2])),
+            ExifTag::YCBCR_COEFFICIENTS        => new IfdEntry(ExifTag::YCBCR_COEFFICIENTS, 5, 3, [[299, 1000], [587, 1000], [114, 1000]]),
+            ExifTag::WHITE_POINT               => new IfdEntry(ExifTag::WHITE_POINT, 5, 2, [[3127, 10000], [3290, 10000]]),
+            ExifTag::PRIMARY_CHROMATICITIES    => new IfdEntry(ExifTag::PRIMARY_CHROMATICITIES, 5, 6, [[6400, 10000], [3300, 10000], [3000, 10000], [6000, 10000], [1500, 10000], [6000, 10000]]),
+            ExifTag::MAKE                      => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
+            ExifTag::MODEL                     => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
+            ExifTag::SOFTWARE                  => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
+            ExifTag::DOCUMENT_NAME             => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 12, 'IMG_5123.CR3'),
+            ExifTag::IMAGE_DESCRIPTION         => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 16, 'Sunset over Alps'),
+            ExifTag::ORIENTATION               => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::RIGHT_TOP->value),
+            ExifTag::ARTIST                    => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
-            ExifTag::EXPOSURE_TIME            => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 125]]),
-            ExifTag::F_NUMBER                 => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[9, 2]]),
-            ExifTag::FOCAL_LENGTH             => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, [[85, 1]]),
-            ExifTag::EXPOSURE_PROGRAM        => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, 3),
-            ExifTag::METERING_MODE           => new IfdEntry(ExifTag::METERING_MODE, 3, 1, 5),
-            ExifTag::WHITE_BALANCE           => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, 1),
-            ExifTag::FLASH                   => new IfdEntry(ExifTag::FLASH, 3, 1, 127),
-            ExifTag::DATETIME_ORIGINAL       => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:03:01 12:34:56'),
-            ExifTag::OFFSET_TIME_ORIGINAL    => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+02:00'),
-            ExifTag::COLOR_SPACE              => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, 1),
+            ExifTag::EXIF_VERSION              => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+            ExifTag::FLASHPIX_VERSION          => new IfdEntry(ExifTag::FLASHPIX_VERSION, 7, 4, '0100'),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY  => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
+            ExifTag::EXPOSURE_TIME             => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 125]]),
+            ExifTag::F_NUMBER                  => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[56, 10]]),
+            ExifTag::EXPOSURE_PROGRAM          => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, ExposureProgram::APERTURE_PRIORITY->value),
+            ExifTag::EXPOSURE_BIAS_VALUE       => new IfdEntry(ExifTag::EXPOSURE_BIAS_VALUE, 10, 1, [[-2, 1]]),
+            ExifTag::METERING_MODE             => new IfdEntry(ExifTag::METERING_MODE, 3, 1, MeteringMode::PATTERN->value),
+            ExifTag::LIGHT_SOURCE              => new IfdEntry(ExifTag::LIGHT_SOURCE, 3, 1, LightSource::DAYLIGHT->value),
+            ExifTag::FLASH                     => new IfdEntry(ExifTag::FLASH, 3, 1, 0x59),
+            ExifTag::WHITE_BALANCE             => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, WhiteBalance::MANUAL->value),
+            ExifTag::BRIGHTNESS_VALUE          => new IfdEntry(ExifTag::BRIGHTNESS_VALUE, 10, 1, [[76, 10]]),
+            ExifTag::COLOR_SPACE               => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::SRGB->value),
+            ExifTag::EXPOSURE_MODE             => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, ExposureMode::MANUAL->value),
+            ExifTag::GAIN_CONTROL              => new IfdEntry(ExifTag::GAIN_CONTROL, 3, 1, GainControl::LOW_GAIN_UP->value),
+            ExifTag::CONTRAST                  => new IfdEntry(ExifTag::CONTRAST, 3, 1, 1),
+            ExifTag::SATURATION                => new IfdEntry(ExifTag::SATURATION, 3, 1, 0),
+            ExifTag::SHARPNESS                 => new IfdEntry(ExifTag::SHARPNESS, 3, 1, 2),
+            ExifTag::DIGITAL_ZOOM_RATIO        => new IfdEntry(ExifTag::DIGITAL_ZOOM_RATIO, 5, 1, [[1, 1]]),
+            ExifTag::FOCAL_LENGTH              => new IfdEntry(ExifTag::FOCAL_LENGTH, 5, 1, [[85, 1]]),
+            ExifTag::FOCAL_LENGTH_IN_35MM_FILM => new IfdEntry(ExifTag::FOCAL_LENGTH_IN_35MM_FILM, 3, 1, 85),
+            ExifTag::MAX_APERTURE_VALUE        => new IfdEntry(ExifTag::MAX_APERTURE_VALUE, 5, 1, [[1995, 1000]]),
+            ExifTag::LENS_INFO                 => new IfdEntry(ExifTag::LENS_INFO, 5, 4, [[35, 1], [40, 10], [150, 1], [56, 10]]),
+            ExifTag::LENS_MODEL                => new IfdEntry(ExifTag::LENS_MODEL, 2, 15, 'EF 85mm f/1.4L'),
+            ExifTag::LENS_MAKE                 => new IfdEntry(ExifTag::LENS_MAKE, 2, 5, 'Canon'),
+            ExifTag::LENS_SERIAL_NUMBER        => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 10, '1234ABC'),
+            ExifTag::SCENE_CAPTURE_TYPE        => new IfdEntry(ExifTag::SCENE_CAPTURE_TYPE, 3, 1, SceneCaptureType::STANDARD->value),
+            ExifTag::SUBJECT_DISTANCE_RANGE    => new IfdEntry(ExifTag::SUBJECT_DISTANCE_RANGE, 3, 1, SubjectDistanceRange::DISTANT->value),
+            ExifTag::FILE_SOURCE               => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, chr(FileSource::DIGITAL_CAMERA->value)),
+            ExifTag::SENSING_METHOD            => new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, SensingMethod::ONE_CHIP_COLOR_AREA->value),
+            ExifTag::GAMMA                     => new IfdEntry(ExifTag::GAMMA, 5, 1, [[22, 10]]),
         ]);
 
-        $gpsIfd = new Ifd([
-            ExifTag::GPS_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 1, 'N'),
-            ExifTag::GPS_LATITUDE      => new IfdEntry(ExifTag::GPS_LATITUDE, 5, 3, [[48, 1], [12, 1], [30, 1]]),
-            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 1, 'E'),
-            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 5, 3, [[11, 1], [34, 1], [45, 1]]),
-            ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, [[120, 1]]),
-            ExifTag::GPS_ALTITUDE_REF  => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+        $interopIfd = new Ifd([
+            ExifTag::INTEROPERABILITY_INDEX   => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, 'R98'),
+            ExifTag::INTEROPERABILITY_VERSION => new IfdEntry(ExifTag::INTEROPERABILITY_VERSION, 7, 4, "0100"),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
 
         $xmpDocument = new XmpDocument([
-            '{http://ns.adobe.com/exif/1.0/}ISOSpeedRatings' => '640',
-            '{http://ns.adobe.com/exif/1.0/}ExposureTime'    => '1/60',
-            '{http://ns.adobe.com/exif/1.0/}FNumber'         => '2.8',
-            '{http://ns.adobe.com/exif/1.0/}FocalLength'     => '50/1',
-            '{http://ns.adobe.com/exif/1.0/}ExposureProgram' => '3',
-            '{http://ns.adobe.com/exif/1.0/}MeteringMode'    => '5',
-            '{http://ns.adobe.com/exif/1.0/}WhiteBalance'    => '1',
-            '{http://ns.adobe.com/exif/1.0/}Flash'           => '127',
-            '{http://ns.adobe.com/exif/1.0/}ColorSpace'      => '1',
-            '{http://ns.adobe.com/exif/1.0/}DateTimeOriginal' => '2024-03-01T12:34:56+02:00',
-            '{http://ns.adobe.com/exif/1.0/}GPSLatitude'     => '48, 12, 30',
-            '{http://ns.adobe.com/exif/1.0/}GPSLatitudeRef'  => 'N',
-            '{http://ns.adobe.com/exif/1.0/}GPSLongitude'    => '11, 34, 45',
-            '{http://ns.adobe.com/exif/1.0/}GPSLongitudeRef' => 'E',
-            '{http://ns.adobe.com/exif/1.0/aux/}LensModel'   => 'RF 50mm F1.2L',
-            '{http://ns.adobe.com/exif/1.0/aux/}SerialNumber' => '12345',
-            '{http://ns.adobe.com/xap/1.0/}CreatorTool'      => 'Lightroom Classic',
-            '{http://ns.adobe.com/tiff/1.0/}Make'            => 'Canon',
-            '{http://ns.adobe.com/tiff/1.0/}Model'           => 'EOS R5',
-            '{http://purl.org/dc/elements/1.1/}subject'      => ['keyword1', 'keyword2'],
-            '{http://purl.org/dc/elements/1.1/}rights'       => 'Copyright ACME',
-            '{http://ns.adobe.com/xap/1.0/rights/}UsageTerms' => 'Editorial use only',
-            '{http://ns.adobe.com/xap/1.0/rights/}WebStatement' => 'https://example.com/license',
-            '{http://ns.adobe.com/photoshop/1.0/}Credit'     => 'ACME Press',
             '{http://purl.org/dc/elements/1.1/}creator'      => ['Jane Doe'],
             '{http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/}CreatorContactInfo/Iptc4xmpCore:CiEmailWork' => 'jane@example.com',
-            '{http://ns.adobe.com/tiff/1.0/}OriginalFileName' => 'IMG_0001.HEIC',
-            '{http://ns.adobe.com/xap/1.0/mm/}History'       => 'edited',
+            '{http://ns.adobe.com/tiff/1.0/}Make'            => 'Canon',
+            '{http://ns.adobe.com/tiff/1.0/}Model'           => 'EOS R6 II',
         ]);
 
         $quickTime = new QuickTimeMeta([
-            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'asset-id',
-            'com.apple.quicktime.make'            => 'Apple',
-            'com.apple.quicktime.model'           => 'iPhone 15',
-            'com.apple.quicktime.software'        => '17.4.1',
-            'MajorBrand'                          => 'heic',
-            'Encoder'                             => 'Apple AVFoundation',
-            'AvgBitrate'                          => 12000000,
-            'CompressorID'                        => 'hvc1',
-            'AudioFormat'                         => 'aac',
-            'AudioChannels'                       => 2,
-            'AudioSampleRate'                     => 48000,
-            'AudioBitsPerSample'                  => 16,
-            'Duration'                            => 3.5,
-            'VideoFrameRate'                      => 59.94,
-            'ImageWidth'                          => 4032,
-            'ImageHeight'                         => 3024,
-            'HDRFormat'                           => 'true',
-            'TransferFunction'                    => 'PQ',
-            'ColorPrimaries'                      => 'P3',
-            'BurstUUID'                           => 'burst-123',
-            'BurstSelected'                       => 1,
-            'DepthData'                           => 'depth-asset',
+            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'asset-01',
+            'com.apple.quicktime.make'            => 'Canon',
+            'com.apple.quicktime.model'           => 'EOS R6 II',
+            'com.apple.quicktime.software'        => '1.2.3',
         ]);
 
-        $metadata = new Metadata([
-            'primary-exif',
-        ], $quickTime, $exifDocument, ['<xmp/>'], $xmpDocument);
+        $metadata = new Metadata(['primary'], $quickTime, $exifDocument, ['<xmp/>'], $xmpDocument);
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
+        self::assertSame('R98', $structured->interop->index);
+        self::assertSame('0100', $structured->interop->version);
+
+        self::assertSame(Compression::JPEG, $structured->tiff->compression);
+        self::assertSame(Photometric::YCBCR, $structured->tiff->photometric);
+        self::assertSame([2, 2], $structured->tiff->ycbcrSubSampling);
+        self::assertSame([0.299, 0.587, 0.114], $structured->tiff->ycbcrCoefficients);
+        self::assertSame([0.3127, 0.329], $structured->tiff->whitePoint);
+        self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], $structured->tiff->primaryChromaticities);
+
         self::assertSame('Canon', $structured->camera->make);
-        self::assertSame('EOS R5', $structured->camera->model);
-        self::assertSame('12345', $structured->camera->serialNumber);
-        self::assertSame('Lightroom Classic', $structured->camera->software);
+        self::assertSame('EOS R6 II', $structured->camera->model);
+        self::assertSame('Jane Doe', $structured->author->artist);
+        self::assertSame('Firmware1', $structured->camera->firmware);
+        self::assertSame(FileSource::DIGITAL_CAMERA, $structured->camera->fileSource);
+        self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $structured->camera->sensingMethod);
 
-        self::assertSame('RF 50mm F1.2L', $structured->lens->model);
+        self::assertSame('EF 85mm f/1.4L', $structured->lens->lensModel);
         self::assertSame(85.0, $structured->lens->focalLengthMm);
+        self::assertSame(85, $structured->lens->focalLengthIn35mm);
+        self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensInfo);
+        self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
+        self::assertSame(6720, $structured->image->width);
+        self::assertSame(4480, $structured->image->height);
         self::assertSame(Orientation::RIGHT_TOP, $structured->image->orientation);
         self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
+        self::assertSame('IMG_5123.CR3', $structured->image->documentName);
+        self::assertSame('Sunset over Alps', $structured->image->description);
 
         self::assertSame(400, $structured->exposure->iso);
-        self::assertSame(0.008, $structured->exposure->exposureTimeSeconds);
-        self::assertSame(4.5, $structured->exposure->apertureFNumber);
-        self::assertSame(85.0, $structured->exposure->focalLengthMm);
+        self::assertSame(0.008, $structured->exposure->exposureTimeSec);
+        self::assertSame(5.6, $structured->exposure->fNumber);
+        self::assertSame(-2.0, $structured->exposure->exposureBiasEv);
         self::assertSame(ExposureProgram::APERTURE_PRIORITY, $structured->exposure->program);
         self::assertSame(MeteringMode::PATTERN, $structured->exposure->meteringMode);
         self::assertSame(WhiteBalance::MANUAL, $structured->exposure->whiteBalance);
+        self::assertSame(GainControl::LOW_GAIN_UP, $structured->exposure->gainControl);
+        self::assertSame(1, $structured->exposure->contrast);
+        self::assertSame(0, $structured->exposure->saturation);
+        self::assertSame(2, $structured->exposure->sharpness);
 
         $flash = $structured->exposure->flash;
         self::assertNotNull($flash);
         self::assertTrue($flash->fired);
-        self::assertSame(FlashMode::AUTO, $flash->mode);
-        self::assertSame(FlashReturn::DETECTED, $flash->returnDetection);
-        self::assertSame(FlashFunction::ABSENT, $flash->functionPresence);
-        self::assertTrue($flash->redEyeReduction);
 
-        $capture = $structured->capture->dateTime;
-        self::assertInstanceOf(DateTimeImmutable::class, $capture);
-        self::assertSame('2024-03-01T12:34:56+02:00', $capture->format('c'));
+        self::assertSame(SceneCaptureType::STANDARD, $structured->scene->type);
+        self::assertSame(SubjectDistanceRange::DISTANT, $structured->scene->subjectDistanceRange);
 
-        $gps = $structured->gps;
-        self::assertNotNull($gps);
-        self::assertEqualsWithDelta(48.208333333333, (float) $gps->latitude, 0.000000000001);
-        self::assertEqualsWithDelta(11.579166666667, (float) $gps->longitude, 0.000000000001);
-        self::assertSame(120.0, $gps->altitude);
-
-        $device = $structured->device;
-        self::assertSame('Apple', $device->manufacturer);
-        self::assertSame('iPhone 15', $device->model);
-        self::assertSame('17.4.1', $device->software);
-
-        self::assertSame('asset-id', $structured->apple->contentIdentifier);
-        self::assertSame($xmpDocument, $structured->xmp->document);
-
-        self::assertSame('heic', $structured->container->format);
-        self::assertSame('Apple AVFoundation', $structured->container->encoder);
-        self::assertSame(12000000, $structured->container->bitrate);
-        self::assertSame('hvc1', $structured->container->videoCodec);
-        self::assertSame('aac', $structured->container->audioCodec);
-
-        self::assertSame(3.5, $structured->video->durationSec);
-        self::assertSame(59.94, $structured->video->frameRate);
-        self::assertSame(4032, $structured->video->width);
-        self::assertSame(3024, $structured->video->height);
-        self::assertTrue($structured->video->hdr);
-        self::assertSame('PQ', $structured->video->transferFunction);
-        self::assertSame('P3', $structured->video->colorPrimaries);
-
-        self::assertSame(2, $structured->audio->channels);
-        self::assertSame(48000, $structured->audio->sampleRate);
-        self::assertSame(16, $structured->audio->bitDepth);
-
-        self::assertSame(['keyword1', 'keyword2'], $structured->keywords->flat);
-        self::assertNull($structured->keywords->hierarchical);
-
-        self::assertSame('Copyright ACME', $structured->rights->copyright);
-        self::assertSame('Editorial use only', $structured->rights->usageTerms);
-        self::assertSame('https://example.com/license', $structured->rights->licenseUrl);
-        self::assertSame('ACME Press', $structured->rights->creditLine);
-
-        self::assertSame('Jane Doe', $structured->author->creator);
-        self::assertSame('jane@example.com', $structured->author->creatorEmail);
-        self::assertSame('Canon', $structured->author->artist);
-
-        self::assertNotNull($structured->temporal->original);
-        self::assertSame('EXIF', $structured->temporal->tzSource);
-
-        self::assertSame('burst-123', $structured->related->burstId);
-        self::assertTrue($structured->related->isPrimaryInBurst);
-        self::assertSame('depth-asset', $structured->related->depthDataId);
-
-        self::assertNull($structured->file->mimeType);
-        self::assertNull($structured->processing->pictureStyle);
-
-        self::assertSame('IMG_0001.HEIC', $structured->integrity->originalFileName);
-        self::assertTrue($structured->integrity->edited);
+        self::assertSame('3.00', $structured->standards->exifVersion);
+        self::assertSame('0100', $structured->standards->flashpixVersion);
     }
 
     /**
-     * Ensures the aggregated structured metadata is cached per metadata instance.
+     * Ensures HEIF metadata including composite images and depth is mapped correctly.
      */
     #[Test]
-    public function cachesStructuredAggregate(): void
+    public function buildsStructuredAggregateForHeif(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_WIDTH   => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 4032),
+            ExifTag::IMAGE_HEIGHT  => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3024),
+            ExifTag::MAKE          => new IfdEntry(ExifTag::MAKE, 2, 5, 'Apple'),
+            ExifTag::MODEL         => new IfdEntry(ExifTag::MODEL, 2, 9, 'iPhone 15'),
+            ExifTag::ORIENTATION   => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::TOP_LEFT->value),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION                  => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY      => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 125),
+            ExifTag::EXPOSURE_TIME                 => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 120]]),
+            ExifTag::F_NUMBER                      => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[19, 10]]),
+            ExifTag::COMPOSITE_IMAGE               => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
+            ExifTag::COMPOSITE_IMAGE_COUNT         => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
+            ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES => new IfdEntry(ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
+            ExifTag::DEPTH_FORMAT                  => new IfdEntry(ExifTag::DEPTH_FORMAT, 3, 1, DepthFormat::LINEAR->value),
+            ExifTag::DEPTH_NEAR                    => new IfdEntry(ExifTag::DEPTH_NEAR, 5, 1, [[1, 10]]),
+            ExifTag::DEPTH_FAR                     => new IfdEntry(ExifTag::DEPTH_FAR, 5, 1, [[50, 1]]),
+            ExifTag::DEPTH_UNITS                   => new IfdEntry(ExifTag::DEPTH_UNITS, 3, 1, DepthUnits::METERS->value),
+            ExifTag::DEPTH_MEASURE_TYPE            => new IfdEntry(ExifTag::DEPTH_MEASURE_TYPE, 3, 1, DepthMeasureType::OPTICAL_RAY->value),
+            ExifTag::RAW_DEVELOPING_SOFTWARE       => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 10, 'Photos 1.0'),
+            ExifTag::IMAGE_EDITING_SOFTWARE        => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 10, 'Pixelmator'),
+            ExifTag::METADATA_EDITING_SOFTWARE     => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 8, 'MetadataX'),
+            ExifTag::PHOTOGRAPHER_NAME             => new IfdEntry(ExifTag::PHOTOGRAPHER_NAME, 2, 11, 'John Appleseed'),
+            ExifTag::IMAGE_EDITOR                  => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 8, 'iOS Edit'),
+            ExifTag::DATETIME_ORIGINAL             => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
+            ExifTag::OFFSET_TIME_ORIGINAL          => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $xmpDocument = new XmpDocument([
+            '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2024-02-01T20:45:00+01:00',
+        ]);
+
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'burst-01',
+            'HDRImageType'                        => 'HDR',
+            'NightMode'                           => 1,
+            'DepthData'                           => 'depth-asset',
+            'com.apple.quicktime.software'        => '17.3',
+            'CreationDate'                        => '2024-02-01T19:45:00Z',
+        ]);
+
+        $metadata = new Metadata(['primary'], $quickTime, $exifDocument, ['<xmp/>'], $xmpDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $structured->composite->type);
+        self::assertSame([9, 4], $structured->composite->counts);
+        foreach ([0.008333333333333333, 0.016666666666666666, 0.03333333333333333, 0.06666666666666667] as $idx => $expected) {
+            self::assertEqualsWithDelta($expected, $structured->composite->exposureTimesTotal[$idx], 1e-12);
+        }
+
+        self::assertSame(DepthFormat::LINEAR, $structured->depth->format);
+        self::assertSame(0.1, $structured->depth->near);
+        self::assertSame(50.0, $structured->depth->far);
+        self::assertSame(DepthUnits::METERS, $structured->depth->units);
+        self::assertSame(DepthMeasureType::OPTICAL_RAY, $structured->depth->measureType);
+
+        self::assertSame('17.3', $structured->device->software);
+        self::assertSame('Photos 1.0', $structured->device->rawDevelopingSoftware);
+        self::assertSame('Pixelmator', $structured->device->imageEditingSoftware);
+        self::assertSame('MetadataX', $structured->device->metadataEditingSoftware);
+
+        self::assertSame('John Appleseed', $structured->author->photographer);
+        self::assertSame('iOS Edit', $structured->author->imageEditor);
+
+        self::assertTrue($structured->scene->hdrScene);
+        self::assertTrue($structured->scene->nightMode);
+
+        self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
+        self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal->original);
+        self::assertSame('+01:00', $structured->temporal->original?->format('P'));
+    }
+
+    /**
+     * Ensures DNG/RAW specific metadata is exposed via the structured API.
+     */
+    #[Test]
+    public function buildsStructuredAggregateForDng(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 8192),
+            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 5464),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED                    => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 64),
+            ExifTag::CFA_PATTERN                  => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, new ExifNumericList([0, 1, 1, 2])),
+            ExifTag::BLACK_LEVEL                  => new IfdEntry(ExifTag::BLACK_LEVEL, 5, 4, [[512, 1], [512, 1], [512, 1], [512, 1]]),
+            ExifTag::WHITE_LEVEL                  => new IfdEntry(ExifTag::WHITE_LEVEL, 4, 1, 16383),
+            ExifTag::COLOR_MATRIX_1               => new IfdEntry(ExifTag::COLOR_MATRIX_1, 10, 9, [[7540, 10000], [3290, -10000], [-50, 10000], [-4540, 10000], [12920, 10000], [-1580, 10000], [-730, 10000], [-2890, 10000], [11620, 10000]]),
+            ExifTag::LINEARIZATION_TABLE          => new IfdEntry(ExifTag::LINEARIZATION_TABLE, 4, 4, new ExifNumericList([0, 512, 2048, 4096])),
+            ExifTag::CALIBRATION_ILLUMINANT_1     => new IfdEntry(ExifTag::CALIBRATION_ILLUMINANT_1, 3, 1, 21),
+            ExifTag::CALIBRATION_ILLUMINANT_2     => new IfdEntry(ExifTag::CALIBRATION_ILLUMINANT_2, 3, 1, 23),
+            ExifTag::CALIBRATION_ILLUMINANT_3     => new IfdEntry(ExifTag::CALIBRATION_ILLUMINANT_3, 3, 1, 17),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $metadata = new Metadata(['primary'], null, $exifDocument, []);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('[0.0,1.0,1.0,2.0]', $structured->raw->cfaPattern);
+        self::assertSame(512, $structured->raw->blackLevel);
+        self::assertSame(16383, $structured->raw->whiteLevel);
+        self::assertNotNull($structured->raw->colorMatrix);
+        self::assertSame(4, $structured->raw->linearizationTableEntries);
+        self::assertSame(21, $structured->raw->calibrationIlluminant1);
+        self::assertSame(23, $structured->raw->calibrationIlluminant2);
+        self::assertSame(17, $structured->raw->calibrationIlluminant3);
+    }
+
+    /**
+     * Ensures missing metadata still results in instantiated value objects.
+     */
+    #[Test]
+    public function handlesMissingMetadata(): void
     {
         $metadata = new Metadata([], null, null, []);
 
-        $first  = $metadata->structured();
-        $second = $metadata->structured();
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame($first, $second);
+        self::assertNull($structured->interop->index);
+        self::assertNull($structured->tiff->compression);
+        self::assertNull($structured->camera->make);
+        self::assertNull($structured->depth->format);
     }
 }
