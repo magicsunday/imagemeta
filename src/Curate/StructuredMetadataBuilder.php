@@ -59,6 +59,7 @@ use function array_map;
 use function explode;
 use function is_numeric;
 use function str_contains;
+use function sprintf;
 
 /**
  * Builds the structured metadata aggregate by orchestrating specialised resolvers.
@@ -109,6 +110,7 @@ final class StructuredMetadataBuilder
         $standards = new Standards(
             exifVersion: $exifResolver->exifVersion(),
             flashpixVersion: $exifResolver->flashpixVersion(),
+            tiffEpStandardId: $exifResolver->tiffEpStandardId(),
         );
 
         $camera = $this->buildCamera($exifResolver, $xmpResolver, $quickTimeResolver);
@@ -147,6 +149,7 @@ final class StructuredMetadataBuilder
             waterDepthM: $exifResolver->waterDepthMeters(),
             accelerationMs2: $exifResolver->accelerationMs2(),
             cameraElevationAngleDeg: $exifResolver->cameraElevationAngleDeg(),
+            selfTimerModeSeconds: $exifResolver->selfTimerModeSeconds(),
         );
 
         $gpsCoords = $exifResolver->gps();
@@ -268,6 +271,7 @@ final class StructuredMetadataBuilder
             usageTerms: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
             licenseUrl: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
             creditLine: $xmpResolver->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
+            securityClassification: $exifResolver->securityClassification(),
         );
 
         $author = new Author(
@@ -332,6 +336,7 @@ final class StructuredMetadataBuilder
             originalDigest: null,
             edited: $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?: null,
             historyLastSoftware: null,
+            imageHistory: $exifResolver->imageHistory(),
         );
 
         return new StructuredMetadata(
@@ -399,47 +404,90 @@ final class StructuredMetadataBuilder
         $modify   = $resolver->fileDateTime();
         $original = $resolver->captureDateTime();
 
+        $offsetTime          = $resolver->offsetTime();
+        $offsetTimeOriginal  = $resolver->offsetTimeOriginal();
+        $offsetTimeDigitized = $resolver->offsetTimeDigitized();
+        $subSecTime          = $resolver->subSecTime();
+        $subSecTimeOriginal  = $resolver->subSecTimeOriginal();
+        $subSecTimeDigitized = $resolver->subSecTimeDigitized();
+        $timeZoneOffsets     = $resolver->timeZoneOffsetMinutes();
+
         $create = $create ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $create = $create ?? $this->parseFlexibleDate($quickTime->string('CreationDate'));
 
         $modify = $modify ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
         $modify = $modify ?? $this->parseFlexibleDate($quickTime->string('ModifyDate'));
 
-        $tzSource = null;
-        $tz       = null;
+        $fallbackTz       = null;
+        $fallbackTzSource = null;
 
         if ($original instanceof DateTimeImmutable) {
-            $offset = ValueConverters::parseOffset($resolver->originalOffset());
-            if ($offset instanceof DateTimeZone) {
-                $tz       = $offset;
-                $tzSource = 'OffsetTimeOriginal';
-                $original = $original->setTimezone($offset);
-            }
+            $fallbackTz       = $original->getTimezone();
+            $fallbackTzSource = 'DateTimeOriginal';
         }
 
         if ($original === null) {
             $original = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
             if ($original instanceof DateTimeImmutable) {
-                $tz       = $original->getTimezone();
-                $tzSource = 'XMP';
+                $fallbackTz       = $original->getTimezone();
+                $fallbackTzSource = 'XMP';
             }
         }
 
         if ($original === null) {
             $quickTimeDate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
             if ($quickTimeDate instanceof DateTimeImmutable) {
-                $original = $quickTimeDate;
-                $tz       = $quickTimeDate->getTimezone();
-                $tzSource = 'QuickTime';
+                $original        = $quickTimeDate;
+                $fallbackTz       = $quickTimeDate->getTimezone();
+                $fallbackTzSource = 'QuickTime';
             }
         }
 
         if ($original === null && $create instanceof DateTimeImmutable) {
-            $original = $create;
+            $original         = $create;
+            $fallbackTz       = $create->getTimezone();
+            $fallbackTzSource = 'DateTimeDigitized';
         }
 
         if ($original === null && $modify instanceof DateTimeImmutable) {
-            $original = $modify;
+            $original         = $modify;
+            $fallbackTz       = $modify->getTimezone();
+            $fallbackTzSource = 'DateTime';
+        }
+
+        $tz       = null;
+        $tzSource = null;
+
+        $offsetCandidates = [
+            'OffsetTimeOriginal'  => $offsetTimeOriginal,
+            'OffsetTimeDigitized' => $offsetTimeDigitized,
+            'OffsetTime'          => $offsetTime,
+        ];
+
+        foreach ($offsetCandidates as $source => $offset) {
+            $candidate = ValueConverters::parseOffset($offset);
+            if ($candidate instanceof DateTimeZone) {
+                $tz       = $candidate;
+                $tzSource = $source;
+                break;
+            }
+        }
+
+        if ($tz === null && is_array($timeZoneOffsets) && $timeZoneOffsets !== []) {
+            $candidate = $this->timeZoneFromMinutes($timeZoneOffsets[0] ?? null);
+            if ($candidate instanceof DateTimeZone) {
+                $tz       = $candidate;
+                $tzSource = 'TimeZoneOffset';
+            }
+        }
+
+        if ($tz === null && $fallbackTz instanceof DateTimeZone) {
+            $tz       = $fallbackTz;
+            $tzSource = $fallbackTzSource;
+        }
+
+        if ($tz instanceof DateTimeZone && $original instanceof DateTimeImmutable) {
+            $original = $original->setTimezone($tz);
         }
 
         return new Temporal(
@@ -448,6 +496,13 @@ final class StructuredMetadataBuilder
             original: $original,
             tz: $tz,
             tzSource: $tzSource,
+            offsetTime: $offsetTime,
+            offsetTimeOriginal: $offsetTimeOriginal,
+            offsetTimeDigitized: $offsetTimeDigitized,
+            subSecTime: $subSecTime,
+            subSecTimeOriginal: $subSecTimeOriginal,
+            subSecTimeDigitized: $subSecTimeDigitized,
+            timeZoneOffsetMinutes: $timeZoneOffsets,
         );
     }
 
@@ -551,6 +606,7 @@ final class StructuredMetadataBuilder
             bitsPerSample: $exif->bitsPerSample(),
             colorSpace: $exif->colorSpace(),
             imageUniqueId: $exif->imageUniqueId(),
+            imageNumber: $exif->imageNumber(),
             documentName: $documentName,
             description: CompositeResolver::first([
                 fn () => $exif->imageDescription(),
@@ -559,6 +615,7 @@ final class StructuredMetadataBuilder
             title: $title,
             componentsConfiguration: $exif->componentsConfiguration(),
             compressedBitsPerPixel: $exif->compressedBitsPerPixel(),
+            interlace: $exif->interlace(),
             userComment: $exif->userComment(),
         );
     }
@@ -590,6 +647,27 @@ final class StructuredMetadataBuilder
     private function firstListValue(array $values): ?string
     {
         return $values[0] ?? null;
+    }
+
+    /**
+     * Converts an EXIF TimeZoneOffset value expressed in minutes to a DateTimeZone.
+     */
+    private function timeZoneFromMinutes(?int $minutes): ?DateTimeZone
+    {
+        if (!is_int($minutes)) {
+            return null;
+        }
+
+        if ($minutes < -14 * 60 || $minutes > 14 * 60) {
+            return null;
+        }
+
+        $absolute = abs($minutes);
+        $hours    = intdiv($absolute, 60);
+        $mins     = $absolute % 60;
+        $prefix   = $minutes < 0 ? '-' : '+';
+
+        return ValueConverters::parseOffset(sprintf('%s%02d:%02d', $prefix, $hours, $mins));
     }
 
     /**

@@ -99,9 +99,15 @@ final readonly class ExifTag
 
     public const int SPECTRAL_SENSITIVITY = 0x8824;
 
+    public const int PHOTOGRAPHIC_SENSITIVITY = 0x8827;
+
     public const int OECF = 0x8828;
 
-    public const int PHOTOGRAPHIC_SENSITIVITY = 0x8827;
+    public const int INTERLACE = 0x8829;
+
+    public const int TIME_ZONE_OFFSET = 0x882A;
+
+    public const int SELF_TIMER_MODE = 0x882B;
 
     public const int SENSITIVITY_TYPE = 0x8830;
 
@@ -173,8 +179,6 @@ final readonly class ExifTag
 
     public const int RELATED_SOUND_FILE = 0xA004;
 
-    public const int SENSING_METHOD = 0xA217;
-
     public const int FILE_SOURCE = 0xA300;
 
     public const int SCENE_TYPE = 0xA301;
@@ -207,7 +211,7 @@ final readonly class ExifTag
 
     public const int BODY_SERIAL_NUMBER = 0xA431;
 
-    public const int LENS_INFO = 0xA432;
+    public const int LENS_SPECIFICATION = 0xA432;
 
     public const int LENS_MAKE = 0xA433;
 
@@ -233,9 +237,19 @@ final readonly class ExifTag
 
     public const int FOCAL_PLANE_RESOLUTION_UNIT = 0xA210;
 
+    public const int IMAGE_NUMBER = 0xA211;
+
+    public const int SECURITY_CLASSIFICATION = 0xA212;
+
+    public const int IMAGE_HISTORY = 0xA213;
+
     public const int SUBJECT_LOCATION = 0xA214;
 
     public const int EXPOSURE_INDEX = 0xA215;
+
+    public const int TIFF_EP_STANDARD_ID = 0xA216;
+
+    public const int SENSING_METHOD = 0xA217;
 
     public const int CFA_PATTERN = 0xA302;
 

@@ -164,5 +164,37 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame(2, $resolver->gpsDifferential());
         self::assertEqualsWithDelta(1.5, $resolver->gpsHorizontalPositioningError(), 0.000001);
     }
+
+    /**
+     * Ensures temporal helper methods expose fractional seconds and offsets.
+     */
+    #[Test]
+    public function exposesTemporalMetadata(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::SUB_SEC_TIME           => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 3, '987'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL  => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '123'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '456'),
+            ExifTag::OFFSET_TIME            => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+00:30'),
+            ExifTag::OFFSET_TIME_ORIGINAL   => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '-01:30'),
+            ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 6, '+01:45'),
+            ExifTag::TIME_ZONE_OFFSET       => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-90, 120])),
+            ExifTag::SELF_TIMER_MODE        => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 7),
+            ExifTag::INTERLACE              => new IfdEntry(ExifTag::INTERLACE, 3, 1, 1),
+        ]);
+
+        $document = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('987', $resolver->subSecTime());
+        self::assertSame('123', $resolver->subSecTimeOriginal());
+        self::assertSame('456', $resolver->subSecTimeDigitized());
+        self::assertSame('+00:30', $resolver->offsetTime());
+        self::assertSame('-01:30', $resolver->offsetTimeOriginal());
+        self::assertSame('+01:45', $resolver->offsetTimeDigitized());
+        self::assertSame([-90, 120], $resolver->timeZoneOffsetMinutes());
+        self::assertSame(7, $resolver->selfTimerModeSeconds());
+        self::assertSame(1, $resolver->interlace());
+    }
 }
 

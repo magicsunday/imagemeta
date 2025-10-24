@@ -42,6 +42,7 @@ final readonly class ImageResolver
         $height        = $exifDocument?->imageHeight();
         $bitsPerSample = null;
         $uniqueId      = $exifDocument?->imageUniqueId();
+        $imageNumber   = $exifDocument?->imageNumber();
         $documentName  = $this->xmpString($xmpDocument, self::NS_TIFF, 'DocumentName');
         $description   = $this->xmpString($xmpDocument, self::NS_TIFF, 'ImageDescription');
 
@@ -64,11 +65,13 @@ final readonly class ImageResolver
             bitsPerSample: $bitsPerSample,
             colorSpace: $colorSpace,
             imageUniqueId: $uniqueId,
+            imageNumber: $imageNumber,
             documentName: $documentName,
             description: $description,
             title: null,
             componentsConfiguration: null,
             compressedBitsPerPixel: null,
+            interlace: $exifDocument?->interlace(),
             userComment: null,
         );
     }
