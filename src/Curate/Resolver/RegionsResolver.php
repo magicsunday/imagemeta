@@ -151,11 +151,11 @@ final readonly class RegionsResolver
         $centersY    = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterY');
         $widths      = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Width');
         $heights     = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Height');
-        $confidences = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Confidence');
-        $rolls       = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Roll');
-        if ($rolls === []) {
-            $rolls = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
-        }
+        $confidenceLevels = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'ConfidenceLevel');
+        $confidences       = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Confidence');
+        $angleInfoRolls    = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'AngleInfoRoll');
+        $rolls             = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Roll');
+        $yaws              = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
 
         $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'Name');
         if ($names === []) {
@@ -196,6 +196,9 @@ final readonly class RegionsResolver
                 continue;
             }
 
+            $confidence = $confidenceLevels[$index] ?? $confidences[$index] ?? null;
+            $rotation   = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
+
             $resolved[] = new Region(
                 RegionType::FACE,
                 $normalised['x'],
@@ -203,8 +206,8 @@ final readonly class RegionsResolver
                 $normalised['w'],
                 $normalised['h'],
                 $this->stringAt($names, $index),
-                $confidences[$index] ?? null,
-                $rolls[$index] ?? null,
+                $confidence,
+                $rotation,
                 $this->stringAt($faceIds, $index),
             );
         }

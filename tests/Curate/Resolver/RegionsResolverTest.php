@@ -46,10 +46,10 @@ final class RegionsResolverTest extends TestCase
             '{' . self::NS_APPLE . '}CenterY'    => ['0.45', '0.61'],
             '{' . self::NS_APPLE . '}Width'      => ['0.2', '0.12'],
             '{' . self::NS_APPLE . '}Height'     => ['0.25', '0.09'],
-            '{' . self::NS_APPLE . '}Confidence' => ['0.88', '0.42'],
-            '{' . self::NS_APPLE . '}Roll'       => ['2.0', '-5.0'],
-            '{' . self::NS_APPLE . '}Name'       => ['Alice', 'Bob'],
-            '{' . self::NS_APPLE . '}FaceID'     => ['101', '202'],
+            '{' . self::NS_APPLE . '}ConfidenceLevel' => ['0.88', '0.42'],
+            '{' . self::NS_APPLE . '}AngleInfoRoll'  => ['2.0', '-5.0'],
+            '{' . self::NS_APPLE . '}Name'            => ['Alice', 'Bob'],
+            '{' . self::NS_APPLE . '}FaceID'          => ['101', '202'],
         ]);
 
         $resolver = new RegionsResolver();
@@ -180,4 +180,37 @@ final class RegionsResolverTest extends TestCase
         self::assertEqualsWithDelta(0.20, $focus->w, 0.001);
         self::assertEqualsWithDelta(0.15, $focus->h, 0.001);
     }
+
+    #[Test]
+    public function fallsBackToYawWhenNoAngleInfoRollOrRoll(): void
+    {
+        $document = new XmpDocument([
+            '{' . self::NS_APPLE . '}CenterX'    => ['0.5'],
+            '{' . self::NS_APPLE . '}CenterY'    => ['0.55'],
+            '{' . self::NS_APPLE . '}Width'      => ['0.2'],
+            '{' . self::NS_APPLE . '}Height'     => ['0.3'],
+            '{' . self::NS_APPLE . '}Confidence' => ['0.77'],
+            '{' . self::NS_APPLE . '}Yaw'        => ['-3.5'],
+            '{' . self::NS_APPLE . '}Name'       => ['Yawy'],
+            '{' . self::NS_APPLE . '}FaceUUID'   => ['abc-123'],
+        ]);
+
+        $regions = (new RegionsResolver())->resolve($document);
+
+        self::assertCount(1, $regions->items);
+        $region = $regions->items[0];
+
+        self::assertSame(RegionType::FACE, $region->type);
+        self::assertEqualsWithDelta(0.4, $region->x, 0.0001);
+        self::assertEqualsWithDelta(0.4, $region->y, 0.0001);
+        self::assertEqualsWithDelta(0.2, $region->w, 0.0001);
+        self::assertEqualsWithDelta(0.3, $region->h, 0.0001);
+        self::assertSame('Yawy', $region->personName);
+        self::assertNotNull($region->confidence);
+        self::assertEqualsWithDelta(0.77, $region->confidence, 0.0001);
+        self::assertNotNull($region->rotationDeg);
+        self::assertEqualsWithDelta(-3.5, $region->rotationDeg, 0.0001);
+        self::assertSame('abc-123', $region->faceId);
+    }
+
 }
