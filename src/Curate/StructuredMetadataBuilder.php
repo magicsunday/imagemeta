@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters;
@@ -131,9 +130,11 @@ final class StructuredMetadataBuilder
         $image  = $this->buildImage($exifResolver, $xmpResolver, $quickTimeResolver, $interop);
 
         $exposure = new Exposure(
-            iso: CompositeResolver::intISO([
-                fn () => $exifResolver->iso(),
-            ]),
+            iso: CompositeResolver::intISO(
+                $exifResolver,
+                fn () => $xmpResolver->string('http://ns.adobe.com/exif/1.0/', 'ISOSpeedRatings'),
+                fn () => $xmpResolver->string('http://ns.adobe.com/exif/1.0/aux/', 'ISOSpeedRatings'),
+            ),
             exposureTimeSec: $exifResolver->exposureTime(),
             fNumber: $exifResolver->fNumber(),
             exposureBiasEv: $exifResolver->exposureBias(),
@@ -430,132 +431,67 @@ final class StructuredMetadataBuilder
         $exifCreate = $resolver->digitizedDateTime();
         $exifModify = $resolver->fileDateTime();
 
+        $xmpCreate       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
+        $xmpModify       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
+        $xmpDateCreated  = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
+        $quickTimeCreate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
+        $quickTimeModify = $this->parseFlexibleDate($quickTime->string('ModifyDate'));
+
+        $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate;
+        $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
+
         $offsetTime          = $resolver->offsetTime();
         $offsetTimeOriginal  = $resolver->offsetTimeOriginal();
         $offsetTimeDigitized = $resolver->offsetTimeDigitized();
 
-        $subSecTime = $resolver->subSecTime();
-        if ($subSecTime === '') {
-            $subSecTime = null;
-        }
+        $subSecTime         = $this->sanitizeSubSeconds($resolver->subSecTime());
+        $subSecOriginalRaw  = $this->sanitizeSubSeconds($resolver->subSecTimeOriginal());
+        $subSecDigitizedRaw = $this->sanitizeSubSeconds($resolver->subSecTimeDigitized());
 
-        $subSecOriginalRaw = $resolver->subSecTimeOriginal();
-        if ($subSecOriginalRaw === '') {
-            $subSecOriginalRaw = null;
-        }
+        $timeZoneOffsets = $resolver->timeZoneOffsetMinutes();
 
-        $subSecDigitizedRaw = $resolver->subSecTimeDigitized();
-        if ($subSecDigitizedRaw === '') {
-            $subSecDigitizedRaw = null;
-        }
-        $timeZoneOffsets     = $resolver->timeZoneOffsetMinutes();
-
-        $exifOriginal = CompositeResolver::dateOriginal([
-            'DateTimeOriginal' => fn () => [
-                'date'   => $resolver->captureDateTime(),
-                'tz'     => ValueConverters::parseOffset($offsetTimeOriginal),
-                'subSec' => $subSecOriginalRaw,
+        $exifOriginal = CompositeResolver::dateOriginal(
+            $resolver,
+            fn () => [
+                'date' => $xmpDateCreated,
+                'tz' => null,
+                'subSec' => null,
+                'source' => 'XMP',
+                'tzSource' => 'XMP',
             ],
-            'DateTimeDigitized' => fn () => [
-                'date'   => $exifCreate,
-                'tz'     => ValueConverters::parseOffset($offsetTimeDigitized),
-                'subSec' => $subSecDigitizedRaw,
+            fn () => [
+                'date' => $quickTimeCreate,
+                'tz' => null,
+                'subSec' => null,
+                'source' => 'QuickTime',
+                'tzSource' => 'QuickTime',
             ],
-            'DateTime' => fn () => [
-                'date'   => $exifModify,
-                'tz'     => ValueConverters::parseOffset($offsetTime),
-                'subSec' => $subSecTime,
-            ],
-        ]);
+            fn () => $exifCreate === null
+                && ($xmpCreate instanceof DateTimeImmutable || $quickTimeCreate instanceof DateTimeImmutable)
+                ? [
+                    'date' => $xmpCreate ?? $quickTimeCreate,
+                    'tz' => null,
+                    'subSec' => $subSecDigitizedRaw,
+                    'source' => 'DateTimeDigitized',
+                    'tzSource' => 'DateTimeDigitized',
+                ]
+                : null,
+            fn () => $exifModify === null
+                && ($xmpModify instanceof DateTimeImmutable || $quickTimeModify instanceof DateTimeImmutable)
+                ? [
+                    'date' => $xmpModify ?? $quickTimeModify,
+                    'tz' => null,
+                    'subSec' => $subSecTime,
+                    'source' => 'DateTime',
+                    'tzSource' => 'DateTime',
+                ]
+                : null,
+        );
 
         $original           = $exifOriginal['date'];
-        $subSecTimeOriginal = $exifOriginal['subSec'] ?? $subSecOriginalRaw;
         $tz                 = $exifOriginal['tz'];
-        $tzSource           = null;
-
-        if ($tz instanceof DateTimeZone) {
-            $source   = $exifOriginal['source'] ?? null;
-            $tzSource = match ($source) {
-                'DateTimeOriginal' => 'OffsetTimeOriginal',
-                'DateTimeDigitized' => 'OffsetTimeDigitized',
-                'DateTime' => 'OffsetTime',
-                default => $source,
-            };
-        } else {
-            $tz = null;
-        }
-
-        $fallbackTz       = $original instanceof DateTimeImmutable ? $original->getTimezone() : null;
-        $fallbackTzSource = $original !== null ? ($exifOriginal['source'] ?? null) : null;
-
-        $create = $exifCreate ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
-        $create = $create ?? $this->parseFlexibleDate($quickTime->string('CreationDate'));
-
-        $modify = $exifModify ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
-        $modify = $modify ?? $this->parseFlexibleDate($quickTime->string('ModifyDate'));
-
-        if ($original === null) {
-            $original = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
-            if ($original instanceof DateTimeImmutable) {
-                $fallbackTz       = $original->getTimezone();
-                $fallbackTzSource = 'XMP';
-            }
-        }
-
-        if ($original === null) {
-            $quickTimeDate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
-            if ($quickTimeDate instanceof DateTimeImmutable) {
-                $original        = $quickTimeDate;
-                $fallbackTz       = $quickTimeDate->getTimezone();
-                $fallbackTzSource = 'QuickTime';
-            }
-        }
-
-        if ($original === null && $create instanceof DateTimeImmutable) {
-            $original         = $create;
-            $fallbackTz       = $create->getTimezone();
-            $fallbackTzSource = 'DateTimeDigitized';
-        }
-
-        if ($original === null && $modify instanceof DateTimeImmutable) {
-            $original         = $modify;
-            $fallbackTz       = $modify->getTimezone();
-            $fallbackTzSource = 'DateTime';
-        }
-
-        if ($tz === null) {
-            $offsetCandidates = [
-                'OffsetTimeOriginal'  => $offsetTimeOriginal,
-                'OffsetTimeDigitized' => $offsetTimeDigitized,
-                'OffsetTime'          => $offsetTime,
-            ];
-
-            foreach ($offsetCandidates as $source => $offset) {
-                $candidate = ValueConverters::parseOffset($offset);
-                if ($candidate instanceof DateTimeZone) {
-                    $tz       = $candidate;
-                    $tzSource = $source;
-                    break;
-                }
-            }
-        }
-
-        if ($tz === null && is_array($timeZoneOffsets) && $timeZoneOffsets !== []) {
-            $candidate = $this->timeZoneFromMinutes($timeZoneOffsets[0]);
-            if ($candidate instanceof DateTimeZone) {
-                $tz       = $candidate;
-                $tzSource = 'TimeZoneOffset';
-            }
-        }
-
-        if ($tz === null && $fallbackTz instanceof DateTimeZone) {
-            $tz       = $fallbackTz;
-            $tzSource = $fallbackTzSource;
-        }
-
-        if ($tz instanceof DateTimeZone && $original instanceof DateTimeImmutable) {
-            $original = $original->setTimezone($tz);
-        }
+        $tzSource           = $exifOriginal['tzSource'] ?? null;
+        $subSecTimeOriginal = $exifOriginal['subSec'] ?? $subSecOriginalRaw;
 
         return new Temporal(
             create: $create,
@@ -647,17 +583,15 @@ final class StructuredMetadataBuilder
     private function buildImage(ExifTagResolver $exif, XmpResolver $xmp, QuickTimeResolver $quickTime, Interop $interop): Image
     {
         $dimensions = CompositeResolver::dimensions(
-            fn () => $exif->imageWidth(),
-            fn () => $exif->imageHeight(),
+            $exif,
+            fn () => [
+                'width' => $quickTime->int('ImageWidth'),
+                'height' => $quickTime->int('ImageHeight'),
+            ],
         );
 
         $width  = $dimensions['width'];
         $height = $dimensions['height'];
-
-        if ($width === null && $height === null) {
-            $width  = $quickTime->int('ImageWidth');
-            $height = $quickTime->int('ImageHeight');
-        }
 
         $documentName = CompositeResolver::first([
             fn () => $xmp->string('http://ns.adobe.com/tiff/1.0/', 'DocumentName'),
@@ -736,24 +670,11 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Converts an EXIF TimeZoneOffset value expressed in minutes to a DateTimeZone.
+     * Normalises EXIF fractional second strings.
      */
-    private function timeZoneFromMinutes(?int $minutes): ?DateTimeZone
+    private function sanitizeSubSeconds(?string $value): ?string
     {
-        if (!is_int($minutes)) {
-            return null;
-        }
-
-        if ($minutes < -14 * 60 || $minutes > 14 * 60) {
-            return null;
-        }
-
-        $absolute = abs($minutes);
-        $hours    = intdiv($absolute, 60);
-        $mins     = $absolute % 60;
-        $prefix   = $minutes < 0 ? '-' : '+';
-
-        return ValueConverters::parseOffset(sprintf('%s%02d:%02d', $prefix, $hours, $mins));
+        return $value === null || $value === '' ? null : $value;
     }
 
     /**
