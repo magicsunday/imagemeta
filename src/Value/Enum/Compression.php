@@ -28,8 +28,6 @@ enum Compression: int
     case THUNDERSCAN                = 32809;
     case JPEG_2000                  = 34712;
     case LOSSY_JPEG                 = 34892;
-    case JPEG_XL                    = 34926;
-    case WEBP                       = 34993;
 
     /**
      * Converts a raw compression id to the backed enum value.
