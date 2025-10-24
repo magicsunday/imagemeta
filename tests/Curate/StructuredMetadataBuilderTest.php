@@ -212,8 +212,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::COMPOSITE_IMAGE                => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
             ExifTag::COMPOSITE_IMAGE_COUNT          => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
             ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES => new IfdEntry(ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
-            ExifTag::DATETIME_ORIGINAL             => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
-            ExifTag::OFFSET_TIME_ORIGINAL          => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
+            ExifTag::DATETIME_ORIGINAL              => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
+            ExifTag::OFFSET_TIME_ORIGINAL           => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
