@@ -496,11 +496,30 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(-0.2, $structured->apple->semanticStyleTone, 1e-12);
         self::assertFalse($structured->apple->flags['livePhotoAuto']);
         self::assertTrue($structured->apple->flags['nightMode']);
+        self::assertSame([0.05, 0.1, -0.1], $structured->apple->accelerationVector);
 
         self::assertSame(4300, $structured->whiteBalanceDetails->kelvin);
         self::assertEqualsWithDelta(0.05, $structured->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
+    }
+
+    /**
+     * Ensures QuickTime metadata provides an acceleration vector when maker notes are absent.
+     */
+    #[Test]
+    public function usesQuickTimeAccelerationVectorWhenMakerNotesMissing(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
+            'AccelerationVector'                  => '0.12 -0.34 0.56',
+        ]);
+
+        $metadata   = new Metadata(['primary'], $quickTime, null, []);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('qt-content', $structured->apple->contentIdentifier);
+        self::assertSame([0.12, -0.34, 0.56], $structured->apple->accelerationVector);
     }
 
     /**
@@ -1250,6 +1269,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(5200, $structured->apple->colorTemperature);
         self::assertArrayHasKey('hdrEnabled', $structured->apple->flags);
         self::assertTrue($structured->apple->flags['hdrEnabled']);
+        self::assertSame([0.1, 0.2, 0.3], $structured->apple->accelerationVector);
     }
 
     /**
