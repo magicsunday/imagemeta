@@ -121,6 +121,7 @@ final readonly class ExifTag
 
     public const int PHOTOGRAPHIC_SENSITIVITY = 0x8827;
 
+    // Opto-Electric Conversion Function
     public const int OECF = 0x8828;
 
     public const int INTERLACE = 0x8829;
