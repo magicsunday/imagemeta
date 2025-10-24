@@ -13,8 +13,11 @@ namespace MagicSunday\ImageMeta\Curate\Resolver;
 
 use Closure;
 use DateTimeImmutable;
+use DateTimeZone;
 
+use function is_array;
 use function is_numeric;
+use function is_string;
 
 /**
  * Selects the first non-null value from a list of resolver callables.
@@ -88,20 +91,47 @@ final readonly class CompositeResolver
     /**
      * Resolves the original capture date from the provided callbacks.
      *
-     * @param array<string,Closure():DateTimeImmutable|null> $candidates
+     * @param array<string,Closure():array{date:?DateTimeImmutable,tz:?DateTimeZone,subSec:?string}> $candidates
      *
-     * @return array{date:?DateTimeImmutable,source:?string}
+     * @return array{date:?DateTimeImmutable,tz:?DateTimeZone,subSec:?string,source:?string}
      */
     public static function dateOriginal(array $candidates): array
     {
         foreach ($candidates as $source => $resolver) {
             $value = $resolver();
 
-            if ($value instanceof DateTimeImmutable) {
-                return ['date' => $value, 'source' => $source];
+            if (!is_array($value)) {
+                continue;
             }
+
+            $date = $value['date'] ?? null;
+            if (!$date instanceof DateTimeImmutable) {
+                continue;
+            }
+
+            $tz = $value['tz'] ?? null;
+            if (!$tz instanceof DateTimeZone) {
+                $tz = null;
+            }
+
+            $subSec = $value['subSec'] ?? null;
+            if (!is_string($subSec) || $subSec === '') {
+                $subSec = null;
+            }
+
+            return [
+                'date' => $date,
+                'tz' => $tz,
+                'subSec' => $subSec,
+                'source' => $source,
+            ];
         }
 
-        return ['date' => null, 'source' => null];
+        return [
+            'date' => null,
+            'tz' => null,
+            'subSec' => null,
+            'source' => null,
+        ];
     }
 }
