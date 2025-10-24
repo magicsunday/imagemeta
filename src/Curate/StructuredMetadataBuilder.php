@@ -213,14 +213,8 @@ final class StructuredMetadataBuilder
         $video = new Video(
             durationSec: $quickTimeResolver->float('Duration'),
             frameRate: $quickTimeResolver->float('VideoFrameRate'),
-            width: CompositeResolver::first([
-                fn () => $quickTimeResolver->int('ImageWidth'),
-                fn () => $image->width,
-            ]),
-            height: CompositeResolver::first([
-                fn () => $quickTimeResolver->int('ImageHeight'),
-                fn () => $image->height,
-            ]),
+            width: $quickTimeResolver->int('ImageWidth'),
+            height: $quickTimeResolver->int('ImageHeight'),
             codec: $quickTimeResolver->string('CompressorID'),
             hdr: $quickTimeResolver->bool('HDRFormat'),
             transferFunction: $quickTimeResolver->string('TransferFunction'),
