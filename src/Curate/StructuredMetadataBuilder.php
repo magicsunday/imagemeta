@@ -105,7 +105,7 @@ final class StructuredMetadataBuilder
         );
 
         $exifVersion = $exifResolver->exifVersion();
-        $profile     = $exifVersion !== null ? ExifCapabilities::fromVersion($exifVersion) : null;
+        $profile     = ExifCapabilities::fromVersion($exifVersion);
 
         $standards = new Standards(
             exifVersion: $exifVersion,
