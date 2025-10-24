@@ -29,6 +29,7 @@ use function preg_replace;
 use function round;
 use function rtrim;
 use function str_pad;
+use function sprintf;
 use function str_replace;
 use function strlen;
 use function substr;
@@ -1268,11 +1269,29 @@ final readonly class ExifDocument
      */
     public function captureDateTime(): ?DateTimeImmutable
     {
-        return $this->parseExifDateTime(
-            $this->dateTimeOriginalRaw(),
-            $this->offsetTimeOriginal(),
-            $this->subSecTimeOriginal(),
-        );
+        $offsetOriginal = $this->offsetTimeOriginal();
+        $offsetDigitized = $this->offsetTimeDigitized();
+        $offset = $this->offsetTime();
+        $fallbackOffset = null;
+
+        if ($offsetOriginal === null && $offsetDigitized === null && $offset === null) {
+            $fallbackOffset = $this->derivedOffsetFromTimeZoneOffset();
+        }
+
+        $attempts = [
+            [$this->dateTimeOriginalRaw(), $offsetOriginal ?? $fallbackOffset, $this->subSecTimeOriginal()],
+            [$this->dateTimeDigitizedRaw(), $offsetDigitized ?? $fallbackOffset, $this->subSecTimeDigitized()],
+            [$this->dateTimeRaw(), $offset ?? $fallbackOffset, $this->subSecTime()],
+        ];
+
+        foreach ($attempts as [$raw, $rawOffset, $subSeconds]) {
+            $dateTime = $this->parseExifDateTime($raw, $rawOffset, $subSeconds);
+            if ($dateTime instanceof DateTimeImmutable) {
+                return $dateTime;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -1536,6 +1555,27 @@ final readonly class ExifDocument
         $stripped = trim($stripped, "\0");
 
         return $stripped === '' ? null : $stripped;
+    }
+
+    /**
+     * Derives a canonical offset string from the legacy TimeZoneOffset tag when available.
+     */
+    private function derivedOffsetFromTimeZoneOffset(): ?string
+    {
+        $offsets = $this->timeZoneOffsetMinutes();
+
+        if ($offsets === null || $offsets === []) {
+            return null;
+        }
+
+        $minutes = $offsets[0];
+        $sign = $minutes < 0 ? '-' : '+';
+        $absolute = abs($minutes);
+        $hours = intdiv($absolute, 60);
+        $remainingMinutes = $absolute % 60;
+        $composed = sprintf('%s%02d:%02d', $sign, $hours, $remainingMinutes);
+
+        return ValueConverters::parseOffsetString($composed);
     }
 
     /**
