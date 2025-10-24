@@ -47,9 +47,9 @@ final readonly class ExifTag
 
     public const int RESOLUTION_UNIT = 0x0128;
 
-    public const int DATETIME = 0x0132;
-
     public const int SOFTWARE = 0x0131;
+
+    public const int DATETIME = 0x0132;
 
     public const int ARTIST = 0x013B;
 
@@ -57,11 +57,15 @@ final readonly class ExifTag
 
     public const int PRIMARY_CHROMATICITIES = 0x013F;
 
+    public const int REFERENCE_BLACK_WHITE = 0x0214;
+
     public const int YCBCR_COEFFICIENTS = 0x0211;
 
     public const int YCBCR_SUB_SAMPLING = 0x0212;
 
     public const int YCBCR_POSITIONING = 0x0213;
+
+    public const int COPYRIGHT = 0x8298;
 
     // Pointer tags
     public const int EXIF_IFD_POINTER = 0x8769;
@@ -87,17 +91,25 @@ final readonly class ExifTag
 
     public const int ISO_SPEED = 0x8833;
 
+    public const int EXIF_VERSION = 0x9000;
+
     public const int DATETIME_ORIGINAL = 0x9003;
 
     public const int DATETIME_DIGITIZED = 0x9004;
-
-    public const int EXIF_VERSION = 0x9000;
 
     public const int OFFSET_TIME = 0x9010;
 
     public const int OFFSET_TIME_ORIGINAL = 0x9011;
 
     public const int OFFSET_TIME_DIGITIZED = 0x9012;
+
+    public const int COMPONENTS_CONFIGURATION = 0x9101;
+
+    public const int COMPRESSED_BITS_PER_PIXEL = 0x9102;
+
+    public const int SHUTTER_SPEED_VALUE = 0x9201;
+
+    public const int APERTURE_VALUE = 0x9202;
 
     public const int BRIGHTNESS_VALUE = 0x9203;
 
@@ -113,21 +125,35 @@ final readonly class ExifTag
 
     public const int FLASH = 0x9209;
 
-    public const int SUBJECT_AREA = 0x9214;
-
     public const int FOCAL_LENGTH = 0x920A;
+
+    public const int SUBJECT_AREA = 0x9214;
 
     public const int MAKER_NOTE = 0x927C;
 
-    public const int FILE_SOURCE = 0xA300;
+    public const int USER_COMMENT = 0x9286;
 
-    public const int SENSING_METHOD = 0xA217;
+    public const int SUB_SEC_TIME = 0x9290;
+
+    public const int SUB_SEC_TIME_ORIGINAL = 0x9291;
+
+    public const int SUB_SEC_TIME_DIGITIZED = 0x9292;
+
+    public const int FLASHPIX_VERSION = 0xA000;
 
     public const int COLOR_SPACE = 0xA001;
 
     public const int EXIF_IMAGE_WIDTH = 0xA002;
 
     public const int EXIF_IMAGE_HEIGHT = 0xA003;
+
+    public const int SENSING_METHOD = 0xA217;
+
+    public const int FILE_SOURCE = 0xA300;
+
+    public const int SCENE_TYPE = 0xA301;
+
+    public const int CUSTOM_RENDERED = 0xA401;
 
     public const int EXPOSURE_MODE = 0xA402;
 
@@ -163,8 +189,6 @@ final readonly class ExifTag
 
     public const int LENS_SERIAL_NUMBER = 0xA435;
 
-    public const int FLASHPIX_VERSION = 0xA000;
-
     public const int COMPOSITE_IMAGE = 0xA460;
 
     public const int COMPOSITE_IMAGE_COUNT = 0xA461;
@@ -174,6 +198,8 @@ final readonly class ExifTag
     public const int GAMMA = 0xA500;
 
     // GPS sub IFD
+    public const int GPS_VERSION_ID = 0x0000;
+
     public const int GPS_LATITUDE_REF = 0x0001;
 
     public const int GPS_LATITUDE = 0x0002;
@@ -185,6 +211,56 @@ final readonly class ExifTag
     public const int GPS_ALTITUDE_REF = 0x0005;
 
     public const int GPS_ALTITUDE = 0x0006;
+
+    public const int GPS_TIME_STAMP = 0x0007;
+
+    public const int GPS_SATELLITES = 0x0008;
+
+    public const int GPS_STATUS = 0x0009;
+
+    public const int GPS_MEASURE_MODE = 0x000A;
+
+    public const int GPS_DOP = 0x000B;
+
+    public const int GPS_SPEED_REF = 0x000C;
+
+    public const int GPS_SPEED = 0x000D;
+
+    public const int GPS_TRACK_REF = 0x000E;
+
+    public const int GPS_TRACK = 0x000F;
+
+    public const int GPS_IMG_DIRECTION_REF = 0x0010;
+
+    public const int GPS_IMG_DIRECTION = 0x0011;
+
+    public const int GPS_MAP_DATUM = 0x0012;
+
+    public const int GPS_DEST_LATITUDE_REF = 0x0013;
+
+    public const int GPS_DEST_LATITUDE = 0x0014;
+
+    public const int GPS_DEST_LONGITUDE_REF = 0x0015;
+
+    public const int GPS_DEST_LONGITUDE = 0x0016;
+
+    public const int GPS_DEST_BEARING_REF = 0x0017;
+
+    public const int GPS_DEST_BEARING = 0x0018;
+
+    public const int GPS_DEST_DISTANCE_REF = 0x0019;
+
+    public const int GPS_DEST_DISTANCE = 0x001A;
+
+    public const int GPS_PROCESSING_METHOD = 0x001B;
+
+    public const int GPS_AREA_INFORMATION = 0x001C;
+
+    public const int GPS_DATE_STAMP = 0x001D;
+
+    public const int GPS_DIFFERENTIAL = 0x001E;
+
+    public const int GPS_H_POSITIONING_ERROR = 0x001F;
 
     // Interoperability IFD
     public const int INTEROPERABILITY_INDEX = 0x0001;
