@@ -498,6 +498,44 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures legacy PhotographicSensitivity data stored in IFD0 is used when EXIF tags are absent.
+     */
+    #[Test]
+    public function fallsBackToIfd0PhotographicSensitivityForIso(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 160),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(160, $structured->exposure->iso);
+    }
+
+    /**
+     * Verifies that image dimensions are resolved from IFD0 when EXIF pixel dimension tags are missing.
+     */
+    #[Test]
+    public function fallsBackToIfd0DimensionsWhenExifPixelDimensionsMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 2048),
+            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 1536),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(2048, $structured->image->width);
+        self::assertSame(1536, $structured->image->height);
+    }
+
+    /**
      * Ensures EXIF 2.3 inputs derive timezone information from the TimeZoneOffset list.
      */
     #[Test]
@@ -562,7 +600,7 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
-     * Verifies that the color space falls back to sRGB when tagged as uncalibrated with an R03 interop index.
+     * Verifies that the color space normalizes to AdobeRGB when tagged as uncalibrated with an R03 interop index.
      */
     #[Test]
     public function normalizesUncalibratedColorSpaceViaInteropR03(): void
@@ -585,7 +623,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
+        self::assertSame(ColorSpace::ADOBE_RGB, $structured->image->colorSpace);
     }
 
     /**
