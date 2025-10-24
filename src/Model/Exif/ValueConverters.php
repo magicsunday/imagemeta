@@ -21,6 +21,7 @@ use function count;
 use function ctype_digit;
 use function explode;
 use function floor;
+use function fmod;
 use function implode;
 use function is_float;
 use function is_int;
@@ -170,6 +171,32 @@ final readonly class ValueConverters
             'N'     => $numeric * 1852.0,
             default => null,
         };
+    }
+
+    /**
+     * Normalises a compass bearing to the [0, 360) interval.
+     */
+    public static function normalizeBearing(int|float|null $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $bearing = fmod((float) $value, 360.0);
+
+        if ($bearing < 0.0) {
+            $bearing += 360.0;
+        }
+
+        if ($bearing < 0.0 || $bearing >= 360.0) {
+            $bearing = fmod($bearing, 360.0);
+
+            if ($bearing < 0.0) {
+                $bearing += 360.0;
+            }
+        }
+
+        return $bearing;
     }
 
     /**
@@ -452,11 +479,13 @@ final readonly class ValueConverters
 
         $trackRefValue       = $trackRefEntry?->value;
         $result['track_ref'] = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
-        $result['track']     = self::rationalToFloat($trackEntry?->value);
+        $trackValue          = self::rationalToFloat($trackEntry?->value);
+        $result['track']     = self::normalizeBearing($trackValue);
 
         $imgDirRefValue             = $imgDirRefEntry?->value;
         $result['img_direction_ref'] = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
-        $result['img_direction']     = self::rationalToFloat($imgDirEntry?->value);
+        $imgDirectionValue           = self::rationalToFloat($imgDirEntry?->value);
+        $result['img_direction']     = self::normalizeBearing($imgDirectionValue);
 
         $result['map_datum'] = self::sanitizeString($mapDatumEntry?->value);
 
@@ -474,7 +503,8 @@ final readonly class ValueConverters
 
         $destBearingRefValue        = $destBearRefEntry?->value;
         $result['dest_bearing_ref'] = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
-        $result['dest_bearing']     = self::rationalToFloat($destBearEntry?->value);
+        $destBearingValue           = self::rationalToFloat($destBearEntry?->value);
+        $result['dest_bearing']     = self::normalizeBearing($destBearingValue);
 
         $destDistanceRefValue        = $destDistRefEntry?->value;
         $result['dest_distance_ref'] = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
