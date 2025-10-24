@@ -91,6 +91,13 @@ final class StructuredMetadataBuilder
             ycbcrCoefficients: $exifResolver->ycbcrCoefficients(),
             whitePoint: $exifResolver->whitePoint(),
             primaryChromaticities: $exifResolver->primaryChromaticities(),
+            stripOffsets: $exifResolver->stripOffsets(),
+            stripByteCounts: $exifResolver->stripByteCounts(),
+            transferFunction: $exifResolver->transferFunction(),
+            jpegInterchangeFormat: $exifResolver->jpegInterchangeFormat(),
+            jpegInterchangeFormatLength: $exifResolver->jpegInterchangeFormatLength(),
+            referenceBlackWhite: $exifResolver->referenceBlackWhite(),
+            copyright: $exifResolver->copyright(),
         );
 
         $composite = new CompositeImageInfo(
