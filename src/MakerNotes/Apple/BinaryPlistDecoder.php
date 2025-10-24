@@ -20,7 +20,7 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
-use function str_starts_with;
+use function strpos;
 use function strlen;
 use function substr;
 
@@ -53,9 +53,12 @@ final class BinaryPlistDecoder
             throw new ParseError('The property list data must not be empty.');
         }
 
-        if (!str_starts_with($data, 'bplist00')) {
+        $signatureOffset = strpos($data, 'bplist00');
+        if ($signatureOffset === false) {
             throw new ParseError('Unsupported property list format.');
         }
+
+        $data = substr($data, $signatureOffset);
 
         if (strlen($data) < 40) {
             throw new ParseError('The property list payload is too small.');
