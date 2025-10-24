@@ -34,7 +34,6 @@ use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
-use MagicSunday\ImageMeta\Value\RawCharacteristics;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -86,7 +85,6 @@ final readonly class StructuredMetadata
         public Temporal $temporal,
         public Derived $derived,
         public RelatedAssets $related,
-        public RawCharacteristics $raw,
         public Sensor $sensor,
         public Uav $uav,
         public Integrity $integrity,

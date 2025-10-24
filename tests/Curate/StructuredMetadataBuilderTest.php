@@ -24,9 +24,6 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
-use MagicSunday\ImageMeta\Value\Enum\DepthFormat;
-use MagicSunday\ImageMeta\Value\Enum\DepthMeasureType;
-use MagicSunday\ImageMeta\Value\Enum\DepthUnits;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -215,11 +212,6 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::COMPOSITE_IMAGE               => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
             ExifTag::COMPOSITE_IMAGE_COUNT         => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
             ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES => new IfdEntry(ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
-            ExifTag::DEPTH_FORMAT                  => new IfdEntry(ExifTag::DEPTH_FORMAT, 3, 1, DepthFormat::LINEAR->value),
-            ExifTag::DEPTH_NEAR                    => new IfdEntry(ExifTag::DEPTH_NEAR, 5, 1, [[1, 10]]),
-            ExifTag::DEPTH_FAR                     => new IfdEntry(ExifTag::DEPTH_FAR, 5, 1, [[50, 1]]),
-            ExifTag::DEPTH_UNITS                   => new IfdEntry(ExifTag::DEPTH_UNITS, 3, 1, DepthUnits::METERS->value),
-            ExifTag::DEPTH_MEASURE_TYPE            => new IfdEntry(ExifTag::DEPTH_MEASURE_TYPE, 3, 1, DepthMeasureType::OPTICAL_RAY->value),
             ExifTag::RAW_DEVELOPING_SOFTWARE       => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 10, 'Photos 1.0'),
             ExifTag::IMAGE_EDITING_SOFTWARE        => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 10, 'Pixelmator'),
             ExifTag::METADATA_EDITING_SOFTWARE     => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 8, 'MetadataX'),
@@ -254,11 +246,11 @@ final class StructuredMetadataBuilderTest extends TestCase
             self::assertEqualsWithDelta($expected, $structured->composite->exposureTimesTotal[$idx], 1e-12);
         }
 
-        self::assertSame(DepthFormat::LINEAR, $structured->depth->format);
-        self::assertSame(0.1, $structured->depth->near);
-        self::assertSame(50.0, $structured->depth->far);
-        self::assertSame(DepthUnits::METERS, $structured->depth->units);
-        self::assertSame(DepthMeasureType::OPTICAL_RAY, $structured->depth->measureType);
+        self::assertNull($structured->depth->format);
+        self::assertNull($structured->depth->near);
+        self::assertNull($structured->depth->far);
+        self::assertNull($structured->depth->units);
+        self::assertNull($structured->depth->measureType);
 
         self::assertSame('17.3', $structured->device->software);
         self::assertSame('Photos 1.0', $structured->device->rawDevelopingSoftware);
@@ -274,45 +266,6 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
         self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal->original);
         self::assertSame('+01:00', $structured->temporal->original?->format('P'));
-    }
-
-    /**
-     * Ensures DNG/RAW specific metadata is exposed via the structured API.
-     */
-    #[Test]
-    public function buildsStructuredAggregateForDng(): void
-    {
-        $ifd0 = new Ifd([
-            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 8192),
-            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 5464),
-        ]);
-
-        $exifIfd = new Ifd([
-            ExifTag::ISO_SPEED                    => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 64),
-            ExifTag::CFA_PATTERN                  => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, new ExifNumericList([0, 1, 1, 2])),
-            ExifTag::BLACK_LEVEL                  => new IfdEntry(ExifTag::BLACK_LEVEL, 5, 4, [[512, 1], [512, 1], [512, 1], [512, 1]]),
-            ExifTag::WHITE_LEVEL                  => new IfdEntry(ExifTag::WHITE_LEVEL, 4, 1, 16383),
-            ExifTag::COLOR_MATRIX_1               => new IfdEntry(ExifTag::COLOR_MATRIX_1, 10, 9, [[7540, 10000], [3290, -10000], [-50, 10000], [-4540, 10000], [12920, 10000], [-1580, 10000], [-730, 10000], [-2890, 10000], [11620, 10000]]),
-            ExifTag::LINEARIZATION_TABLE          => new IfdEntry(ExifTag::LINEARIZATION_TABLE, 4, 4, new ExifNumericList([0, 512, 2048, 4096])),
-            ExifTag::CALIBRATION_ILLUMINANT_1     => new IfdEntry(ExifTag::CALIBRATION_ILLUMINANT_1, 3, 1, 21),
-            ExifTag::CALIBRATION_ILLUMINANT_2     => new IfdEntry(ExifTag::CALIBRATION_ILLUMINANT_2, 3, 1, 23),
-            ExifTag::CALIBRATION_ILLUMINANT_3     => new IfdEntry(ExifTag::CALIBRATION_ILLUMINANT_3, 3, 1, 17),
-        ]);
-
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
-
-        $metadata = new Metadata(['primary'], null, $exifDocument, []);
-
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
-
-        self::assertSame('[0.0,1.0,1.0,2.0]', $structured->raw->cfaPattern);
-        self::assertSame(512, $structured->raw->blackLevel);
-        self::assertSame(16383, $structured->raw->whiteLevel);
-        self::assertNotNull($structured->raw->colorMatrix);
-        self::assertSame(4, $structured->raw->linearizationTableEntries);
-        self::assertSame(21, $structured->raw->calibrationIlluminant1);
-        self::assertSame(23, $structured->raw->calibrationIlluminant2);
-        self::assertSame(17, $structured->raw->calibrationIlluminant3);
     }
 
     /**

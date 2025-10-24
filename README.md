@@ -36,14 +36,13 @@ $structured->related->livePhotoPairId;
 | --- | --- | --- | --- |
 | `Interop` | `index`, `version` | `InteropIndex`, `InteropVersion` | Hex fallback for binary data |
 | `TiffData` | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities` | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities` | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()` |
-| `Depth` | `format`, `near`, `far`, `units`, `measureType` | `DepthFormat`, `DepthNear`, `DepthFar`, `DepthUnits`, `DepthMeasureType` | `DepthFormat`, `ValueConverters::rationalToFloat()` |
+| `Depth` | `format`, `near`, `far`, `units`, `measureType` | – | – |
 | `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal` | `CompositeImage`, `CompositeImageCount`, `CompositeImageExposureTimes` | `CompositeImage`, rational to float |
 | `Standards` | `exifVersion`, `flashpixVersion` | `ExifVersion`, `FlashpixVersion` | `ValueConverters::toExifVersion()` |
 | `Lens` | `lensInfo`, `maxApertureFNumber` | `LensInfo`, `MaxApertureValue` | `ValueConverters::apexToFNumber()` |
 | `Exposure` | `exposureBiasEv`, `gainControl`, `contrast` | `ExposureBiasValue`, `GainControl`, `Contrast` | `GainControl` enum |
 | `Scene` | `subjectDistanceRange` | `SubjectDistanceRange` | `SubjectDistanceRange` enum |
 | `Device` | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware` | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware` | – |
-| `RawCharacteristics` | `cfaPattern`, `blackLevel`, `colorMatrix` | `CFAPattern`, `BlackLevel`, `ColorMatrix1` | `ValueConverters::dngMatrixToString()` |
 
 ```php
 $s = $meta->structured();
