@@ -320,6 +320,41 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
     }
 
+
+    /**
+     * Ensures file level metadata is propagated to the structured representation.
+     */
+    #[Test]
+    public function propagatesFileInformationFromMetadataAggregate(): void
+    {
+        $metadata = new Metadata(
+            [],
+            null,
+            null,
+            [],
+            null,
+            null,
+            null,
+            [],
+            null,
+            null,
+            null,
+            'image/jpeg',
+            54321,
+            'jpg',
+            'sha1-digest',
+            'md5-digest',
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('image/jpeg', $structured->file->mimeType);
+        self::assertSame(54321, $structured->file->fileSize);
+        self::assertSame('jpg', $structured->file->extension);
+        self::assertSame('sha1-digest', $structured->file->digestSha1);
+        self::assertSame('md5-digest', $structured->file->digestMd5);
+    }
+
     /**
      * Ensures printable UNDEFINED EXIF values parsed from a TIFF blob map to structured standards metadata.
      */

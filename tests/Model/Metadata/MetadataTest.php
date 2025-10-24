@@ -86,6 +86,11 @@ final class MetadataTest extends TestCase
             12,
             $sampling,
             [2, 1],
+            'image/heic',
+            987_654,
+            'heic',
+            'abc123',
+            'def456',
         );
 
         self::assertSame($exifBlobs, $metadata->exifBlobs);
@@ -98,6 +103,11 @@ final class MetadataTest extends TestCase
         self::assertSame(12, $metadata->jpegBitsPerSample);
         self::assertSame($sampling, $metadata->jpegFrameSamplingFactors);
         self::assertSame([2, 1], $metadata->jpegYCbCrSubSampling);
+        self::assertSame('image/heic', $metadata->mimeType);
+        self::assertSame(987_654, $metadata->fileSize);
+        self::assertSame('heic', $metadata->extension);
+        self::assertSame('abc123', $metadata->digestSha1);
+        self::assertSame('def456', $metadata->digestMd5);
     }
 
     /**
@@ -116,6 +126,11 @@ final class MetadataTest extends TestCase
         self::assertNull($metadata->jpegBitsPerSample);
         self::assertNull($metadata->jpegFrameSamplingFactors);
         self::assertNull($metadata->jpegYCbCrSubSampling);
+        self::assertNull($metadata->mimeType);
+        self::assertNull($metadata->fileSize);
+        self::assertNull($metadata->extension);
+        self::assertNull($metadata->digestSha1);
+        self::assertNull($metadata->digestMd5);
     }
 
     /**

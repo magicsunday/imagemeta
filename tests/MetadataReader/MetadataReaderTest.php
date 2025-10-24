@@ -23,7 +23,10 @@ use PHPUnit\Framework\TestCase;
 
 use function chr;
 use function file_put_contents;
+use function ltrim;
+use function md5;
 use function pack;
+use function rename;
 use function sha1;
 use function strlen;
 use function sys_get_temp_dir;
@@ -62,7 +65,7 @@ final class MetadataReaderTest extends TestCase
             . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
             . "\xFF\xD9";
 
-        $path = $this->writeTempFile($jpeg);
+        $path = $this->writeTempFile($jpeg, 'jpg');
 
         try {
             $metadata = (new MetadataReader())->read($path);
@@ -82,6 +85,50 @@ final class MetadataReaderTest extends TestCase
         self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
         self::assertNull($metadata->iccProfile);
         self::assertSame([], $metadata->iccSegments);
+        self::assertSame('image/jpeg', $metadata->mimeType);
+        self::assertSame(strlen($jpeg), $metadata->fileSize);
+        self::assertSame('jpg', $metadata->extension);
+        self::assertNull($metadata->digestSha1);
+        self::assertNull($metadata->digestMd5);
+
+        $structured = $metadata->structured();
+        self::assertSame('image/jpeg', $structured->file->mimeType);
+        self::assertSame(strlen($jpeg), $structured->file->fileSize);
+        self::assertSame('jpg', $structured->file->extension);
+        self::assertNull($structured->file->digestSha1);
+        self::assertNull($structured->file->digestMd5);
+    }
+
+    /**
+     * Ensures optional digest calculation provides SHA-1 and MD5 for JPEG payloads.
+     */
+    #[Test]
+    public function testReadJpegWithDigestsPopulatesChecksums(): void
+    {
+        $makerNote = 'digest-maker-note';
+        $tiff      = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R6', $makerNote);
+
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . "\xFF\xD9";
+
+        $path = $this->writeTempFile($jpeg, 'jpeg');
+
+        try {
+            $metadata = (new MetadataReader())->read($path, true);
+        } finally {
+            @unlink($path);
+        }
+
+        $expectedSha1 = sha1($jpeg);
+        $expectedMd5  = md5($jpeg);
+
+        self::assertSame($expectedSha1, $metadata->digestSha1);
+        self::assertSame($expectedMd5, $metadata->digestMd5);
+
+        $structured = $metadata->structured();
+        self::assertSame($expectedSha1, $structured->file->digestSha1);
+        self::assertSame($expectedMd5, $structured->file->digestMd5);
     }
 
     /**
@@ -134,7 +181,7 @@ final class MetadataReaderTest extends TestCase
      *
      * @return string Absolute path to the temporary file containing the payload.
      */
-    private function writeTempFile(string $payload): string
+    private function writeTempFile(string $payload, ?string $extension = null): string
     {
         $path = tempnam(sys_get_temp_dir(), 'meta');
         if ($path === false) {
@@ -142,6 +189,17 @@ final class MetadataReaderTest extends TestCase
         }
 
         file_put_contents($path, $payload);
+
+        if ($extension !== null) {
+            $suffix = ltrim($extension, '.');
+            $target = $path . '.' . $suffix;
+            if (!rename($path, $target)) {
+                @unlink($path);
+                self::fail('Unable to rename temporary file');
+            }
+
+            $path = $target;
+        }
 
         return $path;
     }
