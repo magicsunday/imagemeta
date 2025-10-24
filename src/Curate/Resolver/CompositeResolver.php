@@ -12,6 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
 use Closure;
+use DateTimeImmutable;
+
+use function is_numeric;
 
 /**
  * Selects the first non-null value from a list of resolver callables.
@@ -36,5 +39,69 @@ final readonly class CompositeResolver
         }
 
         return null;
+    }
+
+    /**
+     * Resolves an integer ISO value from the provided candidate callbacks.
+     *
+     * @param list<Closure():int|string|null> $candidates
+     */
+    public static function intISO(array $candidates): ?int
+    {
+        $value = self::first($candidates);
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * Resolves image dimensions through deferred callbacks.
+     *
+     * @param Closure():int|string|null $widthResolver
+     * @param Closure():int|string|null $heightResolver
+     *
+     * @return array{width:?int,height:?int}
+     */
+    public static function dimensions(Closure $widthResolver, Closure $heightResolver): array
+    {
+        $widthValue  = $widthResolver();
+        $heightValue = $heightResolver();
+
+        $width = is_int($widthValue)
+            ? $widthValue
+            : (is_numeric($widthValue) ? (int) $widthValue : null);
+
+        $height = is_int($heightValue)
+            ? $heightValue
+            : (is_numeric($heightValue) ? (int) $heightValue : null);
+
+        return ['width' => $width, 'height' => $height];
+    }
+
+    /**
+     * Resolves the original capture date from the provided callbacks.
+     *
+     * @param array<string,Closure():DateTimeImmutable|null> $candidates
+     *
+     * @return array{date:?DateTimeImmutable,source:?string}
+     */
+    public static function dateOriginal(array $candidates): array
+    {
+        foreach ($candidates as $source => $resolver) {
+            $value = $resolver();
+
+            if ($value instanceof DateTimeImmutable) {
+                return ['date' => $value, 'source' => $source];
+            }
+        }
+
+        return ['date' => null, 'source' => null];
     }
 }

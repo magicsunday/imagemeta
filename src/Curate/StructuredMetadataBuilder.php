@@ -37,6 +37,7 @@ use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
@@ -58,6 +59,7 @@ use MagicSunday\ImageMeta\Value\Xmp;
 use function array_map;
 use function explode;
 use function is_numeric;
+use function is_string;
 use function str_contains;
 use function sprintf;
 
@@ -115,10 +117,12 @@ final class StructuredMetadataBuilder
 
         $camera = $this->buildCamera($exifResolver, $xmpResolver, $quickTimeResolver);
         $lens   = $this->buildLens($exifResolver, $xmpResolver);
-        $image  = $this->buildImage($exifResolver, $xmpResolver, $quickTimeResolver);
+        $image  = $this->buildImage($exifResolver, $xmpResolver, $quickTimeResolver, $interop);
 
         $exposure = new Exposure(
-            iso: $exifResolver->iso(),
+            iso: CompositeResolver::intISO([
+                fn () => $exifResolver->iso(),
+            ]),
             exposureTimeSec: $exifResolver->exposureTime(),
             fNumber: $exifResolver->fNumber(),
             exposureBiasEv: $exifResolver->exposureBias(),
@@ -404,9 +408,18 @@ final class StructuredMetadataBuilder
      */
     private function buildTemporal(ExifTagResolver $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
     {
-        $create   = $resolver->digitizedDateTime();
-        $modify   = $resolver->fileDateTime();
-        $original = $resolver->captureDateTime();
+        $exifCreate = $resolver->digitizedDateTime();
+        $exifModify = $resolver->fileDateTime();
+
+        $exifOriginal = CompositeResolver::dateOriginal([
+            'DateTimeOriginal'  => fn () => $resolver->captureDateTime(),
+            'DateTimeDigitized' => fn () => $exifCreate,
+            'DateTime'          => fn () => $exifModify,
+        ]);
+
+        $original         = $exifOriginal['date'];
+        $fallbackTz       = $original instanceof DateTimeImmutable ? $original->getTimezone() : null;
+        $fallbackTzSource = is_string($exifOriginal['source']) ? $exifOriginal['source'] : null;
 
         $offsetTime          = $resolver->offsetTime();
         $offsetTimeOriginal  = $resolver->offsetTimeOriginal();
@@ -416,19 +429,11 @@ final class StructuredMetadataBuilder
         $subSecTimeDigitized = $resolver->subSecTimeDigitized();
         $timeZoneOffsets     = $resolver->timeZoneOffsetMinutes();
 
-        $create = $create ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
+        $create = $exifCreate ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $create = $create ?? $this->parseFlexibleDate($quickTime->string('CreationDate'));
 
-        $modify = $modify ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
+        $modify = $exifModify ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
         $modify = $modify ?? $this->parseFlexibleDate($quickTime->string('ModifyDate'));
-
-        $fallbackTz       = null;
-        $fallbackTzSource = null;
-
-        if ($original instanceof DateTimeImmutable) {
-            $fallbackTz       = $original->getTimezone();
-            $fallbackTzSource = 'DateTimeOriginal';
-        }
 
         if ($original === null) {
             $original = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
@@ -581,17 +586,20 @@ final class StructuredMetadataBuilder
     /**
      * Builds the image value object with EXIF and XMP fallbacks.
      */
-    private function buildImage(ExifTagResolver $exif, XmpResolver $xmp, QuickTimeResolver $quickTime): Image
+    private function buildImage(ExifTagResolver $exif, XmpResolver $xmp, QuickTimeResolver $quickTime, Interop $interop): Image
     {
-        $width = CompositeResolver::first([
+        $dimensions = CompositeResolver::dimensions(
             fn () => $exif->imageWidth(),
-            fn () => $quickTime->int('ImageWidth'),
-        ]);
-
-        $height = CompositeResolver::first([
             fn () => $exif->imageHeight(),
-            fn () => $quickTime->int('ImageHeight'),
-        ]);
+        );
+
+        $width  = $dimensions['width'];
+        $height = $dimensions['height'];
+
+        if ($width === null && $height === null) {
+            $width  = $quickTime->int('ImageWidth');
+            $height = $quickTime->int('ImageHeight');
+        }
 
         $documentName = CompositeResolver::first([
             fn () => $xmp->string('http://ns.adobe.com/tiff/1.0/', 'DocumentName'),
@@ -608,7 +616,7 @@ final class StructuredMetadataBuilder
             height: $height,
             orientation: $exif->orientation(),
             bitsPerSample: $exif->bitsPerSample(),
-            colorSpace: $exif->colorSpace(),
+            colorSpace: $this->normalizedColorSpace($exif->colorSpace(), $interop),
             imageUniqueId: $exif->imageUniqueId(),
             imageNumber: $exif->imageNumber(),
             documentName: $documentName,
@@ -641,6 +649,18 @@ final class StructuredMetadataBuilder
             nightMode: $night,
             subjectDistanceRange: $exif->subjectDistanceRange(),
         );
+    }
+
+    /**
+     * Normalises the colour space based on interoperability metadata hints.
+     */
+    private function normalizedColorSpace(?ColorSpace $colorSpace, Interop $interop): ?ColorSpace
+    {
+        if ($colorSpace === ColorSpace::UNCALIBRATED && $interop->index === 'R03') {
+            return ColorSpace::ADOBE_RGB;
+        }
+
+        return $colorSpace;
     }
 
     /**
