@@ -160,19 +160,24 @@ final class IccDecoder
 
     private function extractVersion(string $data): ?string
     {
-        $majorMinor = ord($data[8]);
-        $bugfix     = ord($data[9]);
+        $majorByte     = ord($data[8]);
+        $minorBugfix   = ord($data[9]);
+        $major         = $majorByte;
+        $minor         = $minorBugfix >> 4;
+        $bugfixVersion = $minorBugfix & 0x0F;
 
-        $major = $majorMinor >> 4;
-        $minor = $majorMinor & 0x0F;
-        $bug   = $bugfix >> 4;
+        if ($majorByte >= 0x10) {
+            $major         = $majorByte >> 4;
+            $minor         = $majorByte & 0x0F;
+            $bugfixVersion = $minorBugfix >> 4;
+        }
 
-        if ($major === 0 && $minor === 0 && $bug === 0) {
+        if ($major === 0 && $minor === 0 && $bugfixVersion === 0) {
             return null;
         }
 
-        return $bug > 0
-            ? sprintf('%d.%d.%d', $major, $minor, $bug)
+        return $bugfixVersion > 0
+            ? sprintf('%d.%d.%d', $major, $minor, $bugfixVersion)
             : sprintf('%d.%d', $major, $minor);
     }
 

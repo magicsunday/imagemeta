@@ -21,6 +21,7 @@ use function chr;
 use function intdiv;
 use function strlen;
 use function substr;
+use function substr_replace;
 
 /**
  * @covers \MagicSunday\ImageMeta\Parse\Icc\IccDecoder
@@ -108,6 +109,20 @@ final class IccDecoderTest extends TestCase
         $decoder = new IccDecoder();
 
         self::assertNull($decoder->decode(null, $segments));
+    }
+
+    #[Test]
+    public function testDecodeExtractsLegacyVersionEncoding(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        $profile = substr_replace($profile, chr(0x02), 8, 1);
+        $profile = substr_replace($profile, chr(0x13), 9, 1);
+
+        $decoder = new IccDecoder();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('2.1.3', $result['version']);
     }
 
     /**
