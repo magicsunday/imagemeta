@@ -422,7 +422,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(['index' => null], get_object_vars($structured->interop));
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
-        self::assertNull($structured->standards->profile);
+        self::assertSame('2.2', $structured->standards->profile);
     }
 
     /**
@@ -709,6 +709,11 @@ final class StructuredMetadataBuilderTest extends TestCase
 
             foreach (get_object_vars($value) as $field => $fieldValue) {
                 if ($fieldValue === null) {
+                    continue;
+                }
+
+                if ($name === 'standards' && $field === 'profile') {
+                    self::assertSame('2.2', $fieldValue, 'standards::profile should fall back to the default EXIF capability profile');
                     continue;
                 }
 
