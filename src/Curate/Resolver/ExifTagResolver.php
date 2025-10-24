@@ -53,6 +53,7 @@ use function is_int;
 use function is_string;
 use function is_numeric;
 use function ord;
+use function round;
 use function trim;
 
 /**
@@ -526,7 +527,9 @@ final readonly class ExifTagResolver
      */
     public function stripOffsets(): ?array
     {
-        return $this->integerList($this->document?->ifd0, ExifTag::STRIP_OFFSETS);
+        $offsets = $this->document?->stripOffsets();
+
+        return $offsets !== null ? array_values($offsets) : null;
     }
 
     /**
@@ -536,7 +539,9 @@ final readonly class ExifTagResolver
      */
     public function stripByteCounts(): ?array
     {
-        return $this->integerList($this->document?->ifd0, ExifTag::STRIP_BYTE_COUNTS);
+        $counts = $this->document?->stripByteCounts();
+
+        return $counts !== null ? array_values($counts) : null;
     }
 
     /**
@@ -546,7 +551,25 @@ final readonly class ExifTagResolver
      */
     public function transferFunction(): ?array
     {
-        return $this->integerList($this->document?->ifd0, ExifTag::TRANSFER_FUNCTION);
+        $values = $this->document?->transferFunction();
+
+        return $values !== null ? array_values($values) : null;
+    }
+
+    /**
+     * Returns the JPEG thumbnail offset when present.
+     */
+    public function jpegThumbnailOffset(): ?int
+    {
+        return $this->document?->jpegThumbnailOffset();
+    }
+
+    /**
+     * Returns the JPEG thumbnail length when present.
+     */
+    public function jpegThumbnailLength(): ?int
+    {
+        return $this->document?->jpegThumbnailLength();
     }
 
     /**
@@ -723,12 +746,12 @@ final readonly class ExifTagResolver
      */
     public function referenceBlackWhite(): ?array
     {
-        $values = $this->normalizeRationalList($this->getValue($this->document?->ifd0, ExifTag::REFERENCE_BLACK_WHITE));
-        if (count($values) !== 6) {
+        $values = $this->document?->referenceBlackWhite();
+        if ($values === null || count($values) !== 6) {
             return null;
         }
 
-        return $values;
+        return array_values($values);
     }
 
     /**
@@ -736,7 +759,7 @@ final readonly class ExifTagResolver
      */
     public function copyright(): ?string
     {
-        return $this->stringValue($this->document?->ifd0, ExifTag::COPYRIGHT);
+        return $this->document?->copyright();
     }
 
     /**
@@ -1174,9 +1197,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDate(): ?string
     {
-        $value = $this->gpsField('date');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsDateStamp();
     }
 
     /**
@@ -1184,9 +1205,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTime(): ?string
     {
-        $value = $this->gpsField('time');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsTimeStampString();
     }
 
     /**
@@ -1194,9 +1213,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTimestamp(): ?DateTimeImmutable
     {
-        $value = $this->gpsField('timestamp');
-
-        return $value instanceof DateTimeImmutable ? $value : null;
+        return $this->document?->gpsTimestamp();
     }
 
     /**
@@ -1254,9 +1271,7 @@ final readonly class ExifTagResolver
      */
     public function gpsSpeedRef(): ?string
     {
-        $value = $this->gpsField('speed_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsSpeedRef();
     }
 
     /**
@@ -1264,9 +1279,7 @@ final readonly class ExifTagResolver
      */
     public function gpsSpeed(): ?float
     {
-        $value = $this->gpsField('speed_ms');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsSpeedMetresPerSecond();
     }
 
     /**
@@ -1274,9 +1287,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTrackRef(): ?string
     {
-        $value = $this->gpsField('track_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsTrackRef();
     }
 
     /**
@@ -1284,9 +1295,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTrack(): ?float
     {
-        $value = $this->gpsField('track');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsTrack();
     }
 
     /**
@@ -1294,9 +1303,7 @@ final readonly class ExifTagResolver
      */
     public function gpsImgDirectionRef(): ?string
     {
-        $value = $this->gpsField('img_direction_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsImgDirectionRef();
     }
 
     /**
@@ -1304,9 +1311,7 @@ final readonly class ExifTagResolver
      */
     public function gpsImgDirection(): ?float
     {
-        $value = $this->gpsField('img_direction');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsImgDirection();
     }
 
     /**
@@ -1364,9 +1369,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationBearingRef(): ?string
     {
-        $value = $this->gpsField('dest_bearing_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsDestinationBearingRef();
     }
 
     /**
@@ -1374,9 +1377,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationBearing(): ?float
     {
-        $value = $this->gpsField('dest_bearing');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsDestinationBearing();
     }
 
     /**
@@ -1384,9 +1385,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationDistanceRef(): ?string
     {
-        $value = $this->gpsField('dest_distance_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsDestinationDistanceRef();
     }
 
     /**
@@ -1394,9 +1393,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationDistance(): ?float
     {
-        $value = $this->gpsField('dest_distance_m');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsDestinationDistanceMetres();
     }
 
     /**
@@ -1424,17 +1421,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDifferential(): ?int
     {
-        $value = $this->gpsField('differential');
-
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) round($value);
-        }
-
-        return null;
+        return $this->document?->gpsDifferential();
     }
 
     /**
@@ -1442,9 +1429,7 @@ final readonly class ExifTagResolver
      */
     public function gpsHorizontalPositioningError(): ?float
     {
-        $value = $this->gpsField('h_positioning_error');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsHorizontalPositioningError();
     }
 
     /**
@@ -1853,21 +1838,6 @@ final readonly class ExifTagResolver
         $float = CoreValueConverters::rationalToFloat($sanitised);
 
         return $float !== null ? [$float] : [];
-    }
-
-    /**
-     * Normalises integer based lists from EXIF entries.
-     *
-     * @return list<int>|null
-     */
-    private function integerList(?Ifd $ifd, int $tag): ?array
-    {
-        $values = $this->normalizeNumericList($this->getValue($ifd, $tag));
-        if ($values === []) {
-            return null;
-        }
-
-        return array_map(static fn (int|float $value): int => (int) $value, $values);
     }
 
     /**

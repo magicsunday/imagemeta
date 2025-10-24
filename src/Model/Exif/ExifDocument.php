@@ -29,6 +29,7 @@ use function is_string;
 use function ord;
 use function preg_replace;
 use function rtrim;
+use function round;
 use function str_pad;
 use function str_replace;
 use function strlen;
@@ -212,6 +213,78 @@ final readonly class ExifDocument
     public function imageEditor(): ?string
     {
         return $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
+    }
+
+    /**
+     * Returns the strip offsets defined for the primary or thumbnail image data.
+     *
+     * @return list<int>|null
+     */
+    public function stripOffsets(): ?array
+    {
+        $offsets = $this->numericList($this->ifd0, ExifTag::STRIP_OFFSETS);
+
+        return $offsets ?? $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
+    }
+
+    /**
+     * Returns the strip byte counts for the primary or thumbnail image data.
+     *
+     * @return list<int>|null
+     */
+    public function stripByteCounts(): ?array
+    {
+        $counts = $this->numericList($this->ifd0, ExifTag::STRIP_BYTE_COUNTS);
+
+        return $counts ?? $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
+    }
+
+    /**
+     * Returns the transfer function lookup table when available.
+     *
+     * @return list<int>|null
+     */
+    public function transferFunction(): ?array
+    {
+        return $this->numericList($this->ifd0, ExifTag::TRANSFER_FUNCTION);
+    }
+
+    /**
+     * Returns the JPEG thumbnail offset, preferring the dedicated thumbnail IFD when present.
+     */
+    public function jpegThumbnailOffset(): ?int
+    {
+        $offset = $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT);
+
+        return $offset ?? $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT);
+    }
+
+    /**
+     * Returns the JPEG thumbnail byte length, preferring the dedicated thumbnail IFD when present.
+     */
+    public function jpegThumbnailLength(): ?int
+    {
+        $length = $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+
+        return $length ?? $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+    }
+
+    /**
+     * Returns the reference black and white point values as floating point numbers.
+     *
+     * @return list<float>|null
+     */
+    public function referenceBlackWhite(): ?array
+    {
+        return $this->rationalList($this->ifd0, ExifTag::REFERENCE_BLACK_WHITE);
+    }
+
+    /**
+     * Returns the copyright notice string when present.
+     */
+    public function copyright(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::COPYRIGHT);
     }
 
     /**
@@ -929,6 +1002,222 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the recorded GPS date stamp in ISO calendar format.
+     */
+    public function gpsDateStamp(): ?string
+    {
+        $value = $this->gpsValue('date');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Returns the recorded GPS time stamp in HH:MM:SS(.sss) format.
+     */
+    public function gpsTimeStampString(): ?string
+    {
+        $value = $this->gpsValue('time');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Returns the combined GPS timestamp in UTC when both date and time are available.
+     */
+    public function gpsTimestamp(): ?DateTimeImmutable
+    {
+        $value = $this->gpsValue('timestamp');
+
+        return $value instanceof DateTimeImmutable ? $value : null;
+    }
+
+    /**
+     * Returns the GPSSpeedRef value indicating the source units (K, M, N).
+     */
+    public function gpsSpeedRef(): ?string
+    {
+        $value = $this->gpsValue('speed_ref');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Returns the GPS speed converted to metres per second.
+     */
+    public function gpsSpeedMetresPerSecond(): ?float
+    {
+        $value = $this->gpsValue('speed_ms');
+
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the GPSTrackRef value (T for true, M for magnetic).
+     */
+    public function gpsTrackRef(): ?string
+    {
+        $value = $this->gpsValue('track_ref');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Returns the normalised course over ground in degrees within [0, 360).
+     */
+    public function gpsTrack(): ?float
+    {
+        $value = $this->gpsValue('track');
+
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the GPSImgDirectionRef value.
+     */
+    public function gpsImgDirectionRef(): ?string
+    {
+        $value = $this->gpsValue('img_direction_ref');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Returns the normalised image direction in degrees within [0, 360).
+     */
+    public function gpsImgDirection(): ?float
+    {
+        $value = $this->gpsValue('img_direction');
+
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the GPSDestBearingRef value (true or magnetic).
+     */
+    public function gpsDestinationBearingRef(): ?string
+    {
+        $value = $this->gpsValue('dest_bearing_ref');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Returns the normalised destination bearing in degrees within [0, 360).
+     */
+    public function gpsDestinationBearing(): ?float
+    {
+        $value = $this->gpsValue('dest_bearing');
+
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the GPSDestDistanceRef value (kilometres, miles or nautical miles).
+     */
+    public function gpsDestinationDistanceRef(): ?string
+    {
+        $value = $this->gpsValue('dest_distance_ref');
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Returns the destination distance converted to metres.
+     */
+    public function gpsDestinationDistanceMetres(): ?float
+    {
+        $value = $this->gpsValue('dest_distance_m');
+
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the GPS differential correction indicator.
+     */
+    public function gpsDifferential(): ?int
+    {
+        $value = $this->gpsValue('differential');
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            return (int) round($value);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the horizontal positioning error in metres when provided.
+     */
+    public function gpsHorizontalPositioningError(): ?float
+    {
+        $value = $this->gpsValue('h_positioning_error');
+
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns a single value from the cached GPS metadata map.
+     */
+    private function gpsValue(string $key): mixed
+    {
+        $gps = $this->gps();
+
+        return $gps[$key] ?? null;
+    }
+
+    /**
      * Returns a best-effort capture timestamp. Defaults to UTC when no offset tag is provided.
      *
      * @return DateTimeImmutable|null
@@ -1094,6 +1383,46 @@ final readonly class ExifDocument
             }
 
             return $bytes;
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts rational or numeric list values into floating point lists.
+     *
+     * @return list<float>|null
+     */
+    private function rationalList(?Ifd $ifd, int $tag): ?array
+    {
+        $value = $this->value($ifd, $tag);
+
+        if ($value instanceof ExifRationalList) {
+            $result = [];
+            foreach ($value->values as $item) {
+                $float = ValueConverters::rationalToFloat($item);
+                if ($float === null) {
+                    return null;
+                }
+
+                $result[] = $float;
+            }
+
+            return $result;
+        }
+
+        if ($value instanceof ExifRational) {
+            $float = ValueConverters::rationalToFloat($value);
+
+            return $float !== null ? [$float] : null;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            return array_map(static fn ($v): float => (float) $v, $value->values);
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return [(float) $value];
         }
 
         return null;

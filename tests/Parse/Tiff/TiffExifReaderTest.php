@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
@@ -79,6 +80,32 @@ final class TiffExifReaderTest extends TestCase
         $doc    = $reader->parseFromBlob($blob);
 
         call_user_func([self::class, $assertion], $doc);
+    }
+
+    /**
+     * Ensures the TIFF reader exposes EXIF table 64 accessors via the document and resolver.
+     */
+    #[Test]
+    public function surfacesTable64Accessors(): void
+    {
+        $document = (new TiffExifReader())->parseFromBlob(self::buildClassicTiffBlob());
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame([512], $document->stripOffsets());
+        self::assertSame([1024], $document->stripByteCounts());
+        self::assertSame([0, 32768, 65535], $document->transferFunction());
+        self::assertSame(2048, $document->jpegThumbnailOffset());
+        self::assertSame(4096, $document->jpegThumbnailLength());
+        self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $document->referenceBlackWhite());
+        self::assertSame('Jane Doe', $document->copyright());
+
+        self::assertSame([512], $resolver->stripOffsets());
+        self::assertSame([1024], $resolver->stripByteCounts());
+        self::assertSame([0, 32768, 65535], $resolver->transferFunction());
+        self::assertSame(2048, $resolver->jpegThumbnailOffset());
+        self::assertSame(4096, $resolver->jpegThumbnailLength());
+        self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $resolver->referenceBlackWhite());
+        self::assertSame('Jane Doe', $resolver->copyright());
     }
 
     /**
