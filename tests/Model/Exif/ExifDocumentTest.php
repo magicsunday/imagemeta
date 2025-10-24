@@ -148,9 +148,9 @@ final class ExifDocumentTest extends TestCase
         $ifd0 = new Ifd([]);
 
         $exifIfd = new Ifd([
-            ExifTag::DATETIME_DIGITIZED      => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2015:06:07 08:09:10'),
-            ExifTag::SUB_SEC_TIME_DIGITIZED  => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '234'),
-            ExifTag::OFFSET_TIME_DIGITIZED   => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '-04:00'),
+            ExifTag::DATETIME_DIGITIZED     => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2015:06:07 08:09:10'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '234'),
+            ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '-04:00'),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -674,8 +674,8 @@ final class ExifDocumentTest extends TestCase
 
         $exifIfd = new Ifd([
             ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 160),
-            ExifTag::RECOMMENDED_EXPOSURE_INDEX => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY   => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX  => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);

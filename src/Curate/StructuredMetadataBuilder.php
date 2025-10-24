@@ -61,7 +61,6 @@ use MagicSunday\ImageMeta\Value\TiffData;
 use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
-use MagicSunday\ImageMeta\Value\Xmp;
 
 use function array_key_exists;
 use function is_numeric;
@@ -76,7 +75,7 @@ final class StructuredMetadataBuilder
     /**
      * @var array<string, string>
      */
-    private const APPLE_FLAG_KEYS = [
+    private const array APPLE_FLAG_KEYS = [
         'LivePhotoAuto'         => 'livePhotoAuto',
         'LivePhotoEnabled'      => 'livePhotoEnabled',
         'LivePhotoActive'       => 'livePhotoActive',
@@ -207,16 +206,16 @@ final class StructuredMetadataBuilder
             format: $quickTimeResolver->string('MajorBrand'),
             encoder: $quickTimeResolver->string('Encoder'),
             bitrate: CompositeResolver::first([
-                fn () => $quickTimeResolver->int('AvgBitrate'),
-                fn () => $quickTimeResolver->int('Bitrate'),
+                fn (): ?int => $quickTimeResolver->int('AvgBitrate'),
+                fn (): ?int => $quickTimeResolver->int('Bitrate'),
             ]),
             videoCodec: CompositeResolver::first([
-                fn () => $quickTimeResolver->string('CompressorID'),
-                fn () => $quickTimeResolver->string('HandlerDescription'),
+                fn (): ?string => $quickTimeResolver->string('CompressorID'),
+                fn (): ?string => $quickTimeResolver->string('HandlerDescription'),
             ]),
             audioCodec: CompositeResolver::first([
-                fn () => $quickTimeResolver->string('AudioFormat'),
-                fn () => $quickTimeResolver->string('AudioCodecID'),
+                fn (): ?string => $quickTimeResolver->string('AudioFormat'),
+                fn (): ?string => $quickTimeResolver->string('AudioCodecID'),
             ]),
         );
 
@@ -237,8 +236,8 @@ final class StructuredMetadataBuilder
             channels: $quickTimeResolver->int('AudioChannels'),
             sampleRate: $quickTimeResolver->int('AudioSampleRate'),
             codec: CompositeResolver::first([
-                fn () => $quickTimeResolver->string('AudioFormat'),
-                fn () => $quickTimeResolver->string('AudioCodecID'),
+                fn (): ?string => $quickTimeResolver->string('AudioFormat'),
+                fn (): ?string => $quickTimeResolver->string('AudioCodecID'),
             ]),
             bitDepth: $quickTimeResolver->int('AudioBitsPerSample'),
         );
@@ -292,6 +291,7 @@ final class StructuredMetadataBuilder
                 ? ['x' => $location[0], 'y' => $location[1], 'w' => null, 'h' => null]
                 : ['x' => null, 'y' => null, 'w' => null, 'h' => null];
         }
+
         $focus = new Focus(
             subjectDistanceM: $exifResolver->subjectDistance(),
             subjectAreaX: $rect['x'],
@@ -320,8 +320,8 @@ final class StructuredMetadataBuilder
 
         $rights = new Rights(
             copyright: CompositeResolver::first([
-                fn () => $xmpResolver->string('http://purl.org/dc/elements/1.1/', 'rights'),
-                fn () => $exifResolver->artist(),
+                fn (): ?string => $xmpResolver->string('http://purl.org/dc/elements/1.1/', 'rights'),
+                $exifResolver->artist(...),
             ]),
             usageTerms: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
             licenseUrl: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
@@ -332,11 +332,11 @@ final class StructuredMetadataBuilder
         $author = new Author(
             artist: $exifResolver->artist(),
             ownerName: CompositeResolver::first([
-                fn () => $exifResolver->ownerName(),
-                fn () => $xmpResolver->string('http://ns.adobe.com/xap/1.0/aux/', 'OwnerName'),
+                $exifResolver->ownerName(...),
+                fn (): ?string => $xmpResolver->string('http://ns.adobe.com/xap/1.0/aux/', 'OwnerName'),
             ]),
             creator: CompositeResolver::first([
-                fn () => $this->firstListValue($xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'creator')),
+                fn (): ?string => $this->firstListValue($xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'creator')),
             ]),
             creatorEmail: $xmpResolver->string('http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
             photographer: $exifResolver->photographer(),
@@ -345,7 +345,7 @@ final class StructuredMetadataBuilder
 
         $temporal = $this->buildTemporal($exifResolver, $quickTimeResolver, $xmpResolver);
 
-        $cropFactor = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
+        $cropFactor          = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
         $circleOfConfusionMm = ValueConverters::calcCircleOfConfusionMm($cropFactor);
 
         $derived = new Derived(
@@ -396,7 +396,7 @@ final class StructuredMetadataBuilder
         $integrity  = new Integrity(
             originalFileName: $xmpResolver->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
-            edited: $hasHistory === true ? true : null,
+            edited: $hasHistory ? true : null,
             historyLastSoftware: null,
             imageHistory: $exifResolver->imageHistory(),
         );
@@ -445,8 +445,8 @@ final class StructuredMetadataBuilder
     private function buildDevice(ExifTagResolver $exif, QuickTimeResolver $quickTimeResolver): Device
     {
         $softwareChain = CompositeResolver::first([
-            fn () => $quickTimeResolver->string('com.apple.quicktime.software'),
-            fn () => $exif->software(),
+            fn (): ?string => $quickTimeResolver->string('com.apple.quicktime.software'),
+            $exif->software(...),
         ]);
 
         return new Device(
@@ -534,9 +534,9 @@ final class StructuredMetadataBuilder
             ownerName: $exif->ownerName(),
             serialNumber: $exif->bodySerialNumber(),
             firmware: CompositeResolver::first([
-                fn () => $exif->cameraFirmware(),
-                fn () => $exif->cameraFirmwareVersion(),
-                fn () => $exif->software(),
+                $exif->cameraFirmware(...),
+                $exif->cameraFirmwareVersion(...),
+                $exif->software(...),
             ]),
             fileSource: $exif->fileSource(),
             sensingMethod: $exif->sensingMethod(),
@@ -682,7 +682,7 @@ final class StructuredMetadataBuilder
             $semanticTone = $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleTone');
         }
 
-        $flags = $makerNotes !== null ? $makerNotes->flags : [];
+        $flags          = $makerNotes instanceof AppleMakerNotes ? $makerNotes->flags : [];
         $quickTimeFlags = $this->quickTimeFlags($quickTimeResolver);
         foreach ($quickTimeFlags as $key => $value) {
             if (!array_key_exists($key, $flags)) {

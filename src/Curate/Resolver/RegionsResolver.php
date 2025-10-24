@@ -76,25 +76,36 @@ final readonly class RegionsResolver
      */
     private function extractMwgRegions(XmpDocument $document, ?array $dimensions): array
     {
-        $types         = $this->stringValues($document, self::NS_MWG_REGIONS, 'Type');
-        $names         = $this->stringValues($document, self::NS_MWG_REGIONS, 'Name');
-        $displayNames  = $this->stringValues($document, self::NS_MWG_REGIONS, 'PersonDisplayName');
-        $confidences   = $this->floatValues($document, self::NS_MWG_REGIONS, 'Confidence');
-        $rotations     = $this->floatValues($document, self::NS_MWG_REGIONS, 'Rotation');
-        $centersX      = $this->floatValues($document, self::NS_ST_AREA, 'x');
-        $centersY      = $this->floatValues($document, self::NS_ST_AREA, 'y');
-        $widths        = $this->floatValues($document, self::NS_ST_AREA, 'w');
-        $heights       = $this->floatValues($document, self::NS_ST_AREA, 'h');
-        $regionCount   = max(count($centersX), count($centersY), count($widths), count($heights));
-        $resolved      = [];
+        $types        = $this->stringValues($document, self::NS_MWG_REGIONS, 'Type');
+        $names        = $this->stringValues($document, self::NS_MWG_REGIONS, 'Name');
+        $displayNames = $this->stringValues($document, self::NS_MWG_REGIONS, 'PersonDisplayName');
+        $confidences  = $this->floatValues($document, self::NS_MWG_REGIONS, 'Confidence');
+        $rotations    = $this->floatValues($document, self::NS_MWG_REGIONS, 'Rotation');
+        $centersX     = $this->floatValues($document, self::NS_ST_AREA, 'x');
+        $centersY     = $this->floatValues($document, self::NS_ST_AREA, 'y');
+        $widths       = $this->floatValues($document, self::NS_ST_AREA, 'w');
+        $heights      = $this->floatValues($document, self::NS_ST_AREA, 'h');
+        $regionCount  = max(count($centersX), count($centersY), count($widths), count($heights));
+        $resolved     = [];
 
         for ($index = 0; $index < $regionCount; ++$index) {
             $centerX = $centersX[$index] ?? null;
             $centerY = $centersY[$index] ?? null;
             $width   = $widths[$index] ?? null;
             $height  = $heights[$index] ?? null;
+            if ($centerX === null) {
+                continue;
+            }
 
-            if ($centerX === null || $centerY === null || $width === null || $height === null) {
+            if ($centerY === null) {
+                continue;
+            }
+
+            if ($width === null) {
+                continue;
+            }
+
+            if ($height === null) {
                 continue;
             }
 
@@ -145,10 +156,12 @@ final readonly class RegionsResolver
         if ($rolls === []) {
             $rolls = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
         }
-        $names   = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'Name');
+
+        $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'Name');
         if ($names === []) {
             $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FullName');
         }
+
         $faceIds = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FaceID');
         if ($faceIds === []) {
             $faceIds = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FaceUUID');
@@ -162,8 +175,19 @@ final readonly class RegionsResolver
             $centerY = $centersY[$index] ?? null;
             $width   = $widths[$index] ?? null;
             $height  = $heights[$index] ?? null;
+            if ($centerX === null) {
+                continue;
+            }
 
-            if ($centerX === null || $centerY === null || $width === null || $height === null) {
+            if ($centerY === null) {
+                continue;
+            }
+
+            if ($width === null) {
+                continue;
+            }
+
+            if ($height === null) {
                 continue;
             }
 
@@ -199,8 +223,8 @@ final readonly class RegionsResolver
             return null;
         }
 
-        $bestIndex = null;
-        $bestScore = null;
+        $bestIndex             = null;
+        $bestScore             = null;
         [$targetCx, $targetCy] = $this->regionCenter($candidate);
 
         foreach ($regions as $index => $region) {
@@ -227,7 +251,7 @@ final readonly class RegionsResolver
 
     private function mergeRegion(Region $base, Region $supplement): Region
     {
-        $person = $base->personName ?? $supplement->personName;
+        $person     = $base->personName ?? $supplement->personName;
         $confidence = $base->confidence;
         if ($confidence === null) {
             $confidence = $supplement->confidence;
@@ -297,28 +321,20 @@ final readonly class RegionsResolver
         if ($dimensions !== null) {
             if ($scaledCenterX > 1.0 || $scaledWidth > 1.0) {
                 $scaledCenterX /= $dimensions['w'];
-                $scaledWidth   /= $dimensions['w'];
+                $scaledWidth /= $dimensions['w'];
             }
 
             if ($scaledCenterY > 1.0 || $scaledHeight > 1.0) {
                 $scaledCenterY /= $dimensions['h'];
-                $scaledHeight  /= $dimensions['h'];
+                $scaledHeight /= $dimensions['h'];
             }
         }
 
-        if (
-            $scaledCenterX > 1.0 || $scaledCenterY > 1.0
-            || $scaledWidth > 1.0 || $scaledHeight > 1.0
-        ) {
-            if (
-                $scaledCenterX <= 100.0 && $scaledCenterY <= 100.0
-                && $scaledWidth <= 100.0 && $scaledHeight <= 100.0
-            ) {
-                $scaledCenterX /= 100.0;
-                $scaledCenterY /= 100.0;
-                $scaledWidth   /= 100.0;
-                $scaledHeight  /= 100.0;
-            }
+        if (($scaledCenterX > 1.0 || $scaledCenterY > 1.0 || $scaledWidth > 1.0 || $scaledHeight > 1.0) && ($scaledCenterX <= 100.0 && $scaledCenterY <= 100.0 && $scaledWidth <= 100.0 && $scaledHeight <= 100.0)) {
+            $scaledCenterX /= 100.0;
+            $scaledCenterY /= 100.0;
+            $scaledWidth /= 100.0;
+            $scaledHeight /= 100.0;
         }
 
         $halfWidth  = $scaledWidth / 2.0;
@@ -394,7 +410,7 @@ final readonly class RegionsResolver
                 continue;
             }
 
-            $numeric = $this->parseNumericString($value);
+            $numeric  = $this->parseNumericString($value);
             $values[] = $numeric;
         }
 

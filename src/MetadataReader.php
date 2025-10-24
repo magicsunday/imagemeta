@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta;
 
+use finfo;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
@@ -22,13 +23,14 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
-use const FILEINFO_MIME_TYPE;
-use const PATHINFO_EXTENSION;
 use function filesize;
 use function hash_file;
 use function is_string;
 use function pathinfo;
 use function strtolower;
+
+use const FILEINFO_MIME_TYPE;
+use const PATHINFO_EXTENSION;
 
 /**
  * Coordinates format detection and metadata extraction for supported containers.
@@ -75,13 +77,12 @@ final class MetadataReader
         ?string $extension,
         ?string $digestSha1,
         ?string $digestMd5,
-    ): Metadata
-    {
-        $jpeg        = new JpegExtractor($stream);
-        $exifBlobs   = $jpeg->extractExifBlobs();
-        $xmpBlobs    = $jpeg->extractXmpPackets();
-        $iccProfile  = $jpeg->getIccProfile();
-        $iccSegments = $jpeg->getIccSegments();
+    ): Metadata {
+        $jpeg          = new JpegExtractor($stream);
+        $exifBlobs     = $jpeg->extractExifBlobs();
+        $xmpBlobs      = $jpeg->extractXmpPackets();
+        $iccProfile    = $jpeg->getIccProfile();
+        $iccSegments   = $jpeg->getIccSegments();
         $bitsPerSample = $jpeg->getFrameSamplePrecision();
         $sampling      = $jpeg->getFrameComponentSamplingFactors();
         $subSampling   = $jpeg->getFrameYCbCrSubSampling();
@@ -133,8 +134,7 @@ final class MetadataReader
         ?string $extension,
         ?string $digestSha1,
         ?string $digestMd5,
-    ): Metadata
-    {
+    ): Metadata {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
 
         $exifDoc    = null;
@@ -175,7 +175,7 @@ final class MetadataReader
      */
     private function detectMimeType(string $path): ?string
     {
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime  = $finfo->file($path);
 
         if (!is_string($mime) || $mime === '') {

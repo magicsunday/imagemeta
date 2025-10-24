@@ -28,7 +28,8 @@ final readonly class DeviceResolver
     use XmpPropertyAccess;
 
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
-    private const string NS_XMP  = 'http://ns.adobe.com/xap/1.0/';
+
+    private const string NS_XMP = 'http://ns.adobe.com/xap/1.0/';
 
     private const string QUICKTIME_SOFTWARE_KEY = 'com.apple.quicktime.software';
 

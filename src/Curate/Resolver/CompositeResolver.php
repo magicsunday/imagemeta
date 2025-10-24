@@ -75,10 +75,10 @@ final readonly class CompositeResolver
     public static function intISO(ExifTagResolver $resolver): ?int
     {
         return self::firstInt([
-            static fn () => $resolver->int('ISO'),
-            static fn () => $resolver->int('ISOSpeed'),
-            static fn () => $resolver->int('StandardOutputSensitivity'),
-            static fn () => $resolver->int('RecommendedExposureIndex'),
+            static fn (): ?int => $resolver->int('ISO'),
+            static fn (): ?int => $resolver->int('ISOSpeed'),
+            static fn (): ?int => $resolver->int('StandardOutputSensitivity'),
+            static fn (): ?int => $resolver->int('RecommendedExposureIndex'),
         ]);
     }
 
@@ -90,13 +90,13 @@ final readonly class CompositeResolver
     public static function dimensions(ExifTagResolver $resolver): array
     {
         $width = self::firstInt([
-            static fn () => $resolver->int('ExifImageWidth'),
-            static fn () => $resolver->int('ImageWidth'),
+            static fn (): ?int => $resolver->int('ExifImageWidth'),
+            static fn (): ?int => $resolver->int('ImageWidth'),
         ]);
 
         $height = self::firstInt([
-            static fn () => $resolver->int('ExifImageHeight'),
-            static fn () => $resolver->int('ImageLength'),
+            static fn (): ?int => $resolver->int('ExifImageHeight'),
+            static fn (): ?int => $resolver->int('ImageLength'),
         ]);
 
         return [$width, $height];

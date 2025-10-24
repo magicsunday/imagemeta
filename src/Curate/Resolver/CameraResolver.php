@@ -23,8 +23,10 @@ final readonly class CameraResolver
     use XmpPropertyAccess;
 
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
-    private const string NS_AUX  = 'http://ns.adobe.com/exif/1.0/aux/';
-    private const string NS_XMP  = 'http://ns.adobe.com/xap/1.0/';
+
+    private const string NS_AUX = 'http://ns.adobe.com/exif/1.0/aux/';
+
+    private const string NS_XMP = 'http://ns.adobe.com/xap/1.0/';
 
     /**
      * Builds a camera value object from the provided metadata.

@@ -114,7 +114,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function normalisesPrintableUndefinedPayloads(): void
     {
-        $blob     = self::buildClassicVersionBlob();
+        $blob     = $this->buildClassicVersionBlob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         $exifIfd = $document->exifIfd;
@@ -186,7 +186,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function parsesSceneAndSoftwareTags(): void
     {
-        $blob = self::buildClassicSceneSoftwareBlob();
+        $blob = $this->buildClassicSceneSoftwareBlob();
 
         $document = (new TiffExifReader())->parseFromBlob($blob);
         $exifIfd  = $document->exifIfd;
@@ -208,6 +208,7 @@ final class TiffExifReaderTest extends TestCase
         } else {
             self::assertSame("\x00\x01\x02\x03", $cfaPattern);
         }
+
         self::assertSame('Cliffside Dusk', rtrim($exifIfd->get(ExifTag::IMAGE_TITLE)?->value ?? ''));
         self::assertSame('Alex Light', rtrim($exifIfd->get(ExifTag::PHOTOGRAPHER)?->value ?? ''));
         self::assertSame('Chris Edit', rtrim($exifIfd->get(ExifTag::IMAGE_EDITOR)?->value ?? ''));
@@ -444,10 +445,8 @@ final class TiffExifReaderTest extends TestCase
         $fNumberData      = self::packRationalLE(28, 10);
         $fNumberOffset    = $exifIfdOffset + $exifIfdLength;
         $interopIfdOffset = $fNumberOffset + strlen($fNumberData);
-
-        $interopEntryCount = 1;
-        $interopIfdLength  = 2 + ($interopEntryCount * 12) + 4;
-        $gpsIfdOffset      = $interopIfdOffset + $interopIfdLength;
+        $interopIfdLength = 2 + 12 + 4;
+        $gpsIfdOffset     = $interopIfdOffset + $interopIfdLength;
 
         $gpsEntryCount = 6;
         $gpsIfdLength  = 2 + ($gpsEntryCount * 12) + 4;
@@ -513,11 +512,11 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Builds a Classic TIFF blob with EXIF/Flashpix version tags encoded as printable UNDEFINED values.
      */
-    private static function buildClassicVersionBlob(): string
+    private function buildClassicVersionBlob(): string
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
-        $exifIfdOffset = 8 + 2 + (1 * 12) + 4;
+        $exifIfdOffset = 8 + 2 + 12 + 4;
 
         $ifd0Entries = [
             self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
@@ -619,11 +618,11 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Builds a minimal Classic TIFF payload containing scene and software tags inline.
      */
-    private static function buildClassicSceneSoftwareBlob(): string
+    private function buildClassicSceneSoftwareBlob(): string
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
-        $exifIfdOffset = 8 + 2 + (1 * 12) + 4;
+        $exifIfdOffset = 8 + 2 + 12 + 4;
 
         $ifd0Entries = [
             self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),

@@ -34,22 +34,22 @@ final class RegionsResolverTest extends TestCase
     public function resolvesAndMergesRegionSources(): void
     {
         $document = new XmpDocument([
-            '{' . self::NS_ST_AREA . '}x'          => ['0.4', '0.75'],
-            '{' . self::NS_ST_AREA . '}y'          => ['0.45', '0.60'],
-            '{' . self::NS_ST_AREA . '}w'          => ['0.2', '0.10'],
-            '{' . self::NS_ST_AREA . '}h'          => ['0.25', '0.08'],
-            '{' . self::NS_MWG . '}Type'           => ['Face', 'Focus'],
-            '{' . self::NS_MWG . '}Name'           => ['Alice', ''],
-            '{' . self::NS_MWG . '}Confidence'     => ['0.91', '0.5'],
-            '{' . self::NS_MWG . '}Rotation'       => ['12.5', '0'],
-            '{' . self::NS_APPLE . '}CenterX'      => ['0.4', '0.72'],
-            '{' . self::NS_APPLE . '}CenterY'      => ['0.45', '0.61'],
-            '{' . self::NS_APPLE . '}Width'        => ['0.2', '0.12'],
-            '{' . self::NS_APPLE . '}Height'       => ['0.25', '0.09'],
-            '{' . self::NS_APPLE . '}Confidence'   => ['0.88', '0.42'],
-            '{' . self::NS_APPLE . '}Roll'         => ['2.0', '-5.0'],
-            '{' . self::NS_APPLE . '}Name'         => ['Alice', 'Bob'],
-            '{' . self::NS_APPLE . '}FaceID'       => ['101', '202'],
+            '{' . self::NS_ST_AREA . '}x'        => ['0.4', '0.75'],
+            '{' . self::NS_ST_AREA . '}y'        => ['0.45', '0.60'],
+            '{' . self::NS_ST_AREA . '}w'        => ['0.2', '0.10'],
+            '{' . self::NS_ST_AREA . '}h'        => ['0.25', '0.08'],
+            '{' . self::NS_MWG . '}Type'         => ['Face', 'Focus'],
+            '{' . self::NS_MWG . '}Name'         => ['Alice', ''],
+            '{' . self::NS_MWG . '}Confidence'   => ['0.91', '0.5'],
+            '{' . self::NS_MWG . '}Rotation'     => ['12.5', '0'],
+            '{' . self::NS_APPLE . '}CenterX'    => ['0.4', '0.72'],
+            '{' . self::NS_APPLE . '}CenterY'    => ['0.45', '0.61'],
+            '{' . self::NS_APPLE . '}Width'      => ['0.2', '0.12'],
+            '{' . self::NS_APPLE . '}Height'     => ['0.25', '0.09'],
+            '{' . self::NS_APPLE . '}Confidence' => ['0.88', '0.42'],
+            '{' . self::NS_APPLE . '}Roll'       => ['2.0', '-5.0'],
+            '{' . self::NS_APPLE . '}Name'       => ['Alice', 'Bob'],
+            '{' . self::NS_APPLE . '}FaceID'     => ['101', '202'],
         ]);
 
         $resolver = new RegionsResolver();
@@ -101,13 +101,13 @@ final class RegionsResolverTest extends TestCase
     public function normalisesPixelCoordinatesUsingAppliedDimensions(): void
     {
         $document = new XmpDocument([
-            '{' . self::NS_ST_DIM . '}w' => ['4000'],
-            '{' . self::NS_ST_DIM . '}h' => ['3000'],
+            '{' . self::NS_ST_DIM . '}w'  => ['4000'],
+            '{' . self::NS_ST_DIM . '}h'  => ['3000'],
             '{' . self::NS_ST_AREA . '}x' => ['2000'],
             '{' . self::NS_ST_AREA . '}y' => ['1500'],
             '{' . self::NS_ST_AREA . '}w' => ['800'],
             '{' . self::NS_ST_AREA . '}h' => ['600'],
-            '{' . self::NS_MWG . '}Type' => ['Face'],
+            '{' . self::NS_MWG . '}Type'  => ['Face'],
         ]);
 
         $resolver = new RegionsResolver();
@@ -133,25 +133,25 @@ final class RegionsResolverTest extends TestCase
         $faceNames    = ['Alice', 'Bob', 'Charlie', 'Dora', 'Eve', 'Frank', 'Grace'];
         $faceIds      = ['1', '2', '3', '4', '5', '6', '7'];
 
-        $mwgTypes = array_fill(0, 7, 'Face');
+        $mwgTypes   = array_fill(0, 7, 'Face');
         $mwgTypes[] = 'Focus';
 
         $document = new XmpDocument([
-            '{' . self::NS_ST_AREA . '}x' => [...$faceCentersX, '0.50'],
-            '{' . self::NS_ST_AREA . '}y' => [...$faceCentersY, '0.50'],
-            '{' . self::NS_ST_AREA . '}w' => [...$faceWidths, '0.20'],
-            '{' . self::NS_ST_AREA . '}h' => [...$faceHeights, '0.15'],
-            '{' . self::NS_MWG . '}Type' => $mwgTypes,
-            '{' . self::NS_MWG . '}Name' => [...$faceNames, ''],
-            '{' . self::NS_MWG . '}Confidence' => ['0.95', '0.90', '0.85', '0.80', '0.75', '0.70', '0.65', '0.60'],
-            '{' . self::NS_APPLE . '}CenterX' => $faceCentersX,
-            '{' . self::NS_APPLE . '}CenterY' => $faceCentersY,
-            '{' . self::NS_APPLE . '}Width' => $faceWidths,
-            '{' . self::NS_APPLE . '}Height' => $faceHeights,
+            '{' . self::NS_ST_AREA . '}x'        => [...$faceCentersX, '0.50'],
+            '{' . self::NS_ST_AREA . '}y'        => [...$faceCentersY, '0.50'],
+            '{' . self::NS_ST_AREA . '}w'        => [...$faceWidths, '0.20'],
+            '{' . self::NS_ST_AREA . '}h'        => [...$faceHeights, '0.15'],
+            '{' . self::NS_MWG . '}Type'         => $mwgTypes,
+            '{' . self::NS_MWG . '}Name'         => [...$faceNames, ''],
+            '{' . self::NS_MWG . '}Confidence'   => ['0.95', '0.90', '0.85', '0.80', '0.75', '0.70', '0.65', '0.60'],
+            '{' . self::NS_APPLE . '}CenterX'    => $faceCentersX,
+            '{' . self::NS_APPLE . '}CenterY'    => $faceCentersY,
+            '{' . self::NS_APPLE . '}Width'      => $faceWidths,
+            '{' . self::NS_APPLE . '}Height'     => $faceHeights,
             '{' . self::NS_APPLE . '}Confidence' => ['0.88', '0.86', '0.84', '0.82', '0.80', '0.78', '0.76'],
-            '{' . self::NS_APPLE . '}Roll' => ['1.0', '0.5', '-0.5', '2.0', '-1.5', '0.0', '1.5'],
-            '{' . self::NS_APPLE . '}Name' => $faceNames,
-            '{' . self::NS_APPLE . '}FaceID' => $faceIds,
+            '{' . self::NS_APPLE . '}Roll'       => ['1.0', '0.5', '-0.5', '2.0', '-1.5', '0.0', '1.5'],
+            '{' . self::NS_APPLE . '}Name'       => $faceNames,
+            '{' . self::NS_APPLE . '}FaceID'     => $faceIds,
         ]);
 
         $regions = (new RegionsResolver())->resolve($document);

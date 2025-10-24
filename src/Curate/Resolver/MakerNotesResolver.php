@@ -28,7 +28,7 @@ final readonly class MakerNotesResolver
      */
     public function string(string $key): ?string
     {
-        if ($this->metadata === null) {
+        if (!$this->metadata instanceof MakerNotesMetadata) {
             return null;
         }
 
@@ -44,7 +44,7 @@ final readonly class MakerNotesResolver
      */
     public function int(string $key): ?int
     {
-        if ($this->metadata === null) {
+        if (!$this->metadata instanceof MakerNotesMetadata) {
             return null;
         }
 
@@ -59,7 +59,7 @@ final readonly class MakerNotesResolver
      */
     public function bool(string $key): ?bool
     {
-        if ($this->metadata === null) {
+        if (!$this->metadata instanceof MakerNotesMetadata) {
             return null;
         }
 

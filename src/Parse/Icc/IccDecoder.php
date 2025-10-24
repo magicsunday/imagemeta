@@ -11,7 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Icc;
 
+use Imagick;
+use ImagickPixel;
 use MagicSunday\ImageMeta\Core\ParseError;
+use Throwable;
+
 use function array_key_exists;
 use function bin2hex;
 use function class_exists;
@@ -27,8 +31,8 @@ use function sprintf;
 use function str_repeat;
 use function str_starts_with;
 use function strlen;
-use function substr;
 use function strtoupper;
+use function substr;
 use function unpack;
 
 /**
@@ -55,7 +59,7 @@ final class IccDecoder
     /**
      * Decodes the ICC profile payload by extracting header fields and well known tags.
      *
-     * @param string|null       $profileData Raw ICC profile data when a complete payload is available.
+     * @param string|null        $profileData Raw ICC profile data when a complete payload is available.
      * @param array<int, string> $segments    ICC segments collected from APP2 markers ordered by appearance.
      *
      * @return array{
@@ -90,11 +94,11 @@ final class IccDecoder
         $description     = $this->extractDescription($data, $profileSize);
 
         return [
-            'description' => $description,
-            'version' => $version,
-            'pcs' => $pcs,
+            'description'     => $description,
+            'version'         => $version,
+            'pcs'             => $pcs,
             'renderingIntent' => $renderingIntent,
-            'profileId' => $profileId,
+            'profileId'       => $profileId,
         ];
     }
 
@@ -143,7 +147,7 @@ final class IccDecoder
         }
 
         $iccData = '';
-        for ($i = 1; $i <= $expectedCount; $i++) {
+        for ($i = 1; $i <= $expectedCount; ++$i) {
             if (!array_key_exists($i, $sequence)) {
                 return null;
             }
@@ -213,7 +217,7 @@ final class IccDecoder
         $tagCount = $this->uInt32Be(substr($data, $tagCountOffset, 4));
         $cursor   = $tagCountOffset + 4;
 
-        for ($i = 0; $i < $tagCount; $i++) {
+        for ($i = 0; $i < $tagCount; ++$i) {
             if ($cursor + self::TAG_RECORD_LENGTH > $length) {
                 break;
             }
@@ -221,13 +225,17 @@ final class IccDecoder
             $signature = substr($data, $cursor, 4);
             $offset    = $this->uInt32Be(substr($data, $cursor + 4, 4));
             $size      = $this->uInt32Be(substr($data, $cursor + 8, 4));
-            $cursor   += self::TAG_RECORD_LENGTH;
+            $cursor += self::TAG_RECORD_LENGTH;
 
             if ($signature !== 'desc') {
                 continue;
             }
 
-            if ($offset < self::HEADER_LENGTH || $size === 0) {
+            if ($offset < self::HEADER_LENGTH) {
+                continue;
+            }
+
+            if ($size === 0) {
                 continue;
             }
 
@@ -288,14 +296,14 @@ final class IccDecoder
         }
 
         $cursor = 16;
-        for ($i = 0; $i < $recordCount; $i++) {
+        for ($i = 0; $i < $recordCount; ++$i) {
             if ($cursor + $recordSize > strlen($data)) {
                 break;
             }
 
             $stringLength = $this->uInt32Be(substr($data, $cursor + 4, 4));
             $stringOffset = $this->uInt32Be(substr($data, $cursor + 8, 4));
-            $cursor      += $recordSize;
+            $cursor += $recordSize;
 
             if ($stringLength === 0) {
                 continue;
@@ -333,15 +341,15 @@ final class IccDecoder
 
         if (class_exists('Imagick') && class_exists('ImagickPixel')) {
             try {
-                $imagick = new \Imagick();
-                $imagick->newImage(1, 1, new \ImagickPixel('white'));
+                $imagick = new Imagick();
+                $imagick->newImage(1, 1, new ImagickPixel('white'));
                 $imagick->setImageFormat('png');
                 $imagick->setImageProperty('icc:text', $data);
                 $text = $imagick->getImageProperty('icc:text');
                 if ($text !== '') {
                     return $text;
                 }
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 // ignore - fall through to null
             }
         }

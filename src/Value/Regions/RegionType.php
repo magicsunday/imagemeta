@@ -16,9 +16,9 @@ namespace MagicSunday\ImageMeta\Value\Regions;
  */
 enum RegionType: string
 {
-    case FACE = 'Face';
-    case FOCUS = 'Focus';
-    case OBJECT = 'Object';
+    case FACE    = 'Face';
+    case FOCUS   = 'Focus';
+    case OBJECT  = 'Object';
     case UNKNOWN = 'Unknown';
 
     /**
@@ -36,7 +36,7 @@ enum RegionType: string
         }
 
         return match ($normalized) {
-            'face' => self::FACE,
+            'face'  => self::FACE,
             'focus' => self::FOCUS,
             'object', 'pet', 'subject', 'rectangle', 'rect' => self::OBJECT,
             default => self::UNKNOWN,

@@ -195,7 +195,7 @@ final readonly class ValueConverters
         $colors = [];
         foreach ($components as $component) {
             $color = CfaPatternColor::fromExifValue($component);
-            if ($color === null) {
+            if (!$color instanceof CfaPatternColor) {
                 return null;
             }
 
@@ -522,6 +522,7 @@ final readonly class ValueConverters
         if ($altRefValue instanceof ExifNumericList) {
             $altRefValue = $altRefValue->values[0] ?? null;
         }
+
         if (is_int($altRefValue)) {
             $result['alt_ref'] = $altRefValue;
         } elseif (is_float($altRefValue)) {
@@ -623,6 +624,7 @@ final readonly class ValueConverters
         if ($diffValue instanceof ExifNumericList) {
             $diffValue = $diffValue->values[0] ?? null;
         }
+
         if (is_int($diffValue)) {
             $result['differential'] = $diffValue;
         } elseif (is_float($diffValue)) {
@@ -890,7 +892,7 @@ final readonly class ValueConverters
         }
 
         $upper = strtoupper($raw);
-        if ($upper === 'Z' || $upper === 'UTC' || $upper === 'GMT') {
+        if (in_array($upper, ['Z', 'UTC', 'GMT'], true)) {
             return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
         }
 
@@ -974,7 +976,7 @@ final readonly class ValueConverters
 
         if ($minutes >= 60) {
             $hours += (int) floor($minutes / 60);
-            $minutes = $minutes % 60;
+            $minutes %= 60;
         }
 
         if ($hours > 14) {

@@ -49,7 +49,7 @@ final class IccDecoderTest extends TestCase
     {
         $profile = IccFixtures::minimalProfile();
 
-        $half = intdiv(strlen($profile) + 1, 2);
+        $half     = intdiv(strlen($profile) + 1, 2);
         $segments = [
             $this->createSegment(1, 2, substr($profile, 0, $half)),
             $this->createSegment(2, 2, substr($profile, $half)),
@@ -80,7 +80,7 @@ final class IccDecoderTest extends TestCase
     {
         $profile = IccFixtures::minimalProfile();
 
-        $half = intdiv(strlen($profile) + 1, 2);
+        $half     = intdiv(strlen($profile) + 1, 2);
         $segments = [
             $this->createSegment(2, 2, substr($profile, $half)),
             $this->createSegment(1, 2, substr($profile, 0, $half)),
@@ -99,7 +99,7 @@ final class IccDecoderTest extends TestCase
     {
         $profile = IccFixtures::minimalProfile();
 
-        $third = intdiv(strlen($profile), 3);
+        $third    = intdiv(strlen($profile), 3);
         $segments = [
             $this->createSegment(1, 3, substr($profile, 0, $third)),
             $this->createSegment(3, 3, substr($profile, $third * 2)),

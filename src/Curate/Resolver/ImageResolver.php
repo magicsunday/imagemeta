@@ -25,6 +25,7 @@ final readonly class ImageResolver
     use XmpPropertyAccess;
 
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     /**
@@ -47,8 +48,8 @@ final readonly class ImageResolver
         $description   = $this->xmpString($xmpDocument, self::NS_TIFF, 'ImageDescription');
 
         if (
-            $orientation === null
-            && $colorSpace === null
+            !$orientation instanceof Orientation
+            && !$colorSpace instanceof ColorSpace
             && $width === null
             && $height === null
             && $uniqueId === null

@@ -34,7 +34,7 @@ final class GpsTiffBuilder
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
         $ifd0EntryCount = 1;
-        $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
+        $ifd0Size       = 2 + 12 + 4;
         $gpsIfdOffset   = 8 + $ifd0Size;
 
         $ifd0 = pack('v', $ifd0EntryCount)
@@ -142,7 +142,7 @@ final class GpsTiffBuilder
      */
     private static function inlineString(string $value): int
     {
-        return self::inlineBytes(array_map(static fn (string $c): int => ord($c), str_split($value)));
+        return self::inlineBytes(array_map(ord(...), str_split($value)));
     }
 
     /**

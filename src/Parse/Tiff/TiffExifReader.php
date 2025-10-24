@@ -43,33 +43,33 @@ use function substr;
  */
 final class TiffExifReader
 {
-    private const TIFF_MAGIC_CLASSIC = 0x002A;
+    private const int TIFF_MAGIC_CLASSIC = 0x002A;
 
-    private const TIFF_MAGIC_BIG = 0x002B;
+    private const int TIFF_MAGIC_BIG = 0x002B;
 
-    private const TYPE_BYTE = 1;
+    private const int TYPE_BYTE = 1;
 
-    private const TYPE_ASCII = 2;
+    private const int TYPE_ASCII = 2;
 
-    private const TYPE_SHORT = 3;
+    private const int TYPE_SHORT = 3;
 
-    private const TYPE_LONG = 4;
+    private const int TYPE_LONG = 4;
 
-    private const TYPE_RATIONAL = 5;
+    private const int TYPE_RATIONAL = 5;
 
-    private const TYPE_SBYTE = 6;
+    private const int TYPE_SBYTE = 6;
 
-    private const TYPE_UNDEFINED = 7;
+    private const int TYPE_UNDEFINED = 7;
 
-    private const TYPE_SSHORT = 8;
+    private const int TYPE_SSHORT = 8;
 
-    private const TYPE_SLONG = 9;
+    private const int TYPE_SLONG = 9;
 
-    private const TYPE_SRATIONAL = 10;
+    private const int TYPE_SRATIONAL = 10;
 
-    private const TYPE_FLOAT = 11;
+    private const int TYPE_FLOAT = 11;
 
-    private const TYPE_DOUBLE = 12;
+    private const int TYPE_DOUBLE = 12;
 
     private MemoryBuffer $buf;
 

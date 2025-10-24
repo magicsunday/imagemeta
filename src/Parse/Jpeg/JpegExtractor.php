@@ -219,17 +219,17 @@ final class JpegExtractor
             throw new ParseError('Not a JPEG (missing SOI marker)');
         }
 
-        $this->exifBlobs        = [];
-        $this->xmpPackets       = [];
-        $this->iccSegments      = [];
-        $this->iccSequence      = [];
-        $this->iccExpectedCount = null;
-        $this->iccProfile       = null;
-        $this->iptcPayloads     = [];
-        $this->xmpPacketHashes  = [];
-        $this->frameBitsPerSample      = null;
-        $this->frameComponentSampling  = null;
-        $this->frameYCbCrSubSampling   = null;
+        $this->exifBlobs              = [];
+        $this->xmpPackets             = [];
+        $this->iccSegments            = [];
+        $this->iccSequence            = [];
+        $this->iccExpectedCount       = null;
+        $this->iccProfile             = null;
+        $this->iptcPayloads           = [];
+        $this->xmpPacketHashes        = [];
+        $this->frameBitsPerSample     = null;
+        $this->frameComponentSampling = null;
+        $this->frameYCbCrSubSampling  = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -534,7 +534,7 @@ final class JpegExtractor
 
         $count = count($chromas);
         for ($i = 1; $i < $count; ++$i) {
-            $component = $chromas[$i];
+            $component  = $chromas[$i];
             $horizontal = min($horizontal, $component['horizontal']);
             $vertical   = min($vertical, $component['vertical']);
         }

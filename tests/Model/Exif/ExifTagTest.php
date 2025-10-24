@@ -240,5 +240,4 @@ final class ExifTagTest extends TestCase
     {
         self::assertSame(ExifTag::DATETIME, ExifTag::MODIFY_DATE);
     }
-
 }

@@ -27,13 +27,18 @@ final class Metadata
      * @var list<string>
      */
     public readonly array $exifBlobs;
+
     public readonly ?QuickTimeMeta $quickTime;
+
     public readonly ?ExifDocument $exifDoc;
+
     /**
      * @var list<string>
      */
     public readonly array $xmpBlobs;
+
     public readonly ?XmpDocument $xmpDoc;
+
     public readonly ?MakerNotesMetadata $makerNotes;
 
     public readonly ?string $iccProfile;
@@ -64,23 +69,23 @@ final class Metadata
     private ?StructuredMetadata $structured = null;
 
     /**
-     * @param list<string>            $exifBlobs  TIFF‑EXIF blobs (first is primary)
-     * @param QuickTimeMeta|null      $quickTime  QuickTime metadata extracted from ISO BMFF containers.
-     * @param ExifDocument|null       $exifDoc    Parsed representation of the primary EXIF document.
-     * @param list<string>            $xmpBlobs   XMP packets (RDF/XML), first is primary
-     * @param XmpDocument|null        $xmpDoc     Parsed representation of the primary XMP packet.
-     * @param MakerNotesMetadata|null $makerNotes Decoded maker notes metadata for the primary EXIF blob.
-     * @param string|null             $iccProfile Binary ICC profile when available.
-     * @param list<string>            $iccSegments Raw ICC APP2 segments in encounter order.
-     * @param int|null                $jpegBitsPerSample Sample precision reported by the JPEG frame header.
+     * @param list<string>                                         $exifBlobs                TIFF‑EXIF blobs (first is primary)
+     * @param QuickTimeMeta|null                                   $quickTime                QuickTime metadata extracted from ISO BMFF containers.
+     * @param ExifDocument|null                                    $exifDoc                  Parsed representation of the primary EXIF document.
+     * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary
+     * @param XmpDocument|null                                     $xmpDoc                   Parsed representation of the primary XMP packet.
+     * @param MakerNotesMetadata|null                              $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
+     * @param string|null                                          $iccProfile               Binary ICC profile when available.
+     * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order.
+     * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header.
      * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by
      *                                                                                       identifier.
-     * @param array{0:int,1:int}|null $jpegYCbCrSubSampling Derived YCbCr subsampling from the JPEG frame header.
-     * @param string|null             $mimeType Detected mime type for the source file.
-     * @param int|null                $fileSize Size of the source file in bytes.
-     * @param string|null             $extension Lowercase file extension extracted from the path.
-     * @param string|null             $digestSha1 Lowercase hexadecimal SHA-1 digest of the payload.
-     * @param string|null             $digestMd5 Lowercase hexadecimal MD5 digest of the payload.
+     * @param array{0:int,1:int}|null                              $jpegYCbCrSubSampling     Derived YCbCr subsampling from the JPEG frame header.
+     * @param string|null                                          $mimeType                 Detected mime type for the source file.
+     * @param int|null                                             $fileSize                 Size of the source file in bytes.
+     * @param string|null                                          $extension                Lowercase file extension extracted from the path.
+     * @param string|null                                          $digestSha1               Lowercase hexadecimal SHA-1 digest of the payload.
+     * @param string|null                                          $digestMd5                Lowercase hexadecimal MD5 digest of the payload.
      */
     public function __construct(
         array $exifBlobs,
@@ -100,22 +105,22 @@ final class Metadata
         ?string $digestSha1 = null,
         ?string $digestMd5 = null,
     ) {
-        $this->exifBlobs   = $exifBlobs;
-        $this->quickTime   = $quickTime;
-        $this->exifDoc     = $exifDoc;
-        $this->xmpBlobs    = $xmpBlobs;
-        $this->xmpDoc      = $xmpDoc;
-        $this->makerNotes  = $makerNotes;
-        $this->iccProfile  = $iccProfile;
-        $this->iccSegments = $iccSegments;
+        $this->exifBlobs                = $exifBlobs;
+        $this->quickTime                = $quickTime;
+        $this->exifDoc                  = $exifDoc;
+        $this->xmpBlobs                 = $xmpBlobs;
+        $this->xmpDoc                   = $xmpDoc;
+        $this->makerNotes               = $makerNotes;
+        $this->iccProfile               = $iccProfile;
+        $this->iccSegments              = $iccSegments;
         $this->jpegBitsPerSample        = $jpegBitsPerSample;
         $this->jpegFrameSamplingFactors = $jpegFrameSamplingFactors;
         $this->jpegYCbCrSubSampling     = $jpegYCbCrSubSampling;
-        $this->mimeType  = $mimeType;
-        $this->fileSize  = $fileSize;
-        $this->extension = $extension;
-        $this->digestSha1 = $digestSha1;
-        $this->digestMd5  = $digestMd5;
+        $this->mimeType                 = $mimeType;
+        $this->fileSize                 = $fileSize;
+        $this->extension                = $extension;
+        $this->digestSha1               = $digestSha1;
+        $this->digestMd5                = $digestMd5;
     }
 
     /**
@@ -144,7 +149,7 @@ final class Metadata
      */
     public function structured(): StructuredMetadata
     {
-        if ($this->structured === null) {
+        if (!$this->structured instanceof StructuredMetadata) {
             $builder          = new StructuredMetadataBuilder();
             $this->structured = $builder->build($this);
         }

@@ -1633,7 +1633,7 @@ final readonly class ExifTagResolver
         $value = $entry?->value;
 
         if ($value instanceof ExifNumericList) {
-            return array_map(static fn ($v): int => (int) $v, $value->values);
+            return array_map(static fn (int|float $v): int => (int) $v, $value->values);
         }
 
         if (is_int($value) || is_float($value)) {

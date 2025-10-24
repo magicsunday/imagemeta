@@ -30,7 +30,6 @@ use function preg_replace;
 use function round;
 use function rtrim;
 use function str_pad;
-use function sprintf;
 use function str_replace;
 use function strlen;
 use function substr;
@@ -1456,7 +1455,7 @@ final readonly class ExifDocument
         $value = $this->value($ifd, $tag);
 
         if ($value instanceof ExifNumericList) {
-            return array_map(static fn ($v): int => (int) $v, $value->values);
+            return array_map(static fn (int|float $v): int => (int) $v, $value->values);
         }
 
         if (is_int($value)) {
@@ -1506,7 +1505,7 @@ final readonly class ExifDocument
         }
 
         if ($value instanceof ExifNumericList) {
-            return array_map(static fn ($v): float => (float) $v, $value->values);
+            return array_map(static fn (int|float $v): float => (float) $v, $value->values);
         }
 
         if (is_int($value) || is_float($value)) {

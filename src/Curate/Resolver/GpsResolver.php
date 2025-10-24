@@ -56,18 +56,18 @@ final readonly class GpsResolver
         $altitude     = $this->floatValue($gpsData['alt'] ?? null);
         $altitudeRef  = $this->intValue($gpsData['alt_ref'] ?? null);
 
-        $version      = $this->stringValue($gpsData['version'] ?? null);
-        $satellites   = $this->stringValue($gpsData['satellites'] ?? null);
-        $status       = $this->stringValue($gpsData['status'] ?? null);
-        $measureMode  = $this->stringValue($gpsData['measure_mode'] ?? null);
-        $dop          = $this->floatValue($gpsData['dop'] ?? null);
-        $speedRef     = $this->uppercase($gpsData['speed_ref'] ?? null);
-        $speedMs      = $this->floatValue($gpsData['speed_ms'] ?? null);
-        $trackRef     = $this->uppercase($gpsData['track_ref'] ?? null);
-        $track        = $this->floatValue($gpsData['track'] ?? null);
-        $imgDirRef    = $this->uppercase($gpsData['img_direction_ref'] ?? null);
-        $imgDir       = $this->floatValue($gpsData['img_direction'] ?? null);
-        $mapDatum     = $this->stringValue($gpsData['map_datum'] ?? null);
+        $version     = $this->stringValue($gpsData['version'] ?? null);
+        $satellites  = $this->stringValue($gpsData['satellites'] ?? null);
+        $status      = $this->stringValue($gpsData['status'] ?? null);
+        $measureMode = $this->stringValue($gpsData['measure_mode'] ?? null);
+        $dop         = $this->floatValue($gpsData['dop'] ?? null);
+        $speedRef    = $this->uppercase($gpsData['speed_ref'] ?? null);
+        $speedMs     = $this->floatValue($gpsData['speed_ms'] ?? null);
+        $trackRef    = $this->uppercase($gpsData['track_ref'] ?? null);
+        $track       = $this->floatValue($gpsData['track'] ?? null);
+        $imgDirRef   = $this->uppercase($gpsData['img_direction_ref'] ?? null);
+        $imgDir      = $this->floatValue($gpsData['img_direction'] ?? null);
+        $mapDatum    = $this->stringValue($gpsData['map_datum'] ?? null);
 
         $destLatRef    = $this->uppercase($gpsData['dest_lat_ref'] ?? null);
         $destLat       = $this->floatValue($gpsData['dest_lat'] ?? null);
@@ -169,9 +169,7 @@ final readonly class GpsResolver
 
         $differential = $this->intValue($gpsData['differential'] ?? null);
         $hError       = $this->floatValue($gpsData['h_positioning_error'] ?? null);
-
-        $hasData = false;
-        foreach ([
+        $hasData      = array_any([
             $latitude,
             $longitude,
             $altitude,
@@ -203,12 +201,7 @@ final readonly class GpsResolver
             $timestamp,
             $differential,
             $hError,
-        ] as $value) {
-            if ($value !== null) {
-                $hasData = true;
-                break;
-            }
-        }
+        ], fn ($value): bool => $value !== null);
 
         if (!$hasData) {
             return null;
@@ -271,7 +264,7 @@ final readonly class GpsResolver
         }
 
         $parts = array_map(
-            static fn (string $component): string => trim($component),
+            trim(...),
             $parts,
         );
 
@@ -449,9 +442,9 @@ final readonly class GpsResolver
     private function convertSpeedToMetresPerSecond(float $speed, string $speedRef): float
     {
         return match ($speedRef) {
-            'K' => $speed / 3.6,
-            'M' => $speed * 0.44704,
-            'N' => $speed * 0.514444,
+            'K'     => $speed / 3.6,
+            'M'     => $speed * 0.44704,
+            'N'     => $speed * 0.514444,
             default => $speed,
         };
     }

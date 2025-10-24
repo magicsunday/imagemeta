@@ -320,7 +320,6 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
     }
 
-
     /**
      * Ensures file level metadata is propagated to the structured representation.
      */
@@ -944,7 +943,6 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(33.3333333, $structured->gps->speedMs, 1e-6);
     }
 
-
     /**
      * Ensures complex EXIF GPS metadata is fully represented in the structured aggregate.
      */
@@ -1072,7 +1070,6 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(1.5, $structured->gps->horizontalPositioningError, 1e-6);
     }
 
-
     /**
      * Verifies that empty metadata still instantiates every value object with null/default state.
      */
@@ -1111,22 +1108,22 @@ final class StructuredMetadataBuilderTest extends TestCase
     public function mergesFaceRegionsFromXmp(): void
     {
         $xmpDocument = new XmpDocument([
-            '{http://ns.adobe.com/xmp/sType/Area#}x'        => ['0.4', '0.75'],
-            '{http://ns.adobe.com/xmp/sType/Area#}y'        => ['0.45', '0.60'],
-            '{http://ns.adobe.com/xmp/sType/Area#}w'        => ['0.2', '0.10'],
-            '{http://ns.adobe.com/xmp/sType/Area#}h'        => ['0.25', '0.08'],
+            '{http://ns.adobe.com/xmp/sType/Area#}x'                           => ['0.4', '0.75'],
+            '{http://ns.adobe.com/xmp/sType/Area#}y'                           => ['0.45', '0.60'],
+            '{http://ns.adobe.com/xmp/sType/Area#}w'                           => ['0.2', '0.10'],
+            '{http://ns.adobe.com/xmp/sType/Area#}h'                           => ['0.25', '0.08'],
             '{http://www.metadataworkinggroup.com/schemas/regions/}Type'       => ['Face', 'Focus'],
             '{http://www.metadataworkinggroup.com/schemas/regions/}Name'       => ['Alice', ''],
             '{http://www.metadataworkinggroup.com/schemas/regions/}Confidence' => ['0.91', '0.5'],
             '{http://www.metadataworkinggroup.com/schemas/regions/}Rotation'   => ['12.5', '0'],
-            '{http://ns.apple.com/faceinfo/1.0/}CenterX'    => ['0.4', '0.72'],
-            '{http://ns.apple.com/faceinfo/1.0/}CenterY'    => ['0.45', '0.61'],
-            '{http://ns.apple.com/faceinfo/1.0/}Width'      => ['0.2', '0.12'],
-            '{http://ns.apple.com/faceinfo/1.0/}Height'     => ['0.25', '0.09'],
-            '{http://ns.apple.com/faceinfo/1.0/}Confidence' => ['0.88', '0.42'],
-            '{http://ns.apple.com/faceinfo/1.0/}Roll'       => ['1.0', '-5.0'],
-            '{http://ns.apple.com/faceinfo/1.0/}Name'       => ['Alice', 'Bob'],
-            '{http://ns.apple.com/faceinfo/1.0/}FaceID'     => ['101', '202'],
+            '{http://ns.apple.com/faceinfo/1.0/}CenterX'                       => ['0.4', '0.72'],
+            '{http://ns.apple.com/faceinfo/1.0/}CenterY'                       => ['0.45', '0.61'],
+            '{http://ns.apple.com/faceinfo/1.0/}Width'                         => ['0.2', '0.12'],
+            '{http://ns.apple.com/faceinfo/1.0/}Height'                        => ['0.25', '0.09'],
+            '{http://ns.apple.com/faceinfo/1.0/}Confidence'                    => ['0.88', '0.42'],
+            '{http://ns.apple.com/faceinfo/1.0/}Roll'                          => ['1.0', '-5.0'],
+            '{http://ns.apple.com/faceinfo/1.0/}Name'                          => ['Alice', 'Bob'],
+            '{http://ns.apple.com/faceinfo/1.0/}FaceID'                        => ['101', '202'],
         ]);
 
         $metadata   = new Metadata([], null, null, [], $xmpDocument);
@@ -1155,7 +1152,7 @@ final class StructuredMetadataBuilderTest extends TestCase
     #[Test]
     public function usesAppleMakerNotesToPopulateWhiteBalanceDetails(): void
     {
-        $ifd0 = new Ifd([]);
+        $ifd0    = new Ifd([]);
         $exifIfd = new Ifd([
             ExifTag::WHITE_BALANCE => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, WhiteBalance::AUTO->value),
         ]);
@@ -1234,7 +1231,7 @@ final class StructuredMetadataBuilderTest extends TestCase
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
-        $exifIfdOffset = 8 + 2 + (1 * 12) + 4;
+        $exifIfdOffset = 8 + 2 + 12 + 4;
 
         $ifd0Entry = pack('v', ExifTag::EXIF_IFD_POINTER)
             . pack('v', 4)

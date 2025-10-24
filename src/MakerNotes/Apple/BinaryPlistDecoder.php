@@ -20,8 +20,8 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
-use function strlen;
 use function str_starts_with;
+use function strlen;
 use function substr;
 
 /**
@@ -108,13 +108,13 @@ final class BinaryPlistDecoder
 
         $entries = [];
         $cursor  = $offsetTableStart;
-        for ($idx = 0; $idx < $numObjects; $idx++) {
-            $offset = $this->readUint($cursor, $offsetIntSize);
+        for ($idx = 0; $idx < $numObjects; ++$idx) {
+            $offset    = $this->readUint($cursor, $offsetIntSize);
             $entries[] = $offset;
-            $cursor   += $offsetIntSize;
+            $cursor += $offsetIntSize;
         }
 
-        $this->offsetTable   = $entries;
+        $this->offsetTable    = $entries;
         $this->topObjectIndex = $topObject;
     }
 
@@ -137,24 +137,24 @@ final class BinaryPlistDecoder
         $info   = $marker & 0x0F;
 
         return match ($type) {
-            0x0 => $this->parseSimple($info),
-            0x1 => $this->parseInteger($offset, $info),
-            0x2 => $this->parseReal($offset, $info),
-            0x4 => $this->parseData($offset, $info),
-            0x5 => $this->parseAscii($offset, $info),
-            0x6 => $this->parseUnicode($offset, $info),
-            0xA => $this->parseArray($offset, $info),
-            0xD => $this->parseDictionary($offset, $info),
+            0x0     => $this->parseSimple($info),
+            0x1     => $this->parseInteger($offset, $info),
+            0x2     => $this->parseReal($offset, $info),
+            0x4     => $this->parseData($offset, $info),
+            0x5     => $this->parseAscii($offset, $info),
+            0x6     => $this->parseUnicode($offset, $info),
+            0xA     => $this->parseArray($offset, $info),
+            0xD     => $this->parseDictionary($offset, $info),
             default => throw new ParseError('Unsupported property list object type.'),
         };
     }
 
-    private function parseSimple(int $info): bool|null
+    private function parseSimple(int $info): ?bool
     {
         return match ($info) {
-            0x0 => null,
-            0x8 => false,
-            0x9 => true,
+            0x0     => null,
+            0x8     => false,
+            0x9     => true,
             default => throw new ParseError('Unsupported simple property list object.'),
         };
     }
@@ -274,7 +274,7 @@ final class BinaryPlistDecoder
         }
 
         $result = [];
-        for ($idx = 0; $idx < $count; $idx++) {
+        for ($idx = 0; $idx < $count; ++$idx) {
             $reference = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
             $result[]  = $this->parseObject($reference);
         }
@@ -300,7 +300,7 @@ final class BinaryPlistDecoder
 
         $keys   = [];
         $values = [];
-        for ($idx = 0; $idx < $count; $idx++) {
+        for ($idx = 0; $idx < $count; ++$idx) {
             $keyRef = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
             $valRef = $this->readUint(
                 $refsOffset + ($count * $this->objectRefSize) + ($idx * $this->objectRefSize),
@@ -361,7 +361,7 @@ final class BinaryPlistDecoder
         }
 
         $value = 0;
-        for ($idx = 0; $idx < $length; $idx++) {
+        for ($idx = 0; $idx < $length; ++$idx) {
             $value = ($value << 8) | ord($this->data[$offset + $idx]);
         }
 

@@ -42,7 +42,6 @@ use function is_numeric;
 use function is_string;
 use function json_encode;
 use function log;
-use function pow;
 use function rad2deg;
 use function sprintf;
 use function str_replace;
@@ -58,10 +57,13 @@ use const JSON_THROW_ON_ERROR;
  */
 final readonly class ValueConverters
 {
-    private const FULL_FRAME_WIDTH_MM = 36.0;
-    private const FULL_FRAME_HEIGHT_MM = 24.0;
-    private const FULL_FRAME_DIAGONAL_MM = 43.2666153056;
-    private const FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.029;
+    private const float FULL_FRAME_WIDTH_MM = 36.0;
+
+    private const float FULL_FRAME_HEIGHT_MM = 24.0;
+
+    private const float FULL_FRAME_DIAGONAL_MM = 43.2666153056;
+
+    private const float FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.029;
 
     /**
      * Converts a rational or numeric EXIF representation into a floating point value.
@@ -94,7 +96,7 @@ final readonly class ValueConverters
      */
     public static function apexToFNumber(float $apex): float
     {
-        return pow(2.0, $apex / 2.0);
+        return 2.0 ** ($apex / 2.0);
     }
 
     /**
@@ -243,7 +245,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        $ev = (pow($fNumber, 2.0) / $exposureTimeSec) * (100.0 / $iso);
+        $ev = ($fNumber ** 2.0 / $exposureTimeSec) * (100.0 / $iso);
 
         return log($ev, 2.0);
     }
@@ -352,7 +354,7 @@ final readonly class ValueConverters
         float $fullFrameDimensionMm,
         ?float $focalLengthMm,
         ?int $focalLength35mm,
-        ?float $cropFactor
+        ?float $cropFactor,
     ): ?float {
         if ($focalLengthMm !== null && $focalLengthMm > 0.0 && $cropFactor !== null && $cropFactor > 0.0) {
             $sensorDimension = $fullFrameDimensionMm / $cropFactor;

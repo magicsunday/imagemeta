@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use XMLReader;
 
 use function array_key_exists;
-use function array_merge;
 use function is_array;
 use function sprintf;
 use function trim;

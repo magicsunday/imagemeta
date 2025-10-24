@@ -23,7 +23,8 @@ final readonly class LensResolver
 {
     use XmpPropertyAccess;
 
-    private const string NS_AUX  = 'http://ns.adobe.com/exif/1.0/aux/';
+    private const string NS_AUX = 'http://ns.adobe.com/exif/1.0/aux/';
+
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
     /**

@@ -48,10 +48,10 @@ final readonly class ExposureResolver
             && $exposureTime === null
             && $aperture === null
             && $exposureBias === null
-            && $program === null
-            && $metering === null
-            && $whiteBalance === null
-            && $flash === null
+            && !$program instanceof ExposureProgram
+            && !$metering instanceof MeteringMode
+            && !$whiteBalance instanceof WhiteBalance
+            && !$flash instanceof FlashInfo
             && $brightness === null
         ) {
             return null;

@@ -195,51 +195,51 @@ final class ValueConvertersTest extends TestCase
     public static function opticalDatasetProvider(): iterable
     {
         yield 'aps-c crop sensor' => [
-            'focalLength35mm' => 75,
-            'focalLengthMm' => 50.0,
-            'fNumber' => 8.0,
-            'expectedCropFactor' => 1.5,
+            'focalLength35mm'           => 75,
+            'focalLengthMm'             => 50.0,
+            'fNumber'                   => 8.0,
+            'expectedCropFactor'        => 1.5,
             'expectedCircleOfConfusion' => 0.019333333333333334,
-            'expectedHyperfocal' => 16.213793103448276,
-            'expectedFovDiagonal' => 32.179788109672,
-            'expectedFovHorizontal' => 26.991466561592,
-            'expectedFovVertical' => 18.180553841645,
+            'expectedHyperfocal'        => 16.213793103448276,
+            'expectedFovDiagonal'       => 32.179788109672,
+            'expectedFovHorizontal'     => 26.991466561592,
+            'expectedFovVertical'       => 18.180553841645,
         ];
 
         yield 'aps-c wide angle' => [
-            'focalLength35mm' => 52,
-            'focalLengthMm' => 35.0,
-            'fNumber' => 5.6,
-            'expectedCropFactor' => 1.4857142857142858,
+            'focalLength35mm'           => 52,
+            'focalLengthMm'             => 35.0,
+            'fNumber'                   => 5.6,
+            'expectedCropFactor'        => 1.4857142857142858,
             'expectedCircleOfConfusion' => 0.019519230769230768,
-            'expectedHyperfocal' => 11.241896551724139,
-            'expectedFovDiagonal' => 45.17707757599993,
-            'expectedFovHorizontal' => 38.18698400097122,
-            'expectedFovVertical' => 25.989233583833013,
+            'expectedHyperfocal'        => 11.241896551724139,
+            'expectedFovDiagonal'       => 45.17707757599993,
+            'expectedFovHorizontal'     => 38.18698400097122,
+            'expectedFovVertical'       => 25.989233583833013,
         ];
 
         yield 'full frame portrait' => [
-            'focalLength35mm' => 85,
-            'focalLengthMm' => 85.0,
-            'fNumber' => 2.0,
-            'expectedCropFactor' => 1.0,
+            'focalLength35mm'           => 85,
+            'focalLengthMm'             => 85.0,
+            'fNumber'                   => 2.0,
+            'expectedCropFactor'        => 1.0,
             'expectedCircleOfConfusion' => 0.029,
-            'expectedHyperfocal' => 124.65396551724137,
-            'expectedFovDiagonal' => 28.558322254800274,
-            'expectedFovHorizontal' => 23.91316848629826,
-            'expectedFovVertical' => 16.071421421069587,
+            'expectedHyperfocal'        => 124.65396551724137,
+            'expectedFovDiagonal'       => 28.558322254800274,
+            'expectedFovHorizontal'     => 23.91316848629826,
+            'expectedFovVertical'       => 16.071421421069587,
         ];
 
         yield 'micro four thirds normal' => [
-            'focalLength35mm' => 50,
-            'focalLengthMm' => 25.0,
-            'fNumber' => 4.0,
-            'expectedCropFactor' => 2.0,
+            'focalLength35mm'           => 50,
+            'focalLengthMm'             => 25.0,
+            'fNumber'                   => 4.0,
+            'expectedCropFactor'        => 2.0,
             'expectedCircleOfConfusion' => 0.0145,
-            'expectedHyperfocal' => 10.800862068965516,
-            'expectedFovDiagonal' => 46.793003343996574,
-            'expectedFovHorizontal' => 39.59775270904986,
-            'expectedFovVertical' => 26.991466561591626,
+            'expectedHyperfocal'        => 10.800862068965516,
+            'expectedFovDiagonal'       => 46.793003343996574,
+            'expectedFovHorizontal'     => 39.59775270904986,
+            'expectedFovVertical'       => 26.991466561591626,
         ];
     }
 }

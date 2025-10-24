@@ -60,7 +60,7 @@ final readonly class XmpResolver
         $value = $this->document?->get($namespace, $localName);
 
         if (is_string($value)) {
-            $parts = array_map(static fn (string $item): string => trim($item), explode(',', $value));
+            $parts = array_map(trim(...), explode(',', $value));
 
             return array_values(array_filter($parts, static fn (string $item): bool => $item !== ''));
         }
@@ -69,7 +69,7 @@ final readonly class XmpResolver
             return [];
         }
 
-        $items = array_map(static fn (string $item): string => trim($item), array_values($value));
+        $items = array_map(trim(...), array_values($value));
 
         return array_values(array_filter($items, static fn (string $item): bool => $item !== ''));
     }

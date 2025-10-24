@@ -25,7 +25,7 @@ final readonly class AppleResolver
     /**
      * @var array<string, string>
      */
-    private const FLAG_KEYS = [
+    private const array FLAG_KEYS = [
         'LivePhotoAuto'         => 'livePhotoAuto',
         'LivePhotoEnabled'      => 'livePhotoEnabled',
         'LivePhotoActive'       => 'livePhotoActive',

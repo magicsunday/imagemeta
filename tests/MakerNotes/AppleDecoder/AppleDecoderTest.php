@@ -19,8 +19,8 @@ use PHPUnit\Framework\TestCase;
 
 use function hex2bin;
 use function sha1;
-use function strlen;
 use function str_repeat;
+use function strlen;
 
 /**
  * Validates the Apple maker notes decoder implementation.
