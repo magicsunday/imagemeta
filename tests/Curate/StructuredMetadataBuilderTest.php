@@ -468,4 +468,187 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
         self::assertSame('-02:00', $structured->temporal->original?->format('P'));
     }
+
+    /**
+     * Validates that EXIF 2.2 style payloads populate ISO and dimensions while leaving the timezone unset.
+     */
+    #[Test]
+    public function buildsExif22SampleWithoutTimezone(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 4000),
+            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3000),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION             => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0220'),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 200),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(200, $structured->exposure->iso);
+        self::assertSame(4000, $structured->image->width);
+        self::assertSame(3000, $structured->image->height);
+        self::assertNull($structured->temporal->tz);
+        self::assertNull($structured->temporal->tzSource);
+    }
+
+    /**
+     * Ensures EXIF 2.3 inputs derive timezone information from the TimeZoneOffset list.
+     */
+    #[Test]
+    public function buildsExif23SampleWithTimeZoneOffset(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION     => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0230'),
+            ExifTag::ISO_SPEED        => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 320),
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:03:10 10:15:30'),
+            ExifTag::TIME_ZONE_OFFSET => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-90])),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(320, $structured->exposure->iso);
+        self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
+        self::assertSame('-01:30', $structured->temporal->original?->format('P'));
+        self::assertSame([-90], $structured->temporal->timeZoneOffsetMinutes);
+    }
+
+    /**
+     * Covers EXIF 3.0 features including fractional seconds, offset tags and composite image metrics.
+     */
+    #[Test]
+    public function buildsExif30SampleWithOffsetAndComposite(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:07:21 14:05:33'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION                             => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+            ExifTag::OFFSET_TIME_ORIGINAL                     => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+02:30'),
+            ExifTag::OFFSET_TIME_DIGITIZED                    => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 6, '+02:30'),
+            ExifTag::SUB_SEC_TIME                             => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 3, '321'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL                    => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '654'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED                   => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '987'),
+            ExifTag::COMPOSITE_IMAGE                          => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
+            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE   => new IfdEntry(ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE, 3, 2, new ExifNumericList([5, 2])),
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE, 5, 3, [[1, 30], [1, 15], [1, 8]]),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
+        self::assertSame('+02:30', $structured->temporal->offsetTimeOriginal);
+        self::assertSame('321', $structured->temporal->subSecTime);
+        self::assertSame('654', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('987', $structured->temporal->subSecTimeDigitized);
+
+        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $structured->composite->type);
+        self::assertSame([5, 2], $structured->composite->counts);
+        self::assertEqualsWithDelta(0.0333333333, $structured->composite->exposureTimesTotal[0], 1e-10);
+        self::assertEqualsWithDelta(0.0666666666, $structured->composite->exposureTimesTotal[1], 1e-10);
+        self::assertEqualsWithDelta(0.125, $structured->composite->exposureTimesTotal[2], 1e-10);
+    }
+
+    /**
+     * Verifies that the color space falls back to sRGB when tagged as uncalibrated with an R03 interop index.
+     */
+    #[Test]
+    public function normalizesUncalibratedColorSpaceViaInteropR03(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 1024),
+            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 768),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::UNCALIBRATED->value),
+        ]);
+
+        $interopIfd = new Ifd([
+            ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 3, 'R03'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
+    }
+
+    /**
+     * Confirms that lenses providing only MAX_APERTURE_VALUE still expose the derived f-number.
+     */
+    #[Test]
+    public function derivesLensMaxApertureFromApex(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::MAX_APERTURE_VALUE => new IfdEntry(ExifTag::MAX_APERTURE_VALUE, 5, 1, [[4, 1]]),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNotNull($structured->lens->maxApertureFNumber);
+        self::assertEqualsWithDelta(4.0, $structured->lens->maxApertureFNumber, 0.0001);
+    }
+
+    /**
+     * Ensures GPS speed values are converted from kilometres per hour to metres per second.
+     */
+    #[Test]
+    public function convertsGpsSpeedToMetresPerSecond(): void
+    {
+        $gpsIfd = new Ifd([
+            ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 2, 'K'),
+            ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, [[120, 1]]),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertEqualsWithDelta(33.3333333, $structured->gps->speedMs, 1e-6);
+    }
+
+    /**
+     * Verifies that empty metadata still instantiates every value object with null/default state.
+     */
+    #[Test]
+    public function instantiatesValueObjectsWithNullStateWhenMetadataMissing(): void
+    {
+        $structured = (new StructuredMetadataBuilder())->build(new Metadata([], null, null, []));
+
+        foreach (get_object_vars($structured) as $name => $value) {
+            self::assertIsObject($value, sprintf('Expected %s to be an object value object', $name));
+
+            foreach (get_object_vars($value) as $field => $fieldValue) {
+                if ($fieldValue === null) {
+                    continue;
+                }
+
+                if (is_array($fieldValue)) {
+                    self::assertSame([], $fieldValue, sprintf('%s::%s should be an empty array when metadata is missing', $name, $field));
+                    continue;
+                }
+
+                self::fail(sprintf('%s::%s expected null/empty, got %s', $name, $field, var_export($fieldValue, true)));
+            }
+        }
+    }
 }

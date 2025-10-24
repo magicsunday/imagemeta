@@ -56,6 +56,7 @@ use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 
 use function array_map;
 use function explode;
@@ -63,6 +64,7 @@ use function is_numeric;
 use function is_string;
 use function str_contains;
 use function sprintf;
+use function strtoupper;
 
 /**
  * Builds the structured metadata aggregate by orchestrating specialised resolvers.
@@ -124,6 +126,29 @@ final class StructuredMetadataBuilder
         $lens   = $this->buildLens($exifResolver, $xmpResolver);
         $image  = $this->buildImage($exifResolver, $xmpResolver, $quickTimeResolver, $interop);
 
+        if (
+            $image->colorSpace === ColorSpace::UNCALIBRATED
+            && $interop->index !== null
+            && strtoupper($interop->index) === 'R03'
+        ) {
+            $image = new Image(
+                width: $image->width,
+                height: $image->height,
+                orientation: $image->orientation,
+                bitsPerSample: $image->bitsPerSample,
+                colorSpace: ColorSpace::SRGB,
+                imageUniqueId: $image->imageUniqueId,
+                imageNumber: $image->imageNumber,
+                documentName: $image->documentName,
+                description: $image->description,
+                title: $image->title,
+                componentsConfiguration: $image->componentsConfiguration,
+                compressedBitsPerPixel: $image->compressedBitsPerPixel,
+                interlace: $image->interlace,
+                userComment: $image->userComment,
+            );
+        }
+
         $exposure = new Exposure(
             iso: CompositeResolver::intISO([
                 fn () => $exifResolver->iso(),
@@ -162,7 +187,12 @@ final class StructuredMetadataBuilder
         );
 
         $gpsCoords = $exifResolver->gps();
-        $gps       = new Gps($gpsCoords['lat'], $gpsCoords['lon'], $gpsCoords['alt']);
+        $gps       = new Gps(
+            $gpsCoords['lat'],
+            $gpsCoords['lon'],
+            $gpsCoords['alt'],
+            $gpsCoords['speed_ms'] ?? null,
+        );
 
         $device = $this->buildDevice($exifResolver, $quickTimeResolver);
 

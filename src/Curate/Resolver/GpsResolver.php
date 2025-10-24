@@ -36,15 +36,17 @@ final readonly class GpsResolver
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Gps
     {
-        $lat = null;
-        $lon = null;
-        $alt = null;
+        $lat   = null;
+        $lon   = null;
+        $alt   = null;
+        $speed = null;
 
         if ($exifDocument instanceof ExifDocument) {
             $gps = $exifDocument->gps();
             $lat = $gps['lat'] ?? null;
             $lon = $gps['lon'] ?? null;
             $alt = $gps['alt'] ?? null;
+            $speed = $gps['speed_ms'] ?? null;
         }
 
         if ($lat === null || $lon === null) {
@@ -69,11 +71,11 @@ final readonly class GpsResolver
             }
         }
 
-        if ($lat === null && $lon === null && $alt === null) {
+        if ($lat === null && $lon === null && $alt === null && $speed === null) {
             return null;
         }
 
-        return new Gps($lat, $lon, $alt);
+        return new Gps($lat, $lon, $alt, $speed);
     }
 
     /**
