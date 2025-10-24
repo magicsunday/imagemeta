@@ -23,11 +23,13 @@ use PHPUnit\Framework\TestCase;
 
 use function chr;
 use function file_put_contents;
+use function md5;
 use function pack;
 use function sha1;
 use function strlen;
 use function sys_get_temp_dir;
 use function tempnam;
+use function rename;
 use function unlink;
 
 /**
@@ -128,6 +130,86 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Ensures JPEG file level metadata is exposed without computing digests by default.
+     */
+    #[Test]
+    public function testReadJpegPopulatesFileMetadataWithoutDigests(): void
+    {
+        $makerNote = 'file-metadata-maker-note';
+        $tiff      = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R5', $makerNote);
+        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:description="File metadata" />'
+            . '</rdf:RDF>'
+            . '</x:xmpmeta>';
+
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . "\xFF\xD9";
+
+        $path = $this->writeTempFileWithExtension($jpeg, 'JPG');
+
+        try {
+            $metadata   = (new MetadataReader())->read($path);
+            $structured = $metadata->structured();
+        } finally {
+            @unlink($path);
+        }
+
+        $size = strlen($jpeg);
+
+        self::assertSame('image/jpeg', $metadata->mimeType);
+        self::assertSame($size, $metadata->fileSize);
+        self::assertSame('jpg', $metadata->extension);
+        self::assertNull($metadata->digestSha1);
+        self::assertNull($metadata->digestMd5);
+
+        self::assertSame('image/jpeg', $structured->file->mimeType);
+        self::assertSame($size, $structured->file->fileSize);
+        self::assertSame('jpg', $structured->file->extension);
+        self::assertNull($structured->file->digestSha1);
+        self::assertNull($structured->file->digestMd5);
+    }
+
+    /**
+     * Ensures optional digest calculation populates SHA-1 and MD5 values.
+     */
+    #[Test]
+    public function testReadJpegComputesDigestsWhenEnabled(): void
+    {
+        $makerNote = 'file-digest-maker-note';
+        $tiff      = $this->littleEndianTiffWithMakerNote('Fujifilm', 'X-T5', $makerNote);
+        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Digest" />'
+            . '</rdf:RDF>'
+            . '</x:xmpmeta>';
+
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . "\xFF\xD9";
+
+        $path = $this->writeTempFileWithExtension($jpeg, 'jpg');
+
+        try {
+            $metadata   = (new MetadataReader())->read($path, true);
+            $structured = $metadata->structured();
+        } finally {
+            @unlink($path);
+        }
+
+        $expectedSha1 = sha1($jpeg);
+        $expectedMd5  = md5($jpeg);
+
+        self::assertSame($expectedSha1, $metadata->digestSha1);
+        self::assertSame($expectedMd5, $metadata->digestMd5);
+        self::assertSame($expectedSha1, $structured->file->digestSha1);
+        self::assertSame($expectedMd5, $structured->file->digestMd5);
+    }
+
+    /**
      * Writes the provided binary payload to a temporary file and returns its path.
      *
      * @param string $payload Binary payload to persist on disk.
@@ -144,6 +226,22 @@ final class MetadataReaderTest extends TestCase
         file_put_contents($path, $payload);
 
         return $path;
+    }
+
+    /**
+     * Persists the payload and renames the file to include the desired extension.
+     */
+    private function writeTempFileWithExtension(string $payload, string $extension): string
+    {
+        $path   = $this->writeTempFile($payload);
+        $target = $path . '.' . $extension;
+
+        if (!rename($path, $target)) {
+            @unlink($path);
+            self::fail('Unable to rename temporary file');
+        }
+
+        return $target;
     }
 
     /**

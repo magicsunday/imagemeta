@@ -43,6 +43,12 @@ final class Metadata
      */
     public readonly array $iccSegments;
 
+    public readonly ?string $mimeType;
+    public readonly ?int $fileSize;
+    public readonly ?string $extension;
+    public readonly ?string $digestSha1;
+    public readonly ?string $digestMd5;
+
     private ?StructuredMetadata $structured = null;
 
     /**
@@ -54,6 +60,11 @@ final class Metadata
      * @param MakerNotesMetadata|null $makerNotes Decoded maker notes metadata for the primary EXIF blob.
      * @param string|null             $iccProfile Binary ICC profile when available.
      * @param list<string>            $iccSegments Raw ICC APP2 segments in encounter order.
+     * @param string|null             $mimeType    Detected mime type for the inspected file.
+     * @param int|null                $fileSize    File size in bytes when available.
+     * @param string|null             $extension   Lowercase file extension derived from the path.
+     * @param string|null             $digestSha1  Hexadecimal SHA-1 digest when computed.
+     * @param string|null             $digestMd5   Hexadecimal MD5 digest when computed.
      */
     public function __construct(
         array $exifBlobs,
@@ -64,6 +75,11 @@ final class Metadata
         ?MakerNotesMetadata $makerNotes = null,
         ?string $iccProfile = null,
         array $iccSegments = [],
+        ?string $mimeType = null,
+        ?int $fileSize = null,
+        ?string $extension = null,
+        ?string $digestSha1 = null,
+        ?string $digestMd5 = null,
     ) {
         $this->exifBlobs   = $exifBlobs;
         $this->quickTime   = $quickTime;
@@ -73,6 +89,11 @@ final class Metadata
         $this->makerNotes  = $makerNotes;
         $this->iccProfile  = $iccProfile;
         $this->iccSegments = $iccSegments;
+        $this->mimeType    = $mimeType;
+        $this->fileSize    = $fileSize;
+        $this->extension   = $extension;
+        $this->digestSha1  = $digestSha1;
+        $this->digestMd5   = $digestMd5;
     }
 
     /**

@@ -1048,6 +1048,34 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(-5.0, $third->rotationDeg, 0.0001);
     }
 
+    #[Test]
+    public function testBuildsFileMetadataFromAggregate(): void
+    {
+        $metadata = new Metadata(
+            [],
+            null,
+            null,
+            [],
+            null,
+            null,
+            null,
+            [],
+            'image/jpeg',
+            2048,
+            'jpg',
+            'sha1-digest',
+            'md5-digest',
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('image/jpeg', $structured->file->mimeType);
+        self::assertSame(2048, $structured->file->fileSize);
+        self::assertSame('jpg', $structured->file->extension);
+        self::assertSame('sha1-digest', $structured->file->digestSha1);
+        self::assertSame('md5-digest', $structured->file->digestMd5);
+    }
+
     /**
      * Builds a Classic TIFF blob with EXIF/Flashpix version tags encoded as printable UNDEFINED values.
      */

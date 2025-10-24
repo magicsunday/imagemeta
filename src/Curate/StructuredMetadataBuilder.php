@@ -189,7 +189,13 @@ final class StructuredMetadataBuilder
         $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime);
         $xmp   = $xmpResolver->value();
 
-        $file = new File(null, null, null, null, null);
+        $file = new File(
+            $metadata->mimeType,
+            $metadata->fileSize,
+            $metadata->extension,
+            $metadata->digestSha1,
+            $metadata->digestMd5,
+        );
 
         $container = new Container(
             format: $quickTimeResolver->string('MajorBrand'),
