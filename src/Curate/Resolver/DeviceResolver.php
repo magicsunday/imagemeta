@@ -30,8 +30,6 @@ final readonly class DeviceResolver
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
     private const string NS_XMP  = 'http://ns.adobe.com/xap/1.0/';
 
-    private const string QUICKTIME_MAKE_KEY     = 'com.apple.quicktime.make';
-    private const string QUICKTIME_MODEL_KEY    = 'com.apple.quicktime.model';
     private const string QUICKTIME_SOFTWARE_KEY = 'com.apple.quicktime.software';
 
     /**
@@ -39,25 +37,27 @@ final readonly class DeviceResolver
      */
     public function resolve(?QuickTimeMeta $quickTimeMeta, ?XmpDocument $xmpDocument): ?Device
     {
-        $manufacturer = null;
-        $model        = null;
         $software     = null;
+        $hostComputer = null;
 
         if ($quickTimeMeta instanceof QuickTimeMeta) {
-            $manufacturer = $this->stringFromMixed($quickTimeMeta->keys[self::QUICKTIME_MAKE_KEY] ?? null);
-            $model        = $this->stringFromMixed($quickTimeMeta->keys[self::QUICKTIME_MODEL_KEY] ?? null);
             $software     = $this->stringFromMixed($quickTimeMeta->keys[self::QUICKTIME_SOFTWARE_KEY] ?? null);
         }
 
-        $manufacturer ??= $this->xmpString($xmpDocument, self::NS_TIFF, 'Make');
-        $model        ??= $this->xmpString($xmpDocument, self::NS_TIFF, 'Model');
         $software     ??= $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
+        $hostComputer ??= $this->xmpString($xmpDocument, self::NS_TIFF, 'HostComputer');
 
-        if ($manufacturer === null && $model === null && $software === null) {
+        if ($software === null && $hostComputer === null) {
             return null;
         }
 
-        return new Device($manufacturer, $model, $software);
+        return new Device(
+            software: $software,
+            hostComputer: $hostComputer,
+            rawDevelopingSoftware: null,
+            imageEditingSoftware: null,
+            metadataEditingSoftware: null,
+        );
     }
 
     /**

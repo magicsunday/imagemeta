@@ -32,18 +32,40 @@ final readonly class ImageResolver
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Image
     {
-        $orientation = Orientation::fromExifValue($exifDocument?->orientation());
-        if ($orientation === null) {
-            $orientation = Orientation::fromExifValue($this->xmpInt($xmpDocument, self::NS_TIFF, 'Orientation'));
-        }
+        $orientation = Orientation::fromExifValue($exifDocument?->orientation())
+            ?? Orientation::fromExifValue($this->xmpInt($xmpDocument, self::NS_TIFF, 'Orientation'));
 
-        $colorSpaceValue = $this->xmpInt($xmpDocument, self::NS_EXIF, 'ColorSpace');
+        $colorSpaceValue = $exifDocument?->colorSpace() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ColorSpace');
         $colorSpace      = ColorSpace::fromExifValue($colorSpaceValue);
 
-        if ($orientation === null && $colorSpace === null) {
+        $width       = $exifDocument?->imageWidth();
+        $height      = $exifDocument?->imageHeight();
+        $bitsPerSample = null;
+        $uniqueId    = $exifDocument?->imageUniqueId();
+        $documentName = $this->xmpString($xmpDocument, self::NS_TIFF, 'DocumentName');
+        $description  = $this->xmpString($xmpDocument, self::NS_TIFF, 'ImageDescription');
+
+        if (
+            $orientation === null
+            && $colorSpace === null
+            && $width === null
+            && $height === null
+            && $uniqueId === null
+            && $documentName === null
+            && $description === null
+        ) {
             return null;
         }
 
-        return new Image($orientation, $colorSpace);
+        return new Image(
+            width: $width,
+            height: $height,
+            orientation: $orientation,
+            bitsPerSample: $bitsPerSample,
+            colorSpace: $colorSpace,
+            imageUniqueId: $uniqueId,
+            documentName: $documentName,
+            description: $description,
+        );
     }
 }

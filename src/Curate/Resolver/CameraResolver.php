@@ -31,15 +31,24 @@ final readonly class CameraResolver
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Camera
     {
-        $make   = $exifDocument?->cameraMake() ?? $this->xmpString($xmpDocument, self::NS_TIFF, 'Make');
-        $model  = $exifDocument?->cameraModel() ?? $this->xmpString($xmpDocument, self::NS_TIFF, 'Model');
-        $serial = $this->xmpString($xmpDocument, self::NS_AUX, 'SerialNumber');
-        $tool   = $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
+        $make       = $exifDocument?->cameraMake() ?? $this->xmpString($xmpDocument, self::NS_TIFF, 'Make');
+        $model      = $exifDocument?->cameraModel() ?? $this->xmpString($xmpDocument, self::NS_TIFF, 'Model');
+        $owner      = $exifDocument?->ownerName() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'OwnerName');
+        $serial     = $exifDocument?->bodySerialNumber() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'SerialNumber');
+        $firmware   = $exifDocument?->cameraFirmware() ?? $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
 
-        if ($make === null && $model === null && $serial === null && $tool === null) {
+        if ($make === null && $model === null && $owner === null && $serial === null && $firmware === null) {
             return null;
         }
 
-        return new Camera($make, $model, $serial, $tool);
+        return new Camera(
+            make: $make,
+            model: $model,
+            ownerName: $owner,
+            serialNumber: $serial,
+            firmware: $firmware,
+            fileSource: null,
+            sensingMethod: null,
+        );
     }
 }

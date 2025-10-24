@@ -36,34 +36,43 @@ final readonly class ExposureResolver
         $iso           = $exifDocument?->iso() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ISOSpeedRatings');
         $exposureTime  = $exifDocument?->exposureTime() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'ExposureTime');
         $aperture      = $exifDocument?->fNumber() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'FNumber');
-        $focalLength   = $exifDocument?->focalLengthMm() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'FocalLength');
-        $program       = ExposureProgram::fromExifValue($this->xmpInt($xmpDocument, self::NS_EXIF, 'ExposureProgram'));
-        $metering      = MeteringMode::fromExifValue($this->xmpInt($xmpDocument, self::NS_EXIF, 'MeteringMode'));
-        $whiteBalance  = WhiteBalance::fromExifValue($this->xmpInt($xmpDocument, self::NS_EXIF, 'WhiteBalance'));
-        $flash         = FlashInfo::fromExifValue($this->xmpInt($xmpDocument, self::NS_EXIF, 'Flash'));
+        $exposureBias  = $exifDocument?->exposureBias();
+        $program       = ExposureProgram::fromExifValue($exifDocument?->exposureProgram() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ExposureProgram'));
+        $metering      = MeteringMode::fromExifValue($exifDocument?->meteringMode() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'MeteringMode'));
+        $flash         = FlashInfo::fromExifValue($exifDocument?->flash() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'Flash'));
+        $whiteBalance  = WhiteBalance::fromExifValue($exifDocument?->whiteBalance() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'WhiteBalance'));
+        $brightness    = $exifDocument?->brightnessValue();
 
         if (
             $iso === null
             && $exposureTime === null
             && $aperture === null
-            && $focalLength === null
+            && $exposureBias === null
             && $program === null
             && $metering === null
             && $whiteBalance === null
             && $flash === null
+            && $brightness === null
         ) {
             return null;
         }
 
         return new Exposure(
-            $iso,
-            $exposureTime,
-            $aperture,
-            $focalLength,
-            $program,
-            $metering,
-            $whiteBalance,
-            $flash,
+            iso: $iso,
+            exposureTimeSec: $exposureTime,
+            fNumber: $aperture,
+            exposureBiasEv: $exposureBias,
+            program: $program,
+            meteringMode: $metering,
+            flash: $flash,
+            whiteBalance: $whiteBalance,
+            brightnessEv: $brightness,
+            exposureMode: null,
+            gainControl: null,
+            contrast: null,
+            saturation: null,
+            sharpness: null,
+            digitalZoomRatio: null,
         );
     }
 }

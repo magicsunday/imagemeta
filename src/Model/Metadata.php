@@ -21,9 +21,16 @@ use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
  */
-final readonly class Metadata
+final class Metadata
 {
-    private ?StructuredMetadata $structured;
+    public readonly array $exifBlobs;
+    public readonly ?QuickTimeMeta $quickTime;
+    public readonly ?ExifDocument $exifDoc;
+    public readonly array $xmpBlobs;
+    public readonly ?XmpDocument $xmpDoc;
+    public readonly ?MakerNotesMetadata $makerNotes;
+
+    private ?StructuredMetadata $structured = null;
 
     /**
      * @param list<string>            $exifBlobs  TIFF‑EXIF blobs (first is primary)
@@ -34,13 +41,19 @@ final readonly class Metadata
      * @param MakerNotesMetadata|null $makerNotes Decoded maker notes metadata for the primary EXIF blob.
      */
     public function __construct(
-        public array $exifBlobs,
-        public ?QuickTimeMeta $quickTime,
-        public ?ExifDocument $exifDoc = null,
-        public array $xmpBlobs = [],
-        public ?XmpDocument $xmpDoc = null,
-        public ?MakerNotesMetadata $makerNotes = null,
+        array $exifBlobs,
+        ?QuickTimeMeta $quickTime,
+        ?ExifDocument $exifDoc = null,
+        array $xmpBlobs = [],
+        ?XmpDocument $xmpDoc = null,
+        ?MakerNotesMetadata $makerNotes = null,
     ) {
+        $this->exifBlobs  = $exifBlobs;
+        $this->quickTime  = $quickTime;
+        $this->exifDoc    = $exifDoc;
+        $this->xmpBlobs   = $xmpBlobs;
+        $this->xmpDoc     = $xmpDoc;
+        $this->makerNotes = $makerNotes;
     }
 
     /**
@@ -69,7 +82,7 @@ final readonly class Metadata
      */
     public function structured(): StructuredMetadata
     {
-        if (!isset($this->structured)) {
+        if ($this->structured === null) {
             $builder           = new StructuredMetadataBuilder();
             $this->structured = $builder->build($this);
         }
