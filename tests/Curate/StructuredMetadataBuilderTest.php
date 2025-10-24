@@ -69,6 +69,13 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::YCBCR_COEFFICIENTS         => new IfdEntry(ExifTag::YCBCR_COEFFICIENTS, 5, 3, [[299, 1000], [587, 1000], [114, 1000]]),
             ExifTag::WHITE_POINT                => new IfdEntry(ExifTag::WHITE_POINT, 5, 2, [[3127, 10000], [3290, 10000]]),
             ExifTag::PRIMARY_CHROMATICITIES     => new IfdEntry(ExifTag::PRIMARY_CHROMATICITIES, 5, 6, [[6400, 10000], [3300, 10000], [3000, 10000], [6000, 10000], [1500, 10000], [6000, 10000]]),
+            ExifTag::STRIP_OFFSETS              => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 3, new ExifNumericList([512, 1024, 1536])),
+            ExifTag::STRIP_BYTE_COUNTS          => new IfdEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 3, new ExifNumericList([2048, 2048, 1024])),
+            ExifTag::TRANSFER_FUNCTION          => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, new ExifNumericList([0, 32768, 65535])),
+            ExifTag::JPEG_INTERCHANGE_FORMAT    => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 24576),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
+            ExifTag::REFERENCE_BLACK_WHITE      => new IfdEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, [[0, 1], [255, 1], [0, 1], [255, 1], [0, 1], [255, 1]]),
+            ExifTag::COPYRIGHT                  => new IfdEntry(ExifTag::COPYRIGHT, 2, 13, 'Jane Doe 2024'),
             ExifTag::MAKE                       => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
             ExifTag::MODEL                      => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
             ExifTag::SOFTWARE                   => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
@@ -146,6 +153,13 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame([0.299, 0.587, 0.114], $structured->tiff->ycbcrCoefficients);
         self::assertSame([0.3127, 0.329], $structured->tiff->whitePoint);
         self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], $structured->tiff->primaryChromaticities);
+        self::assertSame([512, 1024, 1536], $structured->tiff->stripOffsets);
+        self::assertSame([2048, 2048, 1024], $structured->tiff->stripByteCounts);
+        self::assertSame([0, 32768, 65535], $structured->tiff->transferFunction);
+        self::assertSame(24576, $structured->tiff->jpegInterchangeFormat);
+        self::assertSame(8192, $structured->tiff->jpegInterchangeFormatLength);
+        self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $structured->tiff->referenceBlackWhite);
+        self::assertSame('Jane Doe 2024', $structured->tiff->copyright);
 
         self::assertSame('Canon', $structured->camera->make);
         self::assertSame('EOS R6 II', $structured->camera->model);

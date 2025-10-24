@@ -23,19 +23,26 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 final readonly class TiffData
 {
     /**
-     * @param int|null                                                    $samplesPerPixel       Number of samples per pixel.
-     * @param int|null                                                    $rowsPerStrip          Number of rows per TIFF strip.
-     * @param Compression|null                                            $compression           Compression method used for pixel data.
-     * @param Photometric|null                                            $photometric           Photometric interpretation of the samples.
-     * @param PlanarConfiguration|null                                    $planar                Planar configuration for multi-sample data.
-     * @param ResolutionUnit|null                                         $resolutionUnit        Resolution unit for X/Y values.
-     * @param float|null                                                  $xResolution           Horizontal resolution in the reported unit.
-     * @param float|null                                                  $yResolution           Vertical resolution in the reported unit.
-     * @param YCbCrPositioning|null                                       $ycbcrPos              Chroma positioning relative to luma samples.
-     * @param array{0:int,1:int}|null                                     $ycbcrSubSampling      Horizontal/vertical chroma subsampling factors.
-     * @param array{0:float,1:float,2:float}|null                         $ycbcrCoefficients     Luma coefficients for YCbCr conversions.
-     * @param array{0:float,1:float}|null                                 $whitePoint            Normalised white point (x, y).
-     * @param array{0:float,1:float,2:float,3:float,4:float,5:float}|null $primaryChromaticities Primary chromaticities ordered as R,G,B.
+     * @param int|null                                                    $samplesPerPixel             Number of samples per pixel.
+     * @param int|null                                                    $rowsPerStrip                Number of rows per TIFF strip.
+     * @param Compression|null                                            $compression                 Compression method used for pixel data.
+     * @param Photometric|null                                            $photometric                 Photometric interpretation of the samples.
+     * @param PlanarConfiguration|null                                    $planar                      Planar configuration for multi-sample data.
+     * @param ResolutionUnit|null                                         $resolutionUnit              Resolution unit for X/Y values.
+     * @param float|null                                                  $xResolution                 Horizontal resolution in the reported unit.
+     * @param float|null                                                  $yResolution                 Vertical resolution in the reported unit.
+     * @param YCbCrPositioning|null                                       $ycbcrPos                    Chroma positioning relative to luma samples.
+     * @param array{0:int,1:int}|null                                     $ycbcrSubSampling            Horizontal/vertical chroma subsampling factors.
+     * @param array{0:float,1:float,2:float}|null                         $ycbcrCoefficients           Luma coefficients for YCbCr conversions.
+     * @param array{0:float,1:float}|null                                 $whitePoint                  Normalised white point (x, y).
+     * @param array{0:float,1:float,2:float,3:float,4:float,5:float}|null $primaryChromaticities       Primary chromaticities ordered as R,G,B.
+     * @param list<int>|null                                              $stripOffsets                File offsets for TIFF strips.
+     * @param list<int>|null                                              $stripByteCounts             Byte counts for each TIFF strip.
+     * @param list<int>|null                                              $transferFunction            Transfer function lookup table.
+     * @param int|null                                                    $jpegInterchangeFormat       Offset to the JPEG interchange stream.
+     * @param int|null                                                    $jpegInterchangeFormatLength Byte length of the JPEG interchange stream.
+     * @param array{0:float,1:float,2:float,3:float,4:float,5:float}|null $referenceBlackWhite         Reference black and white point values.
+     * @param string|null                                                 $copyright                   Copyright notice embedded in EXIF.
      */
     public function __construct(
         public ?int $samplesPerPixel,
@@ -51,6 +58,13 @@ final readonly class TiffData
         public ?array $ycbcrCoefficients,
         public ?array $whitePoint,
         public ?array $primaryChromaticities,
+        public ?array $stripOffsets,
+        public ?array $stripByteCounts,
+        public ?array $transferFunction,
+        public ?int $jpegInterchangeFormat,
+        public ?int $jpegInterchangeFormatLength,
+        public ?array $referenceBlackWhite,
+        public ?string $copyright,
     ) {
     }
 }

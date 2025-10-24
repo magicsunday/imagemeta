@@ -263,6 +263,36 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the strip offsets defined in the TIFF IFD.
+     *
+     * @return list<int>|null
+     */
+    public function stripOffsets(): ?array
+    {
+        return $this->integerList($this->document?->ifd0, ExifTag::STRIP_OFFSETS);
+    }
+
+    /**
+     * Returns the strip byte counts for each TIFF strip.
+     *
+     * @return list<int>|null
+     */
+    public function stripByteCounts(): ?array
+    {
+        return $this->integerList($this->document?->ifd0, ExifTag::STRIP_BYTE_COUNTS);
+    }
+
+    /**
+     * Returns the transfer function lookup table when present.
+     *
+     * @return list<int>|null
+     */
+    public function transferFunction(): ?array
+    {
+        return $this->integerList($this->document?->ifd0, ExifTag::TRANSFER_FUNCTION);
+    }
+
+    /**
      * Returns the compression enum.
      */
     public function compression(): ?Compression
@@ -290,6 +320,22 @@ final readonly class ExifTagResolver
         $value = $this->numericValue($this->document?->ifd0, ExifTag::PLANAR_CONFIGURATION);
 
         return $value !== null ? PlanarConfiguration::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns the JPEG interchange format offset when present.
+     */
+    public function jpegInterchangeFormat(): ?int
+    {
+        return $this->numericValue($this->document?->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT);
+    }
+
+    /**
+     * Returns the byte length of the embedded JPEG interchange format stream.
+     */
+    public function jpegInterchangeFormatLength(): ?int
+    {
+        return $this->numericValue($this->document?->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
     }
 
     /**
@@ -389,6 +435,29 @@ final readonly class ExifTagResolver
         $value = $this->getValue($this->document?->ifd0, ExifTag::PRIMARY_CHROMATICITIES);
 
         return CoreValueConverters::toPrimaryChromaticities($value);
+    }
+
+    /**
+     * Returns the reference black and white point values.
+     *
+     * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     */
+    public function referenceBlackWhite(): ?array
+    {
+        $values = $this->normalizeRationalList($this->getValue($this->document?->ifd0, ExifTag::REFERENCE_BLACK_WHITE));
+        if (count($values) !== 6) {
+            return null;
+        }
+
+        return $values;
+    }
+
+    /**
+     * Returns the copyright notice string when present.
+     */
+    public function copyright(): ?string
+    {
+        return $this->stringValue($this->document?->ifd0, ExifTag::COPYRIGHT);
     }
 
     /**
@@ -916,6 +985,21 @@ final readonly class ExifTagResolver
         }
 
         return [];
+    }
+
+    /**
+     * Normalises integer based lists from EXIF entries.
+     *
+     * @return list<int>|null
+     */
+    private function integerList(?Ifd $ifd, int $tag): ?array
+    {
+        $values = $this->normalizeNumericList($this->getValue($ifd, $tag));
+        if ($values === []) {
+            return null;
+        }
+
+        return array_map(static fn (int|float $value): int => (int) $value, $values);
     }
 
     /**
