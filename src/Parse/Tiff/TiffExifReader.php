@@ -249,6 +249,11 @@ final class TiffExifReader
             return rtrim($bytes, "\0");
         }
 
+        // Printable ASCII stored as UNDEFINED → treat as string
+        if ($type === self::TYPE_UNDEFINED && $this->isPrintableAsciiOrNull($bytes)) {
+            return rtrim($bytes, "\0");
+        }
+
         // RATIONAL / SRATIONAL
         if ($type === self::TYPE_RATIONAL || $type === self::TYPE_SRATIONAL) {
             $rationalValues = [];
@@ -292,6 +297,28 @@ final class TiffExifReader
         }
 
         return $count === 1 ? $vals[0] : new ExifNumericList($vals);
+    }
+
+    /**
+     * Determines whether the given byte sequence consists only of printable ASCII or NUL bytes.
+     */
+    private function isPrintableAsciiOrNull(string $bytes): bool
+    {
+        $length = strlen($bytes);
+
+        for ($i = 0; $i < $length; ++$i) {
+            $value = ord($bytes[$i]);
+
+            if ($value === 0) {
+                continue;
+            }
+
+            if ($value < 0x20 || $value > 0x7E) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
