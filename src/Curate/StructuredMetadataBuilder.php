@@ -110,13 +110,7 @@ final class StructuredMetadataBuilder
         );
 
         $exifVersion = $exifResolver->exifVersion();
-        $profile = null;
-        if ($exifVersion !== null) {
-            $derived = ExifCapabilities::fromVersion($exifVersion);
-            if ($derived !== '2.2') {
-                $profile = $derived;
-            }
-        }
+        $profile     = $exifVersion !== null ? ExifCapabilities::fromVersion($exifVersion) : null;
 
         $standards = new Standards(
             exifVersion: $exifVersion,

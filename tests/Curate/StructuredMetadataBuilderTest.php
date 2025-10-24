@@ -386,7 +386,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
         self::assertSame('2.20', $structured->standards->exifVersion);
-        self::assertNull($structured->standards->profile);
+        self::assertSame('2.2', $structured->standards->profile);
     }
 
     /**
