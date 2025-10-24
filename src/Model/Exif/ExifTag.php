@@ -265,8 +265,6 @@ final readonly class ExifTag
     // Interoperability IFD
     public const int INTEROPERABILITY_INDEX = 0x0001;
 
-    public const int INTEROPERABILITY_VERSION = 0x0002;
-
     /**
      * Prevent instantiation of this constants-only utility class.
      */

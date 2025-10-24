@@ -112,8 +112,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $interopIfd = new Ifd([
-            ExifTag::INTEROPERABILITY_INDEX   => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, 'R98'),
-            ExifTag::INTEROPERABILITY_VERSION => new IfdEntry(ExifTag::INTEROPERABILITY_VERSION, 7, 4, '0100'),
+            ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, 'R98'),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
@@ -137,8 +136,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame('R98', $structured->interop->index);
-        self::assertSame('0100', $structured->interop->version);
+        self::assertSame(['index' => 'R98'], get_object_vars($structured->interop));
 
         self::assertSame(Compression::JPEG, $structured->tiff->compression);
         self::assertSame(Photometric::YCBCR, $structured->tiff->photometric);
@@ -261,7 +259,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertNull($structured->interop->index);
+        self::assertSame(['index' => null], get_object_vars($structured->interop));
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
     }

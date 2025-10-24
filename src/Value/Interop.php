@@ -17,12 +17,9 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Interop
 {
     /**
-     * @param string|null $index   Interoperability index identifier such as "R98".
-     * @param string|null $version Interoperability version string or hexadecimal representation.
+     * @param string|null $index Interoperability index identifier such as "R98".
      */
-    public function __construct(
-        public ?string $index,
-        public ?string $version,
-    ) {
+    public function __construct(public ?string $index)
+    {
     }
 }

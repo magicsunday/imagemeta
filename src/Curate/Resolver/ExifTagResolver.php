@@ -43,15 +43,12 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
 
 use function array_map;
 use function array_values;
-use function bin2hex;
 use function count;
 use function is_array;
 use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
-use function strlen;
-use function strtoupper;
 use function trim;
 
 /**
@@ -397,34 +394,6 @@ final readonly class ExifTagResolver
     public function interopIndex(): ?string
     {
         return $this->stringValue($this->document?->interopIfd, ExifTag::INTEROPERABILITY_INDEX);
-    }
-
-    /**
-     * Returns the interoperability version in printable form.
-     */
-    public function interopVersion(): ?string
-    {
-        $value = $this->stringValue($this->document?->interopIfd, ExifTag::INTEROPERABILITY_VERSION);
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value, "\0");
-        if ($trimmed === '') {
-            return null;
-        }
-
-        $printable = true;
-        $length    = strlen($trimmed);
-        for ($i = 0; $i < $length; ++$i) {
-            $ord = ord($trimmed[$i]);
-            if ($ord < 0x20 || $ord > 0x7E) {
-                $printable = false;
-                break;
-            }
-        }
-
-        return $printable ? $trimmed : strtoupper(bin2hex($trimmed));
     }
 
     /**

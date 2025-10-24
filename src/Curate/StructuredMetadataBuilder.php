@@ -75,10 +75,7 @@ final class StructuredMetadataBuilder
         $xmpResolver       = new XmpResolver($xmpDocument);
         $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
 
-        $interop = new Interop(
-            index: $exifResolver->interopIndex(),
-            version: $exifResolver->interopVersion(),
-        );
+        $interop = new Interop(index: $exifResolver->interopIndex());
 
         $tiff = new TiffData(
             samplesPerPixel: $exifResolver->samplesPerPixel(),
