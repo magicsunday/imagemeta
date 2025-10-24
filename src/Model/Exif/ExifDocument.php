@@ -202,7 +202,7 @@ final readonly class ExifDocument
             return $value;
         }
 
-        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
+        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE_LEGACY);
 
         if ($value !== null) {
             return $value;
@@ -222,7 +222,7 @@ final readonly class ExifDocument
             return $value;
         }
 
-        $value = $this->str($this->ifd0, ExifTag::PHOTOGRAPHER);
+        $value = $this->str($this->ifd0, ExifTag::PHOTOGRAPHER_LEGACY);
 
         if ($value !== null) {
             return $value;
@@ -238,7 +238,7 @@ final readonly class ExifDocument
     {
         $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITOR);
 
-        return $value ?? $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
+        return $value ?? $this->str($this->ifd0, ExifTag::IMAGE_EDITOR_LEGACY);
     }
 
     /**
@@ -806,6 +806,18 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera firmware version string when legacy tags are provided.
+     *
+     * EXIF 3.0 no longer defines a dedicated firmware version identifier, so
+     * this method only returns data from the legacy tags preserved for
+     * compatibility.
+     */
+    public function cameraFirmwareVersion(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY);
+    }
+
+    /**
      * Returns the raw developing software string.
      */
     public function rawDevelopingSoftware(): ?string
@@ -813,6 +825,17 @@ final readonly class ExifDocument
         $value = $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
 
         return $value ?? $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY);
+    }
+
+    /**
+     * Returns the raw developing software version string when legacy tags are provided.
+     *
+     * EXIF 3.0 reassigned the identifier to CAMERA_FIRMWARE, so only legacy
+     * metadata produces a value.
+     */
+    public function rawDevelopingSoftwareVersion(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY);
     }
 
     /**
@@ -833,6 +856,17 @@ final readonly class ExifDocument
         $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
 
         return $value ?? $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
+    }
+
+    /**
+     * Returns the metadata editing software version string when legacy tags are provided.
+     *
+     * EXIF 3.0 reassigned the identifier to METADATA_EDITING_SOFTWARE, so only
+     * legacy metadata produces a value.
+     */
+    public function metadataEditingSoftwareVersion(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY);
     }
 
     /**

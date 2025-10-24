@@ -298,5 +298,50 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('Pixel Edit', $resolver->imageEditingSoftware());
         self::assertSame('Meta Desk', $resolver->metadataEditingSoftware());
     }
+
+    #[Test]
+    public function resolvesLegacyTextualTags(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_TITLE_LEGACY   => new IfdEntry(ExifTag::IMAGE_TITLE_LEGACY, 2, 1, 'Legacy Image Title'),
+            ExifTag::PHOTOGRAPHER_LEGACY  => new IfdEntry(ExifTag::PHOTOGRAPHER_LEGACY, 2, 1, 'Legacy Photographer'),
+            ExifTag::IMAGE_EDITOR_LEGACY  => new IfdEntry(ExifTag::IMAGE_EDITOR_LEGACY, 2, 1, 'Legacy Image Editor'),
+            ExifTag::ARTIST               => new IfdEntry(ExifTag::ARTIST, 2, 1, 'Artist Fallback'),
+            ExifTag::IMAGE_DESCRIPTION    => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Description Fallback'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_FIRMWARE_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy FW'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY, 2, 1, 'Legacy Raw'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Edit'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Meta'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument($ifd0, $exifIfd, null, null, null));
+
+        self::assertSame('Legacy Image Title', $resolver->imageTitle());
+        self::assertSame('Legacy Photographer', $resolver->photographer());
+        self::assertSame('Legacy Image Editor', $resolver->imageEditor());
+        self::assertSame('Legacy FW', $resolver->cameraFirmware());
+        self::assertSame('Legacy Raw', $resolver->rawDevelopingSoftware());
+        self::assertSame('Legacy Edit', $resolver->imageEditingSoftware());
+        self::assertSame('Legacy Meta', $resolver->metadataEditingSoftware());
+    }
+
+    #[Test]
+    public function resolvesLegacySoftwareVersions(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY         => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY, 2, 1, 'FW 3.1.0'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY, 2, 1, 'RawLab 5.2.1'),
+            ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'MetaLab 1.0.0'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        self::assertSame('FW 3.1.0', $resolver->cameraFirmwareVersion());
+        self::assertSame('RawLab 5.2.1', $resolver->rawDevelopingSoftwareVersion());
+        self::assertSame('MetaLab 1.0.0', $resolver->metadataEditingSoftwareVersion());
+    }
 }
 
