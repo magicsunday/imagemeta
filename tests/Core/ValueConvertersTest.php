@@ -35,11 +35,43 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function normalisesExifVersionAndFlash(): void
     {
+        self::assertSame('2.20', ValueConverters::toExifVersion('0220'));
+        self::assertSame('2.31', ValueConverters::toExifVersion('0231'));
         self::assertSame('3.00', ValueConverters::toExifVersion('0300'));
+        self::assertSame('Exif', ValueConverters::toExifVersion("Exif\0\0"));
+        self::assertNull(ValueConverters::toExifVersion('0240'));
+        self::assertNull(ValueConverters::toExifVersion("\x01\x02\x03\x04"));
         $flash = ValueConverters::flashFromShort(0x59);
         self::assertTrue($flash->fired);
         self::assertSame(FlashMode::AUTO, $flash->mode);
         self::assertSame(FlashReturn::NO_STROBE_DETECTION, $flash->returnDetection);
+    }
+
+    #[Test]
+    public function normalisesOffsetsAndSubjectAreas(): void
+    {
+        self::assertSame('+01:00', ValueConverters::parseOffset('+01:00')?->getName());
+        self::assertSame('+01:00', ValueConverters::parseOffset('+0100')?->getName());
+        self::assertSame('+01:00', ValueConverters::parseOffset('+1')?->getName());
+        self::assertSame('UTC', ValueConverters::parseOffset('UTC')?->getName());
+        self::assertNull(ValueConverters::parseOffset('+15:00'));
+        self::assertNull(ValueConverters::parseOffset('+01:61'));
+
+        self::assertSame(
+            ['x' => 10, 'y' => 20, 'w' => null, 'h' => null],
+            ValueConverters::subjectAreaToRect([10, 20]),
+        );
+        self::assertSame(
+            ['x' => 75, 'y' => 95, 'w' => 50, 'h' => 50],
+            ValueConverters::subjectAreaToRect([100, 120, 25]),
+        );
+        self::assertSame(
+            ['x' => 10, 'y' => 20, 'w' => 30, 'h' => 40],
+            ValueConverters::subjectAreaToRect([10, 20, 30, 40]),
+        );
+        self::assertNull(ValueConverters::subjectAreaToRect([10]));
+        self::assertNull(ValueConverters::subjectAreaToRect([10, 20, -5]));
+        self::assertNull(ValueConverters::subjectAreaToRect(['a', 'b']));
     }
 
     #[Test]

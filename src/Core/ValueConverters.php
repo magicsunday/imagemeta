@@ -30,7 +30,6 @@ use function array_filter;
 use function array_slice;
 use function array_values;
 use function atan;
-use function bin2hex;
 use function count;
 use function ctype_digit;
 use function ctype_print;
@@ -44,11 +43,11 @@ use function is_string;
 use function json_encode;
 use function log;
 use function pow;
+use function preg_match;
 use function rad2deg;
 use function sprintf;
 use function str_replace;
 use function strlen;
-use function strtoupper;
 use function trim;
 
 use const JSON_PRESERVE_ZERO_FRACTION;
@@ -125,12 +124,32 @@ final readonly class ValueConverters
      */
     public static function parseOffset(?string $offset): ?DateTimeZone
     {
-        if ($offset === null || $offset === '') {
+        if ($offset === null) {
             return null;
         }
 
+        $trimmed = trim($offset);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if ($trimmed === 'Z') {
+            $trimmed = '+00:00';
+        }
+
+        if (preg_match('/^([+-])(\d{1,2})(?::?(\d{2}))?$/', $trimmed, $matches) === 1) {
+            $hours   = (int) $matches[2];
+            $minutes = isset($matches[3]) ? (int) $matches[3] : 0;
+
+            if ($hours > 14 || $minutes >= 60 || ($hours === 14 && $minutes !== 0)) {
+                return null;
+            }
+
+            $trimmed = sprintf('%s%02d:%02d', $matches[1], $hours, $minutes);
+        }
+
         try {
-            return new DateTimeZone($offset);
+            return new DateTimeZone($trimmed);
         } catch (Exception) {
             return null;
         }
@@ -141,13 +160,18 @@ final readonly class ValueConverters
      *
      * @param array<int, int|float> $values Subject area values as extracted from metadata.
      *
-     * @return array{x:?int,y:?int,w:?int,h:?int}
+     * @return array{x:?int,y:?int,w:?int,h:?int}|null
      */
-    public static function subjectAreaToRect(array $values): array
+    public static function subjectAreaToRect(array $values): ?array
     {
         $values = array_values($values);
+        $count  = count($values);
 
-        if (count($values) >= 4) {
+        if ($count >= 4) {
+            if (!is_numeric($values[0]) || !is_numeric($values[1]) || !is_numeric($values[2]) || !is_numeric($values[3])) {
+                return null;
+            }
+
             return [
                 'x' => (int) $values[0],
                 'y' => (int) $values[1],
@@ -156,8 +180,16 @@ final readonly class ValueConverters
             ];
         }
 
-        if (count($values) === 3) {
+        if ($count === 3) {
+            if (!is_numeric($values[0]) || !is_numeric($values[1]) || !is_numeric($values[2])) {
+                return null;
+            }
+
             $radius = (int) $values[2];
+
+            if ($radius < 0) {
+                return null;
+            }
 
             return [
                 'x' => (int) $values[0] - $radius,
@@ -167,7 +199,15 @@ final readonly class ValueConverters
             ];
         }
 
-        return ['x' => null, 'y' => null, 'w' => null, 'h' => null];
+        if ($count === 2) {
+            if (!is_numeric($values[0]) || !is_numeric($values[1])) {
+                return null;
+            }
+
+            return ['x' => (int) $values[0], 'y' => (int) $values[1], 'w' => null, 'h' => null];
+        }
+
+        return null;
     }
 
     /**
@@ -234,17 +274,19 @@ final readonly class ValueConverters
         }
 
         if (ctype_digit($trimmed) && strlen($trimmed) === 4) {
-            $major = (int) substr($trimmed, 0, 2);
-            $minor = (int) substr($trimmed, 2, 2);
-
-            return sprintf('%d.%02d', $major, $minor);
+            return match ($trimmed) {
+                '0220' => '2.20',
+                '0231' => '2.31',
+                '0300' => '3.00',
+                default => null,
+            };
         }
 
         if (ctype_print($trimmed)) {
             return $trimmed;
         }
 
-        return strtoupper(bin2hex($trimmed));
+        return null;
     }
 
     /**
