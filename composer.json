@@ -21,6 +21,12 @@
     },
     "require": {
         "php": "^8.4",
+        "ext-ctype": "*",
+        "ext-date": "*",
+        "ext-hash": "*",
+        "ext-iconv": "*",
+        "ext-json": "*",
+        "ext-pcre": "*",
         "ext-xmlreader": "*"
     },
     "require-dev": {
