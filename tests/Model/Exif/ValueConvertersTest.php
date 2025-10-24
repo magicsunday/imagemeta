@@ -135,6 +135,30 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Ensures APEX shutter speed values are converted into seconds.
+     */
+    #[Test]
+    public function convertsApexShutterSpeedToSeconds(): void
+    {
+        self::assertEqualsWithDelta(1 / 128, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(7, 1)), 0.0000001);
+        self::assertEqualsWithDelta(1.0, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(0, 1)), 0.0000001);
+        self::assertNull(ValueConverters::apexShutterSpeedToSeconds(new ExifRational(1, 0)));
+    }
+
+    /**
+     * Ensures components configuration values convert to labelled channels.
+     */
+    #[Test]
+    public function formatsComponentsConfiguration(): void
+    {
+        $values = new ExifNumericList([1, 2, 3, 0]);
+
+        self::assertSame(['Y', 'Cb', 'Cr', '-'], ValueConverters::componentsConfigurationLabels($values));
+        self::assertSame('Y Cb Cr -', ValueConverters::componentsConfigurationDescription($values));
+        self::assertNull(ValueConverters::componentsConfigurationLabels(new ExifNumericList([])));
+    }
+
+    /**
      * @return iterable<string, array{mixed, float|null}>
      */
     public static function provideApexValues(): iterable

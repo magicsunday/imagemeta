@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
@@ -23,9 +24,15 @@ use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
  */
 final class Metadata
 {
+    /**
+     * @var list<string>
+     */
     public readonly array $exifBlobs;
     public readonly ?QuickTimeMeta $quickTime;
     public readonly ?ExifDocument $exifDoc;
+    /**
+     * @var list<string>
+     */
     public readonly array $xmpBlobs;
     public readonly ?XmpDocument $xmpDoc;
     public readonly ?MakerNotesMetadata $makerNotes;

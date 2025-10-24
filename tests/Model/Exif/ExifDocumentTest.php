@@ -20,6 +20,9 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -281,8 +284,8 @@ final class ExifDocumentTest extends TestCase
             ExifTag::BODY_SERIAL_NUMBER        => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, '123456789'),
             ExifTag::LENS_MODEL                => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF70-200mm'),
             ExifTag::LENS_SERIAL_NUMBER        => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 1, 'LNS987654321'),
-            ExifTag::EXIF_IMAGE_WIDTH          => new IfdEntry(ExifTag::EXIF_IMAGE_WIDTH, 4, 1, 5472),
-            ExifTag::EXIF_IMAGE_HEIGHT         => new IfdEntry(ExifTag::EXIF_IMAGE_HEIGHT, 4, 1, 3648),
+            ExifTag::PIXEL_X_DIMENSION         => new IfdEntry(ExifTag::PIXEL_X_DIMENSION, 4, 1, 5472),
+            ExifTag::PIXEL_Y_DIMENSION         => new IfdEntry(ExifTag::PIXEL_Y_DIMENSION, 4, 1, 3648),
             ExifTag::COLOR_SPACE               => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, 1),
             ExifTag::IMAGE_UNIQUE_ID           => new IfdEntry(ExifTag::IMAGE_UNIQUE_ID, 2, 1, "UNIQUE-ID-123\0"),
             ExifTag::ISO_SPEED                 => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 800),
@@ -397,15 +400,20 @@ final class ExifDocumentTest extends TestCase
             ExifTag::CFA_PATTERN                => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x02\x01\x01\x02"),
             ExifTag::CUSTOM_RENDERED            => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
             ExifTag::DEVICE_SETTING_DESCRIPTION => new IfdEntry(ExifTag::DEVICE_SETTING_DESCRIPTION, 7, 1, 'Neutral profile'),
+            ExifTag::CAMERA_FIRMWARE_VERSION    => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION, 2, 1, '3.1.0'),
             ExifTag::CAMERA_FIRMWARE            => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 2.0'),
             ExifTag::RAW_DEVELOPING_SOFTWARE    => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RawLab'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION, 2, 1, '5.2.1'),
             ExifTag::IMAGE_EDITING_SOFTWARE     => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'EditLab'),
             ExifTag::METADATA_EDITING_SOFTWARE  => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'MetaLab'),
+            ExifTag::METADATA_EDITING_SOFTWARE_VERSION => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION, 2, 1, '1.0.0'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY     => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW Legacy'),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
         self::assertSame([1, 2, 3, 0], $doc->componentsConfiguration());
+        self::assertSame(['Y', 'Cb', 'Cr', '-'], $doc->componentsConfigurationLabels());
         self::assertSame(4.5, $doc->compressedBitsPerPixel());
         self::assertSame('Calibrated output', $doc->userComment());
         self::assertSame('Spectral A', $doc->spectralSensitivity());
@@ -430,17 +438,26 @@ final class ExifDocumentTest extends TestCase
         self::assertSame([2, 0, 0, 0], $doc->tiffEpStandardId());
         self::assertSame([1024, 768], $doc->subjectLocation());
         self::assertSame(320.0, $doc->exposureIndex());
-        self::assertSame(1, $doc->sceneType());
+        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $doc->sceneType());
         self::assertSame([2, 1, 1, 2], $doc->cfaPattern());
-        self::assertSame(1, $doc->customRendered());
+        self::assertSame([
+            CfaPatternColor::BLUE,
+            CfaPatternColor::GREEN,
+            CfaPatternColor::GREEN,
+            CfaPatternColor::BLUE,
+        ], $doc->cfaPatternColors());
+        self::assertSame(CustomRendered::CUSTOM_PROCESS, $doc->customRendered());
         self::assertSame('Neutral profile', $doc->deviceSettingDescription());
         self::assertSame('Cliffside Dusk', $doc->imageTitle());
         self::assertSame('Alex Light', $doc->photographer());
         self::assertSame('Chris Edit', $doc->imageEditor());
+        self::assertSame('3.1.0', $doc->cameraFirmwareVersion());
         self::assertSame('FW 2.0', $doc->cameraFirmware());
         self::assertSame('RawLab', $doc->rawDevelopingSoftware());
+        self::assertSame('5.2.1', $doc->rawDevelopingSoftwareVersion());
         self::assertSame('EditLab', $doc->imageEditingSoftware());
         self::assertSame('MetaLab', $doc->metadataEditingSoftware());
+        self::assertSame('1.0.0', $doc->metadataEditingSoftwareVersion());
     }
 
     /**
@@ -458,6 +475,27 @@ final class ExifDocumentTest extends TestCase
 
         self::assertSame(1024, $doc->imageWidth());
         self::assertSame(768, $doc->imageHeight());
+    }
+
+    #[Test]
+    public function textualSoftwareTagsFallbackToLegacyIdentifiers(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_FIRMWARE_LEGACY         => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy FW'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY, 2, 1, 'Legacy Raw'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY  => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Edit'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Meta'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('Legacy FW', $doc->cameraFirmware());
+        self::assertNull($doc->cameraFirmwareVersion());
+        self::assertSame('Legacy Raw', $doc->rawDevelopingSoftware());
+        self::assertNull($doc->rawDevelopingSoftwareVersion());
+        self::assertSame('Legacy Edit', $doc->imageEditingSoftware());
+        self::assertSame('Legacy Meta', $doc->metadataEditingSoftware());
+        self::assertNull($doc->metadataEditingSoftwareVersion());
     }
 
     /**

@@ -40,6 +40,7 @@ use function is_array;
 use function is_float;
 use function is_int;
 use function is_numeric;
+use function is_string;
 use function json_encode;
 use function log;
 use function pow;
@@ -61,24 +62,24 @@ final readonly class ValueConverters
     /**
      * Converts a rational or numeric EXIF representation into a floating point value.
      *
-     * @param int|float|array<int, int|float>|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value to convert.
+     * @param int|float|array<int, int|float|string>|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value to convert.
      */
     public static function rationalToFloat(int|float|array|ExifRational|ExifRationalList|ExifNumericList|null $value): ?float
     {
         if (is_array($value)) {
             $components = array_values($value);
-            if (isset($components[0], $components[1])) {
-                $numerator   = $components[0];
-                $denominator = $components[1];
-
-                if ((is_int($numerator) || is_float($numerator)) && (is_int($denominator) || is_float($denominator))) {
-                    if ((float) $denominator === 0.0) {
-                        return null;
-                    }
-
-                    return (float) $numerator / (float) $denominator;
-                }
+            if (!isset($components[0], $components[1])) {
+                return null;
             }
+
+            $numerator   = self::normaliseNumericComponent($components[0]);
+            $denominator = self::normaliseNumericComponent($components[1]);
+
+            if ($numerator === null || $denominator === null || $denominator === 0.0) {
+                return null;
+            }
+
+            return $numerator / $denominator;
         }
 
         return ExifValueConverters::rationalToFloat($value);
@@ -257,7 +258,10 @@ final readonly class ValueConverters
             return null;
         }
 
-        $parts = array_values(array_filter(explode(' ', str_replace([',', ';'], ' ', $val))));
+        $parts = array_values(array_filter(
+            explode(' ', str_replace([',', ';'], ' ', $val)),
+            static fn (string $part): bool => $part !== '',
+        ));
         if (count($parts) !== 2) {
             return null;
         }
@@ -272,7 +276,7 @@ final readonly class ValueConverters
     /**
      * Attempts to map a raw value to a backed enum instance.
      *
-     * @template T of UnitEnum
+     * @template T of BackedEnum
      *
      * @param class-string<T> $enumClass
      * @param int|string|null $raw
@@ -281,7 +285,11 @@ final readonly class ValueConverters
      */
     public static function toEnumOrNull(string $enumClass, int|string|null $raw): ?UnitEnum
     {
-        if ($raw === null || ($raw === '' && is_string($raw))) {
+        if ($raw === null) {
+            return null;
+        }
+
+        if ($raw === '') {
             return null;
         }
 
@@ -294,16 +302,12 @@ final readonly class ValueConverters
             $value = (int) $raw;
         }
 
-        if (is_subclass_of($enumClass, BackedEnum::class)) {
-            /** @var class-string<BackedEnum> $enumClass */
-            try {
-                return $enumClass::from($value);
-            } catch (ValueError) {
-                return null;
-            }
+        /** @var class-string<T> $enumClass */
+        try {
+            return $enumClass::from($value);
+        } catch (ValueError) {
+            return null;
         }
-
-        return null;
     }
 
     /**
@@ -319,9 +323,30 @@ final readonly class ValueConverters
             return null;
         }
 
-        $values = $rational instanceof ExifRationalList || $rational instanceof ExifNumericList
-            ? array_values($rational->values)
-            : array_values((array) $rational);
+        if ($rational instanceof ExifRationalList || $rational instanceof ExifNumericList) {
+            $values = $rational->values;
+        } else {
+            $values = [];
+            foreach (array_values($rational) as $component) {
+                if (is_array($component)) {
+                    /** @var array<int, int|float|string> $pair */
+                    $pair     = array_values($component);
+                    $values[] = $pair;
+                } elseif (is_int($component) || is_float($component)) {
+                    $values[] = $component;
+                } elseif (is_string($component)) {
+                    if (!is_numeric($component)) {
+                        return null;
+                    }
+
+                    $values[] = (float) $component;
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
 
         if (count($values) < 2) {
             return null;
@@ -346,9 +371,30 @@ final readonly class ValueConverters
             return null;
         }
 
-        $values = $rational instanceof ExifRationalList || $rational instanceof ExifNumericList
-            ? array_values($rational->values)
-            : array_values((array) $rational);
+        if ($rational instanceof ExifRationalList || $rational instanceof ExifNumericList) {
+            $values = $rational->values;
+        } else {
+            $values = [];
+            foreach (array_values($rational) as $component) {
+                if (is_array($component)) {
+                    /** @var array<int, int|float|string> $pair */
+                    $pair     = array_values($component);
+                    $values[] = $pair;
+                } elseif (is_int($component) || is_float($component)) {
+                    $values[] = $component;
+                } elseif (is_string($component)) {
+                    if (!is_numeric($component)) {
+                        return null;
+                    }
+
+                    $values[] = (float) $component;
+                } else {
+                    return null;
+                }
+            }
+        }
+
+        /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
 
         if (count($values) < 6) {
             return null;
@@ -370,6 +416,8 @@ final readonly class ValueConverters
 
     /**
      * Serialises a DNG matrix or CFA pattern into a reproducible string representation.
+     *
+     * @param array<int, mixed>|ExifRationalList|ExifNumericList|null $matrix
      */
     public static function dngMatrixToString(ExifRationalList|ExifNumericList|array|null $matrix): ?string
     {
@@ -377,14 +425,41 @@ final readonly class ValueConverters
             return null;
         }
 
-        $raw = $matrix instanceof ExifRationalList || $matrix instanceof ExifNumericList
-            ? array_values($matrix->values)
-            : $matrix;
+        if ($matrix instanceof ExifRationalList || $matrix instanceof ExifNumericList) {
+            $raw = $matrix->values;
+        } else {
+            $raw = [];
+            foreach ($matrix as $component) {
+                if (is_array($component)) {
+                    /** @var array<int, int|float|string> $pair */
+                    $pair   = array_values($component);
+                    $raw[]  = $pair;
+                    continue;
+                }
+
+                if (is_int($component) || is_float($component)) {
+                    $raw[] = $component;
+                    continue;
+                }
+
+                if (is_string($component)) {
+                    if (!is_numeric($component)) {
+                        return null;
+                    }
+
+                    $raw[] = (float) $component;
+                    continue;
+                }
+
+                return null;
+            }
+        }
 
         if ($raw === []) {
             return null;
         }
 
+        /** @var list<array<int, int|float|string>|int|float|ExifRational> $raw */
         $values = [];
         foreach ($raw as $component) {
             $float = self::rationalToFloat($component);
@@ -400,5 +475,23 @@ final readonly class ValueConverters
         } catch (JsonException) {
             return implode(',', $values);
         }
+    }
+
+    /**
+     * Normalises a numeric component from a rational pair.
+     *
+     * @param int|float|string $component
+     */
+    private static function normaliseNumericComponent(int|float|string $component): ?float
+    {
+        if (is_int($component) || is_float($component)) {
+            return (float) $component;
+        }
+
+        if (!is_numeric($component)) {
+            return null;
+        }
+
+        return (float) $component;
     }
 }

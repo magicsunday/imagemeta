@@ -14,6 +14,8 @@ namespace MagicSunday\ImageMeta\Curate\Resolver;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Xmp;
 
+use function array_map;
+use function array_values;
 use function is_array;
 use function is_string;
 use function strtolower;
@@ -59,14 +61,9 @@ final readonly class XmpResolver
             return [];
         }
 
-        $result = [];
-        foreach ($value as $item) {
-            if (is_string($item)) {
-                $result[] = trim($item);
-            }
-        }
+        $items  = array_values($value);
 
-        return $result;
+        return array_map(static fn (string $item): string => trim($item), $items);
     }
 
     /**

@@ -173,9 +173,19 @@ final readonly class ExifTag
 
     public const int COLOR_SPACE = 0xA001;
 
-    public const int EXIF_IMAGE_WIDTH = 0xA002;
+    public const int PIXEL_X_DIMENSION = 0xA002;
 
-    public const int EXIF_IMAGE_HEIGHT = 0xA003;
+    /**
+     * @deprecated Use self::PIXEL_X_DIMENSION instead.
+     */
+    public const int EXIF_IMAGE_WIDTH = self::PIXEL_X_DIMENSION;
+
+    public const int PIXEL_Y_DIMENSION = 0xA003;
+
+    /**
+     * @deprecated Use self::PIXEL_Y_DIMENSION instead.
+     */
+    public const int EXIF_IMAGE_HEIGHT = self::PIXEL_Y_DIMENSION;
 
     public const int RELATED_SOUND_FILE = 0xA004;
 
@@ -213,11 +223,30 @@ final readonly class ExifTag
 
     public const int LENS_SPECIFICATION = 0xA432;
 
+    /**
+     * @deprecated Use self::LENS_SPECIFICATION instead.
+     */
+    public const int LENS_INFO = self::LENS_SPECIFICATION;
+
     public const int LENS_MAKE = 0xA433;
 
     public const int LENS_MODEL = 0xA434;
 
     public const int LENS_SERIAL_NUMBER = 0xA435;
+
+    public const int CAMERA_FIRMWARE_VERSION = 0xA436;
+
+    public const int CAMERA_FIRMWARE = 0xA437;
+
+    public const int RAW_DEVELOPING_SOFTWARE = 0xA438;
+
+    public const int RAW_DEVELOPING_SOFTWARE_VERSION = 0xA439;
+
+    public const int IMAGE_EDITING_SOFTWARE = 0xA43A;
+
+    public const int METADATA_EDITING_SOFTWARE = 0xA43B;
+
+    public const int METADATA_EDITING_SOFTWARE_VERSION = 0xA43C;
 
     public const int COMPOSITE_IMAGE = 0xA460;
 
@@ -342,13 +371,13 @@ final readonly class ExifTag
 
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
-    public const int CAMERA_FIRMWARE = 0xE92F;
+    public const int CAMERA_FIRMWARE_LEGACY = 0xE92F;
 
-    public const int RAW_DEVELOPING_SOFTWARE = 0xE930;
+    public const int RAW_DEVELOPING_SOFTWARE_LEGACY = 0xE930;
 
-    public const int IMAGE_EDITING_SOFTWARE = 0xE931;
+    public const int IMAGE_EDITING_SOFTWARE_LEGACY = 0xE931;
 
-    public const int METADATA_EDITING_SOFTWARE = 0xE932;
+    public const int METADATA_EDITING_SOFTWARE_LEGACY = 0xE932;
 
     // Interoperability IFD
     public const int INTEROPERABILITY_INDEX = 0x0001;

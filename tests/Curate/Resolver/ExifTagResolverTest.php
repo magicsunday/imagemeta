@@ -24,6 +24,9 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
 /**
  * @covers \MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver
@@ -201,6 +204,53 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame([-90, 120], $resolver->timeZoneOffsetMinutes());
         self::assertSame(7, $resolver->selfTimerModeSeconds());
         self::assertSame(1, $resolver->interlace());
+    }
+
+    /**
+     * Ensures scene descriptors, CFA patterns, and software metadata resolve to typed structures.
+     */
+    #[Test]
+    public function resolvesSceneDescriptorsAndSoftwareMetadata(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_TITLE  => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Evening scene'),
+            ExifTag::PHOTOGRAPHER => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Jamie Doe'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COMPONENTS_CONFIGURATION   => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
+            ExifTag::SCENE_TYPE                 => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
+            ExifTag::CFA_PATTERN                => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x00\x01\x02\x03"),
+            ExifTag::CUSTOM_RENDERED            => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
+            ExifTag::CAMERA_FIRMWARE_VERSION    => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION, 2, 1, '4.0.0'),
+            ExifTag::CAMERA_FIRMWARE            => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW Main'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE    => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Studio'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION, 2, 1, '2024.1'),
+            ExifTag::IMAGE_EDITING_SOFTWARE     => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Pixel Edit'),
+            ExifTag::METADATA_EDITING_SOFTWARE  => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Desk'),
+            ExifTag::METADATA_EDITING_SOFTWARE_VERSION => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION, 2, 1, '2.5'),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame(['Y', 'Cb', 'Cr', '-'], $resolver->componentsConfigurationLabels());
+        self::assertSame('Y Cb Cr -', $resolver->componentsConfigurationDescription());
+        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $resolver->sceneType());
+        self::assertSame([
+            CfaPatternColor::RED,
+            CfaPatternColor::GREEN,
+            CfaPatternColor::BLUE,
+            CfaPatternColor::CYAN,
+        ], $resolver->cfaPatternColors());
+        self::assertSame(CustomRendered::CUSTOM_PROCESS, $resolver->customRendered());
+        self::assertSame('4.0.0', $resolver->cameraFirmwareVersion());
+        self::assertSame('FW Main', $resolver->cameraFirmware());
+        self::assertSame('Raw Studio', $resolver->rawDevelopingSoftware());
+        self::assertSame('2024.1', $resolver->rawDevelopingSoftwareVersion());
+        self::assertSame('Pixel Edit', $resolver->imageEditingSoftware());
+        self::assertSame('Meta Desk', $resolver->metadataEditingSoftware());
+        self::assertSame('2.5', $resolver->metadataEditingSoftwareVersion());
     }
 }
 

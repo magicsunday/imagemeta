@@ -52,6 +52,7 @@ final readonly class Lens
         }
 
         $this->lensSpecification = $lensSpecification;
+        /** @phpstan-ignore-next-line Maintain deprecated property for backwards compatibility. */
         $this->lensInfo          = $lensSpecification;
     }
 }

@@ -223,7 +223,7 @@ final class StructuredMetadataBuilder
             pictureStyle: null,
             noiseReduction: null,
             clarity: null,
-            customRendered: $exifResolver->customRendered(),
+            customRendered: $exifResolver->customRendered()?->value,
             deviceSettingDescription: $exifResolver->deviceSettingDescription(),
         );
 
@@ -240,7 +240,7 @@ final class StructuredMetadataBuilder
         } else {
             $location = $exifResolver->subjectLocation();
             $rect     = ($location !== null && count($location) >= 2)
-                ? ['x' => (int) $location[0], 'y' => (int) $location[1], 'w' => null, 'h' => null]
+                ? ['x' => $location[0], 'y' => $location[1], 'w' => null, 'h' => null]
                 : ['x' => null, 'y' => null, 'w' => null, 'h' => null];
         }
         $focus = new Focus(
@@ -258,9 +258,11 @@ final class StructuredMetadataBuilder
 
         $regions = new Regions([]);
 
+        $flatKeywords          = $xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'subject');
+        $hierarchicalKeywords  = $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
         $keywords = new Keywords(
-            flat: $xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'subject'),
-            hierarchical: $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject') ?: null,
+            flat: $flatKeywords,
+            hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
         );
 
         $rights = new Rights(
@@ -306,11 +308,12 @@ final class StructuredMetadataBuilder
             cropFactor: null,
         );
 
+        $panoramaFlag = $xmpResolver->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
         $related = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
             burstId: $quickTimeResolver->string('BurstUUID'),
             isPrimaryInBurst: $quickTimeResolver->bool('BurstSelected'),
-            panoramaId: $xmpResolver->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer') ? 'panorama' : null,
+            panoramaId: $panoramaFlag === true ? 'panorama' : null,
             depthDataId: $quickTimeResolver->string('DepthData'),
             relatedSoundFile: $exifResolver->relatedSoundFile(),
         );
@@ -331,10 +334,11 @@ final class StructuredMetadataBuilder
 
         $uav = new Uav(null, null, null, null, null, null, null, null);
 
+        $hasHistory = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
         $integrity = new Integrity(
             originalFileName: $xmpResolver->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
-            edited: $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?: null,
+            edited: $hasHistory === true ? true : null,
             historyLastSoftware: null,
             imageHistory: $exifResolver->imageHistory(),
         );
@@ -474,7 +478,7 @@ final class StructuredMetadataBuilder
         }
 
         if ($tz === null && is_array($timeZoneOffsets) && $timeZoneOffsets !== []) {
-            $candidate = $this->timeZoneFromMinutes($timeZoneOffsets[0] ?? null);
+            $candidate = $this->timeZoneFromMinutes($timeZoneOffsets[0]);
             if ($candidate instanceof DateTimeZone) {
                 $tz       = $candidate;
                 $tzSource = 'TimeZoneOffset';
@@ -630,7 +634,7 @@ final class StructuredMetadataBuilder
 
         return new Scene(
             type: $exif->sceneCaptureType(),
-            sceneType: $exif->sceneType(),
+            sceneType: $exif->sceneType()?->value,
             light: $exif->lightSource(),
             faceCount: null,
             hdrScene: $hdr !== null ? true : null,
