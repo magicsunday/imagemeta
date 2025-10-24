@@ -48,6 +48,10 @@ final class JpegExtractorTest extends TestCase
 
     private const int MARKER_APP13 = 0xED;
 
+    private const int MARKER_SOF0 = 0xC0;
+
+    private const int MARKER_SOF2 = 0xC2;
+
     /**
      * Verifies APP1 segments yield EXIF and XMP payloads regardless of ordering.
      *
@@ -182,6 +186,44 @@ final class JpegExtractorTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$iptcOne, $iptcTwo], $extractor->getIptcPayloads());
+    }
+
+    /**
+     * Ensures SOF markers expose precision and component sampling factors.
+     *
+     * @param int $marker
+     */
+    #[Test]
+    #[DataProvider('provideSofMarkers')]
+    public function parsesPrecisionAndSamplingFromSof(int $marker): void
+    {
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg      = $this->jpeg(self::segment($marker, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame(8, $extractor->getFrameSamplePrecision());
+        self::assertSame(
+            [
+                1 => ['horizontal' => 2, 'vertical' => 2],
+                2 => ['horizontal' => 1, 'vertical' => 1],
+                3 => ['horizontal' => 1, 'vertical' => 1],
+            ],
+            $extractor->getFrameComponentSamplingFactors(),
+        );
+        self::assertSame([2, 2], $extractor->getFrameYCbCrSubSampling());
+    }
+
+    /**
+     * @return iterable<string, array{0:int}>
+     */
+    public static function provideSofMarkers(): iterable
+    {
+        yield 'baseline-dct' => [self::MARKER_SOF0];
+        yield 'progressive-dct' => [self::MARKER_SOF2];
     }
 
     /**

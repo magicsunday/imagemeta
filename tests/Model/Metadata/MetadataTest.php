@@ -67,13 +67,37 @@ final class MetadataTest extends TestCase
             '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2024-05-01',
         ]);
 
-        $metadata = new Metadata($exifBlobs, $quickTime, $exifDoc, $xmpBlobs, $xmpDoc);
+        $iccProfile  = 'icc-profile';
+        $iccSegments = ['seg-1', 'seg-2'];
+        $sampling    = [
+            1 => ['horizontal' => 2, 'vertical' => 2],
+            2 => ['horizontal' => 1, 'vertical' => 1],
+        ];
+
+        $metadata = new Metadata(
+            $exifBlobs,
+            $quickTime,
+            $exifDoc,
+            $xmpBlobs,
+            $xmpDoc,
+            null,
+            $iccProfile,
+            $iccSegments,
+            12,
+            $sampling,
+            [2, 1],
+        );
 
         self::assertSame($exifBlobs, $metadata->exifBlobs);
         self::assertSame($quickTime, $metadata->quickTime);
         self::assertSame($exifDoc, $metadata->exifDoc);
         self::assertSame($xmpBlobs, $metadata->xmpBlobs);
         self::assertSame($xmpDoc, $metadata->xmpDoc);
+        self::assertSame($iccProfile, $metadata->iccProfile);
+        self::assertSame($iccSegments, $metadata->iccSegments);
+        self::assertSame(12, $metadata->jpegBitsPerSample);
+        self::assertSame($sampling, $metadata->jpegFrameSamplingFactors);
+        self::assertSame([2, 1], $metadata->jpegYCbCrSubSampling);
     }
 
     /**
@@ -89,6 +113,9 @@ final class MetadataTest extends TestCase
         self::assertNull($metadata->exifDoc);
         self::assertSame([], $metadata->xmpBlobs);
         self::assertNull($metadata->xmpDoc);
+        self::assertNull($metadata->jpegBitsPerSample);
+        self::assertNull($metadata->jpegFrameSamplingFactors);
+        self::assertNull($metadata->jpegYCbCrSubSampling);
     }
 
     /**

@@ -43,6 +43,14 @@ final class Metadata
      */
     public readonly array $iccSegments;
 
+    public readonly ?int $jpegBitsPerSample;
+
+    /** @var array<int, array{horizontal:int, vertical:int}>|null */
+    public readonly ?array $jpegFrameSamplingFactors;
+
+    /** @var array{0:int,1:int}|null */
+    public readonly ?array $jpegYCbCrSubSampling;
+
     private ?StructuredMetadata $structured = null;
 
     /**
@@ -54,6 +62,10 @@ final class Metadata
      * @param MakerNotesMetadata|null $makerNotes Decoded maker notes metadata for the primary EXIF blob.
      * @param string|null             $iccProfile Binary ICC profile when available.
      * @param list<string>            $iccSegments Raw ICC APP2 segments in encounter order.
+     * @param int|null                $jpegBitsPerSample Sample precision reported by the JPEG frame header.
+     * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by
+     *                                                                                       identifier.
+     * @param array{0:int,1:int}|null $jpegYCbCrSubSampling Derived YCbCr subsampling from the JPEG frame header.
      */
     public function __construct(
         array $exifBlobs,
@@ -64,6 +76,9 @@ final class Metadata
         ?MakerNotesMetadata $makerNotes = null,
         ?string $iccProfile = null,
         array $iccSegments = [],
+        ?int $jpegBitsPerSample = null,
+        ?array $jpegFrameSamplingFactors = null,
+        ?array $jpegYCbCrSubSampling = null,
     ) {
         $this->exifBlobs   = $exifBlobs;
         $this->quickTime   = $quickTime;
@@ -73,6 +88,9 @@ final class Metadata
         $this->makerNotes  = $makerNotes;
         $this->iccProfile  = $iccProfile;
         $this->iccSegments = $iccSegments;
+        $this->jpegBitsPerSample        = $jpegBitsPerSample;
+        $this->jpegFrameSamplingFactors = $jpegFrameSamplingFactors;
+        $this->jpegYCbCrSubSampling     = $jpegYCbCrSubSampling;
     }
 
     /**

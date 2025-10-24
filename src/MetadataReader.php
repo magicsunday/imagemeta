@@ -54,11 +54,14 @@ final class MetadataReader
      */
     private function fromJpeg(Stream $stream): Metadata
     {
-        $jpeg       = new JpegExtractor($stream);
-        $exifBlobs  = $jpeg->extractExifBlobs();
-        $xmpBlobs   = $jpeg->extractXmpPackets();
-        $iccProfile = $jpeg->getIccProfile();
+        $jpeg        = new JpegExtractor($stream);
+        $exifBlobs   = $jpeg->extractExifBlobs();
+        $xmpBlobs    = $jpeg->extractXmpPackets();
+        $iccProfile  = $jpeg->getIccProfile();
         $iccSegments = $jpeg->getIccSegments();
+        $bitsPerSample = $jpeg->getFrameSamplePrecision();
+        $sampling      = $jpeg->getFrameComponentSamplingFactors();
+        $subSampling   = $jpeg->getFrameYCbCrSubSampling();
 
         $exifDoc    = null;
         $xmpDoc     = null;
@@ -73,7 +76,19 @@ final class MetadataReader
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
         }
 
-        return new Metadata($exifBlobs, null, $exifDoc, $xmpBlobs, $xmpDoc, $makerNotes, $iccProfile, $iccSegments);
+        return new Metadata(
+            $exifBlobs,
+            null,
+            $exifDoc,
+            $xmpBlobs,
+            $xmpDoc,
+            $makerNotes,
+            $iccProfile,
+            $iccSegments,
+            $bitsPerSample,
+            $sampling,
+            $subSampling,
+        );
     }
 
     /**

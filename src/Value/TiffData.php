@@ -24,6 +24,7 @@ final readonly class TiffData
 {
     /**
      * @param int|null                                                    $samplesPerPixel             Number of samples per pixel.
+     * @param int|null                                                    $bitsPerSample               Bits per sample reported for the image.
      * @param int|null                                                    $rowsPerStrip                Number of rows per TIFF strip.
      * @param Compression|null                                            $compression                 Compression method used for pixel data.
      * @param Photometric|null                                            $photometric                 Photometric interpretation of the samples.
@@ -46,6 +47,7 @@ final readonly class TiffData
      */
     public function __construct(
         public ?int $samplesPerPixel,
+        public ?int $bitsPerSample,
         public ?int $rowsPerStrip,
         public ?Compression $compression,
         public ?Photometric $photometric,
