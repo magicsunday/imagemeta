@@ -241,7 +241,7 @@ final readonly class ExifTag
 
     public const int DEVICE_SETTING_DESCRIPTION = 0xA40B;
 
-    // GPS sub IFD
+    // GPS sub IFD (Table 66 – EXIF 2.32)
     public const int GPS_VERSION_ID = 0x0000;
 
     public const int GPS_LATITUDE_REF = 0x0001;
