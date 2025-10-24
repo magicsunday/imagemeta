@@ -17,9 +17,9 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Preview
 {
     /**
-     * @param bool|null $hasThumbnail Whether an embedded thumbnail exists.
-     * @param bool|null $hasPreview   Whether an embedded preview image exists.
-     * @param int|null  $previewWidth Width of the preview image in pixels.
+     * @param bool|null $hasThumbnail  Whether an embedded thumbnail exists.
+     * @param bool|null $hasPreview    Whether an embedded preview image exists.
+     * @param int|null  $previewWidth  Width of the preview image in pixels.
      * @param int|null  $previewHeight Height of the preview image in pixels.
      */
     public function __construct(

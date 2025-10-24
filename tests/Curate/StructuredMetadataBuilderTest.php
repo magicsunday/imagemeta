@@ -22,8 +22,8 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -55,27 +55,27 @@ final class StructuredMetadataBuilderTest extends TestCase
     public function buildsStructuredAggregateForDslrJpeg(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::IMAGE_WIDTH               => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 6720),
-            ExifTag::IMAGE_HEIGHT              => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 4480),
-            ExifTag::BITS_PER_SAMPLE           => new IfdEntry(ExifTag::BITS_PER_SAMPLE, 3, 3, new ExifNumericList([14, 14, 14])),
-            ExifTag::COMPRESSION               => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::IMAGE_WIDTH                => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 6720),
+            ExifTag::IMAGE_HEIGHT               => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 4480),
+            ExifTag::BITS_PER_SAMPLE            => new IfdEntry(ExifTag::BITS_PER_SAMPLE, 3, 3, new ExifNumericList([14, 14, 14])),
+            ExifTag::COMPRESSION                => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
             ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(ExifTag::PHOTOMETRIC_INTERPRETATION, 3, 1, Photometric::YCBCR->value),
-            ExifTag::PLANAR_CONFIGURATION      => new IfdEntry(ExifTag::PLANAR_CONFIGURATION, 3, 1, PlanarConfiguration::CHUNKY->value),
-            ExifTag::RESOLUTION_UNIT           => new IfdEntry(ExifTag::RESOLUTION_UNIT, 3, 1, ResolutionUnit::INCHES->value),
-            ExifTag::X_RESOLUTION              => new IfdEntry(ExifTag::X_RESOLUTION, 5, 1, [[300, 1]]),
-            ExifTag::Y_RESOLUTION              => new IfdEntry(ExifTag::Y_RESOLUTION, 5, 1, [[300, 1]]),
-            ExifTag::YCBCR_POSITIONING         => new IfdEntry(ExifTag::YCBCR_POSITIONING, 3, 1, YCbCrPositioning::CENTERED->value),
-            ExifTag::YCBCR_SUB_SAMPLING        => new IfdEntry(ExifTag::YCBCR_SUB_SAMPLING, 3, 2, new ExifNumericList([2, 2])),
-            ExifTag::YCBCR_COEFFICIENTS        => new IfdEntry(ExifTag::YCBCR_COEFFICIENTS, 5, 3, [[299, 1000], [587, 1000], [114, 1000]]),
-            ExifTag::WHITE_POINT               => new IfdEntry(ExifTag::WHITE_POINT, 5, 2, [[3127, 10000], [3290, 10000]]),
-            ExifTag::PRIMARY_CHROMATICITIES    => new IfdEntry(ExifTag::PRIMARY_CHROMATICITIES, 5, 6, [[6400, 10000], [3300, 10000], [3000, 10000], [6000, 10000], [1500, 10000], [6000, 10000]]),
-            ExifTag::MAKE                      => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
-            ExifTag::MODEL                     => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
-            ExifTag::SOFTWARE                  => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
-            ExifTag::DOCUMENT_NAME             => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 12, 'IMG_5123.CR3'),
-            ExifTag::IMAGE_DESCRIPTION         => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 16, 'Sunset over Alps'),
-            ExifTag::ORIENTATION               => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::RIGHT_TOP->value),
-            ExifTag::ARTIST                    => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
+            ExifTag::PLANAR_CONFIGURATION       => new IfdEntry(ExifTag::PLANAR_CONFIGURATION, 3, 1, PlanarConfiguration::CHUNKY->value),
+            ExifTag::RESOLUTION_UNIT            => new IfdEntry(ExifTag::RESOLUTION_UNIT, 3, 1, ResolutionUnit::INCHES->value),
+            ExifTag::X_RESOLUTION               => new IfdEntry(ExifTag::X_RESOLUTION, 5, 1, [[300, 1]]),
+            ExifTag::Y_RESOLUTION               => new IfdEntry(ExifTag::Y_RESOLUTION, 5, 1, [[300, 1]]),
+            ExifTag::YCBCR_POSITIONING          => new IfdEntry(ExifTag::YCBCR_POSITIONING, 3, 1, YCbCrPositioning::CENTERED->value),
+            ExifTag::YCBCR_SUB_SAMPLING         => new IfdEntry(ExifTag::YCBCR_SUB_SAMPLING, 3, 2, new ExifNumericList([2, 2])),
+            ExifTag::YCBCR_COEFFICIENTS         => new IfdEntry(ExifTag::YCBCR_COEFFICIENTS, 5, 3, [[299, 1000], [587, 1000], [114, 1000]]),
+            ExifTag::WHITE_POINT                => new IfdEntry(ExifTag::WHITE_POINT, 5, 2, [[3127, 10000], [3290, 10000]]),
+            ExifTag::PRIMARY_CHROMATICITIES     => new IfdEntry(ExifTag::PRIMARY_CHROMATICITIES, 5, 6, [[6400, 10000], [3300, 10000], [3000, 10000], [6000, 10000], [1500, 10000], [6000, 10000]]),
+            ExifTag::MAKE                       => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
+            ExifTag::MODEL                      => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
+            ExifTag::SOFTWARE                   => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
+            ExifTag::DOCUMENT_NAME              => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 12, 'IMG_5123.CR3'),
+            ExifTag::IMAGE_DESCRIPTION          => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 16, 'Sunset over Alps'),
+            ExifTag::ORIENTATION                => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::RIGHT_TOP->value),
+            ExifTag::ARTIST                     => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
         ]);
 
         $exifIfd = new Ifd([
@@ -114,16 +114,16 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $interopIfd = new Ifd([
             ExifTag::INTEROPERABILITY_INDEX   => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, 'R98'),
-            ExifTag::INTEROPERABILITY_VERSION => new IfdEntry(ExifTag::INTEROPERABILITY_VERSION, 7, 4, "0100"),
+            ExifTag::INTEROPERABILITY_VERSION => new IfdEntry(ExifTag::INTEROPERABILITY_VERSION, 7, 4, '0100'),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
 
         $xmpDocument = new XmpDocument([
-            '{http://purl.org/dc/elements/1.1/}creator'      => ['Jane Doe'],
+            '{http://purl.org/dc/elements/1.1/}creator'                                                => ['Jane Doe'],
             '{http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/}CreatorContactInfo/Iptc4xmpCore:CiEmailWork' => 'jane@example.com',
-            '{http://ns.adobe.com/tiff/1.0/}Make'            => 'Canon',
-            '{http://ns.adobe.com/tiff/1.0/}Model'           => 'EOS R6 II',
+            '{http://ns.adobe.com/tiff/1.0/}Make'                                                      => 'Canon',
+            '{http://ns.adobe.com/tiff/1.0/}Model'                                                     => 'EOS R6 II',
         ]);
 
         $quickTime = new QuickTimeMeta([
@@ -197,28 +197,28 @@ final class StructuredMetadataBuilderTest extends TestCase
     public function buildsStructuredAggregateForHeif(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::IMAGE_WIDTH   => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 4032),
-            ExifTag::IMAGE_HEIGHT  => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3024),
-            ExifTag::MAKE          => new IfdEntry(ExifTag::MAKE, 2, 5, 'Apple'),
-            ExifTag::MODEL         => new IfdEntry(ExifTag::MODEL, 2, 9, 'iPhone 15'),
-            ExifTag::ORIENTATION   => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::TOP_LEFT->value),
+            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 4032),
+            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3024),
+            ExifTag::MAKE         => new IfdEntry(ExifTag::MAKE, 2, 5, 'Apple'),
+            ExifTag::MODEL        => new IfdEntry(ExifTag::MODEL, 2, 9, 'iPhone 15'),
+            ExifTag::ORIENTATION  => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::TOP_LEFT->value),
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::EXIF_VERSION                  => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY      => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 125),
-            ExifTag::EXPOSURE_TIME                 => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 120]]),
-            ExifTag::F_NUMBER                      => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[19, 10]]),
-            ExifTag::COMPOSITE_IMAGE               => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
-            ExifTag::COMPOSITE_IMAGE_COUNT         => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
+            ExifTag::EXIF_VERSION                   => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY       => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 125),
+            ExifTag::EXPOSURE_TIME                  => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 120]]),
+            ExifTag::F_NUMBER                       => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[19, 10]]),
+            ExifTag::COMPOSITE_IMAGE                => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
+            ExifTag::COMPOSITE_IMAGE_COUNT          => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
             ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES => new IfdEntry(ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
-            ExifTag::RAW_DEVELOPING_SOFTWARE       => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 10, 'Photos 1.0'),
-            ExifTag::IMAGE_EDITING_SOFTWARE        => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 10, 'Pixelmator'),
-            ExifTag::METADATA_EDITING_SOFTWARE     => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 8, 'MetadataX'),
-            ExifTag::PHOTOGRAPHER_NAME             => new IfdEntry(ExifTag::PHOTOGRAPHER_NAME, 2, 11, 'John Appleseed'),
-            ExifTag::IMAGE_EDITOR                  => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 8, 'iOS Edit'),
-            ExifTag::DATETIME_ORIGINAL             => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
-            ExifTag::OFFSET_TIME_ORIGINAL          => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE        => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 10, 'Photos 1.0'),
+            ExifTag::IMAGE_EDITING_SOFTWARE         => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 10, 'Pixelmator'),
+            ExifTag::METADATA_EDITING_SOFTWARE      => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 8, 'MetadataX'),
+            ExifTag::PHOTOGRAPHER_NAME              => new IfdEntry(ExifTag::PHOTOGRAPHER_NAME, 2, 11, 'John Appleseed'),
+            ExifTag::IMAGE_EDITOR                   => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 8, 'iOS Edit'),
+            ExifTag::DATETIME_ORIGINAL              => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
+            ExifTag::OFFSET_TIME_ORIGINAL           => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);

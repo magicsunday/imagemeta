@@ -30,8 +30,8 @@ use function str_contains;
 use function str_replace;
 use function str_starts_with;
 use function strlen;
-use function substr;
 use function strtoupper;
+use function substr;
 use function trim;
 
 /**
@@ -104,7 +104,7 @@ final readonly class ValueConverters
     /**
      * Converts a GPS speed measurement into metres per second.
      *
-     * @param string|null                                                 $ref   Speed reference (K, M or N).
+     * @param string|null                                                         $ref   Speed reference (K, M or N).
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value The measured value.
      */
     public static function gpsSpeedToMs(
@@ -127,9 +127,9 @@ final readonly class ValueConverters
         $normalizedRef = strtoupper(trim($ref));
 
         return match ($normalizedRef) {
-            'K' => $numeric / 3.6,
-            'M' => $numeric * 0.44704,
-            'N' => $numeric * 0.5144444444444444,
+            'K'     => $numeric / 3.6,
+            'M'     => $numeric * 0.44704,
+            'N'     => $numeric * 0.5144444444444444,
             default => null,
         };
     }
@@ -295,7 +295,7 @@ final readonly class ValueConverters
         }
 
         $raw = is_string($value) ? trim($value) : (string) $value;
-        $raw = str_replace(["−", '–', '—'], '-', $raw);
+        $raw = str_replace(['−', '–', '—'], '-', $raw);
         $raw = str_replace(['＋'], '+', $raw);
 
         if ($raw === '') {
@@ -308,7 +308,7 @@ final readonly class ValueConverters
         }
 
         if (str_starts_with($upper, 'UTC') || str_starts_with($upper, 'GMT')) {
-            $raw = trim(substr($raw, 3));
+            $raw   = trim(substr($raw, 3));
             $upper = strtoupper($raw);
             if ($raw === '') {
                 return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
@@ -386,7 +386,7 @@ final readonly class ValueConverters
         }
 
         if ($minutes >= 60) {
-            $hours  += (int) floor($minutes / 60);
+            $hours += (int) floor($minutes / 60);
             $minutes = $minutes % 60;
         }
 

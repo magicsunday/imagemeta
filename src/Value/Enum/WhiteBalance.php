@@ -16,7 +16,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum WhiteBalance: int
 {
-    case AUTO = 0;
+    case AUTO   = 0;
     case MANUAL = 1;
 
     /**

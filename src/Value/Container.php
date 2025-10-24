@@ -17,11 +17,11 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Container
 {
     /**
-     * @param string|null $format      Primary container format description.
-     * @param string|null $encoder     Encoder or muxer responsible for the file.
-     * @param int|null    $bitrate     Average bitrate of the container in bits per second.
-     * @param string|null $videoCodec  Video codec identifier when available.
-     * @param string|null $audioCodec  Audio codec identifier when available.
+     * @param string|null $format     Primary container format description.
+     * @param string|null $encoder    Encoder or muxer responsible for the file.
+     * @param int|null    $bitrate    Average bitrate of the container in bits per second.
+     * @param string|null $videoCodec Video codec identifier when available.
+     * @param string|null $audioCodec Audio codec identifier when available.
      */
     public function __construct(
         public ?string $format,

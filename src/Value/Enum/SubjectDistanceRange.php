@@ -17,8 +17,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 enum SubjectDistanceRange: int
 {
     case UNKNOWN = 0;
-    case MACRO = 1;
-    case CLOSE = 2;
+    case MACRO   = 1;
+    case CLOSE   = 2;
     case DISTANT = 3;
 
     /**

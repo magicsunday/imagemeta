@@ -17,7 +17,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 enum DepthFormat: int
 {
     case UNKNOWN = 0;
-    case LINEAR = 1;
+    case LINEAR  = 1;
     case INVERSE = 2;
 
     /**

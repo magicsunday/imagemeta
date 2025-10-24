@@ -41,10 +41,10 @@ final readonly class DeviceResolver
         $hostComputer = null;
 
         if ($quickTimeMeta instanceof QuickTimeMeta) {
-            $software     = $this->stringFromMixed($quickTimeMeta->keys[self::QUICKTIME_SOFTWARE_KEY] ?? null);
+            $software = $this->stringFromMixed($quickTimeMeta->keys[self::QUICKTIME_SOFTWARE_KEY] ?? null);
         }
 
-        $software     ??= $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
+        $software ??= $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
         $hostComputer ??= $this->xmpString($xmpDocument, self::NS_TIFF, 'HostComputer');
 
         if ($software === null && $hostComputer === null) {

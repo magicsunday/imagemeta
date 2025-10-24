@@ -20,11 +20,11 @@ use DateTimeZone;
 final readonly class Temporal
 {
     /**
-     * @param DateTimeImmutable|null $create    Creation timestamp.
-     * @param DateTimeImmutable|null $modify    Modification timestamp.
-     * @param DateTimeImmutable|null $original  Original capture timestamp.
-     * @param DateTimeZone|null      $tz        Time zone derived from the metadata.
-     * @param string|null            $tzSource  Identifier of the metadata source providing the timezone.
+     * @param DateTimeImmutable|null $create   Creation timestamp.
+     * @param DateTimeImmutable|null $modify   Modification timestamp.
+     * @param DateTimeImmutable|null $original Original capture timestamp.
+     * @param DateTimeZone|null      $tz       Time zone derived from the metadata.
+     * @param string|null            $tzSource Identifier of the metadata source providing the timezone.
      */
     public function __construct(
         public ?DateTimeImmutable $create,

@@ -22,8 +22,8 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters as ExifValueConverters;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -365,7 +365,7 @@ final readonly class ExifTagResolver
             return null;
         }
 
-        return [ (int) $values[0], (int) $values[1] ];
+        return [(int) $values[0], (int) $values[1]];
     }
 
     /**
@@ -431,8 +431,8 @@ final readonly class ExifTagResolver
         }
 
         $printable = true;
-        $length = strlen($trimmed);
-        for ($i = 0; $i < $length; $i++) {
+        $length    = strlen($trimmed);
+        for ($i = 0; $i < $length; ++$i) {
             $ord = ord($trimmed[$i]);
             if ($ord < 0x20 || $ord > 0x7E) {
                 $printable = false;
@@ -757,7 +757,7 @@ final readonly class ExifTagResolver
             return null;
         }
 
-        return [ (int) $values[0], (int) $values[1] ];
+        return [(int) $values[0], (int) $values[1]];
     }
 
     /**

@@ -38,12 +38,12 @@ final readonly class ImageResolver
         $colorSpaceValue = $exifDocument?->colorSpace() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ColorSpace');
         $colorSpace      = ColorSpace::fromExifValue($colorSpaceValue);
 
-        $width       = $exifDocument?->imageWidth();
-        $height      = $exifDocument?->imageHeight();
+        $width         = $exifDocument?->imageWidth();
+        $height        = $exifDocument?->imageHeight();
         $bitsPerSample = null;
-        $uniqueId    = $exifDocument?->imageUniqueId();
-        $documentName = $this->xmpString($xmpDocument, self::NS_TIFF, 'DocumentName');
-        $description  = $this->xmpString($xmpDocument, self::NS_TIFF, 'ImageDescription');
+        $uniqueId      = $exifDocument?->imageUniqueId();
+        $documentName  = $this->xmpString($xmpDocument, self::NS_TIFF, 'DocumentName');
+        $description   = $this->xmpString($xmpDocument, self::NS_TIFF, 'ImageDescription');
 
         if (
             $orientation === null

@@ -17,12 +17,12 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Author
 {
     /**
-     * @param string|null $artist        Artist or photographer name.
-     * @param string|null $ownerName     Camera owner name.
-     * @param string|null $creator       Creator attribution as declared in XMP.
-     * @param string|null $creatorEmail  Contact email address for the creator.
-     * @param string|null $photographer  Photographer name recorded in EXIF 3.0 tags.
-     * @param string|null $imageEditor   Name of the image editor responsible for retouching.
+     * @param string|null $artist       Artist or photographer name.
+     * @param string|null $ownerName    Camera owner name.
+     * @param string|null $creator      Creator attribution as declared in XMP.
+     * @param string|null $creatorEmail Contact email address for the creator.
+     * @param string|null $photographer Photographer name recorded in EXIF 3.0 tags.
+     * @param string|null $imageEditor  Name of the image editor responsible for retouching.
      */
     public function __construct(
         public ?string $artist,

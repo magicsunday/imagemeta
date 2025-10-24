@@ -16,10 +16,10 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum GainControl: int
 {
-    case NONE = 0;
-    case LOW_GAIN_UP = 1;
-    case HIGH_GAIN_UP = 2;
-    case LOW_GAIN_DOWN = 3;
+    case NONE           = 0;
+    case LOW_GAIN_UP    = 1;
+    case HIGH_GAIN_UP   = 2;
+    case LOW_GAIN_DOWN  = 3;
     case HIGH_GAIN_DOWN = 4;
 
     /**

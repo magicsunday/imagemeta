@@ -17,7 +17,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 enum DepthUnits: int
 {
     case UNKNOWN = 0;
-    case METERS = 1;
+    case METERS  = 1;
 
     /**
      * Converts a raw depth unit identifier into the enum.

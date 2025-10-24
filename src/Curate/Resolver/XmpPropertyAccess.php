@@ -111,8 +111,8 @@ trait XmpPropertyAccess
 
         if (str_contains($trimmed, '/')) {
             [$numerator, $denominator] = explode('/', $trimmed, 2);
-            $numerator   = trim($numerator);
-            $denominator = trim($denominator);
+            $numerator                 = trim($numerator);
+            $denominator               = trim($denominator);
 
             if ($denominator === '0' || $denominator === '-0') {
                 return null;
