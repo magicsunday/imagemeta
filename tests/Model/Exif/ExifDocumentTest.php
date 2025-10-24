@@ -528,19 +528,46 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function textualSoftwareTagsFallbackToLegacyIdentifiers(): void
     {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_TITLE_LEGACY   => new IfdEntry(ExifTag::IMAGE_TITLE_LEGACY, 2, 1, 'Legacy Title'),
+            ExifTag::PHOTOGRAPHER_LEGACY  => new IfdEntry(ExifTag::PHOTOGRAPHER_LEGACY, 2, 1, 'Legacy Photographer'),
+            ExifTag::IMAGE_EDITOR_LEGACY  => new IfdEntry(ExifTag::IMAGE_EDITOR_LEGACY, 2, 1, 'Legacy Editor'),
+            ExifTag::ARTIST               => new IfdEntry(ExifTag::ARTIST, 2, 1, 'Fallback Artist'),
+            ExifTag::IMAGE_DESCRIPTION    => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Fallback Description'),
+        ]);
+
         $exifIfd = new Ifd([
-            ExifTag::CAMERA_FIRMWARE_LEGACY         => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy FW'),
-            ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY, 2, 1, 'Legacy Raw'),
-            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY  => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Edit'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy FW'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY, 2, 1, 'Legacy Raw'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Edit'),
             ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Meta'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
+        self::assertSame('Legacy Title', $doc->imageTitle());
+        self::assertSame('Legacy Photographer', $doc->photographer());
+        self::assertSame('Legacy Editor', $doc->imageEditor());
         self::assertSame('Legacy FW', $doc->cameraFirmware());
         self::assertSame('Legacy Raw', $doc->rawDevelopingSoftware());
         self::assertSame('Legacy Edit', $doc->imageEditingSoftware());
         self::assertSame('Legacy Meta', $doc->metadataEditingSoftware());
+    }
+
+    #[Test]
+    public function textualSoftwareVersionsUseLegacyTags(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY         => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY, 2, 1, 'FW 3.1.0'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY, 2, 1, 'RawLab 5.2.1'),
+            ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'MetaLab 1.0.0'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('FW 3.1.0', $doc->cameraFirmwareVersion());
+        self::assertSame('RawLab 5.2.1', $doc->rawDevelopingSoftwareVersion());
+        self::assertSame('MetaLab 1.0.0', $doc->metadataEditingSoftwareVersion());
     }
 
     /**
