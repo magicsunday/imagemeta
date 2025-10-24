@@ -203,6 +203,78 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the strip offsets defined for the primary or thumbnail image data.
+     *
+     * @return list<int>|null
+     */
+    public function stripOffsets(): ?array
+    {
+        $offsets = $this->numericList($this->ifd0, ExifTag::STRIP_OFFSETS);
+
+        return $offsets ?? $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
+    }
+
+    /**
+     * Returns the strip byte counts for the primary or thumbnail image data.
+     *
+     * @return list<int>|null
+     */
+    public function stripByteCounts(): ?array
+    {
+        $counts = $this->numericList($this->ifd0, ExifTag::STRIP_BYTE_COUNTS);
+
+        return $counts ?? $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
+    }
+
+    /**
+     * Returns the transfer function lookup table when available.
+     *
+     * @return list<int>|null
+     */
+    public function transferFunction(): ?array
+    {
+        return $this->numericList($this->ifd0, ExifTag::TRANSFER_FUNCTION);
+    }
+
+    /**
+     * Returns the JPEG thumbnail offset, preferring the dedicated thumbnail IFD when present.
+     */
+    public function jpegThumbnailOffset(): ?int
+    {
+        $offset = $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT);
+
+        return $offset ?? $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT);
+    }
+
+    /**
+     * Returns the JPEG thumbnail byte length, preferring the dedicated thumbnail IFD when present.
+     */
+    public function jpegThumbnailLength(): ?int
+    {
+        $length = $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+
+        return $length ?? $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+    }
+
+    /**
+     * Returns the reference black and white point values as floating point numbers.
+     *
+     * @return list<float>|null
+     */
+    public function referenceBlackWhite(): ?array
+    {
+        return $this->rationalList($this->ifd0, ExifTag::REFERENCE_BLACK_WHITE);
+    }
+
+    /**
+     * Returns the copyright notice string when present.
+     */
+    public function copyright(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::COPYRIGHT);
+    }
+
+    /**
      * Returns the sequential image number when provided by the camera.
      */
     public function imageNumber(): ?int
@@ -978,6 +1050,46 @@ final readonly class ExifDocument
             }
 
             return $bytes;
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts rational or numeric list values into floating point lists.
+     *
+     * @return list<float>|null
+     */
+    private function rationalList(?Ifd $ifd, int $tag): ?array
+    {
+        $value = $this->value($ifd, $tag);
+
+        if ($value instanceof ExifRationalList) {
+            $result = [];
+            foreach ($value->values as $item) {
+                $float = ValueConverters::rationalToFloat($item);
+                if ($float === null) {
+                    return null;
+                }
+
+                $result[] = $float;
+            }
+
+            return $result;
+        }
+
+        if ($value instanceof ExifRational) {
+            $float = ValueConverters::rationalToFloat($value);
+
+            return $float !== null ? [$float] : null;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            return array_map(static fn ($v): float => (float) $v, $value->values);
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return [(float) $value];
         }
 
         return null;

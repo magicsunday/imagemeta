@@ -133,6 +133,56 @@ final class ExifDocumentTest extends TestCase
     }
 
     /**
+     * Ensures EXIF 3.0 table 64 convenience accessors expose normalised values.
+     */
+    #[Test]
+    public function exposesTable64ConvenienceAccessors(): void
+    {
+        $transferFunction = new ExifNumericList([0, 32768, 65535]);
+        $referenceBlackWhite = new ExifRationalList([
+            new ExifRational(0, 1),
+            new ExifRational(255, 1),
+            new ExifRational(0, 1),
+            new ExifRational(255, 1),
+            new ExifRational(0, 1),
+            new ExifRational(255, 1),
+        ]);
+
+        $ifd0 = new Ifd([
+            ExifTag::TRANSFER_FUNCTION     => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, $transferFunction),
+            ExifTag::REFERENCE_BLACK_WHITE => new IfdEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, $referenceBlackWhite),
+            ExifTag::COPYRIGHT             => new IfdEntry(ExifTag::COPYRIGHT, 2, 9, "Jane Doe\0"),
+        ]);
+
+        $thumbnailIfd = new Ifd([
+            ExifTag::STRIP_OFFSETS                  => new IfdEntry(
+                ExifTag::STRIP_OFFSETS,
+                4,
+                2,
+                new ExifNumericList([64, 128]),
+            ),
+            ExifTag::STRIP_BYTE_COUNTS              => new IfdEntry(
+                ExifTag::STRIP_BYTE_COUNTS,
+                4,
+                2,
+                new ExifNumericList([256, 512]),
+            ),
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 4096),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
+        ]);
+
+        $doc = new ExifDocument($ifd0, null, null, null, $thumbnailIfd);
+
+        self::assertSame([64, 128], $doc->stripOffsets());
+        self::assertSame([256, 512], $doc->stripByteCounts());
+        self::assertSame([0, 32768, 65535], $doc->transferFunction());
+        self::assertSame(4096, $doc->jpegThumbnailOffset());
+        self::assertSame(8192, $doc->jpegThumbnailLength());
+        self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $doc->referenceBlackWhite());
+        self::assertSame('Jane Doe', $doc->copyright());
+    }
+
+    /**
      * Ensures the GPS helper exposes every decoded field from table 66 including references.
      */
     #[Test]
