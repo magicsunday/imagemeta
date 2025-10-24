@@ -140,6 +140,75 @@ final class ExifDocumentTest extends TestCase
     }
 
     /**
+     * Falls back to DateTimeDigitized when DateTimeOriginal is missing.
+     */
+    #[Test]
+    public function fallsBackToDateTimeDigitizedWhenOriginalMissing(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_DIGITIZED      => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2015:06:07 08:09:10'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED  => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '234'),
+            ExifTag::OFFSET_TIME_DIGITIZED   => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '-04:00'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $capture = $doc->captureDateTime();
+        self::assertNotNull($capture);
+        self::assertSame('2015-06-07T08:09:10.234-04:00', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    /**
+     * Uses the legacy TimeZoneOffset tag when explicit offset tags are unavailable.
+     */
+    #[Test]
+    public function usesTimeZoneOffsetWhenOffsetTagsMissing(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL     => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2021:02:03 04:05:06'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 1, '789'),
+            ExifTag::TIME_ZONE_OFFSET      => new IfdEntry(
+                ExifTag::TIME_ZONE_OFFSET,
+                3,
+                1,
+                new ExifNumericList([90]),
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $capture = $doc->captureDateTime();
+        self::assertNotNull($capture);
+        self::assertSame('2021-02-03T04:05:06.789+01:30', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    /**
+     * Uses the legacy ModifyDate tag when original and digitised timestamps are absent.
+     */
+    #[Test]
+    public function usesModifyDateWhenOriginalAndDigitizedMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME => new IfdEntry(ExifTag::DATETIME, 2, 1, '2010:02:03 04:05:06'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::SUB_SEC_TIME => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '12'),
+            ExifTag::OFFSET_TIME  => new IfdEntry(ExifTag::OFFSET_TIME, 2, 1, '-05:00'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $capture = $doc->captureDateTime();
+        self::assertNotNull($capture);
+        self::assertSame('2010-02-03T04:05:06.120-05:00', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    /**
      * Ensures EXIF 3.0 table 64 convenience accessors expose normalised values.
      */
     #[Test]

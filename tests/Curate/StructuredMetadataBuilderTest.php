@@ -321,7 +321,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('2.32', $standards->exifVersion);
         self::assertSame('0100', $standards->flashpixVersion);
-        self::assertSame('2.32', $standards->profile);
+        self::assertSame('2.3', $standards->profile);
     }
 
     /**
