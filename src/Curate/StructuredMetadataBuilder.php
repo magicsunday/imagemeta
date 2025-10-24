@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Curate;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters;
 use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
@@ -107,8 +108,12 @@ final class StructuredMetadataBuilder
             exposureTimesTotal: $exifResolver->sourceExposureTimesOfCompositeImage(),
         );
 
+        $exifVersion = $exifResolver->exifVersion();
+        $profile     = ExifCapabilities::fromVersion($exifVersion);
+
         $standards = new Standards(
-            exifVersion: $exifResolver->exifVersion(),
+            exifVersion: $exifVersion,
+            profile: $profile,
             flashpixVersion: $exifResolver->flashpixVersion(),
             tiffEpStandardId: $exifResolver->tiffEpStandardId(),
         );
