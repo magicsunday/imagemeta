@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
+use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -68,5 +69,22 @@ final class ValueConvertersTest extends TestCase
         ]);
 
         self::assertSame('[1.0,0.5,0.25]', ValueConverters::dngMatrixToString($matrix));
+    }
+
+    #[Test]
+    public function convertsWhitePointAndEnums(): void
+    {
+        $whitePoint = new ExifRationalList([
+            new ExifRational(3127, 10000),
+            new ExifRational(3290, 10000),
+        ]);
+
+        self::assertSame([0.3127, 0.329], ValueConverters::toWhitePoint($whitePoint));
+        self::assertSame(
+            ResolutionUnit::INCHES,
+            ValueConverters::toEnumOrNull(ResolutionUnit::class, (string) ResolutionUnit::INCHES->value),
+        );
+        self::assertNull(ValueConverters::toEnumOrNull(ResolutionUnit::class, 99));
+        self::assertNull(ValueConverters::toEnumOrNull(ResolutionUnit::class, null));
     }
 }
