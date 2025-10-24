@@ -1,0 +1,364 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\MakerNotes\Apple;
+
+use MagicSunday\ImageMeta\Core\ParseError;
+
+use function array_key_exists;
+use function iconv;
+use function is_int;
+use function is_string;
+use function ord;
+use function strlen;
+use function str_starts_with;
+use function substr;
+
+/**
+ * Minimal decoder for Apple's binary property list format used inside maker notes.
+ */
+final class BinaryPlistDecoder
+{
+    private string $data = '';
+
+    /**
+     * @var list<int>
+     */
+    private array $offsetTable = [];
+
+    private int $objectRefSize = 0;
+
+    private int $length = 0;
+
+    private int $topObjectIndex = 0;
+
+    /**
+     * Decodes the supplied binary property list and returns the top level value.
+     *
+     * @return array<int, string|int|float|bool|array|null>|array<string, string|int|float|bool|array|null>|string|int|float|bool|null
+     */
+    public function decode(string $data): array|string|int|float|bool|null
+    {
+        if ($data === '') {
+            throw new ParseError('The property list data must not be empty.');
+        }
+
+        if (!str_starts_with($data, 'bplist00')) {
+            throw new ParseError('Unsupported property list format.');
+        }
+
+        if (strlen($data) < 40) {
+            throw new ParseError('The property list payload is too small.');
+        }
+
+        $this->data          = $data;
+        $this->length        = strlen($data);
+        $this->offsetTable   = [];
+        $this->objectRefSize = 0;
+        $this->decodeTrailer();
+
+        if ($this->offsetTable === []) {
+            throw new ParseError('The property list does not contain any objects.');
+        }
+
+        $topIndex = $this->topObjectIndex;
+        if ($topIndex < 0) {
+            throw new ParseError('Missing top level object index.');
+        }
+
+        return $this->parseObject($topIndex);
+    }
+
+    private function decodeTrailer(): void
+    {
+        $trailer = substr($this->data, -32);
+        if ($trailer === false || strlen($trailer) !== 32) {
+            throw new ParseError('Invalid property list trailer.');
+        }
+
+        $offsetIntSize    = ord($trailer[6]);
+        $objectRefSize    = ord($trailer[7]);
+        $numObjects       = $this->readUint64($trailer, 8);
+        $topObject        = $this->readUint64($trailer, 16);
+        $offsetTableStart = $this->readUint64($trailer, 24);
+
+        if ($offsetIntSize < 1 || $objectRefSize < 1) {
+            throw new ParseError('Invalid property list integer sizing.');
+        }
+
+        if ($numObjects < 1) {
+            throw new ParseError('The property list does not contain any objects.');
+        }
+
+        if ($offsetTableStart >= $this->length) {
+            throw new ParseError('The offset table is located outside of the payload.');
+        }
+
+        $this->objectRefSize = $objectRefSize;
+
+        $entries = [];
+        $cursor  = $offsetTableStart;
+        for ($idx = 0; $idx < $numObjects; $idx++) {
+            $offset = $this->readUint($cursor, $offsetIntSize);
+            $entries[] = $offset;
+            $cursor   += $offsetIntSize;
+        }
+
+        $this->offsetTable   = $entries;
+        $this->topObjectIndex = (int) $topObject;
+    }
+
+    private function parseObject(int $index): array|string|int|float|bool|null
+    {
+        if (!array_key_exists($index, $this->offsetTable)) {
+            throw new ParseError('The property list object reference is invalid.');
+        }
+
+        $offset = $this->offsetTable[$index];
+        if ($offset >= $this->length) {
+            throw new ParseError('The property list object offset is invalid.');
+        }
+
+        $marker = ord($this->data[$offset]);
+        $type   = $marker >> 4;
+        $info   = $marker & 0x0F;
+
+        return match ($type) {
+            0x0 => $this->parseSimple($info),
+            0x1 => $this->parseInteger($offset, $info),
+            0x2 => $this->parseReal($offset, $info),
+            0x4 => $this->parseData($offset, $info),
+            0x5 => $this->parseAscii($offset, $info),
+            0x6 => $this->parseUnicode($offset, $info),
+            0xA => $this->parseArray($offset, $info),
+            0xD => $this->parseDictionary($offset, $info),
+            default => throw new ParseError('Unsupported property list object type.'),
+        };
+    }
+
+    private function parseSimple(int $info): bool|null
+    {
+        return match ($info) {
+            0x0 => null,
+            0x8 => false,
+            0x9 => true,
+            default => throw new ParseError('Unsupported simple property list object.'),
+        };
+    }
+
+    private function parseInteger(int $offset, int $info): int
+    {
+        $size = 1 << $info;
+        if ($size === 0) {
+            throw new ParseError('Integer object without payload.');
+        }
+
+        $value = $this->readUint($offset + 1, $size);
+
+        return $value;
+    }
+
+    private function parseReal(int $offset, int $info): float
+    {
+        $size = 1 << $info;
+        if ($size === 4) {
+            $bytes = substr($this->data, $offset + 1, 4);
+            if ($bytes === false || strlen($bytes) !== 4) {
+                throw new ParseError('Incomplete real payload.');
+            }
+
+            $value = unpack('G', $bytes);
+
+            return (float) $value[1];
+        }
+
+        if ($size === 8) {
+            $bytes = substr($this->data, $offset + 1, 8);
+            if ($bytes === false || strlen($bytes) !== 8) {
+                throw new ParseError('Incomplete double payload.');
+            }
+
+            $value = unpack('E', $bytes);
+
+            return (float) $value[1];
+        }
+
+        throw new ParseError('Unsupported floating point width.');
+    }
+
+    private function parseData(int $offset, int $info): string
+    {
+        [$size, $header] = $this->readLength($offset, $info);
+
+        $payload = substr($this->data, $offset + $header, $size);
+        if ($payload === false || strlen($payload) !== $size) {
+            throw new ParseError('Incomplete data payload.');
+        }
+
+        return $payload;
+    }
+
+    private function parseAscii(int $offset, int $info): string
+    {
+        [$size, $header] = $this->readLength($offset, $info);
+
+        $payload = substr($this->data, $offset + $header, $size);
+        if ($payload === false || strlen($payload) !== $size) {
+            throw new ParseError('Incomplete ASCII string payload.');
+        }
+
+        return $payload;
+    }
+
+    private function parseUnicode(int $offset, int $info): string
+    {
+        [$size, $header] = $this->readLength($offset, $info);
+
+        $byteLength = $size * 2;
+        $payload    = substr($this->data, $offset + $header, $byteLength);
+        if ($payload === false || strlen($payload) !== $byteLength) {
+            throw new ParseError('Incomplete Unicode string payload.');
+        }
+
+        $decoded = iconv('UTF-16BE', 'UTF-8', $payload);
+        if ($decoded === false) {
+            throw new ParseError('Failed to decode Unicode string payload.');
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * @return array<int, string|int|float|bool|array|null>
+     */
+    private function parseArray(int $offset, int $info): array
+    {
+        [$count, $header] = $this->readLength($offset, $info);
+        if ($count === 0) {
+            return [];
+        }
+
+        $refsOffset = $offset + $header;
+        $bytes      = $count * $this->objectRefSize;
+        if ($refsOffset + $bytes > $this->length) {
+            throw new ParseError('Array references exceed payload bounds.');
+        }
+
+        $result = [];
+        for ($idx = 0; $idx < $count; $idx++) {
+            $reference = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
+            $result[]  = $this->parseObject($reference);
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array<string, string|int|float|bool|array|null>
+     */
+    private function parseDictionary(int $offset, int $info): array
+    {
+        [$count, $header] = $this->readLength($offset, $info);
+        if ($count === 0) {
+            return [];
+        }
+
+        $refsOffset = $offset + $header;
+        $bytes      = $count * $this->objectRefSize * 2;
+        if ($refsOffset + $bytes > $this->length) {
+            throw new ParseError('Dictionary references exceed payload bounds.');
+        }
+
+        $keys   = [];
+        $values = [];
+        for ($idx = 0; $idx < $count; $idx++) {
+            $keyRef = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
+            $valRef = $this->readUint(
+                $refsOffset + ($count * $this->objectRefSize) + ($idx * $this->objectRefSize),
+                $this->objectRefSize
+            );
+
+            $keys[]   = $this->parseObject($keyRef);
+            $values[] = $this->parseObject($valRef);
+        }
+
+        $result = [];
+        foreach ($keys as $idx => $key) {
+            if (!is_string($key)) {
+                throw new ParseError('Dictionary keys must be strings.');
+            }
+
+            $result[$key] = $values[$idx];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array{0:int,1:int}
+     */
+    private function readLength(int $offset, int $info): array
+    {
+        if ($info !== 0x0F) {
+            return [$info, 1];
+        }
+
+        $sizeMarkerOffset = $offset + 1;
+        if ($sizeMarkerOffset >= $this->length) {
+            throw new ParseError('The property list size marker exceeds the payload.');
+        }
+
+        $marker = ord($this->data[$sizeMarkerOffset]);
+        $type   = $marker >> 4;
+        $info   = $marker & 0x0F;
+        if ($type !== 0x1) {
+            throw new ParseError('Size marker does not encode an integer.');
+        }
+
+        $sizeBytes = 1 << $info;
+        $value     = $this->readUint($sizeMarkerOffset + 1, $sizeBytes);
+
+        return [$value, 2 + $sizeBytes];
+    }
+
+    private function readUint(int $offset, int $length): int
+    {
+        if ($length < 1) {
+            throw new ParseError('Cannot read zero length integers.');
+        }
+
+        if ($offset < 0 || $offset + $length > $this->length) {
+            throw new ParseError('Attempted to read outside of the payload.');
+        }
+
+        $value = 0;
+        for ($idx = 0; $idx < $length; $idx++) {
+            $value = ($value << 8) | ord($this->data[$offset + $idx]);
+        }
+
+        return $value;
+    }
+
+    private function readUint64(string $data, int $offset): int
+    {
+        $slice = substr($data, $offset, 8);
+        if ($slice === false || strlen($slice) !== 8) {
+            throw new ParseError('Failed to read 64-bit integer.');
+        }
+
+        $parts = unpack('Nhigh/Nlow', $slice);
+        if ($parts === false) {
+            throw new ParseError('Failed to unpack 64-bit integer.');
+        }
+
+        return ((int) $parts['high'] << 32) | (int) $parts['low'];
+    }
+}

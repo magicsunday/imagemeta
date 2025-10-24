@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\MakerNotes;
 
 use InvalidArgumentException;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 
 use function preg_match;
 
@@ -24,11 +25,13 @@ final readonly class MakerNotesMetadata
      * @param string $vendor Vendor responsible for the maker note payload. Must not be empty.
      * @param int    $length Number of bytes contained in the payload. Must be zero or positive.
      * @param string $sha1   Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
+     * @param AppleMakerNotes|null $apple Additional Apple specific maker note data.
      */
     public function __construct(
         private string $vendor,
         private int $length,
         private string $sha1,
+        private ?AppleMakerNotes $apple = null,
     ) {
         if ($vendor === '') {
             throw new InvalidArgumentException('The vendor must not be empty.');
@@ -65,5 +68,13 @@ final readonly class MakerNotesMetadata
     public function sha1(): string
     {
         return $this->sha1;
+    }
+
+    /**
+     * Returns Apple specific maker note data when available.
+     */
+    public function apple(): ?AppleMakerNotes
+    {
+        return $this->apple;
     }
 }

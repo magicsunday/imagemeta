@@ -35,6 +35,7 @@ final class MakerNotesMetadataTest extends TestCase
         self::assertSame('Contoso', $metadata->vendor());
         self::assertSame(123, $metadata->length());
         self::assertSame('0123456789abcdef0123456789abcdef01234567', $metadata->sha1());
+        self::assertNull($metadata->apple());
     }
 
     /**
