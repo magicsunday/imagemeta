@@ -43,6 +43,7 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -927,6 +928,54 @@ final class StructuredMetadataBuilderTest extends TestCase
                 self::fail(sprintf('%s::%s expected null/empty, got %s', $name, $field, var_export($fieldValue, true)));
             }
         }
+    }
+
+    /**
+     * Ensures XMP region metadata is propagated to the structured output including face counts.
+     */
+    #[Test]
+    public function mergesFaceRegionsFromXmp(): void
+    {
+        $xmpDocument = new XmpDocument([
+            '{http://ns.adobe.com/xmp/sType/Area#}x'        => ['0.4', '0.75'],
+            '{http://ns.adobe.com/xmp/sType/Area#}y'        => ['0.45', '0.60'],
+            '{http://ns.adobe.com/xmp/sType/Area#}w'        => ['0.2', '0.10'],
+            '{http://ns.adobe.com/xmp/sType/Area#}h'        => ['0.25', '0.08'],
+            '{http://www.metadataworkinggroup.com/schemas/regions/}Type'       => ['Face', 'Focus'],
+            '{http://www.metadataworkinggroup.com/schemas/regions/}Name'       => ['Alice', ''],
+            '{http://www.metadataworkinggroup.com/schemas/regions/}Confidence' => ['0.91', '0.5'],
+            '{http://www.metadataworkinggroup.com/schemas/regions/}Rotation'   => ['12.5', '0'],
+            '{http://ns.apple.com/faceinfo/1.0/}CenterX'    => ['0.4', '0.72'],
+            '{http://ns.apple.com/faceinfo/1.0/}CenterY'    => ['0.45', '0.61'],
+            '{http://ns.apple.com/faceinfo/1.0/}Width'      => ['0.2', '0.12'],
+            '{http://ns.apple.com/faceinfo/1.0/}Height'     => ['0.25', '0.09'],
+            '{http://ns.apple.com/faceinfo/1.0/}Confidence' => ['0.88', '0.42'],
+            '{http://ns.apple.com/faceinfo/1.0/}Roll'       => ['1.0', '-5.0'],
+            '{http://ns.apple.com/faceinfo/1.0/}Name'       => ['Alice', 'Bob'],
+            '{http://ns.apple.com/faceinfo/1.0/}FaceID'     => ['101', '202'],
+        ]);
+
+        $metadata   = new Metadata([], null, null, [], $xmpDocument);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(2, $structured->scene->faceCount);
+        self::assertCount(3, $structured->regions->items);
+
+        $first = $structured->regions->items[0];
+        self::assertSame(RegionType::FACE, $first->type);
+        self::assertSame('Alice', $first->personName);
+        self::assertSame('101', $first->faceId);
+        self::assertNotNull($first->confidence);
+        self::assertEqualsWithDelta(0.91, $first->confidence, 0.0001);
+        self::assertNotNull($first->rotationDeg);
+        self::assertEqualsWithDelta(12.5, $first->rotationDeg, 0.0001);
+
+        $third = $structured->regions->items[2];
+        self::assertSame(RegionType::FACE, $third->type);
+        self::assertSame('Bob', $third->personName);
+        self::assertSame('202', $third->faceId);
+        self::assertNotNull($third->rotationDeg);
+        self::assertEqualsWithDelta(-5.0, $third->rotationDeg, 0.0001);
     }
 
     /**

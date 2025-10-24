@@ -127,4 +127,30 @@ XML;
         self::assertArrayNotHasKey($subjectKey, $document->data);
         self::assertNull($document->find('subject'));
     }
+
+    /**
+     * Multiple occurrences of identical properties are returned as ordered lists.
+     */
+    #[Test]
+    public function testDocumentMergesRepeatedValues(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:subject>Alpha</dc:subject>
+  </rdf:Description>
+  <rdf:Description>
+    <dc:subject>Beta</dc:subject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        $subjects = $document->get(self::DC_NAMESPACE, 'subject');
+
+        self::assertIsArray($subjects);
+        self::assertSame(['Alpha', 'Beta'], $subjects);
+    }
 }
