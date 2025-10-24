@@ -22,12 +22,6 @@ final readonly class Lens
     public ?array $lensSpecification;
 
     /**
-     * @deprecated Use $lensSpecification instead.
-     * @var array{0:float,1:float,2:float,3:float}|null
-     */
-    public ?array $lensInfo;
-
-    /**
      * @param string|null                                 $lensMake              Lens manufacturer.
      * @param string|null                                 $lensModel             Lens model description.
      * @param string|null                                 $lensSerialNumber      Serial number reported by the lens.
@@ -35,7 +29,6 @@ final readonly class Lens
      * @param int|null                                    $focalLengthIn35mm     35mm equivalent focal length.
      * @param float|null                                  $maxApertureFNumber    Maximum aperture value as f-number.
      * @param array{0:float,1:float,2:float,3:float}|null $lensSpecification     Lens specification describing zoom and aperture range.
-     * @param array{0:float,1:float,2:float,3:float}|null $lensInfoDeprecated    Deprecated lens specification argument for BC.
      */
     public function __construct(
         public ?string $lensMake,
@@ -45,14 +38,7 @@ final readonly class Lens
         public ?int $focalLengthIn35mm,
         public ?float $maxApertureFNumber,
         ?array $lensSpecification = null,
-        ?array $lensInfoDeprecated = null,
     ) {
-        if ($lensSpecification === null && $lensInfoDeprecated !== null) {
-            $lensSpecification = $lensInfoDeprecated;
-        }
-
         $this->lensSpecification = $lensSpecification;
-        /** @phpstan-ignore-next-line Maintain deprecated property for backwards compatibility. */
-        $this->lensInfo          = $lensSpecification;
     }
 }

@@ -248,18 +248,6 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the lens specification array describing focal and aperture range.
-     *
-     * @deprecated Use lensSpecification() instead.
-     *
-     * @return array{0:float,1:float,2:float,3:float}|null
-     */
-    public function lensInfo(): ?array
-    {
-        return $this->lensSpecification();
-    }
-
-    /**
      * Returns the maximum aperture as f-number converted from APEX.
      */
     public function maxApertureFNumber(): ?float
@@ -1644,30 +1632,6 @@ final readonly class ExifTagResolver
         );
 
         return $values !== [] ? $values : null;
-    }
-
-    /**
-     * Returns the composite image counts.
-     *
-     * @deprecated Use sourceImageNumberOfCompositeImage() instead.
-     *
-     * @return array{0:int,1:int}|null
-     */
-    public function compositeImageCount(): ?array
-    {
-        return $this->sourceImageNumberOfCompositeImage();
-    }
-
-    /**
-     * Returns the exposure times for composite image sources.
-     *
-     * @deprecated Use sourceExposureTimesOfCompositeImage() instead.
-     *
-     * @return list<float>|null
-     */
-    public function compositeExposureTimes(): ?array
-    {
-        return $this->sourceExposureTimesOfCompositeImage();
     }
 
     /**

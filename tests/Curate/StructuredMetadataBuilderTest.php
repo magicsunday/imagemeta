@@ -219,9 +219,6 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(85.0, $structured->lens->focalLengthMm);
         self::assertSame(85, $structured->lens->focalLengthIn35mm);
         self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensSpecification);
-        // Deprecated alias retained for BC to ease migration to EXIF 3.0 terminology.
-        /** @phpstan-ignore-next-line deprecated alias exercised intentionally */
-        self::assertSame($structured->lens->lensSpecification, $structured->lens->lensInfo);
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
         self::assertSame(6720, $structured->image->width);
