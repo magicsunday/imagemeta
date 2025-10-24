@@ -57,4 +57,14 @@ final class EnumMappingTest extends TestCase
         self::assertSame(SensingMethod::COLOR_SEQUENTIAL_LINEAR, SensingMethod::fromExifValue(8));
         self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue(3));
     }
+
+    /**
+     * Ensures the enum does not expose values that are not defined by EXIF 3.0.
+     */
+    #[Test]
+    public function doesNotMapNonExif30PhotometricValues(): void
+    {
+        self::assertNull(Photometric::fromExifValue(511));
+        self::assertNull(Photometric::fromExifValue(514));
+    }
 }
