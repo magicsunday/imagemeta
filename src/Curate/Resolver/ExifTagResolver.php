@@ -24,9 +24,6 @@ use MagicSunday\ImageMeta\Model\Exif\ValueConverters as ExifValueConverters;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
-use MagicSunday\ImageMeta\Value\Enum\DepthFormat;
-use MagicSunday\ImageMeta\Value\Enum\DepthMeasureType;
-use MagicSunday\ImageMeta\Value\Enum\DepthUnits;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -779,52 +776,6 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the depth format enum.
-     */
-    public function depthFormat(): ?DepthFormat
-    {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::DEPTH_FORMAT);
-
-        return $value !== null ? DepthFormat::fromExifValue($value) : null;
-    }
-
-    /**
-     * Returns the near depth plane value.
-     */
-    public function depthNear(): ?float
-    {
-        return $this->rationalValue($this->document?->exifIfd, ExifTag::DEPTH_NEAR);
-    }
-
-    /**
-     * Returns the far depth plane value.
-     */
-    public function depthFar(): ?float
-    {
-        return $this->rationalValue($this->document?->exifIfd, ExifTag::DEPTH_FAR);
-    }
-
-    /**
-     * Returns the depth units enum.
-     */
-    public function depthUnits(): ?DepthUnits
-    {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::DEPTH_UNITS);
-
-        return $value !== null ? DepthUnits::fromExifValue($value) : null;
-    }
-
-    /**
-     * Returns the depth measure type enum.
-     */
-    public function depthMeasureType(): ?DepthMeasureType
-    {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::DEPTH_MEASURE_TYPE);
-
-        return $value !== null ? DepthMeasureType::fromExifValue($value) : null;
-    }
-
-    /**
      * Returns the photographer name.
      */
     public function photographer(): ?string
@@ -878,126 +829,6 @@ final readonly class ExifTagResolver
     public function gamma(): ?float
     {
         return $this->rationalValue($this->document?->exifIfd, ExifTag::GAMMA);
-    }
-
-    /**
-     * Returns a serialised representation of the CFA pattern.
-     */
-    public function cfaPattern(): ?string
-    {
-        $value = $this->getValue($this->document?->exifIfd, ExifTag::CFA_PATTERN);
-        if ($value === null) {
-            $value = $this->getValue($this->document?->exifIfd, ExifTag::CFA_PATTERN_2);
-        }
-
-        if ($value === null) {
-            return null;
-        }
-
-        $values = $this->normalizeNumericList($value);
-        if ($values === []) {
-            return null;
-        }
-
-        return CoreValueConverters::dngMatrixToString($values);
-    }
-
-    /**
-     * Returns the average black level value.
-     */
-    public function blackLevel(): ?int
-    {
-        $value = $this->getValue($this->document?->exifIfd, ExifTag::BLACK_LEVEL);
-        if ($value === null) {
-            return null;
-        }
-
-        $values = $this->normalizeRationalList($value);
-        if ($values === []) {
-            return null;
-        }
-
-        $sum = 0.0;
-        foreach ($values as $component) {
-            $sum += $component;
-        }
-
-        return (int) round($sum / count($values));
-    }
-
-    /**
-     * Returns the white level value.
-     */
-    public function whiteLevel(): ?int
-    {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::WHITE_LEVEL);
-
-        return $value !== null ? (int) $value : null;
-    }
-
-    /**
-     * Returns a serialised colour matrix representation.
-     */
-    public function colorMatrix(): ?string
-    {
-        $value = $this->getValue($this->document?->exifIfd, ExifTag::COLOR_MATRIX_1);
-        if ($value === null) {
-            return null;
-        }
-
-        $values = $this->normalizeRationalList($value);
-        if ($values === []) {
-            return null;
-        }
-
-        return CoreValueConverters::dngMatrixToString($values);
-    }
-
-    /**
-     * Returns the number of entries in the linearisation table.
-     */
-    public function linearizationTableEntries(): ?int
-    {
-        $value = $this->getValue($this->document?->exifIfd, ExifTag::LINEARIZATION_TABLE);
-        if ($value instanceof ExifNumericList) {
-            return count($value->values);
-        }
-
-        if (is_array($value)) {
-            return count($value);
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the first calibration illuminant identifier.
-     */
-    public function calibrationIlluminant1(): ?int
-    {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::CALIBRATION_ILLUMINANT_1);
-
-        return $value !== null ? (int) $value : null;
-    }
-
-    /**
-     * Returns the second calibration illuminant identifier.
-     */
-    public function calibrationIlluminant2(): ?int
-    {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::CALIBRATION_ILLUMINANT_2);
-
-        return $value !== null ? (int) $value : null;
-    }
-
-    /**
-     * Returns the third calibration illuminant identifier.
-     */
-    public function calibrationIlluminant3(): ?int
-    {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::CALIBRATION_ILLUMINANT_3);
-
-        return $value !== null ? (int) $value : null;
     }
 
     /**

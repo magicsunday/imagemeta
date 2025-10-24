@@ -205,35 +205,6 @@ final readonly class ExifTag
 
     public const int INTEROPERABILITY_VERSION = 0x0002;
 
-    // DNG/extended tags
-    public const int CFA_PATTERN = 0xA302;
-
-    public const int CFA_PATTERN_2 = 0xA807;
-
-    public const int BLACK_LEVEL = 0xC61A;
-
-    public const int WHITE_LEVEL = 0xC61D;
-
-    public const int LINEARIZATION_TABLE = 0xC618;
-
-    public const int COLOR_MATRIX_1 = 0xC621;
-
-    public const int CALIBRATION_ILLUMINANT_1 = 0xC65A;
-
-    public const int CALIBRATION_ILLUMINANT_2 = 0xC65B;
-
-    public const int CALIBRATION_ILLUMINANT_3 = 0xC65C;
-
-    public const int DEPTH_FORMAT = 0xC7E9;
-
-    public const int DEPTH_NEAR = 0xC7EA;
-
-    public const int DEPTH_FAR = 0xC7EB;
-
-    public const int DEPTH_UNITS = 0xC7EC;
-
-    public const int DEPTH_MEASURE_TYPE = 0xC7ED;
-
     /**
      * Prevent instantiation of this constants-only utility class.
      */

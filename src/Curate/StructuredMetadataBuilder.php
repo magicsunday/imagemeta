@@ -42,7 +42,6 @@ use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
-use MagicSunday\ImageMeta\Value\RawCharacteristics;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -98,11 +97,11 @@ final class StructuredMetadataBuilder
         );
 
         $depth = new Depth(
-            format: $exifResolver->depthFormat(),
-            near: $exifResolver->depthNear(),
-            far: $exifResolver->depthFar(),
-            units: $exifResolver->depthUnits(),
-            measureType: $exifResolver->depthMeasureType(),
+            format: null,
+            near: null,
+            far: null,
+            units: null,
+            measureType: null,
         );
 
         $composite = new CompositeImageInfo(
@@ -287,17 +286,6 @@ final class StructuredMetadataBuilder
             depthDataId: $quickTimeResolver->string('DepthData'),
         );
 
-        $raw = new RawCharacteristics(
-            cfaPattern: $exifResolver->cfaPattern(),
-            blackLevel: $exifResolver->blackLevel(),
-            whiteLevel: $exifResolver->whiteLevel(),
-            colorMatrix: $exifResolver->colorMatrix(),
-            linearizationTableEntries: $exifResolver->linearizationTableEntries(),
-            calibrationIlluminant1: $exifResolver->calibrationIlluminant1(),
-            calibrationIlluminant2: $exifResolver->calibrationIlluminant2(),
-            calibrationIlluminant3: $exifResolver->calibrationIlluminant3(),
-        );
-
         $sensor = new Sensor(null, null, null, null, null);
 
         $uav = new Uav(null, null, null, null, null, null, null, null);
@@ -342,7 +330,6 @@ final class StructuredMetadataBuilder
             temporal: $temporal,
             derived: $derived,
             related: $related,
-            raw: $raw,
             sensor: $sensor,
             uav: $uav,
             integrity: $integrity,
