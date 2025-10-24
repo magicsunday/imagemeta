@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Value;
 
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 
 /**
@@ -22,7 +23,7 @@ final readonly class Scene
 {
     /**
      * @param SceneCaptureType|null     $type                 Scene capture type classification.
-     * @param int|null                  $sceneType            Scene type classification (e.g. direct capture).
+     * @param SceneType|null            $sceneType            Scene type classification (e.g. direct capture).
      * @param LightSource|null          $light                Dominant light source as reported by the camera.
      * @param int|null                  $faceCount            Number of detected faces.
      * @param bool|null                 $hdrScene             Indicates whether HDR scene processing was applied.
@@ -31,7 +32,7 @@ final readonly class Scene
      */
     public function __construct(
         public ?SceneCaptureType $type,
-        public ?int $sceneType,
+        public ?SceneType $sceneType,
         public ?LightSource $light,
         public ?int $faceCount,
         public ?bool $hdrScene,
