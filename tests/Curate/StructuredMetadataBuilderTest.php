@@ -262,6 +262,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(SubjectDistanceRange::DISTANT, $structured->scene->subjectDistanceRange);
 
         self::assertSame('3.00', $structured->standards->exifVersion);
+        self::assertSame('3.0', $structured->standards->profile);
         self::assertSame('0100', $structured->standards->flashpixVersion);
         self::assertSame([1, 0, 0, 0], $structured->standards->tiffEpStandardId);
 
@@ -361,9 +362,51 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertTrue($structured->scene->hdrScene);
         self::assertTrue($structured->scene->nightMode);
 
+        self::assertSame('3.0', $structured->standards->profile);
+
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
         self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal->original);
         self::assertSame('+01:00', $structured->temporal->original?->format('P'));
+    }
+
+    /**
+     * Ensures EXIF 2.2 markers derive the legacy profile identifier.
+     */
+    #[Test]
+    public function derivesProfileForExif22(): void
+    {
+        $ifd0 = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0220'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('2.20', $structured->standards->exifVersion);
+        self::assertSame('2.2', $structured->standards->profile);
+    }
+
+    /**
+     * Ensures EXIF 2.3 markers derive the enhanced profile identifier.
+     */
+    #[Test]
+    public function derivesProfileForExif23(): void
+    {
+        $ifd0 = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0231'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('2.31', $structured->standards->exifVersion);
+        self::assertSame('2.3', $structured->standards->profile);
     }
 
     /**
@@ -379,6 +422,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(['index' => null], get_object_vars($structured->interop));
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
+        self::assertSame('2.2', $structured->standards->profile);
     }
 
     /**
