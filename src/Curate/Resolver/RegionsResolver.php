@@ -124,7 +124,7 @@ final readonly class RegionsResolver
             );
         }
 
-        return array_values($resolved);
+        return $resolved;
     }
 
     /**
@@ -185,7 +185,7 @@ final readonly class RegionsResolver
             );
         }
 
-        return array_values($resolved);
+        return $resolved;
     }
 
     /**

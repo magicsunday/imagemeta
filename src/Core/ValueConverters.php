@@ -24,7 +24,6 @@ use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use Throwable;
-use UnitEnum;
 
 use function array_filter;
 use function array_slice;
@@ -183,7 +182,7 @@ final readonly class ValueConverters
     /**
      * Normalises EXIF subject area representations into a rectangle map.
      *
-     * @param array<int, int|float> $values Subject area values as extracted from metadata.
+     * @param array<int, int|float|string> $values Subject area values as extracted from metadata.
      *
      * @return array{x:?int,y:?int,w:?int,h:?int}|null
      */
@@ -448,7 +447,7 @@ final readonly class ValueConverters
      *
      * @return T|null
      */
-    public static function toEnumOrNull(string $enumClass, int|string|null $raw): ?UnitEnum
+    public static function toEnumOrNull(string $enumClass, int|string|null $raw): ?BackedEnum
     {
         if ($raw === null) {
             return null;
@@ -465,7 +464,10 @@ final readonly class ValueConverters
 
         /** @var class-string<T> $enumClass */
         try {
-            return $enumClass::from($value);
+            /** @var T $resolved */
+            $resolved = $enumClass::from($value);
+
+            return $resolved;
         } catch (Throwable) {
             return null;
         }

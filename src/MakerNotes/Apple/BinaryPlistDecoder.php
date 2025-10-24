@@ -15,6 +15,8 @@ use MagicSunday\ImageMeta\Core\ParseError;
 
 use function array_key_exists;
 use function iconv;
+use function is_array;
+use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
@@ -43,7 +45,7 @@ final class BinaryPlistDecoder
     /**
      * Decodes the supplied binary property list and returns the top level value.
      *
-     * @return array<int, string|int|float|bool|array|null>|array<string, string|int|float|bool|array|null>|string|int|float|bool|null
+     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|bool|float|int|string|null
      */
     public function decode(string $data): array|string|int|float|bool|null
     {
@@ -80,7 +82,7 @@ final class BinaryPlistDecoder
     private function decodeTrailer(): void
     {
         $trailer = substr($this->data, -32);
-        if ($trailer === false || strlen($trailer) !== 32) {
+        if (strlen($trailer) !== 32) {
             throw new ParseError('Invalid property list trailer.');
         }
 
@@ -113,9 +115,12 @@ final class BinaryPlistDecoder
         }
 
         $this->offsetTable   = $entries;
-        $this->topObjectIndex = (int) $topObject;
+        $this->topObjectIndex = $topObject;
     }
 
+    /**
+     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|bool|float|int|string|null
+     */
     private function parseObject(int $index): array|string|int|float|bool|null
     {
         if (!array_key_exists($index, $this->offsetTable)) {
@@ -171,24 +176,40 @@ final class BinaryPlistDecoder
         $size = 1 << $info;
         if ($size === 4) {
             $bytes = substr($this->data, $offset + 1, 4);
-            if ($bytes === false || strlen($bytes) !== 4) {
+            if (strlen($bytes) !== 4) {
                 throw new ParseError('Incomplete real payload.');
             }
 
-            $value = unpack('G', $bytes);
+            $value = unpack('Gfloat', $bytes);
+            if (!is_array($value) || !array_key_exists('float', $value)) {
+                throw new ParseError('Failed to decode floating point value.');
+            }
 
-            return (float) $value[1];
+            $float = $value['float'];
+            if (!is_float($float) && !is_int($float)) {
+                throw new ParseError('Failed to decode floating point value.');
+            }
+
+            return (float) $float;
         }
 
         if ($size === 8) {
             $bytes = substr($this->data, $offset + 1, 8);
-            if ($bytes === false || strlen($bytes) !== 8) {
+            if (strlen($bytes) !== 8) {
                 throw new ParseError('Incomplete double payload.');
             }
 
-            $value = unpack('E', $bytes);
+            $value = unpack('Efloat', $bytes);
+            if (!is_array($value) || !array_key_exists('float', $value)) {
+                throw new ParseError('Failed to decode floating point value.');
+            }
 
-            return (float) $value[1];
+            $float = $value['float'];
+            if (!is_float($float) && !is_int($float)) {
+                throw new ParseError('Failed to decode floating point value.');
+            }
+
+            return (float) $float;
         }
 
         throw new ParseError('Unsupported floating point width.');
@@ -199,7 +220,7 @@ final class BinaryPlistDecoder
         [$size, $header] = $this->readLength($offset, $info);
 
         $payload = substr($this->data, $offset + $header, $size);
-        if ($payload === false || strlen($payload) !== $size) {
+        if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete data payload.');
         }
 
@@ -211,7 +232,7 @@ final class BinaryPlistDecoder
         [$size, $header] = $this->readLength($offset, $info);
 
         $payload = substr($this->data, $offset + $header, $size);
-        if ($payload === false || strlen($payload) !== $size) {
+        if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete ASCII string payload.');
         }
 
@@ -224,7 +245,7 @@ final class BinaryPlistDecoder
 
         $byteLength = $size * 2;
         $payload    = substr($this->data, $offset + $header, $byteLength);
-        if ($payload === false || strlen($payload) !== $byteLength) {
+        if (strlen($payload) !== $byteLength) {
             throw new ParseError('Incomplete Unicode string payload.');
         }
 
@@ -237,7 +258,7 @@ final class BinaryPlistDecoder
     }
 
     /**
-     * @return array<int, string|int|float|bool|array|null>
+     * @return list<array<int|string, mixed>|bool|float|int|string|null>
      */
     private function parseArray(int $offset, int $info): array
     {
@@ -262,7 +283,7 @@ final class BinaryPlistDecoder
     }
 
     /**
-     * @return array<string, string|int|float|bool|array|null>
+     * @return array<string, array<int|string, mixed>|bool|float|int|string|null>
      */
     private function parseDictionary(int $offset, int $info): array
     {
@@ -350,15 +371,22 @@ final class BinaryPlistDecoder
     private function readUint64(string $data, int $offset): int
     {
         $slice = substr($data, $offset, 8);
-        if ($slice === false || strlen($slice) !== 8) {
+        if (strlen($slice) !== 8) {
             throw new ParseError('Failed to read 64-bit integer.');
         }
 
         $parts = unpack('Nhigh/Nlow', $slice);
-        if ($parts === false) {
+        if (!is_array($parts) || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
             throw new ParseError('Failed to unpack 64-bit integer.');
         }
 
-        return ((int) $parts['high'] << 32) | (int) $parts['low'];
+        $rawHigh = $parts['high'];
+        $rawLow  = $parts['low'];
+
+        if (!is_int($rawHigh) || !is_int($rawLow)) {
+            throw new ParseError('Unexpected 64-bit integer components.');
+        }
+
+        return ($rawHigh << 32) | $rawLow;
     }
 }

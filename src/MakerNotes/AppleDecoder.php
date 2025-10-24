@@ -83,7 +83,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<string, string|int|float|bool|array|null> $dictionary
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      */
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
@@ -137,7 +138,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<string, string|int|float|bool|array|null> $dictionary
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      */
     private function stringValue(array $dictionary, string $key): ?string
     {
@@ -156,7 +158,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<string, string|int|float|bool|array|null> $dictionary
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      */
     private function floatValue(array $dictionary, string ...$keys): ?float
     {
@@ -179,7 +182,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<string, string|int|float|bool|array|null> $dictionary
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      */
     private function intValue(array $dictionary, string ...$keys): ?int
     {
@@ -202,7 +206,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<string, string|int|float|bool|array|null> $dictionary
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      *
      * @return list<float>|null
      */
@@ -244,7 +249,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<string, string|int|float|bool|array|null> $dictionary
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      *
      * @return array<string, bool>
      */
@@ -268,6 +274,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return $flags;
     }
 
+    /**
+     * @param string|int|float|bool|null|array<int|string, mixed> $value
+     * @phpstan-param string|int|float|bool|null|array<int|string, mixed> $value
+     */
     private function boolValue(string|int|float|bool|null|array $value): ?bool
     {
         if (is_bool($value)) {
