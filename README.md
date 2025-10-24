@@ -67,8 +67,4 @@ $s->composite->type;                // CompositeImage::GeneralComposite
 $s->standards->exifVersion;         // "3.00"
 ```
 
-> [!NOTE]
-> The legacy accessors `lensInfo`, `compositeImageCount` and `compositeExposureTimes` remain available as deprecated aliases to
-> ease migration to the EXIF 3.0 naming scheme and will be removed in a future major release.
-
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.
