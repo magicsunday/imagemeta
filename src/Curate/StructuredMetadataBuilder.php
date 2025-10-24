@@ -634,7 +634,7 @@ final class StructuredMetadataBuilder
 
         return new Scene(
             type: $exif->sceneCaptureType(),
-            sceneType: $exif->sceneType()?->value,
+            sceneType: $exif->sceneType(),
             light: $exif->lightSource(),
             faceCount: $faceCount,
             hdrScene: $hdrScene,
