@@ -75,6 +75,41 @@ final class IccDecoderTest extends TestCase
         self::assertNull($decoder->decode(null, [$this->createSegment(1, 2, 'payload')]));
     }
 
+    #[Test]
+    public function testDecodeHandlesOutOfOrderSegments(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        $half = intdiv(strlen($profile) + 1, 2);
+        $segments = [
+            $this->createSegment(2, 2, substr($profile, $half)),
+            $this->createSegment(1, 2, substr($profile, 0, $half)),
+        ];
+
+        $decoder = new IccDecoder();
+        $result  = $decoder->decode(null, $segments);
+
+        self::assertNotNull($result);
+        self::assertSame('Test Profile', $result['description']);
+        self::assertSame('4.2.1', $result['version']);
+    }
+
+    #[Test]
+    public function testDecodeRejectsIncompleteSegmentSequences(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        $third = intdiv(strlen($profile), 3);
+        $segments = [
+            $this->createSegment(1, 3, substr($profile, 0, $third)),
+            $this->createSegment(3, 3, substr($profile, $third * 2)),
+        ];
+
+        $decoder = new IccDecoder();
+
+        self::assertNull($decoder->decode(null, $segments));
+    }
+
     /**
      * @param int    $sequence Sequence index of the ICC fragment.
      * @param int    $count    Total number of ICC fragments.

@@ -127,6 +127,28 @@ final class MetadataReaderTest extends TestCase
         self::assertSame([], $metadata->iccSegments);
     }
 
+    #[Test]
+    public function testDeduplicatesXmpPacketsByHash(): void
+    {
+        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" /></x:xmpmeta>';
+
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . "\xFF\xD9";
+
+        $path = $this->writeTempFile($jpeg);
+
+        try {
+            $metadata = (new MetadataReader())->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertCount(1, $metadata->xmpBlobs);
+        self::assertSame($xmp, $metadata->xmpBlobs[0]);
+    }
+
     /**
      * Writes the provided binary payload to a temporary file and returns its path.
      *
