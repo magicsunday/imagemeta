@@ -59,6 +59,11 @@ use const JSON_THROW_ON_ERROR;
  */
 final readonly class ValueConverters
 {
+    private const FULL_FRAME_WIDTH_MM = 36.0;
+    private const FULL_FRAME_HEIGHT_MM = 24.0;
+    private const FULL_FRAME_DIAGONAL_MM = 43.2666153056;
+    private const FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.029;
+
     /**
      * Converts a rational or numeric EXIF representation into a floating point value.
      *
@@ -260,20 +265,104 @@ final readonly class ValueConverters
     }
 
     /**
-     * Approximates the diagonal field of view in degrees.
+     * Calculates the crop factor from focal lengths.
      */
-    public static function calcFovDeg(?int $focalLength35mm, ?float $cropFactor): ?float
+    public static function calcCropFactor(?int $focalLength35mm, ?float $focalLengthMm): ?float
     {
-        if ($focalLength35mm !== null && $focalLength35mm > 0) {
-            // 35mm full frame diagonal is approximately 43.2666153056 mm.
-            return rad2deg(2.0 * atan(43.2666153056 / (2.0 * (float) $focalLength35mm)));
+        if ($focalLength35mm === null || $focalLength35mm <= 0 || $focalLengthMm === null || $focalLengthMm <= 0.0) {
+            return null;
+        }
+
+        return (float) $focalLength35mm / $focalLengthMm;
+    }
+
+    /**
+     * Calculates the circle of confusion in millimetres based on the crop factor.
+     */
+    public static function calcCircleOfConfusionMm(?float $cropFactor): ?float
+    {
+        if ($cropFactor === null) {
+            return self::FULL_FRAME_CIRCLE_OF_CONFUSION_MM;
+        }
+
+        if ($cropFactor <= 0.0) {
+            return null;
+        }
+
+        return self::FULL_FRAME_CIRCLE_OF_CONFUSION_MM / $cropFactor;
+    }
+
+    /**
+     * Approximates the diagonal field of view in degrees.
+     *
+     * The result reflects the diagonal angle of view of the recorded frame.
+     */
+    public static function calcFovDeg(?int $focalLength35mm, ?float $cropFactor, ?float $focalLengthMm = null): ?float
+    {
+        $fov = self::calcFovFromSensorDimension(
+            self::FULL_FRAME_DIAGONAL_MM,
+            $focalLengthMm,
+            $focalLength35mm,
+            $cropFactor,
+        );
+
+        if ($fov !== null) {
+            return $fov;
         }
 
         if ($cropFactor !== null && $cropFactor > 0.0) {
-            // Assume a 50mm lens equivalent on full frame to derive an estimate.
+            // Assume a 50mm lens equivalent on full frame to derive an estimate when only the crop factor is known.
             $equivalent = 50.0 * $cropFactor;
 
-            return rad2deg(2.0 * atan(43.2666153056 / (2.0 * $equivalent)));
+            return rad2deg(2.0 * atan(self::FULL_FRAME_DIAGONAL_MM / (2.0 * $equivalent)));
+        }
+
+        return null;
+    }
+
+    /**
+     * Approximates the horizontal field of view in degrees.
+     */
+    public static function calcHorizontalFovDeg(?int $focalLength35mm, ?float $cropFactor, ?float $focalLengthMm = null): ?float
+    {
+        return self::calcFovFromSensorDimension(
+            self::FULL_FRAME_WIDTH_MM,
+            $focalLengthMm,
+            $focalLength35mm,
+            $cropFactor,
+        );
+    }
+
+    /**
+     * Approximates the vertical field of view in degrees.
+     */
+    public static function calcVerticalFovDeg(?int $focalLength35mm, ?float $cropFactor, ?float $focalLengthMm = null): ?float
+    {
+        return self::calcFovFromSensorDimension(
+            self::FULL_FRAME_HEIGHT_MM,
+            $focalLengthMm,
+            $focalLength35mm,
+            $cropFactor,
+        );
+    }
+
+    /**
+     * Calculates the field of view for the supplied sensor dimension.
+     */
+    private static function calcFovFromSensorDimension(
+        float $fullFrameDimensionMm,
+        ?float $focalLengthMm,
+        ?int $focalLength35mm,
+        ?float $cropFactor
+    ): ?float {
+        if ($focalLengthMm !== null && $focalLengthMm > 0.0 && $cropFactor !== null && $cropFactor > 0.0) {
+            $sensorDimension = $fullFrameDimensionMm / $cropFactor;
+
+            return rad2deg(2.0 * atan($sensorDimension / (2.0 * $focalLengthMm)));
+        }
+
+        if ($focalLength35mm !== null && $focalLength35mm > 0) {
+            return rad2deg(2.0 * atan($fullFrameDimensionMm / (2.0 * (float) $focalLength35mm)));
         }
 
         return null;

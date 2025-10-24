@@ -222,6 +222,13 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensSpecification);
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
+        self::assertEqualsWithDelta(44.573916, $structured->derived->hyperfocalM, 1e-6);
+        self::assertEqualsWithDelta(28.558322, $structured->derived->fovDiagonalDeg, 1e-6);
+        self::assertEqualsWithDelta(23.913168, $structured->derived->fovHorizontalDeg, 1e-6);
+        self::assertEqualsWithDelta(16.071421, $structured->derived->fovVerticalDeg, 1e-6);
+        self::assertSame(85, $structured->derived->focalLength35mm);
+        self::assertEqualsWithDelta(1.0, $structured->derived->cropFactor, 1e-6);
+
         self::assertSame(6720, $structured->image->width);
         self::assertSame(4480, $structured->image->height);
         self::assertSame(Orientation::RIGHT_TOP, $structured->image->orientation);
