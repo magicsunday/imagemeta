@@ -702,6 +702,11 @@ final class StructuredMetadataBuilder
             $semanticTone = $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleTone');
         }
 
+        $accelerationVector = $makerNotes?->accelerationVector;
+        if ($accelerationVector === null) {
+            $accelerationVector = $this->quickTimeFloatList($quickTimeResolver, 'AccelerationVector');
+        }
+
         $flags          = $makerNotes instanceof AppleMakerNotes ? $makerNotes->flags : [];
         $quickTimeFlags = $this->quickTimeFlags($quickTimeResolver);
         foreach ($quickTimeFlags as $key => $value) {
@@ -723,6 +728,7 @@ final class StructuredMetadataBuilder
             $semanticWarmth,
             $semanticTone,
             $flags,
+            $accelerationVector,
         );
     }
 

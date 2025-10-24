@@ -56,10 +56,11 @@ final readonly class AppleResolver
         $focusPosition    = $resolver->float('FocusPosition');
         $livePhotoIndex   = $resolver->int('LivePhotoVideoIndex');
         $colorTemperature = $resolver->int('ColorTemperature');
-        $semanticPreset   = $resolver->string('SemanticStylePreset');
-        $semanticWarmth   = $resolver->float('SemanticStyleWarmth');
-        $semanticTone     = $resolver->float('SemanticStyleTone');
-        $flags            = $this->flags($resolver);
+        $semanticPreset      = $resolver->string('SemanticStylePreset');
+        $semanticWarmth      = $resolver->float('SemanticStyleWarmth');
+        $semanticTone        = $resolver->float('SemanticStyleTone');
+        $accelerationVector = $this->floatList($resolver, 'AccelerationVector');
+        $flags               = $this->flags($resolver);
 
         if (
             $identifier === null
@@ -73,6 +74,7 @@ final readonly class AppleResolver
             && $semanticPreset === null
             && $semanticWarmth === null
             && $semanticTone === null
+            && $accelerationVector === null
             && $flags === []
         ) {
             return null;
@@ -91,6 +93,7 @@ final readonly class AppleResolver
             $semanticWarmth,
             $semanticTone,
             $flags,
+            $accelerationVector,
         );
     }
 

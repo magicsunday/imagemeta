@@ -29,6 +29,7 @@ final readonly class Apple
      * @param float|null          $semanticStyleWarmth Semantic style warmth value.
      * @param float|null          $semanticStyleTone   Semantic style tone value.
      * @param array<string, bool> $flags               Boolean flags derived from maker notes or QuickTime metadata.
+     * @param list<float>|null    $accelerationVector  Acceleration vector recorded during capture.
      */
     public function __construct(
         public ?string $contentIdentifier,
@@ -43,6 +44,7 @@ final readonly class Apple
         public ?float $semanticStyleWarmth,
         public ?float $semanticStyleTone,
         public array $flags,
+        public ?array $accelerationVector,
     ) {
     }
 }
