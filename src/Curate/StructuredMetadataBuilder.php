@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
+use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
@@ -47,6 +48,7 @@ use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\Scene;
@@ -76,6 +78,7 @@ final class StructuredMetadataBuilder
         $xmpResolver       = new XmpResolver($xmpDocument);
         $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
         $gpsResolver       = new GpsResolver();
+        $regionsResolver   = new RegionsResolver();
 
         $interop = new Interop(index: $exifResolver->interopIndex());
 
@@ -267,9 +270,13 @@ final class StructuredMetadataBuilder
 
         $motion = new Motion(null, null, null, null, null, null, null, null, null);
 
-        $scene = $this->buildScene($exifResolver, $quickTimeResolver);
+        $regions = $regionsResolver->resolve($xmpDocument);
 
-        $regions = new Regions([]);
+        $scene = $this->buildScene(
+            $exifResolver,
+            $quickTimeResolver,
+            $this->countFaceRegions($regions),
+        );
 
         $flatKeywords         = $xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'subject');
         $hierarchicalKeywords = $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
@@ -541,9 +548,25 @@ final class StructuredMetadataBuilder
     }
 
     /**
+     * Counts detected face regions for the scene aggregate.
+     */
+    private function countFaceRegions(Regions $regions): ?int
+    {
+        $count = 0;
+
+        foreach ($regions->items as $region) {
+            if ($region->type === RegionType::FACE) {
+                ++$count;
+            }
+        }
+
+        return $count > 0 ? $count : null;
+    }
+
+    /**
      * Builds the scene value object incorporating EXIF and container hints.
      */
-    private function buildScene(ExifTagResolver $exif, QuickTimeResolver $quickTime): Scene
+    private function buildScene(ExifTagResolver $exif, QuickTimeResolver $quickTime, ?int $faceCount): Scene
     {
         $hdr   = $quickTime->string('HDRImageType');
         $night = $quickTime->bool('NightMode');
@@ -552,7 +575,7 @@ final class StructuredMetadataBuilder
             type: $exif->sceneCaptureType(),
             sceneType: $exif->sceneType()?->value,
             light: $exif->lightSource(),
-            faceCount: null,
+            faceCount: $faceCount,
             hdrScene: $hdr !== null ? true : null,
             nightMode: $night,
             subjectDistanceRange: $exif->subjectDistanceRange(),

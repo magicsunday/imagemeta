@@ -16,7 +16,9 @@ use XMLReader;
 
 use function array_filter;
 use function array_key_exists;
+use function array_merge;
 use function array_values;
+use function is_array;
 use function sprintf;
 use function trim;
 
@@ -70,7 +72,11 @@ final class XmpParser
                         if ($namespace !== self::RDF_NAMESPACE) {
                             $value = $this->finalizeValue($listBuffers[$depth], $textBuffers[$depth]);
                             if ($value !== null) {
-                                $data[$this->buildClarkName($namespace, $localName)] = $value;
+                                $this->storeValue(
+                                    $data,
+                                    $this->buildClarkName($namespace, $localName),
+                                    $value,
+                                );
                             }
                         }
 
@@ -111,7 +117,11 @@ final class XmpParser
                     } elseif ($namespace !== self::RDF_NAMESPACE) {
                         $value = $this->finalizeValue($listBuffers[$depth], $textBuffers[$depth]);
                         if ($value !== null) {
-                            $data[$this->buildClarkName($namespace, $localName)] = $value;
+                            $this->storeValue(
+                                $data,
+                                $this->buildClarkName($namespace, $localName),
+                                $value,
+                            );
                         }
                     }
 
@@ -143,6 +153,42 @@ final class XmpParser
         $text = trim($text);
 
         return $text === '' ? null : $text;
+    }
+
+    /**
+     * Stores a value in the result map while merging multiple occurrences.
+     *
+     * @param array<string, string|array<int, string>> $data
+     * @param list<string>|string                      $value
+     */
+    private function storeValue(array &$data, string $key, array|string $value): void
+    {
+        if (!array_key_exists($key, $data)) {
+            $data[$key] = $value;
+
+            return;
+        }
+
+        $existing = $data[$key];
+
+        if (is_array($existing)) {
+            if (is_array($value)) {
+                $data[$key] = array_values([...$existing, ...$value]);
+            } else {
+                $existing[] = $value;
+                $data[$key] = array_values($existing);
+            }
+
+            return;
+        }
+
+        if (is_array($value)) {
+            $data[$key] = array_values(array_merge([$existing], $value));
+
+            return;
+        }
+
+        $data[$key] = [$existing, $value];
     }
 
     /**
