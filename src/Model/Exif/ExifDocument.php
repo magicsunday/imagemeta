@@ -184,7 +184,12 @@ final readonly class ExifDocument
      */
     public function imageTitle(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
+        return $this->strWithFallback(
+            $this->exifIfd,
+            ExifTag::IMAGE_TITLE,
+            $this->ifd0,
+            ExifTag::LEGACY_IMAGE_TITLE,
+        );
     }
 
     /**
@@ -192,7 +197,12 @@ final readonly class ExifDocument
      */
     public function photographer(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::PHOTOGRAPHER);
+        return $this->strWithFallback(
+            $this->exifIfd,
+            ExifTag::PHOTOGRAPHER,
+            $this->ifd0,
+            ExifTag::LEGACY_PHOTOGRAPHER,
+        );
     }
 
     /**
@@ -200,7 +210,12 @@ final readonly class ExifDocument
      */
     public function imageEditor(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
+        return $this->strWithFallback(
+            $this->exifIfd,
+            ExifTag::IMAGE_EDITOR,
+            $this->ifd0,
+            ExifTag::LEGACY_IMAGE_EDITOR,
+        );
     }
 
     /**
@@ -702,7 +717,12 @@ final readonly class ExifDocument
      */
     public function cameraFirmware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
+        return $this->strWithFallback(
+            $this->exifIfd,
+            ExifTag::CAMERA_FIRMWARE,
+            $this->exifIfd,
+            ExifTag::LEGACY_CAMERA_FIRMWARE,
+        );
     }
 
     /**
@@ -710,7 +730,12 @@ final readonly class ExifDocument
      */
     public function rawDevelopingSoftware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
+        return $this->strWithFallback(
+            $this->exifIfd,
+            ExifTag::RAW_DEVELOPING_SOFTWARE,
+            $this->exifIfd,
+            ExifTag::LEGACY_RAW_DEVELOPING_SOFTWARE,
+        );
     }
 
     /**
@@ -718,7 +743,12 @@ final readonly class ExifDocument
      */
     public function imageEditingSoftware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
+        return $this->strWithFallback(
+            $this->exifIfd,
+            ExifTag::IMAGE_EDITING_SOFTWARE,
+            $this->exifIfd,
+            ExifTag::LEGACY_IMAGE_EDITING_SOFTWARE,
+        );
     }
 
     /**
@@ -726,7 +756,12 @@ final readonly class ExifDocument
      */
     public function metadataEditingSoftware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
+        return $this->strWithFallback(
+            $this->exifIfd,
+            ExifTag::METADATA_EDITING_SOFTWARE,
+            $this->exifIfd,
+            ExifTag::LEGACY_METADATA_EDITING_SOFTWARE,
+        );
     }
 
     /**
@@ -1153,6 +1188,22 @@ final readonly class ExifDocument
             $this->offsetTime(),
             $this->subSecTime(),
         );
+    }
+
+    /**
+     * Returns a string value using a fallback tag when the primary tag is not present.
+     *
+     * @return string|null
+     */
+    private function strWithFallback(?Ifd $primaryIfd, int $primaryTag, ?Ifd $fallbackIfd, int $fallbackTag): ?string
+    {
+        $value = $this->str($primaryIfd, $primaryTag);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->str($fallbackIfd, $fallbackTag);
     }
 
     /**

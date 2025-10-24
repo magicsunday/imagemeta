@@ -81,9 +81,6 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::MODEL                      => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
             ExifTag::SOFTWARE                   => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
             ExifTag::IMAGE_DESCRIPTION          => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 16, 'Sunset over Alps'),
-            ExifTag::IMAGE_TITLE                => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 12, 'Sunset Title'),
-            ExifTag::PHOTOGRAPHER               => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 22, 'Jane D. Photographer'),
-            ExifTag::IMAGE_EDITOR               => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 12, 'John Editor'),
             ExifTag::ORIENTATION                => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::RIGHT_TOP->value),
             ExifTag::ARTIST                     => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
         ]);
@@ -102,6 +99,9 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::IMAGE_NUMBER              => new IfdEntry(ExifTag::IMAGE_NUMBER, 4, 1, 128),
             ExifTag::SECURITY_CLASSIFICATION   => new IfdEntry(ExifTag::SECURITY_CLASSIFICATION, 2, 1, 'Restricted'),
             ExifTag::IMAGE_HISTORY             => new IfdEntry(ExifTag::IMAGE_HISTORY, 2, 1, 'Developed in Raw Studio'),
+            ExifTag::IMAGE_TITLE               => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 12, 'Sunset Title'),
+            ExifTag::PHOTOGRAPHER              => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 22, 'Jane D. Photographer'),
+            ExifTag::IMAGE_EDITOR              => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 12, 'John Editor'),
             ExifTag::INTERLACE                 => new IfdEntry(ExifTag::INTERLACE, 3, 1, 1),
             ExifTag::EXPOSURE_BIAS_VALUE       => new IfdEntry(ExifTag::EXPOSURE_BIAS_VALUE, 10, 1, [[-2, 1]]),
             ExifTag::METERING_MODE             => new IfdEntry(ExifTag::METERING_MODE, 3, 1, MeteringMode::PATTERN->value),
@@ -305,6 +305,40 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('+01:30', $structured->temporal->offsetTimeDigitized);
         self::assertSame([-90, -60], $structured->temporal->timeZoneOffsetMinutes);
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
+    }
+
+    /**
+     * Ensures the builder falls back to legacy attribution tags when EXIF 3.0 tags are not present.
+     */
+    #[Test]
+    public function usesLegacyExifAttributionWhenNewTagsMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::LEGACY_IMAGE_TITLE  => new IfdEntry(ExifTag::LEGACY_IMAGE_TITLE, 2, 1, 'Legacy Title'),
+            ExifTag::LEGACY_PHOTOGRAPHER => new IfdEntry(ExifTag::LEGACY_PHOTOGRAPHER, 2, 1, 'Legacy Photographer'),
+            ExifTag::LEGACY_IMAGE_EDITOR => new IfdEntry(ExifTag::LEGACY_IMAGE_EDITOR, 2, 1, 'Legacy Editor'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::LEGACY_CAMERA_FIRMWARE           => new IfdEntry(ExifTag::LEGACY_CAMERA_FIRMWARE, 2, 1, 'Legacy Firmware'),
+            ExifTag::LEGACY_RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::LEGACY_RAW_DEVELOPING_SOFTWARE, 2, 1, 'Legacy Raw'),
+            ExifTag::LEGACY_IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::LEGACY_IMAGE_EDITING_SOFTWARE, 2, 1, 'Legacy Edit'),
+            ExifTag::LEGACY_METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::LEGACY_METADATA_EDITING_SOFTWARE, 2, 1, 'Legacy Metadata'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $metadata = new Metadata(['primary'], null, $exifDocument, [], null);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('Legacy Title', $structured->image->title);
+        self::assertSame('Legacy Photographer', $structured->author->photographer);
+        self::assertSame('Legacy Editor', $structured->author->imageEditor);
+        self::assertSame('Legacy Firmware', $structured->camera->firmware);
+        self::assertSame('Legacy Raw', $structured->device->rawDevelopingSoftware);
+        self::assertSame('Legacy Edit', $structured->device->imageEditingSoftware);
+        self::assertSame('Legacy Metadata', $structured->device->metadataEditingSoftware);
     }
 
     /**

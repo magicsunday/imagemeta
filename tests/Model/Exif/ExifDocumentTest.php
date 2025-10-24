@@ -416,9 +416,6 @@ final class ExifDocumentTest extends TestCase
     {
         $ifd0 = new Ifd([
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Coastal cliffs'),
-            ExifTag::IMAGE_TITLE       => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Cliffside Dusk'),
-            ExifTag::PHOTOGRAPHER      => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Alex Light'),
-            ExifTag::IMAGE_EDITOR      => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Chris Edit'),
         ]);
 
         $exifIfd = new Ifd([
@@ -432,6 +429,9 @@ final class ExifDocumentTest extends TestCase
             ExifTag::IMAGE_NUMBER               => new IfdEntry(ExifTag::IMAGE_NUMBER, 3, 1, 512),
             ExifTag::SECURITY_CLASSIFICATION    => new IfdEntry(ExifTag::SECURITY_CLASSIFICATION, 2, 1, 'Confidential'),
             ExifTag::IMAGE_HISTORY              => new IfdEntry(ExifTag::IMAGE_HISTORY, 2, 1, 'Processed in RawLab'),
+            ExifTag::IMAGE_TITLE               => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Cliffside Dusk'),
+            ExifTag::PHOTOGRAPHER              => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Alex Light'),
+            ExifTag::IMAGE_EDITOR              => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Chris Edit'),
             ExifTag::TEMPERATURE                => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(200, 10)),
             ExifTag::HUMIDITY                   => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(550, 10)),
             ExifTag::PRESSURE                   => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(100000, 100)),
@@ -495,6 +495,36 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('RawLab', $doc->rawDevelopingSoftware());
         self::assertSame('EditLab', $doc->imageEditingSoftware());
         self::assertSame('MetaLab', $doc->metadataEditingSoftware());
+    }
+
+    /**
+     * Ensures Table 65 extension getters fall back to legacy identifiers when new tags are absent.
+     */
+    #[Test]
+    public function table65ExtensionsFallbackToLegacyIdentifiers(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::LEGACY_IMAGE_TITLE  => new IfdEntry(ExifTag::LEGACY_IMAGE_TITLE, 2, 1, 'Legacy Title'),
+            ExifTag::LEGACY_PHOTOGRAPHER => new IfdEntry(ExifTag::LEGACY_PHOTOGRAPHER, 2, 1, 'Legacy Photographer'),
+            ExifTag::LEGACY_IMAGE_EDITOR => new IfdEntry(ExifTag::LEGACY_IMAGE_EDITOR, 2, 1, 'Legacy Editor'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::LEGACY_CAMERA_FIRMWARE           => new IfdEntry(ExifTag::LEGACY_CAMERA_FIRMWARE, 2, 1, 'FW Legacy'),
+            ExifTag::LEGACY_RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::LEGACY_RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Legacy'),
+            ExifTag::LEGACY_IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::LEGACY_IMAGE_EDITING_SOFTWARE, 2, 1, 'Edit Legacy'),
+            ExifTag::LEGACY_METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::LEGACY_METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Legacy'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('Legacy Title', $doc->imageTitle());
+        self::assertSame('Legacy Photographer', $doc->photographer());
+        self::assertSame('Legacy Editor', $doc->imageEditor());
+        self::assertSame('FW Legacy', $doc->cameraFirmware());
+        self::assertSame('Raw Legacy', $doc->rawDevelopingSoftware());
+        self::assertSame('Edit Legacy', $doc->imageEditingSoftware());
+        self::assertSame('Meta Legacy', $doc->metadataEditingSoftware());
     }
 
     /**

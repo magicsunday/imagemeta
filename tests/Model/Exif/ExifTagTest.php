@@ -69,7 +69,7 @@ final class ExifTagTest extends TestCase
             'COMPRESSION'                    => 0x0103,
             'PHOTOMETRIC_INTERPRETATION'     => 0x0106,
             'IMAGE_DESCRIPTION'              => 0x010E,
-            'IMAGE_TITLE'                    => 0x0320,
+            'IMAGE_TITLE'                    => 0xA436,
             'MAKE'                           => 0x010F,
             'MODEL'                          => 0x0110,
             'STRIP_OFFSETS'                  => 0x0111,
@@ -94,8 +94,8 @@ final class ExifTagTest extends TestCase
             'YCBCR_POSITIONING'              => 0x0213,
             'REFERENCE_BLACK_WHITE'          => 0x0214,
             'COPYRIGHT'                      => 0x8298,
-            'PHOTOGRAPHER'                   => 0xE92D,
-            'IMAGE_EDITOR'                   => 0xE92E,
+            'PHOTOGRAPHER'                   => 0xA437,
+            'IMAGE_EDITOR'                   => 0xA438,
 
             // Pointer tags
             'EXIF_IFD_POINTER'               => 0x8769,
@@ -195,10 +195,18 @@ final class ExifTagTest extends TestCase
             'WATER_DEPTH'                    => 0x9403,
             'ACCELERATION'                   => 0x9404,
             'CAMERA_ELEVATION_ANGLE'         => 0x9405,
-            'CAMERA_FIRMWARE'                => 0xE92F,
-            'RAW_DEVELOPING_SOFTWARE'        => 0xE930,
-            'IMAGE_EDITING_SOFTWARE'         => 0xE931,
-            'METADATA_EDITING_SOFTWARE'      => 0xE932,
+            'CAMERA_FIRMWARE'                => 0xA439,
+            'RAW_DEVELOPING_SOFTWARE'        => 0xA43A,
+            'IMAGE_EDITING_SOFTWARE'         => 0xA43B,
+            'METADATA_EDITING_SOFTWARE'      => 0xA43C,
+
+            'LEGACY_CAMERA_FIRMWARE'         => 0xE92F,
+            'LEGACY_IMAGE_EDITING_SOFTWARE'  => 0xE931,
+            'LEGACY_IMAGE_EDITOR'            => 0xE92E,
+            'LEGACY_IMAGE_TITLE'             => 0x0320,
+            'LEGACY_METADATA_EDITING_SOFTWARE' => 0xE932,
+            'LEGACY_PHOTOGRAPHER'            => 0xE92D,
+            'LEGACY_RAW_DEVELOPING_SOFTWARE' => 0xE930,
 
             // Interoperability IFD
             'INTEROPERABILITY_INDEX'         => 0x0001,

@@ -29,7 +29,7 @@ final readonly class ExifTag
 
     public const int IMAGE_DESCRIPTION = 0x010E;
 
-    public const int IMAGE_TITLE = 0x0320;
+    public const int IMAGE_TITLE = 0xA436;
 
     public const int MAKE = 0x010F;
 
@@ -61,9 +61,9 @@ final readonly class ExifTag
 
     public const int ARTIST = 0x013B;
 
-    public const int PHOTOGRAPHER = 0xE92D;
+    public const int PHOTOGRAPHER = 0xA437;
 
-    public const int IMAGE_EDITOR = 0xE92E;
+    public const int IMAGE_EDITOR = 0xA438;
 
     public const int WHITE_POINT = 0x013E;
 
@@ -342,13 +342,27 @@ final readonly class ExifTag
 
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
-    public const int CAMERA_FIRMWARE = 0xE92F;
+    public const int CAMERA_FIRMWARE = 0xA439;
 
-    public const int RAW_DEVELOPING_SOFTWARE = 0xE930;
+    public const int RAW_DEVELOPING_SOFTWARE = 0xA43A;
 
-    public const int IMAGE_EDITING_SOFTWARE = 0xE931;
+    public const int IMAGE_EDITING_SOFTWARE = 0xA43B;
 
-    public const int METADATA_EDITING_SOFTWARE = 0xE932;
+    public const int METADATA_EDITING_SOFTWARE = 0xA43C;
+
+    public const int LEGACY_IMAGE_TITLE = 0x0320;
+
+    public const int LEGACY_PHOTOGRAPHER = 0xE92D;
+
+    public const int LEGACY_IMAGE_EDITOR = 0xE92E;
+
+    public const int LEGACY_CAMERA_FIRMWARE = 0xE92F;
+
+    public const int LEGACY_RAW_DEVELOPING_SOFTWARE = 0xE930;
+
+    public const int LEGACY_IMAGE_EDITING_SOFTWARE = 0xE931;
+
+    public const int LEGACY_METADATA_EDITING_SOFTWARE = 0xE932;
 
     // Interoperability IFD
     public const int INTEROPERABILITY_INDEX = 0x0001;
