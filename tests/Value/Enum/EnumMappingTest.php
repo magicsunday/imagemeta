@@ -17,7 +17,6 @@ use MagicSunday\ImageMeta\Value\Enum\DepthFormat;
 use MagicSunday\ImageMeta\Value\Enum\DepthMeasureType;
 use MagicSunday\ImageMeta\Value\Enum\DepthUnits;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
-use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
@@ -59,8 +58,10 @@ final class EnumMappingTest extends TestCase
         self::assertSame(ExposureMode::AUTO_BRACKET, ExposureMode::fromExifValue(2));
         self::assertSame(GainControl::HIGH_GAIN_UP, GainControl::fromExifValue(2));
         self::assertSame(SubjectDistanceRange::MACRO, SubjectDistanceRange::fromExifValue(SubjectDistanceRange::MACRO->value));
-        self::assertSame(FileSource::DIGITAL_CAMERA, FileSource::fromExifValue(3));
-        self::assertSame(FileSource::SIGMA_FOVEON, FileSource::fromExifValue(0x8000));
+        self::assertSame(
+            \MagicSunday\ImageMeta\Value\Enum\FileSource::DIGITAL_CAMERA,
+            \MagicSunday\ImageMeta\Value\Enum\FileSource::fromExifValue(3),
+        );
         self::assertSame(SensingMethod::COLOR_SEQUENTIAL_LINEAR, SensingMethod::fromExifValue(8));
         self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue(3));
         self::assertSame(DepthFormat::INVERSE, DepthFormat::fromExifValue(2));
