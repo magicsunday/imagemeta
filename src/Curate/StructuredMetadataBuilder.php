@@ -20,7 +20,6 @@ use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Apple;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\Author;
@@ -144,7 +143,7 @@ final class StructuredMetadataBuilder
         $gpsCoords = $exifResolver->gps();
         $gps       = new Gps($gpsCoords['lat'], $gpsCoords['lon'], $gpsCoords['alt']);
 
-        $device = $this->buildDevice($metadata->quickTime, $exifResolver, $quickTimeResolver);
+        $device = $this->buildDevice($exifResolver, $quickTimeResolver);
 
         $apple = new Apple($metadata->quickTime?->contentIdentifier());
         $xmp   = $xmpResolver->value();
@@ -339,7 +338,7 @@ final class StructuredMetadataBuilder
     /**
      * Builds a device value object using container level metadata.
      */
-    private function buildDevice(?QuickTimeMeta $quickTime, ExifTagResolver $exif, QuickTimeResolver $quickTimeResolver): Device
+    private function buildDevice(ExifTagResolver $exif, QuickTimeResolver $quickTimeResolver): Device
     {
         $softwareChain = CompositeResolver::first([
             fn () => $quickTimeResolver->string('com.apple.quicktime.software'),
@@ -348,7 +347,6 @@ final class StructuredMetadataBuilder
 
         return new Device(
             software: $softwareChain,
-            hostComputer: $exif->hostComputer(),
         );
     }
 

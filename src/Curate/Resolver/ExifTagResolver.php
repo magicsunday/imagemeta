@@ -768,14 +768,6 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the host computer string.
-     */
-    public function hostComputer(): ?string
-    {
-        return $this->stringValue($this->document?->ifd0, ExifTag::HOST_COMPUTER);
-    }
-
-    /**
      * Returns the gamma value.
      */
     public function gamma(): ?float
