@@ -27,8 +27,6 @@ final readonly class ExifTag
 
     public const int PHOTOMETRIC_INTERPRETATION = 0x0106;
 
-    public const int DOCUMENT_NAME = 0x010D;
-
     public const int IMAGE_DESCRIPTION = 0x010E;
 
     public const int MAKE = 0x010F;

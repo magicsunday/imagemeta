@@ -495,6 +495,11 @@ final class StructuredMetadataBuilder
             fn () => $quickTime->int('ImageHeight'),
         ]);
 
+        $documentName = CompositeResolver::first([
+            fn () => $xmp->string('http://ns.adobe.com/tiff/1.0/', 'DocumentName'),
+            fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'title'),
+        ]);
+
         return new Image(
             width: $width,
             height: $height,
@@ -502,7 +507,7 @@ final class StructuredMetadataBuilder
             bitsPerSample: $exif->bitsPerSample(),
             colorSpace: $exif->colorSpace(),
             imageUniqueId: $exif->imageUniqueId(),
-            documentName: $exif->documentName(),
+            documentName: $documentName,
             description: CompositeResolver::first([
                 fn () => $exif->imageDescription(),
                 fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'description'),
