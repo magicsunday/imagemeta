@@ -476,7 +476,9 @@ final readonly class ExifTagResolver
      */
     public function stripOffsets(): ?array
     {
-        return $this->integerList($this->document?->ifd0, ExifTag::STRIP_OFFSETS);
+        $offsets = $this->document?->stripOffsets();
+
+        return $offsets !== null ? array_values($offsets) : null;
     }
 
     /**
@@ -486,7 +488,9 @@ final readonly class ExifTagResolver
      */
     public function stripByteCounts(): ?array
     {
-        return $this->integerList($this->document?->ifd0, ExifTag::STRIP_BYTE_COUNTS);
+        $counts = $this->document?->stripByteCounts();
+
+        return $counts !== null ? array_values($counts) : null;
     }
 
     /**
@@ -496,7 +500,25 @@ final readonly class ExifTagResolver
      */
     public function transferFunction(): ?array
     {
-        return $this->integerList($this->document?->ifd0, ExifTag::TRANSFER_FUNCTION);
+        $values = $this->document?->transferFunction();
+
+        return $values !== null ? array_values($values) : null;
+    }
+
+    /**
+     * Returns the JPEG thumbnail offset when present.
+     */
+    public function jpegThumbnailOffset(): ?int
+    {
+        return $this->document?->jpegThumbnailOffset();
+    }
+
+    /**
+     * Returns the JPEG thumbnail length when present.
+     */
+    public function jpegThumbnailLength(): ?int
+    {
+        return $this->document?->jpegThumbnailLength();
     }
 
     /**
@@ -651,12 +673,12 @@ final readonly class ExifTagResolver
      */
     public function referenceBlackWhite(): ?array
     {
-        $values = $this->normalizeRationalList($this->getValue($this->document?->ifd0, ExifTag::REFERENCE_BLACK_WHITE));
-        if (count($values) !== 6) {
+        $values = $this->document?->referenceBlackWhite();
+        if ($values === null || count($values) !== 6) {
             return null;
         }
 
-        return $values;
+        return array_values($values);
     }
 
     /**
@@ -664,7 +686,7 @@ final readonly class ExifTagResolver
      */
     public function copyright(): ?string
     {
-        return $this->stringValue($this->document?->ifd0, ExifTag::COPYRIGHT);
+        return $this->document?->copyright();
     }
 
     /**
@@ -1756,21 +1778,6 @@ final readonly class ExifTagResolver
         }
 
         return [];
-    }
-
-    /**
-     * Normalises integer based lists from EXIF entries.
-     *
-     * @return list<int>|null
-     */
-    private function integerList(?Ifd $ifd, int $tag): ?array
-    {
-        $values = $this->normalizeNumericList($this->getValue($ifd, $tag));
-        if ($values === []) {
-            return null;
-        }
-
-        return array_map(static fn (int|float $value): int => (int) $value, $values);
     }
 
     /**
