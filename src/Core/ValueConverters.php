@@ -35,6 +35,7 @@ use function ctype_digit;
 use function ctype_print;
 use function explode;
 use function implode;
+use function in_array;
 use function is_array;
 use function is_float;
 use function is_int;
@@ -294,18 +295,26 @@ final readonly class ValueConverters
         }
 
         if (ctype_digit($trimmed) && strlen($trimmed) === 4) {
-            return match ($trimmed) {
-                '0100' => '1.0',
-                '0110' => '1.1',
-                '0210' => '2.1',
-                '0220' => '2.2',
-                '0221' => '2.21',
-                '0230' => '2.3',
-                '0231' => '2.31',
-                '0232' => '2.32',
-                '0300' => '3.0',
-                default => null,
-            };
+            $known = [
+                '0100',
+                '0110',
+                '0210',
+                '0220',
+                '0221',
+                '0230',
+                '0231',
+                '0232',
+                '0300',
+            ];
+
+            if (in_array($trimmed, $known, true)) {
+                $major = (int) substr($trimmed, 0, 2);
+                $minor = substr($trimmed, 2, 2);
+
+                return sprintf('%d.%s', $major, $minor);
+            }
+
+            return null;
         }
 
         if (ctype_print($trimmed)) {

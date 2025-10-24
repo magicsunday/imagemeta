@@ -109,6 +109,30 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures printable UNDEFINED payloads are normalised to strings.
+     */
+    #[Test]
+    public function normalisesPrintableUndefinedPayloads(): void
+    {
+        $blob     = self::buildClassicVersionBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $exifIfd = $document->exifIfd;
+        self::assertNotNull($exifIfd);
+
+        $exifVersion = $exifIfd->get(ExifTag::EXIF_VERSION)?->value;
+        self::assertSame('0232', $exifVersion);
+
+        $flashpixVersion = $exifIfd->get(ExifTag::FLASHPIX_VERSION)?->value;
+        self::assertSame('0100', $flashpixVersion);
+
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('2.32', $resolver->exifVersion());
+        self::assertSame('0100', $resolver->flashpixVersion());
+    }
+
+    /**
      * Ensures that TIFF blobs with an unsupported magic identifier are rejected.
      */
     #[Test]
@@ -484,6 +508,30 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $gpsAltData;
 
         return $blob;
+    }
+
+    /**
+     * Builds a Classic TIFF blob with EXIF/Flashpix version tags encoded as printable UNDEFINED values.
+     */
+    private static function buildClassicVersionBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $exifIfdOffset = 8 + 2 + (1 * 12) + 4;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+        ];
+        $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+
+        $exifEntries = [
+            self::packClassicEntry(ExifTag::EXIF_VERSION, 7, 4, self::inlineAsciiToInt('0232', 4)),
+            self::packClassicEntry(ExifTag::FLASHPIX_VERSION, 7, 4, self::inlineAsciiToInt('0100', 4)),
+        ];
+
+        $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd;
     }
 
     /**

@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
@@ -303,6 +304,24 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('+01:30', $structured->temporal->offsetTimeDigitized);
         self::assertSame([-90, -60], $structured->temporal->timeZoneOffsetMinutes);
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
+    }
+
+    /**
+     * Ensures printable UNDEFINED EXIF values parsed from a TIFF blob map to structured standards metadata.
+     */
+    #[Test]
+    public function buildsStandardsFromPrintableUndefinedBlob(): void
+    {
+        $blob     = $this->buildClassicVersionBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $metadata   = new Metadata([$blob], null, $document);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $standards  = $structured->standards;
+
+        self::assertSame('2.32', $standards->exifVersion);
+        self::assertSame('0100', $standards->flashpixVersion);
+        self::assertSame('2.32', $standards->profile);
     }
 
     /**
@@ -749,5 +768,49 @@ final class StructuredMetadataBuilderTest extends TestCase
                 self::fail(sprintf('%s::%s expected null/empty, got %s', $name, $field, var_export($fieldValue, true)));
             }
         }
+    }
+
+    /**
+     * Builds a Classic TIFF blob with EXIF/Flashpix version tags encoded as printable UNDEFINED values.
+     */
+    private function buildClassicVersionBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $exifIfdOffset = 8 + 2 + (1 * 12) + 4;
+
+        $ifd0Entry = pack('v', ExifTag::EXIF_IFD_POINTER)
+            . pack('v', 4)
+            . pack('V', 1)
+            . pack('V', $exifIfdOffset);
+
+        $ifd0 = pack('v', 1) . $ifd0Entry . pack('V', 0);
+
+        $exifEntries = [
+            pack('v', ExifTag::EXIF_VERSION)
+                . pack('v', 7)
+                . pack('V', 4)
+                . pack('V', $this->inlineAsciiToInt('0232')),
+            pack('v', ExifTag::FLASHPIX_VERSION)
+                . pack('v', 7)
+                . pack('V', 4)
+                . pack('V', $this->inlineAsciiToInt('0100')),
+        ];
+
+        $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd;
+    }
+
+    /**
+     * Converts printable ASCII into an inline Classic TIFF integer representation.
+     */
+    private function inlineAsciiToInt(string $ascii): int
+    {
+        $bytes = str_pad($ascii, 4, "\0");
+
+        $value = unpack('V', $bytes);
+
+        return (int) ($value[1] ?? 0);
     }
 }
