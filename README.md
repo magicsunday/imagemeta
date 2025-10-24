@@ -30,6 +30,22 @@ $structured->related->livePhotoPairId;
 | `temporal.original` | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal` | `ValueConverters::parseOffset()` |
 | `derived.ev100` | Calculated from exposure values | – | `ValueConverters::calcEv100()` |
 
+### GPS metadata coverage
+
+ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decoded data is exposed through
+`ExifDocument::gps()` and the convenience accessors on `Curate\Resolver\ExifTagResolver`. The following fields are
+available to consumers:
+
+* Coordinate references and values: `lat_ref`, `lat`, `lon_ref`, `lon`, `alt_ref`, `alt`.
+* Navigation metrics: `speed_ref`, `speed_ms`, `track_ref`, `track`, `img_direction_ref`, `img_direction`,
+  `dest_lat_ref`, `dest_lat`, `dest_lon_ref`, `dest_lon`, `dest_bearing_ref`, `dest_bearing`, `dest_distance_ref`,
+  `dest_distance_m`.
+* Metadata, timing and accuracy: `version`, `satellites`, `status`, `measure_mode`, `dop`, `map_datum`,
+  `processing_method`, `area_information`, `date`, `time`, `timestamp`, `differential`, `h_positioning_error`.
+
+All fields are trimmed and converted into PHP primitives (floats, ints, strings or `DateTimeImmutable`) so they can be
+used directly without consulting tag identifiers.
+
 ### EXIF 3.0 → Value objects
 
 | Value object | Fields | Source tag(s) | Converter/Enum |
