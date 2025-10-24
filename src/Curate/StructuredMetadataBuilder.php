@@ -126,8 +126,10 @@ final class StructuredMetadataBuilder
         $exposure = new Exposure(
             iso: CompositeResolver::intISO(
                 $exifResolver,
-                fn () => $xmpResolver->string('http://ns.adobe.com/exif/1.0/', 'ISOSpeedRatings'),
-                fn () => $xmpResolver->string('http://ns.adobe.com/exif/1.0/aux/', 'ISOSpeedRatings'),
+                [
+                    $xmpResolver->string('http://ns.adobe.com/exif/1.0/', 'ISOSpeedRatings'),
+                    $xmpResolver->string('http://ns.adobe.com/exif/1.0/aux/', 'ISOSpeedRatings'),
+                ],
             ),
             exposureTimeSec: $exifResolver->exposureTime(),
             fNumber: $exifResolver->fNumber(),
@@ -444,43 +446,50 @@ final class StructuredMetadataBuilder
 
         $timeZoneOffsets = $resolver->timeZoneOffsetMinutes();
 
-        $exifOriginal = CompositeResolver::dateOriginal(
-            $resolver,
-            fn () => [
+        $fallbackDates = [
+            [
                 'date' => $xmpDateCreated,
                 'tz' => null,
                 'subSec' => null,
                 'source' => 'XMP',
                 'tzSource' => 'XMP',
             ],
-            fn () => [
+            [
                 'date' => $quickTimeCreate,
                 'tz' => null,
                 'subSec' => null,
                 'source' => 'QuickTime',
                 'tzSource' => 'QuickTime',
             ],
-            fn () => $exifCreate === null
-                && ($xmpCreate instanceof DateTimeImmutable || $quickTimeCreate instanceof DateTimeImmutable)
-                ? [
-                    'date' => $xmpCreate ?? $quickTimeCreate,
-                    'tz' => null,
-                    'subSec' => $subSecDigitizedRaw,
-                    'source' => 'DateTimeDigitized',
-                    'tzSource' => 'DateTimeDigitized',
-                ]
-                : null,
-            fn () => $exifModify === null
-                && ($xmpModify instanceof DateTimeImmutable || $quickTimeModify instanceof DateTimeImmutable)
-                ? [
-                    'date' => $xmpModify ?? $quickTimeModify,
-                    'tz' => null,
-                    'subSec' => $subSecTime,
-                    'source' => 'DateTime',
-                    'tzSource' => 'DateTime',
-                ]
-                : null,
-        );
+        ];
+
+        if (
+            $exifCreate === null
+            && ($xmpCreate instanceof DateTimeImmutable || $quickTimeCreate instanceof DateTimeImmutable)
+        ) {
+            $fallbackDates[] = [
+                'date' => $xmpCreate ?? $quickTimeCreate,
+                'tz' => null,
+                'subSec' => $subSecDigitizedRaw,
+                'source' => 'DateTimeDigitized',
+                'tzSource' => 'DateTimeDigitized',
+            ];
+        }
+
+        if (
+            $exifModify === null
+            && ($xmpModify instanceof DateTimeImmutable || $quickTimeModify instanceof DateTimeImmutable)
+        ) {
+            $fallbackDates[] = [
+                'date' => $xmpModify ?? $quickTimeModify,
+                'tz' => null,
+                'subSec' => $subSecTime,
+                'source' => 'DateTime',
+                'tzSource' => 'DateTime',
+            ];
+        }
+
+        $exifOriginal = CompositeResolver::dateOriginal($resolver, $fallbackDates);
 
         $original           = $exifOriginal['date'];
         $tz                 = $exifOriginal['tz'];
@@ -578,9 +587,11 @@ final class StructuredMetadataBuilder
     {
         $dimensions = CompositeResolver::dimensions(
             $exif,
-            fn () => [
-                'width' => $quickTime->int('ImageWidth'),
-                'height' => $quickTime->int('ImageHeight'),
+            [
+                [
+                    'width' => $quickTime->int('ImageWidth'),
+                    'height' => $quickTime->int('ImageHeight'),
+                ],
             ],
         );
 

@@ -16,6 +16,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Core\ValueConverters;
 
+use function array_key_exists;
 use function abs;
 use function intdiv;
 use function is_array;
@@ -51,20 +52,15 @@ final readonly class CompositeResolver
     }
 
     /**
-     * Resolves the ISO sensitivity using the EXIF resolver and optional fallback providers.
+     * Selects the first integer value from the candidate list applying numeric normalisation.
      *
-     * @param Closure():(int|float|string|null) ...$fallbacks
+     * @param list<Closure():int|float|string|null|int|float|string|null> $candidates
      */
-    public static function intISO(ExifTagResolver $exif, Closure ...$fallbacks): ?int
+    public static function firstInt(array $candidates): ?int
     {
-        $iso = $exif->iso();
-        if (is_int($iso)) {
-            return $iso;
-        }
-
-        foreach ($fallbacks as $fallback) {
-            $candidate  = $fallback();
-            $normalized = self::normalizeInteger($candidate);
+        foreach ($candidates as $candidate) {
+            $value = $candidate instanceof Closure ? $candidate() : $candidate;
+            $normalized = self::normalizeInteger($value);
 
             if ($normalized !== null) {
                 return $normalized;
@@ -75,51 +71,86 @@ final readonly class CompositeResolver
     }
 
     /**
+     * Resolves the ISO sensitivity using the EXIF resolver and optional fallback values.
+     *
+     * @param list<Closure():int|float|string|null|int|float|string|null> $fallbacks
+     */
+    public static function intISO(ExifTagResolver $exif, array $fallbacks = []): ?int
+    {
+        $candidates = [
+            static fn () => $exif->iso(),
+        ];
+
+        foreach ($fallbacks as $fallback) {
+            $candidates[] = $fallback;
+        }
+
+        return self::firstInt($candidates);
+    }
+
+    /**
      * Resolves image dimensions falling back to optional providers when EXIF lacks values.
      *
-     * @param Closure():(array{width:int|string|null,height:int|string|null}|null) ...$fallbacks
+     * @param list<array{width:int|float|string|null|Closure,height:int|float|string|null|Closure}|Closure():array{
+     *     width:int|float|string|null|Closure,
+     *     height:int|float|string|null|Closure
+     * }|null> $fallbacks
      *
      * @return array{width:?int,height:?int}
      */
-    public static function dimensions(ExifTagResolver $exif, Closure ...$fallbacks): array
+    public static function dimensions(ExifTagResolver $exif, array $fallbacks = []): array
     {
-        $width  = $exif->imageWidth();
-        $height = $exif->imageHeight();
+        $widthCandidates = [
+            static fn () => $exif->imageWidth(),
+        ];
 
-        if ($width !== null || $height !== null) {
-            return ['width' => $width, 'height' => $height];
-        }
+        $heightCandidates = [
+            static fn () => $exif->imageHeight(),
+        ];
 
         foreach ($fallbacks as $fallback) {
-            $value = $fallback();
-            if (!is_array($value)) {
+            if ($fallback instanceof Closure) {
+                $fallback = $fallback();
+            }
+
+            if (!is_array($fallback)) {
                 continue;
             }
 
-            $widthCandidate  = self::normalizeInteger($value['width'] ?? null);
-            $heightCandidate = self::normalizeInteger($value['height'] ?? null);
+            if (array_key_exists('width', $fallback)) {
+                $widthCandidates[] = $fallback['width'];
+            }
 
-            if ($widthCandidate !== null || $heightCandidate !== null) {
-                return ['width' => $widthCandidate, 'height' => $heightCandidate];
+            if (array_key_exists('height', $fallback)) {
+                $heightCandidates[] = $fallback['height'];
             }
         }
 
-        return ['width' => null, 'height' => null];
+        return [
+            'width' => self::firstInt($widthCandidates),
+            'height' => self::firstInt($heightCandidates),
+        ];
     }
 
     /**
      * Resolves the primary capture date along with timezone metadata and fractional seconds.
      *
-     * Each fallback closure may return either {@see DateTimeImmutable} directly or an associative
-     * array containing the keys `date`, `tz`, `subSec`, `source`, and `tzSource`.
+     * Each fallback entry may be either {@see DateTimeImmutable} directly or an associative array
+     * containing the keys `date`, `tz`, `subSec`, `source`, and `tzSource`.
      *
-     * @param Closure():(DateTimeImmutable|array{
+     * @param list<DateTimeImmutable|Closure():DateTimeImmutable|Closure():array{
      *     date:?DateTimeImmutable,
      *     tz:?DateTimeZone,
      *     subSec:?string,
      *     source?:string,
      *     tzSource?:string
-     * }|null) ...$fallbacks
+     * }|array{
+     *     date:?DateTimeImmutable,
+     *     tz:?DateTimeZone,
+     *     subSec:?string,
+     *     source?:string,
+     *     tzSource?:string
+     * }> $fallbacks
      *
      * @return array{
      *     date:?DateTimeImmutable,
@@ -129,7 +160,7 @@ final readonly class CompositeResolver
      *     tzSource:?string
      * }
      */
-    public static function dateOriginal(ExifTagResolver $exif, Closure ...$fallbacks): array
+    public static function dateOriginal(ExifTagResolver $exif, array $fallbacks = []): array
     {
         $offsetTimeOriginal  = $exif->offsetTimeOriginal();
         $offsetTimeDigitized = $exif->offsetTimeDigitized();
@@ -163,41 +194,42 @@ final readonly class CompositeResolver
             ],
         ];
 
-        $position = 0;
-        foreach ($fallbacks as $fallback) {
-            $position++;
-            $value = $fallback();
-            if ($value === null) {
-                continue;
+        foreach ($fallbacks as $index => $fallback) {
+            $label = sprintf('fallback-%d', $index + 1);
+
+            if ($fallback instanceof Closure) {
+                $fallback = $fallback();
             }
 
-            if ($value instanceof DateTimeImmutable) {
+            if ($fallback instanceof DateTimeImmutable) {
                 $candidates[] = [
-                    'source'   => sprintf('fallback-%d', $position),
-                    'date'     => $value,
-                    'tz'       => $value->getTimezone(),
+                    'source'   => $label,
+                    'date'     => $fallback,
+                    'tz'       => $fallback->getTimezone(),
                     'subSec'   => null,
-                    'tzSource' => sprintf('fallback-%d', $position),
+                    'tzSource' => $label,
                 ];
 
                 continue;
             }
 
-            $date = $value['date'] ?? null;
-            $tz   = $value['tz'] ?? null;
-            $sub  = $value['subSec'] ?? null;
-            $src  = $value['source'] ?? null;
-            $tzSrc = $value['tzSource'] ?? null;
-            $label = sprintf('fallback-%d', $position);
+            if (!is_array($fallback)) {
+                continue;
+            }
+
+            $date   = $fallback['date'] ?? null;
+            $tz     = $fallback['tz'] ?? null;
+            $sub    = $fallback['subSec'] ?? null;
+            $source = $fallback['source'] ?? null;
+            $tzSrc  = $fallback['tzSource'] ?? null;
+            $name   = is_string($source) && $source !== '' ? $source : $label;
 
             $candidates[] = [
-                'source'   => is_string($src) && $src !== '' ? $src : $label,
+                'source'   => $name,
                 'date'     => $date instanceof DateTimeImmutable ? $date : null,
                 'tz'       => $tz instanceof DateTimeZone ? $tz : null,
                 'subSec'   => is_string($sub) ? self::normalizeSubSeconds($sub) : null,
-                'tzSource' => is_string($tzSrc) && $tzSrc !== ''
-                    ? $tzSrc
-                    : (is_string($src) && $src !== '' ? $src : $label),
+                'tzSource' => is_string($tzSrc) && $tzSrc !== '' ? $tzSrc : $name,
             ];
         }
 
