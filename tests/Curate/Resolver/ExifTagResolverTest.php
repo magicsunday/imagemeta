@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -35,6 +37,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifRationalList::class)]
 #[UsesClass(ExifNumericList::class)]
+#[UsesClass(TiffExifReader::class)]
+#[UsesClass(GpsTiffBuilder::class)]
 final class ExifTagResolverTest extends TestCase
 {
     /**
@@ -166,6 +170,49 @@ final class ExifTagResolverTest extends TestCase
         self::assertInstanceOf(DateTimeImmutable::class, $timestamp);
         self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
         self::assertSame('12:34:56.789000', $timestamp->format('H:i:s.u'));
+
+        self::assertSame(2, $resolver->gpsDifferential());
+        self::assertEqualsWithDelta(1.5, $resolver->gpsHorizontalPositioningError(), 0.000001);
+    }
+
+    /**
+     * Ensures GPS data parsed from a TIFF blob is normalised and exposed via resolver helpers.
+     */
+    #[Test]
+    public function resolvesGpsMetadataFromSyntheticTiff(): void
+    {
+        $document = (new TiffExifReader())->parseFromBlob(GpsTiffBuilder::buildClassicGpsTiff());
+        $resolver = new ExifTagResolver($document);
+
+        $gps = $resolver->gps();
+
+        self::assertSame('N', $gps['lat_ref']);
+        self::assertEqualsWithDelta(51.5, $gps['lat'], 0.000001);
+        self::assertSame('E', $gps['lon_ref']);
+        self::assertEqualsWithDelta(8.5, $gps['lon'], 0.000001);
+        self::assertSame(0, $gps['alt_ref']);
+        self::assertEqualsWithDelta(150.0, $gps['alt'], 0.000001);
+        self::assertEqualsWithDelta(90.0, $gps['track'], 0.000001);
+        self::assertEqualsWithDelta(45.0, $gps['img_direction'], 0.000001);
+        self::assertEqualsWithDelta(45.0, $gps['dest_bearing'], 0.000001);
+        self::assertEqualsWithDelta(42000.0, $gps['dest_distance_m'], 0.000001);
+
+        self::assertSame('K', $resolver->gpsSpeedRef());
+        self::assertEqualsWithDelta(20.0, $resolver->gpsSpeed(), 0.000001);
+        self::assertSame('T', $resolver->gpsTrackRef());
+        self::assertEqualsWithDelta(90.0, $resolver->gpsTrack(), 0.000001);
+        self::assertSame('M', $resolver->gpsImgDirectionRef());
+        self::assertEqualsWithDelta(45.0, $resolver->gpsImgDirection(), 0.000001);
+        self::assertSame('T', $resolver->gpsDestinationBearingRef());
+        self::assertEqualsWithDelta(45.0, $resolver->gpsDestinationBearing(), 0.000001);
+        self::assertSame('K', $resolver->gpsDestinationDistanceRef());
+        self::assertEqualsWithDelta(42000.0, $resolver->gpsDestinationDistance(), 0.000001);
+        self::assertSame('2024-05-06', $resolver->gpsDate());
+        self::assertSame('12:34:56.789', $resolver->gpsTime());
+
+        $timestamp = $resolver->gpsTimestamp();
+        self::assertInstanceOf(DateTimeImmutable::class, $timestamp);
+        self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
 
         self::assertSame(2, $resolver->gpsDifferential());
         self::assertEqualsWithDelta(1.5, $resolver->gpsHorizontalPositioningError(), 0.000001);

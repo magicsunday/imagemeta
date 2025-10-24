@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -34,6 +36,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesClass(TiffExifReader::class)]
+#[UsesClass(GpsTiffBuilder::class)]
 final class ExifDocumentTest extends TestCase
 {
     private const string ISO_8601_MILLISECONDS = 'Y-m-d\TH:i:s.vP';
@@ -287,7 +291,7 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('N', $gps['speed_ref']);
         self::assertEqualsWithDelta(6.3508166667, $gps['speed_ms'], 0.000001);
         self::assertSame('M', $gps['track_ref']);
-        self::assertEqualsWithDelta(543.21, $gps['track'], 0.000001);
+        self::assertEqualsWithDelta(183.21, $gps['track'], 0.000001);
         self::assertSame('T', $gps['img_direction_ref']);
         self::assertEqualsWithDelta(90.0, $gps['img_direction'], 0.000001);
         self::assertSame('WGS-84', $gps['map_datum']);
@@ -530,5 +534,47 @@ final class ExifDocumentTest extends TestCase
 
         $docWithoutExif = new ExifDocument($ifd0, null, null, null, null);
         self::assertSame(200, $docWithoutExif->iso());
+    }
+
+    /**
+     * Ensures GPS metadata parsed via the TIFF reader is normalised and exposed via dedicated helpers.
+     */
+    #[Test]
+    public function parsesGpsMetadataFromSyntheticTiff(): void
+    {
+        $document = (new TiffExifReader())->parseFromBlob(GpsTiffBuilder::buildClassicGpsTiff());
+
+        $gps = $document->gps();
+
+        self::assertSame('N', $gps['lat_ref']);
+        self::assertEqualsWithDelta(51.5, $gps['lat'], 0.000001);
+        self::assertSame('E', $gps['lon_ref']);
+        self::assertEqualsWithDelta(8.5, $gps['lon'], 0.000001);
+        self::assertSame(0, $gps['alt_ref']);
+        self::assertEqualsWithDelta(150.0, $gps['alt'], 0.000001);
+        self::assertEqualsWithDelta(90.0, $gps['track'], 0.000001);
+        self::assertEqualsWithDelta(45.0, $gps['img_direction'], 0.000001);
+        self::assertEqualsWithDelta(45.0, $gps['dest_bearing'], 0.000001);
+        self::assertEqualsWithDelta(42000.0, $gps['dest_distance_m'], 0.000001);
+
+        self::assertSame('K', $document->gpsSpeedRef());
+        self::assertEqualsWithDelta(20.0, $document->gpsSpeedMetresPerSecond(), 0.000001);
+        self::assertSame('T', $document->gpsTrackRef());
+        self::assertEqualsWithDelta(90.0, $document->gpsTrack(), 0.000001);
+        self::assertSame('M', $document->gpsImgDirectionRef());
+        self::assertEqualsWithDelta(45.0, $document->gpsImgDirection(), 0.000001);
+        self::assertSame('T', $document->gpsDestinationBearingRef());
+        self::assertEqualsWithDelta(45.0, $document->gpsDestinationBearing(), 0.000001);
+        self::assertSame('K', $document->gpsDestinationDistanceRef());
+        self::assertEqualsWithDelta(42000.0, $document->gpsDestinationDistanceMetres(), 0.000001);
+        self::assertSame('2024-05-06', $document->gpsDateStamp());
+        self::assertSame('12:34:56.789', $document->gpsTimeStampString());
+
+        $timestamp = $document->gpsTimestamp();
+        self::assertInstanceOf(DateTimeImmutable::class, $timestamp);
+        self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
+
+        self::assertSame(2, $document->gpsDifferential());
+        self::assertEqualsWithDelta(1.5, $document->gpsHorizontalPositioningError(), 0.000001);
     }
 }

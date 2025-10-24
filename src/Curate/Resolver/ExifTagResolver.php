@@ -49,6 +49,7 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
+use function round;
 use function trim;
 
 /**
@@ -1126,9 +1127,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDate(): ?string
     {
-        $value = $this->gpsField('date');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsDateStamp();
     }
 
     /**
@@ -1136,9 +1135,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTime(): ?string
     {
-        $value = $this->gpsField('time');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsTimeStampString();
     }
 
     /**
@@ -1146,9 +1143,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTimestamp(): ?DateTimeImmutable
     {
-        $value = $this->gpsField('timestamp');
-
-        return $value instanceof DateTimeImmutable ? $value : null;
+        return $this->document?->gpsTimestamp();
     }
 
     /**
@@ -1206,9 +1201,7 @@ final readonly class ExifTagResolver
      */
     public function gpsSpeedRef(): ?string
     {
-        $value = $this->gpsField('speed_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsSpeedRef();
     }
 
     /**
@@ -1216,9 +1209,7 @@ final readonly class ExifTagResolver
      */
     public function gpsSpeed(): ?float
     {
-        $value = $this->gpsField('speed_ms');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsSpeedMetresPerSecond();
     }
 
     /**
@@ -1226,9 +1217,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTrackRef(): ?string
     {
-        $value = $this->gpsField('track_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsTrackRef();
     }
 
     /**
@@ -1236,9 +1225,7 @@ final readonly class ExifTagResolver
      */
     public function gpsTrack(): ?float
     {
-        $value = $this->gpsField('track');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsTrack();
     }
 
     /**
@@ -1246,9 +1233,7 @@ final readonly class ExifTagResolver
      */
     public function gpsImgDirectionRef(): ?string
     {
-        $value = $this->gpsField('img_direction_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsImgDirectionRef();
     }
 
     /**
@@ -1256,9 +1241,7 @@ final readonly class ExifTagResolver
      */
     public function gpsImgDirection(): ?float
     {
-        $value = $this->gpsField('img_direction');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsImgDirection();
     }
 
     /**
@@ -1316,9 +1299,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationBearingRef(): ?string
     {
-        $value = $this->gpsField('dest_bearing_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsDestinationBearingRef();
     }
 
     /**
@@ -1326,9 +1307,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationBearing(): ?float
     {
-        $value = $this->gpsField('dest_bearing');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsDestinationBearing();
     }
 
     /**
@@ -1336,9 +1315,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationDistanceRef(): ?string
     {
-        $value = $this->gpsField('dest_distance_ref');
-
-        return is_string($value) ? $value : null;
+        return $this->document?->gpsDestinationDistanceRef();
     }
 
     /**
@@ -1346,9 +1323,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDestinationDistance(): ?float
     {
-        $value = $this->gpsField('dest_distance_m');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsDestinationDistanceMetres();
     }
 
     /**
@@ -1376,17 +1351,7 @@ final readonly class ExifTagResolver
      */
     public function gpsDifferential(): ?int
     {
-        $value = $this->gpsField('differential');
-
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) round($value);
-        }
-
-        return null;
+        return $this->document?->gpsDifferential();
     }
 
     /**
@@ -1394,9 +1359,7 @@ final readonly class ExifTagResolver
      */
     public function gpsHorizontalPositioningError(): ?float
     {
-        $value = $this->gpsField('h_positioning_error');
-
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return $this->document?->gpsHorizontalPositioningError();
     }
 
     /**
