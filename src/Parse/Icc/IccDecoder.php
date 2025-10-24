@@ -11,11 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Icc;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use function array_key_exists;
 use function bin2hex;
 use function class_exists;
 use function function_exists;
 use function iconv;
+use function is_array;
+use function is_int;
 use function mb_convert_encoding;
 use function min;
 use function ord;
@@ -351,7 +354,15 @@ final class IccDecoder
         $bytes = substr($bytes . "\0\0\0\0", 0, 4);
 
         $unpacked = unpack('Nvalue', $bytes);
+        if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
+            return 0;
+        }
 
-        return isset($unpacked['value']) ? (int) $unpacked['value'] : 0;
+        $value = $unpacked['value'];
+        if (!is_int($value)) {
+            throw new ParseError('Unexpected integer value while decoding ICC profile.');
+        }
+
+        return $value;
     }
 }

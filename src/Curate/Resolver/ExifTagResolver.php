@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
+use BackedEnum;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
@@ -43,7 +44,6 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\FlashInfo;
-use UnitEnum;
 
 use function array_map;
 use function array_values;
@@ -175,13 +175,18 @@ final readonly class ExifTagResolver
     /**
      * Returns a backed enum mapped from the requested EXIF tag value.
      */
-    public function enum(string $tag, string $enumClass): ?UnitEnum
+    /**
+     * @template T of BackedEnum
+     *
+     * @param class-string<T> $enumClass
+     *
+     * @return T|null
+     */
+    public function enum(string $tag, string $enumClass): ?BackedEnum
     {
         $value = $this->int($tag);
 
-        $enum = CoreValueConverters::toEnumOrNull($enumClass, $value);
-
-        return $enum instanceof UnitEnum ? $enum : null;
+        return CoreValueConverters::toEnumOrNull($enumClass, $value);
     }
 
     /**
@@ -634,9 +639,7 @@ final readonly class ExifTagResolver
      */
     public function stripOffsets(): ?array
     {
-        $offsets = $this->document?->stripOffsets();
-
-        return $offsets !== null ? array_values($offsets) : null;
+        return $this->document?->stripOffsets();
     }
 
     /**
@@ -646,9 +649,7 @@ final readonly class ExifTagResolver
      */
     public function stripByteCounts(): ?array
     {
-        $counts = $this->document?->stripByteCounts();
-
-        return $counts !== null ? array_values($counts) : null;
+        return $this->document?->stripByteCounts();
     }
 
     /**
@@ -658,9 +659,7 @@ final readonly class ExifTagResolver
      */
     public function transferFunction(): ?array
     {
-        $values = $this->document?->transferFunction();
-
-        return $values !== null ? array_values($values) : null;
+        return $this->document?->transferFunction();
     }
 
     /**
@@ -858,7 +857,7 @@ final readonly class ExifTagResolver
             return null;
         }
 
-        return array_values($values);
+        return $values;
     }
 
     /**

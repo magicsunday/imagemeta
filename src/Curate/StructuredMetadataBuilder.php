@@ -64,7 +64,6 @@ use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
 
 use function array_key_exists;
-use function array_is_list;
 use function is_numeric;
 use function preg_split;
 use function strtoupper;
@@ -628,19 +627,62 @@ final class StructuredMetadataBuilder
         QuickTimeResolver $quickTimeResolver,
         ?QuickTimeMeta $quickTimeMeta,
     ): Apple {
-        $contentIdentifier = $makerNotes?->contentIdentifier ?? $quickTimeMeta?->contentIdentifier();
-        $cameraType        = $makerNotes?->cameraType ?? $this->quickTimeString($quickTimeResolver, 'CameraType');
-        $hdrHeadroom       = $makerNotes?->hdrHeadroom ?? $this->quickTimeFloat($quickTimeResolver, 'HdrHeadroom', 'HDRHeadroom');
-        $hdrGain           = $makerNotes?->hdrGain ?? $this->quickTimeFloatList($quickTimeResolver, 'HdrGain', 'HDRGain');
-        $snr               = $makerNotes?->snr ?? $this->quickTimeFloat($quickTimeResolver, 'SNRSetting', 'SNR');
-        $focusPosition     = $makerNotes?->focusPosition ?? $this->quickTimeFloat($quickTimeResolver, 'FocusPosition');
-        $livePhotoIndex    = $makerNotes?->livePhotoIndex ?? $this->quickTimeInt($quickTimeResolver, 'LivePhotoVideoIndex');
-        $colorTemperature  = $makerNotes?->colorTemperature ?? $this->quickTimeInt($quickTimeResolver, 'ColorTemperature');
-        $semanticPreset    = $makerNotes?->semanticStylePreset ?? $this->quickTimeString($quickTimeResolver, 'SemanticStylePreset');
-        $semanticWarmth    = $makerNotes?->semanticStyleWarmth ?? $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleWarmth');
-        $semanticTone      = $makerNotes?->semanticStyleTone ?? $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleTone');
+        $contentIdentifier = $makerNotes?->contentIdentifier;
+        if ($contentIdentifier === null) {
+            $contentIdentifier = $quickTimeMeta?->contentIdentifier();
+        }
 
-        $flags         = $makerNotes?->flags ?? [];
+        $cameraType = $makerNotes?->cameraType;
+        if ($cameraType === null) {
+            $cameraType = $this->quickTimeString($quickTimeResolver, 'CameraType');
+        }
+
+        $hdrHeadroom = $makerNotes?->hdrHeadroom;
+        if ($hdrHeadroom === null) {
+            $hdrHeadroom = $this->quickTimeFloat($quickTimeResolver, 'HdrHeadroom', 'HDRHeadroom');
+        }
+
+        $hdrGain = $makerNotes?->hdrGain;
+        if ($hdrGain === null) {
+            $hdrGain = $this->quickTimeFloatList($quickTimeResolver, 'HdrGain', 'HDRGain');
+        }
+
+        $snr = $makerNotes?->snr;
+        if ($snr === null) {
+            $snr = $this->quickTimeFloat($quickTimeResolver, 'SNRSetting', 'SNR');
+        }
+
+        $focusPosition = $makerNotes?->focusPosition;
+        if ($focusPosition === null) {
+            $focusPosition = $this->quickTimeFloat($quickTimeResolver, 'FocusPosition');
+        }
+
+        $livePhotoIndex = $makerNotes?->livePhotoIndex;
+        if ($livePhotoIndex === null) {
+            $livePhotoIndex = $this->quickTimeInt($quickTimeResolver, 'LivePhotoVideoIndex');
+        }
+
+        $colorTemperature = $makerNotes?->colorTemperature;
+        if ($colorTemperature === null) {
+            $colorTemperature = $this->quickTimeInt($quickTimeResolver, 'ColorTemperature');
+        }
+
+        $semanticPreset = $makerNotes?->semanticStylePreset;
+        if ($semanticPreset === null) {
+            $semanticPreset = $this->quickTimeString($quickTimeResolver, 'SemanticStylePreset');
+        }
+
+        $semanticWarmth = $makerNotes?->semanticStyleWarmth;
+        if ($semanticWarmth === null) {
+            $semanticWarmth = $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleWarmth');
+        }
+
+        $semanticTone = $makerNotes?->semanticStyleTone;
+        if ($semanticTone === null) {
+            $semanticTone = $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleTone');
+        }
+
+        $flags = $makerNotes !== null ? $makerNotes->flags : [];
         $quickTimeFlags = $this->quickTimeFlags($quickTimeResolver);
         foreach ($quickTimeFlags as $key => $value) {
             if (!array_key_exists($key, $flags)) {
@@ -672,7 +714,7 @@ final class StructuredMetadataBuilder
         $accelY = null;
         $accelZ = null;
 
-        if ($vector !== null && array_is_list($vector)) {
+        if (is_array($vector)) {
             $accelX = $vector[0] ?? null;
             $accelY = $vector[1] ?? null;
             $accelZ = $vector[2] ?? null;

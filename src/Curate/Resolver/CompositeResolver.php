@@ -53,7 +53,7 @@ final readonly class CompositeResolver
     /**
      * Selects the first integer value from the candidate list applying numeric normalisation.
      *
-     * @param list<Closure():int|float|string|int|float|string|null|null> $candidates
+     * @param array<int, (Closure(): (int|null))|float|int|string|null> $candidates
      */
     public static function firstInt(array $candidates): ?int
     {
