@@ -19,7 +19,6 @@ use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
-use MagicSunday\ImageMeta\Value\Depth;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
@@ -55,7 +54,6 @@ final readonly class StructuredMetadata
     public function __construct(
         public Interop $interop,
         public TiffData $tiff,
-        public Depth $depth,
         public CompositeImageInfo $composite,
         public Standards $standards,
         public Camera $camera,

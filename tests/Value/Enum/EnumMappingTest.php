@@ -13,9 +13,6 @@ namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
-use MagicSunday\ImageMeta\Value\Enum\DepthFormat;
-use MagicSunday\ImageMeta\Value\Enum\DepthMeasureType;
-use MagicSunday\ImageMeta\Value\Enum\DepthUnits;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
@@ -40,9 +37,6 @@ use PHPUnit\Framework\TestCase;
  * @covers \MagicSunday\ImageMeta\Value\Enum\FileSource
  * @covers \MagicSunday\ImageMeta\Value\Enum\SensingMethod
  * @covers \MagicSunday\ImageMeta\Value\Enum\CompositeImage
- * @covers \MagicSunday\ImageMeta\Value\Enum\DepthFormat
- * @covers \MagicSunday\ImageMeta\Value\Enum\DepthUnits
- * @covers \MagicSunday\ImageMeta\Value\Enum\DepthMeasureType
  */
 final class EnumMappingTest extends TestCase
 {
@@ -63,8 +57,5 @@ final class EnumMappingTest extends TestCase
         self::assertSame(FileSource::SIGMA_FOVEON, FileSource::fromExifValue(0x8000));
         self::assertSame(SensingMethod::COLOR_SEQUENTIAL_LINEAR, SensingMethod::fromExifValue(8));
         self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue(3));
-        self::assertSame(DepthFormat::INVERSE, DepthFormat::fromExifValue(2));
-        self::assertSame(DepthUnits::METERS, DepthUnits::fromExifValue(1));
-        self::assertSame(DepthMeasureType::OPTICAL_AXIS, DepthMeasureType::fromExifValue(1));
     }
 }

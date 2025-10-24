@@ -36,7 +36,6 @@ $structured->related->livePhotoPairId;
 | --- | --- | --- | --- |
 | `Interop` | `index`, `version` | `InteropIndex`, `InteropVersion` | Hex fallback for binary data |
 | `TiffData` | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities` | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities` | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()` |
-| `Depth` | `format`, `near`, `far`, `units`, `measureType` | – | – |
 | `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal` | `CompositeImage`, `CompositeImageCount`, `CompositeImageExposureTimes` | `CompositeImage`, rational to float |
 | `Standards` | `exifVersion`, `flashpixVersion` | `ExifVersion`, `FlashpixVersion` | `ValueConverters::toExifVersion()` |
 | `Lens` | `lensInfo`, `maxApertureFNumber` | `LensInfo`, `MaxApertureValue` | `ValueConverters::apexToFNumber()` |
@@ -49,7 +48,6 @@ $s = $meta->structured();
 $s->tiff->compression;              // Compression::JPEG
 $s->lens->lensInfo;                 // [minF, minAperture, maxF, maxAperture]
 $s->composite->type;                // CompositeImage::GeneralComposite
-$s->depth->near;                    // float metres
 $s->standards->exifVersion;         // "3.00"
 ```
 

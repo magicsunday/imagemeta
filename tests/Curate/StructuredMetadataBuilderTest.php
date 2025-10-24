@@ -191,7 +191,7 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
-     * Ensures HEIF metadata including composite images and depth is mapped correctly.
+     * Ensures HEIF metadata including composite images is mapped correctly.
      */
     #[Test]
     public function buildsStructuredAggregateForHeif(): void
@@ -241,12 +241,6 @@ final class StructuredMetadataBuilderTest extends TestCase
             self::assertEqualsWithDelta($expected, $structured->composite->exposureTimesTotal[$idx], 1e-12);
         }
 
-        self::assertNull($structured->depth->format);
-        self::assertNull($structured->depth->near);
-        self::assertNull($structured->depth->far);
-        self::assertNull($structured->depth->units);
-        self::assertNull($structured->depth->measureType);
-
         self::assertSame('17.3', $structured->device->software);
 
         self::assertTrue($structured->scene->hdrScene);
@@ -270,7 +264,6 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertNull($structured->interop->index);
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
-        self::assertNull($structured->depth->format);
     }
 
     /**
