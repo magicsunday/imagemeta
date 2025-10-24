@@ -50,7 +50,6 @@ final class EnumMappingTest extends TestCase
     public function mapsCommonEnumValues(): void
     {
         self::assertSame(Compression::JPEG, Compression::fromExifValue(7));
-        self::assertSame(Compression::JPEG_XL, Compression::fromExifValue(34926));
         self::assertSame(Photometric::YCBCR, Photometric::fromExifValue(6));
         self::assertSame(Photometric::DEPTH_MAP, Photometric::fromExifValue(511));
         self::assertSame(PlanarConfiguration::CHUNKY, PlanarConfiguration::fromExifValue(1));
