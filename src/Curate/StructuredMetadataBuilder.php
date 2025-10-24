@@ -302,6 +302,9 @@ final class StructuredMetadataBuilder
 
         $temporal = $this->buildTemporal($exifResolver, $quickTimeResolver, $xmpResolver);
 
+        $cropFactor = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
+        $circleOfConfusionMm = ValueConverters::calcCircleOfConfusionMm($cropFactor);
+
         $derived = new Derived(
             ev100: ValueConverters::calcEv100(
                 $exposure->exposureTimeSec,
@@ -311,11 +314,13 @@ final class StructuredMetadataBuilder
             hyperfocalM: ValueConverters::calcHyperfocalM(
                 $lens->focalLengthMm,
                 $exposure->fNumber,
-                0.029,
+                $circleOfConfusionMm,
             ),
-            fovDeg: ValueConverters::calcFovDeg($lens->focalLengthIn35mm, null),
+            fovDiagonalDeg: ValueConverters::calcFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            fovHorizontalDeg: ValueConverters::calcHorizontalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            fovVerticalDeg: ValueConverters::calcVerticalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
             focalLength35mm: $lens->focalLengthIn35mm,
-            cropFactor: null,
+            cropFactor: $cropFactor,
         );
 
         $panoramaFlag = $xmpResolver->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');

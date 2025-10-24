@@ -119,4 +119,23 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::toEnumOrNull(ResolutionUnit::class, 99));
         self::assertNull(ValueConverters::toEnumOrNull(ResolutionUnit::class, null));
     }
+
+    #[Test]
+    public function calculatesFieldOfViewAndHyperfocalMetrics(): void
+    {
+        $cropFactor = ValueConverters::calcCropFactor(75, 50.0);
+        self::assertEqualsWithDelta(1.5, $cropFactor, 1e-12);
+
+        $circleOfConfusion = ValueConverters::calcCircleOfConfusionMm($cropFactor);
+        self::assertEqualsWithDelta(0.019333333333333334, $circleOfConfusion, 1e-12);
+        self::assertEqualsWithDelta(0.029, ValueConverters::calcCircleOfConfusionMm(null), 1e-12);
+        self::assertNull(ValueConverters::calcCircleOfConfusionMm(0.0));
+
+        $hyperfocal = ValueConverters::calcHyperfocalM(50.0, 8.0, $circleOfConfusion);
+        self::assertEqualsWithDelta(16.213793103448276, $hyperfocal, 1e-12);
+
+        self::assertEqualsWithDelta(32.179788109672, ValueConverters::calcFovDeg(75, $cropFactor, 50.0), 1e-12);
+        self::assertEqualsWithDelta(26.991466561592, ValueConverters::calcHorizontalFovDeg(75, $cropFactor, 50.0), 1e-12);
+        self::assertEqualsWithDelta(18.180553841645, ValueConverters::calcVerticalFovDeg(75, $cropFactor, 50.0), 1e-12);
+    }
 }
