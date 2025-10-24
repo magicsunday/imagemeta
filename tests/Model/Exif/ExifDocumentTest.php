@@ -571,6 +571,41 @@ final class ExifDocumentTest extends TestCase
     }
 
     /**
+     * Ensures the ISO getter prefers EXIF 3.0 sensitivity tags before falling back to photographic sensitivity.
+     */
+    #[Test]
+    public function isoPrefersStandardOutputAndRecommendedIndices(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 100),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 160),
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY   => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        self::assertSame(160, $doc->iso());
+
+        $recommendedExifIfd = new Ifd([
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY   => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
+        ]);
+
+        $docWithRecommended = new ExifDocument($ifd0, $recommendedExifIfd, null, null, null);
+        self::assertSame(320, $docWithRecommended->iso());
+
+        $photographicExifIfd = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
+        ]);
+
+        $docWithPhotographic = new ExifDocument($ifd0, $photographicExifIfd, null, null, null);
+        self::assertSame(640, $docWithPhotographic->iso());
+    }
+
+    /**
      * Ensures the ISO getter falls back to legacy tags when the ISO speed tag is missing.
      */
     #[Test]
