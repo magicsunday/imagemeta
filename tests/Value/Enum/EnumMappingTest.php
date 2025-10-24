@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
+use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
@@ -50,11 +51,14 @@ final class EnumMappingTest extends TestCase
         self::assertSame(ExposureMode::AUTO_BRACKET, ExposureMode::fromExifValue(2));
         self::assertSame(GainControl::HIGH_GAIN_UP, GainControl::fromExifValue(2));
         self::assertSame(SubjectDistanceRange::MACRO, SubjectDistanceRange::fromExifValue(SubjectDistanceRange::MACRO->value));
-        self::assertSame(
-            \MagicSunday\ImageMeta\Value\Enum\FileSource::DIGITAL_CAMERA,
-            \MagicSunday\ImageMeta\Value\Enum\FileSource::fromExifValue(3),
-        );
+        self::assertSame(FileSource::DIGITAL_CAMERA, FileSource::fromExifValue(3));
         self::assertSame(SensingMethod::COLOR_SEQUENTIAL_LINEAR, SensingMethod::fromExifValue(8));
         self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue(3));
+    }
+
+    #[Test]
+    public function ignoresVendorSpecificFileSource(): void
+    {
+        self::assertNull(FileSource::fromExifValue(0x8000));
     }
 }

@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value\Enum;
 
 /**
- * Enumerates possible image acquisition sources.
+ * Enumerates EXIF 3.0 image acquisition sources.
  */
 enum FileSource: int
 {
@@ -23,6 +23,9 @@ enum FileSource: int
 
     /**
      * Converts a raw EXIF file source into the backed enum.
+     *
+     * Vendor specific values such as 0x8000 (Sigma Foveon) are ignored because
+     * they are not part of the EXIF 3.0 specification.
      */
     public static function fromExifValue(int|string|null $value): ?self
     {
@@ -30,7 +33,11 @@ enum FileSource: int
             return null;
         }
 
-        $intValue = is_string($value) ? (int) $value : $value;
+        $intValue = is_string($value) ? intval($value, 0) : $value;
+
+        if ($intValue >= 0x8000) {
+            return null;
+        }
 
         return self::tryFrom($intValue);
     }
