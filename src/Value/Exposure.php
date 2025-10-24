@@ -23,21 +23,27 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 final readonly class Exposure
 {
     /**
-     * @param int|null             $iso              ISO sensitivity.
-     * @param float|null           $exposureTimeSec  Exposure time in seconds.
-     * @param float|null           $fNumber          Aperture (f-number).
-     * @param float|null           $exposureBiasEv   Exposure compensation in EV.
-     * @param ExposureProgram|null $program          Selected exposure program.
-     * @param MeteringMode|null    $meteringMode     Metering mode.
-     * @param FlashInfo|null       $flash            Flash details.
-     * @param WhiteBalance|null    $whiteBalance     White balance setting.
-     * @param float|null           $brightnessEv     Scene brightness value in EV.
-     * @param ExposureMode|null    $exposureMode     Exposure mode selection.
-     * @param GainControl|null     $gainControl      Applied gain control.
-     * @param int|null             $contrast         Contrast processing setting.
-     * @param int|null             $saturation       Saturation processing setting.
-     * @param int|null             $sharpness        Sharpness processing setting.
-     * @param float|null           $digitalZoomRatio Applied digital zoom ratio.
+     * @param int|null             $iso               ISO sensitivity.
+     * @param float|null           $exposureTimeSec   Exposure time in seconds.
+     * @param float|null           $fNumber           Aperture (f-number).
+     * @param float|null           $exposureBiasEv    Exposure compensation in EV.
+     * @param ExposureProgram|null $program           Selected exposure program.
+     * @param MeteringMode|null    $meteringMode      Metering mode.
+     * @param FlashInfo|null       $flash             Flash details.
+     * @param WhiteBalance|null    $whiteBalance      White balance setting.
+     * @param float|null           $brightnessEv      Scene brightness value in EV.
+     * @param ExposureMode|null    $exposureMode      Exposure mode selection.
+     * @param GainControl|null     $gainControl       Applied gain control.
+     * @param int|null             $contrast          Contrast processing setting.
+     * @param int|null             $saturation        Saturation processing setting.
+     * @param int|null             $sharpness         Sharpness processing setting.
+     * @param float|null           $digitalZoomRatio  Applied digital zoom ratio.
+     * @param float|null           $shutterSpeedEv    Shutter speed expressed as APEX value.
+     * @param float|null           $apertureEv        Aperture expressed as APEX value.
+     * @param int|null             $isoLatitudeYyy    ISO latitude yyy value.
+     * @param int|null             $isoLatitudeZzz    ISO latitude zzz value.
+     * @param float|null           $exposureIndex     Exposure index value.
+     * @param float|null           $flashEnergy       Flash energy measured in beam candle power seconds.
      */
     public function __construct(
         public ?int $iso,
@@ -55,6 +61,12 @@ final readonly class Exposure
         public ?int $saturation,
         public ?int $sharpness,
         public ?float $digitalZoomRatio,
+        public ?float $shutterSpeedEv,
+        public ?float $apertureEv,
+        public ?int $isoLatitudeYyy,
+        public ?int $isoLatitudeZzz,
+        public ?float $exposureIndex,
+        public ?float $flashEnergy,
     ) {
     }
 }

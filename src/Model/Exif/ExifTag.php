@@ -29,6 +29,8 @@ final readonly class ExifTag
 
     public const int IMAGE_DESCRIPTION = 0x010E;
 
+    public const int IMAGE_TITLE = 0x0320;
+
     public const int MAKE = 0x010F;
 
     public const int MODEL = 0x0110;
@@ -52,6 +54,10 @@ final readonly class ExifTag
     public const int DATETIME = 0x0132;
 
     public const int ARTIST = 0x013B;
+
+    public const int PHOTOGRAPHER = 0xE92D;
+
+    public const int IMAGE_EDITOR = 0xE92E;
 
     public const int WHITE_POINT = 0x013E;
 
@@ -81,6 +87,10 @@ final readonly class ExifTag
 
     public const int EXPOSURE_PROGRAM = 0x8822;
 
+    public const int SPECTRAL_SENSITIVITY = 0x8824;
+
+    public const int OECF = 0x8828;
+
     public const int PHOTOGRAPHIC_SENSITIVITY = 0x8827;
 
     public const int SENSITIVITY_TYPE = 0x8830;
@@ -90,6 +100,10 @@ final readonly class ExifTag
     public const int RECOMMENDED_EXPOSURE_INDEX = 0x8832;
 
     public const int ISO_SPEED = 0x8833;
+
+    public const int ISO_SPEED_LATITUDE_YYY = 0x8834;
+
+    public const int ISO_SPEED_LATITUDE_ZZZ = 0x8835;
 
     public const int EXIF_VERSION = 0x9000;
 
@@ -147,6 +161,8 @@ final readonly class ExifTag
 
     public const int EXIF_IMAGE_HEIGHT = 0xA003;
 
+    public const int RELATED_SOUND_FILE = 0xA004;
+
     public const int SENSING_METHOD = 0xA217;
 
     public const int FILE_SOURCE = 0xA300;
@@ -196,6 +212,24 @@ final readonly class ExifTag
     public const int COMPOSITE_IMAGE_EXPOSURE_TIMES = 0xA462;
 
     public const int GAMMA = 0xA500;
+
+    public const int FLASH_ENERGY = 0xA20B;
+
+    public const int SPATIAL_FREQUENCY_RESPONSE = 0xA20C;
+
+    public const int FOCAL_PLANE_X_RESOLUTION = 0xA20E;
+
+    public const int FOCAL_PLANE_Y_RESOLUTION = 0xA20F;
+
+    public const int FOCAL_PLANE_RESOLUTION_UNIT = 0xA210;
+
+    public const int SUBJECT_LOCATION = 0xA214;
+
+    public const int EXPOSURE_INDEX = 0xA215;
+
+    public const int CFA_PATTERN = 0xA302;
+
+    public const int DEVICE_SETTING_DESCRIPTION = 0xA40B;
 
     // GPS sub IFD
     public const int GPS_VERSION_ID = 0x0000;
@@ -261,6 +295,26 @@ final readonly class ExifTag
     public const int GPS_DIFFERENTIAL = 0x001E;
 
     public const int GPS_H_POSITIONING_ERROR = 0x001F;
+
+    public const int TEMPERATURE = 0x9400;
+
+    public const int HUMIDITY = 0x9401;
+
+    public const int PRESSURE = 0x9402;
+
+    public const int WATER_DEPTH = 0x9403;
+
+    public const int ACCELERATION = 0x9404;
+
+    public const int CAMERA_ELEVATION_ANGLE = 0x9405;
+
+    public const int CAMERA_FIRMWARE = 0xE92F;
+
+    public const int RAW_DEVELOPING_SOFTWARE = 0xE930;
+
+    public const int IMAGE_EDITING_SOFTWARE = 0xE931;
+
+    public const int METADATA_EDITING_SOFTWARE = 0xE932;
 
     // Interoperability IFD
     public const int INTEROPERABILITY_INDEX = 0x0001;

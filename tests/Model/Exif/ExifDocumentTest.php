@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
@@ -34,6 +35,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ValueConverters::class)]
 final class ExifDocumentTest extends TestCase
 {
+    private const string ISO_8601_MILLISECONDS = 'Y-m-d\TH:i:s.vP';
+
     /**
      * Ensures an Exif document exposes representative camera, exposure, and GPS metadata values.
      */
@@ -68,6 +71,8 @@ final class ExifDocumentTest extends TestCase
             ),
             ExifTag::LENS_MODEL           => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF50mm F1.2L USM'),
             ExifTag::DATETIME_ORIGINAL    => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01 12:34:56'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 1, '123'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '456'),
             ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
         ]);
 
@@ -118,7 +123,7 @@ final class ExifDocumentTest extends TestCase
 
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
-        self::assertSame('2024-05-01T12:34:56+02:00', $capture->format(DATE_ATOM));
+        self::assertSame('2024-05-01T12:34:56.123+02:00', $capture->format(self::ISO_8601_MILLISECONDS));
 
         $gps = $doc->gps();
         self::assertEqualsWithDelta(40.441666, $gps['lat'], 0.000001);
@@ -162,10 +167,13 @@ final class ExifDocumentTest extends TestCase
             ExifTag::BRIGHTNESS_VALUE          => new IfdEntry(ExifTag::BRIGHTNESS_VALUE, 10, 1, new ExifRational(55, 10)),
             ExifTag::MAX_APERTURE_VALUE        => new IfdEntry(ExifTag::MAX_APERTURE_VALUE, 5, 1, new ExifRational(28, 10)),
             ExifTag::DATETIME_ORIGINAL         => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:02 09:10:11'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL     => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 1, '125'),
             ExifTag::OFFSET_TIME_ORIGINAL      => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+01:30'),
             ExifTag::DATETIME_DIGITIZED        => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:05:02 09:15:00'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED    => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '250'),
             ExifTag::OFFSET_TIME_DIGITIZED     => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+01:30'),
             ExifTag::OFFSET_TIME               => new IfdEntry(ExifTag::OFFSET_TIME, 2, 1, '+01:30'),
+            ExifTag::SUB_SEC_TIME              => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '500'),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -192,20 +200,96 @@ final class ExifDocumentTest extends TestCase
 
         $captured = $doc->captureDateTime();
         self::assertNotNull($captured);
-        self::assertSame('2024-05-02T09:10:11+01:30', $captured->format(DATE_ATOM));
+        self::assertSame('2024-05-02T09:10:11.125+01:30', $captured->format(self::ISO_8601_MILLISECONDS));
 
         $digitized = $doc->dateTimeDigitized();
         self::assertNotNull($digitized);
-        self::assertSame('2024-05-02T09:15:00+01:30', $digitized->format(DATE_ATOM));
+        self::assertSame('2024-05-02T09:15:00.250+01:30', $digitized->format(self::ISO_8601_MILLISECONDS));
 
-        $general = $doc->dateTime();
-        self::assertNotNull($general);
-        self::assertSame('2024-05-02T09:10:11+01:30', $general->format(DATE_ATOM));
+        $fileDate = $doc->dateTime();
+        self::assertNotNull($fileDate);
+        self::assertSame('2024-05-02T09:10:11.500+01:30', $fileDate->format(self::ISO_8601_MILLISECONDS));
+    }
 
-        self::assertSame('2024:05:02 09:10:11', $doc->dateTimeRaw());
-        self::assertSame('2024:05:02 09:15:00', $doc->dateTimeDigitizedRaw());
-        self::assertSame('+01:30', $doc->offsetTimeRaw());
-        self::assertSame('+01:30', $doc->offsetTimeDigitizedRaw());
+    /**
+     * Ensures Table 65 extension tags are exposed via dedicated getters.
+     */
+    #[Test]
+    public function exposesTable65Extensions(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Coastal cliffs'),
+            ExifTag::IMAGE_TITLE       => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Cliffside Dusk'),
+            ExifTag::PHOTOGRAPHER      => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Alex Light'),
+            ExifTag::IMAGE_EDITOR      => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Chris Edit'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COMPONENTS_CONFIGURATION   => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
+            ExifTag::COMPRESSED_BITS_PER_PIXEL  => new IfdEntry(ExifTag::COMPRESSED_BITS_PER_PIXEL, 5, 1, new ExifRational(45, 10)),
+            ExifTag::USER_COMMENT               => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, "ASCII\0\0\0Calibrated output\0"),
+            ExifTag::SPECTRAL_SENSITIVITY       => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 1, 'Spectral A'),
+            ExifTag::OECF                       => new IfdEntry(ExifTag::OECF, 7, 1, 'OECF Blob'),
+            ExifTag::ISO_SPEED_LATITUDE_YYY     => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 3, 1, 200),
+            ExifTag::ISO_SPEED_LATITUDE_ZZZ     => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 3, 1, 400),
+            ExifTag::TEMPERATURE                => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(200, 10)),
+            ExifTag::HUMIDITY                   => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(550, 10)),
+            ExifTag::PRESSURE                   => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(100000, 100)),
+            ExifTag::WATER_DEPTH                => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(30, 10)),
+            ExifTag::ACCELERATION               => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(10, 1)),
+            ExifTag::CAMERA_ELEVATION_ANGLE     => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(50, 10)),
+            ExifTag::RELATED_SOUND_FILE         => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 1, 'clip.wav'),
+            ExifTag::FLASH_ENERGY               => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(150, 10)),
+            ExifTag::SPATIAL_FREQUENCY_RESPONSE => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, 1, 'SFR Data'),
+            ExifTag::FOCAL_PLANE_X_RESOLUTION   => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(8000, 100)),
+            ExifTag::FOCAL_PLANE_Y_RESOLUTION   => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(7900, 100)),
+            ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, 2),
+            ExifTag::SUBJECT_LOCATION           => new IfdEntry(ExifTag::SUBJECT_LOCATION, 3, 2, new ExifNumericList([1024, 768])),
+            ExifTag::EXPOSURE_INDEX             => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(320, 1)),
+            ExifTag::SCENE_TYPE                 => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
+            ExifTag::CFA_PATTERN                => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x02\x01\x01\x02"),
+            ExifTag::CUSTOM_RENDERED            => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
+            ExifTag::DEVICE_SETTING_DESCRIPTION => new IfdEntry(ExifTag::DEVICE_SETTING_DESCRIPTION, 7, 1, 'Neutral profile'),
+            ExifTag::CAMERA_FIRMWARE            => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 2.0'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE    => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RawLab'),
+            ExifTag::IMAGE_EDITING_SOFTWARE     => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'EditLab'),
+            ExifTag::METADATA_EDITING_SOFTWARE  => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'MetaLab'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame([1, 2, 3, 0], $doc->componentsConfiguration());
+        self::assertSame(4.5, $doc->compressedBitsPerPixel());
+        self::assertSame('Calibrated output', $doc->userComment());
+        self::assertSame('Spectral A', $doc->spectralSensitivity());
+        self::assertSame('OECF Blob', $doc->oecf());
+        self::assertSame(200, $doc->isoSpeedLatitudeYyy());
+        self::assertSame(400, $doc->isoSpeedLatitudeZzz());
+        self::assertEqualsWithDelta(20.0, $doc->temperatureCelsius(), 0.0001);
+        self::assertEqualsWithDelta(55.0, $doc->humidityPercent(), 0.0001);
+        self::assertEqualsWithDelta(1000.0, $doc->pressureHPa(), 0.0001);
+        self::assertEqualsWithDelta(3.0, $doc->waterDepthMeters(), 0.0001);
+        self::assertEqualsWithDelta(10.0, $doc->accelerationMs2(), 0.0001);
+        self::assertEqualsWithDelta(5.0, $doc->cameraElevationAngleDeg(), 0.0001);
+        self::assertSame('clip.wav', $doc->relatedSoundFile());
+        self::assertEqualsWithDelta(15.0, $doc->flashEnergy() ?? 0.0, 0.0001);
+        self::assertSame('SFR Data', $doc->spatialFrequencyResponse());
+        self::assertEqualsWithDelta(80.0, $doc->focalPlaneXResolution() ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(79.0, $doc->focalPlaneYResolution() ?? 0.0, 0.0001);
+        self::assertSame(2, $doc->focalPlaneResolutionUnit());
+        self::assertSame([1024, 768], $doc->subjectLocation());
+        self::assertSame(320.0, $doc->exposureIndex());
+        self::assertSame(1, $doc->sceneType());
+        self::assertSame([2, 1, 1, 2], $doc->cfaPattern());
+        self::assertSame(1, $doc->customRendered());
+        self::assertSame('Neutral profile', $doc->deviceSettingDescription());
+        self::assertSame('Cliffside Dusk', $doc->imageTitle());
+        self::assertSame('Alex Light', $doc->photographer());
+        self::assertSame('Chris Edit', $doc->imageEditor());
+        self::assertSame('FW 2.0', $doc->cameraFirmware());
+        self::assertSame('RawLab', $doc->rawDevelopingSoftware());
+        self::assertSame('EditLab', $doc->imageEditingSoftware());
+        self::assertSame('MetaLab', $doc->metadataEditingSoftware());
     }
 
     /**

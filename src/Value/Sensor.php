@@ -11,17 +11,25 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+
 /**
  * Provides sensor related characteristics.
  */
 final readonly class Sensor
 {
     /**
-     * @param float|null  $pixelPitchUm Pixel pitch in micrometres.
-     * @param int|null    $cfaWidth     Width of the repeating CFA pattern.
-     * @param int|null    $cfaHeight    Height of the repeating CFA pattern.
-     * @param string|null $sensorType   Sensor technology (e.g. CCD or CMOS).
-     * @param bool|null   $ibis         Indicates in-body image stabilisation support.
+     * @param float|null              $pixelPitchUm             Pixel pitch in micrometres.
+     * @param int|null                $cfaWidth                 Width of the repeating CFA pattern.
+     * @param int|null                $cfaHeight                Height of the repeating CFA pattern.
+     * @param string|null             $sensorType               Sensor technology (e.g. CCD or CMOS).
+     * @param bool|null               $ibis                     Indicates in-body image stabilisation support.
+     * @param list<int>|null          $cfaPattern               Colour filter array pattern definition.
+     * @param string|null             $spectralSensitivity      Spectral sensitivity description.
+     * @param string|null             $oecf                     Opto-electronic conversion function payload.
+     * @param float|null              $focalPlaneXResolution    Focal plane X resolution.
+     * @param float|null              $focalPlaneYResolution    Focal plane Y resolution.
+     * @param ResolutionUnit|null     $focalPlaneResolutionUnit Focal plane resolution unit.
      */
     public function __construct(
         public ?float $pixelPitchUm,
@@ -29,6 +37,12 @@ final readonly class Sensor
         public ?int $cfaHeight,
         public ?string $sensorType,
         public ?bool $ibis,
+        public ?array $cfaPattern,
+        public ?string $spectralSensitivity,
+        public ?string $oecf,
+        public ?float $focalPlaneXResolution,
+        public ?float $focalPlaneYResolution,
+        public ?ResolutionUnit $focalPlaneResolutionUnit,
     ) {
     }
 }

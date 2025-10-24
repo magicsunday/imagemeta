@@ -112,6 +112,38 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the dedicated camera firmware tag when available.
+     */
+    public function cameraFirmware(): ?string
+    {
+        return $this->document?->cameraFirmware();
+    }
+
+    /**
+     * Returns the raw developing software string.
+     */
+    public function rawDevelopingSoftware(): ?string
+    {
+        return $this->document?->rawDevelopingSoftware();
+    }
+
+    /**
+     * Returns the image editing software string.
+     */
+    public function imageEditingSoftware(): ?string
+    {
+        return $this->document?->imageEditingSoftware();
+    }
+
+    /**
+     * Returns the metadata editing software string.
+     */
+    public function metadataEditingSoftware(): ?string
+    {
+        return $this->document?->metadataEditingSoftware();
+    }
+
+    /**
      * Returns the lens model description when available.
      */
     public function lensModel(): ?string
@@ -219,6 +251,82 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the image title value.
+     */
+    public function imageTitle(): ?string
+    {
+        return $this->document?->imageTitle();
+    }
+
+    /**
+     * Returns the photographer string when available.
+     */
+    public function photographer(): ?string
+    {
+        return $this->document?->photographer();
+    }
+
+    /**
+     * Returns the image editor string when available.
+     */
+    public function imageEditor(): ?string
+    {
+        return $this->document?->imageEditor();
+    }
+
+    /**
+     * Returns the components configuration array.
+     *
+     * @return list<int>|null
+     */
+    public function componentsConfiguration(): ?array
+    {
+        $values = $this->document?->componentsConfiguration();
+
+        return $values !== null ? array_values($values) : null;
+    }
+
+    /**
+     * Returns the compressed bits per pixel ratio.
+     */
+    public function compressedBitsPerPixel(): ?float
+    {
+        return $this->document?->compressedBitsPerPixel();
+    }
+
+    /**
+     * Returns the decoded user comment string.
+     */
+    public function userComment(): ?string
+    {
+        return $this->document?->userComment();
+    }
+
+    /**
+     * Returns the spectral sensitivity description.
+     */
+    public function spectralSensitivity(): ?string
+    {
+        return $this->document?->spectralSensitivity();
+    }
+
+    /**
+     * Returns the opto-electronic conversion function payload.
+     */
+    public function oecf(): ?string
+    {
+        return $this->document?->oecf();
+    }
+
+    /**
+     * Returns the spatial frequency response payload.
+     */
+    public function spatialFrequencyResponse(): ?string
+    {
+        return $this->document?->spatialFrequencyResponse();
+    }
+
+    /**
      * Returns the focal length in millimetres.
      */
     public function focalLength(): ?float
@@ -235,11 +343,57 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the focal plane X resolution.
+     */
+    public function focalPlaneXResolution(): ?float
+    {
+        return $this->document?->focalPlaneXResolution();
+    }
+
+    /**
+     * Returns the focal plane Y resolution.
+     */
+    public function focalPlaneYResolution(): ?float
+    {
+        return $this->document?->focalPlaneYResolution();
+    }
+
+    /**
+     * Returns the focal plane resolution unit.
+     */
+    public function focalPlaneResolutionUnit(): ?ResolutionUnit
+    {
+        $value = $this->document?->focalPlaneResolutionUnit();
+
+        return $value !== null ? ResolutionUnit::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns the CFA pattern description.
+     *
+     * @return list<int>|null
+     */
+    public function cfaPattern(): ?array
+    {
+        $pattern = $this->document?->cfaPattern();
+
+        return $pattern !== null ? array_values($pattern) : null;
+    }
+
+    /**
      * Returns the image description field.
      */
     public function imageDescription(): ?string
     {
         return $this->stringValue($this->document?->ifd0, ExifTag::IMAGE_DESCRIPTION);
+    }
+
+    /**
+     * Returns the related sound file reference.
+     */
+    public function relatedSoundFile(): ?string
+    {
+        return $this->document?->relatedSoundFile();
     }
 
     /**
@@ -489,6 +643,22 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the ISO latitude yyy value.
+     */
+    public function isoLatitudeYyy(): ?int
+    {
+        return $this->document?->isoSpeedLatitudeYyy();
+    }
+
+    /**
+     * Returns the ISO latitude zzz value.
+     */
+    public function isoLatitudeZzz(): ?int
+    {
+        return $this->document?->isoSpeedLatitudeZzz();
+    }
+
+    /**
      * Returns the exposure time in seconds.
      */
     public function exposureTime(): ?float
@@ -497,11 +667,27 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the APEX shutter speed value.
+     */
+    public function shutterSpeedEv(): ?float
+    {
+        return $this->document?->shutterSpeedValue();
+    }
+
+    /**
      * Returns the aperture f-number.
      */
     public function fNumber(): ?float
     {
         return $this->document?->fNumber();
+    }
+
+    /**
+     * Returns the APEX aperture value.
+     */
+    public function apertureEv(): ?float
+    {
+        return $this->document?->apertureValue();
     }
 
     /**
@@ -554,6 +740,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the flash energy value when recorded.
+     */
+    public function flashEnergy(): ?float
+    {
+        return $this->document?->flashEnergy();
+    }
+
+    /**
      * Returns the brightness value in EV.
      */
     public function brightnessValue(): ?float
@@ -579,6 +773,14 @@ final readonly class ExifTagResolver
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::GAIN_CONTROL);
 
         return $value !== null ? GainControl::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns the custom rendered value as reported by the camera.
+     */
+    public function customRendered(): ?int
+    {
+        return $this->document?->customRendered();
     }
 
     /**
@@ -609,6 +811,14 @@ final readonly class ExifTagResolver
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::SHARPNESS);
 
         return $value !== null ? (int) $value : null;
+    }
+
+    /**
+     * Returns the device setting description payload.
+     */
+    public function deviceSettingDescription(): ?string
+    {
+        return $this->document?->deviceSettingDescription();
     }
 
     /**
@@ -662,11 +872,67 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the recorded temperature in Celsius.
+     */
+    public function temperatureCelsius(): ?float
+    {
+        return $this->document?->temperatureCelsius();
+    }
+
+    /**
+     * Returns the relative humidity percentage.
+     */
+    public function humidityPercent(): ?float
+    {
+        return $this->document?->humidityPercent();
+    }
+
+    /**
+     * Returns the ambient pressure in hPa.
+     */
+    public function pressureHPa(): ?float
+    {
+        return $this->document?->pressureHPa();
+    }
+
+    /**
+     * Returns the water depth in metres when provided.
+     */
+    public function waterDepthMeters(): ?float
+    {
+        return $this->document?->waterDepthMeters();
+    }
+
+    /**
+     * Returns the camera acceleration in m/s².
+     */
+    public function accelerationMs2(): ?float
+    {
+        return $this->document?->accelerationMs2();
+    }
+
+    /**
+     * Returns the camera elevation angle in degrees.
+     */
+    public function cameraElevationAngleDeg(): ?float
+    {
+        return $this->document?->cameraElevationAngleDeg();
+    }
+
+    /**
      * Returns the subject distance in metres when available.
      */
     public function subjectDistance(): ?float
     {
         return $this->getRational($this->document?->exifIfd, ExifTag::SUBJECT_DISTANCE);
+    }
+
+    /**
+     * Returns the exposure index when provided.
+     */
+    public function exposureIndex(): ?float
+    {
+        return $this->document?->exposureIndex();
     }
 
     /**
@@ -691,6 +957,18 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the subject location coordinates when provided.
+     *
+     * @return list<int>|null
+     */
+    public function subjectLocation(): ?array
+    {
+        $values = $this->document?->subjectLocation();
+
+        return $values !== null ? array_values($values) : null;
+    }
+
+    /**
      * Returns the light source enum value.
      */
     public function lightSource(): ?LightSource
@@ -708,6 +986,14 @@ final readonly class ExifTagResolver
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
 
         return $value !== null ? SceneCaptureType::tryFrom((int) $value) : null;
+    }
+
+    /**
+     * Returns the raw scene type classification.
+     */
+    public function sceneType(): ?int
+    {
+        return $this->document?->sceneType();
     }
 
     /**

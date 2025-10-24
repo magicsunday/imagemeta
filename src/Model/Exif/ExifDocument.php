@@ -15,14 +15,20 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 
+use function array_map;
 use function is_float;
 use function is_int;
 use function is_string;
+use function ord;
+use function preg_replace;
 use function rtrim;
+use function str_pad;
 use function str_replace;
 use function strlen;
 use function substr;
+use function trim;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
@@ -170,6 +176,74 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the optional image title string.
+     */
+    public function imageTitle(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
+    }
+
+    /**
+     * Returns the photographer name if present.
+     */
+    public function photographer(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::PHOTOGRAPHER);
+    }
+
+    /**
+     * Returns the image editor attribution if present.
+     */
+    public function imageEditor(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
+    }
+
+    /**
+     * Returns the components configuration array when present.
+     *
+     * @return list<int>|null
+     */
+    public function componentsConfiguration(): ?array
+    {
+        return $this->numericList($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
+    }
+
+    /**
+     * Returns the compressed bits per pixel ratio.
+     */
+    public function compressedBitsPerPixel(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::COMPRESSED_BITS_PER_PIXEL);
+    }
+
+    /**
+     * Returns the user comment string after decoding the EXIF prefix.
+     */
+    public function userComment(): ?string
+    {
+        $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+
+        return $raw !== null ? $this->decodeUserComment($raw) : null;
+    }
+
+    /**
+     * Returns the spectral sensitivity description.
+     */
+    public function spectralSensitivity(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::SPECTRAL_SENSITIVITY);
+    }
+
+    /**
+     * Returns the opto-electronic conversion function data as a string.
+     */
+    public function oecf(): ?string
+    {
+        return $this->binaryString($this->exifIfd, ExifTag::OECF);
+    }
+
+    /**
      * Returns the ISO sensitivity value if present.
      *
      * @return int|null
@@ -190,6 +264,22 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the ISO latitude yyy value when present.
+     */
+    public function isoSpeedLatitudeYyy(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::ISO_SPEED_LATITUDE_YYY);
+    }
+
+    /**
+     * Returns the ISO latitude zzz value when present.
+     */
+    public function isoSpeedLatitudeZzz(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::ISO_SPEED_LATITUDE_ZZZ);
+    }
+
+    /**
      * Returns the exposure time in seconds if available.
      *
      * @return float|null
@@ -200,6 +290,14 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the APEX shutter speed value when available.
+     */
+    public function shutterSpeedValue(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
+    }
+
+    /**
      * Returns the aperture (f-number) if available.
      *
      * @return float|null
@@ -207,6 +305,14 @@ final readonly class ExifDocument
     public function fNumber(): ?float
     {
         return $this->rational($this->exifIfd, ExifTag::F_NUMBER);
+    }
+
+    /**
+     * Returns the APEX aperture value when present.
+     */
+    public function apertureValue(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::APERTURE_VALUE);
     }
 
     /**
@@ -300,6 +406,202 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the flash energy when provided.
+     */
+    public function flashEnergy(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FLASH_ENERGY);
+    }
+
+    /**
+     * Returns the focal plane X resolution.
+     */
+    public function focalPlaneXResolution(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FOCAL_PLANE_X_RESOLUTION);
+    }
+
+    /**
+     * Returns the focal plane Y resolution.
+     */
+    public function focalPlaneYResolution(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FOCAL_PLANE_Y_RESOLUTION);
+    }
+
+    /**
+     * Returns the focal plane resolution unit.
+     */
+    public function focalPlaneResolutionUnit(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::FOCAL_PLANE_RESOLUTION_UNIT);
+    }
+
+    /**
+     * Returns the subject location coordinates when supplied.
+     *
+     * @return list<int>|null
+     */
+    public function subjectLocation(): ?array
+    {
+        return $this->numericList($this->exifIfd, ExifTag::SUBJECT_LOCATION);
+    }
+
+    /**
+     * Returns the exposure index value.
+     */
+    public function exposureIndex(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::EXPOSURE_INDEX);
+    }
+
+    /**
+     * Returns the related sound file reference.
+     */
+    public function relatedSoundFile(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::RELATED_SOUND_FILE);
+    }
+
+    /**
+     * Returns the spatial frequency response payload.
+     */
+    public function spatialFrequencyResponse(): ?string
+    {
+        return $this->binaryString($this->exifIfd, ExifTag::SPATIAL_FREQUENCY_RESPONSE);
+    }
+
+    /**
+     * Returns the CFA pattern definition as a list of component identifiers.
+     *
+     * @return list<int>|null
+     */
+    public function cfaPattern(): ?array
+    {
+        return $this->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
+    }
+
+    /**
+     * Returns the scene type classification when present.
+     */
+    public function sceneType(): ?int
+    {
+        $value = $this->value($this->exifIfd, ExifTag::SCENE_TYPE);
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            return $first !== null ? (int) $first : null;
+        }
+
+        if (is_string($value) && $value !== '') {
+            return ord($value[0]);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns whether a custom rendering process was applied.
+     */
+    public function customRendered(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::CUSTOM_RENDERED);
+    }
+
+    /**
+     * Returns the device setting description payload.
+     */
+    public function deviceSettingDescription(): ?string
+    {
+        return $this->binaryString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
+    }
+
+    /**
+     * Returns the recorded temperature in Celsius.
+     */
+    public function temperatureCelsius(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::TEMPERATURE);
+    }
+
+    /**
+     * Returns the relative humidity in percent.
+     */
+    public function humidityPercent(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::HUMIDITY);
+    }
+
+    /**
+     * Returns the ambient pressure in hPa.
+     */
+    public function pressureHPa(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::PRESSURE);
+    }
+
+    /**
+     * Returns the recorded water depth in metres.
+     */
+    public function waterDepthMeters(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::WATER_DEPTH);
+    }
+
+    /**
+     * Returns the camera acceleration in metres per second squared.
+     */
+    public function accelerationMs2(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::ACCELERATION);
+    }
+
+    /**
+     * Returns the camera elevation angle in degrees.
+     */
+    public function cameraElevationAngleDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::CAMERA_ELEVATION_ANGLE);
+    }
+
+    /**
+     * Returns the camera firmware version string when present.
+     */
+    public function cameraFirmware(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
+    }
+
+    /**
+     * Returns the raw developing software string.
+     */
+    public function rawDevelopingSoftware(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
+    }
+
+    /**
+     * Returns the image editing software string.
+     */
+    public function imageEditingSoftware(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
+    }
+
+    /**
+     * Returns the metadata editing software string.
+     */
+    public function metadataEditingSoftware(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
+    }
+
+    /**
      * Returns the raw DateTimeOriginal tag value.
      *
      * @return string|null
@@ -307,6 +609,14 @@ final readonly class ExifDocument
     public function dateTimeOriginalRaw(): ?string
     {
         return $this->str($this->exifIfd, ExifTag::DATETIME_ORIGINAL);
+    }
+
+    /**
+     * Returns the fractional seconds associated with DateTimeOriginal.
+     */
+    public function subSecTimeOriginal(): ?string
+    {
+        return $this->sanitizedSubSec($this->exifIfd, ExifTag::SUB_SEC_TIME_ORIGINAL);
     }
 
     /**
@@ -320,6 +630,14 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the fractional seconds for DateTimeDigitized.
+     */
+    public function subSecTimeDigitized(): ?string
+    {
+        return $this->sanitizedSubSec($this->exifIfd, ExifTag::SUB_SEC_TIME_DIGITIZED);
+    }
+
+    /**
      * Returns the raw DateTime tag value from IFD0.
      *
      * @return string|null
@@ -327,6 +645,14 @@ final readonly class ExifDocument
     public function dateTimeRaw(): ?string
     {
         return $this->str($this->ifd0, ExifTag::DATETIME);
+    }
+
+    /**
+     * Returns the fractional seconds for the DateTime tag.
+     */
+    public function subSecTime(): ?string
+    {
+        return $this->sanitizedSubSec($this->exifIfd, ExifTag::SUB_SEC_TIME);
     }
 
     /**
@@ -380,7 +706,11 @@ final readonly class ExifDocument
      */
     public function captureDateTime(): ?DateTimeImmutable
     {
-        return $this->parseExifDateTime($this->dateTimeOriginalRaw(), $this->offsetTimeOriginalRaw());
+        return $this->parseExifDateTime(
+            $this->dateTimeOriginalRaw(),
+            $this->offsetTimeOriginalRaw(),
+            $this->subSecTimeOriginal(),
+        );
     }
 
     /**
@@ -390,7 +720,11 @@ final readonly class ExifDocument
      */
     public function dateTimeDigitized(): ?DateTimeImmutable
     {
-        return $this->parseExifDateTime($this->dateTimeDigitizedRaw(), $this->offsetTimeDigitizedRaw());
+        return $this->parseExifDateTime(
+            $this->dateTimeDigitizedRaw(),
+            $this->offsetTimeDigitizedRaw(),
+            $this->subSecTimeDigitized(),
+        );
     }
 
     /**
@@ -400,7 +734,11 @@ final readonly class ExifDocument
      */
     public function dateTime(): ?DateTimeImmutable
     {
-        return $this->parseExifDateTime($this->dateTimeRaw(), $this->offsetTimeRaw());
+        return $this->parseExifDateTime(
+            $this->dateTimeRaw(),
+            $this->offsetTimeRaw(),
+            $this->subSecTime(),
+        );
     }
 
     /**
@@ -410,21 +748,15 @@ final readonly class ExifDocument
      */
     private function str(?Ifd $ifd, int $tag): ?string
     {
-        if (!$ifd instanceof Ifd) {
-            return null;
-        }
+        $value = $this->value($ifd, $tag);
 
-        $entry = $ifd->get($tag);
-        if (!$entry instanceof IfdEntry) {
-            return null;
-        }
-
-        $value = $entry->value;
         if (!is_string($value)) {
             return null;
         }
 
-        return rtrim($value, "\0");
+        $trimmed = rtrim($value, "\0");
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     /**
@@ -434,19 +766,10 @@ final readonly class ExifDocument
      */
     private function int(?Ifd $ifd, int $tag): ?int
     {
-        if (!$ifd instanceof Ifd) {
-            return null;
-        }
+        $value = $this->value($ifd, $tag);
 
-        $entry = $ifd->get($tag);
-        if (!$entry instanceof IfdEntry) {
-            return null;
-        }
-
-        $v = $entry->value;
-
-        if ($v instanceof ExifNumericList) {
-            $first = $v->values[0] ?? null;
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
             if (is_int($first)) {
                 return $first;
             }
@@ -458,12 +781,12 @@ final readonly class ExifDocument
             return null;
         }
 
-        if (is_int($v)) {
-            return $v;
+        if (is_int($value)) {
+            return $value;
         }
 
-        if (is_float($v)) {
-            return (int) $v;
+        if (is_float($value)) {
+            return (int) $value;
         }
 
         return null;
@@ -476,13 +799,160 @@ final readonly class ExifDocument
      */
     private function rational(?Ifd $ifd, int $tag): ?float
     {
+        $value = $this->value($ifd, $tag);
+
+        return ValueConverters::rationalToFloat($value);
+    }
+
+    /**
+     * Retrieves the raw entry value for the provided tag.
+     */
+    private function value(?Ifd $ifd, int $tag): mixed
+    {
         if (!$ifd instanceof Ifd) {
             return null;
         }
 
         $entry = $ifd->get($tag);
 
-        return $entry instanceof IfdEntry ? ValueConverters::rationalToFloat($entry->value) : null;
+        return $entry?->value;
+    }
+
+    /**
+     * Returns the raw string value without trimming trailing null bytes.
+     */
+    private function rawString(?Ifd $ifd, int $tag): ?string
+    {
+        $value = $this->value($ifd, $tag);
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Converts a numeric list or undefined string into a list of integers.
+     *
+     * @return list<int>|null
+     */
+    private function numericList(?Ifd $ifd, int $tag): ?array
+    {
+        $value = $this->value($ifd, $tag);
+
+        if ($value instanceof ExifNumericList) {
+            return array_map(static fn ($v): int => (int) $v, $value->values);
+        }
+
+        if (is_int($value)) {
+            return [$value];
+        }
+
+        if (is_string($value) && $value !== '') {
+            $length = strlen($value);
+            $bytes  = [];
+            for ($i = 0; $i < $length; ++$i) {
+                $bytes[] = ord($value[$i]);
+            }
+
+            return $bytes;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns a trimmed binary string value, or null when empty.
+     */
+    private function binaryString(?Ifd $ifd, int $tag): ?string
+    {
+        $value = $this->rawString($ifd, $tag);
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value, "\0");
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * Decodes EXIF user comment strings with encoding prefixes.
+     */
+    private function decodeUserComment(string $raw): ?string
+    {
+        if (strlen($raw) <= 8) {
+            return null;
+        }
+
+        $prefix   = substr($raw, 0, 8);
+        $encoding = strtoupper(trim($prefix, "\0 "));
+        $content  = substr($raw, 8);
+
+        if (!is_string($content)) {
+            return null;
+        }
+
+        $content = trim($content, "\0");
+
+        return match ($encoding) {
+            'ASCII', 'UTF8', '' => $content !== '' ? $content : null,
+            'UNICODE'          => $this->decodeUnicodeComment($content),
+            default            => $content !== '' ? $content : null,
+        };
+    }
+
+    /**
+     * Decodes a UTF-16 encoded user comment.
+     */
+    private function decodeUnicodeComment(string $content): ?string
+    {
+        if ($content === '') {
+            return null;
+        }
+
+        $converted = @\iconv('UTF-16LE', 'UTF-8', $content);
+        if ($converted === false) {
+            $converted = @\iconv('UTF-16BE', 'UTF-8', $content);
+        }
+
+        if ($converted !== false) {
+            $converted = trim($converted, "\0");
+
+            return $converted === '' ? null : $converted;
+        }
+
+        $stripped = preg_replace('/\x00/u', '', $content);
+        if ($stripped === null) {
+            return null;
+        }
+
+        $stripped = trim($stripped, "\0");
+
+        return $stripped === '' ? null : $stripped;
+    }
+
+    /**
+     * Returns sanitized sub-second components limited to microsecond precision.
+     */
+    private function sanitizedSubSec(?Ifd $ifd, int $tag): ?string
+    {
+        $value = $this->value($ifd, $tag);
+
+        if (is_string($value)) {
+            $digits = preg_replace('/[^0-9]/', '', $value);
+
+            return ($digits !== null && $digits !== '') ? $digits : null;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            return $first !== null ? (string) (int) $first : null;
+        }
+
+        if (is_int($value)) {
+            return (string) $value;
+        }
+
+        return null;
     }
 
     /**
@@ -491,7 +961,7 @@ final readonly class ExifDocument
      * @param string|null $rawDateTime Raw EXIF datetime formatted as "YYYY:MM:DD HH:MM:SS".
      * @param string|null $rawOffset   Optional timezone offset such as "+01:00".
      */
-    private function parseExifDateTime(?string $rawDateTime, ?string $rawOffset): ?DateTimeImmutable
+    private function parseExifDateTime(?string $rawDateTime, ?string $rawOffset, ?string $subSeconds): ?DateTimeImmutable
     {
         if ($rawDateTime === null || $rawDateTime === '' || strlen($rawDateTime) < 19) {
             return null;
@@ -506,7 +976,19 @@ final readonly class ExifDocument
         }
 
         $normalized = str_replace(':', '-', substr($rawDateTime, 0, 10)) . substr($rawDateTime, 10);
-        $dt         = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $normalized, $tz);
+        $format     = 'Y-m-d H:i:s';
+
+        if ($subSeconds !== null && $subSeconds !== '') {
+            $digits = preg_replace('/[^0-9]/', '', $subSeconds);
+            if ($digits !== null && $digits !== '') {
+                $digits     = substr($digits, 0, 6);
+                $digits     = str_pad($digits, 6, '0');
+                $normalized .= '.' . $digits;
+                $format     .= '.u';
+            }
+        }
+
+        $dt = DateTimeImmutable::createFromFormat($format, $normalized, $tz);
 
         return $dt !== false ? $dt : null;
     }

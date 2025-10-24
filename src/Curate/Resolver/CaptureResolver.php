@@ -43,7 +43,15 @@ final readonly class CaptureResolver
             return null;
         }
 
-        return new Capture($dateTime);
+        return new Capture(
+            dateTime: $dateTime,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: null,
+            cameraElevationAngleDeg: null,
+        );
     }
 
     /**
