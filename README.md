@@ -36,9 +36,9 @@ $structured->related->livePhotoPairId;
 | --- | --- | --- | --- |
 | `Interop` | `index`, `version` | `InteropIndex`, `InteropVersion` | Hex fallback for binary data |
 | `TiffData` | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities` | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities` | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()` |
-| `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal` | `CompositeImage`, `CompositeImageCount`, `CompositeImageExposureTimes` | `CompositeImage`, rational to float |
+| `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal` | `CompositeImage`, `SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage` | `CompositeImage`, rational to float |
 | `Standards` | `exifVersion`, `flashpixVersion` | `ExifVersion`, `FlashpixVersion` | `ValueConverters::toExifVersion()` |
-| `Lens` | `lensInfo`, `maxApertureFNumber` | `LensInfo`, `MaxApertureValue` | `ValueConverters::apexToFNumber()` |
+| `Lens` | `lensSpecification`, `maxApertureFNumber` | `LensSpecification`, `MaxApertureValue` | `ValueConverters::apexToFNumber()` |
 | `Exposure` | `exposureBiasEv`, `gainControl`, `contrast` | `ExposureBiasValue`, `GainControl`, `Contrast` | `GainControl` enum |
 | `Scene` | `subjectDistanceRange` | `SubjectDistanceRange` | `SubjectDistanceRange` enum |
 | `Device` | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware` | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware` | – |
@@ -46,9 +46,13 @@ $structured->related->livePhotoPairId;
 ```php
 $s = $meta->structured();
 $s->tiff->compression;              // Compression::JPEG
-$s->lens->lensInfo;                 // [minF, minAperture, maxF, maxAperture]
+$s->lens->lensSpecification;       // [minF, minAperture, maxF, maxAperture]
 $s->composite->type;                // CompositeImage::GeneralComposite
 $s->standards->exifVersion;         // "3.00"
 ```
+
+> [!NOTE]
+> The legacy accessors `lensInfo`, `compositeImageCount` and `compositeExposureTimes` remain available as deprecated aliases to
+> ease migration to the EXIF 3.0 naming scheme and will be removed in a future major release.
 
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.

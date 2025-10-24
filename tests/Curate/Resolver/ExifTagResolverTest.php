@@ -164,5 +164,37 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame(2, $resolver->gpsDifferential());
         self::assertEqualsWithDelta(1.5, $resolver->gpsHorizontalPositioningError(), 0.000001);
     }
+
+    /**
+     * Ensures EXIF 3.0 tags expose both new accessors and their deprecated aliases.
+     */
+    #[Test]
+    public function exposesExif30LensAndCompositeMetadataWithAliases(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::LENS_SPECIFICATION                        => new IfdEntry(ExifTag::LENS_SPECIFICATION, 5, 4, [[35, 1], [20, 5], [150, 1], [28, 5]]),
+            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE    => new IfdEntry(ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE, 3, 2, new ExifNumericList([9, 4])),
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE  => new IfdEntry(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
+        ]);
+
+        $document = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame([35.0, 4.0, 150.0, 5.6], $resolver->lensSpecification());
+        self::assertSame($resolver->lensSpecification(), $resolver->lensInfo());
+
+        self::assertSame([9, 4], $resolver->sourceImageNumberOfCompositeImage());
+        self::assertSame(
+            $resolver->sourceImageNumberOfCompositeImage(),
+            $resolver->compositeImageCount(),
+        );
+
+        $exposureTimes = $resolver->sourceExposureTimesOfCompositeImage();
+        self::assertSame($exposureTimes, $resolver->compositeExposureTimes());
+        self::assertNotNull($exposureTimes);
+        self::assertCount(4, $exposureTimes);
+        self::assertEqualsWithDelta(0.008333333333333333, $exposureTimes[0], 1e-12);
+        self::assertEqualsWithDelta(0.06666666666666667, $exposureTimes[3], 1e-12);
+    }
 }
 

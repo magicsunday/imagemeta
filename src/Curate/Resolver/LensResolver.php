@@ -53,7 +53,7 @@ final readonly class LensResolver
             focalLengthMm: $focal,
             focalLengthIn35mm: $focal35,
             maxApertureFNumber: $maxAperture,
-            lensInfo: null,
+            lensSpecification: null,
         );
     }
 }
