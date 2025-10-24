@@ -36,6 +36,13 @@ final class Metadata
     public readonly ?XmpDocument $xmpDoc;
     public readonly ?MakerNotesMetadata $makerNotes;
 
+    public readonly ?string $iccProfile;
+
+    /**
+     * @var list<string>
+     */
+    public readonly array $iccSegments;
+
     private ?StructuredMetadata $structured = null;
 
     /**
@@ -45,6 +52,8 @@ final class Metadata
      * @param list<string>            $xmpBlobs   XMP packets (RDF/XML), first is primary
      * @param XmpDocument|null        $xmpDoc     Parsed representation of the primary XMP packet.
      * @param MakerNotesMetadata|null $makerNotes Decoded maker notes metadata for the primary EXIF blob.
+     * @param string|null             $iccProfile Binary ICC profile when available.
+     * @param list<string>            $iccSegments Raw ICC APP2 segments in encounter order.
      */
     public function __construct(
         array $exifBlobs,
@@ -53,13 +62,17 @@ final class Metadata
         array $xmpBlobs = [],
         ?XmpDocument $xmpDoc = null,
         ?MakerNotesMetadata $makerNotes = null,
+        ?string $iccProfile = null,
+        array $iccSegments = [],
     ) {
-        $this->exifBlobs  = $exifBlobs;
-        $this->quickTime  = $quickTime;
-        $this->exifDoc    = $exifDoc;
-        $this->xmpBlobs   = $xmpBlobs;
-        $this->xmpDoc     = $xmpDoc;
-        $this->makerNotes = $makerNotes;
+        $this->exifBlobs   = $exifBlobs;
+        $this->quickTime   = $quickTime;
+        $this->exifDoc     = $exifDoc;
+        $this->xmpBlobs    = $xmpBlobs;
+        $this->xmpDoc      = $xmpDoc;
+        $this->makerNotes  = $makerNotes;
+        $this->iccProfile  = $iccProfile;
+        $this->iccSegments = $iccSegments;
     }
 
     /**
