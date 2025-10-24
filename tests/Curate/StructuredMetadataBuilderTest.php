@@ -503,6 +503,63 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures HDR scene detection falls back to maker note hints when QuickTime metadata is silent.
+     */
+    #[Test]
+    public function infersHdrSceneFromAppleMakerNotes(): void
+    {
+        $makerNotesWithHeadroom = new AppleMakerNotes(
+            contentIdentifier: null,
+            cameraType: null,
+            hdrHeadroom: 1.5,
+            hdrGain: null,
+            snr: null,
+            focusPosition: null,
+            livePhotoIndex: null,
+            colorTemperature: null,
+            semanticStylePreset: null,
+            semanticStyleWarmth: null,
+            semanticStyleTone: null,
+            flags: [],
+            accelerationVector: null,
+        );
+
+        $makerNotes = new MakerNotesMetadata('Apple', 32, str_repeat('a', 40), $makerNotesWithHeadroom);
+
+        $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
+        $metadata     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertTrue($structured->scene->hdrScene);
+
+        $makerNotesWithFlags = new AppleMakerNotes(
+            contentIdentifier: null,
+            cameraType: null,
+            hdrHeadroom: null,
+            hdrGain: null,
+            snr: null,
+            focusPosition: null,
+            livePhotoIndex: null,
+            colorTemperature: null,
+            semanticStylePreset: null,
+            semanticStyleWarmth: null,
+            semanticStyleTone: null,
+            flags: ['hdrEnabled' => true],
+            accelerationVector: null,
+        );
+
+        $makerNotesFlags = new MakerNotesMetadata('Apple', 16, str_repeat('b', 40), $makerNotesWithFlags);
+
+        $exifDocumentFlags = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotesFlags);
+        $metadataFlags     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocumentFlags, [], null, $makerNotesFlags);
+
+        $structuredFlags = (new StructuredMetadataBuilder())->build($metadataFlags);
+
+        self::assertTrue($structuredFlags->scene->hdrScene);
+    }
+
+    /**
      * Ensures EXIF 2.2 markers derive the legacy profile identifier.
      */
     #[Test]
