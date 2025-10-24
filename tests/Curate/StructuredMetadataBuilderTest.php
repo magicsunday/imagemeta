@@ -218,7 +218,10 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('EF 85mm f/1.4L', $structured->lens->lensModel);
         self::assertSame(85.0, $structured->lens->focalLengthMm);
         self::assertSame(85, $structured->lens->focalLengthIn35mm);
-        self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensInfo);
+        self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensSpecification);
+        // Deprecated alias retained for BC to ease migration to EXIF 3.0 terminology.
+        /** @phpstan-ignore-next-line deprecated alias exercised intentionally */
+        self::assertSame($structured->lens->lensSpecification, $structured->lens->lensInfo);
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
         self::assertSame(6720, $structured->image->width);
@@ -324,8 +327,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::EXPOSURE_TIME                  => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 120]]),
             ExifTag::F_NUMBER                       => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[19, 10]]),
             ExifTag::COMPOSITE_IMAGE                => new IfdEntry(ExifTag::COMPOSITE_IMAGE, 3, 1, CompositeImage::GENERAL_COMPOSITE->value),
-            ExifTag::COMPOSITE_IMAGE_COUNT          => new IfdEntry(ExifTag::COMPOSITE_IMAGE_COUNT, 3, 2, new ExifNumericList([9, 4])),
-            ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES => new IfdEntry(ExifTag::COMPOSITE_IMAGE_EXPOSURE_TIMES, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
+            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE   => new IfdEntry(ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE, 3, 2, new ExifNumericList([9, 4])),
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE, 5, 4, [[1, 120], [1, 60], [1, 30], [1, 15]]),
             ExifTag::DATETIME_ORIGINAL              => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 19, '2024:02:01 20:45:00'),
             ExifTag::OFFSET_TIME_ORIGINAL           => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 6, '+01:00'),
             ExifTag::OFFSET_TIME                    => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+01:30'),

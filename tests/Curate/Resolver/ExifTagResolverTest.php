@@ -127,10 +127,16 @@ final class ExifTagResolverTest extends TestCase
         $resolver = new ExifTagResolver($document);
 
         $gps = $resolver->gps();
+        self::assertSame('N', $gps['lat_ref']);
         self::assertEqualsWithDelta(51.5, $gps['lat'], 0.000001);
+        self::assertSame('E', $gps['lon_ref']);
         self::assertEqualsWithDelta(8.5, $gps['lon'], 0.000001);
+        self::assertSame(0, $gps['alt_ref']);
         self::assertEqualsWithDelta(150.0, $gps['alt'], 0.000001);
 
+        self::assertSame('N', $resolver->gpsLatitudeRef());
+        self::assertSame('E', $resolver->gpsLongitudeRef());
+        self::assertSame(0, $resolver->gpsAltitudeRef());
         self::assertSame('3.0.0.0', $resolver->gpsVersion());
         self::assertSame('05', $resolver->gpsSatellites());
         self::assertSame('A', $resolver->gpsStatus());

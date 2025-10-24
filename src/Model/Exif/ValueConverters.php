@@ -254,8 +254,11 @@ final readonly class ValueConverters
      * Returns the default GPS metadata structure with all keys initialised to null.
      *
      * @return array{
+     *     lat_ref:?string,
      *     lat:?float,
+     *     lon_ref:?string,
      *     lon:?float,
+     *     alt_ref:?int,
      *     alt:?float,
      *     version:?string,
      *     satellites:?string,
@@ -289,8 +292,11 @@ final readonly class ValueConverters
     public static function emptyGpsResult(): array
     {
         return [
+            'lat_ref'               => null,
             'lat'                   => null,
+            'lon_ref'               => null,
             'lon'                   => null,
+            'alt_ref'               => null,
             'alt'                   => null,
             'version'               => null,
             'satellites'            => null,
@@ -328,8 +334,11 @@ final readonly class ValueConverters
      * @param Ifd $gps The GPS IFD containing coordinate tags.
      *
      * @return array{
+     *     lat_ref:?string,
      *     lat:?float,
+     *     lon_ref:?string,
      *     lon:?float,
+     *     alt_ref:?int,
      *     alt:?float,
      *     version:?string,
      *     satellites:?string,
@@ -374,22 +383,32 @@ final readonly class ValueConverters
         $lonRef = $lonRefEntry?->value;
         $lonVal = $lonValEntry?->value;
 
+        $result['lat_ref'] = is_string($latRef) ? strtoupper(trim($latRef)) : null;
+        $result['lon_ref'] = is_string($lonRef) ? strtoupper(trim($lonRef)) : null;
+
         $latPairs = $latVal instanceof ExifRationalList ? $latVal : null;
         $lonPairs = $lonVal instanceof ExifRationalList ? $lonVal : null;
 
-        $result['lat'] = self::dmsToFloat(is_string($latRef) ? trim($latRef) : null, $latPairs);
-        $result['lon'] = self::dmsToFloat(is_string($lonRef) ? trim($lonRef) : null, $lonPairs);
+        $result['lat'] = self::dmsToFloat($result['lat_ref'], $latPairs);
+        $result['lon'] = self::dmsToFloat($result['lon_ref'], $lonPairs);
+
+        $altRefEntry = $gps->get(ExifTag::GPS_ALTITUDE_REF);
+        $altRefValue = $altRefEntry?->value;
+        if ($altRefValue instanceof ExifNumericList) {
+            $altRefValue = $altRefValue->values[0] ?? null;
+        }
+        if (is_int($altRefValue)) {
+            $result['alt_ref'] = $altRefValue;
+        } elseif (is_float($altRefValue)) {
+            $result['alt_ref'] = (int) round($altRefValue);
+        }
 
         $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
         if ($altEntry instanceof IfdEntry && $altEntry->value instanceof ExifRational) {
             $alt = self::rationalToFloat($altEntry->value);
 
-            $altRef = $gps->get(ExifTag::GPS_ALTITUDE_REF);
-            if ($alt !== null && $altRef instanceof IfdEntry) {
-                $refValue = $altRef->value;
-                if (is_int($refValue) && $refValue === 1) {
-                    $alt = -$alt;
-                }
+            if ($alt !== null && $result['alt_ref'] === 1) {
+                $alt = -$alt;
             }
 
             $result['alt'] = $alt;

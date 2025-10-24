@@ -183,7 +183,9 @@ final class ExifTagTest extends TestCase
             'LENS_SERIAL_NUMBER'             => 0xA435,
             'COMPOSITE_IMAGE'                => 0xA460,
             'COMPOSITE_IMAGE_COUNT'          => 0xA461,
+            'SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE' => 0xA461,
             'COMPOSITE_IMAGE_EXPOSURE_TIMES' => 0xA462,
+            'SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE' => 0xA462,
             'GAMMA'                          => 0xA500,
 
             // Environmental sensing and processing notes

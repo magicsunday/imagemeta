@@ -780,8 +780,11 @@ final readonly class ExifDocument
      * Returns the parsed GPS metadata extracted from the GPS IFD.
      *
      * @return array{
+     *     lat_ref:?string,
      *     lat:?float,
+     *     lon_ref:?string,
      *     lon:?float,
+     *     alt_ref:?int,
      *     alt:?float,
      *     version:?string,
      *     satellites:?string,
