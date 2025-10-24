@@ -42,6 +42,34 @@ use function substr;
  */
 final class TiffExifReader
 {
+    private const TIFF_MAGIC_CLASSIC = 0x002A;
+
+    private const TIFF_MAGIC_BIG = 0x002B;
+
+    private const TYPE_BYTE = 1;
+
+    private const TYPE_ASCII = 2;
+
+    private const TYPE_SHORT = 3;
+
+    private const TYPE_LONG = 4;
+
+    private const TYPE_RATIONAL = 5;
+
+    private const TYPE_SBYTE = 6;
+
+    private const TYPE_UNDEFINED = 7;
+
+    private const TYPE_SSHORT = 8;
+
+    private const TYPE_SLONG = 9;
+
+    private const TYPE_SRATIONAL = 10;
+
+    private const TYPE_FLOAT = 11;
+
+    private const TYPE_DOUBLE = 12;
+
     private MemoryBuffer $buf;
 
     private Endian $bo;
@@ -74,17 +102,23 @@ final class TiffExifReader
         };
 
         $magic = $this->readU16();
-        if ($magic === 0x2B) {
+        if ($magic === self::TIFF_MAGIC_BIG) {
             $this->bigTiff = true;
             $this->parseBigTiffHeader();
             $firstIfd = $this->readU64();
             $ifd0     = $this->readIfd($firstIfd);
-        } elseif ($magic === 0x2A) {
+        } elseif ($magic === self::TIFF_MAGIC_CLASSIC) {
             $this->bigTiff = false;
             $firstIfd      = $this->readU32();
             $ifd0          = $this->readIfd($firstIfd);
         } else {
-            throw new ParseError('Unknown TIFF magic (expected 0x002A or 0x002B)');
+            throw new ParseError(
+                sprintf(
+                    'Unknown TIFF magic (expected 0x%04X or 0x%04X)',
+                    self::TIFF_MAGIC_CLASSIC,
+                    self::TIFF_MAGIC_BIG,
+                ),
+            );
         }
 
         // follow pointers
@@ -209,15 +243,15 @@ final class TiffExifReader
             );
         }
 
-        if ($type === 2) { // ASCII
+        if ($type === self::TYPE_ASCII) { // ASCII
             return rtrim($bytes, "\0");
         }
 
-        if ($type === 5 || $type === 10) { // RATIONAL / SRATIONAL
+        if ($type === self::TYPE_RATIONAL || $type === self::TYPE_SRATIONAL) { // RATIONAL / SRATIONAL
             $rationalValues = [];
             for ($i = 0; $i < $count; ++$i) {
-                $num              = $this->read32FromBytes($bytes, $i * 8, $type === 10);
-                $den              = $this->read32FromBytes($bytes, $i * 8 + 4, $type === 10);
+                $num              = $this->read32FromBytes($bytes, $i * 8, $type === self::TYPE_SRATIONAL);
+                $den              = $this->read32FromBytes($bytes, $i * 8 + 4, $type === self::TYPE_SRATIONAL);
                 $rationalValues[] = new ExifRational($num, $den);
             }
 
@@ -230,15 +264,15 @@ final class TiffExifReader
         $cursor = 0;
         for ($i = 0; $i < $count; ++$i) {
             $vals[] = match ($type) {
-                1       => ord($bytes[$cursor]),                                // BYTE
-                6       => $this->toSigned(ord($bytes[$cursor]), 8),            // SBYTE
-                7       => ord($bytes[$cursor]),                                // UNDEFINED → return as byte
-                3       => $this->unpackU16(substr($bytes, $cursor, 2)),        // SHORT
-                8       => $this->unpackS16(substr($bytes, $cursor, 2)),        // SSHORT
-                4       => $this->unpackU32(substr($bytes, $cursor, 4)),        // LONG
-                9       => $this->unpackS32(substr($bytes, $cursor, 4)),        // SLONG
-                11      => $this->unpackFloat(substr($bytes, $cursor, 4)),     // FLOAT
-                12      => $this->unpackDouble(substr($bytes, $cursor, 8)),    // DOUBLE
+                self::TYPE_BYTE      => ord($bytes[$cursor]),                          // BYTE
+                self::TYPE_SBYTE     => $this->toSigned(ord($bytes[$cursor]), 8),      // SBYTE
+                self::TYPE_UNDEFINED => ord($bytes[$cursor]),                          // UNDEFINED → return as byte
+                self::TYPE_SHORT     => $this->unpackU16(substr($bytes, $cursor, 2)),  // SHORT
+                self::TYPE_SSHORT    => $this->unpackS16(substr($bytes, $cursor, 2)),  // SSHORT
+                self::TYPE_LONG      => $this->unpackU32(substr($bytes, $cursor, 4)),  // LONG
+                self::TYPE_SLONG     => $this->unpackS32(substr($bytes, $cursor, 4)),  // SLONG
+                self::TYPE_FLOAT     => $this->unpackFloat(substr($bytes, $cursor, 4)), // FLOAT
+                self::TYPE_DOUBLE    => $this->unpackDouble(substr($bytes, $cursor, 8)), // DOUBLE
                 default => throw new ParseError('Unsupported type in decodeBytes: ' . $type),
             };
             $cursor += $componentSize;
@@ -347,10 +381,10 @@ final class TiffExifReader
     private function bytesPerComponent(int $type): int
     {
         return match ($type) {
-            1, 2, 6, 7 => 1,           // BYTE, ASCII, SBYTE, UNDEFINED
-            3, 8 => 2,           // SHORT, SSHORT
-            4, 9, 11 => 4,           // LONG, SLONG, FLOAT
-            5, 10, 12 => 8,           // RATIONAL, SRATIONAL, DOUBLE
+            self::TYPE_BYTE, self::TYPE_ASCII, self::TYPE_SBYTE, self::TYPE_UNDEFINED => 1,           // BYTE, ASCII, SBYTE, UNDEFINED
+            self::TYPE_SHORT, self::TYPE_SSHORT => 2,           // SHORT, SSHORT
+            self::TYPE_LONG, self::TYPE_SLONG, self::TYPE_FLOAT => 4,           // LONG, SLONG, FLOAT
+            self::TYPE_RATIONAL, self::TYPE_SRATIONAL, self::TYPE_DOUBLE => 8,           // RATIONAL, SRATIONAL, DOUBLE
             default => throw new ParseError('Unsupported TIFF type: ' . $type),
         };
     }
