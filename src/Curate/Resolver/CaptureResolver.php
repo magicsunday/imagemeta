@@ -51,6 +51,7 @@ final readonly class CaptureResolver
             waterDepthM: null,
             accelerationMs2: null,
             cameraElevationAngleDeg: null,
+            selfTimerModeSeconds: $exifDocument?->selfTimerModeSeconds(),
         );
     }
 

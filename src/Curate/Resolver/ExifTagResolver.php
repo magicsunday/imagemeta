@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters as ExifValueConverters;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
@@ -35,6 +36,8 @@ use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
@@ -48,6 +51,7 @@ use function is_array;
 use function is_float;
 use function is_int;
 use function is_string;
+use function is_numeric;
 use function ord;
 use function round;
 use function trim;
@@ -118,11 +122,27 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the camera firmware version string when recorded.
+     */
+    public function cameraFirmwareVersion(): ?string
+    {
+        return $this->document?->cameraFirmwareVersion();
+    }
+
+    /**
      * Returns the raw developing software string.
      */
     public function rawDevelopingSoftware(): ?string
     {
         return $this->document?->rawDevelopingSoftware();
+    }
+
+    /**
+     * Returns the raw developing software version string.
+     */
+    public function rawDevelopingSoftwareVersion(): ?string
+    {
+        return $this->document?->rawDevelopingSoftwareVersion();
     }
 
     /**
@@ -139,6 +159,14 @@ final readonly class ExifTagResolver
     public function metadataEditingSoftware(): ?string
     {
         return $this->document?->metadataEditingSoftware();
+    }
+
+    /**
+     * Returns the metadata editing software version string.
+     */
+    public function metadataEditingSoftwareVersion(): ?string
+    {
+        return $this->document?->metadataEditingSoftwareVersion();
     }
 
     /**
@@ -172,9 +200,7 @@ final readonly class ExifTagResolver
      */
     public function tiffEpStandardId(): ?array
     {
-        $values = $this->document?->tiffEpStandardId();
-
-        return $values !== null ? array_values($values) : null;
+        return $this->document?->tiffEpStandardId();
     }
 
     /**
@@ -277,7 +303,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->ifd0, ExifTag::BITS_PER_SAMPLE);
 
-        return $value !== null ? (int) $value : null;
+        return $value;
     }
 
     /**
@@ -327,9 +353,25 @@ final readonly class ExifTagResolver
      */
     public function componentsConfiguration(): ?array
     {
-        $values = $this->document?->componentsConfiguration();
+        return $this->document?->componentsConfiguration();
+    }
 
-        return $values !== null ? array_values($values) : null;
+    /**
+     * Returns human readable component configuration labels.
+     *
+     * @return list<string>|null
+     */
+    public function componentsConfigurationLabels(): ?array
+    {
+        return $this->document?->componentsConfigurationLabels();
+    }
+
+    /**
+     * Returns the component configuration description string.
+     */
+    public function componentsConfigurationDescription(): ?string
+    {
+        return $this->document?->componentsConfigurationDescription();
     }
 
     /**
@@ -429,9 +471,17 @@ final readonly class ExifTagResolver
      */
     public function cfaPattern(): ?array
     {
-        $pattern = $this->document?->cfaPattern();
+        return $this->document?->cfaPattern();
+    }
 
-        return $pattern !== null ? array_values($pattern) : null;
+    /**
+     * Returns the CFA pattern as colour enums.
+     *
+     * @return list<CfaPatternColor>|null
+     */
+    public function cfaPatternColors(): ?array
+    {
+        return $this->document?->cfaPatternColors();
     }
 
     /**
@@ -457,7 +507,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->ifd0, ExifTag::SAMPLES_PER_PIXEL);
 
-        return $value !== null ? (int) $value : null;
+        return $value;
     }
 
     /**
@@ -467,7 +517,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->ifd0, ExifTag::ROWS_PER_STRIP);
 
-        return $value !== null ? (int) $value : null;
+        return $value;
     }
 
     /**
@@ -652,7 +702,18 @@ final readonly class ExifTagResolver
     {
         $value = $this->getValue($this->document?->ifd0, ExifTag::WHITE_POINT);
 
-        return CoreValueConverters::toWhitePoint($value);
+        if ($value instanceof ExifRationalList || $value instanceof ExifNumericList) {
+            return CoreValueConverters::toWhitePoint($value);
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        /** @var array<int, array<int, int|float|string>|int|float|string> $arrayValue */
+        $arrayValue = array_values($value);
+
+        return CoreValueConverters::toWhitePoint($arrayValue);
     }
 
     /**
@@ -664,7 +725,18 @@ final readonly class ExifTagResolver
     {
         $value = $this->getValue($this->document?->ifd0, ExifTag::PRIMARY_CHROMATICITIES);
 
-        return CoreValueConverters::toPrimaryChromaticities($value);
+        if ($value instanceof ExifRationalList || $value instanceof ExifNumericList) {
+            return CoreValueConverters::toPrimaryChromaticities($value);
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        /** @var array<int, array<int, int|float|string>|int|float|string> $arrayValue */
+        $arrayValue = array_values($value);
+
+        return CoreValueConverters::toPrimaryChromaticities($arrayValue);
     }
 
     /**
@@ -741,7 +813,7 @@ final readonly class ExifTagResolver
             foreach ($this->sensitivityTagPriority($sensitivityType) as $tag) {
                 $value = $this->numericValue($this->document?->exifIfd, $tag);
                 if ($value !== null) {
-                    return (int) $value;
+                    return $value;
                 }
             }
         }
@@ -752,7 +824,7 @@ final readonly class ExifTagResolver
         ] as $tag) {
             $value = $this->numericValue($this->document?->exifIfd, $tag);
             if ($value !== null) {
-                return (int) $value;
+                return $value;
             }
         }
 
@@ -895,7 +967,7 @@ final readonly class ExifTagResolver
     /**
      * Returns the custom rendered value as reported by the camera.
      */
-    public function customRendered(): ?int
+    public function customRendered(): ?CustomRendered
     {
         return $this->document?->customRendered();
     }
@@ -907,7 +979,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::CONTRAST);
 
-        return $value !== null ? (int) $value : null;
+        return $value;
     }
 
     /**
@@ -917,7 +989,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::SATURATION);
 
-        return $value !== null ? (int) $value : null;
+        return $value;
     }
 
     /**
@@ -927,7 +999,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::SHARPNESS);
 
-        return $value !== null ? (int) $value : null;
+        return $value;
     }
 
     /**
@@ -1025,9 +1097,7 @@ final readonly class ExifTagResolver
      */
     public function timeZoneOffsetMinutes(): ?array
     {
-        $offsets = $this->document?->timeZoneOffsetMinutes();
-
-        return $offsets !== null ? array_values($offsets) : null;
+        return $this->document?->timeZoneOffsetMinutes();
     }
 
     /**
@@ -1460,8 +1530,8 @@ final readonly class ExifTagResolver
             return array_map(static fn ($v): int => (int) $v, $value->values);
         }
 
-        if (is_array($value)) {
-            return array_map(static fn ($v): int => (int) $v, $value);
+        if (is_int($value) || is_float($value)) {
+            return [(int) $value];
         }
 
         return null;
@@ -1474,9 +1544,7 @@ final readonly class ExifTagResolver
      */
     public function subjectLocation(): ?array
     {
-        $values = $this->document?->subjectLocation();
-
-        return $values !== null ? array_values($values) : null;
+        return $this->document?->subjectLocation();
     }
 
     /**
@@ -1486,7 +1554,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::LIGHT_SOURCE);
 
-        return $value !== null ? LightSource::tryFrom((int) $value) : null;
+        return $value !== null ? LightSource::tryFrom($value) : null;
     }
 
     /**
@@ -1496,13 +1564,13 @@ final readonly class ExifTagResolver
     {
         $value = $this->numericValue($this->document?->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
 
-        return $value !== null ? SceneCaptureType::tryFrom((int) $value) : null;
+        return $value !== null ? SceneCaptureType::tryFrom($value) : null;
     }
 
     /**
      * Returns the raw scene type classification.
      */
-    public function sceneType(): ?int
+    public function sceneType(): ?SceneType
     {
         return $this->document?->sceneType();
     }
@@ -1574,11 +1642,8 @@ final readonly class ExifTagResolver
         $values = $this->normalizeRationalList(
             $this->getValue($this->document?->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE),
         );
-        if ($values === []) {
-            return null;
-        }
 
-        return array_values($values);
+        return $values !== [] ? $values : null;
     }
 
     /**
@@ -1707,8 +1772,16 @@ final readonly class ExifTagResolver
     private function rationalValue(?Ifd $ifd, int $tag): ?float
     {
         $entry = $this->getEntry($ifd, $tag);
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
 
-        return $entry instanceof IfdEntry ? CoreValueConverters::rationalToFloat($entry->value) : null;
+        $value = $this->sanitizeRationalInput($entry->value);
+        if ($value === null) {
+            return null;
+        }
+
+        return CoreValueConverters::rationalToFloat($value);
     }
 
     /**
@@ -1719,17 +1792,34 @@ final readonly class ExifTagResolver
     private function normalizeRationalList(mixed $value): array
     {
         if ($value instanceof ExifRationalList) {
-            return array_map(static fn (ExifRational $rational): float => CoreValueConverters::rationalToFloat($rational), $value->values);
+            $floats = [];
+            foreach ($value->values as $rational) {
+                $float = CoreValueConverters::rationalToFloat($rational);
+                if ($float === null) {
+                    return [];
+                }
+
+                $floats[] = $float;
+            }
+
+            return $floats;
         }
 
         if ($value instanceof ExifRational) {
-            return [CoreValueConverters::rationalToFloat($value) ?? 0.0];
+            $float = CoreValueConverters::rationalToFloat($value);
+
+            return $float !== null ? [$float] : [];
         }
 
         if (is_array($value)) {
             $values = [];
-            foreach ($value as $component) {
-                $float = CoreValueConverters::rationalToFloat($component);
+            foreach (array_values($value) as $component) {
+                $sanitised = $this->sanitizeRationalArrayComponent($component);
+                if ($sanitised === null) {
+                    return [];
+                }
+
+                $float = CoreValueConverters::rationalToFloat($sanitised);
                 if ($float === null) {
                     return [];
                 }
@@ -1740,7 +1830,14 @@ final readonly class ExifTagResolver
             return $values;
         }
 
-        return [];
+        $sanitised = $this->sanitizeRationalInput($value);
+        if ($sanitised === null) {
+            return [];
+        }
+
+        $float = CoreValueConverters::rationalToFloat($sanitised);
+
+        return $float !== null ? [$float] : [];
     }
 
     /**
@@ -1751,11 +1848,18 @@ final readonly class ExifTagResolver
     private function normalizeNumericList(mixed $value): array
     {
         if ($value instanceof ExifNumericList) {
-            return array_values($value->values);
+            return $value->values;
         }
 
         if (is_array($value)) {
-            return array_values($value);
+            $result = [];
+            foreach ($value as $component) {
+                if (is_int($component) || is_float($component)) {
+                    $result[] = $component;
+                }
+            }
+
+            return $result;
         }
 
         if (is_int($value) || is_float($value)) {
@@ -1763,6 +1867,106 @@ final readonly class ExifTagResolver
         }
 
         return [];
+    }
+
+    /**
+     * Normalises raw rational values into formats accepted by the shared converter.
+     *
+     * @return array<int, int|float|string>|int|float|ExifRational|ExifRationalList|ExifNumericList|null
+     */
+    private function sanitizeRationalInput(mixed $value): array|int|float|ExifRational|ExifRationalList|ExifNumericList|null
+    {
+        if ($value instanceof ExifRationalList || $value instanceof ExifRational || $value instanceof ExifNumericList) {
+            return $value;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return $value;
+        }
+
+        if (is_string($value)) {
+            if ($value === '' || !is_numeric($value)) {
+                return null;
+            }
+
+            return (float) $value;
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        return $this->sanitizeRationalPair(array_values($value));
+    }
+
+    /**
+     * Normalises list elements into rational-compatible representations.
+     *
+     * @return array<int, int|float|string>|int|float|null
+     */
+    private function sanitizeRationalArrayComponent(mixed $component): array|int|float|null
+    {
+        if (is_int($component) || is_float($component)) {
+            return $component;
+        }
+
+        if (is_string($component)) {
+            if ($component === '' || !is_numeric($component)) {
+                return null;
+            }
+
+            return (float) $component;
+        }
+
+        if (!is_array($component)) {
+            return null;
+        }
+
+        return $this->sanitizeRationalPair(array_values($component));
+    }
+
+    /**
+     * Sanitises associative or nested arrays into rational numerator/denominator pairs.
+     *
+     * @param array<int, mixed> $value
+     *
+     * @return array<int, int|float|string>|null
+     */
+    private function sanitizeRationalPair(array $value): ?array
+    {
+        $components = array_values($value);
+        if ($components === []) {
+            return null;
+        }
+
+        if (isset($components[0]) && is_array($components[0])) {
+            return $this->sanitizeRationalPair(array_values($components[0]));
+        }
+
+        $pair = [];
+        foreach ($components as $component) {
+            if (is_int($component) || is_float($component)) {
+                $pair[] = $component;
+            } elseif (is_string($component)) {
+                if ($component === '' || !is_numeric($component)) {
+                    return null;
+                }
+
+                $pair[] = $component;
+            } else {
+                return null;
+            }
+
+            if (count($pair) === 2) {
+                break;
+            }
+        }
+
+        if (count($pair) < 2) {
+            return null;
+        }
+
+        return [$pair[0], $pair[1]];
     }
 
     /**

@@ -91,7 +91,7 @@ final readonly class GpsResolver
         }
 
         $parts = preg_split('/[\\s,]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
-        if ($parts === false || $parts === []) {
+        if ($parts === false) {
             return null;
         }
 

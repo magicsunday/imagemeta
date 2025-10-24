@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 
 use function abs;
@@ -105,6 +106,102 @@ final readonly class ValueConverters
         }
 
         return 2 ** ($apex / 2.0);
+    }
+
+    /**
+     * Converts an APEX shutter speed value into seconds.
+     */
+    public static function apexShutterSpeedToSeconds(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?float {
+        $apex = self::rationalToFloat($value);
+
+        if ($apex === null && is_string($value) && is_numeric($value)) {
+            $apex = (float) $value;
+        }
+
+        if ($apex === null) {
+            return null;
+        }
+
+        return 2 ** (-$apex);
+    }
+
+    /**
+     * Formats a components configuration payload into human readable channel labels.
+     *
+     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value.
+     *
+     * @return list<string>|null
+     */
+    public static function componentsConfigurationLabels(array|ExifNumericList|string|int|null $value): ?array
+    {
+        $components = self::toIntList($value);
+        if ($components === null || $components === []) {
+            return null;
+        }
+
+        $labels = [];
+        foreach ($components as $component) {
+            $label = match ($component) {
+                0       => '-',
+                1       => 'Y',
+                2       => 'Cb',
+                3       => 'Cr',
+                4       => 'R',
+                5       => 'G',
+                6       => 'B',
+                7       => 'A',
+                default => null,
+            };
+
+            if ($label === null) {
+                return null;
+            }
+
+            $labels[] = $label;
+        }
+
+        return $labels;
+    }
+
+    /**
+     * Returns a human readable description for the components configuration.
+     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value.
+     */
+    public static function componentsConfigurationDescription(
+        array|ExifNumericList|string|int|null $value,
+    ): ?string {
+        $labels = self::componentsConfigurationLabels($value);
+
+        return $labels !== null ? implode(' ', $labels) : null;
+    }
+
+    /**
+     * Converts a CFA pattern definition into typed colour enums.
+     *
+     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF representation.
+     *
+     * @return list<CfaPatternColor>|null
+     */
+    public static function cfaPatternToColors(array|ExifNumericList|string|int|null $value): ?array
+    {
+        $components = self::toIntList($value);
+        if ($components === null || $components === []) {
+            return null;
+        }
+
+        $colors = [];
+        foreach ($components as $component) {
+            $color = CfaPatternColor::fromExifValue($component);
+            if ($color === null) {
+                return null;
+            }
+
+            $colors[] = $color;
+        }
+
+        return $colors;
     }
 
     /**
@@ -660,7 +757,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        if (!preg_match('/^\d{4}:\d{2}:\d{2}$/', $value)) {
+        if (preg_match('/^\d{4}:\d{2}:\d{2}$/', $value) !== 1) {
             return null;
         }
 
@@ -870,7 +967,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        if ($hours === null || $minutes === null) {
+        if ($minutes < 0) {
             return null;
         }
 
@@ -883,14 +980,61 @@ final readonly class ValueConverters
             return null;
         }
 
-        if ($minutes < 0 || $minutes > 59) {
-            return null;
-        }
-
         return [
             'sign'    => $sign,
             'hours'   => $hours,
             'minutes' => $minutes,
         ];
+    }
+
+    /**
+     * Normalises numeric EXIF representations into a list of integers.
+     *
+     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value representation.
+     *
+     * @return list<int>|null
+     */
+    private static function toIntList(array|ExifNumericList|string|int|null $value): ?array
+    {
+        if ($value instanceof ExifNumericList) {
+            if ($value->values === []) {
+                return null;
+            }
+
+            return array_map(static fn (int|float $component): int => (int) $component, $value->values);
+        }
+
+        if (is_array($value)) {
+            if ($value === []) {
+                return null;
+            }
+
+            $ints = [];
+            foreach ($value as $component) {
+                if (!is_numeric($component)) {
+                    return null;
+                }
+
+                $ints[] = (int) $component;
+            }
+
+            return $ints;
+        }
+
+        if (is_int($value)) {
+            return [$value];
+        }
+
+        if (!is_string($value) || $value === '') {
+            return null;
+        }
+
+        $length = strlen($value);
+        $ints   = [];
+        for ($i = 0; $i < $length; ++$i) {
+            $ints[] = ord($value[$i]);
+        }
+
+        return $ints;
     }
 }

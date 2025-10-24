@@ -89,6 +89,8 @@ trait XmpPropertyAccess
 
     /**
      * Returns the raw value stored in the XMP document.
+     *
+     * @return array<int|string, mixed>|string|null
      */
     protected function xmpValue(?XmpDocument $document, string $namespaceUri, string $localName): array|string|null
     {

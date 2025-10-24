@@ -18,9 +18,11 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
 use function array_map;
-use function array_values;
 use function is_float;
 use function is_int;
 use function is_string;
@@ -96,6 +98,16 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the lens manufacturer string if present.
+     *
+     * @return string|null
+     */
+    public function lensMake(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::LENS_MAKE);
+    }
+
+    /**
      * Returns the camera owner name if present.
      *
      * @return string|null
@@ -142,7 +154,7 @@ final readonly class ExifDocument
      */
     public function imageWidth(): ?int
     {
-        $width = $this->int($this->exifIfd, ExifTag::EXIF_IMAGE_WIDTH);
+        $width = $this->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION);
 
         return $width ?? $this->int($this->ifd0, ExifTag::IMAGE_WIDTH);
     }
@@ -154,7 +166,7 @@ final readonly class ExifDocument
      */
     public function imageHeight(): ?int
     {
-        $height = $this->int($this->exifIfd, ExifTag::EXIF_IMAGE_HEIGHT);
+        $height = $this->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION);
 
         return $height ?? $this->int($this->ifd0, ExifTag::IMAGE_HEIGHT);
     }
@@ -310,6 +322,28 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the component configuration labels in human readable form.
+     *
+     * @return list<string>|null
+     */
+    public function componentsConfigurationLabels(): ?array
+    {
+        $components = $this->componentsConfiguration();
+
+        return $components !== null ? ValueConverters::componentsConfigurationLabels($components) : null;
+    }
+
+    /**
+     * Returns the component configuration as a formatted string.
+     */
+    public function componentsConfigurationDescription(): ?string
+    {
+        $components = $this->componentsConfiguration();
+
+        return $components !== null ? ValueConverters::componentsConfigurationDescription($components) : null;
+    }
+
+    /**
      * Returns the TIFF/EP standard identifier as a list of bytes.
      *
      * @return list<int>|null
@@ -318,7 +352,7 @@ final readonly class ExifDocument
     {
         $values = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
 
-        return $values !== null ? array_values($values) : null;
+        return $values;
     }
 
     /**
@@ -415,6 +449,30 @@ final readonly class ExifDocument
     public function shutterSpeedValue(): ?float
     {
         return $this->rational($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
+    }
+
+    /**
+     * Returns the shutter speed in seconds derived from the APEX value.
+     */
+    public function shutterSpeedSeconds(): ?float
+    {
+        $raw = $this->value($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
+
+        if (
+            $raw === null
+            || (
+                !is_int($raw)
+                && !is_float($raw)
+                && !is_string($raw)
+                && !$raw instanceof ExifRational
+                && !$raw instanceof ExifRationalList
+                && !$raw instanceof ExifNumericList
+            )
+        ) {
+            return null;
+        }
+
+        return ValueConverters::apexShutterSpeedToSeconds($raw);
     }
 
     /**
@@ -602,24 +660,36 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the CFA pattern as colour enums when possible.
+     *
+     * @return list<CfaPatternColor>|null
+     */
+    public function cfaPatternColors(): ?array
+    {
+        $pattern = $this->cfaPattern();
+
+        return $pattern !== null ? ValueConverters::cfaPatternToColors($pattern) : null;
+    }
+
+    /**
      * Returns the scene type classification when present.
      */
-    public function sceneType(): ?int
+    public function sceneType(): ?SceneType
     {
         $value = $this->value($this->exifIfd, ExifTag::SCENE_TYPE);
 
         if (is_int($value)) {
-            return $value;
+            return SceneType::fromExifValue($value);
         }
 
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
 
-            return $first !== null ? (int) $first : null;
+            return is_int($first) ? SceneType::fromExifValue($first) : null;
         }
 
         if (is_string($value) && $value !== '') {
-            return ord($value[0]);
+            return SceneType::fromExifValue(ord($value[0]));
         }
 
         return null;
@@ -628,9 +698,11 @@ final readonly class ExifDocument
     /**
      * Returns whether a custom rendering process was applied.
      */
-    public function customRendered(): ?int
+    public function customRendered(): ?CustomRendered
     {
-        return $this->int($this->exifIfd, ExifTag::CUSTOM_RENDERED);
+        $value = $this->int($this->exifIfd, ExifTag::CUSTOM_RENDERED);
+
+        return CustomRendered::fromExifValue($value);
     }
 
     /**
@@ -702,7 +774,17 @@ final readonly class ExifDocument
      */
     public function cameraFirmware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
+        $value = $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
+
+        return $value ?? $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_LEGACY);
+    }
+
+    /**
+     * Returns the camera firmware version string when present.
+     */
+    public function cameraFirmwareVersion(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_VERSION);
     }
 
     /**
@@ -710,7 +792,17 @@ final readonly class ExifDocument
      */
     public function rawDevelopingSoftware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
+        $value = $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
+
+        return $value ?? $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY);
+    }
+
+    /**
+     * Returns the raw developing software version string.
+     */
+    public function rawDevelopingSoftwareVersion(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION);
     }
 
     /**
@@ -718,7 +810,9 @@ final readonly class ExifDocument
      */
     public function imageEditingSoftware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
+        $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
+
+        return $value ?? $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY);
     }
 
     /**
@@ -726,7 +820,17 @@ final readonly class ExifDocument
      */
     public function metadataEditingSoftware(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
+        $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
+
+        return $value ?? $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
+    }
+
+    /**
+     * Returns the metadata editing software version string.
+     */
+    public function metadataEditingSoftwareVersion(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_VERSION);
     }
 
     /**
@@ -792,7 +896,7 @@ final readonly class ExifDocument
     {
         $values = $this->numericList($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
 
-        return $values !== null ? array_values($values) : null;
+        return $values;
     }
 
     /**
@@ -1215,6 +1319,18 @@ final readonly class ExifDocument
     {
         $value = $this->value($ifd, $tag);
 
+        if (
+            $value !== null
+            && !is_int($value)
+            && !is_float($value)
+            && !is_string($value)
+            && !$value instanceof ExifRational
+            && !$value instanceof ExifRationalList
+            && !$value instanceof ExifNumericList
+        ) {
+            return null;
+        }
+
         return ValueConverters::rationalToFloat($value);
     }
 
@@ -1339,12 +1455,7 @@ final readonly class ExifDocument
         $prefix   = substr($raw, 0, 8);
         $encoding = strtoupper(trim($prefix, "\0 "));
         $content  = substr($raw, 8);
-
-        if (!is_string($content)) {
-            return null;
-        }
-
-        $content = trim($content, "\0");
+        $content  = trim($content, "\0");
 
         return match ($encoding) {
             'ASCII', 'UTF8', '' => $content !== '' ? $content : null,

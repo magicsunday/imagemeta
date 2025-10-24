@@ -28,7 +28,15 @@ final readonly class MakerNotesResolver
      */
     public function string(string $key): ?string
     {
-        return null;
+        if ($this->metadata === null) {
+            return null;
+        }
+
+        return match ($key) {
+            'vendor' => $this->metadata->vendor(),
+            'sha1'   => $this->metadata->sha1(),
+            default  => null,
+        };
     }
 
     /**
@@ -36,7 +44,14 @@ final readonly class MakerNotesResolver
      */
     public function int(string $key): ?int
     {
-        return null;
+        if ($this->metadata === null) {
+            return null;
+        }
+
+        return match ($key) {
+            'length' => $this->metadata->length(),
+            default  => null,
+        };
     }
 
     /**
@@ -44,6 +59,13 @@ final readonly class MakerNotesResolver
      */
     public function bool(string $key): ?bool
     {
-        return null;
+        if ($this->metadata === null) {
+            return null;
+        }
+
+        return match ($key) {
+            'present' => true,
+            default   => null,
+        };
     }
 }
