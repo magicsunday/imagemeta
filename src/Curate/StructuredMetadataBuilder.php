@@ -104,8 +104,15 @@ final class StructuredMetadataBuilder
 
         $interop = new Interop(index: $exifResolver->interopIndex());
 
+        $bitsPerSample    = $exifResolver->bitsPerSample() ?? $metadata->jpegBitsPerSample;
+        $ycbcrSubSampling = $exifResolver->ycbcrSubSampling();
+        if ($ycbcrSubSampling === null) {
+            $ycbcrSubSampling = $metadata->jpegYCbCrSubSampling;
+        }
+
         $tiff = new TiffData(
             samplesPerPixel: $exifResolver->samplesPerPixel(),
+            bitsPerSample: $bitsPerSample,
             rowsPerStrip: $exifResolver->rowsPerStrip(),
             compression: $exifResolver->compression(),
             photometric: $exifResolver->photometric(),
@@ -114,7 +121,7 @@ final class StructuredMetadataBuilder
             xResolution: $exifResolver->xResolution(),
             yResolution: $exifResolver->yResolution(),
             ycbcrPos: $exifResolver->ycbcrPositioning(),
-            ycbcrSubSampling: $exifResolver->ycbcrSubSampling(),
+            ycbcrSubSampling: $ycbcrSubSampling,
             ycbcrCoefficients: $exifResolver->ycbcrCoefficients(),
             whitePoint: $exifResolver->whitePoint(),
             primaryChromaticities: $exifResolver->primaryChromaticities(),

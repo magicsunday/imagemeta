@@ -48,6 +48,10 @@ final class JpegExtractor
 
     private const int MARKER_APP13 = 0xED;
 
+    private const int MARKER_SOF0 = 0xC0;
+
+    private const int MARKER_SOF2 = 0xC2;
+
     /**
      * Signatures identifying metadata-bearing APP segments.
      */
@@ -89,6 +93,14 @@ final class JpegExtractor
 
     /** @var list<string> */
     private array $iptcPayloads = [];
+
+    private ?int $frameBitsPerSample = null;
+
+    /** @var array<int, array{horizontal: int, vertical: int}>|null */
+    private ?array $frameComponentSampling = null;
+
+    /** @var array{0:int,1:int}|null */
+    private ?array $frameYCbCrSubSampling = null;
 
     /**
      * Initialises the extractor with a seekable stream.
@@ -160,6 +172,40 @@ final class JpegExtractor
     }
 
     /**
+     * Returns the precision in bits reported by the primary start of frame segment.
+     */
+    public function getFrameSamplePrecision(): ?int
+    {
+        $this->parseIfNeeded();
+
+        return $this->frameBitsPerSample;
+    }
+
+    /**
+     * Returns the horizontal and vertical sampling factors for components identified in the SOF.
+     *
+     * @return array<int, array{horizontal:int, vertical:int}>|null
+     */
+    public function getFrameComponentSamplingFactors(): ?array
+    {
+        $this->parseIfNeeded();
+
+        return $this->frameComponentSampling;
+    }
+
+    /**
+     * Returns the derived YCbCr subsampling factors inferred from the SOF component sampling.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    public function getFrameYCbCrSubSampling(): ?array
+    {
+        $this->parseIfNeeded();
+
+        return $this->frameYCbCrSubSampling;
+    }
+
+    /**
      * Lazily scans the JPEG structure the first time metadata is requested.
      */
     private function parseIfNeeded(): void
@@ -181,6 +227,9 @@ final class JpegExtractor
         $this->iccProfile       = null;
         $this->iptcPayloads     = [];
         $this->xmpPacketHashes  = [];
+        $this->frameBitsPerSample      = null;
+        $this->frameComponentSampling  = null;
+        $this->frameYCbCrSubSampling   = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -208,6 +257,8 @@ final class JpegExtractor
                 $this->handleApp2($payload, $offset);
             } elseif ($marker === self::MARKER_APP13) {
                 $this->handleApp13($payload);
+            } elseif ($marker === self::MARKER_SOF0 || $marker === self::MARKER_SOF2) {
+                $this->handleStartOfFrame($marker, $payload, $offset);
             }
         }
 
@@ -389,5 +440,112 @@ final class JpegExtractor
         if (str_starts_with($payload, self::IPTC_SIGNATURE)) {
             $this->iptcPayloads[] = $payload;
         }
+    }
+
+    /**
+     * Parses baseline or progressive start of frame markers to obtain sampling information.
+     *
+     * @param int    $marker  Marker code (SOF0 or SOF2).
+     * @param string $payload Raw SOF payload excluding the marker and length field.
+     * @param int    $offset  Offset where the SOF marker begins.
+     */
+    private function handleStartOfFrame(int $marker, string $payload, int $offset): void
+    {
+        if ($this->frameBitsPerSample !== null) {
+            return;
+        }
+
+        $length = strlen($payload);
+        if ($length < 6) {
+            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is too short', $marker, $offset));
+        }
+
+        $componentCount = ord($payload[5]);
+        if ($componentCount === 0) {
+            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d reports zero components', $marker, $offset));
+        }
+
+        $expectedLength = 6 + ($componentCount * 3);
+        if ($length < $expectedLength) {
+            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is truncated', $marker, $offset));
+        }
+
+        $components = [];
+        $index      = 6;
+
+        for ($i = 0; $i < $componentCount; ++$i) {
+            $componentId     = ord($payload[$index]);
+            $samplingFactors = ord($payload[$index + 1]);
+            $horizontal      = $samplingFactors >> 4;
+            $vertical        = $samplingFactors & 0x0F;
+
+            if ($horizontal === 0 || $vertical === 0) {
+                throw new ParseError(
+                    sprintf('SOF marker 0x%02X at offset %d contains zero sampling factor', $marker, $offset)
+                );
+            }
+
+            $components[$componentId] = [
+                'horizontal' => $horizontal,
+                'vertical'   => $vertical,
+            ];
+
+            $index += 3;
+        }
+
+        $this->frameBitsPerSample     = ord($payload[0]);
+        $this->frameComponentSampling = $components;
+        $this->frameYCbCrSubSampling  = $this->deriveYCbCrSubSampling($components);
+    }
+
+    /**
+     * Derives YCbCr subsampling factors from component sampling values.
+     *
+     * @param array<int, array{horizontal:int, vertical:int}> $components
+     *
+     * @return array{0:int,1:int}|null
+     */
+    private function deriveYCbCrSubSampling(array $components): ?array
+    {
+        $luma = $components[1] ?? null;
+        if ($luma === null) {
+            return null;
+        }
+
+        $chromas = [];
+        foreach ($components as $id => $component) {
+            if ($id === 1) {
+                continue;
+            }
+
+            $chromas[] = $component;
+        }
+
+        if ($chromas === []) {
+            return null;
+        }
+
+        $horizontal = $chromas[0]['horizontal'];
+        $vertical   = $chromas[0]['vertical'];
+
+        if ($horizontal === 0 || $vertical === 0) {
+            return null;
+        }
+
+        $count = count($chromas);
+        for ($i = 1; $i < $count; ++$i) {
+            $component = $chromas[$i];
+            $horizontal = min($horizontal, $component['horizontal']);
+            $vertical   = min($vertical, $component['vertical']);
+        }
+
+        if ($luma['horizontal'] % $horizontal !== 0 || $luma['vertical'] % $vertical !== 0) {
+            return null;
+        }
+
+        return [
+            (int) ($luma['horizontal'] / $horizontal),
+            (int) ($luma['vertical'] / $vertical),
+        ];
     }
 }

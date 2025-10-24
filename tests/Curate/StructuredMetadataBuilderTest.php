@@ -1049,6 +1049,36 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures JPEG frame metadata backfills TIFF characteristics when EXIF is absent.
+     */
+    #[Test]
+    public function backfillsTiffDataFromJpegFrameWhenExifMissing(): void
+    {
+        $metadata = new Metadata(
+            [],
+            null,
+            null,
+            [],
+            null,
+            null,
+            null,
+            [],
+            8,
+            [
+                1 => ['horizontal' => 2, 'vertical' => 2],
+                2 => ['horizontal' => 1, 'vertical' => 1],
+                3 => ['horizontal' => 1, 'vertical' => 1],
+            ],
+            [2, 2],
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(8, $structured->tiff->bitsPerSample);
+        self::assertSame([2, 2], $structured->tiff->ycbcrSubSampling);
+    }
+
+    /**
      * Builds a Classic TIFF blob with EXIF/Flashpix version tags encoded as printable UNDEFINED values.
      */
     private function buildClassicVersionBlob(): string
