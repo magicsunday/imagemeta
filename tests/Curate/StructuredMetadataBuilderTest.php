@@ -707,6 +707,12 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(3648, $structured->image->height);
         self::assertNull($structured->video->width);
         self::assertNull($structured->video->height);
+        self::assertNull($structured->video->durationSec);
+        self::assertNull($structured->video->frameRate);
+        self::assertNull($structured->video->codec);
+        self::assertNull($structured->video->hdr);
+        self::assertNull($structured->video->transferFunction);
+        self::assertNull($structured->video->colorPrimaries);
     }
 
     /**
@@ -1144,6 +1150,51 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('202', $third->faceId);
         self::assertNotNull($third->rotationDeg);
         self::assertEqualsWithDelta(-5.0, $third->rotationDeg, 0.0001);
+    }
+
+    #[Test]
+    public function usesAppleMakerNotesToPopulateWhiteBalanceDetails(): void
+    {
+        $ifd0 = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::WHITE_BALANCE => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, WhiteBalance::AUTO->value),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $apple = new AppleMakerNotes(
+            'uuid-123',
+            'Tele',
+            2.5,
+            [1.0, 1.1, 1.2],
+            24.0,
+            0.62,
+            3,
+            5200,
+            'Warm',
+            0.15,
+            -0.05,
+            ['hdrEnabled' => true],
+            [0.1, 0.2, 0.3],
+        );
+
+        $makerNotes = new MakerNotesMetadata(
+            'Apple',
+            128,
+            '0123456789abcdef0123456789abcdef01234567',
+            $apple,
+        );
+
+        $metadata = new Metadata(['primary'], null, $exifDocument, [], null, $makerNotes);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(WhiteBalance::AUTO, $structured->whiteBalanceDetails->mode);
+        self::assertSame(5200, $structured->whiteBalanceDetails->kelvin);
+        self::assertSame('uuid-123', $structured->apple->contentIdentifier);
+        self::assertSame(5200, $structured->apple->colorTemperature);
+        self::assertArrayHasKey('hdrEnabled', $structured->apple->flags);
+        self::assertTrue($structured->apple->flags['hdrEnabled']);
     }
 
     /**

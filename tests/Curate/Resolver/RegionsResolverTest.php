@@ -122,4 +122,62 @@ final class RegionsResolverTest extends TestCase
         self::assertEqualsWithDelta(0.2, $region->w, 0.0001);
         self::assertEqualsWithDelta(0.2, $region->h, 0.0001);
     }
+
+    #[Test]
+    public function mergesSevenFaceRegionsAndFocusAnnotation(): void
+    {
+        $faceCentersX = ['0.10', '0.22', '0.34', '0.46', '0.58', '0.70', '0.82'];
+        $faceCentersY = ['0.15', '0.27', '0.39', '0.51', '0.63', '0.75', '0.87'];
+        $faceWidths   = ['0.12', '0.11', '0.10', '0.09', '0.08', '0.07', '0.06'];
+        $faceHeights  = ['0.14', '0.13', '0.12', '0.11', '0.10', '0.09', '0.08'];
+        $faceNames    = ['Alice', 'Bob', 'Charlie', 'Dora', 'Eve', 'Frank', 'Grace'];
+        $faceIds      = ['1', '2', '3', '4', '5', '6', '7'];
+
+        $mwgTypes = array_fill(0, 7, 'Face');
+        $mwgTypes[] = 'Focus';
+
+        $document = new XmpDocument([
+            '{' . self::NS_ST_AREA . '}x' => [...$faceCentersX, '0.50'],
+            '{' . self::NS_ST_AREA . '}y' => [...$faceCentersY, '0.50'],
+            '{' . self::NS_ST_AREA . '}w' => [...$faceWidths, '0.20'],
+            '{' . self::NS_ST_AREA . '}h' => [...$faceHeights, '0.15'],
+            '{' . self::NS_MWG . '}Type' => $mwgTypes,
+            '{' . self::NS_MWG . '}Name' => [...$faceNames, ''],
+            '{' . self::NS_MWG . '}Confidence' => ['0.95', '0.90', '0.85', '0.80', '0.75', '0.70', '0.65', '0.60'],
+            '{' . self::NS_APPLE . '}CenterX' => $faceCentersX,
+            '{' . self::NS_APPLE . '}CenterY' => $faceCentersY,
+            '{' . self::NS_APPLE . '}Width' => $faceWidths,
+            '{' . self::NS_APPLE . '}Height' => $faceHeights,
+            '{' . self::NS_APPLE . '}Confidence' => ['0.88', '0.86', '0.84', '0.82', '0.80', '0.78', '0.76'],
+            '{' . self::NS_APPLE . '}Roll' => ['1.0', '0.5', '-0.5', '2.0', '-1.5', '0.0', '1.5'],
+            '{' . self::NS_APPLE . '}Name' => $faceNames,
+            '{' . self::NS_APPLE . '}FaceID' => $faceIds,
+        ]);
+
+        $regions = (new RegionsResolver())->resolve($document);
+
+        self::assertCount(8, $regions->items);
+
+        for ($i = 0; $i < 7; ++$i) {
+            $region = $regions->items[$i];
+            self::assertSame(RegionType::FACE, $region->type);
+            self::assertSame($faceNames[$i], $region->personName);
+            self::assertSame($faceIds[$i], $region->faceId);
+            self::assertNotNull($region->confidence);
+            $expectedX = (float) $faceCentersX[$i] - ((float) $faceWidths[$i] / 2.0);
+            $expectedY = (float) $faceCentersY[$i] - ((float) $faceHeights[$i] / 2.0);
+            self::assertEqualsWithDelta($expectedX, $region->x, 0.001);
+            self::assertEqualsWithDelta($expectedY, $region->y, 0.001);
+            self::assertEqualsWithDelta((float) $faceWidths[$i], $region->w, 0.001);
+            self::assertEqualsWithDelta((float) $faceHeights[$i], $region->h, 0.001);
+        }
+
+        $focus = $regions->items[7];
+        self::assertSame(RegionType::FOCUS, $focus->type);
+        self::assertNull($focus->personName);
+        self::assertEqualsWithDelta(0.40, $focus->x, 0.001);
+        self::assertEqualsWithDelta(0.425, $focus->y, 0.001);
+        self::assertEqualsWithDelta(0.20, $focus->w, 0.001);
+        self::assertEqualsWithDelta(0.15, $focus->h, 0.001);
+    }
 }
