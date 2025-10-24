@@ -225,6 +225,7 @@ final class TiffExifReaderTest extends TestCase
         $interop = $doc->interopIfd;
         self::assertNotNull($interop);
         self::assertSame('R98', $interop->get(0x0001)?->value);
+        self::assertNull($interop->get(0x0002));
 
         $gpsIfd = $doc->gpsIfd;
         self::assertNotNull($gpsIfd);
@@ -273,7 +274,8 @@ final class TiffExifReaderTest extends TestCase
 
         $interop = $doc->interopIfd;
         self::assertNotNull($interop);
-        self::assertSame('R98', $interop->get(0x0002)?->value);
+        self::assertSame('R98', $interop->get(0x0001)?->value);
+        self::assertNull($interop->get(0x0002));
 
         $gpsIfd = $doc->gpsIfd;
         self::assertNotNull($gpsIfd);
@@ -403,7 +405,12 @@ final class TiffExifReaderTest extends TestCase
         $blob .= str_repeat("\0", 16); // pad to 220
 
         $interopEntries = [
-            self::packBigTiffEntry(0x0002, 2, 4, self::inlineAsciiToInt('R98', 8)),
+            self::packBigTiffEntry(
+                ExifTag::INTEROPERABILITY_INDEX,
+                2,
+                4,
+                self::inlineAsciiToInt('R98', 8),
+            ),
         ];
         $blob .= pack('V', count($interopEntries)) . pack('V', 0) . implode('', $interopEntries) . pack('V', 0) . pack('V', 0);
 

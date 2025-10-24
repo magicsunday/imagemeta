@@ -103,7 +103,6 @@ final class ExifTagTest extends TestCase
             'IMAGE_WIDTH'                    => 0x0100,
             'INTEROPERABILITY_IFD_POINTER'   => 0xA005,
             'INTEROPERABILITY_INDEX'         => 0x0001,
-            'INTEROPERABILITY_VERSION'       => 0x0002,
             'ISO_SPEED'                      => 0x8833,
             'LENS_INFO'                      => 0xA432,
             'LENS_MAKE'                      => 0xA433,
