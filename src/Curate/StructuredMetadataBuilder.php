@@ -28,7 +28,6 @@ use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
-use MagicSunday\ImageMeta\Value\Depth;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
@@ -95,14 +94,6 @@ final class StructuredMetadataBuilder
             ycbcrCoefficients: $exifResolver->ycbcrCoefficients(),
             whitePoint: $exifResolver->whitePoint(),
             primaryChromaticities: $exifResolver->primaryChromaticities(),
-        );
-
-        $depth = new Depth(
-            format: null,
-            near: null,
-            far: null,
-            units: null,
-            measureType: null,
         );
 
         $composite = new CompositeImageInfo(
@@ -299,7 +290,6 @@ final class StructuredMetadataBuilder
         return new StructuredMetadata(
             interop: $interop,
             tiff: $tiff,
-            depth: $depth,
             composite: $composite,
             standards: $standards,
             camera: $camera,
