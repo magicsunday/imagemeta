@@ -79,7 +79,9 @@ final readonly class ExifTag
 
     public const int PHOTOGRAPHIC_SENSITIVITY = 0x8827;
 
-    public const int STANDARD_OUTPUT_SENSITIVITY = 0x8830;
+    public const int SENSITIVITY_TYPE = 0x8830;
+
+    public const int STANDARD_OUTPUT_SENSITIVITY = 0x8831;
 
     public const int RECOMMENDED_EXPOSURE_INDEX = 0x8832;
 

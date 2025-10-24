@@ -448,17 +448,38 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the EXIF sensitivity type enumeration describing the recorded ISO metrics.
+     */
+    public function sensitivityType(): ?int
+    {
+        return $this->numericValue($this->document?->exifIfd, ExifTag::SENSITIVITY_TYPE);
+    }
+
+    /**
      * Returns the ISO sensitivity with fallbacks defined by EXIF 3.0.
      */
     public function iso(): ?int
     {
-        $values = [
-            $this->document?->iso(),
-            $this->numericValue($this->document?->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY),
-            $this->numericValue($this->document?->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX),
-        ];
+        $iso = $this->document?->iso();
+        if ($iso !== null) {
+            return $iso;
+        }
 
-        foreach ($values as $value) {
+        $sensitivityType = $this->sensitivityType();
+        if ($sensitivityType !== null) {
+            foreach ($this->sensitivityTagPriority($sensitivityType) as $tag) {
+                $value = $this->numericValue($this->document?->exifIfd, $tag);
+                if ($value !== null) {
+                    return (int) $value;
+                }
+            }
+        }
+
+        foreach ([
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+        ] as $tag) {
+            $value = $this->numericValue($this->document?->exifIfd, $tag);
             if ($value !== null) {
                 return (int) $value;
             }
@@ -765,6 +786,25 @@ final readonly class ExifTagResolver
     public function gamma(): ?float
     {
         return $this->rationalValue($this->document?->exifIfd, ExifTag::GAMMA);
+    }
+
+    /**
+     * Maps the EXIF sensitivity type enumeration to ISO-related tag priorities.
+     *
+     * @return list<int>
+     */
+    private function sensitivityTagPriority(int $type): array
+    {
+        return match ($type) {
+            1 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            2 => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            3 => [ExifTag::ISO_SPEED],
+            4 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            5 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
+            6 => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            7 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            default => [],
+        };
     }
 
     /**
