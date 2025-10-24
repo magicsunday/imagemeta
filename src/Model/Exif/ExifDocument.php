@@ -904,7 +904,7 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the raw DateTime tag value from IFD0.
+     * Returns the raw ModifyDate (legacy DateTime) tag value from IFD0.
      *
      * @return string|null
      */
@@ -914,7 +914,7 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the fractional seconds for the DateTime tag.
+     * Returns the fractional seconds for the ModifyDate/DateTime tag.
      */
     public function subSecTime(): ?string
     {
@@ -950,7 +950,7 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the normalized offset time for the IFD0 DateTime tag.
+     * Returns the normalized offset time for the IFD0 ModifyDate/DateTime tag.
      */
     public function offsetTime(): ?string
     {
@@ -978,7 +978,7 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the raw offset time for the DateTime tag.
+     * Returns the raw offset time for the ModifyDate/DateTime tag.
      *
      * @return string|null
      */
@@ -1280,7 +1280,7 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the DateTime tag combined with its optional offset.
+     * Returns the ModifyDate/DateTime tag combined with its optional offset.
      *
      * @return DateTimeImmutable|null
      */

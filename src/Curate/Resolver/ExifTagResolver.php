@@ -1142,7 +1142,7 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the image datetime when available.
+     * Returns the ModifyDate/DateTime timestamp when available.
      */
     public function fileDateTime(): ?DateTimeImmutable
     {
@@ -1174,7 +1174,7 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the fractional seconds associated with the DateTime tag.
+     * Returns the fractional seconds associated with the ModifyDate/DateTime tag.
      */
     public function subSecTime(): ?string
     {

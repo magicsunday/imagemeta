@@ -85,6 +85,7 @@ final class ExifTagTest extends TestCase
             'TRANSFER_FUNCTION'              => 0x012D,
             'SOFTWARE'                       => 0x0131,
             'DATETIME'                       => 0x0132,
+            'MODIFY_DATE'                    => 0x0132,
             'ARTIST'                         => 0x013B,
             'WHITE_POINT'                    => 0x013E,
             'PRIMARY_CHROMATICITIES'         => 0x013F,
@@ -231,4 +232,13 @@ final class ExifTagTest extends TestCase
         self::assertArrayNotHasKey(0x013C, $constants);
         self::assertArrayNotHasKey(0xA20D, $constants);
     }
+
+    /**
+     * Ensures the ModifyDate alias shares the DateTime identifier.
+     */
+    public function testModifyDateAliasMatchesDateTime(): void
+    {
+        self::assertSame(ExifTag::DATETIME, ExifTag::MODIFY_DATE);
+    }
+
 }

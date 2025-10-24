@@ -65,7 +65,17 @@ final readonly class ExifTag
 
     public const int SOFTWARE = 0x0131;
 
+    /**
+     * Legacy EXIF 2.x identifier retained for backwards compatibility.
+     *
+     * EXIF 3.0 renames the tag to ModifyDate, exposed via the MODIFY_DATE alias.
+     */
     public const int DATETIME = 0x0132;
+
+    /**
+     * Preferred alias that matches the EXIF 3.0 ModifyDate tag name.
+     */
+    public const int MODIFY_DATE = 0x0132;
 
     public const int ARTIST = 0x013B;
 
