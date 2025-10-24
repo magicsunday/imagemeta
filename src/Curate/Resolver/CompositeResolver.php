@@ -283,8 +283,21 @@ final readonly class CompositeResolver
         }
 
         if (!$tz instanceof DateTimeZone && $selected['date'] instanceof DateTimeImmutable) {
-            $tz       = $selected['date']->getTimezone();
-            $tzSource = $selected['tzSource'];
+            $candidateTz     = $selected['date']->getTimezone();
+            $selectedTzSource = is_string($selected['tzSource']) && $selected['tzSource'] !== ''
+                ? $selected['tzSource']
+                : null;
+
+            $offsetSources = ['OffsetTimeOriginal', 'OffsetTimeDigitized', 'OffsetTime', 'TimeZoneOffset'];
+
+            if (
+                $candidateTz instanceof DateTimeZone
+                && ($selectedTzSource === null || !in_array($selectedTzSource, $offsetSources, true))
+            ) {
+                $tz       = $candidateTz;
+                $tzSource = $selectedTzSource
+                    ?? (is_string($selected['source']) && $selected['source'] !== '' ? $selected['source'] : null);
+            }
         }
 
         $date = $selected['date'];

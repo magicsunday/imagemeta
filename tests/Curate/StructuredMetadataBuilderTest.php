@@ -502,6 +502,30 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures DateTimeOriginal does not leak the PHP default timezone when offset metadata is missing.
+     */
+    #[Test]
+    public function leavesTimezoneUnsetWhenOffsetTagsMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:02 12:34:56'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:02 12:34:56'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal->original);
+        self::assertNull($structured->temporal->tz);
+        self::assertNull($structured->temporal->tzSource);
+    }
+
+    /**
      * Validates that EXIF 2.2 style payloads populate ISO and dimensions while leaving the timezone unset.
      */
     #[Test]
