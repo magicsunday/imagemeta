@@ -16,19 +16,15 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum Photometric: int
 {
-    case WHITE_IS_ZERO      = 0;
-    case BLACK_IS_ZERO      = 1;
-    case RGB                = 2;
-    case PALETTE_COLOR      = 3;
-    case TRANSPARENCY_MASK  = 4;
-    case CMYK               = 5;
-    case YCBCR              = 6;
-    case CIELAB             = 8;
-    case ICCLAB             = 9;
-    case COLOR_FILTER_ARRAY = 32803;
-    case LINEAR_RAW         = 34892;
-    case DEPTH_MAP          = 511;
-    case SEMANTIC_MASK      = 514;
+    case WHITE_IS_ZERO     = 0;
+    case BLACK_IS_ZERO     = 1;
+    case RGB               = 2;
+    case PALETTE_COLOR     = 3;
+    case TRANSPARENCY_MASK = 4;
+    case CMYK              = 5;
+    case YCBCR             = 6;
+    case CIELAB            = 8;
+    case ICCLAB            = 9;
 
     /**
      * Converts raw values into the backed enum instance.

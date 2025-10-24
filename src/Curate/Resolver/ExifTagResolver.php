@@ -796,13 +796,13 @@ final readonly class ExifTagResolver
     private function sensitivityTagPriority(int $type): array
     {
         return match ($type) {
-            1 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
-            2 => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            3 => [ExifTag::ISO_SPEED],
-            4 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            5 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
-            6 => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
-            7 => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            1       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            2       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            3       => [ExifTag::ISO_SPEED],
+            4       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            5       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
+            6       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            7       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
             default => [],
         };
     }
