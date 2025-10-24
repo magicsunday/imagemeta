@@ -272,4 +272,24 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertNull($structured->camera->make);
         self::assertNull($structured->depth->format);
     }
+
+    /**
+     * Verifies the ISO fallback uses the Standard Output Sensitivity tag when available.
+     */
+    #[Test]
+    public function usesStandardOutputSensitivityFallback(): void
+    {
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::SENSITIVITY_TYPE            => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 1),
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 640),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(640, $structured->exposure->iso);
+    }
 }
