@@ -226,7 +226,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(Orientation::RIGHT_TOP, $structured->image->orientation);
         self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
         self::assertSame(128, $structured->image->imageNumber);
-        self::assertSame('IMG_5123.CR3', $structured->image->documentName);
+        self::assertNull($structured->image->documentName);
         self::assertSame('Sunset over Alps', $structured->image->description);
         self::assertSame('Sunset Title', $structured->image->title);
         self::assertSame([1, 2, 3, 0], $structured->image->componentsConfiguration);
@@ -423,6 +423,38 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
         self::assertNull($structured->standards->profile);
+    }
+
+    /**
+     * Ensures non-EXIF metadata no longer populates camera, lens or image fields.
+     */
+    #[Test]
+    public function ignoresNonExifFallbacks(): void
+    {
+        $ifd0 = new Ifd([]);
+        $exifIfd = new Ifd([]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $xmpDocument = new XmpDocument([
+            '{http://ns.adobe.com/tiff/1.0/}Make'        => 'XMP Make',
+            '{http://ns.adobe.com/tiff/1.0/}DocumentName' => 'Fallback Document',
+            '{http://ns.adobe.com/exif/1.0/aux/}LensModel' => 'Fallback Lens',
+        ]);
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.make'  => 'QuickTime Make',
+            'com.apple.quicktime.model' => 'QuickTime Model',
+        ]);
+
+        $metadata = new Metadata(['primary'], $quickTime, $exifDocument, ['<xmp/>'], $xmpDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNull($structured->camera->make);
+        self::assertNull($structured->camera->model);
+        self::assertNull($structured->lens->lensModel);
+        self::assertNull($structured->image->documentName);
     }
 
     /**

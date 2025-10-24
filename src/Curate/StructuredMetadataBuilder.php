@@ -56,11 +56,6 @@ use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
 
-use function array_map;
-use function explode;
-use function is_numeric;
-use function str_contains;
-use function sprintf;
 use function strtoupper;
 
 /**
@@ -125,16 +120,12 @@ final class StructuredMetadataBuilder
             tiffEpStandardId: $exifResolver->tiffEpStandardId(),
         );
 
-        $camera = $this->buildCamera($exifResolver, $xmpResolver, $quickTimeResolver);
-        $lens   = $this->buildLens($exifResolver, $xmpResolver);
-        $image  = $this->buildImage($exifResolver, $xmpResolver, $quickTimeResolver, $interop);
+        $camera = $this->buildCamera($exifResolver);
+        $lens   = $this->buildLens($exifResolver);
+        $image  = $this->buildImage($exifResolver, $interop);
 
         $exposure = new Exposure(
-            iso: CompositeResolver::intISO(
-                $exifResolver,
-                fn () => $xmpResolver->string('http://ns.adobe.com/exif/1.0/', 'ISOSpeedRatings'),
-                fn () => $xmpResolver->string('http://ns.adobe.com/exif/1.0/aux/', 'ISOSpeedRatings'),
-            ),
+            iso: CompositeResolver::intISO($exifResolver),
             exposureTimeSec: $exifResolver->exposureTime(),
             fNumber: $exifResolver->fNumber(),
             exposureBiasEv: $exifResolver->exposureBias(),
@@ -510,34 +501,19 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds a camera value object using EXIF, XMP and QuickTime fallbacks.
+     * Builds a camera value object using EXIF metadata.
      */
-    private function buildCamera(ExifTagResolver $exif, XmpResolver $xmp, QuickTimeResolver $quickTime): Camera
+    private function buildCamera(ExifTagResolver $exif): Camera
     {
         return new Camera(
-            make: CompositeResolver::first([
-                fn () => $exif->cameraMake(),
-                fn () => $xmp->string('http://ns.adobe.com/tiff/1.0/', 'Make'),
-                fn () => $quickTime->string('com.apple.quicktime.make'),
-            ]),
-            model: CompositeResolver::first([
-                fn () => $exif->cameraModel(),
-                fn () => $xmp->string('http://ns.adobe.com/tiff/1.0/', 'Model'),
-                fn () => $quickTime->string('com.apple.quicktime.model'),
-            ]),
-            ownerName: CompositeResolver::first([
-                fn () => $exif->ownerName(),
-                fn () => $xmp->string('http://ns.adobe.com/xap/1.0/aux/', 'OwnerName'),
-            ]),
-            serialNumber: CompositeResolver::first([
-                fn () => $exif->bodySerialNumber(),
-                fn () => $xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'SerialNumber'),
-            ]),
+            make: $exif->cameraMake(),
+            model: $exif->cameraModel(),
+            ownerName: $exif->ownerName(),
+            serialNumber: $exif->bodySerialNumber(),
             firmware: CompositeResolver::first([
                 fn () => $exif->cameraFirmware(),
-                fn () => $quickTime->string('CameraFirmwareVersion'),
+                fn () => $exif->cameraFirmwareVersion(),
                 fn () => $exif->software(),
-                fn () => $quickTime->string('com.apple.quicktime.software'),
             ]),
             fileSource: $exif->fileSource(),
             sensingMethod: $exif->sensingMethod(),
@@ -545,63 +521,30 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds a lens value object using EXIF and XMP information.
+     * Builds a lens value object using EXIF metadata.
      */
-    private function buildLens(ExifTagResolver $exif, XmpResolver $xmp): Lens
+    private function buildLens(ExifTagResolver $exif): Lens
     {
-        $focalLength = $exif->focalLength();
-        $focalLength ??= $this->parseRationalString($xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'FocalLength'));
-
-        $lensSpecification = $exif->lensSpecification();
-        if ($lensSpecification === null) {
-            $lensSpecification = $this->parseLensInfoString($xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'LensInfo'));
-        }
-
         return new Lens(
-            lensMake: CompositeResolver::first([
-                fn () => $exif->lensMake(),
-                fn () => $xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'Lens'),
-            ]),
-            lensModel: CompositeResolver::first([
-                fn () => $exif->lensModel(),
-                fn () => $xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'LensModel'),
-            ]),
-            lensSerialNumber: CompositeResolver::first([
-                fn () => $exif->lensSerialNumber(),
-                fn () => $xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'LensSerialNumber'),
-            ]),
-            focalLengthMm: $focalLength,
+            lensMake: $exif->lensMake(),
+            lensModel: $exif->lensModel(),
+            lensSerialNumber: $exif->lensSerialNumber(),
+            focalLengthMm: $exif->focalLength(),
             focalLengthIn35mm: $exif->focalLength35mm(),
             maxApertureFNumber: $exif->maxApertureFNumber(),
-            lensSpecification: $lensSpecification,
+            lensSpecification: $exif->lensSpecification(),
         );
     }
 
     /**
-     * Builds the image value object with EXIF and XMP fallbacks.
+     * Builds the image value object using EXIF metadata.
      */
-    private function buildImage(ExifTagResolver $exif, XmpResolver $xmp, QuickTimeResolver $quickTime, Interop $interop): Image
+    private function buildImage(ExifTagResolver $exif, Interop $interop): Image
     {
-        $dimensions = CompositeResolver::dimensions(
-            $exif,
-            fn () => [
-                'width' => $quickTime->int('ImageWidth'),
-                'height' => $quickTime->int('ImageHeight'),
-            ],
-        );
+        $dimensions = CompositeResolver::dimensions($exif);
 
         $width  = $dimensions['width'];
         $height = $dimensions['height'];
-
-        $documentName = CompositeResolver::first([
-            fn () => $xmp->string('http://ns.adobe.com/tiff/1.0/', 'DocumentName'),
-            fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'title'),
-        ]);
-
-        $title = CompositeResolver::first([
-            fn () => $exif->imageTitle(),
-            fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'title'),
-        ]);
 
         return new Image(
             width: $width,
@@ -611,12 +554,9 @@ final class StructuredMetadataBuilder
             colorSpace: $this->normalizedColorSpace($exif->colorSpace(), $interop),
             imageUniqueId: $exif->imageUniqueId(),
             imageNumber: $exif->imageNumber(),
-            documentName: $documentName,
-            description: CompositeResolver::first([
-                fn () => $exif->imageDescription(),
-                fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'description'),
-            ]),
-            title: $title,
+            documentName: null,
+            description: $exif->imageDescription(),
+            title: $exif->imageTitle(),
             componentsConfiguration: $exif->componentsConfiguration(),
             compressedBitsPerPixel: $exif->compressedBitsPerPixel(),
             interlace: $exif->interlace(),
@@ -675,57 +615,6 @@ final class StructuredMetadataBuilder
     private function sanitizeSubSeconds(?string $value): ?string
     {
         return $value === null || $value === '' ? null : $value;
-    }
-
-    /**
-     * Parses a rational string representation (e.g. "50/1") into a float.
-     */
-    private function parseRationalString(?string $value): ?float
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        if (str_contains($value, '/')) {
-            [$num, $den] = array_map('trim', explode('/', $value, 2));
-            if ($den === '0') {
-                return null;
-            }
-
-            return (float) $num / (float) $den;
-        }
-
-        return is_numeric($value) ? (float) $value : null;
-    }
-
-    /**
-     * Parses a textual lens info representation.
-     *
-     * @return array{0:float,1:float,2:float,3:float}|null
-     */
-    private function parseLensInfoString(?string $value): ?array
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $parts = array_map('trim', explode(' ', $value));
-        if (count($parts) !== 4) {
-            return null;
-        }
-
-        $parsed = [];
-        foreach ($parts as $part) {
-            $float = $this->parseRationalString($part);
-            if ($float === null) {
-                return null;
-            }
-
-            $parsed[] = $float;
-        }
-
-        /** @var array{0:float,1:float,2:float,3:float} $parsed */
-        return $parsed;
     }
 
     /**
