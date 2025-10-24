@@ -43,6 +43,7 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use UnitEnum;
 
 use function array_map;
 use function array_values;
@@ -54,6 +55,7 @@ use function is_string;
 use function is_numeric;
 use function ord;
 use function round;
+use function strtolower;
 use function trim;
 
 /**
@@ -63,6 +65,123 @@ final readonly class ExifTagResolver
 {
     public function __construct(private ?ExifDocument $document)
     {
+    }
+
+    /**
+     * Returns an integer representation for the requested EXIF tag name.
+     */
+    public function int(string $tag): ?int
+    {
+        $key = strtolower($tag);
+
+        return match ($key) {
+            'iso'                       => $this->document?->iso(),
+            'isospeed'                  => $this->numericValue($this->document?->exifIfd, ExifTag::ISO_SPEED),
+            'standardoutputsensitivity' => $this->numericValue($this->document?->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY),
+            'recommendedexposureindex'  => $this->numericValue($this->document?->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX),
+            'exifimagewidth'            => $this->numericValue($this->document?->exifIfd, ExifTag::PIXEL_X_DIMENSION),
+            'imagewidth'                => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_WIDTH),
+            'exifimageheight'           => $this->numericValue($this->document?->exifIfd, ExifTag::PIXEL_Y_DIMENSION),
+            'imagelength'               => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_HEIGHT),
+            'flash'                     => $this->numericValue($this->document?->exifIfd, ExifTag::FLASH),
+            'contrast'                  => $this->numericValue($this->document?->exifIfd, ExifTag::CONTRAST),
+            'saturation'                => $this->numericValue($this->document?->exifIfd, ExifTag::SATURATION),
+            'sharpness'                 => $this->numericValue($this->document?->exifIfd, ExifTag::SHARPNESS),
+            'isolatitudeyyy'            => $this->numericValue($this->document?->exifIfd, ExifTag::ISO_SPEED_LATITUDE_YYY),
+            'isolatitudezzz'            => $this->numericValue($this->document?->exifIfd, ExifTag::ISO_SPEED_LATITUDE_ZZZ),
+            'colorspace'                => $this->numericValue($this->document?->exifIfd, ExifTag::COLOR_SPACE),
+            'exposuremode'              => $this->numericValue($this->document?->exifIfd, ExifTag::EXPOSURE_MODE),
+            'gaincontrol'               => $this->numericValue($this->document?->exifIfd, ExifTag::GAIN_CONTROL),
+            'meteringmode'              => $this->numericValue($this->document?->exifIfd, ExifTag::METERING_MODE),
+            'whitebalance'              => $this->numericValue($this->document?->exifIfd, ExifTag::WHITE_BALANCE),
+            'exposureprogram'           => $this->numericValue($this->document?->exifIfd, ExifTag::EXPOSURE_PROGRAM),
+            default                     => null,
+        };
+    }
+
+    /**
+     * Returns a list of integers for the requested EXIF tag name.
+     *
+     * @return list<int>|null
+     */
+    public function ints(string $tag): ?array
+    {
+        return match (strtolower($tag)) {
+            'timezoneoffset' => $this->timeZoneOffsetMinutes(),
+            default          => null,
+        };
+    }
+
+    /**
+     * Returns a string value for the requested EXIF tag name.
+     */
+    public function string(string $tag): ?string
+    {
+        return match (strtolower($tag)) {
+            'offsettime'          => $this->offsetTime(),
+            'offsettimeoriginal'  => $this->offsetTimeOriginal(),
+            'offsettimedigitized' => $this->offsetTimeDigitized(),
+            'subsectime'          => $this->subSecTime(),
+            'subsectimeoriginal'  => $this->subSecTimeOriginal(),
+            'subsectimedigitized' => $this->subSecTimeDigitized(),
+            'interopindex'        => $this->interopIndex(),
+            default               => null,
+        };
+    }
+
+    /**
+     * Returns a date value for the requested EXIF tag name.
+     */
+    public function date(string $tag): ?DateTimeImmutable
+    {
+        return match (strtolower($tag)) {
+            'datetimeoriginal' => $this->captureDateTime(),
+            'datetimedigitized' => $this->digitizedDateTime(),
+            'datetime'          => $this->fileDateTime(),
+            default             => null,
+        };
+    }
+
+    /**
+     * Returns a rational-compatible value for the requested EXIF tag name.
+     *
+     * @return array<int, int|float|string>|int|float|ExifRational|ExifRationalList|ExifNumericList|null
+     */
+    public function rational(string $tag): array|int|float|ExifRational|ExifRationalList|ExifNumericList|null
+    {
+        $key = strtolower($tag);
+
+        $entry = match ($key) {
+            'exposuretime'        => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_TIME),
+            'fnumber'             => $this->getEntry($this->document?->exifIfd, ExifTag::F_NUMBER),
+            'exposurecompensation' => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_BIAS_VALUE),
+            'brightnessvalue'     => $this->getEntry($this->document?->exifIfd, ExifTag::BRIGHTNESS_VALUE),
+            'digitalzoomratio'    => $this->getEntry($this->document?->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO),
+            'shutterspeedvalue'   => $this->getEntry($this->document?->exifIfd, ExifTag::SHUTTER_SPEED_VALUE),
+            'aperturevalue'       => $this->getEntry($this->document?->exifIfd, ExifTag::APERTURE_VALUE),
+            'exposureindex'       => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_INDEX),
+            'flashenergy'         => $this->getEntry($this->document?->exifIfd, ExifTag::FLASH_ENERGY),
+            'maxaperturevalue'    => $this->getEntry($this->document?->exifIfd, ExifTag::MAX_APERTURE_VALUE),
+            default               => null,
+        };
+
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        return $this->sanitizeRationalInput($entry->value);
+    }
+
+    /**
+     * Returns a backed enum mapped from the requested EXIF tag value.
+     */
+    public function enum(string $tag, string $enumClass): ?UnitEnum
+    {
+        $value = $this->int($tag);
+
+        $enum = CoreValueConverters::toEnumOrNull($enumClass, $value);
+
+        return $enum instanceof UnitEnum ? $enum : null;
     }
 
     /**

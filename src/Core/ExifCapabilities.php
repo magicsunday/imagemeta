@@ -11,57 +11,60 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use function preg_match;
-use function sprintf;
+use function preg_replace;
+use function rtrim;
+use function strlen;
 use function trim;
 
 /**
- * Maps raw EXIF version identifiers to capability profiles defined by the specification.
+ * Derives EXIF capability profiles from version identifiers.
  */
 final class ExifCapabilities
 {
-    private const DEFAULT_PROFILE = '2.2';
-
     /**
-     * Derives the EXIF capability profile name from a raw version marker.
+     * Maps a raw or normalised EXIF version string to the capability profile identifier.
      */
-    public static function fromVersion(?string $version): string
+    public static function fromVersion(?string $exifVersion): string
     {
-        if ($version === null) {
-            return self::DEFAULT_PROFILE;
+        if ($exifVersion === null) {
+            return '2.2';
         }
 
-        $normalized = trim($version, "\0\t\n\r \v");
-        if ($normalized === '') {
-            return self::DEFAULT_PROFILE;
+        $trimmed = trim($exifVersion);
+        if ($trimmed === '') {
+            return '2.2';
         }
 
-        $map = [
-            '0220' => '2.2',
-            '0221' => '2.2',
-            '0230' => '2.3',
-            '0231' => '2.3',
-            '0300' => '3.0',
-        ];
+        // Remove any trailing null bytes coming from byte aligned EXIF strings.
+        $trimmed = rtrim($trimmed, "\0");
 
-        if (isset($map[$normalized])) {
-            return $map[$normalized];
+        if ($trimmed === '') {
+            return '2.2';
         }
 
-        if (preg_match('/^(\d)\.(\d)(\d)$/', $normalized, $matches) === 1) {
-            $candidate = sprintf('0%d%d%d', (int) $matches[1], (int) $matches[2], (int) $matches[3]);
-            if (isset($map[$candidate])) {
-                return $map[$candidate];
+        $digits = preg_replace('/[^0-9]/', '', $trimmed);
+        if ($digits === null || $digits === '') {
+            $digits = $trimmed;
+        }
+
+        if (ctype_digit($digits)) {
+            if (strlen($digits) === 3) {
+                $digits = '0' . $digits;
             }
+
+            return match ($digits) {
+                '0220', '0221' => '2.2',
+                '0230', '0231' => '2.3',
+                '0300'         => '3.0',
+                default        => '2.2',
+            };
         }
 
-        if (preg_match('/^(\d)\.(\d)$/', $normalized, $matches) === 1) {
-            $candidate = sprintf('0%d%d0', (int) $matches[1], (int) $matches[2]);
-            if (isset($map[$candidate])) {
-                return $map[$candidate];
-            }
-        }
-
-        return self::DEFAULT_PROFILE;
+        return match ($digits) {
+            '2.20', '2.21' => '2.2',
+            '2.30', '2.31' => '2.3',
+            '3.00', '3.0'  => '3.0',
+            default        => '2.2',
+        };
     }
 }
