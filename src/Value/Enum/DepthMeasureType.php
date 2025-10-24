@@ -16,9 +16,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum DepthMeasureType: int
 {
-    case UNKNOWN = 0;
+    case UNKNOWN      = 0;
     case OPTICAL_AXIS = 1;
-    case OPTICAL_RAY = 2;
+    case OPTICAL_RAY  = 2;
 
     /**
      * Converts a raw depth measurement type identifier into the enum.

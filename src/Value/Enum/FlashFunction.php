@@ -17,7 +17,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 enum FlashFunction: int
 {
     case PRESENT = 0;
-    case ABSENT = 1;
+    case ABSENT  = 1;
 
     /**
      * Converts the flash bit field into an enum instance.

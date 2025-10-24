@@ -17,11 +17,11 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Sensor
 {
     /**
-     * @param float|null $pixelPitchUm Pixel pitch in micrometres.
-     * @param int|null   $cfaWidth     Width of the repeating CFA pattern.
-     * @param int|null   $cfaHeight    Height of the repeating CFA pattern.
-     * @param string|null $sensorType  Sensor technology (e.g. CCD or CMOS).
-     * @param bool|null  $ibis         Indicates in-body image stabilisation support.
+     * @param float|null  $pixelPitchUm Pixel pitch in micrometres.
+     * @param int|null    $cfaWidth     Width of the repeating CFA pattern.
+     * @param int|null    $cfaHeight    Height of the repeating CFA pattern.
+     * @param string|null $sensorType   Sensor technology (e.g. CCD or CMOS).
+     * @param bool|null   $ibis         Indicates in-body image stabilisation support.
      */
     public function __construct(
         public ?float $pixelPitchUm,

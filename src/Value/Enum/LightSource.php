@@ -16,27 +16,27 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum LightSource: int
 {
-    case UNKNOWN = 0;
-    case DAYLIGHT = 1;
-    case FLUORESCENT = 2;
-    case TUNGSTEN = 3;
-    case FLASH = 4;
-    case FINE_WEATHER = 9;
-    case CLOUDY = 10;
-    case SHADE = 11;
-    case DAYLIGHT_FLUORESCENT = 12;
-    case DAY_WHITE_FLUORESCENT = 13;
+    case UNKNOWN                = 0;
+    case DAYLIGHT               = 1;
+    case FLUORESCENT            = 2;
+    case TUNGSTEN               = 3;
+    case FLASH                  = 4;
+    case FINE_WEATHER           = 9;
+    case CLOUDY                 = 10;
+    case SHADE                  = 11;
+    case DAYLIGHT_FLUORESCENT   = 12;
+    case DAY_WHITE_FLUORESCENT  = 13;
     case COOL_WHITE_FLUORESCENT = 14;
-    case WHITE_FLUORESCENT = 15;
-    case STANDARD_LIGHT_A = 17;
-    case STANDARD_LIGHT_B = 18;
-    case STANDARD_LIGHT_C = 19;
-    case D55 = 20;
-    case D65 = 21;
-    case D75 = 22;
-    case D50 = 23;
-    case ISO_STUDIO_TUNGSTEN = 24;
-    case OTHER = 255;
+    case WHITE_FLUORESCENT      = 15;
+    case STANDARD_LIGHT_A       = 17;
+    case STANDARD_LIGHT_B       = 18;
+    case STANDARD_LIGHT_C       = 19;
+    case D55                    = 20;
+    case D65                    = 21;
+    case D75                    = 22;
+    case D50                    = 23;
+    case ISO_STUDIO_TUNGSTEN    = 24;
+    case OTHER                  = 255;
 
     /**
      * Converts a raw EXIF light source value into the corresponding enum.

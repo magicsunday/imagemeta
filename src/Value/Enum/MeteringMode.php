@@ -16,14 +16,14 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum MeteringMode: int
 {
-    case UNKNOWN = 0;
-    case AVERAGE = 1;
+    case UNKNOWN                 = 0;
+    case AVERAGE                 = 1;
     case CENTER_WEIGHTED_AVERAGE = 2;
-    case SPOT = 3;
-    case MULTI_SPOT = 4;
-    case PATTERN = 5;
-    case PARTIAL = 6;
-    case OTHER = 255;
+    case SPOT                    = 3;
+    case MULTI_SPOT              = 4;
+    case PATTERN                 = 5;
+    case PARTIAL                 = 6;
+    case OTHER                   = 255;
 
     /**
      * Attempts to convert the provided numeric value into an enum case.

@@ -16,11 +16,11 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum FileSource: int
 {
-    case OTHER = 0;
+    case OTHER                = 0;
     case TRANSPARENCY_SCANNER = 1;
-    case REFLECTION_SCANNER = 2;
-    case DIGITAL_CAMERA = 3;
-    case SIGMA_FOVEON = 0x8000;
+    case REFLECTION_SCANNER   = 2;
+    case DIGITAL_CAMERA       = 3;
+    case SIGMA_FOVEON         = 0x8000;
 
     /**
      * Converts a raw EXIF file source into the backed enum.

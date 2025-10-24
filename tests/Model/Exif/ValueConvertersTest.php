@@ -114,8 +114,8 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param mixed       $value    The APEX encoded value.
-     * @param float|null  $expected The expected f-number.
+     * @param mixed      $value    The APEX encoded value.
+     * @param float|null $expected The expected f-number.
      */
     #[Test]
     #[DataProvider('provideApexValues')]
@@ -232,8 +232,8 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param mixed     $value    The raw offset value.
-     * @param int|null  $expected Expected minutes from UTC.
+     * @param mixed    $value    The raw offset value.
+     * @param int|null $expected Expected minutes from UTC.
      */
     #[Test]
     #[DataProvider('provideOffsetMinutes')]

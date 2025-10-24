@@ -93,9 +93,9 @@ final readonly class XmpResolver
         $normalized = strtolower($value);
 
         return match ($normalized) {
-            'true', '1'  => true,
+            'true', '1' => true,
             'false', '0' => false,
-            default      => null,
+            default => null,
         };
     }
 }

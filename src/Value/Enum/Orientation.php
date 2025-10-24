@@ -16,14 +16,14 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum Orientation: int
 {
-    case TOP_LEFT = 1;
-    case TOP_RIGHT = 2;
+    case TOP_LEFT     = 1;
+    case TOP_RIGHT    = 2;
     case BOTTOM_RIGHT = 3;
-    case BOTTOM_LEFT = 4;
-    case LEFT_TOP = 5;
-    case RIGHT_TOP = 6;
+    case BOTTOM_LEFT  = 4;
+    case LEFT_TOP     = 5;
+    case RIGHT_TOP    = 6;
     case RIGHT_BOTTOM = 7;
-    case LEFT_BOTTOM = 8;
+    case LEFT_BOTTOM  = 8;
 
     /**
      * Converts a raw EXIF orientation value into an enum instance.

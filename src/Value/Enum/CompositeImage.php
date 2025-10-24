@@ -16,9 +16,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum CompositeImage: int
 {
-    case UNKNOWN = 0;
-    case NOT_COMPOSITE = 1;
-    case GENERAL_COMPOSITE = 2;
+    case UNKNOWN                 = 0;
+    case NOT_COMPOSITE           = 1;
+    case GENERAL_COMPOSITE       = 2;
     case CAPTURED_WHILE_SHOOTING = 3;
 
     /**

@@ -16,11 +16,11 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum SceneCaptureType: int
 {
-    case STANDARD = 0;
-    case LANDSCAPE = 1;
-    case PORTRAIT = 2;
+    case STANDARD    = 0;
+    case LANDSCAPE   = 1;
+    case PORTRAIT    = 2;
     case NIGHT_SCENE = 3;
-    case OTHER = 4;
+    case OTHER       = 4;
 
     /**
      * Converts the raw EXIF numeric value into an enum instance when possible.

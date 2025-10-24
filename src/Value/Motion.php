@@ -17,7 +17,7 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Motion
 {
     /**
-     * @param float|null $rollDeg Roll angle in degrees.
+     * @param float|null $rollDeg  Roll angle in degrees.
      * @param float|null $pitchDeg Pitch angle in degrees.
      * @param float|null $yawDeg   Yaw angle in degrees.
      * @param float|null $accelX   Acceleration along the X axis.

@@ -15,11 +15,12 @@ use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Gps;
 
-use const PREG_SPLIT_NO_EMPTY;
 use function array_map;
 use function count;
 use function preg_split;
 use function trim;
+
+use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * Resolves GPS information from EXIF and XMP sources.

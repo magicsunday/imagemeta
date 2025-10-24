@@ -83,7 +83,7 @@ final class Metadata
     public function structured(): StructuredMetadata
     {
         if ($this->structured === null) {
-            $builder           = new StructuredMetadataBuilder();
+            $builder          = new StructuredMetadataBuilder();
             $this->structured = $builder->build($this);
         }
 

@@ -16,8 +16,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum ResolutionUnit: int
 {
-    case NONE = 1;
-    case INCHES = 2;
+    case NONE       = 1;
+    case INCHES     = 2;
     case CENTIMETER = 3;
 
     /**

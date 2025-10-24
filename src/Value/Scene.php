@@ -21,11 +21,11 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 final readonly class Scene
 {
     /**
-     * @param SceneCaptureType|null   $type                 Scene capture type classification.
-     * @param LightSource|null        $light                Dominant light source as reported by the camera.
-     * @param int|null                $faceCount            Number of detected faces.
-     * @param bool|null               $hdrScene             Indicates whether HDR scene processing was applied.
-     * @param bool|null               $nightMode            Whether night mode or low light processing was used.
+     * @param SceneCaptureType|null     $type                 Scene capture type classification.
+     * @param LightSource|null          $light                Dominant light source as reported by the camera.
+     * @param int|null                  $faceCount            Number of detected faces.
+     * @param bool|null                 $hdrScene             Indicates whether HDR scene processing was applied.
+     * @param bool|null                 $nightMode            Whether night mode or low light processing was used.
      * @param SubjectDistanceRange|null $subjectDistanceRange Subject distance classification.
      */
     public function __construct(

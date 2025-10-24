@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\DepthFormat;
 use MagicSunday\ImageMeta\Value\Enum\DepthMeasureType;
 use MagicSunday\ImageMeta\Value\Enum\DepthUnits;

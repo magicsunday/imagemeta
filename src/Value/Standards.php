@@ -17,7 +17,7 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Standards
 {
     /**
-     * @param string|null $exifVersion    Normalised EXIF specification version (e.g. "3.00").
+     * @param string|null $exifVersion     Normalised EXIF specification version (e.g. "3.00").
      * @param string|null $flashpixVersion FlashPix specification version string.
      */
     public function __construct(

@@ -27,7 +27,6 @@ use UnitEnum;
 use ValueError;
 
 use function array_filter;
-use function array_map;
 use function array_slice;
 use function array_values;
 use function atan;
@@ -50,6 +49,7 @@ use function str_replace;
 use function strlen;
 use function strtoupper;
 use function trim;
+
 use const JSON_PRESERVE_ZERO_FRACTION;
 use const JSON_THROW_ON_ERROR;
 
@@ -115,7 +115,7 @@ final readonly class ValueConverters
             'K', 'k' => $value * 1000.0 / 3600.0,
             'M', 'm' => $value * 1609.344 / 3600.0,
             'N', 'n' => $value * 1852.0 / 3600.0,
-            default  => $value,
+            default => $value,
         };
     }
 
@@ -193,7 +193,7 @@ final readonly class ValueConverters
         }
 
         $fSquared = $focalLengthMm * $focalLengthMm;
-        $hMm      = ($fSquared) / ($fNumber * $circleOfConfusionMm) + $focalLengthMm;
+        $hMm      = $fSquared / ($fNumber * $circleOfConfusionMm) + $focalLengthMm;
 
         return $hMm / 1000.0;
     }

@@ -272,19 +272,19 @@ final class TiffExifReader
                 // UNDEFINED → return as byte
                 self::TYPE_UNDEFINED => ord($bytes[$cursor]),
                 // SBYTE
-                self::TYPE_SBYTE     => $this->toSigned(ord($bytes[$cursor]), 8),
+                self::TYPE_SBYTE => $this->toSigned(ord($bytes[$cursor]), 8),
                 // SHORT
-                self::TYPE_SHORT     => $this->unpackU16(substr($bytes, $cursor, 2)),
+                self::TYPE_SHORT => $this->unpackU16(substr($bytes, $cursor, 2)),
                 // SSHORT
-                self::TYPE_SSHORT    => $this->unpackS16(substr($bytes, $cursor, 2)),
+                self::TYPE_SSHORT => $this->unpackS16(substr($bytes, $cursor, 2)),
                 // LONG
-                self::TYPE_LONG      => $this->unpackU32(substr($bytes, $cursor, 4)),
+                self::TYPE_LONG => $this->unpackU32(substr($bytes, $cursor, 4)),
                 // SLONG
-                self::TYPE_SLONG     => $this->unpackS32(substr($bytes, $cursor, 4)),
+                self::TYPE_SLONG => $this->unpackS32(substr($bytes, $cursor, 4)),
                 // FLOAT
-                self::TYPE_FLOAT     => $this->unpackFloat(substr($bytes, $cursor, 4)),
+                self::TYPE_FLOAT => $this->unpackFloat(substr($bytes, $cursor, 4)),
                 // DOUBLE
-                self::TYPE_DOUBLE    => $this->unpackDouble(substr($bytes, $cursor, 8)),
+                self::TYPE_DOUBLE => $this->unpackDouble(substr($bytes, $cursor, 8)),
 
                 default => throw new ParseError('Unsupported type in decodeBytes: ' . $type),
             };

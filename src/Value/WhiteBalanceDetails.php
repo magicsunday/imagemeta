@@ -19,10 +19,10 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 final readonly class WhiteBalanceDetails
 {
     /**
-     * @param WhiteBalance|null $mode    Selected white balance mode.
-     * @param int|null          $kelvin  Colour temperature in Kelvin.
-     * @param float|null        $rgGain  Red/green channel gain ratio.
-     * @param float|null        $bgGain  Blue/green channel gain ratio.
+     * @param WhiteBalance|null $mode   Selected white balance mode.
+     * @param int|null          $kelvin Colour temperature in Kelvin.
+     * @param float|null        $rgGain Red/green channel gain ratio.
+     * @param float|null        $bgGain Blue/green channel gain ratio.
      */
     public function __construct(
         public ?WhiteBalance $mode,

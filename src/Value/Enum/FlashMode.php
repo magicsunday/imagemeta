@@ -16,10 +16,10 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum FlashMode: int
 {
-    case UNKNOWN = 0;
-    case COMPULSORY_FIRE = 1;
+    case UNKNOWN             = 0;
+    case COMPULSORY_FIRE     = 1;
     case COMPULSORY_SUPPRESS = 2;
-    case AUTO = 3;
+    case AUTO                = 3;
 
     /**
      * Builds an enum instance from the bit field representation.

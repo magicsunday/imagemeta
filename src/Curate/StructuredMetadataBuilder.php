@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate;
 
 use DateTimeImmutable;
+use DateTimeZone;
+use Exception;
 use MagicSunday\ImageMeta\Core\ValueConverters;
 use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
@@ -355,8 +357,8 @@ final class StructuredMetadataBuilder
      */
     private function buildTemporal(ExifTagResolver $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
     {
-        $create = $resolver->digitizedDateTime();
-        $modify = $resolver->fileDateTime();
+        $create   = $resolver->digitizedDateTime();
+        $modify   = $resolver->fileDateTime();
         $original = $resolver->captureDateTime();
 
         $create = $create ?? $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
@@ -366,12 +368,12 @@ final class StructuredMetadataBuilder
         $modify = $modify ?? $this->parseFlexibleDate($quickTime->string('ModifyDate'));
 
         $tzSource = null;
-        $tz = null;
+        $tz       = null;
 
         if ($original instanceof DateTimeImmutable) {
             $offset = ValueConverters::parseOffset($resolver->originalOffset());
-            if ($offset instanceof \DateTimeZone) {
-                $tz = $offset;
+            if ($offset instanceof DateTimeZone) {
+                $tz       = $offset;
                 $tzSource = 'OffsetTimeOriginal';
                 $original = $original->setTimezone($offset);
             }
@@ -380,7 +382,7 @@ final class StructuredMetadataBuilder
         if ($original === null) {
             $original = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
             if ($original instanceof DateTimeImmutable) {
-                $tz = $original->getTimezone();
+                $tz       = $original->getTimezone();
                 $tzSource = 'XMP';
             }
         }
@@ -389,7 +391,7 @@ final class StructuredMetadataBuilder
             $quickTimeDate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
             if ($quickTimeDate instanceof DateTimeImmutable) {
                 $original = $quickTimeDate;
-                $tz = $quickTimeDate->getTimezone();
+                $tz       = $quickTimeDate->getTimezone();
                 $tzSource = 'QuickTime';
             }
         }
@@ -513,7 +515,7 @@ final class StructuredMetadataBuilder
      */
     private function buildScene(ExifTagResolver $exif, QuickTimeResolver $quickTime): Scene
     {
-        $hdr = $quickTime->string('HDRImageType');
+        $hdr   = $quickTime->string('HDRImageType');
         $night = $quickTime->bool('NightMode');
 
         return new Scene(
@@ -598,7 +600,7 @@ final class StructuredMetadataBuilder
 
         try {
             return new DateTimeImmutable($value);
-        } catch (\Exception) {
+        } catch (Exception) {
             return null;
         }
     }

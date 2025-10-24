@@ -31,15 +31,15 @@ final readonly class LensResolver
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Lens
     {
-        $make = $exifDocument?->lensMake() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensMake');
+        $make  = $exifDocument?->lensMake() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensMake');
         $model = $exifDocument?->lensModel()
             ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensModel')
             ?? $this->xmpString($xmpDocument, self::NS_AUX, 'Lens');
-        $serial = $exifDocument?->lensSerialNumber() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensSerialNumber');
-        $focal = $exifDocument?->focalLengthMm() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'FocalLength');
+        $serial  = $exifDocument?->lensSerialNumber() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensSerialNumber');
+        $focal   = $exifDocument?->focalLengthMm() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'FocalLength');
         $focal35 = $exifDocument?->focalLength35Mm();
 
-        $maxApex = $exifDocument?->maxApertureApex();
+        $maxApex     = $exifDocument?->maxApertureApex();
         $maxAperture = $maxApex !== null ? ValueConverters::apexToFNumber($maxApex) : null;
 
         if ($make === null && $model === null && $serial === null && $focal === null && $focal35 === null) {
