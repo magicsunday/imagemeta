@@ -15,21 +15,19 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
 use function array_map;
+use function iconv;
 use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
 use function preg_replace;
-use function rtrim;
 use function round;
+use function rtrim;
 use function str_pad;
 use function str_replace;
 use function strlen;
@@ -1495,8 +1493,8 @@ final readonly class ExifDocument
 
         return match ($encoding) {
             'ASCII', 'UTF8', '' => $content !== '' ? $content : null,
-            'UNICODE'          => $this->decodeUnicodeComment($content),
-            default            => $content !== '' ? $content : null,
+            'UNICODE' => $this->decodeUnicodeComment($content),
+            default   => $content !== '' ? $content : null,
         };
     }
 
@@ -1509,9 +1507,9 @@ final readonly class ExifDocument
             return null;
         }
 
-        $converted = @\iconv('UTF-16LE', 'UTF-8', $content);
+        $converted = @iconv('UTF-16LE', 'UTF-8', $content);
         if ($converted === false) {
-            $converted = @\iconv('UTF-16BE', 'UTF-8', $content);
+            $converted = @iconv('UTF-16BE', 'UTF-8', $content);
         }
 
         if ($converted !== false) {
@@ -1611,10 +1609,10 @@ final readonly class ExifDocument
         if ($subSeconds !== null && $subSeconds !== '') {
             $digits = preg_replace('/[^0-9]/', '', $subSeconds);
             if ($digits !== null && $digits !== '') {
-                $digits     = substr($digits, 0, 6);
-                $digits     = str_pad($digits, 6, '0');
+                $digits = substr($digits, 0, 6);
+                $digits = str_pad($digits, 6, '0');
                 $normalized .= '.' . $digits;
-                $format     .= '.u';
+                $format .= '.u';
             }
         }
 

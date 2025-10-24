@@ -42,10 +42,10 @@ final readonly class GpsResolver
         $speed = null;
 
         if ($exifDocument instanceof ExifDocument) {
-            $gps = $exifDocument->gps();
-            $lat = $gps['lat'] ?? null;
-            $lon = $gps['lon'] ?? null;
-            $alt = $gps['alt'] ?? null;
+            $gps   = $exifDocument->gps();
+            $lat   = $gps['lat'] ?? null;
+            $lon   = $gps['lon'] ?? null;
+            $alt   = $gps['alt'] ?? null;
             $speed = $gps['speed_ms'] ?? null;
         }
 

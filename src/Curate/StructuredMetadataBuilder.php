@@ -31,11 +31,11 @@ use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
-use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
@@ -268,9 +268,9 @@ final class StructuredMetadataBuilder
 
         $regions = new Regions([]);
 
-        $flatKeywords          = $xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'subject');
-        $hierarchicalKeywords  = $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
-        $keywords = new Keywords(
+        $flatKeywords         = $xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'subject');
+        $hierarchicalKeywords = $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
+        $keywords             = new Keywords(
             flat: $flatKeywords,
             hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
         );
@@ -319,7 +319,7 @@ final class StructuredMetadataBuilder
         );
 
         $panoramaFlag = $xmpResolver->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
-        $related = new RelatedAssets(
+        $related      = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
             burstId: $quickTimeResolver->string('BurstUUID'),
             isPrimaryInBurst: $quickTimeResolver->bool('BurstSelected'),
@@ -345,7 +345,7 @@ final class StructuredMetadataBuilder
         $uav = new Uav(null, null, null, null, null, null, null, null);
 
         $hasHistory = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
-        $integrity = new Integrity(
+        $integrity  = new Integrity(
             originalFileName: $xmpResolver->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
             edited: $hasHistory === true ? true : null,

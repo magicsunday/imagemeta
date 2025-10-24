@@ -22,13 +22,13 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
-use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
-use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
-use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
 /**
  * @covers \MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver
@@ -51,9 +51,9 @@ final class ExifTagResolverTest extends TestCase
     public function exposesExtendedGpsMetadata(): void
     {
         $gpsIfd = new Ifd([
-            ExifTag::GPS_VERSION_ID        => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [3, 0, 0, 0]),
-            ExifTag::GPS_LATITUDE_REF      => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
-            ExifTag::GPS_LATITUDE          => new IfdEntry(
+            ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [3, 0, 0, 0]),
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
                 5,
                 3,
@@ -74,9 +74,9 @@ final class ExifTagResolverTest extends TestCase
                     new ExifRational(0, 1),
                 ]),
             ),
-            ExifTag::GPS_ALTITUDE_REF        => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
-            ExifTag::GPS_ALTITUDE            => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(150, 1)),
-            ExifTag::GPS_TIME_STAMP          => new IfdEntry(
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(150, 1)),
+            ExifTag::GPS_TIME_STAMP   => new IfdEntry(
                 ExifTag::GPS_TIME_STAMP,
                 5,
                 3,
@@ -86,20 +86,20 @@ final class ExifTagResolverTest extends TestCase
                     new ExifRational(56789, 1000),
                 ]),
             ),
-            ExifTag::GPS_DATE_STAMP          => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 10, '2024:05:06'),
-            ExifTag::GPS_SATELLITES          => new IfdEntry(ExifTag::GPS_SATELLITES, 2, 2, '05'),
-            ExifTag::GPS_STATUS              => new IfdEntry(ExifTag::GPS_STATUS, 2, 1, 'A'),
-            ExifTag::GPS_MEASURE_MODE        => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 1, '3'),
-            ExifTag::GPS_DOP                 => new IfdEntry(ExifTag::GPS_DOP, 5, 1, new ExifRational(25, 10)),
-            ExifTag::GPS_SPEED_REF           => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 1, 'K'),
-            ExifTag::GPS_SPEED               => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, new ExifRational(72000, 1000)),
-            ExifTag::GPS_TRACK_REF           => new IfdEntry(ExifTag::GPS_TRACK_REF, 2, 1, 'T'),
-            ExifTag::GPS_TRACK               => new IfdEntry(ExifTag::GPS_TRACK, 5, 1, new ExifRational(12345, 100)),
-            ExifTag::GPS_IMG_DIRECTION_REF   => new IfdEntry(ExifTag::GPS_IMG_DIRECTION_REF, 2, 1, 'M'),
-            ExifTag::GPS_IMG_DIRECTION       => new IfdEntry(ExifTag::GPS_IMG_DIRECTION, 5, 1, new ExifRational(2500, 10)),
-            ExifTag::GPS_MAP_DATUM           => new IfdEntry(ExifTag::GPS_MAP_DATUM, 2, 6, 'WGS-84'),
-            ExifTag::GPS_DEST_LATITUDE_REF   => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 1, 'N'),
-            ExifTag::GPS_DEST_LATITUDE       => new IfdEntry(
+            ExifTag::GPS_DATE_STAMP        => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 10, '2024:05:06'),
+            ExifTag::GPS_SATELLITES        => new IfdEntry(ExifTag::GPS_SATELLITES, 2, 2, '05'),
+            ExifTag::GPS_STATUS            => new IfdEntry(ExifTag::GPS_STATUS, 2, 1, 'A'),
+            ExifTag::GPS_MEASURE_MODE      => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 1, '3'),
+            ExifTag::GPS_DOP               => new IfdEntry(ExifTag::GPS_DOP, 5, 1, new ExifRational(25, 10)),
+            ExifTag::GPS_SPEED_REF         => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 1, 'K'),
+            ExifTag::GPS_SPEED             => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, new ExifRational(72000, 1000)),
+            ExifTag::GPS_TRACK_REF         => new IfdEntry(ExifTag::GPS_TRACK_REF, 2, 1, 'T'),
+            ExifTag::GPS_TRACK             => new IfdEntry(ExifTag::GPS_TRACK, 5, 1, new ExifRational(12345, 100)),
+            ExifTag::GPS_IMG_DIRECTION_REF => new IfdEntry(ExifTag::GPS_IMG_DIRECTION_REF, 2, 1, 'M'),
+            ExifTag::GPS_IMG_DIRECTION     => new IfdEntry(ExifTag::GPS_IMG_DIRECTION, 5, 1, new ExifRational(2500, 10)),
+            ExifTag::GPS_MAP_DATUM         => new IfdEntry(ExifTag::GPS_MAP_DATUM, 2, 6, 'WGS-84'),
+            ExifTag::GPS_DEST_LATITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 1, 'N'),
+            ExifTag::GPS_DEST_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_DEST_LATITUDE,
                 5,
                 3,
@@ -120,13 +120,13 @@ final class ExifTagResolverTest extends TestCase
                     new ExifRational(0, 1),
                 ]),
             ),
-            ExifTag::GPS_DEST_BEARING_REF   => new IfdEntry(ExifTag::GPS_DEST_BEARING_REF, 2, 1, 'T'),
-            ExifTag::GPS_DEST_BEARING       => new IfdEntry(ExifTag::GPS_DEST_BEARING, 5, 1, new ExifRational(123, 1)),
-            ExifTag::GPS_DEST_DISTANCE_REF  => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 1, 'K'),
-            ExifTag::GPS_DEST_DISTANCE      => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, new ExifRational(42, 1)),
-            ExifTag::GPS_PROCESSING_METHOD  => new IfdEntry(ExifTag::GPS_PROCESSING_METHOD, 7, 11, "ASCII\0\0\0NETWORK"),
-            ExifTag::GPS_AREA_INFORMATION   => new IfdEntry(ExifTag::GPS_AREA_INFORMATION, 7, 13, "ASCII\0\0\0AreaName"),
-            ExifTag::GPS_DIFFERENTIAL       => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 2),
+            ExifTag::GPS_DEST_BEARING_REF    => new IfdEntry(ExifTag::GPS_DEST_BEARING_REF, 2, 1, 'T'),
+            ExifTag::GPS_DEST_BEARING        => new IfdEntry(ExifTag::GPS_DEST_BEARING, 5, 1, new ExifRational(123, 1)),
+            ExifTag::GPS_DEST_DISTANCE_REF   => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 1, 'K'),
+            ExifTag::GPS_DEST_DISTANCE       => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, new ExifRational(42, 1)),
+            ExifTag::GPS_PROCESSING_METHOD   => new IfdEntry(ExifTag::GPS_PROCESSING_METHOD, 7, 11, "ASCII\0\0\0NETWORK"),
+            ExifTag::GPS_AREA_INFORMATION    => new IfdEntry(ExifTag::GPS_AREA_INFORMATION, 7, 13, "ASCII\0\0\0AreaName"),
+            ExifTag::GPS_DIFFERENTIAL        => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 2),
             ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(15, 10)),
         ]);
 
@@ -264,17 +264,17 @@ final class ExifTagResolverTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::COMPONENTS_CONFIGURATION   => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
-            ExifTag::SCENE_TYPE                 => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
-            ExifTag::CFA_PATTERN                => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x00\x01\x02\x03"),
-            ExifTag::CUSTOM_RENDERED            => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
-            ExifTag::IMAGE_TITLE                => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Evening Glow'),
-            ExifTag::PHOTOGRAPHER               => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Jamie Doe'),
-            ExifTag::IMAGE_EDITOR               => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Casey Edit'),
-            ExifTag::CAMERA_FIRMWARE            => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW Main'),
-            ExifTag::RAW_DEVELOPING_SOFTWARE    => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Studio'),
-            ExifTag::IMAGE_EDITING_SOFTWARE     => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Pixel Edit'),
-            ExifTag::METADATA_EDITING_SOFTWARE  => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Desk'),
+            ExifTag::COMPONENTS_CONFIGURATION  => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
+            ExifTag::SCENE_TYPE                => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
+            ExifTag::CFA_PATTERN               => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x00\x01\x02\x03"),
+            ExifTag::CUSTOM_RENDERED           => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
+            ExifTag::IMAGE_TITLE               => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Evening Glow'),
+            ExifTag::PHOTOGRAPHER              => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Jamie Doe'),
+            ExifTag::IMAGE_EDITOR              => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Casey Edit'),
+            ExifTag::CAMERA_FIRMWARE           => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW Main'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Studio'),
+            ExifTag::IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Pixel Edit'),
+            ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Desk'),
         ]);
 
         $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -303,11 +303,11 @@ final class ExifTagResolverTest extends TestCase
     public function resolvesLegacyTextualTags(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::IMAGE_TITLE_LEGACY   => new IfdEntry(ExifTag::IMAGE_TITLE_LEGACY, 2, 1, 'Legacy Image Title'),
-            ExifTag::PHOTOGRAPHER_LEGACY  => new IfdEntry(ExifTag::PHOTOGRAPHER_LEGACY, 2, 1, 'Legacy Photographer'),
-            ExifTag::IMAGE_EDITOR_LEGACY  => new IfdEntry(ExifTag::IMAGE_EDITOR_LEGACY, 2, 1, 'Legacy Image Editor'),
-            ExifTag::ARTIST               => new IfdEntry(ExifTag::ARTIST, 2, 1, 'Artist Fallback'),
-            ExifTag::IMAGE_DESCRIPTION    => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Description Fallback'),
+            ExifTag::IMAGE_TITLE_LEGACY  => new IfdEntry(ExifTag::IMAGE_TITLE_LEGACY, 2, 1, 'Legacy Image Title'),
+            ExifTag::PHOTOGRAPHER_LEGACY => new IfdEntry(ExifTag::PHOTOGRAPHER_LEGACY, 2, 1, 'Legacy Photographer'),
+            ExifTag::IMAGE_EDITOR_LEGACY => new IfdEntry(ExifTag::IMAGE_EDITOR_LEGACY, 2, 1, 'Legacy Image Editor'),
+            ExifTag::ARTIST              => new IfdEntry(ExifTag::ARTIST, 2, 1, 'Artist Fallback'),
+            ExifTag::IMAGE_DESCRIPTION   => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Description Fallback'),
         ]);
 
         $exifIfd = new Ifd([
@@ -332,8 +332,8 @@ final class ExifTagResolverTest extends TestCase
     public function resolvesLegacySoftwareVersions(): void
     {
         $exifIfd = new Ifd([
-            ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY         => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY, 2, 1, 'FW 3.1.0'),
-            ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY, 2, 1, 'RawLab 5.2.1'),
+            ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY, 2, 1, 'FW 3.1.0'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY, 2, 1, 'RawLab 5.2.1'),
             ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'MetaLab 1.0.0'),
         ]);
 
@@ -344,4 +344,3 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('MetaLab 1.0.0', $resolver->metadataEditingSoftwareVersion());
     }
 }
-

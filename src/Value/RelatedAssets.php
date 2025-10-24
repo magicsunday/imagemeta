@@ -17,12 +17,12 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class RelatedAssets
 {
     /**
-     * @param string|null $livePhotoPairId   Identifier of the paired live photo asset.
-     * @param string|null $burstId           Identifier for the burst set.
-     * @param bool|null   $isPrimaryInBurst  Indicates whether this asset is the selected burst frame.
-     * @param string|null $panoramaId        Panorama identifier when part of a panorama sequence.
-     * @param string|null $depthDataId       Identifier of an associated depth data asset.
-     * @param string|null $relatedSoundFile  Name of a related sound file attached to the capture.
+     * @param string|null $livePhotoPairId  Identifier of the paired live photo asset.
+     * @param string|null $burstId          Identifier for the burst set.
+     * @param bool|null   $isPrimaryInBurst Indicates whether this asset is the selected burst frame.
+     * @param string|null $panoramaId       Panorama identifier when part of a panorama sequence.
+     * @param string|null $depthDataId      Identifier of an associated depth data asset.
+     * @param string|null $relatedSoundFile Name of a related sound file attached to the capture.
      */
     public function __construct(
         public ?string $livePhotoPairId,

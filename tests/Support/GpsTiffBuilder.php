@@ -15,11 +15,11 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 
 use function array_map;
 use function array_pad;
-use function pack;
-use function strlen;
-use function str_split;
-use function unpack;
 use function ord;
+use function pack;
+use function str_split;
+use function strlen;
+use function unpack;
 
 /**
  * Builds synthetic Classic TIFF payloads containing EXIF GPS metadata for integration tests.
@@ -77,7 +77,7 @@ final class GpsTiffBuilder
         $gpsData    = '';
 
         $addData = static function (string $value) use (&$gpsData, $dataBase): int {
-            $offset  = $dataBase + strlen($gpsData);
+            $offset = $dataBase + strlen($gpsData);
             $gpsData .= $value;
 
             return $offset;
@@ -86,7 +86,7 @@ final class GpsTiffBuilder
         foreach ($definitions as [$tag, $type, $count, $mode, $payload]) {
             switch ($mode) {
                 case 'bytes':
-                    $value = self::inlineBytes($payload);
+                    $value        = self::inlineBytes($payload);
                     $gpsEntries[] = self::packClassicEntry($tag, $type, $count, $value);
                     break;
                 case 'string':
@@ -95,7 +95,7 @@ final class GpsTiffBuilder
                         break;
                     }
 
-                    $offset = $addData($payload);
+                    $offset       = $addData($payload);
                     $gpsEntries[] = self::packClassicEntry($tag, $type, $count, $offset);
                     break;
                 case 'rationals':
@@ -104,7 +104,7 @@ final class GpsTiffBuilder
                         $buffer .= self::packRational($numerator, $denominator);
                     }
 
-                    $offset = $addData($buffer);
+                    $offset       = $addData($buffer);
                     $gpsEntries[] = self::packClassicEntry($tag, $type, $count, $offset);
                     break;
                 case 'inline':

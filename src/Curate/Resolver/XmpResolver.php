@@ -61,7 +61,7 @@ final readonly class XmpResolver
             return [];
         }
 
-        $items  = array_values($value);
+        $items = array_values($value);
 
         return array_map(static fn (string $item): string => trim($item), $items);
     }

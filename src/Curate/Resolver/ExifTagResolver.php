@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -37,7 +38,6 @@ use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
-use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
@@ -51,8 +51,8 @@ use function count;
 use function is_array;
 use function is_float;
 use function is_int;
-use function is_string;
 use function is_numeric;
+use function is_string;
 use function ord;
 use function round;
 use function strtolower;
@@ -135,7 +135,7 @@ final readonly class ExifTagResolver
     public function date(string $tag): ?DateTimeImmutable
     {
         return match (strtolower($tag)) {
-            'datetimeoriginal' => $this->captureDateTime(),
+            'datetimeoriginal'  => $this->captureDateTime(),
             'datetimedigitized' => $this->digitizedDateTime(),
             'datetime'          => $this->fileDateTime(),
             default             => null,
@@ -152,17 +152,17 @@ final readonly class ExifTagResolver
         $key = strtolower($tag);
 
         $entry = match ($key) {
-            'exposuretime'        => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_TIME),
-            'fnumber'             => $this->getEntry($this->document?->exifIfd, ExifTag::F_NUMBER),
+            'exposuretime'         => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_TIME),
+            'fnumber'              => $this->getEntry($this->document?->exifIfd, ExifTag::F_NUMBER),
             'exposurecompensation' => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_BIAS_VALUE),
-            'brightnessvalue'     => $this->getEntry($this->document?->exifIfd, ExifTag::BRIGHTNESS_VALUE),
-            'digitalzoomratio'    => $this->getEntry($this->document?->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO),
-            'shutterspeedvalue'   => $this->getEntry($this->document?->exifIfd, ExifTag::SHUTTER_SPEED_VALUE),
-            'aperturevalue'       => $this->getEntry($this->document?->exifIfd, ExifTag::APERTURE_VALUE),
-            'exposureindex'       => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_INDEX),
-            'flashenergy'         => $this->getEntry($this->document?->exifIfd, ExifTag::FLASH_ENERGY),
-            'maxaperturevalue'    => $this->getEntry($this->document?->exifIfd, ExifTag::MAX_APERTURE_VALUE),
-            default               => null,
+            'brightnessvalue'      => $this->getEntry($this->document?->exifIfd, ExifTag::BRIGHTNESS_VALUE),
+            'digitalzoomratio'     => $this->getEntry($this->document?->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO),
+            'shutterspeedvalue'    => $this->getEntry($this->document?->exifIfd, ExifTag::SHUTTER_SPEED_VALUE),
+            'aperturevalue'        => $this->getEntry($this->document?->exifIfd, ExifTag::APERTURE_VALUE),
+            'exposureindex'        => $this->getEntry($this->document?->exifIfd, ExifTag::EXPOSURE_INDEX),
+            'flashenergy'          => $this->getEntry($this->document?->exifIfd, ExifTag::FLASH_ENERGY),
+            'maxaperturevalue'     => $this->getEntry($this->document?->exifIfd, ExifTag::MAX_APERTURE_VALUE),
+            default                => null,
         };
 
         if (!$entry instanceof IfdEntry) {

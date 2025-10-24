@@ -15,7 +15,6 @@ use BackedEnum;
 use DateTimeZone;
 use Exception;
 use JsonException;
-use Throwable;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
@@ -24,6 +23,7 @@ use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use Throwable;
 use UnitEnum;
 
 use function array_filter;
@@ -44,7 +44,6 @@ use function is_string;
 use function json_encode;
 use function log;
 use function pow;
-use function preg_match;
 use function rad2deg;
 use function sprintf;
 use function str_replace;
@@ -420,7 +419,6 @@ final readonly class ValueConverters
         }
 
         /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
-
         if (count($values) < 2) {
             return null;
         }
@@ -468,7 +466,6 @@ final readonly class ValueConverters
         }
 
         /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
-
         if (count($values) < 6) {
             return null;
         }
@@ -505,8 +502,8 @@ final readonly class ValueConverters
             foreach ($matrix as $component) {
                 if (is_array($component)) {
                     /** @var array<int, int|float|string> $pair */
-                    $pair   = array_values($component);
-                    $raw[]  = $pair;
+                    $pair  = array_values($component);
+                    $raw[] = $pair;
                     continue;
                 }
 

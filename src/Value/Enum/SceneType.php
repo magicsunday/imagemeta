@@ -16,8 +16,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum SceneType: int
 {
-    case NOT_DEFINED                   = 0;
-    case DIRECTLY_PHOTOGRAPHED_IMAGE   = 1;
+    case NOT_DEFINED                 = 0;
+    case DIRECTLY_PHOTOGRAPHED_IMAGE = 1;
 
     /**
      * Converts raw EXIF values to the corresponding enum instance.

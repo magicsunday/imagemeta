@@ -167,6 +167,7 @@ final readonly class ValueConverters
 
     /**
      * Returns a human readable description for the components configuration.
+     *
      * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value.
      */
     public static function componentsConfigurationDescription(
@@ -416,39 +417,39 @@ final readonly class ValueConverters
     public static function emptyGpsResult(): array
     {
         return [
-            'lat_ref'               => null,
-            'lat'                   => null,
-            'lon_ref'               => null,
-            'lon'                   => null,
-            'alt_ref'               => null,
-            'alt'                   => null,
-            'version'               => null,
-            'satellites'            => null,
-            'status'                => null,
-            'measure_mode'          => null,
-            'dop'                   => null,
-            'speed_ref'             => null,
-            'speed_ms'              => null,
-            'track_ref'             => null,
-            'track'                 => null,
-            'img_direction_ref'     => null,
-            'img_direction'         => null,
-            'map_datum'             => null,
-            'dest_lat_ref'          => null,
-            'dest_lat'              => null,
-            'dest_lon_ref'          => null,
-            'dest_lon'              => null,
-            'dest_bearing_ref'      => null,
-            'dest_bearing'          => null,
-            'dest_distance_ref'     => null,
-            'dest_distance_m'       => null,
-            'processing_method'     => null,
-            'area_information'      => null,
-            'date'                  => null,
-            'time'                  => null,
-            'timestamp'             => null,
-            'differential'          => null,
-            'h_positioning_error'   => null,
+            'lat_ref'             => null,
+            'lat'                 => null,
+            'lon_ref'             => null,
+            'lon'                 => null,
+            'alt_ref'             => null,
+            'alt'                 => null,
+            'version'             => null,
+            'satellites'          => null,
+            'status'              => null,
+            'measure_mode'        => null,
+            'dop'                 => null,
+            'speed_ref'           => null,
+            'speed_ms'            => null,
+            'track_ref'           => null,
+            'track'               => null,
+            'img_direction_ref'   => null,
+            'img_direction'       => null,
+            'map_datum'           => null,
+            'dest_lat_ref'        => null,
+            'dest_lat'            => null,
+            'dest_lon_ref'        => null,
+            'dest_lon'            => null,
+            'dest_bearing_ref'    => null,
+            'dest_bearing'        => null,
+            'dest_distance_ref'   => null,
+            'dest_distance_m'     => null,
+            'processing_method'   => null,
+            'area_information'    => null,
+            'date'                => null,
+            'time'                => null,
+            'timestamp'           => null,
+            'differential'        => null,
+            'h_positioning_error' => null,
         ];
     }
 
@@ -563,23 +564,23 @@ final readonly class ValueConverters
         $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
         $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
 
-        $result['version']    = self::formatGpsVersion($versionEntry?->value);
-        $result['satellites'] = self::sanitizeString($satellitesEntry?->value);
-        $result['status']     = self::sanitizeString($statusEntry?->value);
+        $result['version']      = self::formatGpsVersion($versionEntry?->value);
+        $result['satellites']   = self::sanitizeString($satellitesEntry?->value);
+        $result['status']       = self::sanitizeString($statusEntry?->value);
         $result['measure_mode'] = self::sanitizeString($measureEntry?->value);
         $result['dop']          = self::rationalToFloat($dopEntry?->value);
 
-        $speedRefValue        = $speedRefEntry?->value;
-        $speedRef             = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
-        $result['speed_ref']  = $speedRef;
-        $result['speed_ms']   = self::gpsSpeedToMs($speedRef, $speedEntry?->value);
+        $speedRefValue       = $speedRefEntry?->value;
+        $speedRef            = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
+        $result['speed_ref'] = $speedRef;
+        $result['speed_ms']  = self::gpsSpeedToMs($speedRef, $speedEntry?->value);
 
         $trackRefValue       = $trackRefEntry?->value;
         $result['track_ref'] = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
         $trackValue          = self::rationalToFloat($trackEntry?->value);
         $result['track']     = self::normalizeBearing($trackValue);
 
-        $imgDirRefValue             = $imgDirRefEntry?->value;
+        $imgDirRefValue              = $imgDirRefEntry?->value;
         $result['img_direction_ref'] = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
         $imgDirectionValue           = self::rationalToFloat($imgDirEntry?->value);
         $result['img_direction']     = self::normalizeBearing($imgDirectionValue);
@@ -611,7 +612,7 @@ final readonly class ValueConverters
         $result['area_information']  = self::decodeUndefinedString($areaEntry?->value);
 
         $result['date'] = self::normalizeGpsDate($dateEntry?->value);
-        $timeParts       = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
+        $timeParts      = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
             ? self::parseGpsTime($timeEntry->value)
             : null;
         $result['time']      = self::formatGpsTime($timeParts);
@@ -628,7 +629,7 @@ final readonly class ValueConverters
             $result['differential'] = (int) round($diffValue);
         }
 
-        $hPositionEntry = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
+        $hPositionEntry                = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
         $result['h_positioning_error'] = self::rationalToFloat($hPositionEntry?->value);
 
         return $result;
@@ -721,7 +722,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        $data = $value;
+        $data     = $value;
         $prefixes = [
             "ASCII\0\0\0",
             "UNICODE\0",
@@ -807,7 +808,7 @@ final readonly class ValueConverters
         $microseconds = (int) round($fraction * 1_000_000);
 
         if ($microseconds >= 1_000_000) {
-            $secondsInt++;
+            ++$secondsInt;
             $microseconds -= 1_000_000;
         }
 
@@ -842,7 +843,7 @@ final readonly class ValueConverters
         $microseconds = (int) round($fraction * 1_000_000);
 
         if ($microseconds >= 1_000_000) {
-            $secondsInt++;
+            ++$secondsInt;
             $microseconds -= 1_000_000;
         }
 
@@ -851,7 +852,7 @@ final readonly class ValueConverters
 
         if ($microseconds > 0) {
             $timeString .= sprintf('.%06d', $microseconds);
-            $format     .= '.u';
+            $format .= '.u';
         }
 
         $dateTime = DateTimeImmutable::createFromFormat(

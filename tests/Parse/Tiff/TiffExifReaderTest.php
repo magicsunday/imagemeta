@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
@@ -433,16 +433,16 @@ final class TiffExifReaderTest extends TestCase
         $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
         $baseOffset     = strlen($header) + $ifd0Length;
 
-        $makeOffset              = $baseOffset;
-        $transferFunctionOffset  = $makeOffset + strlen($makeString);
+        $makeOffset                = $baseOffset;
+        $transferFunctionOffset    = $makeOffset + strlen($makeString);
         $referenceBlackWhiteOffset = $transferFunctionOffset + strlen($transferFunctionBytes);
-        $copyrightOffset         = $referenceBlackWhiteOffset + strlen($referenceBlackWhite);
-        $exifIfdOffset           = $copyrightOffset + strlen($copyrightString);
+        $copyrightOffset           = $referenceBlackWhiteOffset + strlen($referenceBlackWhite);
+        $exifIfdOffset             = $copyrightOffset + strlen($copyrightString);
 
-        $exifEntryCount = 3;
-        $exifIfdLength  = 2 + ($exifEntryCount * 12) + 4;
-        $fNumberData    = self::packRationalLE(28, 10);
-        $fNumberOffset  = $exifIfdOffset + $exifIfdLength;
+        $exifEntryCount   = 3;
+        $exifIfdLength    = 2 + ($exifEntryCount * 12) + 4;
+        $fNumberData      = self::packRationalLE(28, 10);
+        $fNumberOffset    = $exifIfdOffset + $exifIfdLength;
         $interopIfdOffset = $fNumberOffset + strlen($fNumberData);
 
         $interopEntryCount = 1;
@@ -695,7 +695,7 @@ final class TiffExifReaderTest extends TestCase
             ];
 
             $stringDataBuffer .= $encoded;
-            $nextDataOffset   += $length;
+            $nextDataOffset += $length;
         }
 
         usort($entries, static fn (array $left, array $right): int => $left['tag'] <=> $right['tag']);

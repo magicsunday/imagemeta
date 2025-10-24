@@ -17,9 +17,9 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Standards
 {
     /**
-     * @param string|null $exifVersion       Normalised EXIF specification version (e.g. "3.00").
-     * @param string|null $profile           Derived EXIF capability profile (e.g. "3.0").
-     * @param string|null $flashpixVersion   FlashPix specification version string.
+     * @param string|null    $exifVersion      Normalised EXIF specification version (e.g. "3.00").
+     * @param string|null    $profile          Derived EXIF capability profile (e.g. "3.0").
+     * @param string|null    $flashpixVersion  FlashPix specification version string.
      * @param list<int>|null $tiffEpStandardId TIFF/EP identifier bytes.
      */
     public function __construct(

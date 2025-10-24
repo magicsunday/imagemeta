@@ -53,12 +53,12 @@ final readonly class CompositeResolver
     /**
      * Selects the first integer value from the candidate list applying numeric normalisation.
      *
-     * @param list<Closure():int|float|string|null|int|float|string|null> $candidates
+     * @param list<Closure():int|float|string|int|float|string|null|null> $candidates
      */
     public static function firstInt(array $candidates): ?int
     {
         foreach ($candidates as $candidate) {
-            $value = $candidate instanceof Closure ? $candidate() : $candidate;
+            $value      = $candidate instanceof Closure ? $candidate() : $candidate;
             $normalized = self::normalizeInteger($value);
 
             if ($normalized !== null) {
@@ -165,5 +165,4 @@ final readonly class CompositeResolver
 
         return null;
     }
-
 }
