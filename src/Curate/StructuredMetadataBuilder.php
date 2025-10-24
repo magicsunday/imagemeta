@@ -243,10 +243,13 @@ final class StructuredMetadataBuilder
             bgGain: null,
         );
 
+        $rect      = null;
         $focusRect = $exifResolver->subjectArea();
         if ($focusRect !== null) {
             $rect = ValueConverters::subjectAreaToRect($focusRect);
-        } else {
+        }
+
+        if ($rect === null) {
             $location = $exifResolver->subjectLocation();
             $rect     = ($location !== null && count($location) >= 2)
                 ? ['x' => $location[0], 'y' => $location[1], 'w' => null, 'h' => null]
