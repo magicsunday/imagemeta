@@ -15,6 +15,7 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
@@ -80,6 +81,9 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::MODEL                      => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
             ExifTag::SOFTWARE                   => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
             ExifTag::IMAGE_DESCRIPTION          => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 16, 'Sunset over Alps'),
+            ExifTag::IMAGE_TITLE                => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 12, 'Sunset Title'),
+            ExifTag::PHOTOGRAPHER               => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 22, 'Jane D. Photographer'),
+            ExifTag::IMAGE_EDITOR               => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 12, 'John Editor'),
             ExifTag::ORIENTATION                => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::RIGHT_TOP->value),
             ExifTag::ARTIST                     => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
         ]);
@@ -88,8 +92,12 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::EXIF_VERSION              => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
             ExifTag::FLASHPIX_VERSION          => new IfdEntry(ExifTag::FLASHPIX_VERSION, 7, 4, '0100'),
             ExifTag::PHOTOGRAPHIC_SENSITIVITY  => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
+            ExifTag::ISO_SPEED_LATITUDE_YYY    => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 3, 1, 320),
+            ExifTag::ISO_SPEED_LATITUDE_ZZZ    => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 3, 1, 540),
             ExifTag::EXPOSURE_TIME             => new IfdEntry(ExifTag::EXPOSURE_TIME, 5, 1, [[1, 125]]),
             ExifTag::F_NUMBER                  => new IfdEntry(ExifTag::F_NUMBER, 5, 1, [[56, 10]]),
+            ExifTag::SHUTTER_SPEED_VALUE       => new IfdEntry(ExifTag::SHUTTER_SPEED_VALUE, 10, 1, new ExifRational(697, 100)),
+            ExifTag::APERTURE_VALUE            => new IfdEntry(ExifTag::APERTURE_VALUE, 5, 1, new ExifRational(497, 100)),
             ExifTag::EXPOSURE_PROGRAM          => new IfdEntry(ExifTag::EXPOSURE_PROGRAM, 3, 1, ExposureProgram::APERTURE_PRIORITY->value),
             ExifTag::EXPOSURE_BIAS_VALUE       => new IfdEntry(ExifTag::EXPOSURE_BIAS_VALUE, 10, 1, [[-2, 1]]),
             ExifTag::METERING_MODE             => new IfdEntry(ExifTag::METERING_MODE, 3, 1, MeteringMode::PATTERN->value),
@@ -98,6 +106,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::WHITE_BALANCE             => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, WhiteBalance::MANUAL->value),
             ExifTag::BRIGHTNESS_VALUE          => new IfdEntry(ExifTag::BRIGHTNESS_VALUE, 10, 1, [[76, 10]]),
             ExifTag::COLOR_SPACE               => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::SRGB->value),
+            ExifTag::COMPONENTS_CONFIGURATION  => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
+            ExifTag::COMPRESSED_BITS_PER_PIXEL => new IfdEntry(ExifTag::COMPRESSED_BITS_PER_PIXEL, 5, 1, [[45, 10]]),
             ExifTag::EXPOSURE_MODE             => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, ExposureMode::MANUAL->value),
             ExifTag::GAIN_CONTROL              => new IfdEntry(ExifTag::GAIN_CONTROL, 3, 1, GainControl::LOW_GAIN_UP->value),
             ExifTag::CONTRAST                  => new IfdEntry(ExifTag::CONTRAST, 3, 1, 1),
@@ -111,11 +121,39 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::LENS_MODEL                => new IfdEntry(ExifTag::LENS_MODEL, 2, 15, 'EF 85mm f/1.4L'),
             ExifTag::LENS_MAKE                 => new IfdEntry(ExifTag::LENS_MAKE, 2, 5, 'Canon'),
             ExifTag::LENS_SERIAL_NUMBER        => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 10, '1234ABC'),
+            ExifTag::SPECTRAL_SENSITIVITY      => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 16, 'Standard Spectral'),
+            ExifTag::OECF                      => new IfdEntry(ExifTag::OECF, 7, 12, 'OECF-DATA-01'),
+            ExifTag::USER_COMMENT              => new IfdEntry(ExifTag::USER_COMMENT, 7, 28, "ASCII\0\0\0Shot with ND filter\0"),
+            ExifTag::SUB_SEC_TIME              => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 3, '321'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL     => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '123'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED    => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '456'),
+            ExifTag::TEMPERATURE               => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(215, 10)),
+            ExifTag::HUMIDITY                  => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(600, 10)),
+            ExifTag::PRESSURE                  => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(101325, 100)),
+            ExifTag::WATER_DEPTH               => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(150, 10)),
+            ExifTag::ACCELERATION              => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(98, 10)),
+            ExifTag::CAMERA_ELEVATION_ANGLE    => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
+            ExifTag::RELATED_SOUND_FILE        => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 10, 'sound.wav'),
+            ExifTag::FLASH_ENERGY              => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(250, 10)),
+            ExifTag::SPATIAL_FREQUENCY_RESPONSE => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, 12, 'SFR-Curve-01'),
+            ExifTag::FOCAL_PLANE_X_RESOLUTION  => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(4321, 100)),
+            ExifTag::FOCAL_PLANE_Y_RESOLUTION  => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(4300, 100)),
+            ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, ResolutionUnit::CENTIMETER->value),
+            ExifTag::SUBJECT_LOCATION          => new IfdEntry(ExifTag::SUBJECT_LOCATION, 3, 2, new ExifNumericList([1600, 1700])),
+            ExifTag::EXPOSURE_INDEX            => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(400, 1)),
             ExifTag::SCENE_CAPTURE_TYPE        => new IfdEntry(ExifTag::SCENE_CAPTURE_TYPE, 3, 1, SceneCaptureType::STANDARD->value),
+            ExifTag::SCENE_TYPE                => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
             ExifTag::SUBJECT_DISTANCE_RANGE    => new IfdEntry(ExifTag::SUBJECT_DISTANCE_RANGE, 3, 1, SubjectDistanceRange::DISTANT->value),
             ExifTag::FILE_SOURCE               => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, chr(FileSource::DIGITAL_CAMERA->value)),
             ExifTag::SENSING_METHOD            => new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, SensingMethod::ONE_CHIP_COLOR_AREA->value),
             ExifTag::GAMMA                     => new IfdEntry(ExifTag::GAMMA, 5, 1, [[22, 10]]),
+            ExifTag::CFA_PATTERN               => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x02\x01\x01\x00"),
+            ExifTag::CUSTOM_RENDERED           => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
+            ExifTag::DEVICE_SETTING_DESCRIPTION => new IfdEntry(ExifTag::DEVICE_SETTING_DESCRIPTION, 7, 12, 'Profile:Portrait'),
+            ExifTag::CAMERA_FIRMWARE           => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 6, '1.2.3'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 11, 'Raw Studio'),
+            ExifTag::IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 13, 'Image Studio'),
+            ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 15, 'Metadata Studio'),
         ]);
 
         $interopIfd = new Ifd([
@@ -162,7 +200,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('Canon', $structured->camera->make);
         self::assertSame('EOS R6 II', $structured->camera->model);
         self::assertSame('Jane Doe', $structured->author->artist);
-        self::assertSame('Firmware1', $structured->camera->firmware);
+        self::assertSame('1.2.3', $structured->camera->firmware);
         self::assertSame(FileSource::DIGITAL_CAMERA, $structured->camera->fileSource);
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $structured->camera->sensingMethod);
 
@@ -178,11 +216,17 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
         self::assertSame('IMG_5123.CR3', $structured->image->documentName);
         self::assertSame('Sunset over Alps', $structured->image->description);
+        self::assertSame('Sunset Title', $structured->image->title);
+        self::assertSame([1, 2, 3, 0], $structured->image->componentsConfiguration);
+        self::assertSame(4.5, $structured->image->compressedBitsPerPixel);
+        self::assertSame('Shot with ND filter', $structured->image->userComment);
 
         self::assertSame(400, $structured->exposure->iso);
         self::assertSame(0.008, $structured->exposure->exposureTimeSec);
         self::assertSame(5.6, $structured->exposure->fNumber);
         self::assertSame(-2.0, $structured->exposure->exposureBiasEv);
+        self::assertEqualsWithDelta(6.97, $structured->exposure->shutterSpeedEv, 0.01);
+        self::assertEqualsWithDelta(4.97, $structured->exposure->apertureEv, 0.01);
         self::assertSame(ExposureProgram::APERTURE_PRIORITY, $structured->exposure->program);
         self::assertSame(MeteringMode::PATTERN, $structured->exposure->meteringMode);
         self::assertSame(WhiteBalance::MANUAL, $structured->exposure->whiteBalance);
@@ -190,16 +234,49 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(1, $structured->exposure->contrast);
         self::assertSame(0, $structured->exposure->saturation);
         self::assertSame(2, $structured->exposure->sharpness);
+        self::assertSame(320, $structured->exposure->isoLatitudeYyy);
+        self::assertSame(540, $structured->exposure->isoLatitudeZzz);
+        self::assertSame(400.0, $structured->exposure->exposureIndex);
+        self::assertSame(25.0, $structured->exposure->flashEnergy);
 
         $flash = $structured->exposure->flash;
         self::assertNotNull($flash);
         self::assertTrue($flash->fired);
 
         self::assertSame(SceneCaptureType::STANDARD, $structured->scene->type);
+        self::assertSame(1, $structured->scene->sceneType);
         self::assertSame(SubjectDistanceRange::DISTANT, $structured->scene->subjectDistanceRange);
 
         self::assertSame('3.00', $structured->standards->exifVersion);
         self::assertSame('0100', $structured->standards->flashpixVersion);
+
+        self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
+
+        self::assertEqualsWithDelta(21.5, $structured->capture->temperatureC, 0.001);
+        self::assertEqualsWithDelta(60.0, $structured->capture->humidityPercent, 0.001);
+        self::assertEqualsWithDelta(1013.25, $structured->capture->pressureHPa, 0.001);
+        self::assertEqualsWithDelta(15.0, $structured->capture->waterDepthM, 0.001);
+        self::assertEqualsWithDelta(9.8, $structured->capture->accelerationMs2, 0.001);
+        self::assertEqualsWithDelta(15.0, $structured->capture->cameraElevationAngleDeg, 0.001);
+
+        self::assertSame('sound.wav', $structured->related->relatedSoundFile);
+
+        self::assertSame('Standard Spectral', $structured->sensor->spectralSensitivity);
+        self::assertSame('OECF-DATA-01', $structured->sensor->oecf);
+        self::assertSame([2, 1, 1, 0], $structured->sensor->cfaPattern);
+        self::assertEqualsWithDelta(43.21, $structured->sensor->focalPlaneXResolution, 0.001);
+        self::assertEqualsWithDelta(43.0, $structured->sensor->focalPlaneYResolution, 0.001);
+        self::assertSame(ResolutionUnit::CENTIMETER, $structured->sensor->focalPlaneResolutionUnit);
+
+        self::assertSame('Profile:Portrait', $structured->processing->deviceSettingDescription);
+        self::assertSame(1, $structured->processing->customRendered);
+
+        self::assertSame('Jane D. Photographer', $structured->author->photographer);
+        self::assertSame('John Editor', $structured->author->imageEditor);
+
+        self::assertSame('Raw Studio', $structured->device->rawDevelopingSoftware);
+        self::assertSame('Image Studio', $structured->device->imageEditingSoftware);
+        self::assertSame('Metadata Studio', $structured->device->metadataEditingSoftware);
     }
 
     /**

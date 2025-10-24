@@ -17,12 +17,14 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ProcessingSettings
 {
     /**
-     * @param int|null    $sharpness      Sharpness adjustment level.
-     * @param int|null    $contrast       Contrast adjustment level.
-     * @param int|null    $saturation     Saturation adjustment level.
-     * @param string|null $pictureStyle   Vendor specific picture style identifier.
-     * @param bool|null   $noiseReduction Whether noise reduction was applied.
-     * @param int|null    $clarity        Clarity adjustment level.
+     * @param int|null    $sharpness               Sharpness adjustment level.
+     * @param int|null    $contrast                Contrast adjustment level.
+     * @param int|null    $saturation              Saturation adjustment level.
+     * @param string|null $pictureStyle            Vendor specific picture style identifier.
+     * @param bool|null   $noiseReduction          Whether noise reduction was applied.
+     * @param int|null    $clarity                 Clarity adjustment level.
+     * @param int|null    $customRendered          Indicates whether a custom rendering was applied in-camera.
+     * @param string|null $deviceSettingDescription Binary device setting description payload.
      */
     public function __construct(
         public ?int $sharpness,
@@ -31,6 +33,8 @@ final readonly class ProcessingSettings
         public ?string $pictureStyle,
         public ?bool $noiseReduction,
         public ?int $clarity,
+        public ?int $customRendered,
+        public ?string $deviceSettingDescription,
     ) {
     }
 }

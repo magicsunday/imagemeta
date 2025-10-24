@@ -66,6 +66,10 @@ final readonly class ImageResolver
             imageUniqueId: $uniqueId,
             documentName: $documentName,
             description: $description,
+            title: null,
+            componentsConfiguration: null,
+            compressedBitsPerPixel: null,
+            userComment: null,
         );
     }
 }

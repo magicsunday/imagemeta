@@ -131,9 +131,23 @@ final class StructuredMetadataBuilder
             saturation: $exifResolver->saturation(),
             sharpness: $exifResolver->sharpness(),
             digitalZoomRatio: $exifResolver->digitalZoomRatio(),
+            shutterSpeedEv: $exifResolver->shutterSpeedEv(),
+            apertureEv: $exifResolver->apertureEv(),
+            isoLatitudeYyy: $exifResolver->isoLatitudeYyy(),
+            isoLatitudeZzz: $exifResolver->isoLatitudeZzz(),
+            exposureIndex: $exifResolver->exposureIndex(),
+            flashEnergy: $exifResolver->flashEnergy(),
         );
 
-        $capture = new Capture($exifResolver->captureDateTime());
+        $capture = new Capture(
+            dateTime: $exifResolver->captureDateTime(),
+            temperatureC: $exifResolver->temperatureCelsius(),
+            humidityPercent: $exifResolver->humidityPercent(),
+            pressureHPa: $exifResolver->pressureHPa(),
+            waterDepthM: $exifResolver->waterDepthMeters(),
+            accelerationMs2: $exifResolver->accelerationMs2(),
+            cameraElevationAngleDeg: $exifResolver->cameraElevationAngleDeg(),
+        );
 
         $gpsCoords = $exifResolver->gps();
         $gps       = new Gps($gpsCoords['lat'], $gpsCoords['lon'], $gpsCoords['alt']);
@@ -199,7 +213,16 @@ final class StructuredMetadataBuilder
             gamma: $exifResolver->gamma(),
         );
 
-        $processing = new ProcessingSettings(null, null, null, null, null, null);
+        $processing = new ProcessingSettings(
+            sharpness: null,
+            contrast: null,
+            saturation: null,
+            pictureStyle: null,
+            noiseReduction: null,
+            clarity: null,
+            customRendered: $exifResolver->customRendered(),
+            deviceSettingDescription: $exifResolver->deviceSettingDescription(),
+        );
 
         $whiteBalanceDetails = new WhiteBalanceDetails(
             mode: $exifResolver->whiteBalance(),
@@ -209,9 +232,14 @@ final class StructuredMetadataBuilder
         );
 
         $focusRect = $exifResolver->subjectArea();
-        $rect      = $focusRect !== null
-            ? ValueConverters::subjectAreaToRect($focusRect)
-            : ['x' => null, 'y' => null, 'w' => null, 'h' => null];
+        if ($focusRect !== null) {
+            $rect = ValueConverters::subjectAreaToRect($focusRect);
+        } else {
+            $location = $exifResolver->subjectLocation();
+            $rect     = ($location !== null && count($location) >= 2)
+                ? ['x' => (int) $location[0], 'y' => (int) $location[1], 'w' => null, 'h' => null]
+                : ['x' => null, 'y' => null, 'w' => null, 'h' => null];
+        }
         $focus = new Focus(
             subjectDistanceM: $exifResolver->subjectDistance(),
             subjectAreaX: $rect['x'],
@@ -252,6 +280,8 @@ final class StructuredMetadataBuilder
                 fn () => $this->firstListValue($xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'creator')),
             ]),
             creatorEmail: $xmpResolver->string('http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
+            photographer: $exifResolver->photographer(),
+            imageEditor: $exifResolver->imageEditor(),
         );
 
         $temporal = $this->buildTemporal($exifResolver, $quickTimeResolver, $xmpResolver);
@@ -278,9 +308,22 @@ final class StructuredMetadataBuilder
             isPrimaryInBurst: $quickTimeResolver->bool('BurstSelected'),
             panoramaId: $xmpResolver->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer') ? 'panorama' : null,
             depthDataId: $quickTimeResolver->string('DepthData'),
+            relatedSoundFile: $exifResolver->relatedSoundFile(),
         );
 
-        $sensor = new Sensor(null, null, null, null, null);
+        $sensor = new Sensor(
+            pixelPitchUm: null,
+            cfaWidth: null,
+            cfaHeight: null,
+            sensorType: null,
+            ibis: null,
+            cfaPattern: $exifResolver->cfaPattern(),
+            spectralSensitivity: $exifResolver->spectralSensitivity(),
+            oecf: $exifResolver->oecf(),
+            focalPlaneXResolution: $exifResolver->focalPlaneXResolution(),
+            focalPlaneYResolution: $exifResolver->focalPlaneYResolution(),
+            focalPlaneResolutionUnit: $exifResolver->focalPlaneResolutionUnit(),
+        );
 
         $uav = new Uav(null, null, null, null, null, null, null, null);
 
@@ -341,6 +384,9 @@ final class StructuredMetadataBuilder
 
         return new Device(
             software: $softwareChain,
+            rawDevelopingSoftware: $exif->rawDevelopingSoftware(),
+            imageEditingSoftware: $exif->imageEditingSoftware(),
+            metadataEditingSoftware: $exif->metadataEditingSoftware(),
         );
     }
 
@@ -430,6 +476,7 @@ final class StructuredMetadataBuilder
                 fn () => $xmp->string('http://ns.adobe.com/exif/1.0/aux/', 'SerialNumber'),
             ]),
             firmware: CompositeResolver::first([
+                fn () => $exif->cameraFirmware(),
                 fn () => $quickTime->string('CameraFirmwareVersion'),
                 fn () => $exif->software(),
                 fn () => $quickTime->string('com.apple.quicktime.software'),
@@ -492,6 +539,11 @@ final class StructuredMetadataBuilder
             fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'title'),
         ]);
 
+        $title = CompositeResolver::first([
+            fn () => $exif->imageTitle(),
+            fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'title'),
+        ]);
+
         return new Image(
             width: $width,
             height: $height,
@@ -504,6 +556,10 @@ final class StructuredMetadataBuilder
                 fn () => $exif->imageDescription(),
                 fn () => $xmp->string('http://purl.org/dc/elements/1.1/', 'description'),
             ]),
+            title: $title,
+            componentsConfiguration: $exif->componentsConfiguration(),
+            compressedBitsPerPixel: $exif->compressedBitsPerPixel(),
+            userComment: $exif->userComment(),
         );
     }
 
@@ -517,6 +573,7 @@ final class StructuredMetadataBuilder
 
         return new Scene(
             type: $exif->sceneCaptureType(),
+            sceneType: $exif->sceneType(),
             light: $exif->lightSource(),
             faceCount: null,
             hdrScene: $hdr !== null ? true : null,

@@ -73,6 +73,12 @@ final readonly class ExposureResolver
             saturation: null,
             sharpness: null,
             digitalZoomRatio: null,
+            shutterSpeedEv: null,
+            apertureEv: null,
+            isoLatitudeYyy: null,
+            isoLatitudeZzz: null,
+            exposureIndex: null,
+            flashEnergy: null,
         );
     }
 }

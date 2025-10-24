@@ -20,14 +20,18 @@ use MagicSunday\ImageMeta\Value\Enum\Orientation;
 final readonly class Image
 {
     /**
-     * @param int|null         $width         Final image width in pixels.
-     * @param int|null         $height        Final image height in pixels.
-     * @param Orientation|null $orientation   Image orientation when stored on disk.
-     * @param int|null         $bitsPerSample Bits per colour channel.
-     * @param ColorSpace|null  $colorSpace    Colour space used for the pixel data.
-     * @param string|null      $imageUniqueId Globally unique image identifier.
-     * @param string|null      $documentName  Optional document or file name derived from metadata sources.
-     * @param string|null      $description   Free-form description provided by the camera.
+     * @param int|null         $width                   Final image width in pixels.
+     * @param int|null         $height                  Final image height in pixels.
+     * @param Orientation|null $orientation             Image orientation when stored on disk.
+     * @param int|null         $bitsPerSample           Bits per colour channel.
+     * @param ColorSpace|null  $colorSpace              Colour space used for the pixel data.
+     * @param string|null      $imageUniqueId           Globally unique image identifier.
+     * @param string|null      $documentName            Optional document or file name derived from metadata sources.
+     * @param string|null      $description             Free-form description provided by the camera.
+     * @param string|null      $title                   Human readable title provided by the camera or metadata.
+     * @param list<int>|null   $componentsConfiguration Layout of the colour components for each pixel sample.
+     * @param float|null       $compressedBitsPerPixel  Average bits per pixel after compression.
+     * @param string|null      $userComment             Arbitrary user comment stored by the device.
      */
     public function __construct(
         public ?int $width,
@@ -38,6 +42,10 @@ final readonly class Image
         public ?string $imageUniqueId,
         public ?string $documentName,
         public ?string $description,
+        public ?string $title,
+        public ?array $componentsConfiguration,
+        public ?float $compressedBitsPerPixel,
+        public ?string $userComment,
     ) {
     }
 }
