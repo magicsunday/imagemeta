@@ -11,13 +11,17 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Exif;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 
 use function abs;
+use function array_map;
 use function count;
 use function ctype_digit;
 use function explode;
 use function floor;
+use function implode;
 use function is_float;
 use function is_int;
 use function is_numeric;
@@ -25,6 +29,7 @@ use function is_string;
 use function ltrim;
 use function preg_match;
 use function round;
+use function rtrim;
 use function sprintf;
 use function str_contains;
 use function str_replace;
@@ -135,6 +140,39 @@ final readonly class ValueConverters
     }
 
     /**
+     * Converts a GPS destination distance to metres based on the reference unit.
+     *
+     * @param string|null                                                         $ref   Distance reference (K, M or N).
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value The measured value.
+     */
+    public static function gpsDistanceToMetres(
+        ?string $ref,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?float {
+        if (!is_string($ref)) {
+            return null;
+        }
+
+        $numeric = self::rationalToFloat($value);
+        if ($numeric === null && is_string($value) && is_numeric($value)) {
+            $numeric = (float) $value;
+        }
+
+        if ($numeric === null) {
+            return null;
+        }
+
+        $normalizedRef = strtoupper(trim($ref));
+
+        return match ($normalizedRef) {
+            'K'     => $numeric * 1000.0,
+            'M'     => $numeric * 1609.344,
+            'N'     => $numeric * 1852.0,
+            default => null,
+        };
+    }
+
+    /**
      * Converts the EXIF flash bit field into a typed value object.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Flash tag value representation.
@@ -213,14 +251,119 @@ final readonly class ValueConverters
     }
 
     /**
-     * Extracts GPS latitude, longitude and altitude information from an IFD.
+     * Returns the default GPS metadata structure with all keys initialised to null.
+     *
+     * @return array{
+     *     lat:?float,
+     *     lon:?float,
+     *     alt:?float,
+     *     version:?string,
+     *     satellites:?string,
+     *     status:?string,
+     *     measure_mode:?string,
+     *     dop:?float,
+     *     speed_ref:?string,
+     *     speed_ms:?float,
+     *     track_ref:?string,
+     *     track:?float,
+     *     img_direction_ref:?string,
+     *     img_direction:?float,
+     *     map_datum:?string,
+     *     dest_lat_ref:?string,
+     *     dest_lat:?float,
+     *     dest_lon_ref:?string,
+     *     dest_lon:?float,
+     *     dest_bearing_ref:?string,
+     *     dest_bearing:?float,
+     *     dest_distance_ref:?string,
+     *     dest_distance_m:?float,
+     *     processing_method:?string,
+     *     area_information:?string,
+     *     date:?string,
+     *     time:?string,
+     *     timestamp:?DateTimeImmutable,
+     *     differential:?int,
+     *     h_positioning_error:?float
+     * }
+     */
+    public static function emptyGpsResult(): array
+    {
+        return [
+            'lat'                   => null,
+            'lon'                   => null,
+            'alt'                   => null,
+            'version'               => null,
+            'satellites'            => null,
+            'status'                => null,
+            'measure_mode'          => null,
+            'dop'                   => null,
+            'speed_ref'             => null,
+            'speed_ms'              => null,
+            'track_ref'             => null,
+            'track'                 => null,
+            'img_direction_ref'     => null,
+            'img_direction'         => null,
+            'map_datum'             => null,
+            'dest_lat_ref'          => null,
+            'dest_lat'              => null,
+            'dest_lon_ref'          => null,
+            'dest_lon'              => null,
+            'dest_bearing_ref'      => null,
+            'dest_bearing'          => null,
+            'dest_distance_ref'     => null,
+            'dest_distance_m'       => null,
+            'processing_method'     => null,
+            'area_information'      => null,
+            'date'                  => null,
+            'time'                  => null,
+            'timestamp'             => null,
+            'differential'          => null,
+            'h_positioning_error'   => null,
+        ];
+    }
+
+    /**
+     * Extracts GPS metadata including position, navigation and timing information from an IFD.
      *
      * @param Ifd $gps The GPS IFD containing coordinate tags.
      *
-     * @return array{lat:?float,lon:?float,alt:?float}
+     * @return array{
+     *     lat:?float,
+     *     lon:?float,
+     *     alt:?float,
+     *     version:?string,
+     *     satellites:?string,
+     *     status:?string,
+     *     measure_mode:?string,
+     *     dop:?float,
+     *     speed_ref:?string,
+     *     speed_ms:?float,
+     *     track_ref:?string,
+     *     track:?float,
+     *     img_direction_ref:?string,
+     *     img_direction:?float,
+     *     map_datum:?string,
+     *     dest_lat_ref:?string,
+     *     dest_lat:?float,
+     *     dest_lon_ref:?string,
+     *     dest_lon:?float,
+     *     dest_bearing_ref:?string,
+     *     dest_bearing:?float,
+     *     dest_distance_ref:?string,
+     *     dest_distance_m:?float,
+     *     processing_method:?string,
+     *     area_information:?string,
+     *     date:?string,
+     *     time:?string,
+     *     timestamp:?DateTimeImmutable,
+     *     differential:?int,
+     *     h_positioning_error:?float
+     * }
      */
     public static function gpsFromIfd(Ifd $gps): array
     {
+        $result = self::emptyGpsResult();
+
         $latRefEntry = $gps->get(ExifTag::GPS_LATITUDE_REF);
         $latValEntry = $gps->get(ExifTag::GPS_LATITUDE);
         $lonRefEntry = $gps->get(ExifTag::GPS_LONGITUDE_REF);
@@ -234,10 +377,9 @@ final readonly class ValueConverters
         $latPairs = $latVal instanceof ExifRationalList ? $latVal : null;
         $lonPairs = $lonVal instanceof ExifRationalList ? $lonVal : null;
 
-        $lat = self::dmsToFloat(is_string($latRef) ? $latRef : null, $latPairs);
-        $lon = self::dmsToFloat(is_string($lonRef) ? $lonRef : null, $lonPairs);
+        $result['lat'] = self::dmsToFloat(is_string($latRef) ? trim($latRef) : null, $latPairs);
+        $result['lon'] = self::dmsToFloat(is_string($lonRef) ? trim($lonRef) : null, $lonPairs);
 
-        $alt      = null;
         $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
         if ($altEntry instanceof IfdEntry && $altEntry->value instanceof ExifRational) {
             $alt = self::rationalToFloat($altEntry->value);
@@ -249,9 +391,101 @@ final readonly class ValueConverters
                     $alt = -$alt;
                 }
             }
+
+            $result['alt'] = $alt;
         }
 
-        return ['lat' => $lat, 'lon' => $lon, 'alt' => $alt];
+        $versionEntry     = $gps->get(ExifTag::GPS_VERSION_ID);
+        $satellitesEntry  = $gps->get(ExifTag::GPS_SATELLITES);
+        $statusEntry      = $gps->get(ExifTag::GPS_STATUS);
+        $measureEntry     = $gps->get(ExifTag::GPS_MEASURE_MODE);
+        $dopEntry         = $gps->get(ExifTag::GPS_DOP);
+        $speedRefEntry    = $gps->get(ExifTag::GPS_SPEED_REF);
+        $speedEntry       = $gps->get(ExifTag::GPS_SPEED);
+        $trackRefEntry    = $gps->get(ExifTag::GPS_TRACK_REF);
+        $trackEntry       = $gps->get(ExifTag::GPS_TRACK);
+        $imgDirRefEntry   = $gps->get(ExifTag::GPS_IMG_DIRECTION_REF);
+        $imgDirEntry      = $gps->get(ExifTag::GPS_IMG_DIRECTION);
+        $mapDatumEntry    = $gps->get(ExifTag::GPS_MAP_DATUM);
+        $destLatRefEntry  = $gps->get(ExifTag::GPS_DEST_LATITUDE_REF);
+        $destLatEntry     = $gps->get(ExifTag::GPS_DEST_LATITUDE);
+        $destLonRefEntry  = $gps->get(ExifTag::GPS_DEST_LONGITUDE_REF);
+        $destLonEntry     = $gps->get(ExifTag::GPS_DEST_LONGITUDE);
+        $destBearRefEntry = $gps->get(ExifTag::GPS_DEST_BEARING_REF);
+        $destBearEntry    = $gps->get(ExifTag::GPS_DEST_BEARING);
+        $destDistRefEntry = $gps->get(ExifTag::GPS_DEST_DISTANCE_REF);
+        $destDistEntry    = $gps->get(ExifTag::GPS_DEST_DISTANCE);
+        $processEntry     = $gps->get(ExifTag::GPS_PROCESSING_METHOD);
+        $areaEntry        = $gps->get(ExifTag::GPS_AREA_INFORMATION);
+        $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
+        $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
+
+        $result['version']    = self::formatGpsVersion($versionEntry?->value);
+        $result['satellites'] = self::sanitizeString($satellitesEntry?->value);
+        $result['status']     = self::sanitizeString($statusEntry?->value);
+        $result['measure_mode'] = self::sanitizeString($measureEntry?->value);
+        $result['dop']          = self::rationalToFloat($dopEntry?->value);
+
+        $speedRefValue        = $speedRefEntry?->value;
+        $speedRef             = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
+        $result['speed_ref']  = $speedRef;
+        $result['speed_ms']   = self::gpsSpeedToMs($speedRef, $speedEntry?->value);
+
+        $trackRefValue       = $trackRefEntry?->value;
+        $result['track_ref'] = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
+        $result['track']     = self::rationalToFloat($trackEntry?->value);
+
+        $imgDirRefValue             = $imgDirRefEntry?->value;
+        $result['img_direction_ref'] = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
+        $result['img_direction']     = self::rationalToFloat($imgDirEntry?->value);
+
+        $result['map_datum'] = self::sanitizeString($mapDatumEntry?->value);
+
+        $destLatRefValue        = $destLatRefEntry?->value;
+        $destLatVal             = $destLatEntry?->value;
+        $destLatPairs           = $destLatVal instanceof ExifRationalList ? $destLatVal : null;
+        $result['dest_lat_ref'] = is_string($destLatRefValue) ? strtoupper(trim($destLatRefValue)) : null;
+        $result['dest_lat']     = self::dmsToFloat($result['dest_lat_ref'], $destLatPairs);
+
+        $destLonRefValue        = $destLonRefEntry?->value;
+        $destLonVal             = $destLonEntry?->value;
+        $destLonPairs           = $destLonVal instanceof ExifRationalList ? $destLonVal : null;
+        $result['dest_lon_ref'] = is_string($destLonRefValue) ? strtoupper(trim($destLonRefValue)) : null;
+        $result['dest_lon']     = self::dmsToFloat($result['dest_lon_ref'], $destLonPairs);
+
+        $destBearingRefValue        = $destBearRefEntry?->value;
+        $result['dest_bearing_ref'] = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
+        $result['dest_bearing']     = self::rationalToFloat($destBearEntry?->value);
+
+        $destDistanceRefValue        = $destDistRefEntry?->value;
+        $result['dest_distance_ref'] = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
+        $result['dest_distance_m']   = self::gpsDistanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
+
+        $result['processing_method'] = self::decodeUndefinedString($processEntry?->value);
+        $result['area_information']  = self::decodeUndefinedString($areaEntry?->value);
+
+        $result['date'] = self::normalizeGpsDate($dateEntry?->value);
+        $timeParts       = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
+            ? self::parseGpsTime($timeEntry->value)
+            : null;
+        $result['time']      = self::formatGpsTime($timeParts);
+        $result['timestamp'] = self::combineGpsDateTime($result['date'], $timeParts);
+
+        $diffEntry = $gps->get(ExifTag::GPS_DIFFERENTIAL);
+        $diffValue = $diffEntry?->value;
+        if ($diffValue instanceof ExifNumericList) {
+            $diffValue = $diffValue->values[0] ?? null;
+        }
+        if (is_int($diffValue)) {
+            $result['differential'] = $diffValue;
+        } elseif (is_float($diffValue)) {
+            $result['differential'] = (int) round($diffValue);
+        }
+
+        $hPositionEntry = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);
+        $result['h_positioning_error'] = self::rationalToFloat($hPositionEntry?->value);
+
+        return $result;
     }
 
     /**
@@ -279,6 +513,212 @@ final readonly class ValueConverters
         $sign = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
 
         return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+    }
+
+    /**
+     * Converts a GPS version payload into a dotted string.
+     *
+     * @param mixed $value Raw value extracted from the IFD entry.
+     */
+    private static function formatGpsVersion(mixed $value): ?string
+    {
+        if ($value instanceof ExifNumericList) {
+            $components = array_map(static fn (int|float $component): int => (int) $component, $value->values);
+
+            return implode('.', $components);
+        }
+
+        if (is_string($value)) {
+            $value = trim(str_replace("\0", '', $value));
+            if ($value === '') {
+                return null;
+            }
+
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (string) $value;
+        }
+
+        if (is_float($value)) {
+            return (string) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalises ASCII-like EXIF strings by trimming whitespace and null padding.
+     *
+     * @param mixed $value Raw value extracted from the IFD entry.
+     */
+    private static function sanitizeString(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $clean = trim(str_replace("\0", '', $value));
+
+        return $clean === '' ? null : $clean;
+    }
+
+    /**
+     * Decodes undefined GPS ASCII strings with optional encoding prefixes.
+     *
+     * @param mixed $value Raw value extracted from the IFD entry.
+     */
+    private static function decodeUndefinedString(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $data = $value;
+        $prefixes = [
+            "ASCII\0\0\0",
+            "UNICODE\0",
+            "JIS\0\0\0\0\0",
+        ];
+
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($data, $prefix)) {
+                $data = substr($data, strlen($prefix));
+                break;
+            }
+        }
+
+        $data = str_replace("\0", '', $data);
+        $data = trim($data);
+
+        return $data === '' ? null : $data;
+    }
+
+    /**
+     * Normalises a GPS date stamp into an ISO 8601 calendar date.
+     *
+     * @param mixed $value Raw value extracted from the IFD entry.
+     */
+    private static function normalizeGpsDate(mixed $value): ?string
+    {
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $value = trim(str_replace("\0", '', $value));
+        if ($value === '') {
+            return null;
+        }
+
+        if (!preg_match('/^\d{4}:\d{2}:\d{2}$/', $value)) {
+            return null;
+        }
+
+        return str_replace(':', '-', $value);
+    }
+
+    /**
+     * Extracts hour, minute and second components from a GPS time stamp list.
+     *
+     * @return array{hours:int, minutes:int, seconds:float}|null
+     */
+    private static function parseGpsTime(ExifRationalList $value): ?array
+    {
+        if (count($value->values) < 3) {
+            return null;
+        }
+
+        $hours   = self::rationalToFloat($value->values[0]);
+        $minutes = self::rationalToFloat($value->values[1]);
+        $seconds = self::rationalToFloat($value->values[2]);
+
+        if ($hours === null || $minutes === null || $seconds === null) {
+            return null;
+        }
+
+        return [
+            'hours'   => (int) floor($hours),
+            'minutes' => (int) floor($minutes),
+            'seconds' => $seconds,
+        ];
+    }
+
+    /**
+     * Formats GPS time components into a human readable HH:MM:SS(.ffffff) string.
+     *
+     * @param array{hours:int, minutes:int, seconds:float}|null $timeParts
+     */
+    private static function formatGpsTime(?array $timeParts): ?string
+    {
+        if ($timeParts === null) {
+            return null;
+        }
+
+        $secondsFloat = $timeParts['seconds'];
+        $secondsInt   = (int) floor($secondsFloat);
+        $fraction     = $secondsFloat - $secondsInt;
+        $microseconds = (int) round($fraction * 1_000_000);
+
+        if ($microseconds >= 1_000_000) {
+            $secondsInt++;
+            $microseconds -= 1_000_000;
+        }
+
+        $time = sprintf('%02d:%02d:%02d', $timeParts['hours'], $timeParts['minutes'], $secondsInt);
+
+        if ($microseconds > 0) {
+            $micro = rtrim(sprintf('%06d', $microseconds), '0');
+            if ($micro === '') {
+                $micro = '0';
+            }
+
+            $time .= '.' . $micro;
+        }
+
+        return $time;
+    }
+
+    /**
+     * Combines a GPS date and time into a UTC timestamp.
+     *
+     * @param array{hours:int, minutes:int, seconds:float}|null $timeParts
+     */
+    private static function combineGpsDateTime(?string $date, ?array $timeParts): ?DateTimeImmutable
+    {
+        if ($date === null || $timeParts === null) {
+            return null;
+        }
+
+        $secondsFloat = $timeParts['seconds'];
+        $secondsInt   = (int) floor($secondsFloat);
+        $fraction     = $secondsFloat - $secondsInt;
+        $microseconds = (int) round($fraction * 1_000_000);
+
+        if ($microseconds >= 1_000_000) {
+            $secondsInt++;
+            $microseconds -= 1_000_000;
+        }
+
+        $timeString = sprintf('%02d:%02d:%02d', $timeParts['hours'], $timeParts['minutes'], $secondsInt);
+        $format     = 'Y-m-d H:i:s';
+
+        if ($microseconds > 0) {
+            $timeString .= sprintf('.%06d', $microseconds);
+            $format     .= '.u';
+        }
+
+        $dateTime = DateTimeImmutable::createFromFormat(
+            $format,
+            $date . ' ' . $timeString,
+            new DateTimeZone('UTC'),
+        );
+
+        if ($dateTime === false) {
+            return null;
+        }
+
+        return $dateTime;
     }
 
     /**
