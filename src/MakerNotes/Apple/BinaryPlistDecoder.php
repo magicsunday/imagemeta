@@ -20,8 +20,8 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
-use function strpos;
 use function strlen;
+use function strpos;
 use function substr;
 
 /**

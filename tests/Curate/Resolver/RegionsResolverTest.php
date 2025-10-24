@@ -34,20 +34,20 @@ final class RegionsResolverTest extends TestCase
     public function resolvesAndMergesRegionSources(): void
     {
         $document = new XmpDocument([
-            '{' . self::NS_ST_AREA . '}x'        => ['0.4', '0.75'],
-            '{' . self::NS_ST_AREA . '}y'        => ['0.45', '0.60'],
-            '{' . self::NS_ST_AREA . '}w'        => ['0.2', '0.10'],
-            '{' . self::NS_ST_AREA . '}h'        => ['0.25', '0.08'],
-            '{' . self::NS_MWG . '}Type'         => ['Face', 'Focus'],
-            '{' . self::NS_MWG . '}Name'         => ['Alice', ''],
-            '{' . self::NS_MWG . '}Confidence'   => ['0.91', '0.5'],
-            '{' . self::NS_MWG . '}Rotation'     => ['12.5', '0'],
-            '{' . self::NS_APPLE . '}CenterX'    => ['0.4', '0.72'],
-            '{' . self::NS_APPLE . '}CenterY'    => ['0.45', '0.61'],
-            '{' . self::NS_APPLE . '}Width'      => ['0.2', '0.12'],
-            '{' . self::NS_APPLE . '}Height'     => ['0.25', '0.09'],
+            '{' . self::NS_ST_AREA . '}x'             => ['0.4', '0.75'],
+            '{' . self::NS_ST_AREA . '}y'             => ['0.45', '0.60'],
+            '{' . self::NS_ST_AREA . '}w'             => ['0.2', '0.10'],
+            '{' . self::NS_ST_AREA . '}h'             => ['0.25', '0.08'],
+            '{' . self::NS_MWG . '}Type'              => ['Face', 'Focus'],
+            '{' . self::NS_MWG . '}Name'              => ['Alice', ''],
+            '{' . self::NS_MWG . '}Confidence'        => ['0.91', '0.5'],
+            '{' . self::NS_MWG . '}Rotation'          => ['12.5', '0'],
+            '{' . self::NS_APPLE . '}CenterX'         => ['0.4', '0.72'],
+            '{' . self::NS_APPLE . '}CenterY'         => ['0.45', '0.61'],
+            '{' . self::NS_APPLE . '}Width'           => ['0.2', '0.12'],
+            '{' . self::NS_APPLE . '}Height'          => ['0.25', '0.09'],
             '{' . self::NS_APPLE . '}ConfidenceLevel' => ['0.88', '0.42'],
-            '{' . self::NS_APPLE . '}AngleInfoRoll'  => ['2.0', '-5.0'],
+            '{' . self::NS_APPLE . '}AngleInfoRoll'   => ['2.0', '-5.0'],
             '{' . self::NS_APPLE . '}Name'            => ['Alice', 'Bob'],
             '{' . self::NS_APPLE . '}FaceID'          => ['101', '202'],
         ]);
@@ -212,5 +212,4 @@ final class RegionsResolverTest extends TestCase
         self::assertEqualsWithDelta(-3.5, $region->rotationDeg, 0.0001);
         self::assertSame('abc-123', $region->faceId);
     }
-
 }

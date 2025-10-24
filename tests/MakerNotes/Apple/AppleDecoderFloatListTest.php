@@ -29,7 +29,6 @@ final class AppleDecoderFloatListTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'floatList');
-        $method->setAccessible(true);
 
         $result = $method->invoke($decoder, ['HdrGain' => 1.25], 'HdrGain');
 
@@ -44,7 +43,6 @@ final class AppleDecoderFloatListTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'floatList');
-        $method->setAccessible(true);
 
         $dictionary = [
             'HdrGain' => [

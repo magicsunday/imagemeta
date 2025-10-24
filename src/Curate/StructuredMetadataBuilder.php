@@ -612,8 +612,7 @@ final class StructuredMetadataBuilder
         QuickTimeResolver $quickTime,
         Apple $apple,
         ?int $faceCount,
-    ): Scene
-    {
+    ): Scene {
         $hdr   = $quickTime->string('HDRImageType');
         $night = $quickTime->bool('NightMode');
 

@@ -147,15 +147,15 @@ final readonly class RegionsResolver
      */
     private function extractAppleFaceRegions(XmpDocument $document, ?array $dimensions): array
     {
-        $centersX    = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterX');
-        $centersY    = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterY');
-        $widths      = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Width');
-        $heights     = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Height');
+        $centersX         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterX');
+        $centersY         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterY');
+        $widths           = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Width');
+        $heights          = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Height');
         $confidenceLevels = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'ConfidenceLevel');
-        $confidences       = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Confidence');
-        $angleInfoRolls    = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'AngleInfoRoll');
-        $rolls             = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Roll');
-        $yaws              = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
+        $confidences      = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Confidence');
+        $angleInfoRolls   = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'AngleInfoRoll');
+        $rolls            = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Roll');
+        $yaws             = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
 
         $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'Name');
         if ($names === []) {
