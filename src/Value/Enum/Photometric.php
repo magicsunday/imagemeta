@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value\Enum;
 
 /**
- * Enumerates TIFF/EXIF photometric interpretations.
+ * Enumerates TIFF/EXIF photometric interpretations defined in EXIF 3.0.
  */
 enum Photometric: int
 {
