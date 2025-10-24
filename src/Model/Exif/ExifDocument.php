@@ -770,21 +770,13 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the camera firmware version string when present.
+     * Returns the camera firmware string when present.
      */
     public function cameraFirmware(): ?string
     {
         $value = $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
 
         return $value ?? $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_LEGACY);
-    }
-
-    /**
-     * Returns the camera firmware version string when present.
-     */
-    public function cameraFirmwareVersion(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_VERSION);
     }
 
     /**
@@ -795,14 +787,6 @@ final readonly class ExifDocument
         $value = $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
 
         return $value ?? $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY);
-    }
-
-    /**
-     * Returns the raw developing software version string.
-     */
-    public function rawDevelopingSoftwareVersion(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION);
     }
 
     /**
@@ -823,14 +807,6 @@ final readonly class ExifDocument
         $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
 
         return $value ?? $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
-    }
-
-    /**
-     * Returns the metadata editing software version string.
-     */
-    public function metadataEditingSoftwareVersion(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_VERSION);
     }
 
     /**
