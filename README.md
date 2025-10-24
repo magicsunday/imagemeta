@@ -30,6 +30,10 @@ $structured->related->livePhotoPairId;
 | `temporal.original` | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal` | `ValueConverters::parseOffset()` |
 | `derived.ev100` | Calculated from exposure values | – | `ValueConverters::calcEv100()` |
 
+### Temporal fractional seconds harmonisation
+
+ImageMeta mirrors fractional seconds from `SubSecTimeOriginal` or `SubSecTimeDigitized` into the generic EXIF `SubSecTime` slot when the latter is missing. This display-only harmonisation keeps `temporal.subSecTime`, `temporal.subSecTimeOriginal` and `temporal.subSecTimeDigitized` aligned without altering the underlying capture timestamps.
+
 ### GPS metadata coverage
 
 ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decoded data is exposed through

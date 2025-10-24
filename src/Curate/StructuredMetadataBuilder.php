@@ -454,6 +454,9 @@ final class StructuredMetadataBuilder
 
     /**
      * Builds the temporal value object derived from EXIF, QuickTime and XMP data.
+     *
+     * Fractional seconds are mirrored into the generic field to keep display values consistent
+     * whenever only the original or digitized timestamp carries sub-second precision.
      */
     private function buildTemporal(ExifTagResolver $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
     {
@@ -483,6 +486,10 @@ final class StructuredMetadataBuilder
         $subSecTime         = $this->sanitizeSubSeconds($resolver->string('SubSecTime'));
         $subSecDigitizedRaw = $this->sanitizeSubSeconds($resolver->string('SubSecTimeDigitized'));
         $subSecOriginal     = $this->sanitizeSubSeconds($subOriginalRaw);
+
+        if ($subSecTime === null) {
+            $subSecTime = $subSecOriginal ?? $subSecDigitizedRaw;
+        }
 
         $timeZoneOffsets = $resolver->ints('TimeZoneOffset');
 

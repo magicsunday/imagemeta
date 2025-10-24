@@ -777,6 +777,47 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures fractional seconds mirror into the generic field when the original precision is available.
+     */
+    #[Test]
+    public function mirrorsFractionalSecondsFromOriginalIntoGenericField(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::SUB_SEC_TIME_ORIGINAL  => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '957'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '957'),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('957', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('957', $structured->temporal->subSecTimeDigitized);
+        self::assertSame('957', $structured->temporal->subSecTime);
+    }
+
+    /**
+     * Ensures fractional seconds mirror into the generic field when only digitized precision is present.
+     */
+    #[Test]
+    public function mirrorsFractionalSecondsFromDigitizedIntoGenericField(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '957'),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNull($structured->temporal->subSecTimeOriginal);
+        self::assertSame('957', $structured->temporal->subSecTimeDigitized);
+        self::assertSame('957', $structured->temporal->subSecTime);
+    }
+
+    /**
      * Verifies that the color space upgrades to Adobe RGB when tagged as uncalibrated with an R03 interop index.
      */
     #[Test]
