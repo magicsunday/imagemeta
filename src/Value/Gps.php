@@ -17,14 +17,16 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Gps
 {
     /**
-     * @param float|null $latitude  Latitude in decimal degrees.
+     * @param float|null $latitude Latitude in decimal degrees.
      * @param float|null $longitude Longitude in decimal degrees.
-     * @param float|null $altitude  Altitude in metres relative to sea level.
+     * @param float|null $altitude Altitude in metres relative to sea level.
+     * @param float|null $speedMs Ground speed in metres per second when provided.
      */
     public function __construct(
         public ?float $latitude,
         public ?float $longitude,
         public ?float $altitude,
+        public ?float $speedMs,
     ) {
     }
 }
