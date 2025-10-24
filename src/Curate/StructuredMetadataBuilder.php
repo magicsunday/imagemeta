@@ -75,10 +75,7 @@ final class StructuredMetadataBuilder
         $xmpResolver       = new XmpResolver($xmpDocument);
         $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
 
-        $interop = new Interop(
-            index: $exifResolver->interopIndex(),
-            version: $exifResolver->interopVersion(),
-        );
+        $interop = new Interop(index: $exifResolver->interopIndex());
 
         $tiff = new TiffData(
             samplesPerPixel: $exifResolver->samplesPerPixel(),
@@ -94,6 +91,13 @@ final class StructuredMetadataBuilder
             ycbcrCoefficients: $exifResolver->ycbcrCoefficients(),
             whitePoint: $exifResolver->whitePoint(),
             primaryChromaticities: $exifResolver->primaryChromaticities(),
+            stripOffsets: $exifResolver->stripOffsets(),
+            stripByteCounts: $exifResolver->stripByteCounts(),
+            transferFunction: $exifResolver->transferFunction(),
+            jpegInterchangeFormat: $exifResolver->jpegInterchangeFormat(),
+            jpegInterchangeFormatLength: $exifResolver->jpegInterchangeFormatLength(),
+            referenceBlackWhite: $exifResolver->referenceBlackWhite(),
+            copyright: $exifResolver->copyright(),
         );
 
         $composite = new CompositeImageInfo(

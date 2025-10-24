@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
+use DateTimeImmutable;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
@@ -379,5 +380,130 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(10.0, $result['lat'], 0.000001);
         self::assertEqualsWithDelta(20.5, $result['lon'], 0.000001);
         self::assertNull($result['alt']);
+    }
+
+    /**
+     * Ensures EXIF 3.0 GPS tags are decoded into a rich metadata map including temporal and navigation fields.
+     */
+    #[Test]
+    public function extractsExtendedGpsMetadata(): void
+    {
+        $gps = new Ifd([
+            ExifTag::GPS_VERSION_ID        => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [3, 0, 0, 0]),
+            ExifTag::GPS_LATITUDE_REF      => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE          => new IfdEntry(
+                ExifTag::GPS_LATITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(51, 1),
+                    new ExifRational(30, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(
+                ExifTag::GPS_LONGITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(8, 1),
+                    new ExifRational(30, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_ALTITUDE_REF        => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+            ExifTag::GPS_ALTITUDE            => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, new ExifRational(150, 1)),
+            ExifTag::GPS_TIME_STAMP          => new IfdEntry(
+                ExifTag::GPS_TIME_STAMP,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(12, 1),
+                    new ExifRational(34, 1),
+                    new ExifRational(56789, 1000),
+                ]),
+            ),
+            ExifTag::GPS_DATE_STAMP          => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 10, '2024:05:06'),
+            ExifTag::GPS_SATELLITES          => new IfdEntry(ExifTag::GPS_SATELLITES, 2, 2, '05'),
+            ExifTag::GPS_STATUS              => new IfdEntry(ExifTag::GPS_STATUS, 2, 1, 'A'),
+            ExifTag::GPS_MEASURE_MODE        => new IfdEntry(ExifTag::GPS_MEASURE_MODE, 2, 1, '3'),
+            ExifTag::GPS_DOP                 => new IfdEntry(ExifTag::GPS_DOP, 5, 1, new ExifRational(25, 10)),
+            ExifTag::GPS_SPEED_REF           => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 1, 'K'),
+            ExifTag::GPS_SPEED               => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, new ExifRational(72000, 1000)),
+            ExifTag::GPS_TRACK_REF           => new IfdEntry(ExifTag::GPS_TRACK_REF, 2, 1, 'T'),
+            ExifTag::GPS_TRACK               => new IfdEntry(ExifTag::GPS_TRACK, 5, 1, new ExifRational(12345, 100)),
+            ExifTag::GPS_IMG_DIRECTION_REF   => new IfdEntry(ExifTag::GPS_IMG_DIRECTION_REF, 2, 1, 'M'),
+            ExifTag::GPS_IMG_DIRECTION       => new IfdEntry(ExifTag::GPS_IMG_DIRECTION, 5, 1, new ExifRational(2500, 10)),
+            ExifTag::GPS_MAP_DATUM           => new IfdEntry(ExifTag::GPS_MAP_DATUM, 2, 6, 'WGS-84'),
+            ExifTag::GPS_DEST_LATITUDE_REF   => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 1, 'N'),
+            ExifTag::GPS_DEST_LATITUDE       => new IfdEntry(
+                ExifTag::GPS_DEST_LATITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(41, 1),
+                    new ExifRational(0, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_DEST_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE_REF, 2, 1, 'E'),
+            ExifTag::GPS_DEST_LONGITUDE     => new IfdEntry(
+                ExifTag::GPS_DEST_LONGITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(8, 1),
+                    new ExifRational(30, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_DEST_BEARING_REF   => new IfdEntry(ExifTag::GPS_DEST_BEARING_REF, 2, 1, 'T'),
+            ExifTag::GPS_DEST_BEARING       => new IfdEntry(ExifTag::GPS_DEST_BEARING, 5, 1, new ExifRational(123, 1)),
+            ExifTag::GPS_DEST_DISTANCE_REF  => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 1, 'K'),
+            ExifTag::GPS_DEST_DISTANCE      => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, new ExifRational(42, 1)),
+            ExifTag::GPS_PROCESSING_METHOD  => new IfdEntry(ExifTag::GPS_PROCESSING_METHOD, 7, 11, "ASCII\0\0\0NETWORK"),
+            ExifTag::GPS_AREA_INFORMATION   => new IfdEntry(ExifTag::GPS_AREA_INFORMATION, 7, 13, "ASCII\0\0\0AreaName"),
+            ExifTag::GPS_DIFFERENTIAL       => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 2),
+            ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(15, 10)),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertEqualsWithDelta(51.5, $result['lat'], 0.000001);
+        self::assertEqualsWithDelta(8.5, $result['lon'], 0.000001);
+        self::assertEqualsWithDelta(150.0, $result['alt'], 0.000001);
+        self::assertSame('3.0.0.0', $result['version']);
+        self::assertSame('05', $result['satellites']);
+        self::assertSame('A', $result['status']);
+        self::assertSame('3', $result['measure_mode']);
+        self::assertEqualsWithDelta(2.5, $result['dop'], 0.000001);
+        self::assertSame('K', $result['speed_ref']);
+        self::assertEqualsWithDelta(20.0, $result['speed_ms'], 0.000001);
+        self::assertSame('T', $result['track_ref']);
+        self::assertEqualsWithDelta(123.45, $result['track'], 0.000001);
+        self::assertSame('M', $result['img_direction_ref']);
+        self::assertEqualsWithDelta(250.0, $result['img_direction'], 0.000001);
+        self::assertSame('WGS-84', $result['map_datum']);
+        self::assertSame('N', $result['dest_lat_ref']);
+        self::assertEqualsWithDelta(41.0, $result['dest_lat'], 0.000001);
+        self::assertSame('E', $result['dest_lon_ref']);
+        self::assertEqualsWithDelta(8.5, $result['dest_lon'], 0.000001);
+        self::assertSame('T', $result['dest_bearing_ref']);
+        self::assertEqualsWithDelta(123.0, $result['dest_bearing'], 0.000001);
+        self::assertSame('K', $result['dest_distance_ref']);
+        self::assertEqualsWithDelta(42000.0, $result['dest_distance_m'], 0.000001);
+        self::assertSame('NETWORK', $result['processing_method']);
+        self::assertSame('AreaName', $result['area_information']);
+        self::assertSame('2024-05-06', $result['date']);
+        self::assertSame('12:34:56.789', $result['time']);
+
+        $timestamp = $result['timestamp'];
+        self::assertInstanceOf(DateTimeImmutable::class, $timestamp);
+        self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
+        self::assertSame('12:34:56.789000', $timestamp->format('H:i:s.u'));
+
+        self::assertSame(2, $result['differential']);
+        self::assertEqualsWithDelta(1.5, $result['h_positioning_error'], 0.000001);
     }
 }

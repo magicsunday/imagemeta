@@ -686,14 +686,45 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the parsed GPS coordinates if present.
+     * Returns the parsed GPS metadata extracted from the GPS IFD.
      *
-     * @return array{lat:?float, lon:?float, alt:?float}
+     * @return array{
+     *     lat:?float,
+     *     lon:?float,
+     *     alt:?float,
+     *     version:?string,
+     *     satellites:?string,
+     *     status:?string,
+     *     measure_mode:?string,
+     *     dop:?float,
+     *     speed_ref:?string,
+     *     speed_ms:?float,
+     *     track_ref:?string,
+     *     track:?float,
+     *     img_direction_ref:?string,
+     *     img_direction:?float,
+     *     map_datum:?string,
+     *     dest_lat_ref:?string,
+     *     dest_lat:?float,
+     *     dest_lon_ref:?string,
+     *     dest_lon:?float,
+     *     dest_bearing_ref:?string,
+     *     dest_bearing:?float,
+     *     dest_distance_ref:?string,
+     *     dest_distance_m:?float,
+     *     processing_method:?string,
+     *     area_information:?string,
+     *     date:?string,
+     *     time:?string,
+     *     timestamp:?DateTimeImmutable,
+     *     differential:?int,
+     *     h_positioning_error:?float
+     * }
      */
     public function gps(): array
     {
         if (!$this->gpsIfd instanceof Ifd) {
-            return ['lat' => null, 'lon' => null, 'alt' => null];
+            return ValueConverters::emptyGpsResult();
         }
 
         return ValueConverters::gpsFromIfd($this->gpsIfd);

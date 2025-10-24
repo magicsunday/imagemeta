@@ -39,6 +39,7 @@ use function str_pad;
 use function str_repeat;
 use function strlen;
 use function substr;
+use function trim;
 use function unpack;
 
 /**
@@ -213,6 +214,25 @@ final class TiffExifReaderTest extends TestCase
     {
         self::assertSame('Canon', $doc->ifd0->get(ExifTag::MAKE)?->value);
         self::assertSame(1, $doc->ifd0->get(ExifTag::ORIENTATION)?->value);
+        self::assertSame(512, $doc->ifd0->get(ExifTag::STRIP_OFFSETS)?->value);
+        self::assertSame(1024, $doc->ifd0->get(ExifTag::STRIP_BYTE_COUNTS)?->value);
+        self::assertSame(2048, $doc->ifd0->get(ExifTag::JPEG_INTERCHANGE_FORMAT)?->value);
+        self::assertSame(4096, $doc->ifd0->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH)?->value);
+
+        $transfer = $doc->ifd0->get(ExifTag::TRANSFER_FUNCTION)?->value;
+        self::assertInstanceOf(ExifNumericList::class, $transfer);
+        self::assertSame([0, 32768, 65535], $transfer->values);
+
+        $refBlackWhite = $doc->ifd0->get(ExifTag::REFERENCE_BLACK_WHITE)?->value;
+        self::assertInstanceOf(ExifRationalList::class, $refBlackWhite);
+        self::assertSame(
+            [[0, 1], [255, 1], [0, 1], [255, 1], [0, 1], [255, 1]],
+            array_map(static fn (ExifRational $r): array => [$r->numerator, $r->denominator], $refBlackWhite->values),
+        );
+
+        $copyright = $doc->ifd0->get(ExifTag::COPYRIGHT)?->value;
+        self::assertIsString($copyright);
+        self::assertSame('Jane Doe', trim($copyright, "\0"));
 
         $exifIfd = $doc->exifIfd;
         self::assertNotNull($exifIfd);
@@ -225,6 +245,7 @@ final class TiffExifReaderTest extends TestCase
         $interop = $doc->interopIfd;
         self::assertNotNull($interop);
         self::assertSame('R98', $interop->get(0x0001)?->value);
+        self::assertNull($interop->get(0x0002));
 
         $gpsIfd = $doc->gpsIfd;
         self::assertNotNull($gpsIfd);
@@ -273,7 +294,8 @@ final class TiffExifReaderTest extends TestCase
 
         $interop = $doc->interopIfd;
         self::assertNotNull($interop);
-        self::assertSame('R98', $interop->get(0x0002)?->value);
+        self::assertSame('R98', $interop->get(0x0001)?->value);
+        self::assertNull($interop->get(0x0002));
 
         $gpsIfd = $doc->gpsIfd;
         self::assertNotNull($gpsIfd);
@@ -309,25 +331,74 @@ final class TiffExifReaderTest extends TestCase
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
+        $makeString            = "Canon\0";
+        $transferFunctionBytes = pack('v*', 0, 32768, 65535);
+        $referenceBlackWhite   = self::packRationalLE(0, 1)
+            . self::packRationalLE(255, 1)
+            . self::packRationalLE(0, 1)
+            . self::packRationalLE(255, 1)
+            . self::packRationalLE(0, 1)
+            . self::packRationalLE(255, 1);
+        $copyrightString = "Jane Doe\0";
+
+        $ifd0EntryCount = 11;
+        $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
+        $baseOffset     = strlen($header) + $ifd0Length;
+
+        $makeOffset              = $baseOffset;
+        $transferFunctionOffset  = $makeOffset + strlen($makeString);
+        $referenceBlackWhiteOffset = $transferFunctionOffset + strlen($transferFunctionBytes);
+        $copyrightOffset         = $referenceBlackWhiteOffset + strlen($referenceBlackWhite);
+        $exifIfdOffset           = $copyrightOffset + strlen($copyrightString);
+
+        $exifEntryCount = 3;
+        $exifIfdLength  = 2 + ($exifEntryCount * 12) + 4;
+        $fNumberData    = self::packRationalLE(28, 10);
+        $fNumberOffset  = $exifIfdOffset + $exifIfdLength;
+        $interopIfdOffset = $fNumberOffset + strlen($fNumberData);
+
+        $interopEntryCount = 1;
+        $interopIfdLength  = 2 + ($interopEntryCount * 12) + 4;
+        $gpsIfdOffset      = $interopIfdOffset + $interopIfdLength;
+
+        $gpsEntryCount = 6;
+        $gpsIfdLength  = 2 + ($gpsEntryCount * 12) + 4;
+        $gpsLatData    = self::packRationalTripletLE([40, 1], [30, 1], [15, 1]);
+        $gpsLonData    = self::packRationalTripletLE([70, 1], [45, 1], [30, 1]);
+        $gpsAltData    = self::packRationalLE(150, 1);
+
+        $gpsLatOffset = $gpsIfdOffset + $gpsIfdLength;
+        $gpsLonOffset = $gpsLatOffset + strlen($gpsLatData);
+        $gpsAltOffset = $gpsLonOffset + strlen($gpsLonData);
+
         $ifd0Entries = [
-            self::packClassicEntry(ExifTag::MAKE, 2, 6, 62),
+            self::packClassicEntry(ExifTag::MAKE, 2, strlen($makeString), $makeOffset),
             self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1),
-            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, 68),
-            self::packClassicEntry(ExifTag::GPS_IFD_POINTER, 4, 1, 136),
+            self::packClassicEntry(ExifTag::STRIP_OFFSETS, 4, 1, 512),
+            self::packClassicEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 1, 1024),
+            self::packClassicEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, $transferFunctionOffset),
+            self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 2048),
+            self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4096),
+            self::packClassicEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, $referenceBlackWhiteOffset),
+            self::packClassicEntry(ExifTag::COPYRIGHT, 2, strlen($copyrightString), $copyrightOffset),
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+            self::packClassicEntry(ExifTag::GPS_IFD_POINTER, 4, 1, $gpsIfdOffset),
         ];
         $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
 
         $blob = $header . $ifd0;
-        $blob .= "Canon\0"; // offset 62
+        $blob .= $makeString;
+        $blob .= $transferFunctionBytes;
+        $blob .= $referenceBlackWhite;
+        $blob .= $copyrightString;
 
         $exifEntries = [
             self::packClassicEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 200),
-            self::packClassicEntry(ExifTag::F_NUMBER, 5, 1, 110),
-            self::packClassicEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, 118),
+            self::packClassicEntry(ExifTag::F_NUMBER, 5, 1, $fNumberOffset),
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, $interopIfdOffset),
         ];
         $blob .= pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
-
-        $blob .= pack('V', 28) . pack('V', 10); // offset 110
+        $blob .= $fNumberData;
 
         $interopEntries = [
             self::packClassicEntry(0x0001, 2, 4, self::inlineAsciiToInt('R98', 4)),
@@ -336,17 +407,17 @@ final class TiffExifReaderTest extends TestCase
 
         $gpsEntries = [
             self::packClassicEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, self::inlineAsciiToInt('N', 4)),
-            self::packClassicEntry(ExifTag::GPS_LATITUDE, 5, 3, 214),
+            self::packClassicEntry(ExifTag::GPS_LATITUDE, 5, 3, $gpsLatOffset),
             self::packClassicEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, self::inlineAsciiToInt('E', 4)),
-            self::packClassicEntry(ExifTag::GPS_LONGITUDE, 5, 3, 238),
+            self::packClassicEntry(ExifTag::GPS_LONGITUDE, 5, 3, $gpsLonOffset),
             self::packClassicEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 1),
-            self::packClassicEntry(ExifTag::GPS_ALTITUDE, 5, 1, 262),
+            self::packClassicEntry(ExifTag::GPS_ALTITUDE, 5, 1, $gpsAltOffset),
         ];
         $blob .= pack('v', count($gpsEntries)) . implode('', $gpsEntries) . pack('V', 0);
 
-        $blob .= self::packRationalTripletLE([40, 1], [30, 1], [15, 1]);
-        $blob .= self::packRationalTripletLE([70, 1], [45, 1], [30, 1]);
-        $blob .= pack('V', 150) . pack('V', 1);
+        $blob .= $gpsLatData;
+        $blob .= $gpsLonData;
+        $blob .= $gpsAltData;
 
         return $blob;
     }
@@ -403,7 +474,12 @@ final class TiffExifReaderTest extends TestCase
         $blob .= str_repeat("\0", 16); // pad to 220
 
         $interopEntries = [
-            self::packBigTiffEntry(0x0002, 2, 4, self::inlineAsciiToInt('R98', 8)),
+            self::packBigTiffEntry(
+                ExifTag::INTEROPERABILITY_INDEX,
+                2,
+                4,
+                self::inlineAsciiToInt('R98', 8),
+            ),
         ];
         $blob .= pack('V', count($interopEntries)) . pack('V', 0) . implode('', $interopEntries) . pack('V', 0) . pack('V', 0);
 

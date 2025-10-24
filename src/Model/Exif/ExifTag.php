@@ -37,9 +37,13 @@ final readonly class ExifTag
 
     public const int ORIENTATION = 0x0112;
 
+    public const int STRIP_OFFSETS = 0x0111;
+
     public const int SAMPLES_PER_PIXEL = 0x0115;
 
     public const int ROWS_PER_STRIP = 0x0116;
+
+    public const int STRIP_BYTE_COUNTS = 0x0117;
 
     public const int X_RESOLUTION = 0x011A;
 
@@ -48,6 +52,8 @@ final readonly class ExifTag
     public const int PLANAR_CONFIGURATION = 0x011C;
 
     public const int RESOLUTION_UNIT = 0x0128;
+
+    public const int TRANSFER_FUNCTION = 0x012D;
 
     public const int SOFTWARE = 0x0131;
 
@@ -63,13 +69,17 @@ final readonly class ExifTag
 
     public const int PRIMARY_CHROMATICITIES = 0x013F;
 
-    public const int REFERENCE_BLACK_WHITE = 0x0214;
+    public const int JPEG_INTERCHANGE_FORMAT = 0x0201;
+
+    public const int JPEG_INTERCHANGE_FORMAT_LENGTH = 0x0202;
 
     public const int YCBCR_COEFFICIENTS = 0x0211;
 
     public const int YCBCR_SUB_SAMPLING = 0x0212;
 
     public const int YCBCR_POSITIONING = 0x0213;
+
+    public const int REFERENCE_BLACK_WHITE = 0x0214;
 
     public const int COPYRIGHT = 0x8298;
 
@@ -318,8 +328,6 @@ final readonly class ExifTag
 
     // Interoperability IFD
     public const int INTEROPERABILITY_INDEX = 0x0001;
-
-    public const int INTEROPERABILITY_VERSION = 0x0002;
 
     /**
      * Prevent instantiation of this constants-only utility class.
