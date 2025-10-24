@@ -80,6 +80,8 @@ final class MetadataReaderTest extends TestCase
         self::assertSame('Nikon', $metadata->makerNotes->vendor());
         self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
         self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
+        self::assertNull($metadata->iccProfile);
+        self::assertSame([], $metadata->iccSegments);
     }
 
     /**
@@ -121,6 +123,8 @@ final class MetadataReaderTest extends TestCase
         self::assertSame('Sony', $metadata->makerNotes->vendor());
         self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
         self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
+        self::assertNull($metadata->iccProfile);
+        self::assertSame([], $metadata->iccSegments);
     }
 
     /**

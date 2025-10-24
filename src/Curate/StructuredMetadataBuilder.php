@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\Apple;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\Author;
@@ -215,12 +216,18 @@ final class StructuredMetadataBuilder
             bitDepth: $quickTimeResolver->int('AudioBitsPerSample'),
         );
 
+        $iccData = null;
+        if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
+            $iccData = (new IccDecoder())->decode($metadata->iccProfile, $metadata->iccSegments);
+        }
+
         $colorProfile = new ColorProfile(
-            profileName: null,
-            profileVersion: null,
-            pcs: null,
-            renderingIntent: null,
+            profileName: $iccData['description'] ?? null,
+            profileVersion: $iccData['version'] ?? null,
+            pcs: $iccData['pcs'] ?? null,
+            renderingIntent: $iccData['renderingIntent'] ?? null,
             gamma: $exifResolver->gamma(),
+            profileId: $iccData['profileId'] ?? null,
         );
 
         $processing = new ProcessingSettings(

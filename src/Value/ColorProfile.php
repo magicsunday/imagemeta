@@ -22,6 +22,7 @@ final readonly class ColorProfile
      * @param string|null $pcs             Profile connection space.
      * @param string|null $renderingIntent Rendering intent description.
      * @param float|null  $gamma           Scene gamma value when provided by EXIF.
+     * @param string|null $profileId       Optional profile identifier (MD5) when available.
      */
     public function __construct(
         public ?string $profileName,
@@ -29,6 +30,7 @@ final readonly class ColorProfile
         public ?string $pcs,
         public ?string $renderingIntent,
         public ?float $gamma,
+        public ?string $profileId = null,
     ) {
     }
 }

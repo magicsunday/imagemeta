@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
@@ -725,6 +726,26 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertNotNull($structured->lens->maxApertureFNumber);
         self::assertEqualsWithDelta(4.0, $structured->lens->maxApertureFNumber, 0.0001);
+    }
+
+    /**
+     * Ensures ICC colour profile data from JPEG metadata is mapped onto the structured aggregate.
+     */
+    #[Test]
+    public function populatesColorProfileFromIccMetadata(): void
+    {
+        $icc = IccFixtures::minimalProfile();
+
+        $metadata   = new Metadata([], null, null, [], null, null, $icc, []);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        $profile = $structured->colorProfile;
+        self::assertSame('Test Profile', $profile->profileName);
+        self::assertSame('4.2.1', $profile->profileVersion);
+        self::assertSame('XYZ ', $profile->pcs);
+        self::assertSame('Media-Relative Colorimetric', $profile->renderingIntent);
+        self::assertSame('00112233445566778899AABBCCDDEEFF', $profile->profileId);
+        self::assertNull($profile->gamma);
     }
 
     /**
