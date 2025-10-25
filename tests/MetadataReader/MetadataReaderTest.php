@@ -151,6 +151,35 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
+     * Ensures the structured image aggregate falls back to the SOF precision when EXIF lacks the tag.
+     */
+    #[Test]
+    public function testStructuredImageBitsPerSampleFallbacksToFramePrecision(): void
+    {
+        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 672, 448);
+
+        $jpeg = "\xFF\xD8"
+            . $this->segment(0xC0, $sofPayload)
+            . "\xFF\xD9";
+
+        $path = $this->writeTempFile($jpeg, 'jpg');
+
+        try {
+            $metadata = (new MetadataReader())->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertSame(8, $metadata->jpegBitsPerSample);
+
+        $image = $metadata->structured()->image;
+
+        self::assertSame(8, $image->bitsPerSample);
+        self::assertSame(448, $image->width);
+        self::assertSame(672, $image->height);
+    }
+
+    /**
      * Ensures ISO BMFF detection populates EXIF/XMP blobs and QuickTime metadata.
      */
     #[Test]
@@ -300,6 +329,32 @@ final class MetadataReaderTest extends TestCase
             . $modelData
             . $exifIfd
             . $makerNote;
+    }
+
+    /**
+     * Builds a baseline start of frame payload with three colour components.
+     *
+     * @param int $precision Sample precision reported by the SOF marker.
+     * @param int $height    Frame height in image lines.
+     * @param int $width     Frame width in samples per line.
+     *
+     * @return string Serialized SOF payload excluding marker and length fields.
+     */
+    private function buildBaselineStartOfFramePayload(int $precision, int $height, int $width): string
+    {
+        $components = [
+            [1, 0x22, 0],
+            [2, 0x11, 1],
+            [3, 0x11, 1],
+        ];
+
+        $payload = pack('CnnC', $precision, $height, $width, count($components));
+
+        foreach ($components as [$id, $sampling, $table]) {
+            $payload .= pack('CCC', $id, $sampling, $table);
+        }
+
+        return $payload;
     }
 
     /**
