@@ -71,6 +71,12 @@ final class TiffExifReader
 
     private const int TYPE_DOUBLE = 12;
 
+    private const int TYPE_LONG8 = 16;
+
+    private const int TYPE_SLONG8 = 17;
+
+    private const int TYPE_IFD8 = 18;
+
     private MemoryBuffer $buf;
 
     private Endian $bo;
@@ -286,6 +292,11 @@ final class TiffExifReader
                 self::TYPE_LONG => $this->unpackU32(substr($bytes, $cursor, 4)),
                 // SLONG
                 self::TYPE_SLONG => $this->unpackS32(substr($bytes, $cursor, 4)),
+                // LONG8 / IFD8
+                self::TYPE_LONG8,
+                self::TYPE_IFD8 => $this->unpackU64(substr($bytes, $cursor, 8)),
+                // SLONG8
+                self::TYPE_SLONG8 => $this->unpackS64(substr($bytes, $cursor, 8)),
                 // FLOAT
                 self::TYPE_FLOAT => $this->unpackFloat(substr($bytes, $cursor, 4)),
                 // DOUBLE
@@ -439,7 +450,10 @@ final class TiffExifReader
             // RATIONAL, SRATIONAL, DOUBLE
             self::TYPE_RATIONAL,
             self::TYPE_SRATIONAL,
-            self::TYPE_DOUBLE => 8,
+            self::TYPE_DOUBLE,
+            self::TYPE_LONG8,
+            self::TYPE_SLONG8,
+            self::TYPE_IFD8 => 8,
 
             default => throw new ParseError('Unsupported TIFF type: ' . $type),
         };
@@ -604,6 +618,62 @@ final class TiffExifReader
         $format = $this->bo === Endian::Little ? 'e' : 'E';
 
         return Unpack::float($format, $b, '64-bit float from TIFF bytes');
+    }
+
+    /**
+     * Unpacks an unsigned 64-bit integer from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return int
+     */
+    private function unpackU64(string $b): int
+    {
+        [$hi, $lo] = $this->unpackU64Parts($b);
+
+        return Unpack::combineUint32($hi, $lo);
+    }
+
+    /**
+     * Unpacks a signed 64-bit integer from a byte string.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return int
+     */
+    private function unpackS64(string $b): int
+    {
+        [$hi, $lo] = $this->unpackU64Parts($b);
+
+        if (($hi & 0x80000000) === 0) {
+            return Unpack::combineUint32($hi, $lo);
+        }
+
+        $hiComplement = (~$hi) & 0xFFFFFFFF;
+        $loComplement = (~$lo) & 0xFFFFFFFF;
+        $magnitude    = Unpack::combineUint32($hiComplement, $loComplement) + 1;
+
+        return -$magnitude;
+    }
+
+    /**
+     * Reads the high and low 32-bit components of a 64-bit value according to the current endianness.
+     *
+     * @param string $b Source bytes.
+     *
+     * @return array{0:int,1:int}
+     */
+    private function unpackU64Parts(string $b): array
+    {
+        if ($this->bo === Endian::Little) {
+            $lo = $this->unpackU32(substr($b, 0, 4));
+            $hi = $this->unpackU32(substr($b, 4, 4));
+        } else {
+            $hi = $this->unpackU32(substr($b, 0, 4));
+            $lo = $this->unpackU32(substr($b, 4, 4));
+        }
+
+        return [$hi, $lo];
     }
 
     /**

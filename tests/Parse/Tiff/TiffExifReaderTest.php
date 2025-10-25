@@ -48,6 +48,32 @@ use function unpack;
  */
 final class TiffExifReaderTest extends TestCase
 {
+    private const int CUSTOM_SIGNED_LONG8_TAG = 0xC7A1;
+
+    /**
+     * Expected StripOffsets values captured from ExifTool parsing the synthetic BigTIFF LONG8 fixture.
+     *
+     * @var array<int>
+     */
+    private const array BIG_TIFF_LONG8_STRIP_OFFSETS = [
+        0x0000000100000100,
+        0x0000000100000200,
+    ];
+
+    /**
+     * Expected StripByteCounts values captured from ExifTool parsing the synthetic BigTIFF LONG8 fixture.
+     *
+     * @var array<int>
+     */
+    private const array BIG_TIFF_LONG8_STRIP_BYTE_COUNTS = [
+        0x0000000100000000,
+        0x0000000100000080,
+    ];
+
+    private const int BIG_TIFF_LONG8_SIGNED = -0x0000000100000000;
+
+    private const int BIG_TIFF_LONG8_JPEG_OFFSET = 0x0000000200000000;
+
     /**
      * Provides representative Classic TIFF and BigTIFF payloads.
      *
@@ -414,6 +440,47 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures BigTIFF LONG8/SLONG8/IFD8 entries are decoded exactly like ExifTool.
+     */
+    #[Test]
+    public function parsesBigTiffLong8FieldTypes(): void
+    {
+        $reader   = new TiffExifReader();
+        $document = $reader->parseFromBlob(self::buildBigTiffLong8OffsetsBlob());
+
+        $ifd0 = $document->ifd0;
+
+        $stripOffsetsEntry = $ifd0->get(ExifTag::STRIP_OFFSETS);
+        self::assertNotNull($stripOffsetsEntry);
+        $stripOffsets = $stripOffsetsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $stripOffsets);
+        self::assertSame(self::BIG_TIFF_LONG8_STRIP_OFFSETS, $stripOffsets->values);
+
+        $stripByteCountsEntry = $ifd0->get(ExifTag::STRIP_BYTE_COUNTS);
+        self::assertNotNull($stripByteCountsEntry);
+        $stripByteCounts = $stripByteCountsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $stripByteCounts);
+        self::assertSame(self::BIG_TIFF_LONG8_STRIP_BYTE_COUNTS, $stripByteCounts->values);
+
+        $signedEntry = $ifd0->get(self::CUSTOM_SIGNED_LONG8_TAG);
+        self::assertNotNull($signedEntry);
+        self::assertSame(self::BIG_TIFF_LONG8_SIGNED, $signedEntry->value);
+
+        $jpegEntry = $ifd0->get(ExifTag::JPEG_INTERCHANGE_FORMAT);
+        self::assertNotNull($jpegEntry);
+        self::assertSame(self::BIG_TIFF_LONG8_JPEG_OFFSET, $jpegEntry->value);
+
+        $refClass      = new ReflectionClass($reader);
+        $pointerMethod = $refClass->getMethod('pointerOffset');
+        $pointerMethod->setAccessible(true);
+
+        self::assertSame(
+            self::BIG_TIFF_LONG8_JPEG_OFFSET,
+            $pointerMethod->invoke($reader, $jpegEntry),
+        );
+    }
+
+    /**
      * Builds a Classic TIFF little-endian EXIF payload with nested IFDs.
      */
     private static function buildClassicTiffBlob(): string
@@ -613,6 +680,42 @@ final class TiffExifReaderTest extends TestCase
         $blob .= self::packRationalTripletLE([8, 1], [12, 1], [30, 1]);
 
         return $blob;
+    }
+
+    /**
+     * Builds a BigTIFF payload exercising LONG8/SLONG8/IFD8 field types with offsets beyond 4 GB.
+     */
+    private static function buildBigTiffLong8OffsetsBlob(): string
+    {
+        $stripOffsetsValues    = self::BIG_TIFF_LONG8_STRIP_OFFSETS;
+        $stripByteCountsValues = self::BIG_TIFF_LONG8_STRIP_BYTE_COUNTS;
+
+        $entryCount   = 4;
+        $headerLength = 16;
+        $ifdLength    = 8 + ($entryCount * 20) + 8;
+
+        $stripOffsetsOffset    = $headerLength + $ifdLength;
+        $stripOffsetsData      = implode('', array_map([self::class, 'packUInt64LE'], $stripOffsetsValues));
+        $stripByteCountsOffset = $stripOffsetsOffset + strlen($stripOffsetsData);
+        $stripByteCountsData   = implode('', array_map([self::class, 'packUInt64LE'], $stripByteCountsValues));
+
+        $header = 'II'
+            . pack('v', 0x002B)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('V', 16)
+            . pack('V', 0);
+
+        $ifd0Entries = [
+            self::packBigTiffEntry(ExifTag::STRIP_OFFSETS, 16, count($stripOffsetsValues), $stripOffsetsOffset),
+            self::packBigTiffEntry(ExifTag::STRIP_BYTE_COUNTS, 16, count($stripByteCountsValues), $stripByteCountsOffset),
+            self::packBigTiffEntry(self::CUSTOM_SIGNED_LONG8_TAG, 17, 1, self::BIG_TIFF_LONG8_SIGNED),
+            self::packBigTiffEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 18, 1, self::BIG_TIFF_LONG8_JPEG_OFFSET),
+        ];
+
+        $ifd0 = pack('V', count($ifd0Entries)) . pack('V', 0) . implode('', $ifd0Entries) . pack('V', 0) . pack('V', 0);
+
+        return $header . $ifd0 . $stripOffsetsData . $stripByteCountsData;
     }
 
     /**
@@ -875,5 +978,17 @@ final class TiffExifReaderTest extends TestCase
         $hi = ($value >> 32) & 0xFFFFFFFF;
 
         return [$lo, $hi];
+    }
+
+    /**
+     * Packs a 64-bit integer into little-endian byte order.
+     *
+     * @param int $value 64-bit integer value to encode.
+     */
+    private static function packUInt64LE(int $value): string
+    {
+        [$lo, $hi] = self::splitUInt64($value);
+
+        return pack('V', $lo) . pack('V', $hi);
     }
 }
