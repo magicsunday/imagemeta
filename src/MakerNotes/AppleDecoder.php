@@ -101,6 +101,22 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $semanticStylePreset = $this->stringValue($dictionary, 'SemanticStylePreset');
         $semanticStyleWarmth = $this->floatValue($dictionary, 'SemanticStyleWarmth');
         $semanticStyleTone   = $this->floatValue($dictionary, 'SemanticStyleTone');
+        $semanticStyleCompact = $this->semanticStyleFromCollection($dictionary);
+        if ($semanticStyleCompact !== null) {
+            [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
+
+            if ($semanticStylePreset === null && $compactPreset !== null) {
+                $semanticStylePreset = $compactPreset;
+            }
+
+            if ($semanticStyleWarmth === null && $compactWarmth !== null) {
+                $semanticStyleWarmth = $compactWarmth;
+            }
+
+            if ($semanticStyleTone === null && $compactTone !== null) {
+                $semanticStyleTone = $compactTone;
+            }
+        }
         $accelerationVector  = $this->floatList($dictionary, 'AccelerationVector');
         $flags               = $this->extractFlags($dictionary);
 
@@ -264,6 +280,86 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         return null;
+    }
+
+    /**
+     * Extracts semantic style values from Apple's compact semantic style array.
+     *
+     * Apple stores semantic style metadata as an ordered collection where index 0 / `_0`
+     * contains the preset name, index 1 / `_1` the warmth adjustment, and index 2 / `_2` the
+     * tone adjustment. Index `_3` is currently unused by the curated metadata object.
+     *
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @return array{0:?string,1:?float,2:?float}|null
+     */
+    private function semanticStyleFromCollection(array $dictionary): ?array
+    {
+        if (!array_key_exists('SemanticStyle', $dictionary)) {
+            return null;
+        }
+
+        $value = $dictionary['SemanticStyle'];
+        if (!is_array($value)) {
+            return null;
+        }
+
+        /** @var array<int|string, mixed> $semantic */
+        $semantic = $value;
+
+        $resolve = static function (array $entries, int $index): string|int|float|bool|array|null {
+            $intKey      = $index;
+            $stringKey   = (string) $index;
+            $underscored = '_' . $index;
+
+            if (array_key_exists($intKey, $entries)) {
+                return $entries[$intKey];
+            }
+
+            if (array_key_exists($stringKey, $entries)) {
+                return $entries[$stringKey];
+            }
+
+            if (array_key_exists($underscored, $entries)) {
+                return $entries[$underscored];
+            }
+
+            return null;
+        };
+
+        $presetRaw = $resolve($semantic, 0);
+        $warmthRaw = $resolve($semantic, 1);
+        $toneRaw   = $resolve($semantic, 2);
+
+        $preset = null;
+        if (is_string($presetRaw)) {
+            $trimmed = trim($presetRaw);
+            if ($trimmed !== '') {
+                $preset = $trimmed;
+            }
+        }
+
+        $warmth = null;
+        if (is_float($warmthRaw)) {
+            $warmth = $warmthRaw;
+        } elseif (is_int($warmthRaw) || is_numeric($warmthRaw)) {
+            $warmth = (float) $warmthRaw;
+        }
+
+        $tone = null;
+        if (is_float($toneRaw)) {
+            $tone = $toneRaw;
+        } elseif (is_int($toneRaw) || is_numeric($toneRaw)) {
+            $tone = (float) $toneRaw;
+        }
+
+        if ($preset === null && $warmth === null && $tone === null) {
+            return null;
+        }
+
+        return [$preset, $warmth, $tone];
     }
 
     /**
