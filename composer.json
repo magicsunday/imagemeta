@@ -23,6 +23,7 @@
         "php": "^8.4",
         "ext-ctype": "*",
         "ext-date": "*",
+        "ext-fileinfo": "*",
         "ext-hash": "*",
         "ext-iconv": "*",
         "ext-json": "*",

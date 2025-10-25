@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
+use function class_exists;
 use function filesize;
 use function hash_file;
 use function is_string;
@@ -175,6 +176,10 @@ final class MetadataReader
      */
     private function detectMimeType(string $path): ?string
     {
+        if (!class_exists(finfo::class)) {
+            return null;
+        }
+
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime  = $finfo->file($path);
 
