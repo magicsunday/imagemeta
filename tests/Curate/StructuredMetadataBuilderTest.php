@@ -502,6 +502,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(0.05, $structured->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
+        self::assertFalse($structured->scene->nightMode);
     }
 
     /**
@@ -520,6 +521,44 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('qt-content', $structured->apple->contentIdentifier);
         self::assertSame([0.12, -0.34, 0.56], $structured->apple->accelerationVector);
+    }
+
+    /**
+     * Ensures JPEG-only metadata uses the maker note night mode flag when QuickTime metadata is absent.
+     */
+    #[Test]
+    public function usesMakerNoteNightModeWhenQuickTimeMissing(): void
+    {
+        $appleMakerNotes = new AppleMakerNotes(
+            contentIdentifier: null,
+            cameraType: null,
+            hdrHeadroom: null,
+            hdrGain: null,
+            snr: null,
+            focusPosition: null,
+            livePhotoIndex: null,
+            colorTemperature: null,
+            semanticStylePreset: null,
+            semanticStyleWarmth: null,
+            semanticStyleTone: null,
+            flags: ['nightMode' => true],
+            accelerationVector: null,
+        );
+
+        $makerNotes = new MakerNotesMetadata('Apple', 0, str_repeat('a', 40), $appleMakerNotes);
+
+        $metadata = new Metadata(
+            ['primary'],
+            null,
+            new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes),
+            [],
+            null,
+            $makerNotes,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertTrue($structured->scene->nightMode);
     }
 
     /**
