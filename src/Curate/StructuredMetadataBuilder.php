@@ -615,6 +615,9 @@ final class StructuredMetadataBuilder
     ): Scene {
         $hdr   = $quickTime->string('HDRImageType');
         $night = $quickTime->bool('NightMode');
+        if ($night === null) {
+            $night = $apple->flags['nightMode'] ?? null;
+        }
 
         $hdrScene = null;
         if ($hdr !== null) {
