@@ -42,7 +42,7 @@ final class GpsTiffBuilder
             . pack('V', 0);
 
         $definitions = [
-            [ExifTag::GPS_VERSION_ID, 1, 4, 'bytes', [3, 0, 0, 0]],
+            [ExifTag::GPS_VERSION_ID, 2, 9, 'string', '3.0.0.0' . chr(0)],
             [ExifTag::GPS_LATITUDE_REF, 2, 2, 'string', "N\0"],
             [ExifTag::GPS_LATITUDE, 5, 3, 'rationals', [[51, 1], [30, 1], [0, 1]]],
             [ExifTag::GPS_LONGITUDE_REF, 2, 2, 'string', "E\0"],

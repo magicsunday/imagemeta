@@ -56,6 +56,10 @@ final readonly class GpsResolver
         $altitudeRef  = $this->intValue($gpsData['alt_ref'] ?? null);
 
         $version     = $this->stringValue($gpsData['version'] ?? null);
+        $versionRaw  = $gpsData['version_raw'] ?? null;
+        if (!is_string($versionRaw)) {
+            $versionRaw = null;
+        }
         $satellites  = $this->stringValue($gpsData['satellites'] ?? null);
         $status      = $this->stringValue($gpsData['status'] ?? null);
         $measureMode = $this->stringValue($gpsData['measure_mode'] ?? null);
@@ -84,7 +88,11 @@ final readonly class GpsResolver
         $processingMethod = $this->stringValue($gpsData['processing_method'] ?? null);
         $areaInformation  = $this->stringValue($gpsData['area_information'] ?? null);
 
-        $date = $this->normaliseDate($this->stringValue($gpsData['date'] ?? null));
+        $date    = $this->normaliseDate($this->stringValue($gpsData['date'] ?? null));
+        $dateRaw = $gpsData['date_raw'] ?? null;
+        if (!is_string($dateRaw)) {
+            $dateRaw = null;
+        }
         $time = $this->stringValue($gpsData['time'] ?? null);
 
         $timestamp = $exifDocument?->gpsTimestamp();
@@ -206,6 +214,7 @@ final readonly class GpsResolver
             $altitude,
             $altitudeRef,
             $version,
+            $versionRaw,
             $satellites,
             $status,
             $measureMode,
@@ -232,6 +241,7 @@ final readonly class GpsResolver
             $processingMethod,
             $areaInformation,
             $date,
+            $dateRaw,
             $time,
             $timestamp,
             $differential,
@@ -250,6 +260,7 @@ final readonly class GpsResolver
             altitude: $altitude,
             altitudeRef: $altitudeRef,
             version: $version,
+            versionRaw: $versionRaw,
             satellites: $satellites,
             status: $status,
             measureMode: $measureMode,
@@ -276,6 +287,7 @@ final readonly class GpsResolver
             processingMethod: $processingMethod,
             areaInformation: $areaInformation,
             date: $date,
+            dateRaw: $dateRaw,
             time: $time,
             timestamp: $timestamp,
             differential: $differential,
