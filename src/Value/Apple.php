@@ -32,6 +32,16 @@ final readonly class Apple
      * @param array<string, bool> $flags               Boolean flags derived from maker notes or QuickTime metadata.
      * @param list<float>|null    $accelerationVector  Acceleration vector recorded during capture.
      * @param RunTime|null        $runTime             Capture runtime metadata describing the CMTime payload.
+     * @param string|null         $makerNoteVersion    Maker note version string reported by the device.
+     * @param string|null         $hdrImageType        HDR image classification (e.g. "HDR").
+     * @param string|null         $burstUuid           Identifier referencing the originating burst sequence.
+     * @param list<float>|null    $focusDistanceRange  Near and far focus distance bounds in meters.
+     * @param string|null         $oisMode             Optical image stabilisation mode.
+     * @param string|null         $imageCaptureType    Capture type enumeration label.
+     * @param string|null         $imageUniqueId       Unique image identifier distinct from EXIF/ImageUniqueID.
+     * @param string|null         $photoIdentifier     Photos framework identifier for the asset.
+     * @param float|null          $afMeasuredDepth     Autofocus measured depth value in meters.
+     * @param float|null          $afConfidence        Autofocus confidence score between 0.0 and 1.0.
      */
     public function __construct(
         public ?string $contentIdentifier,
@@ -41,14 +51,24 @@ final readonly class Apple
         public ?float $snr,
         public ?float $focusPosition,
         public ?int $livePhotoIndex,
-        public ?float $livePhotoTime = null,
+        public ?float $livePhotoTime,
         public ?int $colorTemperature,
         public ?string $semanticStylePreset,
         public ?float $semanticStyleWarmth,
         public ?float $semanticStyleTone,
         public array $flags,
         public ?array $accelerationVector,
-        public ?RunTime $runTime = null,
+        public ?RunTime $runTime,
+        public ?string $makerNoteVersion,
+        public ?string $hdrImageType,
+        public ?string $burstUuid,
+        public ?array $focusDistanceRange,
+        public ?string $oisMode,
+        public ?string $imageCaptureType,
+        public ?string $imageUniqueId,
+        public ?string $photoIdentifier,
+        public ?float $afMeasuredDepth,
+        public ?float $afConfidence,
     ) {
     }
 }

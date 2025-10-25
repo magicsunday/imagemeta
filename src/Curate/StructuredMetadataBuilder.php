@@ -83,6 +83,30 @@ use function strtoupper;
 final class StructuredMetadataBuilder
 {
     /**
+     * @var array<int, string>
+     */
+    private const array APPLE_HDR_IMAGE_TYPE_MAP = [
+        0 => 'Standard',
+        1 => 'HDR',
+        2 => 'HDR2',
+        3 => 'HDR3',
+    ];
+
+    /**
+     * @var array<int, string>
+     */
+    private const array APPLE_IMAGE_CAPTURE_TYPE_MAP = [
+        0 => 'Unknown',
+        1 => 'Standard',
+        2 => 'LivePhoto',
+        3 => 'Burst',
+        4 => 'HDR',
+        5 => 'HDR2',
+        6 => 'NightMode',
+        7 => 'LivePhotoLongExposure',
+    ];
+
+    /**
      * @var array<string, string>
      */
     private const array APPLE_FLAG_KEYS = [
@@ -668,7 +692,10 @@ final class StructuredMetadataBuilder
             $flags = [];
         }
 
-        $hdr   = $quickTime->string('HDRImageType');
+        $hdr   = $apple->hdrImageType;
+        if ($hdr === null) {
+            $hdr = $quickTime->string('HDRImageType');
+        }
         $night = $quickTime->bool('NightMode');
         if ($night === null) {
             $night = $this->appleFlag($flags, 'nightMode');
@@ -819,6 +846,56 @@ final class StructuredMetadataBuilder
 
         $runTime = $this->appleRunTime($makerNotes?->runTime);
 
+        $makerNoteVersion = $makerNotes?->makerNoteVersion;
+        if ($makerNoteVersion === null) {
+            $makerNoteVersion = $this->quickTimeString($quickTimeResolver, 'MakerNoteVersion');
+        }
+
+        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, self::APPLE_HDR_IMAGE_TYPE_MAP);
+        if ($hdrImageType === null) {
+            $hdrImageType = $this->quickTimeEnumerated($quickTimeResolver, self::APPLE_HDR_IMAGE_TYPE_MAP, 'HDRImageType', 'HdrImageType');
+        }
+
+        $burstUuid = $makerNotes?->burstUuid;
+        if ($burstUuid === null) {
+            $burstUuid = $this->quickTimeString($quickTimeResolver, 'BurstUUID');
+        }
+
+        $focusDistanceRange = $makerNotes?->focusDistanceRange;
+        if ($focusDistanceRange === null) {
+            $focusDistanceRange = $this->quickTimeFocusDistanceRange($quickTimeResolver);
+        }
+
+        $oisMode = $makerNotes?->oisMode;
+        if ($oisMode === null) {
+            $oisMode = $this->quickTimeStringOrNumeric($quickTimeResolver, 'OISMode');
+        }
+
+        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, self::APPLE_IMAGE_CAPTURE_TYPE_MAP);
+        if ($imageCaptureType === null) {
+            $imageCaptureType = $this->quickTimeEnumerated($quickTimeResolver, self::APPLE_IMAGE_CAPTURE_TYPE_MAP, 'ImageCaptureType');
+        }
+
+        $imageUniqueId = $makerNotes?->imageUniqueId;
+        if ($imageUniqueId === null) {
+            $imageUniqueId = $this->quickTimeString($quickTimeResolver, 'ImageUniqueID');
+        }
+
+        $photoIdentifier = $makerNotes?->photoIdentifier;
+        if ($photoIdentifier === null) {
+            $photoIdentifier = $this->quickTimeString($quickTimeResolver, 'PhotoIdentifier');
+        }
+
+        $afMeasuredDepth = $makerNotes?->afMeasuredDepth;
+        if ($afMeasuredDepth === null) {
+            $afMeasuredDepth = $this->quickTimeFloat($quickTimeResolver, 'AFMeasuredDepth');
+        }
+
+        $afConfidence = $makerNotes?->afConfidence;
+        if ($afConfidence === null) {
+            $afConfidence = $this->quickTimeFloat($quickTimeResolver, 'AFConfidence');
+        }
+
         return new Apple(
             $contentIdentifier,
             $cameraType,
@@ -835,6 +912,16 @@ final class StructuredMetadataBuilder
             $flags,
             $accelerationVector,
             $runTime,
+            $makerNoteVersion,
+            $hdrImageType,
+            $burstUuid,
+            $focusDistanceRange,
+            $oisMode,
+            $imageCaptureType,
+            $imageUniqueId,
+            $photoIdentifier,
+            $afMeasuredDepth,
+            $afConfidence,
         );
     }
 
@@ -971,6 +1058,102 @@ final class StructuredMetadataBuilder
         }
 
         return $values !== [] ? $values : null;
+    }
+
+    /**
+     * @return list<float>|null
+     */
+    private function quickTimeFocusDistanceRange(QuickTimeResolver $resolver): ?array
+    {
+        $range = $this->quickTimeFloatList($resolver, 'FocusDistanceRange');
+        if ($range !== null) {
+            return $range;
+        }
+
+        $near = $this->quickTimeFloat($resolver, 'FocusDistanceRangeNear', 'FocusDistanceNear');
+        $far  = $this->quickTimeFloat($resolver, 'FocusDistanceRangeFar', 'FocusDistanceFar');
+
+        $values = [];
+        if ($near !== null) {
+            $values[] = $near;
+        }
+
+        if ($far !== null) {
+            $values[] = $far;
+        }
+
+        return $values !== [] ? $values : null;
+    }
+
+    private function quickTimeStringOrNumeric(QuickTimeResolver $resolver, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            $value = $this->quickTimeString($resolver, $key);
+            if ($value !== null) {
+                return $value;
+            }
+
+            $intValue = $resolver->int($key);
+            if ($intValue !== null) {
+                return (string) $intValue;
+            }
+
+            $floatValue = $resolver->float($key);
+            if ($floatValue !== null) {
+                return (string) $floatValue;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int, string> $map
+     */
+    private function normalizeEnumerated(?string $value, array $map): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (is_numeric($trimmed)) {
+            $code = (int) $trimmed;
+
+            return $map[$code] ?? $trimmed;
+        }
+
+        return $trimmed;
+    }
+
+    /**
+     * @param array<int, string> $map
+     */
+    private function quickTimeEnumerated(QuickTimeResolver $resolver, array $map, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            $string = $this->quickTimeString($resolver, $key);
+            if ($string !== null) {
+                if (is_numeric($string)) {
+                    $code = (int) $string;
+
+                    return $map[$code] ?? $string;
+                }
+
+                return $string;
+            }
+
+            $code = $resolver->int($key);
+            if ($code !== null) {
+                return $map[$code] ?? (string) $code;
+            }
+        }
+
+        return null;
     }
 
     /**
