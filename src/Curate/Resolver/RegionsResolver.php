@@ -53,11 +53,12 @@ final readonly class RegionsResolver
             return new Regions([]);
         }
 
-        $dimensions   = $this->appliedDimensions($document);
-        $mwgRegions   = $this->extractMwgRegions($document, $dimensions);
-        $appleEntries = $this->appleFaceEntries($document, $dimensions);
-        $appleRegions = $this->regionsFromAppleEntries($appleEntries);
-        $mwgRegions   = $this->applyAppleMetadataWithoutGeometry($mwgRegions, $appleEntries);
+        $dimensions = $this->appliedDimensions($document);
+        $mwgRegions = $this->extractMwgRegions($document, $dimensions);
+        $appleData  = $this->extractAppleFaceRegions($document, $dimensions);
+        $supplement = $appleData['supplemental'];
+        $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
+        $appleRegions = $appleData['regions'];
 
         foreach ($appleRegions as $appleRegion) {
             $matchIndex = $this->findMatchingRegionIndex($mwgRegions, $appleRegion);
@@ -68,6 +69,8 @@ final readonly class RegionsResolver
 
             $mwgRegions[] = $appleRegion;
         }
+
+        $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
 
         return new Regions(array_values($mwgRegions));
     }
@@ -144,17 +147,20 @@ final readonly class RegionsResolver
     }
 
     /**
-     * Extracts Apple FaceInfo face entries.
+     * Extracts Apple FaceInfo face entries along with supplemental metadata.
      *
      * @param array{w: float, h: float}|null $dimensions
      *
-     * @return list<Region>
+     * @return array{regions: list<Region>, supplemental: list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}>}
      */
     private function extractAppleFaceRegions(XmpDocument $document, ?array $dimensions): array
     {
         $entries = $this->appleFaceEntries($document, $dimensions);
 
-        return $this->regionsFromAppleEntries($entries);
+        return [
+            'regions' => $this->regionsFromAppleEntries($entries),
+            'supplemental' => $entries,
+        ];
     }
 
     /**
@@ -262,12 +268,12 @@ final readonly class RegionsResolver
     }
 
     /**
-     * @param list<Region>                                                                                                                                                      $regions
+     * @param list<Region> $regions
      * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
      *
      * @return list<Region>
      */
-    private function applyAppleMetadataWithoutGeometry(array $regions, array $entries): array
+    private function applyAppleSupplementalMetadata(array $regions, array $entries): array
     {
         if ($entries === []) {
             return $regions;
@@ -288,12 +294,20 @@ final readonly class RegionsResolver
             return $regions;
         }
 
-        foreach ($entries as $position => $entry) {
-            if ($entry['geometry'] !== null) {
-                continue;
+        $hasSupplemental = false;
+        foreach ($entries as $entry) {
+            if ($this->hasSupplementalMetadata($entry)) {
+                $hasSupplemental = true;
+                break;
             }
+        }
 
-            if ($entry['person'] === null && $entry['confidence'] === null && $entry['rotation'] === null && $entry['faceId'] === null) {
+        if (!$hasSupplemental) {
+            return $regions;
+        }
+
+        foreach ($entries as $position => $entry) {
+            if (!$this->hasSupplementalMetadata($entry)) {
                 continue;
             }
 
@@ -320,6 +334,17 @@ final readonly class RegionsResolver
         }
 
         return $regions;
+    }
+
+    /**
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     */
+    private function hasSupplementalMetadata(array $entry): bool
+    {
+        return $entry['person'] !== null
+            || $entry['confidence'] !== null
+            || $entry['rotation'] !== null
+            || $entry['faceId'] !== null;
     }
 
     /**

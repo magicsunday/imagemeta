@@ -136,6 +136,41 @@ final class RegionsResolverTest extends TestCase
     }
 
     #[Test]
+    public function mergesSupplementalAppleMetadataByIndex(): void
+    {
+        $document = new XmpDocument([
+            '{' . self::NS_ST_AREA . '}x'             => ['0.3', '0.68'],
+            '{' . self::NS_ST_AREA . '}y'             => ['0.32', '0.66'],
+            '{' . self::NS_ST_AREA . '}w'             => ['0.22', '0.18'],
+            '{' . self::NS_ST_AREA . '}h'             => ['0.28', '0.20'],
+            '{' . self::NS_MWG . '}Type'              => ['Face', 'Face'],
+            '{' . self::NS_APPLE . '}ConfidenceLevel' => ['750', '500'],
+            '{' . self::NS_APPLE . '}Yaw'             => ['11.5', '-6.0'],
+            '{' . self::NS_APPLE . '}FaceID'          => ['face-a', 'face-b'],
+        ]);
+
+        $regions = (new RegionsResolver())->resolve($document);
+
+        self::assertCount(2, $regions->items);
+
+        $first = $regions->items[0];
+        self::assertSame(RegionType::FACE, $first->type);
+        self::assertSame('face-a', $first->faceId);
+        self::assertNotNull($first->confidence);
+        self::assertEqualsWithDelta(0.75, $first->confidence, 0.0001);
+        self::assertNotNull($first->rotationDeg);
+        self::assertEqualsWithDelta(11.5, $first->rotationDeg, 0.0001);
+
+        $second = $regions->items[1];
+        self::assertSame(RegionType::FACE, $second->type);
+        self::assertSame('face-b', $second->faceId);
+        self::assertNotNull($second->confidence);
+        self::assertEqualsWithDelta(0.5, $second->confidence, 0.0001);
+        self::assertNotNull($second->rotationDeg);
+        self::assertEqualsWithDelta(-6.0, $second->rotationDeg, 0.0001);
+    }
+
+    #[Test]
     public function normalisesPixelCoordinatesUsingAppliedDimensions(): void
     {
         $document = new XmpDocument([
@@ -197,10 +232,14 @@ final class RegionsResolverTest extends TestCase
         $method     = $reflection->getMethod('extractAppleFaceRegions');
         $method->setAccessible(true);
 
-        /** @var list<Region> $regions */
-        $regions = $method->invoke($resolver, $document, null);
+        /** @var array{regions: list<Region>, supplemental: list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}>} $result */
+        $result = $method->invoke($resolver, $document, null);
+
+        $regions      = $result['regions'];
+        $supplemental = $result['supplemental'];
 
         self::assertCount($count, $regions);
+        self::assertCount($count, $supplemental);
 
         foreach ($regions as $index => $region) {
             self::assertSame(RegionType::FACE, $region->type);
