@@ -195,6 +195,12 @@ final readonly class ExifDocument
      */
     public function imageTitle(): ?string
     {
+        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
+
+        if ($value !== null) {
+            return $value;
+        }
+
         $value = $this->str($this->exifIfd, ExifTag::IMAGE_TITLE);
 
         if ($value !== null) {
@@ -215,6 +221,12 @@ final readonly class ExifDocument
      */
     public function photographer(): ?string
     {
+        $value = $this->str($this->ifd0, ExifTag::PHOTOGRAPHER);
+
+        if ($value !== null) {
+            return $value;
+        }
+
         $value = $this->str($this->exifIfd, ExifTag::PHOTOGRAPHER);
 
         if ($value !== null) {
@@ -235,6 +247,12 @@ final readonly class ExifDocument
      */
     public function imageEditor(): ?string
     {
+        $value = $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
+
+        if ($value !== null) {
+            return $value;
+        }
+
         $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITOR);
 
         return $value ?? $this->str($this->ifd0, ExifTag::IMAGE_EDITOR_LEGACY);
