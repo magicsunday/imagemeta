@@ -86,6 +86,11 @@ final class BinaryPlistDecoder
         return $this->parseObject($topIndex);
     }
 
+    /**
+     * Parses the property list trailer to configure offsets and reference sizing.
+     *
+     * @return void
+     */
     private function decodeTrailer(): void
     {
         $trailer = substr($this->data, -32);
@@ -157,6 +162,13 @@ final class BinaryPlistDecoder
         };
     }
 
+    /**
+     * Decodes simple marker objects such as null and boolean values.
+     *
+     * @param int $info Marker information nibble extracted from the object header.
+     *
+     * @return bool|null Null for the null marker or boolean flag values.
+     */
     private function parseSimple(int $info): ?bool
     {
         return match ($info) {
@@ -167,6 +179,14 @@ final class BinaryPlistDecoder
         };
     }
 
+    /**
+     * Reads an integer object from the payload.
+     *
+     * @param int $offset Byte offset of the object within the payload.
+     * @param int $info   Marker information nibble describing the integer width.
+     *
+     * @return int Decoded integer value.
+     */
     private function parseInteger(int $offset, int $info): int
     {
         $size = 1 << $info;
@@ -179,6 +199,14 @@ final class BinaryPlistDecoder
         return $value;
     }
 
+    /**
+     * Reads a floating point object from the payload.
+     *
+     * @param int $offset Byte offset of the object within the payload.
+     * @param int $info   Marker information nibble describing the float width.
+     *
+     * @return float Decoded floating point value.
+     */
     private function parseReal(int $offset, int $info): float
     {
         $size = 1 << $info;
@@ -223,6 +251,14 @@ final class BinaryPlistDecoder
         throw new ParseError('Unsupported floating point width.');
     }
 
+    /**
+     * Reads a binary data object from the payload.
+     *
+     * @param int $offset Byte offset of the object within the payload.
+     * @param int $info   Marker information nibble describing the payload length encoding.
+     *
+     * @return string Raw binary payload extracted from the property list.
+     */
     private function parseData(int $offset, int $info): string
     {
         [$size, $header] = $this->readLength($offset, $info);
@@ -235,6 +271,14 @@ final class BinaryPlistDecoder
         return $payload;
     }
 
+    /**
+     * Reads an ASCII string object from the payload.
+     *
+     * @param int $offset Byte offset of the object within the payload.
+     * @param int $info   Marker information nibble describing the payload length encoding.
+     *
+     * @return string ASCII string content extracted from the property list.
+     */
     private function parseAscii(int $offset, int $info): string
     {
         [$size, $header] = $this->readLength($offset, $info);
@@ -247,6 +291,14 @@ final class BinaryPlistDecoder
         return $payload;
     }
 
+    /**
+     * Reads a UTF-16 encoded string object from the payload and converts it to UTF-8.
+     *
+     * @param int $offset Byte offset of the object within the payload.
+     * @param int $info   Marker information nibble describing the payload length encoding.
+     *
+     * @return string Unicode string decoded from the property list.
+     */
     private function parseUnicode(int $offset, int $info): string
     {
         [$size, $header] = $this->readLength($offset, $info);
@@ -429,6 +481,14 @@ final class BinaryPlistDecoder
         return [$value, 2 + $sizeBytes];
     }
 
+    /**
+     * Reads an unsigned big-endian integer from the payload.
+     *
+     * @param int $offset Starting byte offset within the property list data.
+     * @param int $length Number of bytes to consume for the integer.
+     *
+     * @return int Parsed unsigned integer value.
+     */
     private function readUint(int $offset, int $length): int
     {
         if ($length < 1) {
@@ -447,6 +507,14 @@ final class BinaryPlistDecoder
         return $value;
     }
 
+    /**
+     * Reads an unsigned 64-bit big-endian integer from the provided string.
+     *
+     * @param string $data   Binary string containing the encoded integer.
+     * @param int    $offset Offset within the string where the integer begins.
+     *
+     * @return int Decoded 64-bit integer value.
+     */
     private function readUint64(string $data, int $offset): int
     {
         $slice = substr($data, $offset, 8);

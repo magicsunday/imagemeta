@@ -95,6 +95,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         );
     }
 
+    /**
+     * Parses the raw Apple maker note payload into a structured representation.
+     *
+     * @param string $raw Raw maker note data stream.
+     *
+     * @return AppleMakerNotes|null Parsed maker notes instance or null when the payload cannot be decoded.
+     */
     private function parseAppleData(string $raw): ?AppleMakerNotes
     {
         try {

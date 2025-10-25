@@ -28,6 +28,11 @@ use function trim;
  */
 final readonly class XmpResolver
 {
+    /**
+     * Wraps an optional XMP document for structured lookups.
+     *
+     * @param XmpDocument|null $document Parsed XMP document instance.
+     */
     public function __construct(private ?XmpDocument $document)
     {
     }

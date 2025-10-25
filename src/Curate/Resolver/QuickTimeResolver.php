@@ -26,6 +26,11 @@ use function trim;
  */
 final readonly class QuickTimeResolver
 {
+    /**
+     * Wraps an optional QuickTime metadata container for convenient lookups.
+     *
+     * @param QuickTimeMeta|null $meta Parsed QuickTime metadata aggregate.
+     */
     public function __construct(private ?QuickTimeMeta $meta)
     {
     }
