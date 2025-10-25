@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Value\Regions\Region;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 
 use function abs;
+use function array_shift;
 use function array_values;
 use function ceil;
 use function count;
@@ -25,6 +26,7 @@ use function is_string;
 use function log10;
 use function max;
 use function pow;
+use function ksort;
 use function trim;
 
 /**
@@ -55,7 +57,7 @@ final readonly class RegionsResolver
 
         $dimensions = $this->appliedDimensions($document);
         $mwgRegions = $this->extractMwgRegions($document, $dimensions);
-        $appleData  = $this->extractAppleFaceRegions($document, $dimensions);
+        $appleData  = $this->extractAppleFaceRegions($document, $dimensions, $mwgRegions);
         $supplement = $appleData['supplemental'];
         $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
         $appleRegions = $appleData['regions'];
@@ -150,16 +152,17 @@ final readonly class RegionsResolver
      * Extracts Apple FaceInfo face entries along with supplemental metadata.
      *
      * @param array{w: float, h: float}|null $dimensions
+     * @param list<Region> $mwgRegions
      *
-     * @return array{regions: list<Region>, supplemental: list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}>}
+     * @return array{regions: list<Region>, supplemental: array<int, Region>}
      */
-    private function extractAppleFaceRegions(XmpDocument $document, ?array $dimensions): array
+    private function extractAppleFaceRegions(XmpDocument $document, ?array $dimensions, array $mwgRegions): array
     {
         $entries = $this->appleFaceEntries($document, $dimensions);
 
         return [
             'regions' => $this->regionsFromAppleEntries($entries),
-            'supplemental' => $entries,
+            'supplemental' => $this->supplementalRegionsFromAppleEntries($entries, $mwgRegions),
         ];
     }
 
@@ -269,71 +272,156 @@ final readonly class RegionsResolver
 
     /**
      * @param list<Region> $regions
-     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
+     * @param array<int, Region> $supplemental
      *
      * @return list<Region>
      */
-    private function applyAppleSupplementalMetadata(array $regions, array $entries): array
+    private function applyAppleSupplementalMetadata(array $regions, array $supplemental): array
     {
-        if ($entries === []) {
+        if ($supplemental === []) {
             return $regions;
         }
 
-        $mwgFaceIndices = [];
-        foreach ($regions as $index => $region) {
+        foreach ($supplemental as $index => $supplement) {
+            $baseRegion = $regions[$index] ?? null;
+            if (!$baseRegion instanceof Region) {
+                continue;
+            }
+
+            $regions[$index] = $this->mergeRegion($baseRegion, $supplement);
+        }
+
+        return $regions;
+    }
+
+    /**
+     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
+     * @param list<Region> $mwgRegions
+     *
+     * @return array<int, Region>
+     */
+    private function supplementalRegionsFromAppleEntries(array $entries, array $mwgRegions): array
+    {
+        if ($entries === [] || $mwgRegions === []) {
+            return [];
+        }
+
+        $faceIndices = [];
+        foreach ($mwgRegions as $index => $region) {
             if ($region->type === RegionType::FACE) {
-                $mwgFaceIndices[] = $index;
+                $faceIndices[] = $index;
             }
         }
 
-        if ($mwgFaceIndices === []) {
-            return $regions;
+        if ($faceIndices === []) {
+            return [];
         }
 
-        if (count($entries) !== count($mwgFaceIndices)) {
-            return $regions;
-        }
+        $unmatchedIndices = $faceIndices;
+        $supplemental     = [];
 
-        $hasSupplemental = false;
         foreach ($entries as $entry) {
-            if ($this->hasSupplementalMetadata($entry)) {
-                $hasSupplemental = true;
-                break;
+            $matchIndex = $this->matchAppleEntryToMwgRegion($mwgRegions, $entry);
+            if ($matchIndex === null) {
+                continue;
             }
-        }
 
-        if (!$hasSupplemental) {
-            return $regions;
-        }
+            $unmatchedIndices = $this->removeMatchedIndex($unmatchedIndices, $matchIndex);
 
-        foreach ($entries as $position => $entry) {
             if (!$this->hasSupplementalMetadata($entry)) {
                 continue;
             }
 
-            $mwgIndex = $mwgFaceIndices[$position] ?? null;
-            if ($mwgIndex === null) {
+            $baseRegion            = $mwgRegions[$matchIndex];
+            $supplemental[$matchIndex] = $this->createSupplementalRegion($baseRegion, $entry);
+        }
+
+        foreach ($entries as $entry) {
+            if ($entry['geometry'] !== null) {
                 continue;
             }
 
-            $baseRegion = $regions[$mwgIndex];
+            if (!$this->hasSupplementalMetadata($entry)) {
+                continue;
+            }
 
-            $supplement = new Region(
-                RegionType::FACE,
-                $baseRegion->x,
-                $baseRegion->y,
-                $baseRegion->w,
-                $baseRegion->h,
-                $entry['person'],
-                $entry['confidence'],
-                $entry['rotation'],
-                $entry['faceId'],
-            );
+            $nextIndex = array_shift($unmatchedIndices);
+            if ($nextIndex === null) {
+                break;
+            }
 
-            $regions[$mwgIndex] = $this->mergeRegion($baseRegion, $supplement);
+            $baseRegion             = $mwgRegions[$nextIndex];
+            $supplemental[$nextIndex] = $this->createSupplementalRegion($baseRegion, $entry);
         }
 
-        return $regions;
+        if ($supplemental === []) {
+            return [];
+        }
+
+        ksort($supplemental);
+
+        return $supplemental;
+    }
+
+    /**
+     * @param list<Region> $mwgRegions
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     */
+    private function matchAppleEntryToMwgRegion(array $mwgRegions, array $entry): ?int
+    {
+        $geometry = $entry['geometry'];
+        if ($geometry === null) {
+            return null;
+        }
+
+        $candidate = new Region(
+            RegionType::FACE,
+            $geometry['x'],
+            $geometry['y'],
+            $geometry['w'],
+            $geometry['h'],
+            $entry['person'],
+            $entry['confidence'],
+            $entry['rotation'],
+            $entry['faceId'],
+        );
+
+        return $this->findMatchingRegionIndex($mwgRegions, $candidate);
+    }
+
+    /**
+     * @param list<int> $indices
+     *
+     * @return list<int>
+     */
+    private function removeMatchedIndex(array $indices, int $match): array
+    {
+        foreach ($indices as $position => $index) {
+            if ($index === $match) {
+                unset($indices[$position]);
+                break;
+            }
+        }
+
+        return array_values($indices);
+    }
+
+    /**
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     */
+    private function createSupplementalRegion(Region $baseRegion, array $entry): Region
+    {
+        return new Region(
+            $baseRegion->type ?? RegionType::FACE,
+            $baseRegion->x,
+            $baseRegion->y,
+            $baseRegion->w,
+            $baseRegion->h,
+            $entry['person'],
+            $entry['confidence'],
+            $entry['rotation'],
+            $entry['faceId'],
+        );
     }
 
     /**
