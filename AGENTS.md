@@ -11,6 +11,15 @@
 **Projektziel:** Streaming-Parser für JPEG/HEIC/MOV/MP4; EXIF (Classic-TIFF & BigTIFF), XMP, QuickTime/ISOBMFF – **reines PHP 8.4**, ohne `exif_read_data()` oder externe CLI-Tools.
 
 **EXIF-Support:** EXIF **1.x**, **2.x** (2.1/2.2/2.21/2.3/2.31/2.32) und **3.0** (Endianness, Classic-TIFF `0x2A`, BigTIFF `0x2B`/64-bit) vollständig berücksichtigen.
+* siehe EXIF-Spezifikationen unter 
+  - `docs/EXIF-210.pdf`
+  - `docs/EXIF-220.pdf`
+  - `docs/EXIF-230.pdf`
+  - `docs/EXIF-231.pdf`
+  - `docs/EXIF-232.pdf`
+  - `docs/EXIF-300.pdf`
+* siehe TIFF 6.0-Spezifikation unter 
+  - `docs/TIFF6.pdf`
 
 **Grundsätze (MUSS):**
 
