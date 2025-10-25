@@ -636,6 +636,48 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures maker note flags alone populate scene metadata when QuickTime metadata is absent.
+     */
+    #[Test]
+    public function derivesSceneFlagsFromMakerNotesWithoutQuickTime(): void
+    {
+        $appleMakerNotes = new AppleMakerNotes(
+            contentIdentifier: null,
+            cameraType: null,
+            hdrHeadroom: null,
+            hdrGain: null,
+            snr: null,
+            focusPosition: null,
+            livePhotoIndex: null,
+            colorTemperature: null,
+            semanticStylePreset: null,
+            semanticStyleWarmth: null,
+            semanticStyleTone: null,
+            flags: [
+                'nightMode' => true,
+                'hdrEnabled' => true,
+            ],
+            accelerationVector: null,
+        );
+
+        $makerNotes = new MakerNotesMetadata('Apple', 0, str_repeat('a', 40), $appleMakerNotes);
+
+        $metadata = new Metadata(
+            ['primary'],
+            null,
+            new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes),
+            [],
+            null,
+            $makerNotes,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertTrue($structured->scene->nightMode);
+        self::assertTrue($structured->scene->hdrScene);
+    }
+
+    /**
      * Ensures HDR scene detection falls back to maker note hints when QuickTime metadata is silent.
      */
     #[Test]

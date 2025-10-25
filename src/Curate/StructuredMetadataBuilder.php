@@ -666,8 +666,8 @@ final class StructuredMetadataBuilder
 
         $hdr   = $quickTime->string('HDRImageType');
         $night = $quickTime->bool('NightMode');
-        if ($night === null && array_key_exists('nightMode', $flags)) {
-            $night = $flags['nightMode'];
+        if ($night === null) {
+            $night = $this->appleFlag($flags, 'nightMode');
         }
 
         $hdrScene = null;
@@ -678,8 +678,8 @@ final class StructuredMetadataBuilder
             if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
                 $hdrScene = true;
             } elseif (
-                (array_key_exists('hdrEnabled', $flags) && $flags['hdrEnabled'])
-                || (array_key_exists('hdrAuto', $flags) && $flags['hdrAuto'])
+                $this->appleFlag($flags, 'hdrEnabled') === true
+                || $this->appleFlag($flags, 'hdrAuto') === true
             ) {
                 $hdrScene = true;
             }
@@ -694,6 +694,22 @@ final class StructuredMetadataBuilder
             nightMode: $night,
             subjectDistanceRange: $exif->subjectDistanceRange(),
         );
+    }
+
+    /**
+     * Retrieves a boolean flag from the normalised Apple flag map.
+     *
+     * @param array<string, bool> $flags
+     */
+    private function appleFlag(array $flags, string $key): ?bool
+    {
+        if (!array_key_exists($key, $flags)) {
+            return null;
+        }
+
+        $value = $flags[$key];
+
+        return is_bool($value) ? $value : null;
     }
 
     /**
