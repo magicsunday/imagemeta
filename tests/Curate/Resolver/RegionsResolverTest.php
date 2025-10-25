@@ -100,7 +100,6 @@ final class RegionsResolverTest extends TestCase
         self::assertSame('202', $appleOnlyRegion->faceId);
     }
 
-
     #[Test]
     public function enrichesMwgFacesWithAppleMetadataWithoutGeometry(): void
     {
@@ -135,7 +134,6 @@ final class RegionsResolverTest extends TestCase
         self::assertNotNull($second->rotationDeg);
         self::assertEqualsWithDelta(-2.0, $second->rotationDeg, 0.0001);
     }
-
 
     #[Test]
     public function normalisesPixelCoordinatesUsingAppliedDimensions(): void
@@ -176,8 +174,8 @@ final class RegionsResolverTest extends TestCase
     #[DataProvider('provideAppleConfidenceProperty')]
     public function normalisesAppleConfidenceValues(string $confidenceProperty): void
     {
-        $count          = 1001;
-        $maxConfidence  = $count - 1;
+        $count            = 1001;
+        $maxConfidence    = $count - 1;
         $confidenceValues = array_map(static fn (int $value): string => (string) $value, range(0, $maxConfidence));
 
         $values = [
@@ -193,8 +191,8 @@ final class RegionsResolverTest extends TestCase
             $values['{' . self::NS_APPLE . '}Confidence'] = $confidenceValues;
         }
 
-        $resolver  = new RegionsResolver();
-        $document  = new XmpDocument($values);
+        $resolver   = new RegionsResolver();
+        $document   = new XmpDocument($values);
         $reflection = new ReflectionClass($resolver);
         $method     = $reflection->getMethod('extractAppleFaceRegions');
         $method->setAccessible(true);
@@ -208,7 +206,7 @@ final class RegionsResolverTest extends TestCase
             self::assertSame(RegionType::FACE, $region->type);
             self::assertNotNull($region->confidence);
 
-            $rawConfidence = (float) $confidenceValues[$index];
+            $rawConfidence      = (float) $confidenceValues[$index];
             $expectedConfidence = $rawConfidence > 1.0
                 ? $rawConfidence / $maxConfidence
                 : $rawConfidence;

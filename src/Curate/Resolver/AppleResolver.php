@@ -49,18 +49,18 @@ final readonly class AppleResolver
         $identifier = $quickTimeMeta->contentIdentifier();
         $resolver   = new QuickTimeResolver($quickTimeMeta);
 
-        $cameraType       = $resolver->string('CameraType');
-        $hdrHeadroom      = $resolver->float('HdrHeadroom') ?? $resolver->float('HDRHeadroom');
-        $hdrGain          = $this->floatList($resolver, 'HdrGain', 'HDRGain');
-        $snr              = $resolver->float('SNRSetting') ?? $resolver->float('SNR');
-        $focusPosition    = $resolver->float('FocusPosition');
-        $livePhotoIndex   = $resolver->int('LivePhotoVideoIndex');
-        $colorTemperature = $resolver->int('ColorTemperature');
-        $semanticPreset      = $resolver->string('SemanticStylePreset');
-        $semanticWarmth      = $resolver->float('SemanticStyleWarmth');
-        $semanticTone        = $resolver->float('SemanticStyleTone');
+        $cameraType         = $resolver->string('CameraType');
+        $hdrHeadroom        = $resolver->float('HdrHeadroom') ?? $resolver->float('HDRHeadroom');
+        $hdrGain            = $this->floatList($resolver, 'HdrGain', 'HDRGain');
+        $snr                = $resolver->float('SNRSetting') ?? $resolver->float('SNR');
+        $focusPosition      = $resolver->float('FocusPosition');
+        $livePhotoIndex     = $resolver->int('LivePhotoVideoIndex');
+        $colorTemperature   = $resolver->int('ColorTemperature');
+        $semanticPreset     = $resolver->string('SemanticStylePreset');
+        $semanticWarmth     = $resolver->float('SemanticStyleWarmth');
+        $semanticTone       = $resolver->float('SemanticStyleTone');
         $accelerationVector = $this->floatList($resolver, 'AccelerationVector');
-        $flags               = $this->flags($resolver);
+        $flags              = $this->flags($resolver);
 
         if (
             $identifier === null

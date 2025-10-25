@@ -69,8 +69,8 @@ final class AppleDecoderTest extends TestCase
     #[Test]
     public function decodeMapsSemanticStyleFromCompactArray(): void
     {
-        $raw      = (string) hex2bin('62706c6973743030d2010203045f1011436f6e74656e744964656e7469666965725d53656d616e7469635374796c655d636f6d706163742d7374796c65d405060708090a0b0c525f30525f31525f32525f33555669766964233fd000000000000023bfb999999999999a1001080d212f3d46494c4f5258616a0000000000000101000000000000000d0000000000000000000000000000006c');
-        $decoder  = new AppleDecoder();
+        $raw     = (string) hex2bin('62706c6973743030d2010203045f1011436f6e74656e744964656e7469666965725d53656d616e7469635374796c655d636f6d706163742d7374796c65d405060708090a0b0c525f30525f31525f32525f33555669766964233fd000000000000023bfb999999999999a1001080d212f3d46494c4f5258616a0000000000000101000000000000000d0000000000000000000000000000006c');
+        $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
@@ -110,16 +110,16 @@ final class AppleDecoderTest extends TestCase
         $method->setAccessible(true);
 
         $scalarNotes = $method->invoke($decoder, [
-            'ContentIdentifier'    => 'scalar',
-            'LivePhotoAuto'        => true,
-            'LivePhotoEnabled'     => true,
-            'LivePhotoActive'      => true,
-            'LivePhotoLongExposure'=> true,
-            'LivePhoto'            => 1,
-            'HdrAuto'              => 1,
-            'HdrEnabled'           => '1',
-            'NightMode'            => true,
-            'LongExposure'         => true,
+            'ContentIdentifier'     => 'scalar',
+            'LivePhotoAuto'         => true,
+            'LivePhotoEnabled'      => true,
+            'LivePhotoActive'       => true,
+            'LivePhotoLongExposure' => true,
+            'LivePhoto'             => 1,
+            'HdrAuto'               => 1,
+            'HdrEnabled'            => '1',
+            'NightMode'             => true,
+            'LongExposure'          => true,
         ]);
 
         $maskNotes = $method->invoke($decoder, [

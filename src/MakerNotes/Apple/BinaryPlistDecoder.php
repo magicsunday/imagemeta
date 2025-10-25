@@ -357,7 +357,7 @@ final class BinaryPlistDecoder
 
     private function convertUidPayloadToDecimalString(string $payload): string
     {
-        $value = '0';
+        $value  = '0';
         $length = strlen($payload);
         for ($idx = 0; $idx < $length; ++$idx) {
             $value = $this->multiplyAndAddDecimalString($value, 256, ord($payload[$idx]));
@@ -372,10 +372,10 @@ final class BinaryPlistDecoder
         $result = '';
 
         for ($idx = strlen($decimal) - 1; $idx >= 0; --$idx) {
-            $digit = ord($decimal[$idx]) - 48;
+            $digit   = ord($decimal[$idx]) - 48;
             $product = ($digit * $multiplier) + $carry;
-            $result = chr(($product % 10) + 48) . $result;
-            $carry  = intdiv($product, 10);
+            $result  = chr(($product % 10) + 48) . $result;
+            $carry   = intdiv($product, 10);
         }
 
         while ($carry > 0) {
