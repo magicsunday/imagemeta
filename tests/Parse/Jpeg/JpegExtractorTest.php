@@ -206,6 +206,8 @@ final class JpegExtractorTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame(8, $extractor->getFrameSamplePrecision());
+        self::assertSame(32, $extractor->getFrameHeight());
+        self::assertSame(64, $extractor->getFrameWidth());
         self::assertSame(
             [
                 1 => ['horizontal' => 2, 'vertical' => 2],

@@ -91,6 +91,8 @@ final class MetadataTest extends TestCase
             'heic',
             'abc123',
             'def456',
+            4096,
+            2730,
         );
 
         self::assertSame($exifBlobs, $metadata->exifBlobs);
@@ -108,6 +110,8 @@ final class MetadataTest extends TestCase
         self::assertSame('heic', $metadata->extension);
         self::assertSame('abc123', $metadata->digestSha1);
         self::assertSame('def456', $metadata->digestMd5);
+        self::assertSame(4096, $metadata->jpegFrameWidth);
+        self::assertSame(2730, $metadata->jpegFrameHeight);
     }
 
     /**
@@ -126,6 +130,8 @@ final class MetadataTest extends TestCase
         self::assertNull($metadata->jpegBitsPerSample);
         self::assertNull($metadata->jpegFrameSamplingFactors);
         self::assertNull($metadata->jpegYCbCrSubSampling);
+        self::assertNull($metadata->jpegFrameWidth);
+        self::assertNull($metadata->jpegFrameHeight);
         self::assertNull($metadata->mimeType);
         self::assertNull($metadata->fileSize);
         self::assertNull($metadata->extension);

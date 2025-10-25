@@ -201,7 +201,7 @@ final class StructuredMetadataBuilder
 
         $camera = $this->buildCamera($exifResolver);
         $lens   = $this->buildLens($exifResolver);
-        $image  = $this->buildImage($exifResolver, $metadata->jpegFrameWidth, $metadata->jpegFrameHeight);
+        $image  = $this->buildImage($metadata, $exifResolver);
 
         $exposure = new Exposure(
             iso: CompositeResolver::intISO($exifResolver),
@@ -654,24 +654,24 @@ final class StructuredMetadataBuilder
     /**
      * Builds the image value object using EXIF metadata.
      *
-     * @param ExifTagResolver $exif        Resolver exposing image related EXIF tags.
-     * @param int|null        $frameWidth  Optional JPEG frame width used as fallback when EXIF is missing dimensions.
-     * @param int|null        $frameHeight Optional JPEG frame height used as fallback when EXIF is missing dimensions.
+     * @param Metadata        $metadata Metadata container supplying JPEG frame fallbacks.
+     * @param ExifTagResolver $exif      Resolver exposing image related EXIF tags.
      *
      * @return Image Normalised image metadata aggregate.
      */
-    private function buildImage(ExifTagResolver $exif, ?int $frameWidth, ?int $frameHeight): Image
+    private function buildImage(Metadata $metadata, ExifTagResolver $exif): Image
     {
         [$width, $height] = CompositeResolver::dimensions($exif);
 
-        $orientation = $exif->orientation();
         if ($width === null) {
-            $width = $frameWidth;
+            $width = $metadata->jpegFrameWidth;
         }
 
         if ($height === null) {
-            $height = $frameHeight;
+            $height = $metadata->jpegFrameHeight;
         }
+
+        $orientation = $exif->orientation();
 
         return new Image(
             width: $width,
