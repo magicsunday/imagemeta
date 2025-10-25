@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Curate;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime as AppleRunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
@@ -48,6 +49,7 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
+use MagicSunday\ImageMeta\Value\RunTime as ValueRunTime;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -454,10 +456,12 @@ final class StructuredMetadataBuilderTest extends TestCase
             snr: 18.5,
             focusPosition: 0.5,
             livePhotoIndex: 4,
+            livePhotoTime: 0.2,
             colorTemperature: 4300,
             semanticStylePreset: 'MakerPreset',
             semanticStyleWarmth: 0.3,
             semanticStyleTone: -0.2,
+            runTime: new AppleRunTime(epoch: 7, timescale: 20, value: 100, flags: 9),
             flags: ['livePhotoAuto' => false, 'nightMode' => true],
             accelerationVector: [0.05, 0.1, -0.1],
         );
@@ -493,6 +497,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(18.5, $structured->apple->snr, 1e-12);
         self::assertEqualsWithDelta(0.5, $structured->apple->focusPosition, 1e-12);
         self::assertSame(4, $structured->apple->livePhotoIndex);
+        self::assertEqualsWithDelta(0.2, $structured->apple->livePhotoTime, 1e-12);
         self::assertSame(4300, $structured->apple->colorTemperature);
         self::assertSame('MakerPreset', $structured->apple->semanticStylePreset);
         self::assertEqualsWithDelta(0.3, $structured->apple->semanticStyleWarmth, 1e-12);
@@ -500,6 +505,11 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertFalse($structured->apple->flags['livePhotoAuto']);
         self::assertTrue($structured->apple->flags['nightMode']);
         self::assertSame([0.05, 0.1, -0.1], $structured->apple->accelerationVector);
+        self::assertInstanceOf(ValueRunTime::class, $structured->apple->runTime);
+        self::assertSame(7, $structured->apple->runTime?->epoch);
+        self::assertSame(20, $structured->apple->runTime?->timescale);
+        self::assertSame(100, $structured->apple->runTime?->value);
+        self::assertSame(9, $structured->apple->runTime?->flags);
 
         self::assertSame(4300, $structured->whiteBalanceDetails->kelvin);
         self::assertEqualsWithDelta(0.05, $structured->motion->accelX, 1e-12);
@@ -1405,6 +1415,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             -0.05,
             ['hdrEnabled' => true],
             [0.1, 0.2, 0.3],
+            null,
+            null,
         );
 
         $makerNotes = new MakerNotesMetadata(

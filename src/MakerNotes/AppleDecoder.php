@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
 
 use function array_is_list;
 use function array_key_exists;
@@ -298,7 +299,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $hdrGain              = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
         $snr                  = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
         $focusPosition        = $this->floatValue($dictionary, 'FocusPosition');
+        $runTime              = $this->runTimeValue($dictionary, 'RunTime');
         $livePhotoIndex       = $this->intValue($dictionary, 'LivePhotoVideoIndex');
+        $livePhotoTime        = null;
+        if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
+            $timescale = $runTime->timescale;
+            if ($timescale !== null && $timescale > 0) {
+                $livePhotoTime = $livePhotoIndex / $timescale;
+            }
+        }
         $colorTemperature     = $this->intValue($dictionary, 'ColorTemperature');
         $semanticStylePreset  = $this->stringValue($dictionary, 'SemanticStylePreset');
         $semanticStyleWarmth  = $this->floatValue($dictionary, 'SemanticStyleWarmth');
@@ -330,12 +339,14 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             && $snr === null
             && $focusPosition === null
             && $livePhotoIndex === null
+            && $livePhotoTime === null
             && $colorTemperature === null
             && $semanticStylePreset === null
             && $semanticStyleWarmth === null
             && $semanticStyleTone === null
             && $flags === []
             && $accelerationVector === null
+            && $runTime === null
         ) {
             return null;
         }
@@ -354,7 +365,37 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $semanticStyleTone,
             $flags,
             $accelerationVector,
+            $livePhotoTime,
+            $runTime,
         );
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function runTimeValue(array $dictionary, string $key): ?RunTime
+    {
+        if (!array_key_exists($key, $dictionary)) {
+            return null;
+        }
+
+        $value = $dictionary[$key];
+        if (!is_array($value)) {
+            return null;
+        }
+
+        $epoch     = $this->intValue($value, 'epoch', 'Epoch');
+        $timescale = $this->intValue($value, 'timescale', 'Timescale');
+        $rawValue  = $this->intValue($value, 'value', 'Value');
+        $flags     = $this->intValue($value, 'flags', 'Flags');
+
+        if ($epoch === null && $timescale === null && $rawValue === null && $flags === null) {
+            return null;
+        }
+
+        return new RunTime($epoch, $timescale, $rawValue, $flags);
     }
 
     /**

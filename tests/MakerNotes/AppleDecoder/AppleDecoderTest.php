@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\AppleDecoder;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use PHPUnit\Framework\Attributes\Test;
@@ -166,6 +167,36 @@ final class AppleDecoderTest extends TestCase
         self::assertSame('DictionaryPreset', $notes->semanticStylePreset);
         self::assertEqualsWithDelta(0.45, $notes->semanticStyleWarmth, 1e-12);
         self::assertEqualsWithDelta(-0.25, $notes->semanticStyleTone, 1e-12);
+    }
+
+    #[Test]
+    public function buildAppleMakerNotesParsesRunTime(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        $dictionary = [
+            'RunTime'             => [
+                'epoch'     => '2',
+                'timescale' => 600,
+                'value'     => 1500,
+                'flags'     => 5,
+            ],
+            'LivePhotoVideoIndex' => 1200,
+        ];
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, $dictionary);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame(1200, $notes->livePhotoIndex);
+        self::assertEqualsWithDelta(2.0, $notes->livePhotoTime, 1e-12);
+        self::assertInstanceOf(RunTime::class, $notes->runTime);
+        self::assertSame(2, $notes->runTime?->epoch);
+        self::assertSame(600, $notes->runTime?->timescale);
+        self::assertSame(1500, $notes->runTime?->value);
+        self::assertSame(5, $notes->runTime?->flags);
     }
 
     private function buildMakerNotesBlob(): string
