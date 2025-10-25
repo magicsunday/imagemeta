@@ -571,6 +571,9 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('qt-content', $structured->apple->contentIdentifier);
         self::assertSame([0.12, -0.34, 0.56], $structured->apple->accelerationVector);
+        self::assertEqualsWithDelta(0.12, $structured->motion->accelX, 1e-12);
+        self::assertEqualsWithDelta(-0.34, $structured->motion->accelY, 1e-12);
+        self::assertEqualsWithDelta(0.56, $structured->motion->accelZ, 1e-12);
     }
 
     #[Test]
