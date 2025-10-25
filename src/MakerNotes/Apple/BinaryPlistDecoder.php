@@ -14,12 +14,16 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 use MagicSunday\ImageMeta\Core\ParseError;
 
 use function array_key_exists;
+use function chr;
 use function iconv;
+use function intdiv;
 use function is_array;
 use function is_float;
 use function is_int;
 use function is_string;
+use function ltrim;
 use function ord;
+use function sprintf;
 use function strlen;
 use function strpos;
 use function substr;
@@ -146,6 +150,7 @@ final class BinaryPlistDecoder
             0x4     => $this->parseData($offset, $info),
             0x5     => $this->parseAscii($offset, $info),
             0x6     => $this->parseUnicode($offset, $info),
+            0x8     => $this->parseUid($offset, $info),
             0xA     => $this->parseArray($offset, $info),
             0xD     => $this->parseDictionary($offset, $info),
             default => throw new ParseError('Unsupported property list object type.'),
@@ -258,6 +263,77 @@ final class BinaryPlistDecoder
         }
 
         return $decoded;
+    }
+
+    private function parseUid(int $offset, int $info): int|string
+    {
+        [$lengthValue, $header] = $this->readLength($offset, $info);
+
+        if ($info === 0x0F) {
+            $size = $lengthValue;
+        } else {
+            $size   = $lengthValue + 1;
+            $header = 1;
+        }
+
+        if ($size < 1) {
+            throw new ParseError('UID objects must contain at least one byte.');
+        }
+
+        $payloadOffset = $offset + $header;
+        if ($payloadOffset + $size > $this->length) {
+            throw new ParseError('Incomplete UID payload.');
+        }
+
+        if ($size <= PHP_INT_SIZE) {
+            $value = $this->readUint($payloadOffset, $size);
+
+            if ($size === PHP_INT_SIZE && $value < 0) {
+                return sprintf('%u', $value);
+            }
+
+            return $value;
+        }
+
+        $payload = substr($this->data, $payloadOffset, $size);
+        if (strlen($payload) !== $size) {
+            throw new ParseError('Incomplete UID payload.');
+        }
+
+        return $this->convertUidPayloadToDecimalString($payload);
+    }
+
+    private function convertUidPayloadToDecimalString(string $payload): string
+    {
+        $value = '0';
+        $length = strlen($payload);
+        for ($idx = 0; $idx < $length; ++$idx) {
+            $value = $this->multiplyAndAddDecimalString($value, 256, ord($payload[$idx]));
+        }
+
+        return $value;
+    }
+
+    private function multiplyAndAddDecimalString(string $decimal, int $multiplier, int $addend): string
+    {
+        $carry  = $addend;
+        $result = '';
+
+        for ($idx = strlen($decimal) - 1; $idx >= 0; --$idx) {
+            $digit = ord($decimal[$idx]) - 48;
+            $product = ($digit * $multiplier) + $carry;
+            $result = chr(($product % 10) + 48) . $result;
+            $carry  = intdiv($product, 10);
+        }
+
+        while ($carry > 0) {
+            $result = chr(($carry % 10) + 48) . $result;
+            $carry  = intdiv($carry, 10);
+        }
+
+        $trimmed = ltrim($result, '0');
+
+        return $trimmed === '' ? '0' : $trimmed;
     }
 
     /**
