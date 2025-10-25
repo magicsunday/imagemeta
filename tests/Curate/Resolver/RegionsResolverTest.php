@@ -100,6 +100,43 @@ final class RegionsResolverTest extends TestCase
         self::assertSame('202', $appleOnlyRegion->faceId);
     }
 
+
+    #[Test]
+    public function enrichesMwgFacesWithAppleMetadataWithoutGeometry(): void
+    {
+        $document = new XmpDocument([
+            '{' . self::NS_ST_AREA . '}x'             => ['0.4', '0.7'],
+            '{' . self::NS_ST_AREA . '}y'             => ['0.5', '0.65'],
+            '{' . self::NS_ST_AREA . '}w'             => ['0.2', '0.15'],
+            '{' . self::NS_ST_AREA . '}h'             => ['0.25', '0.18'],
+            '{' . self::NS_MWG . '}Type'              => ['Face', 'Face'],
+            '{' . self::NS_APPLE . '}FaceID'          => ['A1', 'A2'],
+            '{' . self::NS_APPLE . '}ConfidenceLevel' => ['950', '870'],
+            '{' . self::NS_APPLE . '}AngleInfoRoll'   => ['1.5', '-2.0'],
+        ]);
+
+        $regions = (new RegionsResolver())->resolve($document);
+
+        self::assertCount(2, $regions->items);
+
+        $first = $regions->items[0];
+        self::assertSame(RegionType::FACE, $first->type);
+        self::assertSame('A1', $first->faceId);
+        self::assertNotNull($first->confidence);
+        self::assertEqualsWithDelta(0.95, $first->confidence, 0.0001);
+        self::assertNotNull($first->rotationDeg);
+        self::assertEqualsWithDelta(1.5, $first->rotationDeg, 0.0001);
+
+        $second = $regions->items[1];
+        self::assertSame(RegionType::FACE, $second->type);
+        self::assertSame('A2', $second->faceId);
+        self::assertNotNull($second->confidence);
+        self::assertEqualsWithDelta(0.87, $second->confidence, 0.0001);
+        self::assertNotNull($second->rotationDeg);
+        self::assertEqualsWithDelta(-2.0, $second->rotationDeg, 0.0001);
+    }
+
+
     #[Test]
     public function normalisesPixelCoordinatesUsingAppliedDimensions(): void
     {

@@ -55,7 +55,9 @@ final readonly class RegionsResolver
 
         $dimensions   = $this->appliedDimensions($document);
         $mwgRegions   = $this->extractMwgRegions($document, $dimensions);
-        $appleRegions = $this->extractAppleFaceRegions($document, $dimensions);
+        $appleEntries = $this->appleFaceEntries($document, $dimensions);
+        $appleRegions = $this->regionsFromAppleEntries($appleEntries);
+        $mwgRegions   = $this->applyAppleMetadataWithoutGeometry($mwgRegions, $appleEntries);
 
         foreach ($appleRegions as $appleRegion) {
             $matchIndex = $this->findMatchingRegionIndex($mwgRegions, $appleRegion);
@@ -150,6 +152,18 @@ final readonly class RegionsResolver
      */
     private function extractAppleFaceRegions(XmpDocument $document, ?array $dimensions): array
     {
+        $entries = $this->appleFaceEntries($document, $dimensions);
+
+        return $this->regionsFromAppleEntries($entries);
+    }
+
+    /**
+     * @param array{w: float, h: float}|null $dimensions
+     *
+     * @return list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}>
+     */
+    private function appleFaceEntries(XmpDocument $document, ?array $dimensions): array
+    {
         $centersX         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterX');
         $centersY         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterY');
         $widths           = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Width');
@@ -172,33 +186,29 @@ final readonly class RegionsResolver
             $faceIds = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FaceUUID');
         }
 
-        $count    = max(count($centersX), count($centersY), count($widths), count($heights));
-        $resolved = [];
+        $count = 0;
+        foreach ([$centersX, $centersY, $widths, $heights, $confidenceLevels, $confidences, $angleInfoRolls, $rolls, $yaws, $names, $faceIds] as $values) {
+            $valueCount = count($values);
+            if ($valueCount > $count) {
+                $count = $valueCount;
+            }
+        }
+
+        if ($count === 0) {
+            return [];
+        }
+
+        $entries = [];
 
         for ($index = 0; $index < $count; ++$index) {
             $centerX = $centersX[$index] ?? null;
             $centerY = $centersY[$index] ?? null;
             $width   = $widths[$index] ?? null;
             $height  = $heights[$index] ?? null;
-            if ($centerX === null) {
-                continue;
-            }
 
-            if ($centerY === null) {
-                continue;
-            }
-
-            if ($width === null) {
-                continue;
-            }
-
-            if ($height === null) {
-                continue;
-            }
-
-            $normalised = $this->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
-            if ($normalised === null) {
-                continue;
+            $geometry = null;
+            if ($centerX !== null && $centerY !== null && $width !== null && $height !== null) {
+                $geometry = $this->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
             }
 
             $confidence = $this->normalisedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
@@ -208,20 +218,108 @@ final readonly class RegionsResolver
 
             $rotation = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
 
-            $resolved[] = new Region(
+            $entries[] = [
+                'geometry'   => $geometry,
+                'person'     => $this->stringAt($names, $index),
+                'confidence' => $confidence,
+                'rotation'   => $rotation,
+                'faceId'     => $this->stringAt($faceIds, $index),
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
+     *
+     * @return list<Region>
+     */
+    private function regionsFromAppleEntries(array $entries): array
+    {
+        $regions = [];
+
+        foreach ($entries as $entry) {
+            $geometry = $entry['geometry'];
+            if ($geometry === null) {
+                continue;
+            }
+
+            $regions[] = new Region(
                 RegionType::FACE,
-                $normalised['x'],
-                $normalised['y'],
-                $normalised['w'],
-                $normalised['h'],
-                $this->stringAt($names, $index),
-                $confidence,
-                $rotation,
-                $this->stringAt($faceIds, $index),
+                $geometry['x'],
+                $geometry['y'],
+                $geometry['w'],
+                $geometry['h'],
+                $entry['person'],
+                $entry['confidence'],
+                $entry['rotation'],
+                $entry['faceId'],
             );
         }
 
-        return $resolved;
+        return $regions;
+    }
+
+    /**
+     * @param list<Region> $regions
+     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
+     *
+     * @return list<Region>
+     */
+    private function applyAppleMetadataWithoutGeometry(array $regions, array $entries): array
+    {
+        if ($entries === []) {
+            return $regions;
+        }
+
+        $mwgFaceIndices = [];
+        foreach ($regions as $index => $region) {
+            if ($region->type === RegionType::FACE) {
+                $mwgFaceIndices[] = $index;
+            }
+        }
+
+        if ($mwgFaceIndices === []) {
+            return $regions;
+        }
+
+        if (count($entries) !== count($mwgFaceIndices)) {
+            return $regions;
+        }
+
+        foreach ($entries as $position => $entry) {
+            if ($entry['geometry'] !== null) {
+                continue;
+            }
+
+            if ($entry['person'] === null && $entry['confidence'] === null && $entry['rotation'] === null && $entry['faceId'] === null) {
+                continue;
+            }
+
+            $mwgIndex = $mwgFaceIndices[$position] ?? null;
+            if ($mwgIndex === null) {
+                continue;
+            }
+
+            $baseRegion = $regions[$mwgIndex];
+
+            $supplement = new Region(
+                RegionType::FACE,
+                $baseRegion->x,
+                $baseRegion->y,
+                $baseRegion->w,
+                $baseRegion->h,
+                $entry['person'],
+                $entry['confidence'],
+                $entry['rotation'],
+                $entry['faceId'],
+            );
+
+            $regions[$mwgIndex] = $this->mergeRegion($baseRegion, $supplement);
+        }
+
+        return $regions;
     }
 
     /**
