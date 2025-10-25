@@ -110,21 +110,18 @@ final class AppleDecoderTest extends TestCase
         self::assertEqualsWithDelta(-0.15, $apple->semanticStyleTone, 1e-12);
         self::assertSame([0.12, -0.34, 0.56], $apple->accelerationVector);
 
-        self::assertArrayHasKey('livePhoto', $apple->flags);
-        self::assertArrayHasKey('livePhotoAuto', $apple->flags);
-        self::assertArrayHasKey('livePhotoEnabled', $apple->flags);
-        self::assertArrayHasKey('livePhotoLongExposure', $apple->flags);
         self::assertArrayHasKey('hdrAuto', $apple->flags);
         self::assertArrayHasKey('hdrEnabled', $apple->flags);
         self::assertArrayHasKey('longExposure', $apple->flags);
+        self::assertArrayHasKey('personInPhoto', $apple->flags);
+        self::assertArrayHasKey('petInPhoto', $apple->flags);
 
-        self::assertTrue($apple->flags['livePhoto']);
-        self::assertTrue($apple->flags['livePhotoAuto']);
-        self::assertTrue($apple->flags['livePhotoEnabled']);
-        self::assertTrue($apple->flags['livePhotoLongExposure']);
         self::assertTrue($apple->flags['hdrAuto']);
         self::assertTrue($apple->flags['hdrEnabled']);
         self::assertTrue($apple->flags['longExposure']);
+        self::assertTrue($apple->flags['personInPhoto']);
+        self::assertFalse($apple->flags['petInPhoto']);
+
     }
 
     #[Test]
@@ -311,13 +308,15 @@ final class AppleDecoderTest extends TestCase
             'HdrEnabled'            => '1',
             'NightMode'             => true,
             'LongExposure'          => true,
+            'PersonInPhoto'         => true,
+            'PetInPhoto'            => false,
         ]);
 
         $maskNotes = $method->invoke($decoder, [
             'ContentIdentifier'     => 'mask',
             'SceneFlags'            => (1 << 0) | (1 << 1),
             'ImageProcessingFlags'  => (1 << 0) | (1 << 1),
-            'PhotosAppFeatureFlags' => (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
+            'PhotosAppFeatureFlags' => 1 << 0,
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $scalarNotes);
@@ -326,10 +325,30 @@ final class AppleDecoderTest extends TestCase
         $scalarFlags = $scalarNotes->flags;
         $maskFlags   = $maskNotes->flags;
 
-        ksort($scalarFlags);
         ksort($maskFlags);
 
-        self::assertSame($scalarFlags, $maskFlags);
+        self::assertSame(
+            [
+                'hdrAuto'       => true,
+                'hdrEnabled'    => true,
+                'longExposure'  => true,
+                'nightMode'     => true,
+                'personInPhoto' => true,
+                'petInPhoto'    => false,
+            ],
+            $maskFlags,
+        );
+
+        foreach ($maskFlags as $flag => $value) {
+            self::assertArrayHasKey($flag, $scalarFlags);
+            self::assertSame($value, $scalarFlags[$flag]);
+        }
+
+        self::assertTrue($scalarFlags['livePhoto']);
+        self::assertTrue($scalarFlags['livePhotoAuto']);
+        self::assertTrue($scalarFlags['livePhotoEnabled']);
+        self::assertTrue($scalarFlags['livePhotoActive']);
+        self::assertTrue($scalarFlags['livePhotoLongExposure']);
     }
 
     #[Test]
@@ -344,16 +363,22 @@ final class AppleDecoderTest extends TestCase
             'LivePhotoLongExposure' => false,
             'NightMode'             => false,
             'SceneFlags'            => 1 << 0,
-            'PhotosAppFeatureFlags' => 1 << 4,
+            'PetInPhoto'            => false,
+            'PhotosAppFeatureFlags' => 1 << 1,
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        $flags = $notes->flags;
+        ksort($flags);
+
         self::assertSame(
             [
                 'livePhotoLongExposure' => false,
                 'nightMode'             => false,
+                'personInPhoto'         => false,
+                'petInPhoto'            => false,
             ],
-            $notes->flags,
+            $flags,
         );
     }
 
@@ -368,7 +393,7 @@ final class AppleDecoderTest extends TestCase
             'ContentIdentifier'     => 'positions',
             'SceneFlags'            => [0, 1],
             'ImageProcessingFlags'  => ['values' => [0, 1]],
-            'PhotosAppFeatureFlags' => [0, 1, ['values' => [2, 3]], 4],
+            'PhotosAppFeatureFlags' => [0],
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
@@ -380,13 +405,10 @@ final class AppleDecoderTest extends TestCase
             [
                 'hdrAuto'               => true,
                 'hdrEnabled'            => true,
-                'livePhoto'             => true,
-                'livePhotoActive'       => true,
-                'livePhotoAuto'         => true,
-                'livePhotoEnabled'      => true,
-                'livePhotoLongExposure' => true,
                 'longExposure'          => true,
                 'nightMode'             => true,
+                'personInPhoto'         => true,
+                'petInPhoto'            => false,
             ],
             $flags,
         );

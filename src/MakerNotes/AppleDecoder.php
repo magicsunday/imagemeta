@@ -56,6 +56,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         'LivePhotoActive'       => 'livePhotoActive',
         'LivePhotoLongExposure' => 'livePhotoLongExposure',
         'LivePhoto'             => 'livePhoto',
+        'PersonInPhoto'         => 'personInPhoto',
+        'PetInPhoto'            => 'petInPhoto',
         'HdrAuto'               => 'hdrAuto',
         'HdrEnabled'            => 'hdrEnabled',
         'NightMode'             => 'nightMode',
@@ -88,11 +90,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             1 => 'hdrAuto',            // Bit 1 – HDR auto detection engaged.
         ],
         'PhotosAppFeatureFlags' => [
-            0 => 'livePhoto',          // Bit 0 – Live Photo asset present.
-            1 => 'livePhotoAuto',      // Bit 1 – Live Photo auto capture.
-            2 => 'livePhotoEnabled',   // Bit 2 – Live Photo enabled by the user.
-            3 => 'livePhotoActive',    // Bit 3 – Live Photo active during capture.
-            4 => 'livePhotoLongExposure', // Bit 4 – Live Photo long exposure fused asset.
+            0 => 'personInPhoto',      // Bit 0 – Person detected in the asset.
+            1 => 'petInPhoto',         // Bit 1 – Pet detected in the asset.
         ],
     ];
 
@@ -1010,13 +1009,20 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
 
             $enabledBits = $this->bitPositions($dictionary[$makerKey]);
-            if ($enabledBits === []) {
+            if ($enabledBits === null) {
                 continue;
             }
 
+            $assignFalse = $makerKey === 'PhotosAppFeatureFlags';
+
             foreach ($bitMap as $bitPosition => $normalized) {
-                if (in_array($bitPosition, $enabledBits, true) && !array_key_exists($normalized, $flags)) {
-                    $flags[$normalized] = true;
+                if (array_key_exists($normalized, $flags)) {
+                    continue;
+                }
+
+                $isEnabled = in_array($bitPosition, $enabledBits, true);
+                if ($isEnabled || $assignFalse) {
+                    $flags[$normalized] = $isEnabled;
                 }
             }
         }
@@ -1033,9 +1039,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param string|int|float|bool|array<int|string, mixed>|null $value
      *
-     * @return list<int> Zero-based bit positions detected in the value.
+     * @return list<int>|null Zero-based bit positions detected in the value or null when the value does not encode a bit mask.
      */
-    private function bitPositions(string|int|float|bool|array|null $value): array
+    private function bitPositions(string|int|float|bool|array|null $value): ?array
     {
         if (is_int($value)) {
             return $this->bitPositionsFromMask($value);
@@ -1048,30 +1054,34 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         if (is_string($value)) {
             $normalized = trim($value);
             if ($normalized === '') {
-                return [];
+                return null;
             }
 
             if (str_starts_with($normalized, '0x') || str_starts_with($normalized, '0X')) {
                 $hex = substr($normalized, 2);
                 if ($hex === '' || !ctype_xdigit($hex)) {
-                    return [];
+                    return null;
                 }
 
                 return $this->bitPositionsFromMask((int) hexdec($hex));
             }
 
             if (!is_numeric($normalized)) {
-                return [];
+                return null;
             }
 
             return $this->bitPositionsFromMask((int) $normalized);
         }
 
         if (is_bool($value) || $value === null) {
-            return [];
+            return null;
         }
 
-        if (!is_array($value) || $value === []) {
+        if (!is_array($value)) {
+            return null;
+        }
+
+        if ($value === []) {
             return [];
         }
 
@@ -1083,13 +1093,14 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
 
             if (!array_key_exists('values', $value)) {
-                return [];
+                return null;
             }
 
             return $this->bitPositions($value['values']);
         }
 
         $positions = [];
+        $hasEntry  = false;
         foreach ($value as $entry) {
             if (is_int($entry) || is_float($entry) || (is_string($entry) && is_numeric($entry))) {
                 $position = (int) $entry;
@@ -1097,15 +1108,24 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                     $positions[] = $position;
                 }
 
+                $hasEntry = true;
                 continue;
             }
 
             $nested = $this->bitPositions($entry);
-            if ($nested !== []) {
-                foreach ($nested as $bit) {
-                    $positions[] = $bit;
-                }
+            if ($nested === null) {
+                continue;
             }
+
+            $hasEntry = true;
+
+            foreach ($nested as $bit) {
+                $positions[] = $bit;
+            }
+        }
+
+        if (!$hasEntry) {
+            return null;
         }
 
         if ($positions === []) {

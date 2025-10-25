@@ -529,7 +529,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             'ContentIdentifier'     => 'bitfield',
             'SceneFlags'            => [0, 1],
             'ImageProcessingFlags'  => ['values' => [0, 1]],
-            'PhotosAppFeatureFlags' => [0, 1, ['values' => [2, 3]], 4],
+            'PhotosAppFeatureFlags' => [0],
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $appleMakerNotes);
@@ -548,11 +548,8 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertTrue($structured->apple->flags['longExposure']);
         self::assertTrue($structured->apple->flags['hdrEnabled']);
         self::assertTrue($structured->apple->flags['hdrAuto']);
-        self::assertTrue($structured->apple->flags['livePhoto']);
-        self::assertTrue($structured->apple->flags['livePhotoAuto']);
-        self::assertTrue($structured->apple->flags['livePhotoEnabled']);
-        self::assertTrue($structured->apple->flags['livePhotoActive']);
-        self::assertTrue($structured->apple->flags['livePhotoLongExposure']);
+        self::assertTrue($structured->apple->flags['personInPhoto']);
+        self::assertFalse($structured->apple->flags['petInPhoto']);
     }
 
     /**

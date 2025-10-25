@@ -31,7 +31,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
             'SceneFlags'            => 0b11,
             'ImageProcessingFlags'  => '0x3',
             'PhotosAppFeatureFlags' => [
-                'values' => [0, 1, 2, 3, 4],
+                'values' => [0, 1],
             ],
         ];
 
@@ -41,13 +41,10 @@ final class AppleDecoderFlagMaskTest extends TestCase
         $expected = [
             'hdrAuto'               => true,
             'hdrEnabled'            => true,
-            'livePhoto'             => true,
-            'livePhotoActive'       => true,
-            'livePhotoAuto'         => true,
-            'livePhotoEnabled'      => true,
-            'livePhotoLongExposure' => true,
             'longExposure'          => true,
             'nightMode'             => true,
+            'personInPhoto'         => true,
+            'petInPhoto'            => true,
         ];
         ksort($expected);
 
@@ -55,7 +52,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
     }
 
     #[Test]
-    public function extractFlagsIgnoresUnmappedBitPositions(): void
+    public function extractFlagsDefaultsPhotosAppFeatureBitsToFalse(): void
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'extractFlags');
@@ -70,6 +67,9 @@ final class AppleDecoderFlagMaskTest extends TestCase
 
         $result = $method->invoke($decoder, $dictionary);
 
-        self::assertSame([], $result);
+        self::assertSame([
+            'personInPhoto' => false,
+            'petInPhoto'    => false,
+        ], $result);
     }
 }
