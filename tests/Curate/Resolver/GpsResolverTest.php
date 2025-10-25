@@ -135,6 +135,10 @@ final class GpsResolverTest extends TestCase
         self::assertSame('12:34:56.789', $gps->time);
         self::assertInstanceOf(DateTimeImmutable::class, $gps->timestamp);
         self::assertSame('2024-05-06T12:34:56+00:00', $gps->timestamp?->format(DATE_ATOM));
+        self::assertSame('K', $gps->speedOriginalRef);
+        self::assertEqualsWithDelta(72.0, $gps->speedOriginal, 1e-6);
+        self::assertSame('K', $gps->destinationDistanceOriginalRef);
+        self::assertEqualsWithDelta(42.0, $gps->destinationDistanceOriginal, 1e-6);
         self::assertEqualsWithDelta(42000.0, $gps->destinationDistanceMetres, 1e-6);
         self::assertEqualsWithDelta(1.5, $gps->horizontalPositioningError, 1e-6);
     }
@@ -151,6 +155,8 @@ final class GpsResolverTest extends TestCase
             '{http://ns.adobe.com/exif/1.0/}GPSAltitude'     => ['120.5'],
             '{http://ns.adobe.com/exif/1.0/}GPSSpeedRef'     => ['K'],
             '{http://ns.adobe.com/exif/1.0/}GPSSpeed'        => ['72'],
+            '{http://ns.adobe.com/exif/1.0/}GPSDestDistanceRef' => ['N'],
+            '{http://ns.adobe.com/exif/1.0/}GPSDestDistance'    => ['1.5'],
             '{http://ns.adobe.com/exif/1.0/}GPSDateStamp'    => ['2024-05-06'],
             '{http://ns.adobe.com/exif/1.0/}GPSTimeStamp'    => ['12:34:56'],
             '{http://ns.adobe.com/exif/1.0/}GPSDateTime'     => ['2024-05-06T12:34:56+02:00'],
@@ -167,6 +173,11 @@ final class GpsResolverTest extends TestCase
         self::assertEqualsWithDelta(-120.5, $gps->altitude ?? 0.0, 1e-6);
         self::assertSame('K', $gps->speedRef);
         self::assertEqualsWithDelta(20.0, $gps->speedMs ?? 0.0, 1e-6);
+        self::assertSame('K', $gps->speedOriginalRef);
+        self::assertEqualsWithDelta(72.0, $gps->speedOriginal ?? 0.0, 1e-6);
+        self::assertEqualsWithDelta(2778.0, $gps->destinationDistanceMetres ?? 0.0, 1e-6);
+        self::assertSame('N', $gps->destinationDistanceOriginalRef);
+        self::assertEqualsWithDelta(1.5, $gps->destinationDistanceOriginal ?? 0.0, 1e-6);
         self::assertSame('2024-05-06T10:34:56+00:00', $gps->timestamp?->format(DATE_ATOM));
     }
 }

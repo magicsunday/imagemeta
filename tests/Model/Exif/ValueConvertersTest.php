@@ -504,6 +504,8 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(2.5, $result['dop'], 0.000001);
         self::assertSame('K', $result['speed_ref']);
         self::assertEqualsWithDelta(20.0, $result['speed_ms'], 0.000001);
+        self::assertSame('K', $result['speed_original_ref']);
+        self::assertEqualsWithDelta(72.0, $result['speed_original'], 0.000001);
         self::assertSame('T', $result['track_ref']);
         self::assertEqualsWithDelta(123.45, $result['track'], 0.000001);
         self::assertSame('M', $result['img_direction_ref']);
@@ -517,6 +519,8 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(123.0, $result['dest_bearing'], 0.000001);
         self::assertSame('K', $result['dest_distance_ref']);
         self::assertEqualsWithDelta(42000.0, $result['dest_distance_m'], 0.000001);
+        self::assertSame('K', $result['dest_distance_original_ref']);
+        self::assertEqualsWithDelta(42.0, $result['dest_distance_original'], 0.000001);
         self::assertSame('NETWORK', $result['processing_method']);
         self::assertSame('AreaName', $result['area_information']);
         self::assertSame('2024-05-06', $result['date']);
