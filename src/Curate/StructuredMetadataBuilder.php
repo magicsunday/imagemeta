@@ -315,7 +315,7 @@ final class StructuredMetadataBuilder
             afMode: null,
         );
 
-        $motion = $this->buildMotion($appleMakerNotes);
+        $motion = $this->buildMotion($apple);
 
         $regions = $regionsResolver->resolve($xmpDocument);
 
@@ -856,13 +856,13 @@ final class StructuredMetadataBuilder
     /**
      * Builds the motion metadata aggregate from the Apple acceleration vector.
      *
-     * @param AppleMakerNotes|null $makerNotes Parsed Apple maker note payload.
+     * @param Apple $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
      * @return Motion Motion metadata aggregate with per-axis acceleration.
      */
-    private function buildMotion(?AppleMakerNotes $makerNotes): Motion
+    private function buildMotion(Apple $apple): Motion
     {
-        $vector = $makerNotes?->accelerationVector;
+        $vector = $apple->accelerationVector;
 
         $accelX = null;
         $accelY = null;
