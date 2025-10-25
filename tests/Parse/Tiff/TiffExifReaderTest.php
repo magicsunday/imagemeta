@@ -50,6 +50,8 @@ final class TiffExifReaderTest extends TestCase
 {
     private const int CUSTOM_SIGNED_LONG8_TAG = 0xC7A1;
 
+    private const int SUB_IFDS_TAG = 0x014A;
+
     /**
      * Expected StripOffsets values captured from ExifTool parsing the synthetic BigTIFF LONG8 fixture.
      *
@@ -188,6 +190,21 @@ final class TiffExifReaderTest extends TestCase
         $this->expectException(BoundsError::class);
 
         (new TiffExifReader())->parseFromBlob($blob);
+    }
+
+    /**
+     * Ensures SubIFDs pointers stored using the IFD field type are followed correctly.
+     */
+    #[Test]
+    public function decodesSubIfdPointers(): void
+    {
+        [$blob, $subIfdOffset] = $this->buildClassicSubIfdBlob();
+
+        $document   = (new TiffExifReader())->parseFromBlob($blob);
+        $subIfdsEntry = $document->ifd0->get(self::SUB_IFDS_TAG);
+
+        self::assertNotNull($subIfdsEntry);
+        self::assertSame($subIfdOffset, $subIfdsEntry->value);
     }
 
     /**
@@ -598,6 +615,38 @@ final class TiffExifReaderTest extends TestCase
         $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
 
         return $header . $ifd0 . $exifIfd;
+    }
+
+    /**
+     * Builds a Classic TIFF blob containing a SubIFDs tag that references an external IFD.
+     *
+     * @return array{0: string, 1: int}
+     */
+    private function buildClassicSubIfdBlob(): array
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0EntryCount         = 1;
+        $ifd0Size               = 2 + ($ifd0EntryCount * 12) + 4;
+        $pointerArrayOffset     = 8 + $ifd0Size;
+        $subIfdOffset           = 64;
+
+        $ifd0Entries = [
+            self::packClassicEntry(self::SUB_IFDS_TAG, 13, 1, $pointerArrayOffset),
+        ];
+
+        $blob = $header;
+        $blob .= pack('v', $ifd0EntryCount) . implode('', $ifd0Entries) . pack('V', 0);
+        $blob .= pack('V', $subIfdOffset);
+
+        $blob = str_pad($blob, $subIfdOffset, "\0", STR_PAD_RIGHT);
+
+        $subIfdEntries = [
+            self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1),
+        ];
+        $blob .= pack('v', count($subIfdEntries)) . implode('', $subIfdEntries) . pack('V', 0);
+
+        return [$blob, $subIfdOffset];
     }
 
     /**

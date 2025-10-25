@@ -71,6 +71,8 @@ final class TiffExifReader
 
     private const int TYPE_DOUBLE = 12;
 
+    private const int TYPE_IFD = 13;
+
     private const int TYPE_LONG8 = 16;
 
     private const int TYPE_SLONG8 = 17;
@@ -289,7 +291,8 @@ final class TiffExifReader
                 // SSHORT
                 self::TYPE_SSHORT => $this->unpackS16(substr($bytes, $cursor, 2)),
                 // LONG
-                self::TYPE_LONG => $this->unpackU32(substr($bytes, $cursor, 4)),
+                self::TYPE_LONG,
+                self::TYPE_IFD => $this->unpackU32(substr($bytes, $cursor, 4)),
                 // SLONG
                 self::TYPE_SLONG => $this->unpackS32(substr($bytes, $cursor, 4)),
                 // LONG8 / IFD8
@@ -347,7 +350,7 @@ final class TiffExifReader
         $dataSize        = $unitSize * $count;
         $inlineThreshold = $this->bigTiff ? 8 : 4;
 
-        if ($dataSize <= $inlineThreshold) {
+        if ($type !== self::TYPE_IFD && $dataSize <= $inlineThreshold) {
             $raw = $this->uXToBytes($valueOrOffset, $inlineThreshold);
 
             return [substr($raw, 0, $dataSize), null];
@@ -444,6 +447,7 @@ final class TiffExifReader
 
             // LONG, SLONG, FLOAT
             self::TYPE_LONG,
+            self::TYPE_IFD,
             self::TYPE_SLONG,
             self::TYPE_FLOAT => 4,
 
