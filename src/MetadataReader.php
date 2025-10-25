@@ -67,7 +67,12 @@ final class MetadataReader
     /**
      * Extracts metadata from a JPEG container.
      *
-     * @param Stream $stream Source stream positioned at the start of the file.
+     * @param Stream  $stream     Source stream positioned at the start of the file.
+     * @param ?string $mimeType   MIME type associated with the inspected file.
+     * @param ?int    $fileSize   File size in bytes if it could be determined.
+     * @param ?string $extension  File extension detected from the path or stream.
+     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
+     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
      *
      * @return Metadata
      */
@@ -124,7 +129,12 @@ final class MetadataReader
     /**
      * Extracts metadata from an ISO Base Media File Format container.
      *
-     * @param Stream $stream Source stream positioned at the start of the file.
+     * @param Stream  $stream     Source stream positioned at the start of the file.
+     * @param ?string $mimeType   MIME type associated with the inspected file.
+     * @param ?int    $fileSize   File size in bytes if it could be determined.
+     * @param ?string $extension  File extension detected from the path or stream.
+     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
+     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
      *
      * @return Metadata
      */
