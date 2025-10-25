@@ -714,6 +714,97 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures "Standard" HDR image types do not force HDR scenes without supporting hints.
+     */
+    #[Test]
+    public function treatsStandardHdrImageTypeAsNonHdrHint(): void
+    {
+        $standardMakerNotes = new AppleMakerNotes(
+            contentIdentifier: null,
+            cameraType: null,
+            hdrHeadroom: null,
+            hdrGain: null,
+            snr: null,
+            focusPosition: null,
+            livePhotoIndex: null,
+            colorTemperature: null,
+            semanticStylePreset: null,
+            semanticStyleWarmth: null,
+            semanticStyleTone: null,
+            flags: [],
+            accelerationVector: null,
+            livePhotoTime: null,
+            runTime: null,
+            makerNoteVersion: null,
+            hdrImageType: 'Standard',
+        );
+
+        $makerNotes = new MakerNotesMetadata('Apple', 8, str_repeat('c', 40), $standardMakerNotes);
+        $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
+        $metadata = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNull($structured->scene->hdrScene);
+
+        $headroomMakerNotes = new AppleMakerNotes(
+            contentIdentifier: null,
+            cameraType: null,
+            hdrHeadroom: 1.2,
+            hdrGain: null,
+            snr: null,
+            focusPosition: null,
+            livePhotoIndex: null,
+            colorTemperature: null,
+            semanticStylePreset: null,
+            semanticStyleWarmth: null,
+            semanticStyleTone: null,
+            flags: [],
+            accelerationVector: null,
+            livePhotoTime: null,
+            runTime: null,
+            makerNoteVersion: null,
+            hdrImageType: 'Standard',
+        );
+
+        $headroomMakerNotesMeta = new MakerNotesMetadata('Apple', 9, str_repeat('d', 40), $headroomMakerNotes);
+        $headroomExif = new ExifDocument(new Ifd([]), null, null, null, null, $headroomMakerNotesMeta);
+        $headroomMetadata = new Metadata(['primary'], new QuickTimeMeta([]), $headroomExif, [], null, $headroomMakerNotesMeta);
+
+        $structuredHeadroom = (new StructuredMetadataBuilder())->build($headroomMetadata);
+
+        self::assertTrue($structuredHeadroom->scene->hdrScene);
+
+        $flagMakerNotes = new AppleMakerNotes(
+            contentIdentifier: null,
+            cameraType: null,
+            hdrHeadroom: null,
+            hdrGain: null,
+            snr: null,
+            focusPosition: null,
+            livePhotoIndex: null,
+            colorTemperature: null,
+            semanticStylePreset: null,
+            semanticStyleWarmth: null,
+            semanticStyleTone: null,
+            flags: ['hdrEnabled' => true],
+            accelerationVector: null,
+            livePhotoTime: null,
+            runTime: null,
+            makerNoteVersion: null,
+            hdrImageType: 'Standard',
+        );
+
+        $flagMakerNotesMeta = new MakerNotesMetadata('Apple', 10, str_repeat('e', 40), $flagMakerNotes);
+        $flagExif = new ExifDocument(new Ifd([]), null, null, null, null, $flagMakerNotesMeta);
+        $flagMetadata = new Metadata(['primary'], new QuickTimeMeta([]), $flagExif, [], null, $flagMakerNotesMeta);
+
+        $structuredFlags = (new StructuredMetadataBuilder())->build($flagMetadata);
+
+        self::assertTrue($structuredFlags->scene->hdrScene);
+    }
+
+    /**
      * Ensures maker note flags alone populate scene metadata when QuickTime metadata is absent.
      */
     #[Test]
