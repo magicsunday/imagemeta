@@ -97,6 +97,10 @@ final class JpegExtractor
 
     private ?int $frameBitsPerSample = null;
 
+    private ?int $frameHeight = null;
+
+    private ?int $frameWidth = null;
+
     /** @var array<int, array{horizontal: int, vertical: int}>|null */
     private ?array $frameComponentSampling = null;
 
@@ -183,6 +187,26 @@ final class JpegExtractor
     }
 
     /**
+     * Returns the frame height reported by the primary start of frame segment.
+     */
+    public function getFrameHeight(): ?int
+    {
+        $this->parseIfNeeded();
+
+        return $this->frameHeight;
+    }
+
+    /**
+     * Returns the frame width reported by the primary start of frame segment.
+     */
+    public function getFrameWidth(): ?int
+    {
+        $this->parseIfNeeded();
+
+        return $this->frameWidth;
+    }
+
+    /**
      * Returns the horizontal and vertical sampling factors for components identified in the SOF.
      *
      * @return array<int, array{horizontal:int, vertical:int}>|null
@@ -231,6 +255,8 @@ final class JpegExtractor
         $this->frameBitsPerSample     = null;
         $this->frameComponentSampling = null;
         $this->frameYCbCrSubSampling  = null;
+        $this->frameHeight            = null;
+        $this->frameWidth             = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -492,6 +518,14 @@ final class JpegExtractor
             ];
 
             $index += 3;
+        }
+
+        if ($this->frameHeight === null) {
+            $this->frameHeight = (ord($payload[1]) << 8) | ord($payload[2]);
+        }
+
+        if ($this->frameWidth === null) {
+            $this->frameWidth = (ord($payload[3]) << 8) | ord($payload[4]);
         }
 
         $this->frameBitsPerSample     = ord($payload[0]);

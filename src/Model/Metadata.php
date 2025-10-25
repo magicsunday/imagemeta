@@ -56,6 +56,10 @@ final class Metadata
     /** @var array{0:int,1:int}|null */
     public readonly ?array $jpegYCbCrSubSampling;
 
+    public readonly ?int $jpegFrameWidth;
+
+    public readonly ?int $jpegFrameHeight;
+
     public readonly ?string $mimeType;
 
     public readonly ?int $fileSize;
@@ -81,6 +85,8 @@ final class Metadata
      * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by
      *                                                                                       identifier.
      * @param array{0:int,1:int}|null                              $jpegYCbCrSubSampling     Derived YCbCr subsampling from the JPEG frame header.
+     * @param int|null                                             $jpegFrameWidth           Frame width reported by the JPEG start of frame marker.
+     * @param int|null                                             $jpegFrameHeight          Frame height reported by the JPEG start of frame marker.
      * @param string|null                                          $mimeType                 Detected mime type for the source file.
      * @param int|null                                             $fileSize                 Size of the source file in bytes.
      * @param string|null                                          $extension                Lowercase file extension extracted from the path.
@@ -104,6 +110,8 @@ final class Metadata
         ?string $extension = null,
         ?string $digestSha1 = null,
         ?string $digestMd5 = null,
+        ?int $jpegFrameWidth = null,
+        ?int $jpegFrameHeight = null,
     ) {
         $this->exifBlobs                = $exifBlobs;
         $this->quickTime                = $quickTime;
@@ -121,6 +129,8 @@ final class Metadata
         $this->extension                = $extension;
         $this->digestSha1               = $digestSha1;
         $this->digestMd5                = $digestMd5;
+        $this->jpegFrameWidth           = $jpegFrameWidth;
+        $this->jpegFrameHeight          = $jpegFrameHeight;
     }
 
     /**
