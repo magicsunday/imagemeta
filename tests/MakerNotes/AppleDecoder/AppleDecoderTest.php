@@ -31,8 +31,68 @@ use function strlen;
 final class AppleDecoderTest extends TestCase
 {
     /**
-     * Ensures the decoder extracts structured Apple maker note data from a representative payload.
+     * Ensures the decoder resolves keyed archive maker note data into structured metadata.
      */
+    #[Test]
+    public function decodeUnarchivesKeyedArchivePayload(): void
+    {
+        $hex = ''
+            . '62706c6973743030d40102030405066e725924617263686976657258246f626a656374735424746f70582476657273696f6e5f100f4e534b65796564'
+            . '4172636869766572af101f07080f101112131415161718191a1b1c1d1e1f232425262728292d2e2f303155246e756c6cd2090a0b0c5824636c617373'
+            . '65735a24636c6173736e616d65a30c0d0e5f10134e534d757461626c6544696374696f6e6172795c4e5344696374696f6e617279584e534f626a6563'
+            . '745f1011436f6e74656e744964656e7469666965725b48647248656164726f6f6d574864724761696e5a534e5253657474696e675d466f637573506f'
+            . '736974696f6e5f10134c69766550686f746f566964656f496e6465785f101353656d616e7469635374796c655072657365745f101353656d616e7469'
+            . '635374796c655761726d74685f101153656d616e7469635374796c65546f6e655f1012416363656c65726174696f6e566563746f725f101550686f74'
+            . '6f7341707046656174757265466c6167735a5363656e65466c6167735f1014496d61676550726f63657373696e67466c6167735d4c69766550686f74'
+            . '6f4175746f5f101361726368697665642d70686f746f2d7575696423400a000000000000a3202122233ff0000000000000233ff8000000000000233f'
+            . 'fc000000000000234037800000000000233fe28f5c28f5c28f10055c4472616d617469635761726d233fd333333333333323bfc3333333333333a32a'
+            . '2b2c233fbeb851eb851eb823bfd5c28f5c28f5c3233fe1eb851eb851ec10151002100309d33233343538525624636c617373574e532e6b6579735a4e'
+            . '532e6f626a65637473d13637564346245549441001ae393a3b3d3e40424446484a4c4e50d1362ed1362fd1363c1004d13625d1363f1006d136411007'
+            . 'd136431008d136451009d13647100ad13649100bd1364b100cd1364d100dd1364f100ed13651100fae535557595b5d5e60626466686a6cd136541010'
+            . 'd136561011d136581012d1365a1013d1365c1014d1362dd1365f1016d136611017d136631018d136651019d13667101ad13669101bd1366b101cd136'
+            . '6d101dd16f7054726f6f74d13671101e12000186a000080011001b00240029003200440066006c0071007a00850089009f00ac00b500c900d500dd00'
+            . 'e800f6010c01220138014c016101790184019b01a901bf01c801cc01d501de01e701f001f901fb02080211021a021e022702300239023b023d023f02'
+            . '400247024e025602610264026b026d027c027f028202850287028a028d028f0292029402970299029c029e02a102a302a602a802ab02ad02b002b202'
+            . 'b502b702ba02bc02cb02ce02d002d302d502d802da02dd02df02e202e402e702ea02ec02ef02f102f402f602f902fb02fe0300030303050308030a03'
+            . '0d030f03120317031a031c0000000000000201000000000000007300000000000000000000000000000321'
+        ;
+        $raw = (string) hex2bin($hex);
+        $decoder = new AppleDecoder();
+
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
+        self::assertEqualsWithDelta(3.25, $apple->hdrHeadroom, 1e-12);
+        self::assertSame([1.0, 1.5, 1.75], $apple->hdrGain);
+        self::assertEqualsWithDelta(23.5, $apple->snr, 1e-12);
+        self::assertEqualsWithDelta(0.58, $apple->focusPosition, 1e-12);
+        self::assertSame(5, $apple->livePhotoIndex);
+        self::assertSame('DramaticWarm', $apple->semanticStylePreset);
+        self::assertEqualsWithDelta(0.3, $apple->semanticStyleWarmth, 1e-12);
+        self::assertEqualsWithDelta(-0.15, $apple->semanticStyleTone, 1e-12);
+        self::assertSame([0.12, -0.34, 0.56], $apple->accelerationVector);
+
+        self::assertArrayHasKey('livePhoto', $apple->flags);
+        self::assertArrayHasKey('livePhotoAuto', $apple->flags);
+        self::assertArrayHasKey('livePhotoEnabled', $apple->flags);
+        self::assertArrayHasKey('livePhotoLongExposure', $apple->flags);
+        self::assertArrayHasKey('hdrAuto', $apple->flags);
+        self::assertArrayHasKey('hdrEnabled', $apple->flags);
+        self::assertArrayHasKey('longExposure', $apple->flags);
+
+        self::assertTrue($apple->flags['livePhoto']);
+        self::assertTrue($apple->flags['livePhotoAuto']);
+        self::assertTrue($apple->flags['livePhotoEnabled']);
+        self::assertTrue($apple->flags['livePhotoLongExposure']);
+        self::assertTrue($apple->flags['hdrAuto']);
+        self::assertTrue($apple->flags['hdrEnabled']);
+        self::assertTrue($apple->flags['longExposure']);
+    }
+
     #[Test]
     public function decodeParsesAppleMakerNotes(): void
     {

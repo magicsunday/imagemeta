@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
 
 use function array_is_list;
 use function array_key_exists;
@@ -114,7 +115,63 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
+        if ($this->isKeyedArchive($decoded)) {
+            try {
+                $decoded = (new KeyedArchiveUnarchiver())->unarchive($decoded);
+            } catch (ParseError) {
+                return null;
+            }
+        }
+
+        if (!is_array($decoded) || array_is_list($decoded)) {
+            return null;
+        }
+
         return $this->buildAppleMakerNotes($decoded);
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function isKeyedArchive(array $dictionary): bool
+    {
+        if (!array_key_exists('$archiver', $dictionary)) {
+            return false;
+        }
+
+        if (!array_key_exists('$top', $dictionary) || !is_array($dictionary['$top'])) {
+            return false;
+        }
+
+        if (!array_key_exists('$objects', $dictionary) || !is_array($dictionary['$objects'])) {
+            return false;
+        }
+
+        $top = $dictionary['$top'];
+
+        if (!is_array($top)) {
+            return false;
+        }
+
+        return $this->containsUidReference($top);
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $value
+     */
+    private function containsUidReference(array $value): bool
+    {
+        if (array_key_exists('CF$UID', $value)) {
+            return true;
+        }
+
+        foreach ($value as $entry) {
+            if (is_array($entry) && $this->containsUidReference($entry)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
