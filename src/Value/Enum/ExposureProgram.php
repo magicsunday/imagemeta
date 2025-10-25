@@ -23,10 +23,10 @@ enum ExposureProgram: int
     case NORMAL            = 2;
     case APERTURE_PRIORITY = 3;
     case SHUTTER_PRIORITY  = 4;
-    case CREATIVE          = 5;
-    case ACTION            = 6;
-    case PORTRAIT          = 7;
-    case LANDSCAPE         = 8;
+    case CREATIVE_PROGRAM  = 5;
+    case ACTION_PROGRAM    = 6;
+    case PORTRAIT_MODE     = 7;
+    case LANDSCAPE_MODE    = 8;
     case BULB              = 9;
 
     /**
