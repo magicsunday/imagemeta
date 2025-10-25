@@ -96,6 +96,16 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     ];
 
     /**
+     * Maker note keys that encode the Live Photo still frame index.
+     *
+     * @var array<int, string>
+     */
+    private const array LIVE_PHOTO_INDEX_KEYS = [
+        'LivePhotoVideoIndex',
+        'LivePhotoMovieIndex',
+    ];
+
+    /**
      * Creates a metadata value object describing the Apple maker note payload.
      *
      * @param string      $raw   Raw maker note data stream.
@@ -617,7 +627,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $snr                  = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
         $focusPosition        = $this->floatValue($dictionary, 'FocusPosition');
         $runTime              = $this->runTimeValue($dictionary, 'RunTime');
-        $livePhotoIndex       = $this->intValue($dictionary, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
+        $livePhotoIndex       = $this->intValue($dictionary, ...self::LIVE_PHOTO_INDEX_KEYS);
         $livePhotoTime        = null;
         if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
             $timescale = $runTime->timescale;

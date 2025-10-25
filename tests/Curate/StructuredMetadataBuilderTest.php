@@ -519,6 +519,20 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     #[Test]
+    public function usesQuickTimeMovieIndexWhenMakerNotesMissing(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            'LivePhotoMovieIndex' => 6,
+        ]);
+
+        $metadata   = new Metadata([], $quickTime);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(6, $structured->apple->livePhotoIndex);
+        self::assertNull($structured->apple->livePhotoTime);
+    }
+
+    #[Test]
     public function propagatesBitmaskFlagsFromAppleMakerNotes(): void
     {
         $decoder = new AppleDecoder();

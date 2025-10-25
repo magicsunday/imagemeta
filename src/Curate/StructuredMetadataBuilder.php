@@ -762,7 +762,7 @@ final class StructuredMetadataBuilder
 
         $livePhotoIndex = $makerNotes?->livePhotoIndex;
         if ($livePhotoIndex === null) {
-            $livePhotoIndex = $this->quickTimeInt($quickTimeResolver, 'LivePhotoVideoIndex');
+            $livePhotoIndex = $this->quickTimeInt($quickTimeResolver, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
         }
 
         $livePhotoTime = $makerNotes?->livePhotoTime;
