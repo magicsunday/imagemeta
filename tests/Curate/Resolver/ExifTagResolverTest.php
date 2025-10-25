@@ -312,6 +312,9 @@ final class ExifTagResolverTest extends TestCase
     {
         $ifd0 = new Ifd([
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Evening scene'),
+            ExifTag::IMAGE_TITLE       => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Evening Glow'),
+            ExifTag::PHOTOGRAPHER      => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Jamie Doe'),
+            ExifTag::IMAGE_EDITOR      => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Casey Edit'),
         ]);
 
         $exifIfd = new Ifd([
@@ -319,9 +322,6 @@ final class ExifTagResolverTest extends TestCase
             ExifTag::SCENE_TYPE                => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
             ExifTag::CFA_PATTERN               => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x00\x01\x02\x03"),
             ExifTag::CUSTOM_RENDERED           => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
-            ExifTag::IMAGE_TITLE               => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Evening Glow'),
-            ExifTag::PHOTOGRAPHER              => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Jamie Doe'),
-            ExifTag::IMAGE_EDITOR              => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Casey Edit'),
             ExifTag::CAMERA_FIRMWARE           => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW Main'),
             ExifTag::RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Studio'),
             ExifTag::IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Pixel Edit'),

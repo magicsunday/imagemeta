@@ -561,6 +561,9 @@ final class ExifDocumentTest extends TestCase
     {
         $ifd0 = new Ifd([
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Coastal cliffs'),
+            ExifTag::IMAGE_TITLE       => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Cliffside Dusk'),
+            ExifTag::PHOTOGRAPHER      => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Alex Light'),
+            ExifTag::IMAGE_EDITOR      => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Chris Edit'),
         ]);
 
         $exifIfd = new Ifd([
@@ -593,9 +596,6 @@ final class ExifDocumentTest extends TestCase
             ExifTag::CFA_PATTERN                 => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x02\x01\x01\x02"),
             ExifTag::CUSTOM_RENDERED             => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
             ExifTag::DEVICE_SETTING_DESCRIPTION  => new IfdEntry(ExifTag::DEVICE_SETTING_DESCRIPTION, 7, 1, 'Neutral profile'),
-            ExifTag::IMAGE_TITLE                 => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Cliffside Dusk'),
-            ExifTag::PHOTOGRAPHER                => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Alex Light'),
-            ExifTag::IMAGE_EDITOR                => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Chris Edit'),
             ExifTag::CAMERA_FIRMWARE             => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 2.0'),
             ExifTag::RAW_DEVELOPING_SOFTWARE     => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RawLab'),
             ExifTag::IMAGE_EDITING_SOFTWARE      => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'EditLab'),
