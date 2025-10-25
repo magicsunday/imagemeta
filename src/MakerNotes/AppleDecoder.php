@@ -84,7 +84,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         0 => 'Standard',
         1 => 'HDR',
         2 => 'HDR2',
-        3 => 'HDR3',
+        3 => 'HDR Image',
+        4 => 'Original Image',
     ];
 
     /**

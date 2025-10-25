@@ -319,6 +319,36 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    #[DataProvider('hdrImageTypeProvider')]
+    public function buildAppleMakerNotesMapsHdrImageTypeCodes(int $code, string $label): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier' => 'hdr-' . $code,
+            'HDRImageType'      => $code,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame($label, $notes->hdrImageType);
+    }
+
+    /**
+     * @return iterable<int, array{int, string}>
+     */
+    public static function hdrImageTypeProvider(): iterable
+    {
+        yield 'Standard' => [0, 'Standard'];
+        yield 'HDR' => [1, 'HDR'];
+        yield 'HDR2' => [2, 'HDR2'];
+        yield 'HDR Image' => [3, 'HDR Image'];
+        yield 'Original Image' => [4, 'Original Image'];
+    }
+
+    #[Test]
     #[DataProvider('imageCaptureTypeProvider')]
     public function buildAppleMakerNotesMapsImageCaptureTypeCodes(int $code, string $label): void
     {
