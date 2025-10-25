@@ -387,6 +387,7 @@ final readonly class ValueConverters
             $known = [
                 '0100',
                 '0110',
+                '0200',
                 '0210',
                 '0220',
                 '0221',
