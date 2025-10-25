@@ -19,6 +19,9 @@ use function is_int;
 
 /**
  * Represents a single entry within an image file directory (IFD).
+ *
+ * @phpstan-type ExifScalarValue int|float|string|ExifRational|ExifRationalList|ExifNumericList
+ * @phpstan-type ExifInputValue ExifScalarValue|array<int|string, int|float|array<int|string, int|float>>
  */
 final readonly class IfdEntry
 {
@@ -33,10 +36,10 @@ final readonly class IfdEntry
     /**
      * Normalises raw decoded values so callers may provide convenient array representations.
      *
-     * @param int                                                                                                        $tag   The numeric identifier of the entry.
-     * @param int                                                                                                        $type  The TIFF field type code.
-     * @param int                                                                                                        $count The number of values stored in the entry.
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|array<int, int|float|array<int, int|float>> $value The raw value or values decoded from the IFD.
+     * @param int            $tag   The numeric identifier of the entry.
+     * @param int            $type  The TIFF field type code.
+     * @param int            $count The number of values stored in the entry.
+     * @param ExifInputValue $value The raw value or values decoded from the IFD.
      */
     public function __construct(
         int $tag,
@@ -53,11 +56,11 @@ final readonly class IfdEntry
     /**
      * Converts shorthand array inputs into strongly typed EXIF value objects.
      *
-     * @param int                                                                                                        $type  TIFF field type code describing the payload.
-     * @param int                                                                                                        $count Number of values stored for the entry.
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|array<int, int|float|array<int, int|float>> $value Raw value passed to the constructor.
+     * @param int            $type  TIFF field type code describing the payload.
+     * @param int            $count Number of values stored for the entry.
+     * @param ExifInputValue $value Raw value passed to the constructor.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
+     * @return ExifScalarValue
      */
     private function normaliseValue(
         int $type,

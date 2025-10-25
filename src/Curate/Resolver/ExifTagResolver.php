@@ -54,7 +54,6 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function ord;
-use function round;
 use function strtolower;
 use function trim;
 
@@ -1278,15 +1277,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->gpsField('alt_ref');
 
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) round($value);
-        }
-
-        return null;
+        return is_int($value) ? $value : null;
     }
 
     /**
@@ -1360,7 +1351,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->gpsField('dop');
 
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1438,7 +1429,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->gpsField('dest_lat');
 
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1458,7 +1449,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->gpsField('dest_lon');
 
-        return is_float($value) ? $value : (is_int($value) ? (float) $value : null);
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1531,6 +1522,8 @@ final readonly class ExifTagResolver
 
     /**
      * Returns a single field from the cached GPS metadata map.
+     *
+     * @return string|int|float|DateTimeImmutable|null
      */
     private function gpsField(string $key): string|int|float|DateTimeImmutable|null
     {
@@ -2024,7 +2017,9 @@ final readonly class ExifTagResolver
     /**
      * Sanitises associative or nested arrays into rational numerator/denominator pairs.
      *
-     * @param array<int, mixed> $value
+     * @param array<int|string, int|float|string|array<int|string, int|float|string|null>> $value
+     *
+     * @phpstan-param array<int|string, int|float|string|array<int|string, int|float|string|null>> $value
      *
      * @return array<int, int|float|string>|null
      */
