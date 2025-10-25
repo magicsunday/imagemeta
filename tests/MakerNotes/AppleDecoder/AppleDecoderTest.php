@@ -22,6 +22,7 @@ use ReflectionMethod;
 use function hex2bin;
 use function sha1;
 use function str_repeat;
+use function str_replace;
 use function strlen;
 
 /**
@@ -160,6 +161,21 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    public function decodeResolvesLivePhotoMovieIndex(): void
+    {
+        $raw     = $this->buildMakerNotesBlobWithMovieIndex();
+        $decoder = new AppleDecoder();
+
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame(2, $apple->livePhotoIndex);
+    }
+
+    #[Test]
     public function decodeMapsSemanticStyleFromCompactArray(): void
     {
         $raw     = (string) hex2bin('62706c6973743030d2010203045f1011436f6e74656e744964656e7469666965725d53656d616e7469635374796c655d636f6d706163742d7374796c65d405060708090a0b0c525f30525f31525f32525f33555669766964233fd000000000000023bfb999999999999a1001080d212f3d46494c4f5258616a0000000000000101000000000000000d0000000000000000000000000000006c');
@@ -252,6 +268,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(600, $notes->runTime?->timescale);
         self::assertSame(1500, $notes->runTime?->value);
         self::assertSame(5, $notes->runTime?->flags);
+    }
+
+    private function buildMakerNotesBlobWithMovieIndex(): string
+    {
+        return str_replace('LivePhotoVideoIndex', 'LivePhotoMovieIndex', $this->buildMakerNotesBlob());
     }
 
     private function buildMakerNotesBlob(): string

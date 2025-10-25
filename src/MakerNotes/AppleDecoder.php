@@ -316,7 +316,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $snr                  = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
         $focusPosition        = $this->floatValue($dictionary, 'FocusPosition');
         $runTime              = $this->runTimeValue($dictionary, 'RunTime');
-        $livePhotoIndex       = $this->intValue($dictionary, 'LivePhotoVideoIndex');
+        $livePhotoIndex       = $this->intValue($dictionary, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
         $livePhotoTime        = null;
         if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
             $timescale = $runTime->timescale;
