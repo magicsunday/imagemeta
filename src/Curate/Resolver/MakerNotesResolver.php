@@ -19,6 +19,11 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
  */
 final readonly class MakerNotesResolver
 {
+    /**
+     * Wraps optional maker note metadata for vendor-specific lookups.
+     *
+     * @param MakerNotesMetadata|null $metadata Parsed maker note metadata aggregate.
+     */
     public function __construct(private ?MakerNotesMetadata $metadata)
     {
     }

@@ -63,6 +63,11 @@ use function trim;
  */
 final readonly class ExifTagResolver
 {
+    /**
+     * Wraps an optional EXIF document for high level tag lookups.
+     *
+     * @param ExifDocument|null $document Parsed EXIF document instance.
+     */
     public function __construct(private ?ExifDocument $document)
     {
     }

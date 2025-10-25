@@ -359,6 +359,14 @@ final readonly class RegionsResolver
         return $bestIndex;
     }
 
+    /**
+     * Merges overlapping region metadata, preferring existing geometry while enriching attributes.
+     *
+     * @param Region $base        Primary region resolved from MWG metadata.
+     * @param Region $supplement  Supplementary region derived from Apple metadata.
+     *
+     * @return Region Combined region carrying the most complete metadata set.
+     */
     private function mergeRegion(Region $base, Region $supplement): Region
     {
         $person     = $base->personName ?? $supplement->personName;
@@ -518,6 +526,13 @@ final readonly class RegionsResolver
         ];
     }
 
+    /**
+     * Constrains a normalised coordinate to the unit interval.
+     *
+     * @param float $value Coordinate or dimension value to clamp.
+     *
+     * @return float Value restricted to the range [0.0, 1.0].
+     */
     private function clamp(float $value): float
     {
         if ($value < 0.0) {

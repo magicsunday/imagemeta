@@ -645,6 +645,15 @@ final class StructuredMetadataBuilder
         );
     }
 
+    /**
+     * Builds the Apple metadata aggregate by combining maker note values with QuickTime fallbacks.
+     *
+     * @param AppleMakerNotes|null $makerNotes Parsed Apple maker note payload.
+     * @param QuickTimeResolver    $quickTimeResolver Resolver exposing QuickTime metadata entries.
+     * @param QuickTimeMeta|null   $quickTimeMeta QuickTime metadata container used for content identifiers.
+     *
+     * @return Apple Apple metadata value object with normalised fields.
+     */
     private function buildApple(
         ?AppleMakerNotes $makerNotes,
         QuickTimeResolver $quickTimeResolver,
@@ -735,6 +744,13 @@ final class StructuredMetadataBuilder
         );
     }
 
+    /**
+     * Builds the motion metadata aggregate from the Apple acceleration vector.
+     *
+     * @param AppleMakerNotes|null $makerNotes Parsed Apple maker note payload.
+     *
+     * @return Motion Motion metadata aggregate with per-axis acceleration.
+     */
     private function buildMotion(?AppleMakerNotes $makerNotes): Motion
     {
         $vector = $makerNotes?->accelerationVector;
@@ -752,6 +768,14 @@ final class StructuredMetadataBuilder
         return new Motion(null, null, null, $accelX, $accelY, $accelZ, null, null, null);
     }
 
+    /**
+     * Resolves the first non-empty QuickTime string value from the supplied keys.
+     *
+     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param string            ...$keys Candidate metadata keys to inspect in order.
+     *
+     * @return string|null First matching string value or null when no value is present.
+     */
     private function quickTimeString(QuickTimeResolver $resolver, string ...$keys): ?string
     {
         foreach ($keys as $key) {
@@ -764,6 +788,14 @@ final class StructuredMetadataBuilder
         return null;
     }
 
+    /**
+     * Resolves the first available QuickTime float value from the provided keys.
+     *
+     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param string            ...$keys Candidate metadata keys to inspect in order.
+     *
+     * @return float|null First matching float value or null when no value is present.
+     */
     private function quickTimeFloat(QuickTimeResolver $resolver, string ...$keys): ?float
     {
         foreach ($keys as $key) {
@@ -776,6 +808,14 @@ final class StructuredMetadataBuilder
         return null;
     }
 
+    /**
+     * Resolves the first available QuickTime integer value from the provided keys.
+     *
+     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param string            ...$keys Candidate metadata keys to inspect in order.
+     *
+     * @return int|null First matching integer value or null when no value is present.
+     */
     private function quickTimeInt(QuickTimeResolver $resolver, string ...$keys): ?int
     {
         foreach ($keys as $key) {

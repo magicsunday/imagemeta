@@ -18,6 +18,17 @@ use MagicSunday\ImageMeta\Core\StreamWindow;
  */
 final readonly class BoxDescriptor
 {
+    /**
+     * Initialises the immutable box descriptor with layout and payload information.
+     *
+     * @param string       $type          Four-character box type.
+     * @param int          $size          Total box size including header.
+     * @param int          $offset        Absolute offset of the box within the stream.
+     * @param int          $contentOffset Offset to the box payload relative to the stream.
+     * @param int          $contentSize   Size of the box payload in bytes.
+     * @param StreamWindow $window        Stream window exposing the box payload.
+     * @param string|null  $userType      UUID for user boxes when applicable.
+     */
     public function __construct(
         public string $type,
         public int $size,

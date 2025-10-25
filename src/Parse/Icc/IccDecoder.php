@@ -158,6 +158,13 @@ final class IccDecoder
         return $iccData;
     }
 
+    /**
+     * Extracts the ICC specification version string from the profile header.
+     *
+     * @param string $data Raw ICC profile payload.
+     *
+     * @return string|null Human readable version or null when unavailable.
+     */
     private function extractVersion(string $data): ?string
     {
         $majorByte     = ord($data[8]);
@@ -181,6 +188,13 @@ final class IccDecoder
             : sprintf('%d.%d', $major, $minor);
     }
 
+    /**
+     * Normalises a 4-byte signature by uppercasing and validating its contents.
+     *
+     * @param string $signature Raw 4-byte signature string.
+     *
+     * @return string|null Uppercased signature or null when invalid.
+     */
     private function extractSignature(string $signature): ?string
     {
         if ($signature === '' || strlen($signature) < 4) {
@@ -190,6 +204,13 @@ final class IccDecoder
         return strtoupper($signature);
     }
 
+    /**
+     * Maps the rendering intent field from the profile header to a descriptive label.
+     *
+     * @param string $data Raw ICC profile payload.
+     *
+     * @return string|null Rendering intent description or null when unknown.
+     */
     private function extractRenderingIntent(string $data): ?string
     {
         $intent = $this->uInt32Be(substr($data, 64, 4));
@@ -197,6 +218,13 @@ final class IccDecoder
         return self::RENDERING_INTENT_MAP[$intent] ?? null;
     }
 
+    /**
+     * Extracts the profile ID digest when present.
+     *
+     * @param string $data Raw ICC profile payload.
+     *
+     * @return string|null Uppercased hexadecimal profile identifier or null when unset.
+     */
     private function extractProfileId(string $data): ?string
     {
         $profileId = substr($data, 84, 16);
@@ -207,6 +235,14 @@ final class IccDecoder
         return strtoupper(bin2hex($profileId));
     }
 
+    /**
+     * Extracts the profile description from the tag table.
+     *
+     * @param string $data        Raw ICC profile payload.
+     * @param int    $profileSize Declared profile size limiting the accessible range.
+     *
+     * @return string|null Profile description text or null when not available.
+     */
     private function extractDescription(string $data, int $profileSize): ?string
     {
         if ($profileSize < self::HEADER_LENGTH + 4) {
@@ -266,6 +302,13 @@ final class IccDecoder
         return null;
     }
 
+    /**
+     * Parses an ICC 'desc' tag to retrieve its ASCII description.
+     *
+     * @param string $data Raw tag payload beginning with the type signature.
+     *
+     * @return string|null Extracted description or null when invalid.
+     */
     private function parseDescTag(string $data): ?string
     {
         if (strlen($data) < 12) {
@@ -288,6 +331,13 @@ final class IccDecoder
         return rtrim($text, "\0");
     }
 
+    /**
+     * Parses an ICC 'mluc' tag to extract the first non-empty UTF-16 value.
+     *
+     * @param string $data Raw tag payload beginning with the type signature.
+     *
+     * @return string|null Extracted description string or null when no valid record exists.
+     */
     private function parseMlucTag(string $data): ?string
     {
         if (strlen($data) < 16) {
@@ -328,6 +378,13 @@ final class IccDecoder
         return null;
     }
 
+    /**
+     * Converts a UTF-16BE encoded string to UTF-8 when possible.
+     *
+     * @param string $data Raw UTF-16BE encoded bytes.
+     *
+     * @return string|null Converted UTF-8 string or null when conversion fails.
+     */
     private function decodeUtf16Be(string $data): ?string
     {
         if ($data === '') {
@@ -362,6 +419,13 @@ final class IccDecoder
         return null;
     }
 
+    /**
+     * Converts up to four bytes into an unsigned big-endian integer.
+     *
+     * @param string $bytes Raw bytes to interpret as a big-endian integer.
+     *
+     * @return int Parsed unsigned integer value.
+     */
     private function uInt32Be(string $bytes): int
     {
         $bytes = substr($bytes . "\0\0\0\0", 0, 4);
