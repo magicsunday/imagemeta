@@ -17,8 +17,11 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 
 use function array_is_list;
 use function array_key_exists;
+use function array_unique;
+use function array_values;
 use function ctype_xdigit;
 use function hexdec;
+use function in_array;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -26,6 +29,7 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function sha1;
+use function sort;
 use function str_starts_with;
 use function strlen;
 use function substr;
@@ -54,25 +58,25 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     ];
 
     /**
-     * Maps bit masks provided by Apple maker note dictionaries to normalised flags.
+     * Maps Apple bitfield sources (indexed by zero-based bit position) to normalised flags.
      *
      * @var array<string, array<int, string>>
      */
     private const array FLAG_MASK_MAP = [
         'SceneFlags' => [
-            1 << 0 => 'nightMode',
-            1 << 1 => 'longExposure',
+            0 => 'nightMode',          // Bit 0 – night mode capture.
+            1 => 'longExposure',       // Bit 1 – long exposure tripod/night capture.
         ],
         'ImageProcessingFlags' => [
-            1 << 0 => 'hdrEnabled',
-            1 << 1 => 'hdrAuto',
+            0 => 'hdrEnabled',         // Bit 0 – HDR rendering enabled.
+            1 => 'hdrAuto',            // Bit 1 – HDR auto detection engaged.
         ],
         'PhotosAppFeatureFlags' => [
-            1 << 0 => 'livePhoto',
-            1 << 1 => 'livePhotoAuto',
-            1 << 2 => 'livePhotoEnabled',
-            1 << 3 => 'livePhotoActive',
-            1 << 4 => 'livePhotoLongExposure',
+            0 => 'livePhoto',          // Bit 0 – Live Photo asset present.
+            1 => 'livePhotoAuto',      // Bit 1 – Live Photo auto capture.
+            2 => 'livePhotoEnabled',   // Bit 2 – Live Photo enabled by the user.
+            3 => 'livePhotoActive',    // Bit 3 – Live Photo active during capture.
+            4 => 'livePhotoLongExposure', // Bit 4 – Live Photo long exposure fused asset.
         ],
     ];
 
@@ -425,19 +429,140 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $mask = $this->maskValue($dictionary[$makerKey]);
-            if ($mask === null) {
+            $enabledBits = $this->bitPositions($dictionary[$makerKey]);
+            if ($enabledBits === []) {
                 continue;
             }
 
-            foreach ($bitMap as $bit => $normalized) {
-                if (($mask & $bit) === $bit && !array_key_exists($normalized, $flags)) {
+            foreach ($bitMap as $bitPosition => $normalized) {
+                if (in_array($bitPosition, $enabledBits, true) && !array_key_exists($normalized, $flags)) {
                     $flags[$normalized] = true;
                 }
             }
         }
 
         return $flags;
+    }
+
+    /**
+     * Normalises Apple bitfield metadata to a list of enabled bit positions.
+     *
+     * Apple encodes bitfields either as integral masks (decimal/hex strings included) or
+     * as ordered collections enumerating the zero-based bit positions that are enabled.
+     * Nested collections can appear under helper keys such as "values" or "Flags".
+     *
+     * @param string|int|float|bool|array<int|string, mixed>|null $value
+     *
+     * @return list<int> Zero-based bit positions detected in the value.
+     */
+    private function bitPositions(string|int|float|bool|array|null $value): array
+    {
+        if (is_int($value)) {
+            return $this->bitPositionsFromMask($value);
+        }
+
+        if (is_float($value)) {
+            return $this->bitPositionsFromMask((int) $value);
+        }
+
+        if (is_string($value)) {
+            $normalized = trim($value);
+            if ($normalized === '') {
+                return [];
+            }
+
+            if (str_starts_with($normalized, '0x') || str_starts_with($normalized, '0X')) {
+                $hex = substr($normalized, 2);
+                if ($hex === '' || !ctype_xdigit($hex)) {
+                    return [];
+                }
+
+                return $this->bitPositionsFromMask((int) hexdec($hex));
+            }
+
+            if (!is_numeric($normalized)) {
+                return [];
+            }
+
+            return $this->bitPositionsFromMask((int) $normalized);
+        }
+
+        if (is_bool($value) || $value === null) {
+            return [];
+        }
+
+        if (!is_array($value) || $value === []) {
+            return [];
+        }
+
+        if (!array_is_list($value)) {
+            foreach (['flags', 'Flags', 'value', 'Value', 'mask', 'Mask', 'bitPositions', 'BitPositions'] as $key) {
+                if (array_key_exists($key, $value)) {
+                    return $this->bitPositions($value[$key]);
+                }
+            }
+
+            if (!array_key_exists('values', $value)) {
+                return [];
+            }
+
+            return $this->bitPositions($value['values']);
+        }
+
+        $positions = [];
+        foreach ($value as $entry) {
+            if (is_int($entry) || is_float($entry) || (is_string($entry) && is_numeric($entry))) {
+                $position = (int) $entry;
+                if ($position >= 0) {
+                    $positions[] = $position;
+                }
+
+                continue;
+            }
+
+            $nested = $this->bitPositions($entry);
+            if ($nested !== []) {
+                foreach ($nested as $bit) {
+                    $positions[] = $bit;
+                }
+            }
+        }
+
+        if ($positions === []) {
+            return [];
+        }
+
+        $positions = array_values(array_unique($positions, SORT_NUMERIC));
+        sort($positions);
+
+        return $positions;
+    }
+
+    /**
+     * Converts an integer bit mask into a list of zero-based bit positions.
+     *
+     * @param int $mask Bit mask with enabled bits set to 1.
+     *
+     * @return list<int>
+     */
+    private function bitPositionsFromMask(int $mask): array
+    {
+        if ($mask <= 0) {
+            return [];
+        }
+
+        $positions = [];
+        $bitIndex  = 0;
+        while ($mask !== 0) {
+            if (($mask & 1) === 1) {
+                $positions[] = $bitIndex;
+            }
+
+            $mask >>= 1;
+            $bitIndex++;
+        }
+
+        return $positions;
     }
 
     /**
@@ -477,85 +602,4 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return null;
     }
 
-    /**
-     * @param string|int|float|bool|array<int|string, mixed>|null $value
-     *
-     * @phpstan-param string|int|float|bool|null|array<int|string, mixed> $value
-     */
-    private function maskValue(string|int|float|bool|array|null $value): ?int
-    {
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) $value;
-        }
-
-        if (is_string($value)) {
-            $normalized = trim($value);
-            if ($normalized === '') {
-                return null;
-            }
-
-            if (str_starts_with($normalized, '0x') || str_starts_with($normalized, '0X')) {
-                $hex = substr($normalized, 2);
-                if ($hex !== '' && ctype_xdigit($hex)) {
-                    return (int) hexdec($hex);
-                }
-
-                return null;
-            }
-
-            if (is_numeric($normalized)) {
-                return (int) $normalized;
-            }
-
-            return null;
-        }
-
-        if (is_bool($value) || $value === null) {
-            return null;
-        }
-
-        if (!is_array($value)) {
-            return null;
-        }
-
-        if ($value === []) {
-            return null;
-        }
-
-        if (!array_is_list($value)) {
-            foreach (['flags', 'Flags', 'value', 'Value', 'mask', 'Mask'] as $key) {
-                if (array_key_exists($key, $value)) {
-                    $mask = $this->maskValue($value[$key]);
-                    if ($mask !== null) {
-                        return $mask;
-                    }
-                }
-            }
-
-            if (!array_key_exists('values', $value)) {
-                return null;
-            }
-
-            $values = $value['values'];
-            if (!is_array($values)) {
-                return $this->maskValue($values);
-            }
-
-            $value = $values;
-        }
-
-        $mask = 0;
-        foreach ($value as $entry) {
-            $part = $this->maskValue($entry);
-            if ($part !== null) {
-                $mask |= $part;
-            }
-        }
-
-        return $mask !== 0 ? $mask : null;
-    }
 }

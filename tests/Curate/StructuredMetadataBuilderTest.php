@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Curate;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
@@ -49,6 +50,7 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function str_repeat;
 
@@ -503,6 +505,43 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
         self::assertFalse($structured->scene->nightMode);
+    }
+
+    #[Test]
+    public function propagatesBitmaskFlagsFromAppleMakerNotes(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        $appleMakerNotes = $method->invoke($decoder, [
+            'ContentIdentifier'     => 'bitfield',
+            'SceneFlags'            => [0, 1],
+            'ImageProcessingFlags'  => ['values' => [0, 1]],
+            'PhotosAppFeatureFlags' => [0, 1, ['values' => [2, 3]], 4],
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $appleMakerNotes);
+
+        $makerNotes = new MakerNotesMetadata(
+            'Apple',
+            64,
+            str_repeat('b', 40),
+            $appleMakerNotes,
+        );
+
+        $metadata   = new Metadata(['primary'], null, null, [], null, $makerNotes);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertTrue($structured->apple->flags['nightMode']);
+        self::assertTrue($structured->apple->flags['longExposure']);
+        self::assertTrue($structured->apple->flags['hdrEnabled']);
+        self::assertTrue($structured->apple->flags['hdrAuto']);
+        self::assertTrue($structured->apple->flags['livePhoto']);
+        self::assertTrue($structured->apple->flags['livePhotoAuto']);
+        self::assertTrue($structured->apple->flags['livePhotoEnabled']);
+        self::assertTrue($structured->apple->flags['livePhotoActive']);
+        self::assertTrue($structured->apple->flags['livePhotoLongExposure']);
     }
 
     /**
