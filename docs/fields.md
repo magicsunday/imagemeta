@@ -26,7 +26,7 @@ Time zone offsets in `Temporal` are expressed as raw EXIF strings and minutes (`
 
 ## Circle of confusion model
 
-`ValueConverters::calcCircleOfConfusionMm()` assumes a full-frame reference circle of confusion of 0.029&nbsp;mm. When a crop
+`ValueConverters::calcCircleOfConfusionMm()` assumes a full-frame reference circle of confusion of 0.030&nbsp;mm. When a crop
 factor is available, the constant is divided by the crop factor to approximate the effective CoC for the captured format. If no
-crop factor can be derived the function keeps the 0.029&nbsp;mm baseline, and it returns `null` whenever an invalid (zero or
+crop factor can be derived the function keeps the 0.030&nbsp;mm baseline, and it returns `null` whenever an invalid (zero or
 negative) crop factor is encountered. This value feeds into the hyperfocal distance calculator and the three field-of-view helpers.

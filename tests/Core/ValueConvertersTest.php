@@ -128,12 +128,12 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(1.5, $cropFactor, 1e-12);
 
         $circleOfConfusion = ValueConverters::calcCircleOfConfusionMm($cropFactor);
-        self::assertEqualsWithDelta(0.019333333333333334, $circleOfConfusion, 1e-12);
-        self::assertEqualsWithDelta(0.029, ValueConverters::calcCircleOfConfusionMm(null), 1e-12);
+        self::assertEqualsWithDelta(0.02, $circleOfConfusion, 1e-12);
+        self::assertEqualsWithDelta(0.03, ValueConverters::calcCircleOfConfusionMm(null), 1e-12);
         self::assertNull(ValueConverters::calcCircleOfConfusionMm(0.0));
 
         $hyperfocal = ValueConverters::calcHyperfocalM(50.0, 8.0, $circleOfConfusion);
-        self::assertEqualsWithDelta(16.213793103448276, $hyperfocal, 1e-12);
+        self::assertEqualsWithDelta(15.675, $hyperfocal, 1e-12);
 
         self::assertEqualsWithDelta(32.179788109672, ValueConverters::calcFovDeg(75, $cropFactor, 50.0), 1e-12);
         self::assertEqualsWithDelta(26.991466561592, ValueConverters::calcHorizontalFovDeg(75, $cropFactor, 50.0), 1e-12);
@@ -199,8 +199,8 @@ final class ValueConvertersTest extends TestCase
             'focalLengthMm'             => 50.0,
             'fNumber'                   => 8.0,
             'expectedCropFactor'        => 1.5,
-            'expectedCircleOfConfusion' => 0.019333333333333334,
-            'expectedHyperfocal'        => 16.213793103448276,
+            'expectedCircleOfConfusion' => 0.02,
+            'expectedHyperfocal'        => 15.675,
             'expectedFovDiagonal'       => 32.179788109672,
             'expectedFovHorizontal'     => 26.991466561592,
             'expectedFovVertical'       => 18.180553841645,
@@ -211,8 +211,8 @@ final class ValueConvertersTest extends TestCase
             'focalLengthMm'             => 35.0,
             'fNumber'                   => 5.6,
             'expectedCropFactor'        => 1.4857142857142858,
-            'expectedCircleOfConfusion' => 0.019519230769230768,
-            'expectedHyperfocal'        => 11.241896551724139,
+            'expectedCircleOfConfusion' => 0.02019230769230769,
+            'expectedHyperfocal'        => 10.868333333333334,
             'expectedFovDiagonal'       => 45.17707757599993,
             'expectedFovHorizontal'     => 38.18698400097122,
             'expectedFovVertical'       => 25.989233583833013,
@@ -223,8 +223,8 @@ final class ValueConvertersTest extends TestCase
             'focalLengthMm'             => 85.0,
             'fNumber'                   => 2.0,
             'expectedCropFactor'        => 1.0,
-            'expectedCircleOfConfusion' => 0.029,
-            'expectedHyperfocal'        => 124.65396551724137,
+            'expectedCircleOfConfusion' => 0.03,
+            'expectedHyperfocal'        => 120.50166666666667,
             'expectedFovDiagonal'       => 28.558322254800274,
             'expectedFovHorizontal'     => 23.91316848629826,
             'expectedFovVertical'       => 16.071421421069587,
@@ -235,8 +235,8 @@ final class ValueConvertersTest extends TestCase
             'focalLengthMm'             => 25.0,
             'fNumber'                   => 4.0,
             'expectedCropFactor'        => 2.0,
-            'expectedCircleOfConfusion' => 0.0145,
-            'expectedHyperfocal'        => 10.800862068965516,
+            'expectedCircleOfConfusion' => 0.015,
+            'expectedHyperfocal'        => 10.441666666666666,
             'expectedFovDiagonal'       => 46.793003343996574,
             'expectedFovHorizontal'     => 39.59775270904986,
             'expectedFovVertical'       => 26.991466561591626,
