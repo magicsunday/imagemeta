@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Curate\Resolver;
 
 use BackedEnum;
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
@@ -871,9 +872,19 @@ final readonly class ExifTagResolver
      */
     public function exifVersion(): ?string
     {
-        $value = $this->stringValue($this->document?->exifIfd, ExifTag::EXIF_VERSION);
+        return $this->document?->exifVersion();
+    }
 
-        return CoreValueConverters::toExifVersion($value);
+    /**
+     * Returns the derived EXIF capability profile identifier.
+     */
+    public function exifProfile(): string
+    {
+        if ($this->document instanceof ExifDocument) {
+            return $this->document->exifProfile();
+        }
+
+        return ExifCapabilities::fromVersion(null);
     }
 
     /**
