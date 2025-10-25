@@ -96,14 +96,17 @@ final class StructuredMetadataBuilder
      * @var array<int, string>
      */
     private const array APPLE_IMAGE_CAPTURE_TYPE_MAP = [
-        0 => 'Unknown',
-        1 => 'Standard',
-        2 => 'LivePhoto',
-        3 => 'Burst',
-        4 => 'HDR',
-        5 => 'HDR2',
-        6 => 'NightMode',
-        7 => 'LivePhotoLongExposure',
+        0  => 'Unknown',
+        1  => 'ProRAW',
+        2  => 'Portrait',
+        3  => 'Live Photo',
+        4  => 'Live Photo Long Exposure',
+        5  => 'Burst',
+        6  => 'Night Mode',
+        7  => 'Night Mode Portrait',
+        10 => 'Photo',
+        11 => 'Manual Focus',
+        12 => 'Scene',
     ];
 
     /**

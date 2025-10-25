@@ -68,7 +68,7 @@ final class AppleResolverTest extends TestCase
         self::assertSame('resolver-burst', $apple->burstUuid);
         self::assertSame([0.7, 2.4], $apple->focusDistanceRange);
         self::assertSame('5', $apple->oisMode);
-        self::assertSame('LivePhoto', $apple->imageCaptureType);
+        self::assertSame('Portrait', $apple->imageCaptureType);
         self::assertSame('resolver-unique', $apple->imageUniqueId);
         self::assertSame('resolver-photo', $apple->photoIdentifier);
         self::assertEqualsWithDelta(1.8, $apple->afMeasuredDepth, 1e-12);
