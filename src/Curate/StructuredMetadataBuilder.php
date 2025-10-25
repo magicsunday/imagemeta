@@ -254,43 +254,53 @@ final class StructuredMetadataBuilder
         );
 
         $container = new Container(
-            format: $quickTimeResolver->string('MajorBrand'),
-            encoder: $quickTimeResolver->string('Encoder'),
+            format: $quickTimeResolver->string(QuickTimeMeta::MAJOR_BRAND_KEY),
+            encoder: CompositeResolver::first([
+                fn (): ?string => $quickTimeResolver->string('com.apple.quicktime.encoder'),
+                fn (): ?string => $quickTimeResolver->string('Encoder'),
+            ]),
             bitrate: CompositeResolver::first([
+                fn (): ?int => $quickTimeResolver->int('com.apple.quicktime.avgBitrate'),
+                fn (): ?int => $quickTimeResolver->int('com.apple.quicktime.bitrate'),
+                fn (): ?int => $quickTimeResolver->int('com.apple.quicktime.dataRate'),
                 fn (): ?int => $quickTimeResolver->int('AvgBitrate'),
                 fn (): ?int => $quickTimeResolver->int('Bitrate'),
             ]),
             videoCodec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string('CompressorID'),
-                fn (): ?string => $quickTimeResolver->string('HandlerDescription'),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::COMPRESSOR_NAME_KEY),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::VIDEO_CODEC_KEY),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::HANDLER_DESCRIPTION_KEY),
             ]),
             audioCodec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string('AudioFormat'),
-                fn (): ?string => $quickTimeResolver->string('AudioCodecID'),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_FORMAT_KEY),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_CODEC_KEY),
             ]),
         );
 
         $preview = new Preview(null, null, null, null);
 
         $video = new Video(
-            durationSec: $quickTimeResolver->float('Duration'),
-            frameRate: $quickTimeResolver->float('VideoFrameRate'),
-            width: $quickTimeResolver->int('ImageWidth'),
-            height: $quickTimeResolver->int('ImageHeight'),
-            codec: $quickTimeResolver->string('CompressorID'),
-            hdr: $quickTimeResolver->bool('HDRFormat'),
-            transferFunction: $quickTimeResolver->string('TransferFunction'),
-            colorPrimaries: $quickTimeResolver->string('ColorPrimaries'),
+            durationSec: $quickTimeResolver->float('com.apple.quicktime.duration'),
+            frameRate: $quickTimeResolver->float('com.apple.quicktime.videoFrameRate'),
+            width: $quickTimeResolver->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
+            height: $quickTimeResolver->int(QuickTimeMeta::VIDEO_HEIGHT_KEY),
+            codec: CompositeResolver::first([
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::COMPRESSOR_NAME_KEY),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::VIDEO_CODEC_KEY),
+            ]),
+            hdr: $quickTimeResolver->bool('com.apple.quicktime.hdrFormat'),
+            transferFunction: $quickTimeResolver->string('com.apple.quicktime.transferFunction'),
+            colorPrimaries: $quickTimeResolver->string('com.apple.quicktime.colorPrimaries'),
         );
 
         $audio = new Audio(
-            channels: $quickTimeResolver->int('AudioChannels'),
-            sampleRate: $quickTimeResolver->int('AudioSampleRate'),
+            channels: $quickTimeResolver->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
+            sampleRate: $quickTimeResolver->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
             codec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string('AudioFormat'),
-                fn (): ?string => $quickTimeResolver->string('AudioCodecID'),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_FORMAT_KEY),
+                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_CODEC_KEY),
             ]),
-            bitDepth: $quickTimeResolver->int('AudioBitsPerSample'),
+            bitDepth: $quickTimeResolver->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
         );
 
         $iccData = null;
