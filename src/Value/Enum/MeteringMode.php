@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use function is_int;
+
 /**
  * Defines the metering mode used to determine exposure.
  */

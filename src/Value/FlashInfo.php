@@ -15,6 +15,8 @@ use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 
+use function is_int;
+
 /**
  * Represents flash related capture information as exposed by EXIF and XMP.
  */

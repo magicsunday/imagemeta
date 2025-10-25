@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use function is_string;
+
 /**
  * Enumerates the colour components referenced by the CFA pattern tag.
  */

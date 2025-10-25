@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use function is_int;
+
 /**
  * Describes the camera's exposure program.
  */

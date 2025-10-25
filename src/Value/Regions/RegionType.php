@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Regions;
 
+use function strtolower;
+use function trim;
+
 /**
  * Describes the semantic classification of an annotated region.
  */
