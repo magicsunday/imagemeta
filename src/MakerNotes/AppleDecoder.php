@@ -60,6 +60,17 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     ];
 
     /**
+     * Maps known camera type codes to descriptive labels.
+     *
+     * @var array<int, string>
+     */
+    private const array CAMERA_TYPE_MAP = [
+        0 => 'Back Wide Angle',
+        1 => 'Back Normal',
+        6 => 'Front',
+    ];
+
+    /**
      * Maps Apple bitfield sources (indexed by zero-based bit position) to normalised flags.
      *
      * @var array<string, array<int, string>>
@@ -294,7 +305,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         $contentIdentifier    = $this->stringValue($dictionary, 'ContentIdentifier');
-        $cameraType           = $this->stringValue($dictionary, 'CameraType');
+        $cameraTypeCode       = $this->intValue($dictionary, 'CameraType');
+        if ($cameraTypeCode !== null) {
+            $cameraType = self::CAMERA_TYPE_MAP[$cameraTypeCode] ?? $cameraTypeCode;
+        } else {
+            $cameraType = $this->stringValue($dictionary, 'CameraType');
+        }
         $hdrHeadroom          = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
         $hdrGain              = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
         $snr                  = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
