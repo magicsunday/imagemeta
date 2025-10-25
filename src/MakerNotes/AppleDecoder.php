@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
 
 use function array_is_list;
 use function array_key_exists;
+use function array_flip;
 use function array_unique;
 use function array_values;
 use function ctype_space;
@@ -1197,20 +1198,20 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
 
             $enabledBits = $this->bitPositions($dictionary[$makerKey]);
-            if ($enabledBits === null) {
-                continue;
-            }
-
-            $assignFalse = $makerKey === 'PhotosAppFeatureFlags';
+            $enabledLookup = $enabledBits !== null ? array_flip($enabledBits) : null;
 
             foreach ($bitMap as $bitPosition => $normalized) {
-                if (array_key_exists($normalized, $flags)) {
+                $hasExisting = array_key_exists($normalized, $flags);
+                if (!$hasExisting) {
+                    $flags[$normalized] = false;
+                }
+
+                if ($enabledLookup === null || !array_key_exists($bitPosition, $enabledLookup)) {
                     continue;
                 }
 
-                $isEnabled = in_array($bitPosition, $enabledBits, true);
-                if ($isEnabled || $assignFalse) {
-                    $flags[$normalized] = $isEnabled;
+                if (!$hasExisting || $flags[$normalized] === false) {
+                    $flags[$normalized] = true;
                 }
             }
         }

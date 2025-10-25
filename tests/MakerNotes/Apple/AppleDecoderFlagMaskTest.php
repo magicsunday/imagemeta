@@ -52,7 +52,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
     }
 
     #[Test]
-    public function extractFlagsDefaultsPhotosAppFeatureBitsToFalse(): void
+    public function extractFlagsAssignsFalseDefaultsWhenNoMappedBitsEnabled(): void
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'extractFlags');
@@ -66,10 +66,18 @@ final class AppleDecoderFlagMaskTest extends TestCase
         ];
 
         $result = $method->invoke($decoder, $dictionary);
+        ksort($result);
 
-        self::assertSame([
+        $expected = [
+            'hdrAuto'       => false,
+            'hdrEnabled'    => false,
+            'longExposure'  => false,
+            'nightMode'     => false,
             'personInPhoto' => false,
             'petInPhoto'    => false,
-        ], $result);
+        ];
+        ksort($expected);
+
+        self::assertSame($expected, $result);
     }
 }
