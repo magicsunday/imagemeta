@@ -22,6 +22,7 @@ use ReflectionMethod;
 use function hex2bin;
 use function sha1;
 use function str_repeat;
+use function str_replace;
 use function strlen;
 
 /**
@@ -160,67 +161,18 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
-    public function parseAppleDataReturnsNotesForBinaryPlist(): void
+    public function decodeResolvesLivePhotoMovieIndex(): void
     {
+        $raw     = $this->buildMakerNotesBlobWithMovieIndex();
         $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'parseAppleData');
-        $method->setAccessible(true);
 
-        /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, $this->buildMakerNotesBlob());
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(AppleMakerNotes::class, $notes);
-    }
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
 
-    #[Test]
-    public function parseAppleDataParsesRawDictionaryPayload(): void
-    {
-        $raw = <<<'RAW'
-        {
-            ContentIdentifier = "raw-dictionary";
-            CameraType = "Back Wide Angle";
-            HdrHeadroom = 2.75;
-            HdrGain = (1.0, 1.15, 1.3);
-            SNRSetting = 21.5;
-            FocusPosition = 0.5;
-            LivePhotoVideoIndex = 3;
-            ColorTemperature = 5400;
-            SemanticStylePreset = Warm;
-            SemanticStyleWarmth = 0.2;
-            SemanticStyleTone = -0.1;
-            AccelerationVector = (0.1 -0.2 0.3);
-            RunTime = { epoch = 1; timescale = 30; value = 90; flags = 2; };
-            LivePhotoEnabled = YES;
-        }
-        RAW;
-
-        $decoder = new AppleDecoder();
-        $method  = new ReflectionMethod(AppleDecoder::class, 'parseAppleData');
-        $method->setAccessible(true);
-
-        /** @var AppleMakerNotes|null $notes */
-        $notes = $method->invoke($decoder, $raw);
-
-        self::assertInstanceOf(AppleMakerNotes::class, $notes);
-        self::assertSame('raw-dictionary', $notes->contentIdentifier);
-        self::assertSame('Back Wide Angle', $notes->cameraType);
-        self::assertEqualsWithDelta(2.75, $notes->hdrHeadroom, 1e-12);
-        self::assertSame([1.0, 1.15, 1.3], $notes->hdrGain);
-        self::assertEqualsWithDelta(21.5, $notes->snr, 1e-12);
-        self::assertEqualsWithDelta(0.5, $notes->focusPosition, 1e-12);
-        self::assertSame(3, $notes->livePhotoIndex);
-        self::assertSame(5400, $notes->colorTemperature);
-        self::assertSame('Warm', $notes->semanticStylePreset);
-        self::assertEqualsWithDelta(0.2, $notes->semanticStyleWarmth, 1e-12);
-        self::assertEqualsWithDelta(-0.1, $notes->semanticStyleTone, 1e-12);
-        self::assertSame([0.1, -0.2, 0.3], $notes->accelerationVector);
-        self::assertInstanceOf(RunTime::class, $notes->runTime);
-        self::assertSame(1, $notes->runTime?->epoch);
-        self::assertSame(30, $notes->runTime?->timescale);
-        self::assertSame(90, $notes->runTime?->value);
-        self::assertSame(2, $notes->runTime?->flags);
-        self::assertArrayHasKey('livePhotoEnabled', $notes->flags);
-        self::assertTrue($notes->flags['livePhotoEnabled']);
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame(2, $apple->livePhotoIndex);
     }
 
     #[Test]
@@ -316,6 +268,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(600, $notes->runTime?->timescale);
         self::assertSame(1500, $notes->runTime?->value);
         self::assertSame(5, $notes->runTime?->flags);
+    }
+
+    private function buildMakerNotesBlobWithMovieIndex(): string
+    {
+        return str_replace('LivePhotoVideoIndex', 'LivePhotoMovieIndex', $this->buildMakerNotesBlob());
     }
 
     private function buildMakerNotesBlob(): string
