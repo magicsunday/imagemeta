@@ -17,9 +17,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 enum FlashReturn: int
 {
     case NO_STROBE_DETECTION = 0;
-    case RESERVED            = 1;
-    case NOT_DETECTED        = 2;
-    case DETECTED            = 3;
+    case RETURN_NOT_DETECTED = 2;
+    case RETURN_DETECTED     = 3;
 
     /**
      * Creates an enum instance from the flash bit field.

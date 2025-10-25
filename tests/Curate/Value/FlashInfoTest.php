@@ -34,7 +34,7 @@ final class FlashInfoTest extends TestCase
         self::assertNotNull($info);
         self::assertTrue($info->fired);
         self::assertSame(FlashMode::AUTO, $info->mode);
-        self::assertSame(FlashReturn::DETECTED, $info->returnDetection);
+        self::assertSame(FlashReturn::RETURN_DETECTED, $info->returnDetection);
         self::assertSame(FlashFunction::ABSENT, $info->functionPresence);
         self::assertTrue($info->redEyeReduction);
     }
