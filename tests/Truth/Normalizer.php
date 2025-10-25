@@ -11,15 +11,24 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Truth;
 
+use BackedEnum;
+use DateTimeInterface;
+use UnitEnum;
+
+/**
+ * Provides helpers to normalize metadata for comparisons against ExifTool truth data.
+ */
 final class Normalizer
 {
-    /** Delta für Floatvergleiche */
+    /** Delta used for floating point comparisons. */
     public const DELTA = 1e-6;
 
     /** @var array<string, array<int|string, string>> */
     private array $enumMap;
 
     /**
+     * Create a new normalizer with the provided enum mapping.
+     *
      * @param array<string, array<int|string, string>> $enumMap
      */
     public function __construct(array $enumMap)
@@ -28,35 +37,32 @@ final class Normalizer
     }
 
     /**
-     * Enum → vergleichbarer String (Enum-Name) oder passt Wert unverändert durch.
-     * Unterstützt reine PHP-Enums (->name) und Fallbacks.
+     * Convert enum or temporal values into comparable scalar representations.
      */
-    public static function toComparable(mixed $value): mixed
+    public static function toComparable(BackedEnum|UnitEnum|DateTimeInterface|string|int|float|bool|null $value): string|int|float|bool|null
     {
-        if ($value instanceof \BackedEnum) {
-            return $value->name; // Name stabiler als ->value bei BackedEnums
-        }
-        if ($value instanceof \UnitEnum) {
+        if ($value instanceof BackedEnum) {
             return $value->name;
         }
-        if ($value instanceof \DateTimeInterface) {
-            // Sekundenpräzision (SubSec separat, wenn gewünscht)
+        if ($value instanceof UnitEnum) {
+            return $value->name;
+        }
+        if ($value instanceof DateTimeInterface) {
             return $value->format('Y-m-d\TH:i:sP');
         }
         return $value;
     }
 
     /**
-     * Vergleicht eine Structured-Enum gegen ExifTool(-n) Rohwert über die EnumMap.
+     * Compare a structured enum value against an ExifTool numeric value via the enum map.
      *
-     * @param non-empty-string $group  z. B. 'Orientation', 'WhiteBalance'
-     * @param int|string $exifNumeric
-     * @param \UnitEnum|\BackedEnum|string|null $structuredEnum
+     * @param non-empty-string $group Identifier in the enum map, e.g. "Orientation" or "WhiteBalance".
+     * @param int|string       $exifNumeric
      */
-    public function compareEnum(string $group, int|string $exifNumeric, mixed $structuredEnum): bool
+    public function compareEnum(string $group, int|string $exifNumeric, BackedEnum|UnitEnum|string|null $structuredEnum): bool
     {
         if (!isset($this->enumMap[$group])) {
-            return false; // kein Mapping hinterlegt
+            return false; // no mapping available
         }
         $expectedName = $this->enumMap[$group][$exifNumeric] ?? null;
         if ($expectedName === null) {
@@ -66,9 +72,14 @@ final class Normalizer
         return $actualName === $expectedName;
     }
 
+    /**
+     * Decode the EXIF flash flag bitmask into structured fields.
+     *
+     * @return array{fired:bool,returnDetection:string,mode:string,functionPresence:string,redEyeReduction:bool}
+     */
     public static function decodeExifFlash(int $val): array
     {
-        // Spezifikation (EXIF 2.3):
+        // Specification (EXIF 2.3):
         // Bit 0: Fired
         // Bits 1-2: Return status (0,2,3)
         // Bits 3-4: Mode (0..3)
@@ -105,10 +116,9 @@ final class Normalizer
     }
 
     /**
-     * Baut aus EXIF DateTime + SubSec + OffsetTime eine ISO-8601.
-     * Erwartet ExifTool-JSON (mit -n/-struct).
+     * Build an ISO-8601 timestamp from EXIF base, subseconds and offset values.
      *
-     * @param array<string,mixed> $exif
+     * @param array<string,string|int|float|bool|null>                    $exif
      * @param 'EXIF:CreateDate'|'EXIF:DateTimeOriginal'|'IFD0:ModifyDate' $baseKey
      */
     public static function buildIso8601FromExif(array $exif, string $baseKey): ?string
@@ -123,16 +133,16 @@ final class Normalizer
             return null;
         }
 
-        // SubSec (passender Schlüssel zu Base)
+        // SubSec (matching key for the base field)
         $subSecKey = match ($baseKey) {
             'EXIF:CreateDate'       => 'EXIF:SubSecTimeDigitized',
             'EXIF:DateTimeOriginal' => 'EXIF:SubSecTimeOriginal',
-            'IFD0:ModifyDate'       => 'EXIF:SubSecTime', // oft nicht vorhanden
+            'IFD0:ModifyDate'       => 'EXIF:SubSecTime', // often missing in the data
         };
         $sub = self::get($exif, $subSecKey);
         $sub = is_string($sub) && $sub !== '' ? $sub : null;
 
-        // Offset (passender Schlüssel zu Base)
+        // Offset (matching key for the base field)
         $offsetKey = match ($baseKey) {
             'EXIF:CreateDate'       => 'EXIF:OffsetTimeDigitized',
             'EXIF:DateTimeOriginal' => 'EXIF:OffsetTimeOriginal',
@@ -141,25 +151,32 @@ final class Normalizer
         $off = self::get($exif, $offsetKey);
         $off = is_string($off) && $off !== '' ? $off : '+00:00';
 
-        // zusammensetzen
+        // combine the individual parts
         if ($sub !== null) {
-            // normalisiere auf 3 Stellen (Millis)
+            // normalize to milliseconds (three digits)
             $sub = str_pad(substr($sub, 0, 3), 3, '0');
             return sprintf('%s.%s%s', $dt, $sub, self::normalizeOffset($off));
         }
         return sprintf('%s%s', $dt, self::normalizeOffset($off));
     }
 
-    /** @param array<string,mixed> $exif */
-    private static function get(array $exif, string $key): mixed
+    /**
+     * Retrieve a value from the ExifTool JSON array.
+     *
+     * @param array<string,string|int|float|bool|null> $exif
+     */
+    private static function get(array $exif, string $key): string|int|float|bool|null
     {
-        // ExifTool-JSON gibt flache Keys "GROUP:Tag"
+        // ExifTool JSON exposes flattened keys "GROUP:Tag"
         return $exif[$key] ?? null;
     }
 
+    /**
+     * Normalize offsets like "+0100" to the canonical "+01:00" representation.
+     */
     private static function normalizeOffset(string $off): string
     {
-        // erlaubt Formate "+01:00" oder "+0100" → immer "+01:00"
+        // accept "+01:00" or "+0100" and always return "+01:00"
         if (preg_match('/^[\+\-]\d{2}:\d{2}$/', $off)) {
             return $off;
         }
@@ -170,8 +187,9 @@ final class Normalizer
     }
 
     /**
-     * Extrahiert MWG Face-Areas aus ExifTool-JSON → [{x,y,w,h}, ...]
-     * @param array<string,mixed> $exif
+     * Extract MWG face areas from the ExifTool JSON representation.
+     *
+     * @param array<string,string|int|float|bool|null> $exif
      * @return array<int,array{x:float,y:float,w:float,h:float}>
      */
     public static function mwgFaces(array $exif): array
@@ -188,7 +206,7 @@ final class Normalizer
                 $faces[$i][$c] = (float)$v;
             }
         }
-        // nur Gesichter
+        // keep only face regions
         $out = [];
         ksort($faces);
         foreach ($faces as $i => $a) {
