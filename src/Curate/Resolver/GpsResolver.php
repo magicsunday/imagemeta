@@ -22,7 +22,6 @@ use function array_map;
 use function count;
 use function is_float;
 use function is_int;
-use function is_string;
 use function preg_match;
 use function preg_split;
 use function sprintf;
@@ -322,9 +321,9 @@ final readonly class GpsResolver
     /**
      * Returns the value as string when not empty.
      */
-    private function stringValue(mixed $value): ?string
+    private function stringValue(?string $value): ?string
     {
-        if (!is_string($value)) {
+        if ($value === null) {
             return null;
         }
 
@@ -336,7 +335,7 @@ final readonly class GpsResolver
     /**
      * Returns the value as float when numeric.
      */
-    private function floatValue(mixed $value): ?float
+    private function floatValue(int|float|null $value): ?float
     {
         if (is_float($value)) {
             return $value;
@@ -352,7 +351,7 @@ final readonly class GpsResolver
     /**
      * Returns the value as integer when numeric.
      */
-    private function intValue(mixed $value): ?int
+    private function intValue(int|float|null $value): ?int
     {
         if (is_int($value)) {
             return $value;

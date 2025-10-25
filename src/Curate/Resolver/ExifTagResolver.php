@@ -817,14 +817,7 @@ final readonly class ExifTagResolver
             return CoreValueConverters::toWhitePoint($value);
         }
 
-        if (!is_array($value)) {
-            return null;
-        }
-
-        /** @var array<int, array<int, int|float|string>|int|float|string> $arrayValue */
-        $arrayValue = array_values($value);
-
-        return CoreValueConverters::toWhitePoint($arrayValue);
+        return null;
     }
 
     /**
@@ -840,14 +833,7 @@ final readonly class ExifTagResolver
             return CoreValueConverters::toPrimaryChromaticities($value);
         }
 
-        if (!is_array($value)) {
-            return null;
-        }
-
-        /** @var array<int, array<int, int|float|string>|int|float|string> $arrayValue */
-        $arrayValue = array_values($value);
-
-        return CoreValueConverters::toPrimaryChromaticities($arrayValue);
+        return null;
     }
 
     /**
@@ -1545,10 +1531,8 @@ final readonly class ExifTagResolver
 
     /**
      * Returns a single field from the cached GPS metadata map.
-     *
-     * @return mixed
      */
-    private function gpsField(string $key): mixed
+    private function gpsField(string $key): string|int|float|DateTimeImmutable|null
     {
         $gps = $this->gps();
 
@@ -1799,7 +1783,7 @@ final readonly class ExifTagResolver
     /**
      * Returns the raw entry value for a tag.
      */
-    private function getValue(?Ifd $ifd, int $tag): mixed
+    private function getValue(?Ifd $ifd, int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         return $this->getEntry($ifd, $tag)?->value;
     }
@@ -1874,10 +1858,15 @@ final readonly class ExifTagResolver
     /**
      * Returns an array of floats converted from rational values.
      *
+     * @param array|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
+     *
+     * @phpstan-param array<int|string, int|float|string|array<int|string, int|float|string|null>>|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
+     *
      * @return list<float>
      */
-    private function normalizeRationalList(mixed $value): array
-    {
+    private function normalizeRationalList(
+        array|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): array {
         if ($value instanceof ExifRationalList) {
             $floats = [];
             foreach ($value->values as $rational) {
@@ -1900,7 +1889,10 @@ final readonly class ExifTagResolver
 
         if (is_array($value)) {
             $values = [];
-            foreach (array_values($value) as $component) {
+            /** @var list<array<int|string, int|float|string|null>|int|float|string> $components */
+            $components = array_values($value);
+
+            foreach ($components as $component) {
                 $sanitised = $this->sanitizeRationalArrayComponent($component);
                 if ($sanitised === null) {
                     return [];
@@ -1930,17 +1922,24 @@ final readonly class ExifTagResolver
     /**
      * Normalises numeric lists from EXIF entries.
      *
+     * @param array|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
+     *
+     * @phpstan-param array<int|string, int|float|string|array<int|string, int|float|string|null>>|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
+     *
      * @return list<int|float>
      */
-    private function normalizeNumericList(mixed $value): array
+    private function normalizeNumericList(array|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): array
     {
         if ($value instanceof ExifNumericList) {
             return $value->values;
         }
 
         if (is_array($value)) {
+            /** @var array<int|string, int|float|string|array<int|string, int|float|string|null>> $numericComponents */
+            $numericComponents = $value;
+
             $result = [];
-            foreach ($value as $component) {
+            foreach ($numericComponents as $component) {
                 if (is_int($component) || is_float($component)) {
                     $result[] = $component;
                 }
@@ -1959,10 +1958,15 @@ final readonly class ExifTagResolver
     /**
      * Normalises raw rational values into formats accepted by the shared converter.
      *
+     * @param array|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
+     *
+     * @phpstan-param array<int|string, int|float|string|array<int|string, int|float|string|null>>|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value
+     *
      * @return array<int, int|float|string>|int|float|ExifRational|ExifRationalList|ExifNumericList|null
      */
-    private function sanitizeRationalInput(mixed $value): array|int|float|ExifRational|ExifRationalList|ExifNumericList|null
-    {
+    private function sanitizeRationalInput(
+        array|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): array|int|float|ExifRational|ExifRationalList|ExifNumericList|null {
         if ($value instanceof ExifRationalList || $value instanceof ExifRational || $value instanceof ExifNumericList) {
             return $value;
         }
@@ -1989,10 +1993,15 @@ final readonly class ExifTagResolver
     /**
      * Normalises list elements into rational-compatible representations.
      *
+     * @param array|int|float|string|null $component
+     *
+     * @phpstan-param array<int|string, array<int|string, int|float|string|null>|int|float|string|null>|int|float|string|null $component
+     *
      * @return array<int, int|float|string>|int|float|null
      */
-    private function sanitizeRationalArrayComponent(mixed $component): array|int|float|null
-    {
+    private function sanitizeRationalArrayComponent(
+        array|int|float|string|null $component,
+    ): array|int|float|null {
         if (is_int($component) || is_float($component)) {
             return $component;
         }

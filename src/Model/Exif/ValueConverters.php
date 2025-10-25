@@ -669,9 +669,9 @@ final readonly class ValueConverters
     /**
      * Converts a GPS version payload into a dotted string.
      *
-     * @param mixed $value Raw value extracted from the IFD entry.
+     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
      */
-    private static function formatGpsVersion(mixed $value): ?string
+    private static function formatGpsVersion(string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value): ?string
     {
         if ($value instanceof ExifNumericList) {
             $components = array_map(static fn (int|float $component): int => (int) $component, $value->values);
@@ -702,10 +702,11 @@ final readonly class ValueConverters
     /**
      * Normalises ASCII-like EXIF strings by trimming whitespace and null padding.
      *
-     * @param mixed $value Raw value extracted from the IFD entry.
+     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
      */
-    private static function sanitizeString(mixed $value): ?string
-    {
+    private static function sanitizeString(
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?string {
         if (!is_string($value)) {
             return null;
         }
@@ -718,10 +719,11 @@ final readonly class ValueConverters
     /**
      * Decodes undefined GPS ASCII strings with optional encoding prefixes.
      *
-     * @param mixed $value Raw value extracted from the IFD entry.
+     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
      */
-    private static function decodeUndefinedString(mixed $value): ?string
-    {
+    private static function decodeUndefinedString(
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?string {
         if (!is_string($value)) {
             return null;
         }
@@ -749,10 +751,11 @@ final readonly class ValueConverters
     /**
      * Normalises a GPS date stamp into an ISO 8601 calendar date.
      *
-     * @param mixed $value Raw value extracted from the IFD entry.
+     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
      */
-    private static function normalizeGpsDate(mixed $value): ?string
-    {
+    private static function normalizeGpsDate(
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?string {
         if (!is_string($value)) {
             return null;
         }

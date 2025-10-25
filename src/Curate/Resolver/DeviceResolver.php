@@ -71,7 +71,7 @@ final readonly class DeviceResolver
     /**
      * Normalises arbitrary QuickTime metadata values to strings.
      */
-    private function stringFromMixed(mixed $value): ?string
+    private function stringFromMixed(string|int|float|bool|null $value): ?string
     {
         if (is_string($value)) {
             return $value;

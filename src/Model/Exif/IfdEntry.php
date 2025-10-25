@@ -95,7 +95,7 @@ final readonly class IfdEntry
     /**
      * Builds a list of {@see ExifRational} objects from array inputs.
      *
-     * @param array<int, mixed> $value The raw array representation.
+     * @param array<int, int|float|array<int, int|float>> $value The raw array representation.
      *
      * @return list<ExifRational>
      */
@@ -124,7 +124,7 @@ final readonly class IfdEntry
     /**
      * Extracts numeric list components from an array representation.
      *
-     * @param array<int, mixed> $value Raw numeric components.
+     * @param array<int, int|float|array<int, int|float>> $value Raw numeric components.
      *
      * @return list<int|float>
      */
@@ -143,11 +143,13 @@ final readonly class IfdEntry
     /**
      * Extracts a rational numerator/denominator pair from the provided value.
      *
-     * @param mixed $value Potential rational pair to inspect.
+     * @param array<int|string, int|float|array<int|string, int|float>>|int|float|null $value Potential rational pair to inspect.
+     *
+     * @phpstan-param array<int|string, int|float|array<int|string, int|float>>|int|float|null $value Potential rational pair to inspect.
      *
      * @return array{0: int|float, 1: int|float}|null
      */
-    private function extractRationalPair(mixed $value): ?array
+    private function extractRationalPair(array|int|float|null $value): ?array
     {
         if (!is_array($value)) {
             return null;
