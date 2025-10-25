@@ -158,6 +158,23 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    public function decodeAcceptsPaddedDictionaryPayload(): void
+    {
+        $raw = '{ ContentIdentifier = "padded"; LivePhotoAuto = 1; }' . str_repeat("\0", 8);
+
+        $decoder = new AppleDecoder();
+
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame('padded', $apple->contentIdentifier);
+        self::assertTrue($apple->flags['livePhotoAuto']);
+    }
+
+    #[Test]
     public function decodeResolvesLivePhotoMovieIndex(): void
     {
         $raw     = $this->buildMakerNotesBlobWithMovieIndex();

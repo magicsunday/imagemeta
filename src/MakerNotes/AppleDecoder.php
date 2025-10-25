@@ -470,7 +470,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function skipWhitespace(string $raw, int &$offset, int $length): void
     {
         while ($offset < $length) {
-            if (!ctype_space($raw[$offset])) {
+            $char = $raw[$offset];
+
+            if ($char === "\0") {
+                ++$offset;
+
+                continue;
+            }
+
+            if (!ctype_space($char)) {
                 break;
             }
 
