@@ -31,6 +31,38 @@ use function strlen;
 final class AppleDecoderTest extends TestCase
 {
     /**
+     * Ensures keyed archive payloads map integer camera type codes to descriptive labels.
+     */
+    #[Test]
+    public function decodeMapsCameraTypeCodeFromKeyedArchive(): void
+    {
+        $hex = ''
+            . '62706c6973743030d401020304050622265924617263686976657258246f626a'
+            . '656374735424746f70582476657273696f6e5f100f4e534b6579656441726368'
+            . '69766572a70708191f20211855246e756c6cd3090a0b0c0f145624636c617373'
+            . '574e532e6b6579735a4e532e6f626a65637473d10d0e564346245549441002a2'
+            . '1012d10d111003d10d131004a21517d10d161005d10d181006d21a1b1c1d5824'
+            . '636c61737365735a24636c6173736e616d65a21d1e5c4e5344696374696f6e61'
+            . '7279584e534f626a6563745f1011436f6e74656e744964656e7469666965725a'
+            . '43616d657261547970655f101361726368697665642d70686f746f2d75756964'
+            . 'd1232454726f6f74d10d25100112000186a000080011001b0024002900320044'
+            . '004c005200590060006800730076007d007f008200850087008a008c008f0092'
+            . '009400970099009e00a700b200b500c200cb00df00ea010001030108010b010d'
+            . '0000000000000201000000000000002700000000000000000000000000000112';
+        $raw = (string) hex2bin($hex);
+        $decoder = new AppleDecoder();
+
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
+        self::assertSame('Front', $apple->cameraType);
+    }
+
+    /**
      * Ensures the decoder resolves keyed archive maker note data into structured metadata.
      */
     #[Test]
@@ -142,6 +174,29 @@ final class AppleDecoderTest extends TestCase
         self::assertSame('Vivid', $apple->semanticStylePreset);
         self::assertEqualsWithDelta(0.25, $apple->semanticStyleWarmth, 1e-12);
         self::assertEqualsWithDelta(-0.1, $apple->semanticStyleTone, 1e-12);
+    }
+
+    #[Test]
+    public function buildAppleMakerNotesHandlesCameraTypeCodes(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        $mapped = $method->invoke($decoder, [
+            'ContentIdentifier' => 'mapped-camera',
+            'CameraType'        => 0,
+        ]);
+
+        $unknown = $method->invoke($decoder, [
+            'ContentIdentifier' => 'unknown-camera',
+            'CameraType'        => 42,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $mapped);
+        self::assertInstanceOf(AppleMakerNotes::class, $unknown);
+        self::assertSame('Back Wide Angle', $mapped->cameraType);
+        self::assertSame(42, $unknown->cameraType);
     }
 
     #[Test]

@@ -49,7 +49,8 @@ final readonly class AppleResolver
         $identifier = $quickTimeMeta->contentIdentifier();
         $resolver   = new QuickTimeResolver($quickTimeMeta);
 
-        $cameraType         = $resolver->string('CameraType');
+        $cameraTypeString  = $resolver->string('CameraType');
+        $cameraType         = $cameraTypeString ?? $resolver->int('CameraType');
         $hdrHeadroom        = $resolver->float('HdrHeadroom') ?? $resolver->float('HDRHeadroom');
         $hdrGain            = $this->floatList($resolver, 'HdrGain', 'HDRGain');
         $snr                = $resolver->float('SNRSetting') ?? $resolver->float('SNR');

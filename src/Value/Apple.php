@@ -18,7 +18,7 @@ final readonly class Apple
 {
     /**
      * @param string|null         $contentIdentifier   Unique content identifier assigned by Apple platforms.
-     * @param string|null         $cameraType          Reported hardware camera type (e.g. "Wide", "Tele").
+     * @param string|int|null     $cameraType          Reported hardware camera type (e.g. "Wide", "Tele").
      * @param float|null          $hdrHeadroom         HDR headroom value reported by the capture pipeline.
      * @param list<float>|null    $hdrGain             HDR gain values per colour channel.
      * @param float|null          $snr                 Signal-to-noise ratio setting applied during capture.
@@ -33,7 +33,7 @@ final readonly class Apple
      */
     public function __construct(
         public ?string $contentIdentifier,
-        public ?string $cameraType,
+        public string|int|null $cameraType,
         public ?float $hdrHeadroom,
         public ?array $hdrGain,
         public ?float $snr,

@@ -18,7 +18,7 @@ final readonly class AppleMakerNotes
 {
     /**
      * @param string|null         $contentIdentifier   Unique content identifier assigned by Apple platforms.
-     * @param string|null         $cameraType          Describes the hardware camera (e.g. "Wide", "Tele").
+     * @param string|int|null     $cameraType          Describes the hardware camera (e.g. "Wide", "Tele").
      * @param float|null          $hdrHeadroom         HDR headroom value reported by the device.
      * @param list<float>|null    $hdrGain             HDR gain values per colour channel.
      * @param float|null          $snr                 Signal-to-noise ratio setting.
@@ -33,7 +33,7 @@ final readonly class AppleMakerNotes
      */
     public function __construct(
         public ?string $contentIdentifier,
-        public ?string $cameraType,
+        public string|int|null $cameraType,
         public ?float $hdrHeadroom,
         public ?array $hdrGain,
         public ?float $snr,
