@@ -262,7 +262,7 @@ final readonly class RegionsResolver
     }
 
     /**
-     * @param list<Region> $regions
+     * @param list<Region>                                                                                                                                                      $regions
      * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
      *
      * @return list<Region>
@@ -362,8 +362,8 @@ final readonly class RegionsResolver
     /**
      * Merges overlapping region metadata, preferring existing geometry while enriching attributes.
      *
-     * @param Region $base        Primary region resolved from MWG metadata.
-     * @param Region $supplement  Supplementary region derived from Apple metadata.
+     * @param Region $base       Primary region resolved from MWG metadata.
+     * @param Region $supplement Supplementary region derived from Apple metadata.
      *
      * @return Region Combined region carrying the most complete metadata set.
      */

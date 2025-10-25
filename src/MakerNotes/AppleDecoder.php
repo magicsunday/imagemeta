@@ -26,8 +26,8 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function sha1;
-use function strlen;
 use function str_starts_with;
+use function strlen;
 use function substr;
 use function trim;
 
@@ -124,17 +124,17 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
-        $contentIdentifier   = $this->stringValue($dictionary, 'ContentIdentifier');
-        $cameraType          = $this->stringValue($dictionary, 'CameraType');
-        $hdrHeadroom         = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
-        $hdrGain             = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
-        $snr                 = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
-        $focusPosition       = $this->floatValue($dictionary, 'FocusPosition');
-        $livePhotoIndex      = $this->intValue($dictionary, 'LivePhotoVideoIndex');
-        $colorTemperature    = $this->intValue($dictionary, 'ColorTemperature');
-        $semanticStylePreset = $this->stringValue($dictionary, 'SemanticStylePreset');
-        $semanticStyleWarmth = $this->floatValue($dictionary, 'SemanticStyleWarmth');
-        $semanticStyleTone   = $this->floatValue($dictionary, 'SemanticStyleTone');
+        $contentIdentifier    = $this->stringValue($dictionary, 'ContentIdentifier');
+        $cameraType           = $this->stringValue($dictionary, 'CameraType');
+        $hdrHeadroom          = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
+        $hdrGain              = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
+        $snr                  = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
+        $focusPosition        = $this->floatValue($dictionary, 'FocusPosition');
+        $livePhotoIndex       = $this->intValue($dictionary, 'LivePhotoVideoIndex');
+        $colorTemperature     = $this->intValue($dictionary, 'ColorTemperature');
+        $semanticStylePreset  = $this->stringValue($dictionary, 'SemanticStylePreset');
+        $semanticStyleWarmth  = $this->floatValue($dictionary, 'SemanticStyleWarmth');
+        $semanticStyleTone    = $this->floatValue($dictionary, 'SemanticStyleTone');
         $semanticStyleCompact = $this->semanticStyleFromCollection($dictionary);
         if ($semanticStyleCompact !== null) {
             [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
@@ -151,8 +151,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 $semanticStyleTone = $compactTone;
             }
         }
-        $accelerationVector  = $this->floatList($dictionary, 'AccelerationVector');
-        $flags               = $this->extractFlags($dictionary);
+        $accelerationVector = $this->floatList($dictionary, 'AccelerationVector');
+        $flags              = $this->extractFlags($dictionary);
 
         if (
             $contentIdentifier === null

@@ -91,6 +91,10 @@ final class StructuredMetadataBuilder
 
     /**
      * Builds the structured metadata aggregate from the supplied metadata container.
+     *
+     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     *
+     * @return StructuredMetadata Structured aggregate composed from specialised resolvers.
      */
     public function build(Metadata $metadata): StructuredMetadata
     {
@@ -443,7 +447,12 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds a device value object using container level metadata.
+     * Builds the device metadata aggregate by combining EXIF and QuickTime sources.
+     *
+     * @param ExifTagResolver   $exif              Resolver exposing EXIF tag helpers.
+     * @param QuickTimeResolver $quickTimeResolver Resolver exposing QuickTime metadata fields.
+     *
+     * @return Device Device value object describing capture hardware and software.
      */
     private function buildDevice(ExifTagResolver $exif, QuickTimeResolver $quickTimeResolver): Device
     {
@@ -465,6 +474,12 @@ final class StructuredMetadataBuilder
      *
      * Fractional seconds are mirrored into the generic field to keep display values consistent
      * whenever only the original or digitized timestamp carries sub-second precision.
+     *
+     * @param ExifTagResolver   $resolver  Resolver exposing EXIF timestamps and offsets.
+     * @param QuickTimeResolver $quickTime QuickTime metadata resolver used for time fallbacks.
+     * @param XmpResolver       $xmp       Resolver providing XMP timestamp fields.
+     *
+     * @return Temporal Normalised temporal metadata aggregate.
      */
     private function buildTemporal(ExifTagResolver $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
     {
@@ -528,6 +543,10 @@ final class StructuredMetadataBuilder
 
     /**
      * Builds a camera value object using EXIF metadata.
+     *
+     * @param ExifTagResolver $exif Resolver exposing camera related EXIF tags.
+     *
+     * @return Camera Normalised camera metadata aggregate.
      */
     private function buildCamera(ExifTagResolver $exif): Camera
     {
@@ -548,6 +567,10 @@ final class StructuredMetadataBuilder
 
     /**
      * Builds a lens value object using EXIF metadata.
+     *
+     * @param ExifTagResolver $exif Resolver exposing lens specific EXIF tags.
+     *
+     * @return Lens Normalised lens metadata aggregate.
      */
     private function buildLens(ExifTagResolver $exif): Lens
     {
@@ -567,6 +590,10 @@ final class StructuredMetadataBuilder
 
     /**
      * Builds the image value object using EXIF metadata.
+     *
+     * @param ExifTagResolver $exif Resolver exposing image related EXIF tags.
+     *
+     * @return Image Normalised image metadata aggregate.
      */
     private function buildImage(ExifTagResolver $exif): Image
     {
@@ -591,7 +618,11 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Counts detected face regions for the scene aggregate.
+     * Counts the number of face regions detected in the supplied region aggregate.
+     *
+     * @param Regions $regions Region aggregate containing detected regions.
+     *
+     * @return int|null Number of face regions or null when no face region exists.
      */
     private function countFaceRegions(Regions $regions): ?int
     {
@@ -607,7 +638,14 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds the scene value object incorporating EXIF and container hints.
+     * Builds the scene metadata aggregate using EXIF, QuickTime and Apple sources.
+     *
+     * @param ExifTagResolver   $exif      Resolver exposing EXIF scene metadata.
+     * @param QuickTimeResolver $quickTime Resolver providing QuickTime scene hints.
+     * @param Apple             $apple     Aggregated Apple maker note metadata.
+     * @param int|null          $faceCount Number of detected face regions.
+     *
+     * @return Scene Scene metadata value object.
      */
     private function buildScene(
         ExifTagResolver $exif,
@@ -650,9 +688,9 @@ final class StructuredMetadataBuilder
     /**
      * Builds the Apple metadata aggregate by combining maker note values with QuickTime fallbacks.
      *
-     * @param AppleMakerNotes|null $makerNotes Parsed Apple maker note payload.
+     * @param AppleMakerNotes|null $makerNotes        Parsed Apple maker note payload.
      * @param QuickTimeResolver    $quickTimeResolver Resolver exposing QuickTime metadata entries.
-     * @param QuickTimeMeta|null   $quickTimeMeta QuickTime metadata container used for content identifiers.
+     * @param QuickTimeMeta|null   $quickTimeMeta     QuickTime metadata container used for content identifiers.
      *
      * @return Apple Apple metadata value object with normalised fields.
      */
@@ -774,7 +812,7 @@ final class StructuredMetadataBuilder
      * Resolves the first non-empty QuickTime string value from the supplied keys.
      *
      * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
-     * @param string            ...$keys Candidate metadata keys to inspect in order.
+     * @param string            ...$keys  Candidate metadata keys to inspect in order.
      *
      * @return string|null First matching string value or null when no value is present.
      */
@@ -794,7 +832,7 @@ final class StructuredMetadataBuilder
      * Resolves the first available QuickTime float value from the provided keys.
      *
      * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
-     * @param string            ...$keys Candidate metadata keys to inspect in order.
+     * @param string            ...$keys  Candidate metadata keys to inspect in order.
      *
      * @return float|null First matching float value or null when no value is present.
      */
@@ -814,7 +852,7 @@ final class StructuredMetadataBuilder
      * Resolves the first available QuickTime integer value from the provided keys.
      *
      * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
-     * @param string            ...$keys Candidate metadata keys to inspect in order.
+     * @param string            ...$keys  Candidate metadata keys to inspect in order.
      *
      * @return int|null First matching integer value or null when no value is present.
      */
@@ -831,7 +869,12 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * @return list<float>|null
+     * Resolves a list of floating point values from a space or comma separated QuickTime field.
+     *
+     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param string            ...$keys  Candidate metadata keys to inspect in order.
+     *
+     * @return list<float>|null Normalised list of float values or null when unavailable.
      */
     private function quickTimeFloatList(QuickTimeResolver $resolver, string ...$keys): ?array
     {
@@ -860,7 +903,11 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * @return array<string, bool>
+     * Builds a normalised map of QuickTime boolean flags relevant to Apple metadata.
+     *
+     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     *
+     * @return array<string, bool> Normalised flag map keyed by camelCase identifiers.
      */
     private function quickTimeFlags(QuickTimeResolver $resolver): array
     {
@@ -877,6 +924,10 @@ final class StructuredMetadataBuilder
 
     /**
      * Normalises the colour space based on interoperability metadata hints.
+     *
+     * @param ExifTagResolver $resolver Resolver exposing colour space and interoperability tags.
+     *
+     * @return ColorSpace|null Normalised colour space enumeration or null when undefined.
      */
     private function normalizedColorSpace(ExifTagResolver $resolver): ?ColorSpace
     {
@@ -895,7 +946,9 @@ final class StructuredMetadataBuilder
     /**
      * Returns the first string from the list or null.
      *
-     * @param list<string> $values
+     * @param list<string> $values List of candidate string values in priority order.
+     *
+     * @return string|null First entry in the list or null when the list is empty.
      */
     private function firstListValue(array $values): ?string
     {
@@ -904,6 +957,10 @@ final class StructuredMetadataBuilder
 
     /**
      * Normalises EXIF fractional second strings.
+     *
+     * @param string|null $value Raw fractional second string as stored in EXIF tags.
+     *
+     * @return string|null Cleaned fractional second string or null when empty.
      */
     private function sanitizeSubSeconds(?string $value): ?string
     {
@@ -912,6 +969,10 @@ final class StructuredMetadataBuilder
 
     /**
      * Attempts to parse various ISO 8601 date representations.
+     *
+     * @param string|null $value Timestamp string in ISO 8601 format.
+     *
+     * @return DateTimeImmutable|null Parsed timestamp or null when parsing fails.
      */
     private function parseFlexibleDate(?string $value): ?DateTimeImmutable
     {

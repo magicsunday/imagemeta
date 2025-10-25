@@ -54,40 +54,40 @@ final readonly class StructuredMetadata
     /**
      * Creates a structured metadata aggregate populated with curated value objects for each domain.
      *
-     * @param Interop             $interop Interoperability metadata derived from EXIF tags.
-     * @param TiffData            $tiff TIFF-related imaging parameters.
-     * @param CompositeImageInfo  $composite Composite capture information for multi-image scenes.
-     * @param Standards           $standards Metadata standard identifiers and versions.
-     * @param Camera              $camera Camera manufacturer and model information.
-     * @param Lens                $lens Lens identification and optical properties.
-     * @param Image               $image Image dimensions and orientation details.
-     * @param Exposure            $exposure Exposure settings and capture parameters.
-     * @param Capture             $capture Environmental capture metadata.
-     * @param Gps                 $gps Geographic positioning information.
-     * @param Device              $device Host device information.
-     * @param Apple               $apple Apple-specific metadata aggregate.
-     * @param Xmp                 $xmp Parsed XMP document wrapper.
-     * @param File                $file File level metadata and characteristics.
-     * @param Container           $container Container format metadata.
-     * @param Preview             $preview Embedded preview information.
-     * @param Video               $video Video track metadata when available.
-     * @param Audio               $audio Audio track metadata when available.
-     * @param ColorProfile        $colorProfile Colour profile information.
-     * @param ProcessingSettings  $processing Image processing metadata.
+     * @param Interop             $interop             Interoperability metadata derived from EXIF tags.
+     * @param TiffData            $tiff                TIFF-related imaging parameters.
+     * @param CompositeImageInfo  $composite           Composite capture information for multi-image scenes.
+     * @param Standards           $standards           Metadata standard identifiers and versions.
+     * @param Camera              $camera              Camera manufacturer and model information.
+     * @param Lens                $lens                Lens identification and optical properties.
+     * @param Image               $image               Image dimensions and orientation details.
+     * @param Exposure            $exposure            Exposure settings and capture parameters.
+     * @param Capture             $capture             Environmental capture metadata.
+     * @param Gps                 $gps                 Geographic positioning information.
+     * @param Device              $device              Host device information.
+     * @param Apple               $apple               Apple-specific metadata aggregate.
+     * @param Xmp                 $xmp                 Parsed XMP document wrapper.
+     * @param File                $file                File level metadata and characteristics.
+     * @param Container           $container           Container format metadata.
+     * @param Preview             $preview             Embedded preview information.
+     * @param Video               $video               Video track metadata when available.
+     * @param Audio               $audio               Audio track metadata when available.
+     * @param ColorProfile        $colorProfile        Colour profile information.
+     * @param ProcessingSettings  $processing          Image processing metadata.
      * @param WhiteBalanceDetails $whiteBalanceDetails White balance analysis details.
-     * @param Focus               $focus Focus distance and autofocus data.
-     * @param Motion              $motion Motion and acceleration measurements.
-     * @param Scene               $scene Scene classification details.
-     * @param Regions             $regions Region and face annotations.
-     * @param Keywords            $keywords Keyword annotations.
-     * @param Rights              $rights Rights and licensing information.
-     * @param Author              $author Creator metadata values.
-     * @param Temporal            $temporal Temporal metadata beyond capture timestamps.
-     * @param Derived             $derived Derived asset references.
-     * @param RelatedAssets       $related Related asset references from metadata.
-     * @param Sensor              $sensor Sensor and detection metadata.
-     * @param Uav                 $uav Unmanned aerial vehicle metadata.
-     * @param Integrity           $integrity Integrity and validation metadata.
+     * @param Focus               $focus               Focus distance and autofocus data.
+     * @param Motion              $motion              Motion and acceleration measurements.
+     * @param Scene               $scene               Scene classification details.
+     * @param Regions             $regions             Region and face annotations.
+     * @param Keywords            $keywords            Keyword annotations.
+     * @param Rights              $rights              Rights and licensing information.
+     * @param Author              $author              Creator metadata values.
+     * @param Temporal            $temporal            Temporal metadata beyond capture timestamps.
+     * @param Derived             $derived             Derived asset references.
+     * @param RelatedAssets       $related             Related asset references from metadata.
+     * @param Sensor              $sensor              Sensor and detection metadata.
+     * @param Uav                 $uav                 Unmanned aerial vehicle metadata.
+     * @param Integrity           $integrity           Integrity and validation metadata.
      */
     public function __construct(
         public Interop $interop,
