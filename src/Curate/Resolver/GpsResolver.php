@@ -56,12 +56,18 @@ final readonly class GpsResolver
         $altitudeRef  = $this->intValue($gpsData['alt_ref'] ?? null);
 
         $version     = $this->stringValue($gpsData['version'] ?? null);
+        $versionRaw  = $gpsData['version_raw'] ?? null;
+        if (!is_string($versionRaw)) {
+            $versionRaw = null;
+        }
         $satellites  = $this->stringValue($gpsData['satellites'] ?? null);
         $status      = $this->stringValue($gpsData['status'] ?? null);
         $measureMode = $this->stringValue($gpsData['measure_mode'] ?? null);
         $dop         = $this->floatValue($gpsData['dop'] ?? null);
         $speedRef    = $this->uppercase($gpsData['speed_ref'] ?? null);
         $speedMs     = $this->floatValue($gpsData['speed_ms'] ?? null);
+        $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref'] ?? null);
+        $speedOriginal    = $this->floatValue($gpsData['speed_original'] ?? null);
         $trackRef    = $this->uppercase($gpsData['track_ref'] ?? null);
         $track       = $this->floatValue($gpsData['track'] ?? null);
         $imgDirRef   = $this->uppercase($gpsData['img_direction_ref'] ?? null);
@@ -76,11 +82,17 @@ final readonly class GpsResolver
         $destBear      = $this->floatValue($gpsData['dest_bearing'] ?? null);
         $destDistRef   = $this->uppercase($gpsData['dest_distance_ref'] ?? null);
         $destDistMetre = $this->floatValue($gpsData['dest_distance_m'] ?? null);
+        $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref'] ?? null);
+        $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original'] ?? null);
 
         $processingMethod = $this->stringValue($gpsData['processing_method'] ?? null);
         $areaInformation  = $this->stringValue($gpsData['area_information'] ?? null);
 
-        $date = $this->normaliseDate($this->stringValue($gpsData['date'] ?? null));
+        $date    = $this->normaliseDate($this->stringValue($gpsData['date'] ?? null));
+        $dateRaw = $gpsData['date_raw'] ?? null;
+        if (!is_string($dateRaw)) {
+            $dateRaw = null;
+        }
         $time = $this->stringValue($gpsData['time'] ?? null);
 
         $timestamp = $exifDocument?->gpsTimestamp();
@@ -139,14 +151,42 @@ final readonly class GpsResolver
             }
         }
 
+        $xmpSpeedRef = $this->xmpString($xmpDocument, self::NS_EXIF, 'GPSSpeedRef');
         if ($speedRef === null) {
-            $speedRef = $this->uppercase($this->xmpString($xmpDocument, self::NS_EXIF, 'GPSSpeedRef'));
+            $speedRef = $this->uppercase($xmpSpeedRef);
+        }
+        if ($speedOriginalRef === null) {
+            $speedOriginalRef = $this->stringValue($xmpSpeedRef);
         }
 
-        if ($speedMs === null) {
-            $speedValue = $this->xmpFloat($xmpDocument, self::NS_EXIF, 'GPSSpeed');
-            if ($speedValue !== null && $speedRef !== null) {
+        $speedValue = $this->xmpFloat($xmpDocument, self::NS_EXIF, 'GPSSpeed');
+        if ($speedValue !== null) {
+            if ($speedMs === null && $speedRef !== null) {
                 $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
+            }
+            if ($speedOriginal === null) {
+                $speedOriginal = $speedValue;
+            }
+        }
+
+        $xmpDestDistRef = $this->xmpString($xmpDocument, self::NS_EXIF, 'GPSDestDistanceRef');
+        if ($destDistRef === null) {
+            $destDistRef = $this->uppercase($xmpDestDistRef);
+        }
+        if ($destDistOriginalRef === null) {
+            $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
+        }
+
+        $destDistValue = $this->xmpFloat($xmpDocument, self::NS_EXIF, 'GPSDestDistance');
+        if ($destDistValue !== null) {
+            if ($destDistMetre === null && $destDistRef !== null) {
+                $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
+                if ($convertedDistance !== null) {
+                    $destDistMetre = $convertedDistance;
+                }
+            }
+            if ($destDistOriginal === null) {
+                $destDistOriginal = $destDistValue;
             }
         }
 
@@ -174,12 +214,15 @@ final readonly class GpsResolver
             $altitude,
             $altitudeRef,
             $version,
+            $versionRaw,
             $satellites,
             $status,
             $measureMode,
             $dop,
             $speedRef,
             $speedMs,
+            $speedOriginalRef,
+            $speedOriginal,
             $trackRef,
             $track,
             $imgDirRef,
@@ -193,9 +236,12 @@ final readonly class GpsResolver
             $destBear,
             $destDistRef,
             $destDistMetre,
+            $destDistOriginalRef,
+            $destDistOriginal,
             $processingMethod,
             $areaInformation,
             $date,
+            $dateRaw,
             $time,
             $timestamp,
             $differential,
@@ -214,12 +260,15 @@ final readonly class GpsResolver
             altitude: $altitude,
             altitudeRef: $altitudeRef,
             version: $version,
+            versionRaw: $versionRaw,
             satellites: $satellites,
             status: $status,
             measureMode: $measureMode,
             dop: $dop,
             speedRef: $speedRef,
             speedMs: $speedMs,
+            speedOriginalRef: $speedOriginalRef,
+            speedOriginal: $speedOriginal,
             trackRef: $trackRef,
             track: $track,
             imageDirectionRef: $imgDirRef,
@@ -233,9 +282,12 @@ final readonly class GpsResolver
             destinationBearing: $destBear,
             destinationDistanceRef: $destDistRef,
             destinationDistanceMetres: $destDistMetre,
+            destinationDistanceOriginalRef: $destDistOriginalRef,
+            destinationDistanceOriginal: $destDistOriginal,
             processingMethod: $processingMethod,
             areaInformation: $areaInformation,
             date: $date,
+            dateRaw: $dateRaw,
             time: $time,
             timestamp: $timestamp,
             differential: $differential,
@@ -433,6 +485,19 @@ final readonly class GpsResolver
         }
 
         return $dateTime->setTimezone(new DateTimeZone('UTC'));
+    }
+
+    /**
+     * Converts destination distance into metres using GPSDestDistanceRef semantics.
+     */
+    private function convertDistanceToMetres(float $distance, string $distanceRef): ?float
+    {
+        return match ($distanceRef) {
+            'K'     => $distance * 1000.0,
+            'M'     => $distance * 1609.344,
+            'N'     => $distance * 1852.0,
+            default => null,
+        };
     }
 
     /**

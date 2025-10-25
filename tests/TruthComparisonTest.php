@@ -98,6 +98,13 @@ final class TruthComparisonTest extends TestCase
         $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->image->width ?? 0, "$file: width");
         $this->assertSame((int)($exif['File:ImageHeight'] ?? 0), $meta->image->height ?? 0, "$file: height");
 
+        if ($file === 'Landscape_0.jpg') {
+            $this->assertNotNull($meta->image->width, 'Landscape_0.jpg: width fallback expected non-null value');
+            $this->assertNotNull($meta->image->height, 'Landscape_0.jpg: height fallback expected non-null value');
+            $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->image->width, 'Landscape_0.jpg: width fallback matches ExifTool');
+            $this->assertSame((int)($exif['File:ImageHeight'] ?? 0), $meta->image->height, 'Landscape_0.jpg: height fallback matches ExifTool');
+        }
+
         // Orientation
         if (isset($exif['IFD0:Orientation'], $this->map['Orientation'])) {
             $ok = $this->norm->compareEnum('Orientation', (int)$exif['IFD0:Orientation'], $meta->image->orientation ?? null);

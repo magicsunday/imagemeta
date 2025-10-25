@@ -61,6 +61,8 @@ use function trim;
  *     dop:?float,
  *     speed_ref:?string,
  *     speed_ms:?float,
+ *     speed_original_ref:?string,
+ *     speed_original:?float,
  *     track_ref:?string,
  *     track:?float,
  *     img_direction_ref:?string,
@@ -74,6 +76,8 @@ use function trim;
  *     dest_bearing:?float,
  *     dest_distance_ref:?string,
  *     dest_distance_m:?float,
+ *     dest_distance_original_ref:?string,
+ *     dest_distance_original:?float,
  *     processing_method:?string,
  *     area_information:?string,
  *     date:?string,
@@ -437,6 +441,8 @@ final readonly class ValueConverters
             'dop'                 => null,
             'speed_ref'           => null,
             'speed_ms'            => null,
+            'speed_original_ref'  => null,
+            'speed_original'      => null,
             'track_ref'           => null,
             'track'               => null,
             'img_direction_ref'   => null,
@@ -450,6 +456,8 @@ final readonly class ValueConverters
             'dest_bearing'        => null,
             'dest_distance_ref'   => null,
             'dest_distance_m'     => null,
+            'dest_distance_original_ref' => null,
+            'dest_distance_original'     => null,
             'processing_method'   => null,
             'area_information'    => null,
             'date'                => null,
@@ -538,16 +546,21 @@ final readonly class ValueConverters
         $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
         $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
 
-        $result['version']      = self::formatGpsVersion($versionEntry?->value);
+        $versionParts            = self::formatGpsVersion($versionEntry?->value);
+        $result['version']      = $versionParts['normalized'];
+        $result['version_raw']  = $versionParts['raw'];
         $result['satellites']   = self::sanitizeString($satellitesEntry?->value);
         $result['status']       = self::sanitizeString($statusEntry?->value);
         $result['measure_mode'] = self::sanitizeString($measureEntry?->value);
         $result['dop']          = self::rationalToFloat($dopEntry?->value);
 
-        $speedRefValue       = $speedRefEntry?->value;
-        $speedRef            = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
-        $result['speed_ref'] = $speedRef;
-        $result['speed_ms']  = self::gpsSpeedToMs($speedRef, $speedEntry?->value);
+        $speedRefValue                = $speedRefEntry?->value;
+        $speedOriginalRef             = self::sanitizeString($speedRefValue);
+        $speedRef                     = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
+        $result['speed_ref']          = $speedRef;
+        $result['speed_ms']           = self::gpsSpeedToMs($speedRef, $speedEntry?->value);
+        $result['speed_original_ref'] = $speedOriginalRef;
+        $result['speed_original']     = self::rationalToFloat($speedEntry?->value);
 
         $trackRefValue       = $trackRefEntry?->value;
         $result['track_ref'] = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
@@ -578,14 +591,18 @@ final readonly class ValueConverters
         $destBearingValue           = self::rationalToFloat($destBearEntry?->value);
         $result['dest_bearing']     = self::normalizeBearing($destBearingValue);
 
-        $destDistanceRefValue        = $destDistRefEntry?->value;
-        $result['dest_distance_ref'] = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
-        $result['dest_distance_m']   = self::gpsDistanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
+        $destDistanceRefValue                 = $destDistRefEntry?->value;
+        $result['dest_distance_ref']            = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
+        $result['dest_distance_original_ref']   = self::sanitizeString($destDistanceRefValue);
+        $result['dest_distance_original']       = self::rationalToFloat($destDistEntry?->value);
+        $result['dest_distance_m']              = self::gpsDistanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
 
         $result['processing_method'] = self::decodeUndefinedString($processEntry?->value);
         $result['area_information']  = self::decodeUndefinedString($areaEntry?->value);
 
-        $result['date'] = self::normalizeGpsDate($dateEntry?->value);
+        $dateParts       = self::normalizeGpsDate($dateEntry?->value);
+        $result['date'] = $dateParts['normalized'];
+        $result['date_raw'] = $dateParts['raw'];
         $timeParts      = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
             ? self::parseGpsTime($timeEntry->value)
             : null;
@@ -641,33 +658,60 @@ final readonly class ValueConverters
      * Converts a GPS version payload into a dotted string.
      *
      * @param ExifScalar $value Raw value extracted from the IFD entry.
+     *
+     * @return array{normalized: ?string, raw: ?string}
      */
-    private static function formatGpsVersion(string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value): ?string
-    {
+    private static function formatGpsVersion(
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): array {
+        $raw = is_string($value) ? $value : null;
+        $normalized = null;
+
         if ($value instanceof ExifNumericList) {
             $components = array_map(static fn (int|float $component): int => (int) $component, $value->values);
 
-            return implode('.', $components);
+            $normalized = implode('.', $components);
+
+            return [
+                'normalized' => $normalized,
+                'raw' => $raw,
+            ];
         }
 
         if (is_string($value)) {
-            $value = trim(str_replace("\0", '', $value));
-            if ($value === '') {
-                return null;
+            $clean = trim(str_replace("\0", '', $value));
+            if ($clean !== '') {
+                $normalized = $clean;
             }
 
-            return $value;
+            return [
+                'normalized' => $normalized,
+                'raw' => $raw,
+            ];
         }
 
         if (is_int($value)) {
-            return (string) $value;
+            $normalized = (string) $value;
+
+            return [
+                'normalized' => $normalized,
+                'raw' => null,
+            ];
         }
 
         if (is_float($value)) {
-            return (string) $value;
+            $normalized = (string) $value;
+
+            return [
+                'normalized' => $normalized,
+                'raw' => null,
+            ];
         }
 
-        return null;
+        return [
+            'normalized' => null,
+            'raw' => $raw,
+        ];
     }
 
     /**
@@ -723,24 +767,39 @@ final readonly class ValueConverters
      * Normalises a GPS date stamp into an ISO 8601 calendar date.
      *
      * @param ExifScalar $value Raw value extracted from the IFD entry.
+     *
+     * @return array{normalized: ?string, raw: ?string}
      */
     private static function normalizeGpsDate(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
-    ): ?string {
+    ): array {
+        $raw = is_string($value) ? $value : null;
         if (!is_string($value)) {
-            return null;
+            return [
+                'normalized' => null,
+                'raw' => $raw,
+            ];
         }
 
-        $value = trim(str_replace("\0", '', $value));
-        if ($value === '') {
-            return null;
+        $clean = trim(str_replace("\0", '', $value));
+        if ($clean === '') {
+            return [
+                'normalized' => null,
+                'raw' => $raw,
+            ];
         }
 
-        if (preg_match('/^\d{4}:\d{2}:\d{2}$/', $value) !== 1) {
-            return null;
+        if (preg_match('/^\d{4}:\d{2}:\d{2}$/', $clean) !== 1) {
+            return [
+                'normalized' => null,
+                'raw' => $raw,
+            ];
         }
 
-        return str_replace(':', '-', $value);
+        return [
+            'normalized' => str_replace(':', '-', $clean),
+            'raw' => $raw,
+        ];
     }
 
     /**
