@@ -36,6 +36,7 @@ use function sha1;
 use function str_contains;
 use function strtolower;
 use function sort;
+use function preg_match;
 use function str_starts_with;
 use function strlen;
 use function substr;
@@ -668,6 +669,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $hdrHeadroom          = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
         $hdrGain              = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
         $snr                  = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
+        $aeStable             = $this->boolDictionaryValue($dictionary, 'AEStable');
+        $aeTarget             = $this->rationalFloatValue($dictionary, 'AETarget');
+        $aeAverage            = $this->rationalFloatValue($dictionary, 'AEAverage');
+        $afStable             = $this->boolDictionaryValue($dictionary, 'AFStable');
+        $afPerformance        = $this->rationalFloatValue($dictionary, 'AFPerformance');
+        $signalToNoiseRatioType = $this->stringOrIntValue($dictionary, 'SignalToNoiseRatioType');
+        $luminanceNoiseAmplitude = $this->rationalFloatValue($dictionary, 'LuminanceNoiseAmplitude');
         $focusPosition        = $this->floatValue($dictionary, 'FocusPosition');
         $runTime              = $this->runTimeValue($dictionary, 'RunTime');
         $livePhotoIndex       = $this->intValue($dictionary, ...self::LIVE_PHOTO_INDEX_KEYS);
@@ -699,7 +707,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
         }
         $accelerationVector = $this->floatList($dictionary, 'AccelerationVector');
-        $flags              = $this->extractFlags($dictionary);
+        $flags                   = $this->extractFlags($dictionary);
+        $imageCaptureRequestId   = $this->identifierValue($dictionary, 'ImageCaptureRequestID');
+        $qualityHint             = $this->stringOrNumericValue($dictionary, 'QualityHint');
+        $colorCorrectionMatrix   = $this->floatList($dictionary, 'ColorCorrectionMatrix');
 
         $makerNoteVersion   = $this->makerNoteVersionValue($dictionary, 'MakerNoteVersion');
         $hdrImageType       = $this->enumeratedStringValue($dictionary, self::HDR_IMAGE_TYPE_MAP, 'HDRImageType', 'HdrImageType');
@@ -718,6 +729,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             && $hdrHeadroom === null
             && $hdrGain === null
             && $snr === null
+            && $aeStable === null
+            && $aeTarget === null
+            && $aeAverage === null
+            && $afStable === null
+            && $afPerformance === null
+            && $signalToNoiseRatioType === null
+            && $luminanceNoiseAmplitude === null
             && $focusPosition === null
             && $livePhotoIndex === null
             && $livePhotoTime === null
@@ -727,6 +745,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             && $semanticStyleTone === null
             && $flags === []
             && $accelerationVector === null
+            && $imageCaptureRequestId === null
+            && $qualityHint === null
+            && $colorCorrectionMatrix === null
             && $runTime === null
             && $makerNoteVersion === null
             && $hdrImageType === null
@@ -748,6 +769,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $hdrHeadroom,
             $hdrGain,
             $snr,
+            $aeStable,
+            $aeTarget,
+            $aeAverage,
+            $afStable,
+            $afPerformance,
+            $signalToNoiseRatioType,
+            $luminanceNoiseAmplitude,
             $focusPosition,
             $livePhotoIndex,
             $colorTemperature,
@@ -756,6 +784,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $semanticStyleTone,
             $flags,
             $accelerationVector,
+            $imageCaptureRequestId,
+            $qualityHint,
+            $colorCorrectionMatrix,
             $livePhotoTime,
             $runTime,
             $makerNoteVersion,
@@ -797,6 +828,318 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         return new RunTime($epoch, $timescale, $rawValue, $flags);
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function boolDictionaryValue(array $dictionary, string ...$keys): ?bool
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $dictionary)) {
+                continue;
+            }
+
+            $value = $this->boolValue($dictionary[$key]);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function rationalFloatValue(array $dictionary, string ...$keys): ?float
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $dictionary)) {
+                continue;
+            }
+
+            $float = $this->normaliseRationalFloat($dictionary[$key]);
+            if ($float !== null) {
+                return $float;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string|int|float|array<int|string, mixed>|null $value
+     */
+    private function normaliseRationalFloat(string|int|float|array|null $value): ?float
+    {
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        if (is_string($value)) {
+            $normalized = trim($value);
+            if ($normalized === '') {
+                return null;
+            }
+
+            if (str_contains($normalized, '/')) {
+                [$numeratorRaw, $denominatorRaw] = explode('/', $normalized, 2);
+                $numerator   = trim($numeratorRaw);
+                $denominator = trim($denominatorRaw);
+
+                if ($numerator === '' || $denominator === '' || !is_numeric($numerator) || !is_numeric($denominator)) {
+                    return null;
+                }
+
+                $denominatorFloat = (float) $denominator;
+                if ($denominatorFloat === 0.0) {
+                    return null;
+                }
+
+                return (float) $numerator / $denominatorFloat;
+            }
+
+            if (!is_numeric($normalized)) {
+                return null;
+            }
+
+            return (float) $normalized;
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        foreach (['value', 'Value', 'data', 'Data', 'ratio', 'Ratio'] as $key) {
+            if (array_key_exists($key, $value)) {
+                $nested = $this->normaliseRationalFloat($value[$key]);
+                if ($nested !== null) {
+                    return $nested;
+                }
+            }
+        }
+
+        if (array_key_exists('values', $value) && is_array($value['values'])) {
+            $nested = $this->normaliseRationalFloat($value['values']);
+            if ($nested !== null) {
+                return $nested;
+            }
+        }
+
+        $numerator   = $this->numericComponentFromArray($value, 'numerator', 'Numerator', 'num', 'Num', 'numer');
+        $denominator = $this->numericComponentFromArray($value, 'denominator', 'Denominator', 'den', 'Den', 'denom', 'Denom');
+        if ($numerator !== null && $denominator !== null) {
+            if ($denominator === 0.0) {
+                return null;
+            }
+
+            return $numerator / $denominator;
+        }
+
+        if (!array_is_list($value)) {
+            return null;
+        }
+
+        $count = count($value);
+        if ($count >= 2) {
+            $num = $this->numericScalarValue($value[0]);
+            $den = $this->numericScalarValue($value[1]);
+            if ($num !== null && $den !== null && $den !== 0.0) {
+                return $num / $den;
+            }
+        }
+
+        foreach ($value as $entry) {
+            $float = $this->normaliseRationalFloat($entry);
+            if ($float !== null) {
+                return $float;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, mixed> $value
+     *
+     * @phpstan-param array<int|string, mixed> $value
+     */
+    private function numericComponentFromArray(array $value, string ...$keys): ?float
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $value)) {
+                continue;
+            }
+
+            $numeric = $this->numericScalarValue($value[$key]);
+            if ($numeric !== null) {
+                return $numeric;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string|int|float|array<int|string, mixed>|null $value
+     */
+    private function numericScalarValue(string|int|float|array|null $value): ?float
+    {
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        if (is_string($value)) {
+            $normalized = trim($value);
+            if ($normalized === '' || !is_numeric($normalized)) {
+                return null;
+            }
+
+            return (float) $normalized;
+        }
+
+        if (is_array($value)) {
+            return $this->normaliseRationalFloat($value);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function stringOrIntValue(array $dictionary, string ...$keys): string|int|null
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $dictionary)) {
+                continue;
+            }
+
+            $value = $dictionary[$key];
+
+            if (is_int($value)) {
+                return $value;
+            }
+
+            if (is_float($value)) {
+                $intValue = (int) $value;
+                if ((float) $intValue === $value) {
+                    return $intValue;
+                }
+
+                return (string) $value;
+            }
+
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed === '') {
+                    continue;
+                }
+
+                if ($this->isIntegerString($trimmed)) {
+                    return $this->stringWithinIntRange($trimmed) ? (int) $trimmed : $trimmed;
+                }
+
+                if (is_numeric($trimmed)) {
+                    return $trimmed;
+                }
+
+                return $trimmed;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function identifierValue(array $dictionary, string ...$keys): string|int|null
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $dictionary)) {
+                continue;
+            }
+
+            $value = $dictionary[$key];
+
+            if (is_int($value)) {
+                return $value;
+            }
+
+            if (is_float($value)) {
+                $intValue = (int) $value;
+                if ((float) $intValue === $value) {
+                    return $intValue;
+                }
+
+                return (string) $value;
+            }
+
+            if (is_string($value)) {
+                $trimmed = trim($value);
+
+                return $trimmed !== '' ? $trimmed : null;
+            }
+        }
+
+        return null;
+    }
+
+    private function isIntegerString(string $value): bool
+    {
+        return preg_match('/^-?\d+$/', $value) === 1;
+    }
+
+    private function stringWithinIntRange(string $value): bool
+    {
+        $negative = $value !== '' && $value[0] === '-';
+        $digits   = $negative ? substr($value, 1) : $value;
+
+        if ($digits === '') {
+            return false;
+        }
+
+        $maxDigits = (string) PHP_INT_MAX;
+
+        $digitLength = strlen($digits);
+        $maxLength   = strlen($maxDigits);
+
+        if ($digitLength < $maxLength) {
+            return true;
+        }
+
+        if ($digitLength > $maxLength) {
+            return false;
+        }
+
+        $comparison = strcmp($digits, $maxDigits);
+        if ($comparison > 0) {
+            return false;
+        }
+
+        if ($comparison < 0) {
+            return true;
+        }
+
+        return !$negative;
     }
 
     /**
