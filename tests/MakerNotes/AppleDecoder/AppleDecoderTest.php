@@ -488,6 +488,36 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(5, $notes->runTime?->flags);
     }
 
+    #[Test]
+    #[DataProvider('stabilityFlagProvider')]
+    public function buildAppleMakerNotesParsesStabilityFlags(string $makerKey, string|int $value, string $expectedFlag, bool $expected): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier' => 'stability',
+            $makerKey           => $value,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertArrayHasKey($expectedFlag, $notes->flags);
+        self::assertSame($expected, $notes->flags[$expectedFlag]);
+    }
+
+    /**
+     * @return iterable<string, array{string, string|int, string, bool}>
+     */
+    public static function stabilityFlagProvider(): iterable
+    {
+        yield 'ae-stable numeric enabled' => ['AEStable', 1, 'aeStable', true];
+        yield 'ae-stable string disabled' => ['AEStable', '0', 'aeStable', false];
+        yield 'af-stable numeric disabled' => ['AFStable', 0, 'afStable', false];
+        yield 'af-stable string enabled' => ['AFStable', '1', 'afStable', true];
+    }
+
     private function buildMakerNotesBlobWithMovieIndex(): string
     {
         return str_replace('LivePhotoVideoIndex', 'LivePhotoMovieIndex', $this->buildMakerNotesBlob());
@@ -531,6 +561,8 @@ final class AppleDecoderTest extends TestCase
             'LongExposure'          => true,
             'PersonInPhoto'         => true,
             'PetInPhoto'            => false,
+            'AEStable'             => 1,
+            'AFStable'             => '0',
         ]);
 
         $maskNotes = $method->invoke($decoder, [
@@ -570,6 +602,8 @@ final class AppleDecoderTest extends TestCase
         self::assertTrue($scalarFlags['livePhotoEnabled']);
         self::assertTrue($scalarFlags['livePhotoActive']);
         self::assertTrue($scalarFlags['livePhotoLongExposure']);
+        self::assertTrue($scalarFlags['aeStable']);
+        self::assertFalse($scalarFlags['afStable']);
     }
 
     #[Test]

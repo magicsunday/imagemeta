@@ -52,6 +52,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @var array<string, string>
      */
     private const array FLAG_MAP = [
+        'AEStable'             => 'aeStable',
+        'AFStable'             => 'afStable',
         'LivePhotoAuto'         => 'livePhotoAuto',
         'LivePhotoEnabled'      => 'livePhotoEnabled',
         'LivePhotoActive'       => 'livePhotoActive',

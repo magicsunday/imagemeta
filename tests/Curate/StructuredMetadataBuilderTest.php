@@ -564,6 +564,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             'SceneFlags'            => [0, 1],
             'ImageProcessingFlags'  => ['values' => [0, 1]],
             'PhotosAppFeatureFlags' => [0],
+            'AEStable'             => 1,
+            'AFStable'             => 0,
         ]);
 
         self::assertInstanceOf(AppleMakerNotes::class, $appleMakerNotes);
@@ -584,6 +586,8 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertTrue($structured->apple->flags['hdrAuto']);
         self::assertTrue($structured->apple->flags['personInPhoto']);
         self::assertFalse($structured->apple->flags['petInPhoto']);
+        self::assertTrue($structured->apple->flags['aeStable']);
+        self::assertFalse($structured->apple->flags['afStable']);
     }
 
     /**
