@@ -134,6 +134,26 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame('Jane Doe', $resolver->copyright());
     }
 
+    #[Test]
+    public function parsesLinkedIfdChain(): void
+    {
+        $blob      = $this->buildClassicLinkedIfdBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $subsequentIfds = $document->subsequentIfds();
+
+        self::assertCount(2, $subsequentIfds);
+        self::assertSame($document->ifd1, $subsequentIfds[0]);
+
+        $firstIfdEntry = $subsequentIfds[0]->get(ExifTag::IMAGE_HEIGHT);
+        self::assertNotNull($firstIfdEntry);
+        self::assertSame(200, $firstIfdEntry->value);
+
+        $secondIfdEntry = $subsequentIfds[1]->get(ExifTag::BITS_PER_SAMPLE);
+        self::assertNotNull($secondIfdEntry);
+        self::assertSame(16, $secondIfdEntry->value);
+    }
+
     /**
      * Ensures printable UNDEFINED payloads are normalised to strings.
      */
@@ -574,6 +594,33 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $gpsAltData;
 
         return $blob;
+    }
+
+    /**
+     * Builds a Classic TIFF blob that chains multiple subsequent IFDs.
+     */
+    private function buildClassicLinkedIfdBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifdEntryCount = 1;
+        $ifdLength     = 2 + ($ifdEntryCount * 12) + 4;
+        $ifd1Offset    = 8 + $ifdLength;
+        $ifd2Offset    = $ifd1Offset + $ifdLength;
+
+        $ifd0 = pack('v', $ifdEntryCount)
+            . self::packClassicEntry(ExifTag::IMAGE_WIDTH, 3, 1, 100)
+            . pack('V', $ifd1Offset);
+
+        $ifd1 = pack('v', $ifdEntryCount)
+            . self::packClassicEntry(ExifTag::IMAGE_HEIGHT, 3, 1, 200)
+            . pack('V', $ifd2Offset);
+
+        $ifd2 = pack('v', $ifdEntryCount)
+            . self::packClassicEntry(ExifTag::BITS_PER_SAMPLE, 3, 1, 16)
+            . pack('V', 0);
+
+        return $header . $ifd0 . $ifd1 . $ifd2;
     }
 
     /**
