@@ -95,6 +95,8 @@ final class StructuredMetadataBuilder
         'HdrEnabled'            => 'hdrEnabled',
         'NightMode'             => 'nightMode',
         'LongExposure'          => 'longExposure',
+        'PersonInPhoto'         => 'personInPhoto',
+        'PetInPhoto'            => 'petInPhoto',
     ];
 
     /**
