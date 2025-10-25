@@ -400,57 +400,113 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         /** @var array<int|string, mixed> $semantic */
         $semantic = $value;
 
-        $resolve = static function (array $entries, int $index): string|int|float|bool|array|null {
-            $intKey      = $index;
-            $stringKey   = (string) $index;
-            $underscored = '_' . $index;
-
-            if (array_key_exists($intKey, $entries)) {
-                return $entries[$intKey];
-            }
-
-            if (array_key_exists($stringKey, $entries)) {
-                return $entries[$stringKey];
-            }
-
-            if (array_key_exists($underscored, $entries)) {
-                return $entries[$underscored];
-            }
-
+        $entries = $this->semanticStyleEntries($semantic);
+        if ($entries === null) {
             return null;
-        };
-
-        $presetRaw = $resolve($semantic, 0);
-        $warmthRaw = $resolve($semantic, 1);
-        $toneRaw   = $resolve($semantic, 2);
-
-        $preset = null;
-        if (is_string($presetRaw)) {
-            $trimmed = trim($presetRaw);
-            if ($trimmed !== '') {
-                $preset = $trimmed;
-            }
         }
 
-        $warmth = null;
-        if (is_float($warmthRaw)) {
-            $warmth = $warmthRaw;
-        } elseif (is_int($warmthRaw) || is_numeric($warmthRaw)) {
-            $warmth = (float) $warmthRaw;
-        }
+        $presetRaw      = $this->semanticStyleEntry($entries, 0);
+        $legacyWarmth   = $this->semanticStyleEntry($entries, 1);
+        $modernWarmth   = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 2) : null;
+        $warmthRaw      = $legacyWarmth ?? $modernWarmth;
+        $toneRawLegacy  = $legacyWarmth !== null ? $this->semanticStyleEntry($entries, 2) : null;
+        $toneRawModern  = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 3, 2) : null;
+        $toneRaw        = $toneRawLegacy ?? $toneRawModern;
 
-        $tone = null;
-        if (is_float($toneRaw)) {
-            $tone = $toneRaw;
-        } elseif (is_int($toneRaw) || is_numeric($toneRaw)) {
-            $tone = (float) $toneRaw;
-        }
+        $preset = $this->semanticStylePreset($presetRaw);
+        $warmth = $this->semanticStyleFloat($warmthRaw);
+        $tone   = $this->semanticStyleFloat($toneRaw);
 
         if ($preset === null && $warmth === null && $tone === null) {
             return null;
         }
 
         return [$preset, $warmth, $tone];
+    }
+
+    /**
+     * @param array<int|string, mixed> $semantic
+     *
+     * @return array<int|string, string|int|float|bool|null>|null
+     */
+    private function semanticStyleEntries(array $semantic): ?array
+    {
+        if (!array_is_list($semantic)) {
+            foreach (['values', 'Values'] as $key) {
+                if (array_key_exists($key, $semantic) && is_array($semantic[$key])) {
+                    /** @var array<int|string, mixed> $values */
+                    $values = $semantic[$key];
+
+                    return $this->semanticStyleEntries($values);
+                }
+            }
+        }
+
+        return $semantic;
+    }
+
+    /**
+     * @param array<int|string, string|int|float|bool|null> $entries
+     */
+    private function semanticStyleEntry(array $entries, int ...$indexes): string|int|float|bool|null
+    {
+        foreach ($indexes as $index) {
+            $candidates = [$index, (string) $index, '_' . $index];
+            foreach ($candidates as $key) {
+                if (!array_key_exists($key, $entries)) {
+                    continue;
+                }
+
+                $value = $entries[$key];
+                if (is_array($value)) {
+                    foreach (['value', 'Value'] as $innerKey) {
+                        if (array_key_exists($innerKey, $value)) {
+                            $inner = $value[$innerKey];
+                            if (!is_array($inner)) {
+                                $value = $inner;
+                            }
+
+                            break;
+                        }
+                    }
+
+                    if (is_array($value)) {
+                        continue;
+                    }
+                }
+
+                if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
+                    return $value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function semanticStylePreset(string|int|float|bool|null $value): ?string
+    {
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed !== '') {
+                return $trimmed;
+            }
+        }
+
+        return null;
+    }
+
+    private function semanticStyleFloat(string|int|float|bool|null $value): ?float
+    {
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_numeric($value)) {
+            return (float) $value;
+        }
+
+        return null;
     }
 
     /**

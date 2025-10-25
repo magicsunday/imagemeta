@@ -523,6 +523,26 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame([0.12, -0.34, 0.56], $structured->apple->accelerationVector);
     }
 
+    #[Test]
+    public function usesQuickTimeSemanticStyleDictionaryWhenMakerNotesMissing(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
+            'SemanticStyle'                       => [
+                '_0' => 'CompositePreset',
+                '_2' => 0.4,
+                '_3' => -0.15,
+            ],
+        ]);
+
+        $metadata   = new Metadata(['primary'], $quickTime, null, []);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('CompositePreset', $structured->apple->semanticStylePreset);
+        self::assertEqualsWithDelta(0.4, $structured->apple->semanticStyleWarmth, 1e-12);
+        self::assertEqualsWithDelta(-0.15, $structured->apple->semanticStyleTone, 1e-12);
+    }
+
     /**
      * Ensures JPEG-only metadata uses the maker note night mode flag when QuickTime metadata is absent.
      */
