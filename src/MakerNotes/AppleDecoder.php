@@ -119,15 +119,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        if ($this->isKeyedArchive($decoded)) {
-            try {
-                $decoded = (new KeyedArchiveUnarchiver())->unarchive($decoded);
-            } catch (ParseError) {
-                return null;
-            }
-        }
-
-        if (!is_array($decoded) || array_is_list($decoded)) {
+        $decoded = $this->resolveKeyedArchiveDictionary($decoded);
+        if ($decoded === null || !is_array($decoded) || array_is_list($decoded)) {
             return null;
         }
 
@@ -176,6 +169,96 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         return false;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|null
+     */
+    private function resolveKeyedArchiveDictionary(array $dictionary): ?array
+    {
+        if ($this->isKeyedArchive($dictionary)) {
+            try {
+                return (new KeyedArchiveUnarchiver())->unarchive($dictionary);
+            } catch (ParseError) {
+                return null;
+            }
+        }
+
+        $normalised = $this->normaliseKeyedArchive($dictionary);
+        if ($normalised === null) {
+            return $dictionary;
+        }
+
+        try {
+            return (new KeyedArchiveUnarchiver())->unarchive($normalised);
+        } catch (ParseError) {
+            return null;
+        }
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|null
+     */
+    private function normaliseKeyedArchive(array $dictionary): ?array
+    {
+        $objectsKey = $this->firstExistingKey($dictionary, '$objects', 'objects');
+        if ($objectsKey === null) {
+            return null;
+        }
+
+        $topKey = $this->firstExistingKey($dictionary, '$top', 'top');
+        if ($topKey === null) {
+            return null;
+        }
+
+        $objects = $dictionary[$objectsKey];
+        $top     = $dictionary[$topKey];
+
+        if (!is_array($objects) || !is_array($top)) {
+            return null;
+        }
+
+        if (!$this->containsUidReference($top)) {
+            return null;
+        }
+
+        $normalised            = $dictionary;
+        $normalised['$objects'] = $objects;
+        $normalised['$top']     = $top;
+
+        if (!array_key_exists('$archiver', $normalised)) {
+            $archiverKey = $this->firstExistingKey($dictionary, '$archiver', 'archiver');
+            if ($archiverKey !== null) {
+                $normalised['$archiver'] = $dictionary[$archiverKey];
+            }
+        }
+
+        if (!array_key_exists('$version', $normalised)) {
+            $versionKey = $this->firstExistingKey($dictionary, '$version', 'version');
+            if ($versionKey !== null) {
+                $normalised['$version'] = $dictionary[$versionKey];
+            }
+        }
+
+        return $normalised;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function firstExistingKey(array $dictionary, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $dictionary)) {
+                return $key;
+            }
+        }
+
+        return null;
     }
 
     /**
