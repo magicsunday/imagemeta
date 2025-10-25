@@ -171,6 +171,45 @@ final class RegionsResolverTest extends TestCase
     }
 
     #[Test]
+    public function pairsAppleMetadataWithoutGeometryToExistingFaces(): void
+    {
+        $document = new XmpDocument([
+            '{' . self::NS_ST_AREA . '}x'             => ['0.2', '0.52', '0.72'],
+            '{' . self::NS_ST_AREA . '}y'             => ['0.25', '0.54', '0.68'],
+            '{' . self::NS_ST_AREA . '}w'             => ['0.3', '0.14', '0.18'],
+            '{' . self::NS_ST_AREA . '}h'             => ['0.34', '0.16', '0.2'],
+            '{' . self::NS_MWG . '}Type'              => ['Face', 'Focus', 'Face'],
+            '{' . self::NS_APPLE . '}ConfidenceLevel' => ['830', '910', '500'],
+            '{' . self::NS_APPLE . '}AngleInfoRoll'   => ['0.5', '-1.25', '3.0'],
+            '{' . self::NS_APPLE . '}FaceID'          => ['face-1', 'face-2', 'face-extra'],
+        ]);
+
+        $regions = (new RegionsResolver())->resolve($document);
+
+        self::assertCount(3, $regions->items);
+
+        $firstFace = $regions->items[0];
+        self::assertSame(RegionType::FACE, $firstFace->type);
+        self::assertSame('face-1', $firstFace->faceId);
+        self::assertNotNull($firstFace->confidence);
+        self::assertEqualsWithDelta(0.83, $firstFace->confidence, 0.0001);
+        self::assertNotNull($firstFace->rotationDeg);
+        self::assertEqualsWithDelta(0.5, $firstFace->rotationDeg, 0.0001);
+
+        $focusRegion = $regions->items[1];
+        self::assertSame(RegionType::FOCUS, $focusRegion->type);
+        self::assertNull($focusRegion->faceId);
+
+        $secondFace = $regions->items[2];
+        self::assertSame(RegionType::FACE, $secondFace->type);
+        self::assertSame('face-2', $secondFace->faceId);
+        self::assertNotNull($secondFace->confidence);
+        self::assertEqualsWithDelta(0.91, $secondFace->confidence, 0.0001);
+        self::assertNotNull($secondFace->rotationDeg);
+        self::assertEqualsWithDelta(-1.25, $secondFace->rotationDeg, 0.0001);
+    }
+
+    #[Test]
     public function normalisesPixelCoordinatesUsingAppliedDimensions(): void
     {
         $document = new XmpDocument([
@@ -232,14 +271,14 @@ final class RegionsResolverTest extends TestCase
         $method     = $reflection->getMethod('extractAppleFaceRegions');
         $method->setAccessible(true);
 
-        /** @var array{regions: list<Region>, supplemental: list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}>} $result */
-        $result = $method->invoke($resolver, $document, null);
+        /** @var array{regions: list<Region>, supplemental: array<int, Region>} $result */
+        $result = $method->invoke($resolver, $document, null, []);
 
         $regions      = $result['regions'];
         $supplemental = $result['supplemental'];
 
         self::assertCount($count, $regions);
-        self::assertCount($count, $supplemental);
+        self::assertCount(0, $supplemental);
 
         foreach ($regions as $index => $region) {
             self::assertSame(RegionType::FACE, $region->type);
