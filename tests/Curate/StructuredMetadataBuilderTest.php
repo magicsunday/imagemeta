@@ -632,7 +632,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('qt-burst', $structured->apple->burstUuid);
         self::assertSame([0.5, 1.9], $structured->apple->focusDistanceRange);
         self::assertSame('4', $structured->apple->oisMode);
-        self::assertSame('NightMode', $structured->apple->imageCaptureType);
+        self::assertSame('Night Mode', $structured->apple->imageCaptureType);
         self::assertSame('qt-unique', $structured->apple->imageUniqueId);
         self::assertSame('qt-photo', $structured->apple->photoIdentifier);
         self::assertEqualsWithDelta(1.4, $structured->apple->afMeasuredDepth, 1e-12);

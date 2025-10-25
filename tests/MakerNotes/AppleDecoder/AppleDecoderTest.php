@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -222,7 +223,7 @@ final class AppleDecoderTest extends TestCase
             'BurstUUID'          => 'burst-uuid',
             'FocusDistanceRange' => [0.45, 1.5],
             'OISMode'            => 2,
-            'ImageCaptureType'   => 3,
+            'ImageCaptureType'   => 5,
             'ImageUniqueID'      => 'unique-id',
             'PhotoIdentifier'    => 'photo-id',
             'AFMeasuredDepth'    => 0.75,
@@ -318,10 +319,45 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    #[DataProvider('imageCaptureTypeProvider')]
+    public function buildAppleMakerNotesMapsImageCaptureTypeCodes(int $code, string $label): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier' => 'mapped-' . $code,
+            'ImageCaptureType'  => $code,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame($label, $notes->imageCaptureType);
+    }
+
+    /**
+     * @return iterable<int, array{int, string}>
+     */
+    public static function imageCaptureTypeProvider(): iterable
+    {
+        yield 'ProRAW' => [1, 'ProRAW'];
+        yield 'Portrait' => [2, 'Portrait'];
+        yield 'Live Photo' => [3, 'Live Photo'];
+        yield 'Live Photo Long Exposure' => [4, 'Live Photo Long Exposure'];
+        yield 'Burst' => [5, 'Burst'];
+        yield 'Night Mode' => [6, 'Night Mode'];
+        yield 'Night Mode Portrait' => [7, 'Night Mode Portrait'];
+        yield 'Photo' => [10, 'Photo'];
+        yield 'Manual Focus' => [11, 'Manual Focus'];
+        yield 'Scene' => [12, 'Scene'];
+    }
+
+    #[Test]
     public function decodeParsesAdditionalMakerNoteFields(): void
     {
         $raw = '{ MakerNoteVersion = "1.4"; HDRImageType = 2; BurstUUID = "text-burst"; '
-            . 'FocusDistanceRange = (0.4, 1.6); OISMode = 5; ImageCaptureType = 7; '
+            . 'FocusDistanceRange = (0.4, 1.6); OISMode = 5; ImageCaptureType = 4; '
             . 'ImageUniqueID = "text-unique"; PhotoIdentifier = "text-photo"; '
             . 'AFMeasuredDepth = 1.1; AFConfidence = 0.65; ContentIdentifier = "textual"; }';
 
@@ -338,7 +374,7 @@ final class AppleDecoderTest extends TestCase
         self::assertSame('text-burst', $apple->burstUuid);
         self::assertSame([0.4, 1.6], $apple->focusDistanceRange);
         self::assertSame('5', $apple->oisMode);
-        self::assertSame('LivePhotoLongExposure', $apple->imageCaptureType);
+        self::assertSame('Live Photo Long Exposure', $apple->imageCaptureType);
         self::assertSame('text-unique', $apple->imageUniqueId);
         self::assertSame('text-photo', $apple->photoIdentifier);
         self::assertEqualsWithDelta(1.1, $apple->afMeasuredDepth, 1e-12);
