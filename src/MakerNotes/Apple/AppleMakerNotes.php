@@ -30,6 +30,8 @@ final readonly class AppleMakerNotes
      * @param float|null          $semanticStyleTone   Semantic style tone adjustment.
      * @param array<string, bool> $flags               Boolean flags derived from maker note keys.
      * @param list<float>|null    $accelerationVector  Acceleration vector recorded during capture.
+     * @param float|null          $livePhotoTime       Normalised Live Photo timestamp in seconds.
+     * @param RunTime|null        $runTime             Capture runtime metadata describing the CMTime payload.
      */
     public function __construct(
         public ?string $contentIdentifier,
@@ -45,6 +47,8 @@ final readonly class AppleMakerNotes
         public ?float $semanticStyleTone,
         public array $flags,
         public ?array $accelerationVector,
+        public ?float $livePhotoTime = null,
+        public ?RunTime $runTime = null,
     ) {
     }
 }

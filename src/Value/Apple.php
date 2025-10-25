@@ -24,12 +24,14 @@ final readonly class Apple
      * @param float|null          $snr                 Signal-to-noise ratio setting applied during capture.
      * @param float|null          $focusPosition       Focus position within the device specific range.
      * @param int|null            $livePhotoIndex      Index of the still frame for Live Photo sequences.
+     * @param float|null          $livePhotoTime       Normalised Live Photo timestamp in seconds.
      * @param int|null            $colorTemperature    White balance colour temperature in Kelvin.
      * @param string|null         $semanticStylePreset Semantic style preset name.
      * @param float|null          $semanticStyleWarmth Semantic style warmth value.
      * @param float|null          $semanticStyleTone   Semantic style tone value.
      * @param array<string, bool> $flags               Boolean flags derived from maker notes or QuickTime metadata.
      * @param list<float>|null    $accelerationVector  Acceleration vector recorded during capture.
+     * @param RunTime|null        $runTime             Capture runtime metadata describing the CMTime payload.
      */
     public function __construct(
         public ?string $contentIdentifier,
@@ -39,12 +41,14 @@ final readonly class Apple
         public ?float $snr,
         public ?float $focusPosition,
         public ?int $livePhotoIndex,
+        public ?float $livePhotoTime = null,
         public ?int $colorTemperature,
         public ?string $semanticStylePreset,
         public ?float $semanticStyleWarmth,
         public ?float $semanticStyleTone,
         public array $flags,
         public ?array $accelerationVector,
+        public ?RunTime $runTime = null,
     ) {
     }
 }

@@ -88,12 +88,14 @@ final readonly class AppleResolver
             $snr,
             $focusPosition,
             $livePhotoIndex,
+            null,
             $colorTemperature,
             $semanticPreset,
             $semanticWarmth,
             $semanticTone,
             $flags,
             $accelerationVector,
+            null,
         );
     }
 

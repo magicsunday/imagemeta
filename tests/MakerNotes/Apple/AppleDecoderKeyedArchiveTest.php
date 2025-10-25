@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -50,8 +51,14 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         self::assertSame(10.5, $apple->snr);
         self::assertSame(0.75, $apple->focusPosition);
         self::assertSame(5, $apple->livePhotoIndex);
+        self::assertEqualsWithDelta(0.5, $apple->livePhotoTime, 1e-12);
         self::assertSame(6500, $apple->colorTemperature);
         self::assertSame([0.1, 0.2, 0.3], $apple->accelerationVector);
+        self::assertInstanceOf(RunTime::class, $apple->runTime);
+        self::assertSame(1, $apple->runTime?->epoch);
+        self::assertSame(10, $apple->runTime?->timescale);
+        self::assertSame(50, $apple->runTime?->value);
+        self::assertSame(3, $apple->runTime?->flags);
     }
 
     private function createKeyedArchiveBlob(): string
@@ -68,6 +75,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
                 'HdrHeadroom'         => ['CF$UID' => 4],
                 'LivePhotoVideoIndex' => ['CF$UID' => 8],
                 'SNRSetting'          => ['CF$UID' => 6],
+                'RunTime'             => ['CF$UID' => 17],
             ],
             [
                 '$classes'   => ['AppleMakerNotesRoot', 'NSObject'],
@@ -95,6 +103,12 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
             0.1,
             0.2,
             0.3,
+            [
+                'epoch'     => 1,
+                'timescale' => 10,
+                'value'     => 50,
+                'flags'     => 3,
+            ],
         ];
 
         $archive = [
