@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+use function base64_decode;
 use function hex2bin;
 use function sha1;
 use function str_repeat;
@@ -30,6 +31,8 @@ use function strlen;
  */
 final class AppleDecoderTest extends TestCase
 {
+    private const string PHOTOS_APP_DETECTION_BPLIST = 'YnBsaXN0MDDSAQIDBF8QEUNvbnRlbnRJZGVudGlmaWVyXxAVUGhvdG9zQXBwRmVhdHVyZUZsYWdzXxAUcGhvdG9zLWFwcC1kZXRlY3Rpb24QAQgNITlQAAAAAAAAAQEAAAAAAAAABQAAAAAAAAAAAAAAAAAAAFI=';
+
     /**
      * Ensures the decoder resolves keyed archive maker note data into structured metadata.
      */
@@ -76,21 +79,19 @@ final class AppleDecoderTest extends TestCase
         self::assertEqualsWithDelta(-0.15, $apple->semanticStyleTone, 1e-12);
         self::assertSame([0.12, -0.34, 0.56], $apple->accelerationVector);
 
-        self::assertArrayHasKey('livePhoto', $apple->flags);
-        self::assertArrayHasKey('livePhotoAuto', $apple->flags);
-        self::assertArrayHasKey('livePhotoEnabled', $apple->flags);
-        self::assertArrayHasKey('livePhotoLongExposure', $apple->flags);
-        self::assertArrayHasKey('hdrAuto', $apple->flags);
-        self::assertArrayHasKey('hdrEnabled', $apple->flags);
-        self::assertArrayHasKey('longExposure', $apple->flags);
+        $flags = $apple->flags;
+        ksort($flags);
 
-        self::assertTrue($apple->flags['livePhoto']);
-        self::assertTrue($apple->flags['livePhotoAuto']);
-        self::assertTrue($apple->flags['livePhotoEnabled']);
-        self::assertTrue($apple->flags['livePhotoLongExposure']);
-        self::assertTrue($apple->flags['hdrAuto']);
-        self::assertTrue($apple->flags['hdrEnabled']);
-        self::assertTrue($apple->flags['longExposure']);
+        self::assertSame(
+            [
+                'hdrAuto'             => true,
+                'hdrEnabled'          => true,
+                'livePhotoAuto'       => true,
+                'longExposure'        => true,
+                'personOrPetDetected' => true,
+            ],
+            $flags,
+        );
     }
 
     #[Test]
@@ -217,12 +218,36 @@ final class AppleDecoderTest extends TestCase
         self::assertInstanceOf(AppleMakerNotes::class, $maskNotes);
 
         $scalarFlags = $scalarNotes->flags;
-        $maskFlags   = $maskNotes->flags;
-
         ksort($scalarFlags);
+
+        self::assertSame(
+            [
+                'hdrAuto'               => true,
+                'hdrEnabled'            => true,
+                'livePhoto'             => true,
+                'livePhotoActive'       => true,
+                'livePhotoAuto'         => true,
+                'livePhotoEnabled'      => true,
+                'livePhotoLongExposure' => true,
+                'longExposure'          => true,
+                'nightMode'             => true,
+            ],
+            $scalarFlags,
+        );
+
+        $maskFlags = $maskNotes->flags;
         ksort($maskFlags);
 
-        self::assertSame($scalarFlags, $maskFlags);
+        self::assertSame(
+            [
+                'hdrAuto'             => true,
+                'hdrEnabled'          => true,
+                'longExposure'        => true,
+                'nightMode'           => true,
+                'personOrPetDetected' => true,
+            ],
+            $maskFlags,
+        );
     }
 
     #[Test]
@@ -245,6 +270,7 @@ final class AppleDecoderTest extends TestCase
             [
                 'livePhotoLongExposure' => false,
                 'nightMode'             => false,
+                'personOrPetDetected'   => true,
             ],
             $notes->flags,
         );
@@ -271,17 +297,31 @@ final class AppleDecoderTest extends TestCase
 
         self::assertSame(
             [
-                'hdrAuto'               => true,
-                'hdrEnabled'            => true,
-                'livePhoto'             => true,
-                'livePhotoActive'       => true,
-                'livePhotoAuto'         => true,
-                'livePhotoEnabled'      => true,
-                'livePhotoLongExposure' => true,
-                'longExposure'          => true,
-                'nightMode'             => true,
+                'hdrAuto'             => true,
+                'hdrEnabled'          => true,
+                'longExposure'        => true,
+                'nightMode'           => true,
+                'personOrPetDetected' => true,
             ],
             $flags,
         );
+    }
+
+    #[Test]
+    public function decodeInterpretsPhotosAppDetectionFlag(): void
+    {
+        $raw = base64_decode(self::PHOTOS_APP_DETECTION_BPLIST, true);
+        self::assertIsString($raw);
+
+        $decoder = new AppleDecoder();
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame('photos-app-detection', $apple->contentIdentifier);
+        self::assertArrayHasKey('personOrPetDetected', $apple->flags);
+        self::assertTrue($apple->flags['personOrPetDetected']);
     }
 }

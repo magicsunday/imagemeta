@@ -72,14 +72,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             0 => 'hdrEnabled',         // Bit 0 – HDR rendering enabled.
             1 => 'hdrAuto',            // Bit 1 – HDR auto detection engaged.
         ],
-        'PhotosAppFeatureFlags' => [
-            0 => 'livePhoto',          // Bit 0 – Live Photo asset present.
-            1 => 'livePhotoAuto',      // Bit 1 – Live Photo auto capture.
-            2 => 'livePhotoEnabled',   // Bit 2 – Live Photo enabled by the user.
-            3 => 'livePhotoActive',    // Bit 3 – Live Photo active during capture.
-            4 => 'livePhotoLongExposure', // Bit 4 – Live Photo long exposure fused asset.
-        ],
     ];
+
+    private const string PHOTOS_APP_DETECTION_FLAG = 'personOrPetDetected';
 
     /**
      * Creates a metadata value object describing the Apple maker note payload.
@@ -662,7 +657,76 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
         }
 
+        if (
+            array_key_exists('PhotosAppFeatureFlags', $dictionary)
+            && !array_key_exists(self::PHOTOS_APP_DETECTION_FLAG, $flags)
+        ) {
+            $detected = $this->photosAppDetectionFlag($dictionary['PhotosAppFeatureFlags']);
+            if ($detected !== null) {
+                $flags[self::PHOTOS_APP_DETECTION_FLAG] = $detected;
+            }
+        }
+
         return $flags;
+    }
+
+    /**
+     * Normalises the Photos app detection mask into a boolean flag.
+     *
+     * @param string|int|float|bool|array<int|string, mixed>|null $value Raw Photos app feature flag value.
+     *
+     * @return bool|null Normalised detection flag or null when it cannot be derived.
+     */
+    private function photosAppDetectionFlag(string|int|float|bool|array|null $value): ?bool
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value !== 0;
+        }
+
+        if (is_float($value)) {
+            return $value !== 0.0;
+        }
+
+        if (is_string($value)) {
+            $normalized = trim($value);
+            if ($normalized === '') {
+                return null;
+            }
+
+            if (str_starts_with($normalized, '0x') || str_starts_with($normalized, '0X')) {
+                $hex = substr($normalized, 2);
+                if ($hex === '' || !ctype_xdigit($hex)) {
+                    return null;
+                }
+
+                return hexdec($hex) !== 0;
+            }
+
+            if (is_numeric($normalized)) {
+                return (int) $normalized !== 0;
+            }
+
+            return null;
+        }
+
+        if (!is_array($value) || $value === []) {
+            return null;
+        }
+
+        $positions = $this->bitPositions($value);
+        if ($positions === []) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

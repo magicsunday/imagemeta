@@ -39,15 +39,11 @@ final class AppleDecoderFlagMaskTest extends TestCase
         ksort($result);
 
         $expected = [
-            'hdrAuto'               => true,
-            'hdrEnabled'            => true,
-            'livePhoto'             => true,
-            'livePhotoActive'       => true,
-            'livePhotoAuto'         => true,
-            'livePhotoEnabled'      => true,
-            'livePhotoLongExposure' => true,
-            'longExposure'          => true,
-            'nightMode'             => true,
+            'hdrAuto'              => true,
+            'hdrEnabled'           => true,
+            'longExposure'         => true,
+            'nightMode'            => true,
+            'personOrPetDetected'  => true,
         ];
         ksort($expected);
 
@@ -70,6 +66,23 @@ final class AppleDecoderFlagMaskTest extends TestCase
 
         $result = $method->invoke($decoder, $dictionary);
 
-        self::assertSame([], $result);
+        self::assertSame([
+            'personOrPetDetected' => true,
+        ], $result);
+    }
+
+    #[Test]
+    public function extractFlagsDetectsPhotosAppMaskWhenZero(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'extractFlags');
+
+        $result = $method->invoke($decoder, [
+            'PhotosAppFeatureFlags' => 0,
+        ]);
+
+        self::assertSame([
+            'personOrPetDetected' => false,
+        ], $result);
     }
 }

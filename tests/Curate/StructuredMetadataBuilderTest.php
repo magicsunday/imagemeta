@@ -538,11 +538,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertTrue($structured->apple->flags['longExposure']);
         self::assertTrue($structured->apple->flags['hdrEnabled']);
         self::assertTrue($structured->apple->flags['hdrAuto']);
-        self::assertTrue($structured->apple->flags['livePhoto']);
-        self::assertTrue($structured->apple->flags['livePhotoAuto']);
-        self::assertTrue($structured->apple->flags['livePhotoEnabled']);
-        self::assertTrue($structured->apple->flags['livePhotoActive']);
-        self::assertTrue($structured->apple->flags['livePhotoLongExposure']);
+        self::assertTrue($structured->apple->flags['personOrPetDetected']);
     }
 
     /**

@@ -91,6 +91,6 @@ Bit-mask sources such as `SceneFlags`, `ImageProcessingFlags` and `PhotosAppFeat
 
 * `SceneFlags`: bit 0 → `nightMode`, bit 1 → `longExposure`
 * `ImageProcessingFlags`: bit 0 → `hdrEnabled`, bit 1 → `hdrAuto`
-* `PhotosAppFeatureFlags`: bit 0 → `livePhoto`, bit 1 → `livePhotoAuto`, bit 2 → `livePhotoEnabled`, bit 3 → `livePhotoActive`, bit 4 → `livePhotoLongExposure`
+* `PhotosAppFeatureFlags`: any non-zero value indicates `personOrPetDetected`
 
 Explicit boolean keys continue to override the derived values when both representations are present.
