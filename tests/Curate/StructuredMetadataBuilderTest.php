@@ -1218,6 +1218,28 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures EXIF fractional seconds are normalised to millisecond precision.
+     */
+    #[Test]
+    public function normalizesFractionalSecondsToMillisecondsPrecision(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::SUB_SEC_TIME           => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 6, '654321'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL  => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 9, '123456789'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 7, '98a7654'),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('654', $structured->temporal->subSecTime);
+        self::assertSame('123', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('987', $structured->temporal->subSecTimeDigitized);
+    }
+
+    /**
      * Ensures fractional seconds mirror into the generic field when the original precision is available.
      */
     #[Test]

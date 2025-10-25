@@ -73,7 +73,10 @@ use function is_float;
 use function is_int;
 use function is_numeric;
 use function is_string;
+use function preg_replace;
 use function preg_split;
+use function str_pad;
+use function substr;
 use function trim;
 use function strtoupper;
 use function in_array;
@@ -550,11 +553,11 @@ final class StructuredMetadataBuilder
         $offsetTimeDigitized = $resolver->string('OffsetTimeDigitized');
 
         $subSecTime         = $this->sanitizeSubSeconds($resolver->string('SubSecTime'));
-        $subSecDigitizedRaw = $this->sanitizeSubSeconds($resolver->string('SubSecTimeDigitized'));
+        $subSecTimeDigitized = $this->sanitizeSubSeconds($resolver->string('SubSecTimeDigitized'));
         $subSecOriginal     = $this->sanitizeSubSeconds($subOriginalRaw);
 
         if ($subSecTime === null) {
-            $subSecTime = $subSecOriginal ?? $subSecDigitizedRaw;
+            $subSecTime = $subSecOriginal ?? $subSecTimeDigitized;
         }
 
         $timeZoneOffsets = $resolver->ints('TimeZoneOffset');
@@ -579,7 +582,7 @@ final class StructuredMetadataBuilder
             offsetTimeDigitized: $offsetTimeDigitized,
             subSecTime: $subSecTime,
             subSecTimeOriginal: $subSecOriginal,
-            subSecTimeDigitized: $subSecDigitizedRaw,
+            subSecTimeDigitized: $subSecTimeDigitized,
             timeZoneOffsetMinutes: $timeZoneOffsets,
         );
     }
@@ -1365,7 +1368,18 @@ final class StructuredMetadataBuilder
      */
     private function sanitizeSubSeconds(?string $value): ?string
     {
-        return $value === null || $value === '' ? null : $value;
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $digits = preg_replace('/\\D+/', '', $value);
+        if ($digits === '') {
+            return null;
+        }
+
+        $digits = substr($digits, 0, 3);
+
+        return str_pad($digits, 3, '0');
     }
 
     /**
