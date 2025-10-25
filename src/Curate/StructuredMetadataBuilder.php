@@ -62,11 +62,17 @@ use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 
+use function array_is_list;
 use function array_key_exists;
 use function count;
 use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
 use function is_numeric;
+use function is_string;
 use function preg_split;
+use function trim;
 use function strtoupper;
 
 /**
@@ -754,6 +760,23 @@ final class StructuredMetadataBuilder
             $semanticTone = $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleTone');
         }
 
+        $semanticStyleComposite = $this->quickTimeSemanticStyle($quickTimeMeta);
+        if ($semanticStyleComposite !== null) {
+            [$compositePreset, $compositeWarmth, $compositeTone] = $semanticStyleComposite;
+
+            if ($semanticPreset === null && $compositePreset !== null) {
+                $semanticPreset = $compositePreset;
+            }
+
+            if ($semanticWarmth === null && $compositeWarmth !== null) {
+                $semanticWarmth = $compositeWarmth;
+            }
+
+            if ($semanticTone === null && $compositeTone !== null) {
+                $semanticTone = $compositeTone;
+            }
+        }
+
         $accelerationVector = $makerNotes?->accelerationVector;
         if ($accelerationVector === null) {
             $accelerationVector = $this->quickTimeFloatList($quickTimeResolver, 'AccelerationVector');
@@ -900,6 +923,134 @@ final class StructuredMetadataBuilder
         }
 
         return $values !== [] ? $values : null;
+    }
+
+    /**
+     * Extracts semantic style values from QuickTime composite metadata entries.
+     *
+     * @return array{0:?string,1:?float,2:?float}|null
+     */
+    private function quickTimeSemanticStyle(?QuickTimeMeta $meta): ?array
+    {
+        if ($meta === null) {
+            return null;
+        }
+
+        $value = $meta->keys['SemanticStyle'] ?? null;
+        if (!is_array($value)) {
+            return null;
+        }
+
+        /** @var array<int|string, mixed> $semantic */
+        $semantic = $value;
+
+        $entries = $this->normaliseSemanticStyleEntries($semantic);
+        if ($entries === null) {
+            return null;
+        }
+
+        $presetRaw      = $this->semanticStyleEntry($entries, 0);
+        $legacyWarmth   = $this->semanticStyleEntry($entries, 1);
+        $modernWarmth   = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 2) : null;
+        $warmthRaw      = $legacyWarmth ?? $modernWarmth;
+        $toneRawLegacy  = $legacyWarmth !== null ? $this->semanticStyleEntry($entries, 2) : null;
+        $toneRawModern  = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 3, 2) : null;
+        $toneRaw        = $toneRawLegacy ?? $toneRawModern;
+
+        $preset = $this->semanticStylePreset($presetRaw);
+        $warmth = $this->semanticStyleFloat($warmthRaw);
+        $tone   = $this->semanticStyleFloat($toneRaw);
+
+        if ($preset === null && $warmth === null && $tone === null) {
+            return null;
+        }
+
+        return [$preset, $warmth, $tone];
+    }
+
+    /**
+     * @param array<int|string, mixed> $semantic
+     *
+     * @return array<int|string, string|int|float|bool|null>|null
+     */
+    private function normaliseSemanticStyleEntries(array $semantic): ?array
+    {
+        if (!array_is_list($semantic)) {
+            foreach (['values', 'Values'] as $key) {
+                if (array_key_exists($key, $semantic) && is_array($semantic[$key])) {
+                    /** @var array<int|string, mixed> $values */
+                    $values = $semantic[$key];
+
+                    return $this->normaliseSemanticStyleEntries($values);
+                }
+            }
+        }
+
+        return $semantic;
+    }
+
+    /**
+     * @param array<int|string, string|int|float|bool|null> $entries
+     */
+    private function semanticStyleEntry(array $entries, int ...$indexes): string|int|float|bool|null
+    {
+        foreach ($indexes as $index) {
+            $candidates = [$index, (string) $index, '_' . $index];
+            foreach ($candidates as $key) {
+                if (!array_key_exists($key, $entries)) {
+                    continue;
+                }
+
+                $value = $entries[$key];
+                if (is_array($value)) {
+                    foreach (['value', 'Value'] as $innerKey) {
+                        if (array_key_exists($innerKey, $value)) {
+                            $inner = $value[$innerKey];
+                            if (!is_array($inner)) {
+                                $value = $inner;
+                            }
+
+                            break;
+                        }
+                    }
+
+                    if (is_array($value)) {
+                        continue;
+                    }
+                }
+
+                if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
+                    return $value;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function semanticStylePreset(string|int|float|bool|null $value): ?string
+    {
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed !== '') {
+                return $trimmed;
+            }
+        }
+
+        return null;
+    }
+
+    private function semanticStyleFloat(string|int|float|bool|null $value): ?float
+    {
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_numeric($value)) {
+            return (float) $value;
+        }
+
+        return null;
     }
 
     /**
