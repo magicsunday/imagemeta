@@ -17,24 +17,36 @@ use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-/** @return ?string ISO-8601 (Sekundenauflösung), falls DateTimeInterface oder String übergeben wurde */
+/**
+ * Converts supported date/time values into an ISO 8601 string with second precision.
+ *
+ * @param mixed $value Metadata value that may contain a date/time representation.
+ *
+ * @return string|null Normalized ISO 8601 string or null if the value cannot be converted.
+ */
 function safeIso(mixed $value): ?string
 {
     if ($value instanceof \DateTimeInterface) {
         return $value->format('Y-m-d\TH:i:sP');
     }
     if (is_string($value) && $value !== '') {
-        // Angleichung: schneide Millis ab, stelle Offset sicher
+        // Normalise by trimming milliseconds and ensuring an offset is present.
         if (!str_contains($value, 'T')) {
             return null;
         }
-        // Bei fehlendem Offset annehmen, dass bereits normalisiert ist
+        // Assume the timestamp is already normalised when no offset is provided.
         return preg_replace('/(\.\d+)?([Z\+\-]\d{2}:\d{2})?$/', '$2' === '' ? '' : '$2', $value) ?: $value;
     }
     return null;
 }
 
-/** @return ?string Enum-Name deiner Library */
+/**
+ * Resolves the enum name for comparison or returns the provided string value.
+ *
+ * @param mixed $enum Enum instance or string representation returned by the API under test.
+ *
+ * @return string|null Enum name or null when the value cannot be resolved.
+ */
 function enumName(mixed $enum): ?string
 {
     if ($enum instanceof \BackedEnum || $enum instanceof \UnitEnum) {
@@ -53,6 +65,9 @@ final class TruthComparisonTest extends TestCase
     /** @var array<string, array<int|string, string>> */
     private array $map;
 
+    /**
+     * Boots the enum map and normalizer before each comparison test.
+     */
     protected function setUp(): void
     {
         /** @var array<string, array<int|string, string>> $map */
@@ -61,6 +76,11 @@ final class TruthComparisonTest extends TestCase
         $this->norm = new Normalizer($map);
     }
 
+    /**
+     * Validates that structured metadata matches the ExifTool ground truth for the given file.
+     *
+     * @param string $file Fixture filename relative to the image directory.
+     */
     #[Test]
     #[DataProvider('provideFiles')]
     public function test_core_fields_match_exiftool(string $file): void
@@ -71,12 +91,12 @@ final class TruthComparisonTest extends TestCase
             ->read(self::IMAGES . '/' . $file)
             ->structured();
 
-        // Kamera
+        // Camera
         $this->assertSame($exif['IFD0:Make'] ?? null, $meta->camera->make ?? null, "$file: Make");
         $this->assertSame($exif['IFD0:Model'] ?? null, $meta->camera->model ?? null, "$file: Model");
         $this->assertSame($exif['IFD0:Software'] ?? null, $meta->camera->firmware ?? null, "$file: Firmware");
 
-        // Bildgröße
+        // Image dimensions
         $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->image->width ?? 0, "$file: width");
         $this->assertSame((int)($exif['File:ImageHeight'] ?? 0), $meta->image->height ?? 0, "$file: height");
 
@@ -92,7 +112,7 @@ final class TruthComparisonTest extends TestCase
             $this->assertTrue($ok, "$file: ColorSpace enum mapping");
         }
 
-        // EXIF Kerndaten
+        // Core EXIF data
         $this->assertEqualsWithDelta((float)($exif['EXIF:FNumber'] ?? 0), (float)($meta->exposure->fNumber ?? 0), Normalizer::DELTA, "$file: FNumber");
         $this->assertEqualsWithDelta((float)($exif['EXIF:ExposureTime'] ?? 0), (float)($meta->exposure->exposureTimeSec ?? 0), Normalizer::DELTA, "$file: ExposureTime");
         $this->assertSame((int)($exif['EXIF:ISOSpeedRatings'] ?? $exif['EXIF:ISO'] ?? 0), (int)($meta->exposure->iso ?? 0), "$file: ISO");
@@ -111,13 +131,13 @@ final class TruthComparisonTest extends TestCase
             $this->assertTrue($ok, "$file: WhiteBalance enum");
         }
 
-        // Belichtungsmodus (neu)
+        // Exposure mode (additional field)
         if (isset($exif['EXIF:ExposureMode'])) {
             $ok = $this->norm->compareEnum('ExposureMode', (int)$exif['EXIF:ExposureMode'], $meta->exposure->exposureMode ?? null);
             $this->assertTrue($ok, "$file: ExposureMode enum");
         }
 
-        // Linseninfos
+        // Lens information
         if (isset($exif['EXIF:FocalLength'])) {
             $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens->focalLengthMm ?? $meta->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
         }
@@ -128,7 +148,7 @@ final class TruthComparisonTest extends TestCase
             $this->assertSame($exif['EXIF:LensModel'], $meta->lens->lensModel ?? null, "$file: LensModel");
         }
 
-        // Zeiten (ISO-8601)
+        // Timestamp comparisons (ISO-8601)
         $createIso = Normalizer::buildIso8601FromExif($exif, 'EXIF:CreateDate');
         $origIso   = Normalizer::buildIso8601FromExif($exif, 'EXIF:DateTimeOriginal');
         $modifyIso = Normalizer::buildIso8601FromExif($exif, 'IFD0:ModifyDate');
@@ -155,7 +175,7 @@ final class TruthComparisonTest extends TestCase
             $this->assertEqualsWithDelta((float)$exif['GPS:GPSImgDirection'], (float)($meta->gps->imageDirection ?? 0), 1e-6, "$file: GPS direction");
         }
 
-        // ICC
+        // ICC profile
         if (isset($exif['ICC_Profile:ProfileDescription'])) {
             $this->assertSame($exif['ICC_Profile:ProfileDescription'], $meta->colorProfile->profileName ?? null, "$file: ICC name");
         }
@@ -169,7 +189,7 @@ final class TruthComparisonTest extends TestCase
             $this->assertSame(strtoupper((string)$exif['ICC_Profile:ProfileID']), strtoupper((string)($meta->colorProfile->profileId ?? '')), "$file: ICC id");
         }
 
-        // Flash (Bitmaske → strukturierte Felder)
+        // Flash (bitmask decoded into structured fields)
         if (isset($exif['EXIF:Flash']) && isset($meta->exposure->flash)) {
             $decoded = Normalizer::decodeExifFlash((int)$exif['EXIF:Flash']);
             $this->assertSame($decoded['fired'], (bool)$meta->exposure->flash->fired, "$file: Flash fired");
@@ -211,7 +231,11 @@ final class TruthComparisonTest extends TestCase
         }
     }
 
-    /** @return iterable<string, array{0:string}> */
+    /**
+     * Provides fixture filenames for tests that compare structured metadata against ExifTool output.
+     *
+     * @return iterable<string, array{0:string}> Ordered list of image filenames.
+     */
     public static function provideFiles(): iterable
     {
         $list = glob(self::IMAGES . '/*');
@@ -223,7 +247,13 @@ final class TruthComparisonTest extends TestCase
         }
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Loads the ExifTool JSON reference data for the provided fixture file.
+     *
+     * @param string $file Fixture filename without the ExifTool suffix.
+     *
+     * @return array<string,mixed> Parsed ExifTool response as an associative array.
+     */
     private function loadExifToolJson(string $file): array
     {
         $json = file_get_contents(self::FIXTURES . '/' . $file . '.exiftool.json');
