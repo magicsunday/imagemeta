@@ -80,6 +80,26 @@ final class TruthComparisonTest extends TestCase
     }
 
     #[Test]
+    public function test_landscape_bits_per_sample_matches_exiftool_file_precision(): void
+    {
+        $file = 'Landscape_0.jpg';
+        $exif = $this->loadExifToolJson($file);
+
+        self::assertArrayHasKey('File:BitsPerSample', $exif);
+        self::assertNull($exif['EXIF:BitsPerSample'] ?? null);
+
+        $meta = (new MetadataReader())
+            ->read(self::IMAGES . '/' . $file)
+            ->structured();
+
+        self::assertSame(
+            (int) $exif['File:BitsPerSample'],
+            $meta->image->bitsPerSample,
+            $file . ': bitsPerSample',
+        );
+    }
+
+    #[Test]
     #[DataProvider('provideFiles')]
     public function test_core_fields_match_exiftool(string $file): void
     {

@@ -153,7 +153,12 @@ final class StructuredMetadataBuilder
 
         $interop = new Interop(index: $exifResolver->interopIndex());
 
-        $bitsPerSample    = $exifResolver->bitsPerSample() ?? $metadata->jpegBitsPerSample;
+        $jpegBitsPerSample = $metadata->jpegBitsPerSample;
+
+        $bitsPerSample    = $exifResolver->bitsPerSample();
+        if ($bitsPerSample === null) {
+            $bitsPerSample = $jpegBitsPerSample;
+        }
         $ycbcrSubSampling = $exifResolver->ycbcrSubSampling();
         if ($ycbcrSubSampling === null) {
             $ycbcrSubSampling = $metadata->jpegYCbCrSubSampling;
@@ -201,7 +206,7 @@ final class StructuredMetadataBuilder
 
         $camera = $this->buildCamera($exifResolver);
         $lens   = $this->buildLens($exifResolver);
-        $image  = $this->buildImage($exifResolver);
+        $image  = $this->buildImage($exifResolver, $jpegBitsPerSample);
 
         $exposure = new Exposure(
             iso: CompositeResolver::intISO($exifResolver),
@@ -644,19 +649,25 @@ final class StructuredMetadataBuilder
     /**
      * Builds the image value object using EXIF metadata.
      *
-     * @param ExifTagResolver $exif Resolver exposing image related EXIF tags.
+     * @param ExifTagResolver $exif             Resolver exposing image related EXIF tags.
+     * @param int|null        $jpegBitsPerSample Sample precision reported by the JPEG frame header.
      *
      * @return Image Normalised image metadata aggregate.
      */
-    private function buildImage(ExifTagResolver $exif): Image
+    private function buildImage(ExifTagResolver $exif, ?int $jpegBitsPerSample): Image
     {
         [$width, $height] = CompositeResolver::dimensions($exif);
+
+        $bitsPerSample = $exif->bitsPerSample();
+        if ($bitsPerSample === null) {
+            $bitsPerSample = $jpegBitsPerSample;
+        }
 
         return new Image(
             width: $width,
             height: $height,
             orientation: $exif->orientation(),
-            bitsPerSample: $exif->bitsPerSample(),
+            bitsPerSample: $bitsPerSample,
             colorSpace: $this->normalizedColorSpace($exif),
             imageUniqueId: $exif->imageUniqueId(),
             imageNumber: $exif->imageNumber(),
