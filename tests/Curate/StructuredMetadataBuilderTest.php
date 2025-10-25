@@ -48,6 +48,7 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -584,9 +585,12 @@ final class StructuredMetadataBuilderTest extends TestCase
 
     /**
      * Ensures JPEG-only metadata uses the maker note night mode flag when QuickTime metadata is absent.
+     *
+     * @param bool $nightModeFlag Maker note flag value to assert.
      */
     #[Test]
-    public function usesMakerNoteNightModeWhenQuickTimeMissing(): void
+    #[DataProvider('makerNoteNightModeFlagsProvider')]
+    public function usesMakerNoteNightModeWhenQuickTimeMissing(bool $nightModeFlag): void
     {
         $appleMakerNotes = new AppleMakerNotes(
             contentIdentifier: null,
@@ -600,7 +604,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             semanticStylePreset: null,
             semanticStyleWarmth: null,
             semanticStyleTone: null,
-            flags: ['nightMode' => true],
+            flags: ['nightMode' => $nightModeFlag],
             accelerationVector: null,
         );
 
@@ -617,7 +621,18 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertTrue($structured->scene->nightMode);
+        self::assertSame($nightModeFlag, $structured->scene->nightMode);
+    }
+
+    /**
+     * Provides maker note night mode flag variations for JPEG-only captures.
+     *
+     * @return iterable<string, array{0: bool}>
+     */
+    public static function makerNoteNightModeFlagsProvider(): iterable
+    {
+        yield 'night-mode-enabled' => [true];
+        yield 'night-mode-disabled' => [false];
     }
 
     /**
