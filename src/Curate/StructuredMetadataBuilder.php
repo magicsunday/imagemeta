@@ -76,6 +76,7 @@ use function is_string;
 use function preg_split;
 use function trim;
 use function strtoupper;
+use function in_array;
 
 /**
  * Builds the structured metadata aggregate by orchestrating specialised resolvers.
@@ -91,6 +92,11 @@ final class StructuredMetadataBuilder
         2 => 'HDR2',
         3 => 'HDR3',
     ];
+
+    /**
+     * @var list<string>
+     */
+    private const array APPLE_HDR_SCENE_LABELS = ['HDR', 'HDR2', 'HDR3'];
 
     /**
      * @var array<int, string>
@@ -702,9 +708,12 @@ final class StructuredMetadataBuilder
         }
 
         $hdrScene = null;
-        if ($hdr !== null) {
+
+        if ($hdr !== null && $this->isHdrSceneLabel($hdr)) {
             $hdrScene = true;
-        } else {
+        }
+
+        if ($hdrScene === null) {
             $hdrHeadroom = $apple->hdrHeadroom;
             if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
                 $hdrScene = true;
@@ -732,6 +741,13 @@ final class StructuredMetadataBuilder
      *
      * @param array<string, bool> $flags
      */
+    private function isHdrSceneLabel(string $label): bool
+    {
+        $normalized = strtoupper(trim($label));
+
+        return in_array($normalized, self::APPLE_HDR_SCENE_LABELS, true);
+    }
+
     private function appleFlag(array $flags, string $key): ?bool
     {
         if (!array_key_exists($key, $flags)) {
