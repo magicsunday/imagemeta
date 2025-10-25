@@ -211,7 +211,8 @@ final class ExifTagTest extends TestCase
             'METADATA_EDITING_SOFTWARE_LEGACY' => 0xE932,
 
             // Interoperability IFD
-            'INTEROPERABILITY_INDEX' => 0x0001,
+            'INTEROPERABILITY_INDEX'   => 0x0001,
+            'INTEROPERABILITY_VERSION' => 0x0002,
         ];
 
         $reflection = new ReflectionClass(ExifTag::class);

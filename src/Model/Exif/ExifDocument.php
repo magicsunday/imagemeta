@@ -457,6 +457,22 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the interoperability version string when present.
+     */
+    public function interopVersion(): ?string
+    {
+        $raw = $this->rawString($this->interopIfd, ExifTag::INTEROPERABILITY_VERSION);
+
+        if ($raw === null) {
+            return null;
+        }
+
+        $trimmed = trim($raw, "\0 ");
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
      * Returns the interlace flag when recorded.
      */
     public function interlace(): ?int
