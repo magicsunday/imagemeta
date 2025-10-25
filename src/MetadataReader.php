@@ -90,6 +90,8 @@ final class MetadataReader
         $iccProfile    = $jpeg->getIccProfile();
         $iccSegments   = $jpeg->getIccSegments();
         $bitsPerSample = $jpeg->getFrameSamplePrecision();
+        $frameHeight   = $jpeg->getFrameHeight();
+        $frameWidth    = $jpeg->getFrameWidth();
         $sampling      = $jpeg->getFrameComponentSamplingFactors();
         $subSampling   = $jpeg->getFrameYCbCrSubSampling();
 
@@ -123,6 +125,8 @@ final class MetadataReader
             $extension,
             $digestSha1,
             $digestMd5,
+            $frameWidth,
+            $frameHeight,
         );
     }
 
