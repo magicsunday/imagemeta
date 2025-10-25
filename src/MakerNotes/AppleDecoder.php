@@ -268,6 +268,30 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
+        $semanticStyleCompact = null;
+        if (
+            !array_key_exists('SemanticStylePreset', $dictionary)
+            && !array_key_exists('SemanticStyleWarmth', $dictionary)
+            && !array_key_exists('SemanticStyleTone', $dictionary)
+        ) {
+            $semanticStyleCompact = $this->semanticStyleFromCollection($dictionary);
+            if ($semanticStyleCompact !== null) {
+                [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
+
+                if ($compactPreset !== null) {
+                    $dictionary['SemanticStylePreset'] = $compactPreset;
+                }
+
+                if ($compactWarmth !== null) {
+                    $dictionary['SemanticStyleWarmth'] = $compactWarmth;
+                }
+
+                if ($compactTone !== null) {
+                    $dictionary['SemanticStyleTone'] = $compactTone;
+                }
+            }
+        }
+
         $contentIdentifier    = $this->stringValue($dictionary, 'ContentIdentifier');
         $cameraType           = $this->stringValue($dictionary, 'CameraType');
         $hdrHeadroom          = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
@@ -279,7 +303,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $semanticStylePreset  = $this->stringValue($dictionary, 'SemanticStylePreset');
         $semanticStyleWarmth  = $this->floatValue($dictionary, 'SemanticStyleWarmth');
         $semanticStyleTone    = $this->floatValue($dictionary, 'SemanticStyleTone');
-        $semanticStyleCompact = $this->semanticStyleFromCollection($dictionary);
+        $semanticStyleCompact ??= $this->semanticStyleFromCollection($dictionary);
         if ($semanticStyleCompact !== null) {
             [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 
@@ -464,8 +488,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts semantic style values from Apple's compact semantic style array.
      *
      * Apple stores semantic style metadata as an ordered collection where index 0 / `_0`
-     * contains the preset name, index 1 / `_1` the warmth adjustment, and index 2 / `_2` the
-     * tone adjustment. Index `_3` is currently unused by the curated metadata object.
+     * contains the preset name. Legacy payloads store the warmth adjustment at index 1 / `_1`
+     * and tone at index 2 / `_2`. Modern payloads use index 2 / `_2` for warmth and index 3 / `_3`
+     * for tone.
      *
      * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      *
