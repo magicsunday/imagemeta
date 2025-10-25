@@ -194,6 +194,144 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    public function buildAppleMakerNotesExtractsAdditionalFields(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier'  => 'extended',
+            'MakerNoteVersion'   => '2.1',
+            'HDRImageType'       => 1,
+            'BurstUUID'          => 'burst-uuid',
+            'FocusDistanceRange' => [0.45, 1.5],
+            'OISMode'            => 2,
+            'ImageCaptureType'   => 3,
+            'ImageUniqueID'      => 'unique-id',
+            'PhotoIdentifier'    => 'photo-id',
+            'AFMeasuredDepth'    => 0.75,
+            'AFConfidence'       => 0.8,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame('2.1', $notes->makerNoteVersion);
+        self::assertSame('HDR', $notes->hdrImageType);
+        self::assertSame('burst-uuid', $notes->burstUuid);
+        self::assertSame([0.45, 1.5], $notes->focusDistanceRange);
+        self::assertSame('2', $notes->oisMode);
+        self::assertSame('Burst', $notes->imageCaptureType);
+        self::assertSame('unique-id', $notes->imageUniqueId);
+        self::assertSame('photo-id', $notes->photoIdentifier);
+        self::assertEqualsWithDelta(0.75, $notes->afMeasuredDepth, 1e-12);
+        self::assertEqualsWithDelta(0.8, $notes->afConfidence, 1e-12);
+    }
+
+    #[Test]
+    public function buildAppleMakerNotesCombinesFocusDistanceNearAndFar(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier'      => 'focus-range',
+            'FocusDistanceRangeNear' => 0.3,
+            'FocusDistanceRangeFar'  => 2.8,
+            'ImageCaptureType'       => 'Portrait',
+            'HDRImageType'           => 'HDR3',
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame([0.3, 2.8], $notes->focusDistanceRange);
+        self::assertSame('HDR3', $notes->hdrImageType);
+        self::assertSame('Portrait', $notes->imageCaptureType);
+    }
+
+    #[Test]
+    public function buildAppleMakerNotesHandlesFocusDistanceNearOnly(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier'      => 'near-only',
+            'FocusDistanceRangeNear' => 0.42,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame([0.42], $notes->focusDistanceRange);
+    }
+
+    #[Test]
+    public function buildAppleMakerNotesHandlesFocusDistanceFarOnly(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier'     => 'far-only',
+            'FocusDistanceRangeFar' => '1.75',
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame([1.75], $notes->focusDistanceRange);
+    }
+
+    #[Test]
+    public function buildAppleMakerNotesKeepsUnknownEnumerations(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier' => 'unknown',
+            'HDRImageType'      => 99,
+            'ImageCaptureType'  => 42,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame('99', $notes->hdrImageType);
+        self::assertSame('42', $notes->imageCaptureType);
+    }
+
+    #[Test]
+    public function decodeParsesAdditionalMakerNoteFields(): void
+    {
+        $raw = '{ MakerNoteVersion = "1.4"; HDRImageType = 2; BurstUUID = "text-burst"; '
+            . 'FocusDistanceRange = (0.4, 1.6); OISMode = 5; ImageCaptureType = 7; '
+            . 'ImageUniqueID = "text-unique"; PhotoIdentifier = "text-photo"; '
+            . 'AFMeasuredDepth = 1.1; AFConfidence = 0.65; ContentIdentifier = "textual"; }';
+
+        $decoder = new AppleDecoder();
+
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame('textual', $apple->contentIdentifier);
+        self::assertSame('1.4', $apple->makerNoteVersion);
+        self::assertSame('HDR2', $apple->hdrImageType);
+        self::assertSame('text-burst', $apple->burstUuid);
+        self::assertSame([0.4, 1.6], $apple->focusDistanceRange);
+        self::assertSame('5', $apple->oisMode);
+        self::assertSame('LivePhotoLongExposure', $apple->imageCaptureType);
+        self::assertSame('text-unique', $apple->imageUniqueId);
+        self::assertSame('text-photo', $apple->photoIdentifier);
+        self::assertEqualsWithDelta(1.1, $apple->afMeasuredDepth, 1e-12);
+        self::assertEqualsWithDelta(0.65, $apple->afConfidence, 1e-12);
+    }
+
+    #[Test]
     public function buildAppleMakerNotesHandlesCameraTypeCodes(): void
     {
         $decoder = new AppleDecoder();

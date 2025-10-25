@@ -32,6 +32,16 @@ final readonly class AppleMakerNotes
      * @param list<float>|null    $accelerationVector  Acceleration vector recorded during capture.
      * @param float|null          $livePhotoTime       Normalised Live Photo timestamp in seconds.
      * @param RunTime|null        $runTime             Capture runtime metadata describing the CMTime payload.
+     * @param string|null         $makerNoteVersion    Maker note version string reported by the device.
+     * @param string|null         $hdrImageType        HDR image classification (e.g. "HDR").
+     * @param string|null         $burstUuid           Identifier referencing the originating burst.
+     * @param list<float>|null    $focusDistanceRange  Near and far focus distance bounds in meters.
+     * @param string|null         $oisMode             Optical image stabilisation mode.
+     * @param string|null         $imageCaptureType    Capture type enumeration label.
+     * @param string|null         $imageUniqueId       Unique image identifier distinct from EXIF/ImageUniqueID.
+     * @param string|null         $photoIdentifier     Photos framework identifier for the asset.
+     * @param float|null          $afMeasuredDepth     Autofocus measured depth value in meters.
+     * @param float|null          $afConfidence        Autofocus confidence score between 0.0 and 1.0.
      */
     public function __construct(
         public ?string $contentIdentifier,
@@ -49,6 +59,16 @@ final readonly class AppleMakerNotes
         public ?array $accelerationVector,
         public ?float $livePhotoTime = null,
         public ?RunTime $runTime = null,
+        public ?string $makerNoteVersion = null,
+        public ?string $hdrImageType = null,
+        public ?string $burstUuid = null,
+        public ?array $focusDistanceRange = null,
+        public ?string $oisMode = null,
+        public ?string $imageCaptureType = null,
+        public ?string $imageUniqueId = null,
+        public ?string $photoIdentifier = null,
+        public ?float $afMeasuredDepth = null,
+        public ?float $afConfidence = null,
     ) {
     }
 }

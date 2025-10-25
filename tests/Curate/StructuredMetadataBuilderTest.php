@@ -464,6 +464,16 @@ final class StructuredMetadataBuilderTest extends TestCase
             runTime: new AppleRunTime(epoch: 7, timescale: 20, value: 100, flags: 9),
             flags: ['livePhotoAuto' => false, 'nightMode' => true],
             accelerationVector: [0.05, 0.1, -0.1],
+            makerNoteVersion: '2.0',
+            hdrImageType: 'HDR',
+            burstUuid: 'maker-burst',
+            focusDistanceRange: [0.4, 1.8],
+            oisMode: 'Video',
+            imageCaptureType: 'Portrait',
+            imageUniqueId: 'maker-unique',
+            photoIdentifier: 'maker-photo',
+            afMeasuredDepth: 0.85,
+            afConfidence: 0.76,
         );
 
         $makerNotes = new MakerNotesMetadata('Apple', 64, str_repeat('a', 40), $appleMakerNotes);
@@ -505,6 +515,16 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertFalse($structured->apple->flags['livePhotoAuto']);
         self::assertTrue($structured->apple->flags['nightMode']);
         self::assertSame([0.05, 0.1, -0.1], $structured->apple->accelerationVector);
+        self::assertSame('2.0', $structured->apple->makerNoteVersion);
+        self::assertSame('HDR', $structured->apple->hdrImageType);
+        self::assertSame('maker-burst', $structured->apple->burstUuid);
+        self::assertSame([0.4, 1.8], $structured->apple->focusDistanceRange);
+        self::assertSame('Video', $structured->apple->oisMode);
+        self::assertSame('Portrait', $structured->apple->imageCaptureType);
+        self::assertSame('maker-unique', $structured->apple->imageUniqueId);
+        self::assertSame('maker-photo', $structured->apple->photoIdentifier);
+        self::assertEqualsWithDelta(0.85, $structured->apple->afMeasuredDepth, 1e-12);
+        self::assertEqualsWithDelta(0.76, $structured->apple->afConfidence, 1e-12);
         self::assertInstanceOf(ValueRunTime::class, $structured->apple->runTime);
         self::assertSame(7, $structured->apple->runTime?->epoch);
         self::assertSame(20, $structured->apple->runTime?->timescale);
@@ -575,6 +595,40 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(-0.34, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(0.56, $structured->motion->accelZ, 1e-12);
     }
+
+    #[Test]
+    public function usesQuickTimeEnumeratedValuesWhenMakerNotesMissing(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
+            'MakerNoteVersion'                    => '1.1',
+            'HDRImageType'                        => 2,
+            'BurstUUID'                           => 'qt-burst',
+            'FocusDistanceRange'                  => '0.5 1.9',
+            'OISMode'                             => 4,
+            'ImageCaptureType'                    => 6,
+            'ImageUniqueID'                       => 'qt-unique',
+            'PhotoIdentifier'                     => 'qt-photo',
+            'AFMeasuredDepth'                     => 1.4,
+            'AFConfidence'                        => 0.55,
+        ]);
+
+        $metadata   = new Metadata(['primary'], $quickTime, null, []);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('1.1', $structured->apple->makerNoteVersion);
+        self::assertSame('HDR2', $structured->apple->hdrImageType);
+        self::assertSame('qt-burst', $structured->apple->burstUuid);
+        self::assertSame([0.5, 1.9], $structured->apple->focusDistanceRange);
+        self::assertSame('4', $structured->apple->oisMode);
+        self::assertSame('NightMode', $structured->apple->imageCaptureType);
+        self::assertSame('qt-unique', $structured->apple->imageUniqueId);
+        self::assertSame('qt-photo', $structured->apple->photoIdentifier);
+        self::assertEqualsWithDelta(1.4, $structured->apple->afMeasuredDepth, 1e-12);
+        self::assertEqualsWithDelta(0.55, $structured->apple->afConfidence, 1e-12);
+    }
+
+
 
     #[Test]
     public function usesQuickTimeSemanticStyleDictionaryWhenMakerNotesMissing(): void

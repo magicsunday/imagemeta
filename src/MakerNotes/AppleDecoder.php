@@ -74,6 +74,34 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     ];
 
     /**
+     * Maps HDR image type codes to descriptive labels.
+     *
+     * @var array<int, string>
+     */
+    private const array HDR_IMAGE_TYPE_MAP = [
+        0 => 'Standard',
+        1 => 'HDR',
+        2 => 'HDR2',
+        3 => 'HDR3',
+    ];
+
+    /**
+     * Maps image capture type codes to descriptive labels.
+     *
+     * @var array<int, string>
+     */
+    private const array IMAGE_CAPTURE_TYPE_MAP = [
+        0 => 'Unknown',
+        1 => 'Standard',
+        2 => 'LivePhoto',
+        3 => 'Burst',
+        4 => 'HDR',
+        5 => 'HDR2',
+        6 => 'NightMode',
+        7 => 'LivePhotoLongExposure',
+    ];
+
+    /**
      * Maps Apple bitfield sources (indexed by zero-based bit position) to normalised flags.
      *
      * @var array<string, array<int, string>>
@@ -649,6 +677,17 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $accelerationVector = $this->floatList($dictionary, 'AccelerationVector');
         $flags              = $this->extractFlags($dictionary);
 
+        $makerNoteVersion   = $this->stringValue($dictionary, 'MakerNoteVersion');
+        $hdrImageType       = $this->enumeratedStringValue($dictionary, self::HDR_IMAGE_TYPE_MAP, 'HDRImageType', 'HdrImageType');
+        $burstUuid          = $this->stringValue($dictionary, 'BurstUUID');
+        $focusDistanceRange = $this->focusDistanceRangeValue($dictionary);
+        $oisMode            = $this->stringOrNumericValue($dictionary, 'OISMode');
+        $imageCaptureType   = $this->enumeratedStringValue($dictionary, self::IMAGE_CAPTURE_TYPE_MAP, 'ImageCaptureType');
+        $imageUniqueId      = $this->stringValue($dictionary, 'ImageUniqueID');
+        $photoIdentifier    = $this->stringValue($dictionary, 'PhotoIdentifier');
+        $afMeasuredDepth    = $this->floatValue($dictionary, 'AFMeasuredDepth');
+        $afConfidence       = $this->floatValue($dictionary, 'AFConfidence');
+
         if (
             $contentIdentifier === null
             && $cameraType === null
@@ -665,6 +704,16 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             && $flags === []
             && $accelerationVector === null
             && $runTime === null
+            && $makerNoteVersion === null
+            && $hdrImageType === null
+            && $burstUuid === null
+            && $focusDistanceRange === null
+            && $oisMode === null
+            && $imageCaptureType === null
+            && $imageUniqueId === null
+            && $photoIdentifier === null
+            && $afMeasuredDepth === null
+            && $afConfidence === null
         ) {
             return null;
         }
@@ -685,6 +734,16 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $accelerationVector,
             $livePhotoTime,
             $runTime,
+            $makerNoteVersion,
+            $hdrImageType,
+            $burstUuid,
+            $focusDistanceRange,
+            $oisMode,
+            $imageCaptureType,
+            $imageUniqueId,
+            $photoIdentifier,
+            $afMeasuredDepth,
+            $afConfidence,
         );
     }
 
@@ -837,6 +896,114 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
             if ($result !== []) {
                 return $result;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @return list<float>|null
+     */
+    private function focusDistanceRangeValue(array $dictionary): ?array
+    {
+        $range = $this->floatList($dictionary, 'FocusDistanceRange');
+        if ($range !== null) {
+            return $range;
+        }
+
+        $near = $this->floatValue(
+            $dictionary,
+            'FocusDistanceRangeNear',
+            'FocusDistanceRangeMin',
+            'FocusDistanceNear',
+        );
+        $far = $this->floatValue(
+            $dictionary,
+            'FocusDistanceRangeFar',
+            'FocusDistanceRangeMax',
+            'FocusDistanceFar',
+        );
+
+        $values = [];
+        if ($near !== null) {
+            $values[] = $near;
+        }
+
+        if ($far !== null) {
+            $values[] = $far;
+        }
+
+        return $values !== [] ? $values : null;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function stringOrNumericValue(array $dictionary, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $dictionary)) {
+                continue;
+            }
+
+            $value = $dictionary[$key];
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed !== '') {
+                    return $trimmed;
+                }
+            }
+
+            if (is_int($value) || is_float($value) || is_numeric($value)) {
+                return (string) $value;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int, string>                                                     $map
+     */
+    private function enumeratedStringValue(array $dictionary, array $map, string ...$keys): ?string
+    {
+        foreach ($keys as $key) {
+            if (!array_key_exists($key, $dictionary)) {
+                continue;
+            }
+
+            $value = $dictionary[$key];
+            if (is_string($value)) {
+                $trimmed = trim($value);
+                if ($trimmed === '') {
+                    continue;
+                }
+
+                if (is_numeric($trimmed)) {
+                    $code = (int) $trimmed;
+
+                    return $map[$code] ?? $trimmed;
+                }
+
+                return $trimmed;
+            }
+
+            if (is_int($value)) {
+                return $map[$value] ?? (string) $value;
+            }
+
+            if (is_float($value) || is_numeric($value)) {
+                $code = (int) $value;
+
+                return $map[$code] ?? (string) $value;
             }
         }
 
