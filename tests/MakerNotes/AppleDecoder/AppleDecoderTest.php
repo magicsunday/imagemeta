@@ -176,6 +176,36 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    public function decodeRecordsDisabledFlagsFromZeroBitMasks(): void
+    {
+        $raw = '{ ContentIdentifier = "flags-zero"; SceneFlags = 0; ImageProcessingFlags = 0; PhotosAppFeatureFlags = 0; }';
+
+        $decoder = new AppleDecoder();
+
+        $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+
+        $apple = $metadata->apple();
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
+        self::assertSame('flags-zero', $apple->contentIdentifier);
+
+        self::assertArrayHasKey('nightMode', $apple->flags);
+        self::assertArrayHasKey('longExposure', $apple->flags);
+        self::assertArrayHasKey('hdrEnabled', $apple->flags);
+        self::assertArrayHasKey('hdrAuto', $apple->flags);
+        self::assertArrayHasKey('personInPhoto', $apple->flags);
+        self::assertArrayHasKey('petInPhoto', $apple->flags);
+
+        self::assertFalse($apple->flags['nightMode']);
+        self::assertFalse($apple->flags['longExposure']);
+        self::assertFalse($apple->flags['hdrEnabled']);
+        self::assertFalse($apple->flags['hdrAuto']);
+        self::assertFalse($apple->flags['personInPhoto']);
+        self::assertFalse($apple->flags['petInPhoto']);
+    }
+
+    #[Test]
     public function decodeResolvesLivePhotoMovieIndex(): void
     {
         $raw     = $this->buildMakerNotesBlobWithMovieIndex();
@@ -629,6 +659,7 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(
             [
                 'livePhotoLongExposure' => false,
+                'longExposure'          => false,
                 'nightMode'             => false,
                 'personInPhoto'         => false,
                 'petInPhoto'            => false,

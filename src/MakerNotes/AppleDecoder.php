@@ -1200,8 +1200,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $enabledBits = $this->bitPositions($dictionary[$makerKey]);
-            $enabledLookup = $enabledBits !== null ? array_flip($enabledBits) : null;
+            $enabledBits   = $this->bitPositions($dictionary[$makerKey]);
+            $enabledLookup = $enabledBits === null ? null : array_flip($enabledBits);
 
             foreach ($bitMap as $bitPosition => $normalized) {
                 $hasExisting = array_key_exists($normalized, $flags);
@@ -1213,7 +1213,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                     continue;
                 }
 
-                if (!$hasExisting || $flags[$normalized] === false) {
+                if (!$hasExisting) {
                     $flags[$normalized] = true;
                 }
             }
