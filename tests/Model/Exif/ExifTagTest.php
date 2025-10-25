@@ -111,6 +111,7 @@ final class ExifTagTest extends TestCase
             'F_NUMBER'                                 => 0x829D,
             'EXPOSURE_PROGRAM'                         => 0x8822,
             'SPECTRAL_SENSITIVITY'                     => 0x8824,
+            'ISO_SPEED_RATINGS_LEGACY'                 => 0x8827,
             'PHOTOGRAPHIC_SENSITIVITY'                 => 0x8827,
             'OECF'                                     => 0x8828,
             'INTERLACE'                                => 0x8829,
@@ -239,5 +240,16 @@ final class ExifTagTest extends TestCase
     public function testModifyDateAliasMatchesDateTime(): void
     {
         self::assertSame(ExifTag::DATETIME, ExifTag::MODIFY_DATE);
+    }
+
+    /**
+     * Ensures the ISO Speed Ratings alias shares the PhotographicSensitivity identifier.
+     */
+    public function testIsoSpeedRatingsLegacyAliasMatchesPhotographicSensitivity(): void
+    {
+        self::assertSame(
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+            ExifTag::ISO_SPEED_RATINGS_LEGACY
+        );
     }
 }
