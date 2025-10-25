@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Truth;
 
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
+
 /**
  * Maps ExifTool (-n) Rohwerte auf die Enum-Namen deiner Library.
  * Die Namen stammen aus deinem Dump und sind so gewählt, dass sie
@@ -28,15 +30,15 @@ return [
         8 => 'LEFT_BOTTOM',
     ],
     'ExposureProgram' => [
-        0 => 'NOT_DEFINED',
-        1 => 'MANUAL',
-        2 => 'NORMAL',            // ExifTool: Program AE
-        3 => 'APERTURE_PRIORITY',
-        4 => 'SHUTTER_PRIORITY',
-        5 => 'CREATIVE_PROGRAM',
-        6 => 'ACTION_PROGRAM',
-        7 => 'PORTRAIT_MODE',
-        8 => 'LANDSCAPE_MODE',
+        0 => ExposureProgram::NOT_DEFINED->name,
+        1 => ExposureProgram::MANUAL->name,
+        2 => ExposureProgram::NORMAL->name,            // ExifTool: Program AE
+        3 => ExposureProgram::APERTURE_PRIORITY->name,
+        4 => ExposureProgram::SHUTTER_PRIORITY->name,
+        5 => ExposureProgram::CREATIVE_PROGRAM->name,
+        6 => ExposureProgram::ACTION_PROGRAM->name,
+        7 => ExposureProgram::PORTRAIT_MODE->name,
+        8 => ExposureProgram::LANDSCAPE_MODE->name,
     ],
     'MeteringMode' => [
         0   => 'UNKNOWN',
