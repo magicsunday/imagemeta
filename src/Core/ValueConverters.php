@@ -63,7 +63,7 @@ final readonly class ValueConverters
 
     private const float FULL_FRAME_DIAGONAL_MM = 43.2666153056;
 
-    private const float FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.029;
+    private const float FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.030;
 
     /**
      * Converts a rational or numeric EXIF representation into a floating point value.
