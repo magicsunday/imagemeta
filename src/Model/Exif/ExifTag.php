@@ -129,6 +129,14 @@ final readonly class ExifTag
 
     public const int SPECTRAL_SENSITIVITY = 0x8824;
 
+    /**
+     * Legacy EXIF 2.x identifier retained for backwards compatibility.
+     *
+     * EXIF 3.0 renames the tag to PhotographicSensitivity, exposed via the
+     * PHOTOGRAPHIC_SENSITIVITY alias.
+     */
+    public const int ISO_SPEED_RATINGS_LEGACY = 0x8827;
+
     public const int PHOTOGRAPHIC_SENSITIVITY = 0x8827;
 
     // Opto-Electric Conversion Function
