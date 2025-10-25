@@ -13,9 +13,12 @@ namespace MagicSunday\ImageMeta\Tests\Curate\Resolver;
 
 use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Regions\Region;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 /**
  * @covers \MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver
@@ -121,6 +124,60 @@ final class RegionsResolverTest extends TestCase
         self::assertEqualsWithDelta(0.4, $region->y, 0.0001);
         self::assertEqualsWithDelta(0.2, $region->w, 0.0001);
         self::assertEqualsWithDelta(0.2, $region->h, 0.0001);
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function provideAppleConfidenceProperty(): iterable
+    {
+        yield 'confidence-level' => ['ConfidenceLevel'];
+        yield 'confidence' => ['Confidence'];
+    }
+
+    #[Test]
+    #[DataProvider('provideAppleConfidenceProperty')]
+    public function normalisesAppleConfidenceValues(string $confidenceProperty): void
+    {
+        $count          = 1001;
+        $maxConfidence  = $count - 1;
+        $confidenceValues = array_map(static fn (int $value): string => (string) $value, range(0, $maxConfidence));
+
+        $values = [
+            '{' . self::NS_APPLE . '}CenterX' => array_fill(0, $count, '0.5'),
+            '{' . self::NS_APPLE . '}CenterY' => array_fill(0, $count, '0.5'),
+            '{' . self::NS_APPLE . '}Width'   => array_fill(0, $count, '0.1'),
+            '{' . self::NS_APPLE . '}Height'  => array_fill(0, $count, '0.1'),
+        ];
+
+        $values['{' . self::NS_APPLE . '}' . $confidenceProperty] = $confidenceValues;
+
+        if ($confidenceProperty === 'ConfidenceLevel') {
+            $values['{' . self::NS_APPLE . '}Confidence'] = $confidenceValues;
+        }
+
+        $resolver  = new RegionsResolver();
+        $document  = new XmpDocument($values);
+        $reflection = new ReflectionClass($resolver);
+        $method     = $reflection->getMethod('extractAppleFaceRegions');
+        $method->setAccessible(true);
+
+        /** @var list<Region> $regions */
+        $regions = $method->invoke($resolver, $document, null);
+
+        self::assertCount($count, $regions);
+
+        foreach ($regions as $index => $region) {
+            self::assertSame(RegionType::FACE, $region->type);
+            self::assertNotNull($region->confidence);
+
+            $rawConfidence = (float) $confidenceValues[$index];
+            $expectedConfidence = $rawConfidence > 1.0
+                ? $rawConfidence / $maxConfidence
+                : $rawConfidence;
+
+            self::assertEqualsWithDelta($expectedConfidence, $region->confidence, 0.0001);
+        }
     }
 
     #[Test]

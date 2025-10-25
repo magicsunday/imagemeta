@@ -18,10 +18,13 @@ use MagicSunday\ImageMeta\Value\Regions\RegionType;
 
 use function abs;
 use function array_values;
+use function ceil;
 use function count;
 use function is_array;
 use function is_string;
+use function log10;
 use function max;
+use function pow;
 use function trim;
 
 /**
@@ -157,6 +160,8 @@ final readonly class RegionsResolver
         $rolls            = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Roll');
         $yaws             = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
 
+        $confidenceScale = $this->confidenceScale($confidenceLevels, $confidences);
+
         $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'Name');
         if ($names === []) {
             $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FullName');
@@ -196,8 +201,12 @@ final readonly class RegionsResolver
                 continue;
             }
 
-            $confidence = $confidenceLevels[$index] ?? $confidences[$index] ?? null;
-            $rotation   = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
+            $confidence = $this->normalisedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
+            if ($confidence === null) {
+                $confidence = $this->normalisedConfidence($confidences[$index] ?? null, $confidenceScale);
+            }
+
+            $rotation = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
 
             $resolved[] = new Region(
                 RegionType::FACE,
@@ -303,6 +312,66 @@ final readonly class RegionsResolver
         $trimmed = trim($value);
 
         return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * Normalises Apple-specific confidence values to the unit interval.
+     */
+    private function normalisedConfidence(?float $confidence, float $scale): ?float
+    {
+        if ($confidence === null) {
+            return null;
+        }
+
+        if ($scale <= 1.0 || abs($confidence) <= 1.0) {
+            return $confidence;
+        }
+
+        $normalised = $confidence / $scale;
+
+        if ($normalised > 1.0) {
+            return 1.0;
+        }
+
+        if ($normalised < -1.0) {
+            return -1.0;
+        }
+
+        return $normalised;
+    }
+
+    /**
+     * @param list<float|null> $confidenceLevels
+     * @param list<float|null> $confidences
+     */
+    private function confidenceScale(array $confidenceLevels, array $confidences): float
+    {
+        $maxConfidence = 0.0;
+
+        foreach ([$confidenceLevels, $confidences] as $values) {
+            foreach ($values as $value) {
+                if ($value === null) {
+                    continue;
+                }
+
+                $absolute = abs($value);
+                if ($absolute > $maxConfidence) {
+                    $maxConfidence = $absolute;
+                }
+            }
+        }
+
+        if ($maxConfidence <= 1.0) {
+            return 1.0;
+        }
+
+        $scale = pow(10.0, ceil(log10($maxConfidence)));
+
+        if ($scale <= 0.0) {
+            return 1.0;
+        }
+
+        return $scale;
     }
 
     /**
