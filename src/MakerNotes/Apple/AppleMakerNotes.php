@@ -22,6 +22,13 @@ final readonly class AppleMakerNotes
      * @param float|null          $hdrHeadroom         HDR headroom value reported by the device.
      * @param list<float>|null    $hdrGain             HDR gain values per colour channel.
      * @param float|null          $snr                 Signal-to-noise ratio setting.
+     * @param bool|null           $aeStable            Indicates whether auto exposure was stable during capture.
+     * @param float|null          $aeTarget            Auto exposure target luminance value.
+     * @param float|null          $aeAverage           Auto exposure average luminance value.
+     * @param bool|null           $afStable            Indicates whether auto focus was stable during capture.
+     * @param float|null          $afPerformance       Auto focus performance metric reported by the device.
+     * @param string|int|null     $signalToNoiseRatioType Signal-to-noise ratio measurement type identifier.
+     * @param float|null          $luminanceNoiseAmplitude Luminance noise amplitude measured for the capture.
      * @param float|null          $focusPosition       Lens focus position in the native scale.
      * @param int|null            $livePhotoIndex      Index of the representative frame in a Live Photo sequence.
      * @param int|null            $colorTemperature    White balance colour temperature in Kelvin.
@@ -30,6 +37,9 @@ final readonly class AppleMakerNotes
      * @param float|null          $semanticStyleTone   Semantic style tone adjustment.
      * @param array<string, bool> $flags               Boolean flags derived from maker note keys.
      * @param list<float>|null    $accelerationVector  Acceleration vector recorded during capture.
+     * @param string|int|null     $imageCaptureRequestId Identifier for the originating image capture request.
+     * @param string|null         $qualityHint         Quality hint reported by the processing pipeline.
+     * @param list<float>|null    $colorCorrectionMatrix Color correction matrix components in row-major order.
      * @param float|null          $livePhotoTime       Normalised Live Photo timestamp in seconds.
      * @param RunTime|null        $runTime             Capture runtime metadata describing the CMTime payload.
      * @param string|null         $makerNoteVersion    Normalised maker note version string reported by the device.
@@ -49,6 +59,13 @@ final readonly class AppleMakerNotes
         public ?float $hdrHeadroom,
         public ?array $hdrGain,
         public ?float $snr,
+        public ?bool $aeStable,
+        public ?float $aeTarget,
+        public ?float $aeAverage,
+        public ?bool $afStable,
+        public ?float $afPerformance,
+        public string|int|null $signalToNoiseRatioType,
+        public ?float $luminanceNoiseAmplitude,
         public ?float $focusPosition,
         public ?int $livePhotoIndex,
         public ?int $colorTemperature,
@@ -57,6 +74,9 @@ final readonly class AppleMakerNotes
         public ?float $semanticStyleTone,
         public array $flags,
         public ?array $accelerationVector,
+        public string|int|null $imageCaptureRequestId = null,
+        public ?string $qualityHint = null,
+        public ?array $colorCorrectionMatrix = null,
         public ?float $livePhotoTime = null,
         public ?RunTime $runTime = null,
         public ?string $makerNoteVersion = null,

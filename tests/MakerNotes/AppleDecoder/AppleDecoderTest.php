@@ -547,6 +547,41 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    public function buildAppleMakerNotesExtractsExtendedTags(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier'       => 'extended',
+            'AEStable'                => '1',
+            'AETarget'                => ['numerator' => 37, 'denominator' => 10],
+            'AEAverage'               => [1, 4],
+            'AFStable'                => '0',
+            'AFPerformance'           => ['value' => ['numerator' => 3, 'denominator' => 2]],
+            'SignalToNoiseRatioType'  => '2',
+            'LuminanceNoiseAmplitude' => ['values' => [['numerator' => 5, 'denominator' => 2]]],
+            'ImageCaptureRequestID'   => '  REQ-12345  ',
+            'QualityHint'             => ' LowLight ',
+            'ColorCorrectionMatrix'   => ['values' => [1, '0.5', 0.25]],
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertTrue($notes->aeStable);
+        self::assertEqualsWithDelta(3.7, $notes->aeTarget, 1e-12);
+        self::assertEqualsWithDelta(0.25, $notes->aeAverage, 1e-12);
+        self::assertFalse($notes->afStable);
+        self::assertEqualsWithDelta(1.5, $notes->afPerformance, 1e-12);
+        self::assertSame(2, $notes->signalToNoiseRatioType);
+        self::assertEqualsWithDelta(2.5, $notes->luminanceNoiseAmplitude, 1e-12);
+        self::assertSame('REQ-12345', $notes->imageCaptureRequestId);
+        self::assertSame('LowLight', $notes->qualityHint);
+        self::assertSame([1.0, 0.5, 0.25], $notes->colorCorrectionMatrix);
+    }
+
+    #[Test]
     #[DataProvider('stabilityFlagProvider')]
     public function buildAppleMakerNotesParsesStabilityFlags(string $makerKey, string|int $value, string $expectedFlag, bool $expected): void
     {
