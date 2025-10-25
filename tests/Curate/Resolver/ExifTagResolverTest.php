@@ -135,8 +135,10 @@ final class ExifTagResolverTest extends TestCase
 
         $gps = $resolver->gps();
         self::assertSame('N', $gps['lat_ref']);
+        self::assertIsFloat($gps['lat']);
         self::assertEqualsWithDelta(51.5, $gps['lat'], 0.000001);
         self::assertSame('E', $gps['lon_ref']);
+        self::assertIsFloat($gps['lon']);
         self::assertEqualsWithDelta(8.5, $gps['lon'], 0.000001);
         self::assertSame(0, $gps['alt_ref']);
         self::assertEqualsWithDelta(150.0, $gps['alt'], 0.000001);
@@ -148,22 +150,38 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('05', $resolver->gpsSatellites());
         self::assertSame('A', $resolver->gpsStatus());
         self::assertSame('3', $resolver->gpsMeasureMode());
-        self::assertEqualsWithDelta(2.5, $resolver->gpsDop(), 0.000001);
+        $dop = $resolver->gpsDop();
+        self::assertIsFloat($dop);
+        self::assertEqualsWithDelta(2.5, $dop, 0.000001);
         self::assertSame('K', $resolver->gpsSpeedRef());
-        self::assertEqualsWithDelta(20.0, $resolver->gpsSpeed(), 0.000001);
+        $speed = $resolver->gpsSpeed();
+        self::assertIsFloat($speed);
+        self::assertEqualsWithDelta(20.0, $speed, 0.000001);
         self::assertSame('T', $resolver->gpsTrackRef());
-        self::assertEqualsWithDelta(123.45, $resolver->gpsTrack(), 0.000001);
+        $track = $resolver->gpsTrack();
+        self::assertIsFloat($track);
+        self::assertEqualsWithDelta(123.45, $track, 0.000001);
         self::assertSame('M', $resolver->gpsImgDirectionRef());
-        self::assertEqualsWithDelta(250.0, $resolver->gpsImgDirection(), 0.000001);
+        $imgDirection = $resolver->gpsImgDirection();
+        self::assertIsFloat($imgDirection);
+        self::assertEqualsWithDelta(250.0, $imgDirection, 0.000001);
         self::assertSame('WGS-84', $resolver->gpsMapDatum());
         self::assertSame('N', $resolver->gpsDestinationLatitudeRef());
-        self::assertEqualsWithDelta(41.0, $resolver->gpsDestinationLatitude(), 0.000001);
+        $destLat = $resolver->gpsDestinationLatitude();
+        self::assertIsFloat($destLat);
+        self::assertEqualsWithDelta(41.0, $destLat, 0.000001);
         self::assertSame('E', $resolver->gpsDestinationLongitudeRef());
-        self::assertEqualsWithDelta(8.5, $resolver->gpsDestinationLongitude(), 0.000001);
+        $destLon = $resolver->gpsDestinationLongitude();
+        self::assertIsFloat($destLon);
+        self::assertEqualsWithDelta(8.5, $destLon, 0.000001);
         self::assertSame('T', $resolver->gpsDestinationBearingRef());
-        self::assertEqualsWithDelta(123.0, $resolver->gpsDestinationBearing(), 0.000001);
+        $destBearing = $resolver->gpsDestinationBearing();
+        self::assertIsFloat($destBearing);
+        self::assertEqualsWithDelta(123.0, $destBearing, 0.000001);
         self::assertSame('K', $resolver->gpsDestinationDistanceRef());
-        self::assertEqualsWithDelta(42000.0, $resolver->gpsDestinationDistance(), 0.000001);
+        $destDistance = $resolver->gpsDestinationDistance();
+        self::assertIsFloat($destDistance);
+        self::assertEqualsWithDelta(42000.0, $destDistance, 0.000001);
         self::assertSame('NETWORK', $resolver->gpsProcessingMethod());
         self::assertSame('AreaName', $resolver->gpsAreaInformation());
         self::assertSame('2024-05-06', $resolver->gpsDate());
@@ -175,7 +193,9 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('12:34:56.789000', $timestamp->format('H:i:s.u'));
 
         self::assertSame(2, $resolver->gpsDifferential());
-        self::assertEqualsWithDelta(1.5, $resolver->gpsHorizontalPositioningError(), 0.000001);
+        $horizontalError = $resolver->gpsHorizontalPositioningError();
+        self::assertIsFloat($horizontalError);
+        self::assertEqualsWithDelta(1.5, $horizontalError, 0.000001);
     }
 
     /**
@@ -201,15 +221,25 @@ final class ExifTagResolverTest extends TestCase
         self::assertEqualsWithDelta(42000.0, $gps['dest_distance_m'], 0.000001);
 
         self::assertSame('K', $resolver->gpsSpeedRef());
-        self::assertEqualsWithDelta(20.0, $resolver->gpsSpeed(), 0.000001);
+        $speed = $resolver->gpsSpeed();
+        self::assertIsFloat($speed);
+        self::assertEqualsWithDelta(20.0, $speed, 0.000001);
         self::assertSame('T', $resolver->gpsTrackRef());
-        self::assertEqualsWithDelta(90.0, $resolver->gpsTrack(), 0.000001);
+        $track = $resolver->gpsTrack();
+        self::assertIsFloat($track);
+        self::assertEqualsWithDelta(90.0, $track, 0.000001);
         self::assertSame('M', $resolver->gpsImgDirectionRef());
-        self::assertEqualsWithDelta(45.0, $resolver->gpsImgDirection(), 0.000001);
+        $imgDirection = $resolver->gpsImgDirection();
+        self::assertIsFloat($imgDirection);
+        self::assertEqualsWithDelta(45.0, $imgDirection, 0.000001);
         self::assertSame('T', $resolver->gpsDestinationBearingRef());
-        self::assertEqualsWithDelta(45.0, $resolver->gpsDestinationBearing(), 0.000001);
+        $destBearing = $resolver->gpsDestinationBearing();
+        self::assertIsFloat($destBearing);
+        self::assertEqualsWithDelta(45.0, $destBearing, 0.000001);
         self::assertSame('K', $resolver->gpsDestinationDistanceRef());
-        self::assertEqualsWithDelta(42000.0, $resolver->gpsDestinationDistance(), 0.000001);
+        $destDistance = $resolver->gpsDestinationDistance();
+        self::assertIsFloat($destDistance);
+        self::assertEqualsWithDelta(42000.0, $destDistance, 0.000001);
         self::assertSame('2024-05-06', $resolver->gpsDate());
         self::assertSame('12:34:56.789', $resolver->gpsTime());
 
@@ -218,7 +248,9 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
 
         self::assertSame(2, $resolver->gpsDifferential());
-        self::assertEqualsWithDelta(1.5, $resolver->gpsHorizontalPositioningError(), 0.000001);
+        $horizontalError = $resolver->gpsHorizontalPositioningError();
+        self::assertIsFloat($horizontalError);
+        self::assertEqualsWithDelta(1.5, $horizontalError, 0.000001);
     }
 
     /**
@@ -251,6 +283,25 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame([-60, 120], $resolver->timeZoneOffsetMinutes());
         self::assertSame(7, $resolver->selfTimerModeSeconds());
         self::assertSame(1, $resolver->interlace());
+    }
+
+    /**
+     * Ensures GPS conversions return null when unit references are unknown.
+     */
+    #[Test]
+    public function gpsConversionsRequireKnownReferences(): void
+    {
+        $gpsIfd = new Ifd([
+            ExifTag::GPS_SPEED_REF         => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 1, 'X'),
+            ExifTag::GPS_SPEED             => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, new ExifRational(72000, 1000)),
+            ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 1, 'Q'),
+            ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, new ExifRational(42, 1)),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), null, $gpsIfd, null, null));
+
+        self::assertNull($resolver->gpsSpeed());
+        self::assertNull($resolver->gpsDestinationDistance());
     }
 
     /**

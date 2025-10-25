@@ -27,7 +27,6 @@ use function is_int;
 use function is_string;
 use function ord;
 use function preg_replace;
-use function round;
 use function rtrim;
 use function str_pad;
 use function str_replace;
@@ -1100,15 +1099,7 @@ final readonly class ExifDocument
     {
         $value = $this->gpsValue('speed_ms');
 
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1128,15 +1119,7 @@ final readonly class ExifDocument
     {
         $value = $this->gpsValue('track');
 
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1156,15 +1139,7 @@ final readonly class ExifDocument
     {
         $value = $this->gpsValue('img_direction');
 
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1184,15 +1159,7 @@ final readonly class ExifDocument
     {
         $value = $this->gpsValue('dest_bearing');
 
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1212,15 +1179,7 @@ final readonly class ExifDocument
     {
         $value = $this->gpsValue('dest_distance_m');
 
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
+        return is_float($value) ? $value : null;
     }
 
     /**
@@ -1230,15 +1189,7 @@ final readonly class ExifDocument
     {
         $value = $this->gpsValue('differential');
 
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) round($value);
-        }
-
-        return null;
+        return is_int($value) ? $value : null;
     }
 
     /**
@@ -1248,15 +1199,7 @@ final readonly class ExifDocument
     {
         $value = $this->gpsValue('h_positioning_error');
 
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
+        return is_float($value) ? $value : null;
     }
 
     /**

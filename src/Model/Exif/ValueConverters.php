@@ -45,13 +45,50 @@ use function trim;
 
 /**
  * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
+ *
+ * @phpstan-type ExifScalar int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+ * @phpstan-type GpsFieldMap array{
+ *     lat_ref:?string,
+ *     lat:?float,
+ *     lon_ref:?string,
+ *     lon:?float,
+ *     alt_ref:?int,
+ *     alt:?float,
+ *     version:?string,
+ *     satellites:?string,
+ *     status:?string,
+ *     measure_mode:?string,
+ *     dop:?float,
+ *     speed_ref:?string,
+ *     speed_ms:?float,
+ *     track_ref:?string,
+ *     track:?float,
+ *     img_direction_ref:?string,
+ *     img_direction:?float,
+ *     map_datum:?string,
+ *     dest_lat_ref:?string,
+ *     dest_lat:?float,
+ *     dest_lon_ref:?string,
+ *     dest_lon:?float,
+ *     dest_bearing_ref:?string,
+ *     dest_bearing:?float,
+ *     dest_distance_ref:?string,
+ *     dest_distance_m:?float,
+ *     processing_method:?string,
+ *     area_information:?string,
+ *     date:?string,
+ *     time:?string,
+ *     timestamp:?DateTimeImmutable,
+ *     differential:?int,
+ *     h_positioning_error:?float
+ * }
  */
 final readonly class ValueConverters
 {
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $v The value to convert.
+     * @param ExifScalar $v The value to convert.
      *
      * @return float|null
      */
@@ -93,7 +130,7 @@ final readonly class ValueConverters
     /**
      * Converts a stored APEX aperture value into a traditional f-number.
      *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value The APEX value to convert.
+     * @param ExifScalar $value The APEX value to convert.
      */
     public static function apexToFNumber(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): ?float
     {
@@ -112,6 +149,8 @@ final readonly class ValueConverters
 
     /**
      * Converts an APEX shutter speed value into seconds.
+     *
+     * @param ExifScalar $value The APEX value to convert.
      */
     public static function apexShutterSpeedToSeconds(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
@@ -210,8 +249,8 @@ final readonly class ValueConverters
     /**
      * Converts a GPS speed measurement into metres per second.
      *
-     * @param string|null                                                         $ref   Speed reference (K, M or N).
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value The measured value.
+     * @param string|null $ref   Speed reference (K, M or N).
+     * @param ExifScalar  $value The measured value.
      */
     public static function gpsSpeedToMs(
         ?string $ref,
@@ -243,8 +282,8 @@ final readonly class ValueConverters
     /**
      * Converts a GPS destination distance to metres based on the reference unit.
      *
-     * @param string|null                                                         $ref   Distance reference (K, M or N).
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value The measured value.
+     * @param string|null $ref   Distance reference (K, M or N).
+     * @param ExifScalar  $value The measured value.
      */
     public static function gpsDistanceToMetres(
         ?string $ref,
@@ -302,7 +341,7 @@ final readonly class ValueConverters
     /**
      * Converts the EXIF flash bit field into a typed value object.
      *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Flash tag value representation.
+     * @param ExifScalar $value Flash tag value representation.
      */
     public static function flashFromShort(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
@@ -380,41 +419,7 @@ final readonly class ValueConverters
     /**
      * Returns the default GPS metadata structure with all keys initialised to null.
      *
-     * @return array{
-     *     lat_ref:?string,
-     *     lat:?float,
-     *     lon_ref:?string,
-     *     lon:?float,
-     *     alt_ref:?int,
-     *     alt:?float,
-     *     version:?string,
-     *     satellites:?string,
-     *     status:?string,
-     *     measure_mode:?string,
-     *     dop:?float,
-     *     speed_ref:?string,
-     *     speed_ms:?float,
-     *     track_ref:?string,
-     *     track:?float,
-     *     img_direction_ref:?string,
-     *     img_direction:?float,
-     *     map_datum:?string,
-     *     dest_lat_ref:?string,
-     *     dest_lat:?float,
-     *     dest_lon_ref:?string,
-     *     dest_lon:?float,
-     *     dest_bearing_ref:?string,
-     *     dest_bearing:?float,
-     *     dest_distance_ref:?string,
-     *     dest_distance_m:?float,
-     *     processing_method:?string,
-     *     area_information:?string,
-     *     date:?string,
-     *     time:?string,
-     *     timestamp:?DateTimeImmutable,
-     *     differential:?int,
-     *     h_positioning_error:?float
-     * }
+     * @return GpsFieldMap
      */
     public static function emptyGpsResult(): array
     {
@@ -460,41 +465,7 @@ final readonly class ValueConverters
      *
      * @param Ifd $gps The GPS IFD containing coordinate tags.
      *
-     * @return array{
-     *     lat_ref:?string,
-     *     lat:?float,
-     *     lon_ref:?string,
-     *     lon:?float,
-     *     alt_ref:?int,
-     *     alt:?float,
-     *     version:?string,
-     *     satellites:?string,
-     *     status:?string,
-     *     measure_mode:?string,
-     *     dop:?float,
-     *     speed_ref:?string,
-     *     speed_ms:?float,
-     *     track_ref:?string,
-     *     track:?float,
-     *     img_direction_ref:?string,
-     *     img_direction:?float,
-     *     map_datum:?string,
-     *     dest_lat_ref:?string,
-     *     dest_lat:?float,
-     *     dest_lon_ref:?string,
-     *     dest_lon:?float,
-     *     dest_bearing_ref:?string,
-     *     dest_bearing:?float,
-     *     dest_distance_ref:?string,
-     *     dest_distance_m:?float,
-     *     processing_method:?string,
-     *     area_information:?string,
-     *     date:?string,
-     *     time:?string,
-     *     timestamp:?DateTimeImmutable,
-     *     differential:?int,
-     *     h_positioning_error:?float
-     * }
+     * @return GpsFieldMap
      */
     public static function gpsFromIfd(Ifd $gps): array
     {
@@ -669,7 +640,7 @@ final readonly class ValueConverters
     /**
      * Converts a GPS version payload into a dotted string.
      *
-     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
+     * @param ExifScalar $value Raw value extracted from the IFD entry.
      */
     private static function formatGpsVersion(string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value): ?string
     {
@@ -702,7 +673,7 @@ final readonly class ValueConverters
     /**
      * Normalises ASCII-like EXIF strings by trimming whitespace and null padding.
      *
-     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
+     * @param ExifScalar $value Raw value extracted from the IFD entry.
      */
     private static function sanitizeString(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
@@ -719,7 +690,7 @@ final readonly class ValueConverters
     /**
      * Decodes undefined GPS ASCII strings with optional encoding prefixes.
      *
-     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
+     * @param ExifScalar $value Raw value extracted from the IFD entry.
      */
     private static function decodeUndefinedString(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
@@ -751,7 +722,7 @@ final readonly class ValueConverters
     /**
      * Normalises a GPS date stamp into an ISO 8601 calendar date.
      *
-     * @param string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value extracted from the IFD entry.
+     * @param ExifScalar $value Raw value extracted from the IFD entry.
      */
     private static function normalizeGpsDate(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,

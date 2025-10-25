@@ -372,8 +372,10 @@ final class ExifDocumentTest extends TestCase
         $gps = $doc->gps();
 
         self::assertSame('S', $gps['lat_ref']);
+        self::assertIsFloat($gps['lat']);
         self::assertEqualsWithDelta(-33.870094, $gps['lat'], 0.000001);
         self::assertSame('W', $gps['lon_ref']);
+        self::assertIsFloat($gps['lon']);
         self::assertEqualsWithDelta(-18.415772, $gps['lon'], 0.000001);
         self::assertSame(1, $gps['alt_ref']);
         self::assertEqualsWithDelta(-250.0, $gps['alt'], 0.000001);
@@ -382,21 +384,29 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('07', $gps['satellites']);
         self::assertSame('V', $gps['status']);
         self::assertSame('2', $gps['measure_mode']);
+        self::assertIsFloat($gps['dop']);
         self::assertEqualsWithDelta(1.5, $gps['dop'], 0.000001);
         self::assertSame('N', $gps['speed_ref']);
+        self::assertIsFloat($gps['speed_ms']);
         self::assertEqualsWithDelta(6.3508166667, $gps['speed_ms'], 0.000001);
         self::assertSame('M', $gps['track_ref']);
+        self::assertIsFloat($gps['track']);
         self::assertEqualsWithDelta(183.21, $gps['track'], 0.000001);
         self::assertSame('T', $gps['img_direction_ref']);
+        self::assertIsFloat($gps['img_direction']);
         self::assertEqualsWithDelta(90.0, $gps['img_direction'], 0.000001);
         self::assertSame('WGS-84', $gps['map_datum']);
         self::assertSame('N', $gps['dest_lat_ref']);
+        self::assertIsFloat($gps['dest_lat']);
         self::assertEqualsWithDelta(34.0, $gps['dest_lat'], 0.000001);
         self::assertSame('E', $gps['dest_lon_ref']);
+        self::assertIsFloat($gps['dest_lon']);
         self::assertEqualsWithDelta(19.0, $gps['dest_lon'], 0.000001);
         self::assertSame('T', $gps['dest_bearing_ref']);
+        self::assertIsFloat($gps['dest_bearing']);
         self::assertEqualsWithDelta(45.0, $gps['dest_bearing'], 0.000001);
         self::assertSame('M', $gps['dest_distance_ref']);
+        self::assertIsFloat($gps['dest_distance_m']);
         self::assertEqualsWithDelta(160934.4, $gps['dest_distance_m'], 0.000001);
         self::assertSame('SURVEY', $gps['processing_method']);
         self::assertSame('Test Area', $gps['area_information']);
@@ -409,6 +419,46 @@ final class ExifDocumentTest extends TestCase
 
         self::assertSame(1, $gps['differential']);
         self::assertEqualsWithDelta(0.5, $gps['h_positioning_error'], 0.000001);
+
+        self::assertIsFloat($doc->gpsSpeedMetresPerSecond());
+        self::assertIsFloat($doc->gpsTrack());
+        self::assertIsFloat($doc->gpsImgDirection());
+        self::assertIsFloat($doc->gpsDestinationBearing());
+        self::assertIsFloat($doc->gpsDestinationDistanceMetres());
+        self::assertSame(1, $doc->gpsDifferential());
+        self::assertIsFloat($doc->gpsHorizontalPositioningError());
+    }
+
+    /**
+     * Ensures GPS speed conversion returns null when the unit reference is unknown.
+     */
+    #[Test]
+    public function gpsSpeedMetresPerSecondRequiresKnownReference(): void
+    {
+        $gpsIfd = new Ifd([
+            ExifTag::GPS_SPEED_REF => new IfdEntry(ExifTag::GPS_SPEED_REF, 2, 1, 'X'),
+            ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, new ExifRational(5000, 100)),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+
+        self::assertNull($doc->gpsSpeedMetresPerSecond());
+    }
+
+    /**
+     * Ensures destination distance conversion returns null when the unit reference is unknown.
+     */
+    #[Test]
+    public function gpsDestinationDistanceRequiresKnownReference(): void
+    {
+        $gpsIfd = new Ifd([
+            ExifTag::GPS_DEST_DISTANCE_REF => new IfdEntry(ExifTag::GPS_DEST_DISTANCE_REF, 2, 1, 'Q'),
+            ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, new ExifRational(250, 1)),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+
+        self::assertNull($doc->gpsDestinationDistanceMetres());
     }
 
     /**
