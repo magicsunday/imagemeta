@@ -249,4 +249,39 @@ final class AppleDecoderTest extends TestCase
             $notes->flags,
         );
     }
+
+    #[Test]
+    public function flagMasksAcceptBitPositionLists(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier'     => 'positions',
+            'SceneFlags'            => [0, 1],
+            'ImageProcessingFlags'  => ['values' => [0, 1]],
+            'PhotosAppFeatureFlags' => [0, 1, ['values' => [2, 3]], 4],
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+
+        $flags = $notes->flags;
+        ksort($flags);
+
+        self::assertSame(
+            [
+                'hdrAuto'               => true,
+                'hdrEnabled'            => true,
+                'livePhoto'             => true,
+                'livePhotoActive'       => true,
+                'livePhotoAuto'         => true,
+                'livePhotoEnabled'      => true,
+                'livePhotoLongExposure' => true,
+                'longExposure'          => true,
+                'nightMode'             => true,
+            ],
+            $flags,
+        );
+    }
 }
