@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function hex2bin;
 use function sha1;
@@ -81,5 +82,69 @@ final class AppleDecoderTest extends TestCase
 
         self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
         self::assertNull($metadata->apple());
+    }
+
+    #[Test]
+    public function flagMasksMirrorScalarInputs(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        $scalarNotes = $method->invoke($decoder, [
+            'ContentIdentifier'    => 'scalar',
+            'LivePhotoAuto'        => true,
+            'LivePhotoEnabled'     => true,
+            'LivePhotoActive'      => true,
+            'LivePhotoLongExposure'=> true,
+            'LivePhoto'            => 1,
+            'HdrAuto'              => 1,
+            'HdrEnabled'           => '1',
+            'NightMode'            => true,
+            'LongExposure'         => true,
+        ]);
+
+        $maskNotes = $method->invoke($decoder, [
+            'ContentIdentifier'     => 'mask',
+            'SceneFlags'            => (1 << 0) | (1 << 1),
+            'ImageProcessingFlags'  => (1 << 0) | (1 << 1),
+            'PhotosAppFeatureFlags' => (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4),
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $scalarNotes);
+        self::assertInstanceOf(AppleMakerNotes::class, $maskNotes);
+
+        $scalarFlags = $scalarNotes->flags;
+        $maskFlags   = $maskNotes->flags;
+
+        ksort($scalarFlags);
+        ksort($maskFlags);
+
+        self::assertSame($scalarFlags, $maskFlags);
+    }
+
+    #[Test]
+    public function explicitFlagValuesOverrideMasks(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier'     => 'override',
+            'LivePhotoLongExposure' => false,
+            'NightMode'             => false,
+            'SceneFlags'            => 1 << 0,
+            'PhotosAppFeatureFlags' => 1 << 4,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame(
+            [
+                'livePhotoLongExposure' => false,
+                'nightMode'             => false,
+            ],
+            $notes->flags,
+        );
     }
 }
