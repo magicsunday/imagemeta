@@ -413,7 +413,7 @@ final class ValueConvertersTest extends TestCase
     public function extractsExtendedGpsMetadata(): void
     {
         $gps = new Ifd([
-            ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [3, 0, 0, 0]),
+            ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 9, '3.0.0.0' . chr(0)),
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -498,6 +498,7 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(8.5, $result['lon'], 0.000001);
         self::assertEqualsWithDelta(150.0, $result['alt'], 0.000001);
         self::assertSame('3.0.0.0', $result['version']);
+        self::assertSame('3.0.0.0' . chr(0), $result['version_raw']);
         self::assertSame('05', $result['satellites']);
         self::assertSame('A', $result['status']);
         self::assertSame('3', $result['measure_mode']);
@@ -518,6 +519,7 @@ final class ValueConvertersTest extends TestCase
         self::assertSame('K', $result['dest_distance_ref']);
         self::assertEqualsWithDelta(42000.0, $result['dest_distance_m'], 0.000001);
         self::assertSame('NETWORK', $result['processing_method']);
+        self::assertSame('2024:05:06', $result['date_raw']);
         self::assertSame('AreaName', $result['area_information']);
         self::assertSame('2024-05-06', $result['date']);
         self::assertSame('12:34:56.789', $result['time']);
@@ -529,5 +531,18 @@ final class ValueConvertersTest extends TestCase
 
         self::assertSame(2, $result['differential']);
         self::assertEqualsWithDelta(1.5, $result['h_positioning_error'], 0.000001);
+    }
+
+    #[Test]
+    public function formatsGpsVersionFromNumericList(): void
+    {
+        $gps = new Ifd([
+            ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [2, 3, 4, 5]),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertSame('2.3.4.5', $result['version']);
+        self::assertNull($result['version_raw']);
     }
 }

@@ -33,7 +33,7 @@ final class GpsResolverTest extends TestCase
     public function resolvesCompleteGpsDatasetFromExif(): void
     {
         $gpsIfd = new Ifd([
-            ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [3, 0, 0, 0]),
+            ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 9, '3.0.0.0' . chr(0)),
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -128,10 +128,13 @@ final class GpsResolverTest extends TestCase
         self::assertSame('N', $gps->latitudeRef);
         self::assertSame('E', $gps->longitudeRef);
         self::assertEqualsWithDelta(150.0, $gps->altitude, 1e-6);
+        self::assertSame('3.0.0.0', $gps->version);
+        self::assertSame('3.0.0.0' . chr(0), $gps->versionRaw);
         self::assertSame('05', $gps->satellites);
         self::assertSame('NETWORK', $gps->processingMethod);
         self::assertSame('AreaName', $gps->areaInformation);
         self::assertSame('2024-05-06', $gps->date);
+        self::assertSame('2024:05:06', $gps->dateRaw);
         self::assertSame('12:34:56.789', $gps->time);
         self::assertInstanceOf(DateTimeImmutable::class, $gps->timestamp);
         self::assertSame('2024-05-06T12:34:56+00:00', $gps->timestamp?->format(DATE_ATOM));
