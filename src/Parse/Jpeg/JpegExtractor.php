@@ -29,6 +29,7 @@ use function sprintf;
 use function str_starts_with;
 use function strlen;
 use function substr;
+use function unpack;
 
 /**
  * Parses JPEG streams to extract metadata-bearing APP segments.
@@ -97,9 +98,9 @@ final class JpegExtractor
 
     private ?int $frameBitsPerSample = null;
 
-    private ?int $frameHeight = null;
+    private ?int $frameLines = null;
 
-    private ?int $frameWidth = null;
+    private ?int $frameSamplesPerLine = null;
 
     /** @var array<int, array{horizontal: int, vertical: int}>|null */
     private ?array $frameComponentSampling = null;
@@ -193,7 +194,7 @@ final class JpegExtractor
     {
         $this->parseIfNeeded();
 
-        return $this->frameHeight;
+        return $this->frameLines;
     }
 
     /**
@@ -203,7 +204,7 @@ final class JpegExtractor
     {
         $this->parseIfNeeded();
 
-        return $this->frameWidth;
+        return $this->frameSamplesPerLine;
     }
 
     /**
@@ -252,11 +253,11 @@ final class JpegExtractor
         $this->iccProfile             = null;
         $this->iptcPayloads           = [];
         $this->xmpPacketHashes        = [];
-        $this->frameBitsPerSample     = null;
-        $this->frameComponentSampling = null;
-        $this->frameYCbCrSubSampling  = null;
-        $this->frameHeight            = null;
-        $this->frameWidth             = null;
+        $this->frameBitsPerSample      = null;
+        $this->frameComponentSampling  = null;
+        $this->frameYCbCrSubSampling   = null;
+        $this->frameLines              = null;
+        $this->frameSamplesPerLine     = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -520,12 +521,15 @@ final class JpegExtractor
             $index += 3;
         }
 
-        if ($this->frameHeight === null) {
-            $this->frameHeight = (ord($payload[1]) << 8) | ord($payload[2]);
+        /** @var array{lines:int,samples:int} $fields */
+        $fields = unpack('nlines/nsamples', substr($payload, 1, 4));
+
+        if ($this->frameLines === null) {
+            $this->frameLines = $fields['lines'];
         }
 
-        if ($this->frameWidth === null) {
-            $this->frameWidth = (ord($payload[3]) << 8) | ord($payload[4]);
+        if ($this->frameSamplesPerLine === null) {
+            $this->frameSamplesPerLine = $fields['samples'];
         }
 
         $this->frameBitsPerSample     = ord($payload[0]);

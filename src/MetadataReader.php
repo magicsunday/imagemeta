@@ -120,13 +120,13 @@ final class MetadataReader
             $bitsPerSample,
             $sampling,
             $subSampling,
-            $mimeType,
-            $fileSize,
-            $extension,
-            $digestSha1,
-            $digestMd5,
-            $frameWidth,
-            $frameHeight,
+            mimeType: $mimeType,
+            fileSize: $fileSize,
+            extension: $extension,
+            digestSha1: $digestSha1,
+            digestMd5: $digestMd5,
+            jpegFrameWidth: $frameWidth,
+            jpegFrameHeight: $frameHeight,
         );
     }
 
