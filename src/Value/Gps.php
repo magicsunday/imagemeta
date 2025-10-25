@@ -32,6 +32,8 @@ final readonly class Gps
      * @param float|null             $dop                        Dilution of precision.
      * @param string|null            $speedRef                   Speed reference unit (K/M/N).
      * @param float|null             $speedMs                    Ground speed in metres per second.
+     * @param string|null            $speedOriginalRef           Original speed reference unit.
+     * @param float|null             $speedOriginal              Raw ground speed in the original unit.
      * @param string|null            $trackRef                   Course over ground reference (T/M).
      * @param float|null             $track                      Course over ground in degrees.
      * @param string|null            $imageDirectionRef          Image direction reference (T/M).
@@ -45,6 +47,8 @@ final readonly class Gps
      * @param float|null             $destinationBearing         Destination bearing in degrees.
      * @param string|null            $destinationDistanceRef     Destination distance reference (K/M/N).
      * @param float|null             $destinationDistanceMetres  Destination distance in metres.
+     * @param string|null            $destinationDistanceOriginalRef Destination distance reference in original unit.
+     * @param float|null             $destinationDistanceOriginal Raw destination distance in the original unit.
      * @param string|null            $processingMethod           GPS processing method description.
      * @param string|null            $areaInformation            GPS area information description.
      * @param string|null            $date                       GPS date stamp in ISO 8601 calendar format.
@@ -67,6 +71,8 @@ final readonly class Gps
         public ?float $dop = null,
         public ?string $speedRef = null,
         public ?float $speedMs = null,
+        public ?string $speedOriginalRef = null,
+        public ?float $speedOriginal = null,
         public ?string $trackRef = null,
         public ?float $track = null,
         public ?string $imageDirectionRef = null,
@@ -80,6 +86,8 @@ final readonly class Gps
         public ?float $destinationBearing = null,
         public ?string $destinationDistanceRef = null,
         public ?float $destinationDistanceMetres = null,
+        public ?string $destinationDistanceOriginalRef = null,
+        public ?float $destinationDistanceOriginal = null,
         public ?string $processingMethod = null,
         public ?string $areaInformation = null,
         public ?string $date = null,

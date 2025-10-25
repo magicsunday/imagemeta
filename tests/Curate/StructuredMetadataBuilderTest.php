@@ -1424,6 +1424,8 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('K', $structured->gps->speedRef);
         self::assertEqualsWithDelta(33.3333333, $structured->gps->speedMs, 1e-6);
+        self::assertSame('K', $structured->gps->speedOriginalRef);
+        self::assertEqualsWithDelta(120.0, $structured->gps->speedOriginal, 1e-6);
     }
 
     /**
@@ -1530,6 +1532,8 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(2.5, $structured->gps->dop, 1e-6);
         self::assertSame('K', $structured->gps->speedRef);
         self::assertEqualsWithDelta(20.0, $structured->gps->speedMs, 1e-6);
+        self::assertSame('K', $structured->gps->speedOriginalRef);
+        self::assertEqualsWithDelta(72.0, $structured->gps->speedOriginal, 1e-6);
         self::assertSame('T', $structured->gps->trackRef);
         self::assertEqualsWithDelta(123.45, $structured->gps->track, 1e-6);
         self::assertSame('M', $structured->gps->imageDirectionRef);
@@ -1543,6 +1547,8 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(123.0, $structured->gps->destinationBearing, 1e-6);
         self::assertSame('K', $structured->gps->destinationDistanceRef);
         self::assertEqualsWithDelta(42000.0, $structured->gps->destinationDistanceMetres, 1e-6);
+        self::assertSame('K', $structured->gps->destinationDistanceOriginalRef);
+        self::assertEqualsWithDelta(42.0, $structured->gps->destinationDistanceOriginal, 1e-6);
         self::assertSame('NETWORK', $structured->gps->processingMethod);
         self::assertSame('AreaName', $structured->gps->areaInformation);
         self::assertSame('2024-05-06', $structured->gps->date);

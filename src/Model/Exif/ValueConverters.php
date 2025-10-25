@@ -61,6 +61,8 @@ use function trim;
  *     dop:?float,
  *     speed_ref:?string,
  *     speed_ms:?float,
+ *     speed_original_ref:?string,
+ *     speed_original:?float,
  *     track_ref:?string,
  *     track:?float,
  *     img_direction_ref:?string,
@@ -74,6 +76,8 @@ use function trim;
  *     dest_bearing:?float,
  *     dest_distance_ref:?string,
  *     dest_distance_m:?float,
+ *     dest_distance_original_ref:?string,
+ *     dest_distance_original:?float,
  *     processing_method:?string,
  *     area_information:?string,
  *     date:?string,
@@ -437,6 +441,8 @@ final readonly class ValueConverters
             'dop'                 => null,
             'speed_ref'           => null,
             'speed_ms'            => null,
+            'speed_original_ref'  => null,
+            'speed_original'      => null,
             'track_ref'           => null,
             'track'               => null,
             'img_direction_ref'   => null,
@@ -450,6 +456,8 @@ final readonly class ValueConverters
             'dest_bearing'        => null,
             'dest_distance_ref'   => null,
             'dest_distance_m'     => null,
+            'dest_distance_original_ref' => null,
+            'dest_distance_original'     => null,
             'processing_method'   => null,
             'area_information'    => null,
             'date'                => null,
@@ -544,10 +552,13 @@ final readonly class ValueConverters
         $result['measure_mode'] = self::sanitizeString($measureEntry?->value);
         $result['dop']          = self::rationalToFloat($dopEntry?->value);
 
-        $speedRefValue       = $speedRefEntry?->value;
-        $speedRef            = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
-        $result['speed_ref'] = $speedRef;
-        $result['speed_ms']  = self::gpsSpeedToMs($speedRef, $speedEntry?->value);
+        $speedRefValue                = $speedRefEntry?->value;
+        $speedOriginalRef             = self::sanitizeString($speedRefValue);
+        $speedRef                     = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
+        $result['speed_ref']          = $speedRef;
+        $result['speed_ms']           = self::gpsSpeedToMs($speedRef, $speedEntry?->value);
+        $result['speed_original_ref'] = $speedOriginalRef;
+        $result['speed_original']     = self::rationalToFloat($speedEntry?->value);
 
         $trackRefValue       = $trackRefEntry?->value;
         $result['track_ref'] = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
@@ -578,9 +589,11 @@ final readonly class ValueConverters
         $destBearingValue           = self::rationalToFloat($destBearEntry?->value);
         $result['dest_bearing']     = self::normalizeBearing($destBearingValue);
 
-        $destDistanceRefValue        = $destDistRefEntry?->value;
-        $result['dest_distance_ref'] = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
-        $result['dest_distance_m']   = self::gpsDistanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
+        $destDistanceRefValue                 = $destDistRefEntry?->value;
+        $result['dest_distance_ref']            = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
+        $result['dest_distance_original_ref']   = self::sanitizeString($destDistanceRefValue);
+        $result['dest_distance_original']       = self::rationalToFloat($destDistEntry?->value);
+        $result['dest_distance_m']              = self::gpsDistanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
 
         $result['processing_method'] = self::decodeUndefinedString($processEntry?->value);
         $result['area_information']  = self::decodeUndefinedString($areaEntry?->value);
