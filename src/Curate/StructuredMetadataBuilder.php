@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Curate;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
-use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters;
 use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
@@ -191,7 +190,7 @@ final class StructuredMetadataBuilder
         );
 
         $exifVersion = $exifResolver->exifVersion();
-        $profile     = ExifCapabilities::fromVersion($exifVersion);
+        $profile     = $exifResolver->exifProfile();
 
         $standards = new Standards(
             exifVersion: $exifVersion,
@@ -596,16 +595,24 @@ final class StructuredMetadataBuilder
      */
     private function buildCamera(ExifTagResolver $exif): Camera
     {
+        $profile = (float) $exif->exifProfile();
+
+        $firmwareCandidates = [
+            $exif->cameraFirmware(...),
+        ];
+
+        if ($profile < 3.0) {
+            $firmwareCandidates[] = $exif->cameraFirmwareVersion(...);
+        }
+
+        $firmwareCandidates[] = $exif->software(...);
+
         return new Camera(
             make: $exif->cameraMake(),
             model: $exif->cameraModel(),
             ownerName: $exif->ownerName(),
             serialNumber: $exif->bodySerialNumber(),
-            firmware: CompositeResolver::first([
-                $exif->cameraFirmware(...),
-                $exif->cameraFirmwareVersion(...),
-                $exif->software(...),
-            ]),
+            firmware: CompositeResolver::first($firmwareCandidates),
             fileSource: $exif->fileSource(),
             sensingMethod: $exif->sensingMethod(),
         );

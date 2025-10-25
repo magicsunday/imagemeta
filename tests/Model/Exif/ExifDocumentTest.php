@@ -712,6 +712,35 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('MetaLab 1.0.0', $doc->metadataEditingSoftwareVersion());
     }
 
+    #[Test]
+    public function exifThreeOmitsLegacySoftwareVersions(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_TITLE => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Autumn Sunset'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION               => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+            ExifTag::CAMERA_FIRMWARE            => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'Firmware Build 5'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE    => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Developer X'),
+            ExifTag::IMAGE_EDITING_SOFTWARE     => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Image Editor Y'),
+            ExifTag::METADATA_EDITING_SOFTWARE  => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Metadata Tool Z'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('3.00', $doc->exifVersion());
+        self::assertSame('3.0', $doc->exifProfile());
+        self::assertSame('Autumn Sunset', $doc->imageTitle());
+        self::assertSame('Firmware Build 5', $doc->cameraFirmware());
+        self::assertNull($doc->cameraFirmwareVersion());
+        self::assertSame('Raw Developer X', $doc->rawDevelopingSoftware());
+        self::assertNull($doc->rawDevelopingSoftwareVersion());
+        self::assertSame('Image Editor Y', $doc->imageEditingSoftware());
+        self::assertSame('Metadata Tool Z', $doc->metadataEditingSoftware());
+        self::assertNull($doc->metadataEditingSoftwareVersion());
+    }
+
     /**
      * Ensures the ISO getter prefers EXIF 3.0 sensitivity tags before falling back to photographic sensitivity.
      */

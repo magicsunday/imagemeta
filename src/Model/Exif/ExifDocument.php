@@ -14,6 +14,8 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
@@ -40,6 +42,12 @@ use function trim;
  */
 final readonly class ExifDocument
 {
+    private ?string $exifVersion;
+
+    private string $exifProfile;
+
+    private bool $exifThreeOrNewer;
+
     /**
      * @param Ifd                     $ifd0       Root IFD of the TIFF structure.
      * @param Ifd|null                $exifIfd    Sub IFD containing EXIF-specific tags.
@@ -56,6 +64,10 @@ final readonly class ExifDocument
         public ?Ifd $ifd1,
         public ?MakerNotesMetadata $makerNotes = null,
     ) {
+        $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
+        $this->exifVersion = CoreValueConverters::toExifVersion($rawVersion);
+        $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
+        $this->exifThreeOrNewer = (float) $this->exifProfile >= 3.0;
     }
 
     /**
@@ -188,6 +200,22 @@ final readonly class ExifDocument
     public function imageUniqueId(): ?string
     {
         return $this->str($this->exifIfd, ExifTag::IMAGE_UNIQUE_ID);
+    }
+
+    /**
+     * Returns the normalised EXIF version string when present.
+     */
+    public function exifVersion(): ?string
+    {
+        return $this->exifVersion;
+    }
+
+    /**
+     * Returns the derived EXIF capability profile identifier.
+     */
+    public function exifProfile(): string
+    {
+        return $this->exifProfile;
     }
 
     /**
@@ -831,6 +859,10 @@ final readonly class ExifDocument
      */
     public function cameraFirmwareVersion(): ?string
     {
+        if ($this->exifThreeOrNewer) {
+            return null;
+        }
+
         return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY);
     }
 
@@ -852,6 +884,10 @@ final readonly class ExifDocument
      */
     public function rawDevelopingSoftwareVersion(): ?string
     {
+        if ($this->exifThreeOrNewer) {
+            return null;
+        }
+
         return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY);
     }
 
@@ -883,6 +919,10 @@ final readonly class ExifDocument
      */
     public function metadataEditingSoftwareVersion(): ?string
     {
+        if ($this->exifThreeOrNewer) {
+            return null;
+        }
+
         return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY);
     }
 

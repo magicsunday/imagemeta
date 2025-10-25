@@ -1624,6 +1624,35 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame([0.1, 0.2, 0.3], $structured->apple->accelerationVector);
     }
 
+    #[Test]
+    public function exifThreeKeepsLegacyVersionFieldsEmpty(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::MAKE        => new IfdEntry(ExifTag::MAKE, 2, 1, 'Contoso'),
+            ExifTag::MODEL       => new IfdEntry(ExifTag::MODEL, 2, 1, 'Model X'),
+            ExifTag::IMAGE_TITLE => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Autumn Sunset'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION              => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Developer X'),
+            ExifTag::IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Image Editor Y'),
+            ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Metadata Tool Z'),
+        ]);
+
+        $metadata = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('3.00', $structured->standards->exifVersion);
+        self::assertSame('3.0', $structured->standards->profile);
+        self::assertSame('Autumn Sunset', $structured->image->title);
+        self::assertNull($structured->camera->firmware);
+        self::assertSame('Raw Developer X', $structured->device->rawDevelopingSoftware);
+        self::assertSame('Image Editor Y', $structured->device->imageEditingSoftware);
+        self::assertSame('Metadata Tool Z', $structured->device->metadataEditingSoftware);
+    }
+
     /**
      * Ensures JPEG frame metadata backfills TIFF characteristics when EXIF is absent.
      */
