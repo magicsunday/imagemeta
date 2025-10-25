@@ -21,6 +21,7 @@ use function array_is_list;
 use function array_key_exists;
 use function array_unique;
 use function array_values;
+use function ctype_space;
 use function ctype_xdigit;
 use function hexdec;
 use function in_array;
@@ -31,6 +32,8 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function sha1;
+use function str_contains;
+use function strtolower;
 use function sort;
 use function str_starts_with;
 use function strlen;
@@ -121,10 +124,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function parseAppleData(string $raw): ?AppleMakerNotes
     {
-        try {
-            $decoded = (new BinaryPlistDecoder())->decode($raw);
-        } catch (ParseError) {
-            return null;
+        $decoded = $this->decodeBinaryPropertyList($raw);
+        if ($decoded === null) {
+            $decoded = $this->parseRawDictionaryPayload($raw);
         }
 
         if (!is_array($decoded) || array_is_list($decoded)) {
@@ -137,6 +139,306 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         return $this->buildAppleMakerNotes($decoded);
+    }
+
+    /**
+     * Attempts to decode the supplied payload as binary property list.
+     *
+     * @param string $raw Raw maker note data stream.
+     *
+     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|bool|float|int|string|null|null
+     */
+    private function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
+    {
+        try {
+            return (new BinaryPlistDecoder())->decode($raw);
+        } catch (ParseError) {
+            return null;
+        }
+    }
+
+    /**
+     * Parses a textual Apple NSDictionary representation.
+     *
+     * Apple devices sometimes embed maker notes as the string form of a
+     * dictionary instead of a binary property list. The representation mirrors
+     * the Objective-C `-[NSDictionary description]` format using braces,
+     * semicolon separated key/value pairs, and parentheses for arrays.
+     *
+     * @param string $raw Raw maker note data stream.
+     *
+     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|null
+     */
+    private function parseRawDictionaryPayload(string $raw): ?array
+    {
+        $offset = 0;
+        $length = strlen($raw);
+
+        $this->skipWhitespace($raw, $offset, $length);
+        if ($offset >= $length || $raw[$offset] !== '{') {
+            return null;
+        }
+
+        try {
+            $dictionary = $this->parseDictionary($raw, $offset, $length);
+        } catch (ParseError) {
+            return null;
+        }
+
+        $this->skipWhitespace($raw, $offset, $length);
+        if ($offset < $length) {
+            return null;
+        }
+
+        return $dictionary;
+    }
+
+    /**
+     * Parses a dictionary section from the textual representation.
+     *
+     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>
+     */
+    private function parseDictionary(string $raw, int &$offset, int $length): array
+    {
+        if ($raw[$offset] !== '{') {
+            throw new ParseError('Expected dictionary opening brace.');
+        }
+
+        ++$offset;
+        $dictionary = [];
+
+        while (true) {
+            $this->skipWhitespace($raw, $offset, $length);
+            if ($offset >= $length) {
+                throw new ParseError('Unterminated dictionary payload.');
+            }
+
+            $char = $raw[$offset];
+            if ($char === '}') {
+                ++$offset;
+
+                break;
+            }
+
+            $key = $this->parseKey($raw, $offset, $length);
+
+            $this->skipWhitespace($raw, $offset, $length);
+            if ($offset >= $length) {
+                throw new ParseError('Dictionary entry without value.');
+            }
+
+            $delimiter = $raw[$offset];
+            if ($delimiter !== '=' && $delimiter !== ':') {
+                throw new ParseError('Dictionary entry is missing a separator.');
+            }
+
+            ++$offset;
+
+            $value = $this->parseValue($raw, $offset, $length);
+            $dictionary[$key] = $value;
+
+            $this->skipWhitespace($raw, $offset, $length);
+            if ($offset >= $length) {
+                throw new ParseError('Unexpected end of dictionary payload.');
+            }
+
+            $terminator = $raw[$offset];
+            if ($terminator === ';' || $terminator === ',') {
+                ++$offset;
+
+                continue;
+            }
+
+            if ($terminator === '}') {
+                continue;
+            }
+        }
+
+        return $dictionary;
+    }
+
+    private function parseValue(string $raw, int &$offset, int $length): array|bool|float|int|string|null
+    {
+        $this->skipWhitespace($raw, $offset, $length);
+        if ($offset >= $length) {
+            throw new ParseError('Missing value for dictionary entry.');
+        }
+
+        $char = $raw[$offset];
+        if ($char === '{') {
+            return $this->parseDictionary($raw, $offset, $length);
+        }
+
+        if ($char === '(') {
+            return $this->parseArray($raw, $offset, $length);
+        }
+
+        if ($char === '"') {
+            return $this->parseQuotedString($raw, $offset, $length);
+        }
+
+        $word = $this->parseWord($raw, $offset, $length);
+        if ($word === '') {
+            return null;
+        }
+
+        $lower = strtolower($word);
+        if ($lower === 'true' || $word === 'YES') {
+            return true;
+        }
+
+        if ($lower === 'false' || $word === 'NO') {
+            return false;
+        }
+
+        if ($lower === 'null') {
+            return null;
+        }
+
+        if (is_numeric($word)) {
+            if (str_contains($word, '.') || str_contains($word, 'e') || str_contains($word, 'E')) {
+                return (float) $word;
+            }
+
+            return (int) $word;
+        }
+
+        return $word;
+    }
+
+    /**
+     * @return list<array|bool|float|int|string|null>
+     */
+    private function parseArray(string $raw, int &$offset, int $length): array
+    {
+        if ($raw[$offset] !== '(') {
+            throw new ParseError('Expected array opening parenthesis.');
+        }
+
+        ++$offset;
+        $values = [];
+
+        while (true) {
+            $this->skipWhitespace($raw, $offset, $length);
+            if ($offset >= $length) {
+                throw new ParseError('Unterminated array payload.');
+            }
+
+            if ($raw[$offset] === ')') {
+                ++$offset;
+
+                break;
+            }
+
+            $values[] = $this->parseValue($raw, $offset, $length);
+
+            $this->skipWhitespace($raw, $offset, $length);
+            if ($offset >= $length) {
+                throw new ParseError('Unexpected end of array payload.');
+            }
+
+            $terminator = $raw[$offset];
+            if ($terminator === ',' || $terminator === ';') {
+                ++$offset;
+            }
+
+            if ($terminator === ')') {
+                continue;
+            }
+        }
+
+        return $values;
+    }
+
+    private function parseQuotedString(string $raw, int &$offset, int $length): string
+    {
+        if ($raw[$offset] !== '"') {
+            throw new ParseError('Expected quoted string.');
+        }
+
+        ++$offset;
+        $start  = $offset;
+        $buffer = '';
+
+        while ($offset < $length) {
+            $char = $raw[$offset];
+            if ($char === '\\') {
+                if ($offset + 1 >= $length) {
+                    throw new ParseError('Invalid escape sequence in string.');
+                }
+
+                $next = $raw[$offset + 1];
+                $buffer .= substr($raw, $start, $offset - $start);
+                $buffer .= $next;
+                $offset += 2;
+                $start = $offset;
+
+                continue;
+            }
+
+            if ($char === '"') {
+                $buffer .= substr($raw, $start, $offset - $start);
+                ++$offset;
+
+                return $buffer;
+            }
+
+            ++$offset;
+        }
+
+        throw new ParseError('Unterminated quoted string.');
+    }
+
+    private function parseWord(string $raw, int &$offset, int $length): string
+    {
+        $start = $offset;
+
+        while ($offset < $length) {
+            $char = $raw[$offset];
+            if (
+                $char === ';'
+                || $char === ','
+                || $char === ')'
+                || $char === '}'
+                || ctype_space($char)
+            ) {
+                break;
+            }
+
+            ++$offset;
+        }
+
+        return substr($raw, $start, $offset - $start);
+    }
+
+    private function parseKey(string $raw, int &$offset, int $length): string
+    {
+        $this->skipWhitespace($raw, $offset, $length);
+        if ($offset >= $length) {
+            throw new ParseError('Missing dictionary key.');
+        }
+
+        if ($raw[$offset] === '"') {
+            return $this->parseQuotedString($raw, $offset, $length);
+        }
+
+        $key = $this->parseWord($raw, $offset, $length);
+        if ($key === '') {
+            throw new ParseError('Dictionary key is empty.');
+        }
+
+        return $key;
+    }
+
+    private function skipWhitespace(string $raw, int &$offset, int $length): void
+    {
+        while ($offset < $length) {
+            if (!ctype_space($raw[$offset])) {
+                break;
+            }
+
+            ++$offset;
+        }
     }
 
     /**
