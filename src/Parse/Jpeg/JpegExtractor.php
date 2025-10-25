@@ -20,6 +20,7 @@ use function array_keys;
 use function count;
 use function implode;
 use function ksort;
+use function min;
 use function ord;
 use function range;
 use function sha1;

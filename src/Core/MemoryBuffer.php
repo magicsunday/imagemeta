@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function ord;
 use function strlen;
+use function substr;
 
 /**
  * Provides a simple, bounds-checked in-memory buffer abstraction.

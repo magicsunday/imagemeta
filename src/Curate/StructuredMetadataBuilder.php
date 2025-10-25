@@ -63,6 +63,8 @@ use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 
 use function array_key_exists;
+use function count;
+use function is_array;
 use function is_numeric;
 use function preg_split;
 use function strtoupper;

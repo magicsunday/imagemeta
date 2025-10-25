@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use function is_string;
+
 /**
  * Enumerates gain control adjustments performed by the camera.
  */

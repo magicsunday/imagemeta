@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Capture;
 
 use function strtotime;
+use function trim;
 
 /**
  * Resolves capture timestamps while preferring EXIF derived values.

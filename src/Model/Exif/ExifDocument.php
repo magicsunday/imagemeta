@@ -31,6 +31,7 @@ use function round;
 use function rtrim;
 use function str_pad;
 use function str_replace;
+use function strtoupper;
 use function strlen;
 use function substr;
 use function trim;
