@@ -130,8 +130,21 @@ final readonly class ExifTagResolver
             'subsectimeoriginal'  => $this->subSecTimeOriginal(),
             'subsectimedigitized' => $this->subSecTimeDigitized(),
             'interopindex'        => $this->interopIndex(),
+            'interopversion'      => $this->interopVersion(),
             default               => null,
         };
+    }
+
+    /**
+     * Returns the interoperability version string.
+     */
+    public function interopVersion(): ?string
+    {
+        if ($this->document instanceof ExifDocument) {
+            return $this->document->interopVersion();
+        }
+
+        return null;
     }
 
     /**
