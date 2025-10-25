@@ -49,12 +49,13 @@ final readonly class ExifDocument
     private bool $exifThreeOrNewer;
 
     /**
-     * @param Ifd                     $ifd0       Root IFD of the TIFF structure.
-     * @param Ifd|null                $exifIfd    Sub IFD containing EXIF-specific tags.
-     * @param Ifd|null                $gpsIfd     Sub IFD containing GPS-related tags.
-     * @param Ifd|null                $interopIfd Sub IFD containing interoperability tags.
-     * @param Ifd|null                $ifd1       Optional next IFD, typically thumbnails.
-     * @param MakerNotesMetadata|null $makerNotes Decoded maker note metadata provided by vendor decoders.
+     * @param Ifd                     $ifd0            Root IFD of the TIFF structure.
+     * @param Ifd|null                $exifIfd         Sub IFD containing EXIF-specific tags.
+     * @param Ifd|null                $gpsIfd          Sub IFD containing GPS-related tags.
+     * @param Ifd|null                $interopIfd      Sub IFD containing interoperability tags.
+     * @param Ifd|null                $ifd1            Optional next IFD, typically thumbnails.
+     * @param MakerNotesMetadata|null $makerNotes      Decoded maker note metadata provided by vendor decoders.
+     * @param list<Ifd>               $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
      */
     public function __construct(
         public Ifd $ifd0,
@@ -63,6 +64,7 @@ final readonly class ExifDocument
         public ?Ifd $interopIfd,
         public ?Ifd $ifd1,
         public ?MakerNotesMetadata $makerNotes = null,
+        public array $subsequentIfds = [],
     ) {
         $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
         $this->exifVersion = CoreValueConverters::toExifVersion($rawVersion);
@@ -76,6 +78,16 @@ final readonly class ExifDocument
     public function makerNotes(): ?MakerNotesMetadata
     {
         return $this->makerNotes;
+    }
+
+    /**
+     * Returns any additional image file directories linked from IFD0.
+     *
+     * @return list<Ifd>
+     */
+    public function subsequentIfds(): array
+    {
+        return $this->subsequentIfds;
     }
 
     /**

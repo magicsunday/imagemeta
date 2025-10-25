@@ -151,14 +151,30 @@ final class TiffExifReader
             $gpsIfd = $this->readIfd($this->pointerOffset($gpsPointer));
         }
 
+        $additionalIfds = [];
+        $visitedOffsets  = [];
+
         $nextOffset = $ifd0->nextIfdOffset;
-        if ($nextOffset !== null && $nextOffset > 0) {
-            $ifd1 = $this->readIfd($nextOffset);
+        while ($nextOffset !== null && $nextOffset > 0) {
+            if (isset($visitedOffsets[$nextOffset])) {
+                break;
+            }
+
+            $visitedOffsets[$nextOffset] = true;
+
+            $nextIfd       = $this->readIfd($nextOffset);
+            $additionalIfds[] = $nextIfd;
+
+            if ($ifd1 === null) {
+                $ifd1 = $nextIfd;
+            }
+
+            $nextOffset = $nextIfd->nextIfdOffset;
         }
 
         $makerNotes = $this->resolveMakerNotes($makerNotesRegistry, $ifd0, $exifIfd);
 
-        return new ExifDocument($ifd0, $exifIfd, $gpsIfd, $interopIfd, $ifd1, $makerNotes);
+        return new ExifDocument($ifd0, $exifIfd, $gpsIfd, $interopIfd, $ifd1, $makerNotes, $additionalIfds);
     }
 
     /**
