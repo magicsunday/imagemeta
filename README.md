@@ -86,3 +86,11 @@ The diagonal field of view exposed via `fovDiagonalDeg` corresponds to the value
 The expanded temporal aggregate surfaces raw EXIF offset tags alongside a resolved `DateTimeZone` instance. This makes it possible to reconstruct original capture times even when the offset varies between creation, digitisation and modification steps. File level metadata now reports size, extension and cryptographic digests to help consumers correlate assets or detect tampering.
 
 Apple maker note data now includes semantic style parameters, colour temperature and Live Photo flags from both maker notes and QuickTime metadata. GPS coverage has been widened with horizontal positioning error and full destination navigation metrics from EXIF 2.32 table 66.
+
+Bit-mask sources such as `SceneFlags`, `ImageProcessingFlags` and `PhotosAppFeatureFlags` are decoded so their individual bits populate the normalised `apple.flags` array:
+
+* `SceneFlags`: bit 0 → `nightMode`, bit 1 → `longExposure`
+* `ImageProcessingFlags`: bit 0 → `hdrEnabled`, bit 1 → `hdrAuto`
+* `PhotosAppFeatureFlags`: bit 0 → `livePhoto`, bit 1 → `livePhotoAuto`, bit 2 → `livePhotoEnabled`, bit 3 → `livePhotoActive`, bit 4 → `livePhotoLongExposure`
+
+Explicit boolean keys continue to override the derived values when both representations are present.

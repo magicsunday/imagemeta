@@ -17,6 +17,8 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 
 use function array_is_list;
 use function array_key_exists;
+use function ctype_xdigit;
+use function hexdec;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -25,6 +27,8 @@ use function is_numeric;
 use function is_string;
 use function sha1;
 use function strlen;
+use function str_starts_with;
+use function substr;
 use function trim;
 
 /**
@@ -47,6 +51,29 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         'HdrEnabled'            => 'hdrEnabled',
         'NightMode'             => 'nightMode',
         'LongExposure'          => 'longExposure',
+    ];
+
+    /**
+     * Maps bit masks provided by Apple maker note dictionaries to normalised flags.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const array FLAG_MASK_MAP = [
+        'SceneFlags' => [
+            1 << 0 => 'nightMode',
+            1 << 1 => 'longExposure',
+        ],
+        'ImageProcessingFlags' => [
+            1 << 0 => 'hdrEnabled',
+            1 << 1 => 'hdrAuto',
+        ],
+        'PhotosAppFeatureFlags' => [
+            1 << 0 => 'livePhoto',
+            1 << 1 => 'livePhotoAuto',
+            1 << 2 => 'livePhotoEnabled',
+            1 << 3 => 'livePhotoActive',
+            1 << 4 => 'livePhotoLongExposure',
+        ],
     ];
 
     /**
@@ -386,6 +413,23 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $flags[$normalized] = $bool;
         }
 
+        foreach (self::FLAG_MASK_MAP as $makerKey => $bitMap) {
+            if (!array_key_exists($makerKey, $dictionary)) {
+                continue;
+            }
+
+            $mask = $this->maskValue($dictionary[$makerKey]);
+            if ($mask === null) {
+                continue;
+            }
+
+            foreach ($bitMap as $bit => $normalized) {
+                if (($mask & $bit) === $bit && !array_key_exists($normalized, $flags)) {
+                    $flags[$normalized] = true;
+                }
+            }
+        }
+
         return $flags;
     }
 
@@ -424,5 +468,87 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         return null;
+    }
+
+    /**
+     * @param string|int|float|bool|array<int|string, mixed>|null $value
+     *
+     * @phpstan-param string|int|float|bool|null|array<int|string, mixed> $value
+     */
+    private function maskValue(string|int|float|bool|array|null $value): ?int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            return (int) $value;
+        }
+
+        if (is_string($value)) {
+            $normalized = trim($value);
+            if ($normalized === '') {
+                return null;
+            }
+
+            if (str_starts_with($normalized, '0x') || str_starts_with($normalized, '0X')) {
+                $hex = substr($normalized, 2);
+                if ($hex !== '' && ctype_xdigit($hex)) {
+                    return (int) hexdec($hex);
+                }
+
+                return null;
+            }
+
+            if (is_numeric($normalized)) {
+                return (int) $normalized;
+            }
+
+            return null;
+        }
+
+        if (is_bool($value) || $value === null) {
+            return null;
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        if ($value === []) {
+            return null;
+        }
+
+        if (!array_is_list($value)) {
+            foreach (['flags', 'Flags', 'value', 'Value', 'mask', 'Mask'] as $key) {
+                if (array_key_exists($key, $value)) {
+                    $mask = $this->maskValue($value[$key]);
+                    if ($mask !== null) {
+                        return $mask;
+                    }
+                }
+            }
+
+            if (!array_key_exists('values', $value)) {
+                return null;
+            }
+
+            $values = $value['values'];
+            if (!is_array($values)) {
+                return $this->maskValue($values);
+            }
+
+            $value = $values;
+        }
+
+        $mask = 0;
+        foreach ($value as $entry) {
+            $part = $this->maskValue($entry);
+            if ($part !== null) {
+                $mask |= $part;
+            }
+        }
+
+        return $mask !== 0 ? $mask : null;
     }
 }
