@@ -274,6 +274,34 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    #[DataProvider('makerNoteVersionProvider')]
+    public function buildAppleMakerNotesNormalisesMakerNoteVersionFromIntegers(array|int $makerNoteVersion, string $expected): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, [
+            'ContentIdentifier' => 'normalised-version',
+            'MakerNoteVersion'  => $makerNoteVersion,
+        ]);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame($expected, $notes->makerNoteVersion);
+    }
+
+    /**
+     * @return iterable<string, array{array{values: list<int>}|list<int>|int, string}>
+     */
+    public static function makerNoteVersionProvider(): iterable
+    {
+        yield 'list of integers' => [[1, 4, 0, 2], '1.4.0.2'];
+        yield 'values wrapper' => [['values' => [3, 1]], '3.1'];
+        yield 'scalar integer' => [7, '7'];
+    }
+
+    #[Test]
     public function buildAppleMakerNotesCombinesFocusDistanceNearAndFar(): void
     {
         $decoder = new AppleDecoder();

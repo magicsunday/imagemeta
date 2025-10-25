@@ -701,7 +701,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $accelerationVector = $this->floatList($dictionary, 'AccelerationVector');
         $flags              = $this->extractFlags($dictionary);
 
-        $makerNoteVersion   = $this->stringValue($dictionary, 'MakerNoteVersion');
+        $makerNoteVersion   = $this->makerNoteVersionValue($dictionary, 'MakerNoteVersion');
         $hdrImageType       = $this->enumeratedStringValue($dictionary, self::HDR_IMAGE_TYPE_MAP, 'HDRImageType', 'HdrImageType');
         $burstUuid          = $this->stringValue($dictionary, 'BurstUUID');
         $focusDistanceRange = $this->focusDistanceRangeValue($dictionary);
@@ -963,6 +963,64 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         return $values !== [] ? $values : null;
+    }
+
+    /**
+     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     *
+     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     */
+    private function makerNoteVersionValue(array $dictionary, string $key): ?string
+    {
+        if (!array_key_exists($key, $dictionary)) {
+            return null;
+        }
+
+        $scalar = $this->stringOrNumericValue($dictionary, $key);
+        if ($scalar !== null) {
+            return $scalar;
+        }
+
+        $value = $dictionary[$key];
+        if (!is_array($value)) {
+            return null;
+        }
+
+        if (!array_is_list($value) && array_key_exists('values', $value) && is_array($value['values'])) {
+            $value = $value['values'];
+        }
+
+        if (!array_is_list($value)) {
+            return null;
+        }
+
+        $components = [];
+        foreach ($value as $entry) {
+            if (is_int($entry)) {
+                $components[] = (string) $entry;
+                continue;
+            }
+
+            if (is_string($entry)) {
+                $trimmed = trim($entry);
+                if ($trimmed === '' || !is_numeric($trimmed)) {
+                    continue;
+                }
+
+                $components[] = (string) (int) $trimmed;
+                continue;
+            }
+
+            if (is_float($entry) || is_numeric($entry)) {
+                $components[] = (string) (int) $entry;
+            }
+        }
+
+        if ($components === []) {
+            return null;
+        }
+
+        return implode('.', $components);
     }
 
     /**

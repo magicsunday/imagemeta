@@ -32,7 +32,7 @@ final readonly class AppleMakerNotes
      * @param list<float>|null    $accelerationVector  Acceleration vector recorded during capture.
      * @param float|null          $livePhotoTime       Normalised Live Photo timestamp in seconds.
      * @param RunTime|null        $runTime             Capture runtime metadata describing the CMTime payload.
-     * @param string|null         $makerNoteVersion    Maker note version string reported by the device.
+     * @param string|null         $makerNoteVersion    Normalised maker note version string reported by the device.
      * @param string|null         $hdrImageType        HDR image classification (e.g. "HDR").
      * @param string|null         $burstUuid           Identifier referencing the originating burst.
      * @param list<float>|null    $focusDistanceRange  Near and far focus distance bounds in meters.
