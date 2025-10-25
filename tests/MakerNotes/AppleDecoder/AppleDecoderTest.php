@@ -160,6 +160,70 @@ final class AppleDecoderTest extends TestCase
     }
 
     #[Test]
+    public function parseAppleDataReturnsNotesForBinaryPlist(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'parseAppleData');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, $this->buildMakerNotesBlob());
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+    }
+
+    #[Test]
+    public function parseAppleDataParsesRawDictionaryPayload(): void
+    {
+        $raw = <<<'RAW'
+        {
+            ContentIdentifier = "raw-dictionary";
+            CameraType = "Back Wide Angle";
+            HdrHeadroom = 2.75;
+            HdrGain = (1.0, 1.15, 1.3);
+            SNRSetting = 21.5;
+            FocusPosition = 0.5;
+            LivePhotoVideoIndex = 3;
+            ColorTemperature = 5400;
+            SemanticStylePreset = Warm;
+            SemanticStyleWarmth = 0.2;
+            SemanticStyleTone = -0.1;
+            AccelerationVector = (0.1 -0.2 0.3);
+            RunTime = { epoch = 1; timescale = 30; value = 90; flags = 2; };
+            LivePhotoEnabled = YES;
+        }
+        RAW;
+
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'parseAppleData');
+        $method->setAccessible(true);
+
+        /** @var AppleMakerNotes|null $notes */
+        $notes = $method->invoke($decoder, $raw);
+
+        self::assertInstanceOf(AppleMakerNotes::class, $notes);
+        self::assertSame('raw-dictionary', $notes->contentIdentifier);
+        self::assertSame('Back Wide Angle', $notes->cameraType);
+        self::assertEqualsWithDelta(2.75, $notes->hdrHeadroom, 1e-12);
+        self::assertSame([1.0, 1.15, 1.3], $notes->hdrGain);
+        self::assertEqualsWithDelta(21.5, $notes->snr, 1e-12);
+        self::assertEqualsWithDelta(0.5, $notes->focusPosition, 1e-12);
+        self::assertSame(3, $notes->livePhotoIndex);
+        self::assertSame(5400, $notes->colorTemperature);
+        self::assertSame('Warm', $notes->semanticStylePreset);
+        self::assertEqualsWithDelta(0.2, $notes->semanticStyleWarmth, 1e-12);
+        self::assertEqualsWithDelta(-0.1, $notes->semanticStyleTone, 1e-12);
+        self::assertSame([0.1, -0.2, 0.3], $notes->accelerationVector);
+        self::assertInstanceOf(RunTime::class, $notes->runTime);
+        self::assertSame(1, $notes->runTime?->epoch);
+        self::assertSame(30, $notes->runTime?->timescale);
+        self::assertSame(90, $notes->runTime?->value);
+        self::assertSame(2, $notes->runTime?->flags);
+        self::assertArrayHasKey('livePhotoEnabled', $notes->flags);
+        self::assertTrue($notes->flags['livePhotoEnabled']);
+    }
+
+    #[Test]
     public function decodeMapsSemanticStyleFromCompactArray(): void
     {
         $raw     = (string) hex2bin('62706c6973743030d2010203045f1011436f6e74656e744964656e7469666965725d53656d616e7469635374796c655d636f6d706163742d7374796c65d405060708090a0b0c525f30525f31525f32525f33555669766964233fd000000000000023bfb999999999999a1001080d212f3d46494c4f5258616a0000000000000101000000000000000d0000000000000000000000000000006c');
