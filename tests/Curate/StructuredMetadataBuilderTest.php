@@ -326,6 +326,21 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
     }
 
+    #[Test]
+    public function mapsZeroOrientationToUnknownEnum(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::ORIENTATION => new IfdEntry(ExifTag::ORIENTATION, 3, 1, 0),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, null, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(Orientation::UNKNOWN, $structured->image->orientation);
+    }
+
     /**
      * Ensures file level metadata is propagated to the structured representation.
      */
