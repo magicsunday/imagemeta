@@ -673,11 +673,16 @@ final class StructuredMetadataBuilder
 
         $orientation = $exif->orientation();
 
+        $bitsPerSample = $exif->bitsPerSample();
+        if ($bitsPerSample === null) {
+            $bitsPerSample = $metadata->jpegBitsPerSample;
+        }
+
         return new Image(
             width: $width,
             height: $height,
             orientation: $orientation,
-            bitsPerSample: $exif->bitsPerSample(),
+            bitsPerSample: $bitsPerSample,
             colorSpace: $this->normalizedColorSpace($exif),
             imageUniqueId: $exif->imageUniqueId(),
             imageNumber: $exif->imageNumber(),
