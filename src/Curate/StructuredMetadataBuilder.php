@@ -654,6 +654,7 @@ final class StructuredMetadataBuilder
     {
         [$width, $height] = CompositeResolver::dimensions($exif);
 
+        $orientation = $exif->orientation();
         if ($width === null) {
             $width = $frameWidth;
         }
@@ -665,7 +666,7 @@ final class StructuredMetadataBuilder
         return new Image(
             width: $width,
             height: $height,
-            orientation: $exif->orientation(),
+            orientation: $orientation,
             bitsPerSample: $exif->bitsPerSample(),
             colorSpace: $this->normalizedColorSpace($exif),
             imageUniqueId: $exif->imageUniqueId(),

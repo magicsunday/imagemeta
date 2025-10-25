@@ -16,6 +16,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  */
 enum Orientation: int
 {
+    case UNKNOWN      = 0;
     case TOP_LEFT     = 1;
     case TOP_RIGHT    = 2;
     case BOTTOM_RIGHT = 3;
@@ -27,9 +28,15 @@ enum Orientation: int
 
     /**
      * Converts a raw EXIF orientation value into an enum instance.
+     *
+     * Values outside the EXIF specification are mapped to {@see Orientation::UNKNOWN}.
      */
     public static function fromExifValue(?int $value): ?self
     {
-        return $value !== null ? self::tryFrom($value) : null;
+        if ($value === null) {
+            return null;
+        }
+
+        return self::tryFrom($value) ?? self::UNKNOWN;
     }
 }
