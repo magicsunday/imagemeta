@@ -21,10 +21,13 @@ use function array_key_exists;
 use function array_unique;
 use function array_unshift;
 use function array_values;
+use function bin2hex;
 use function explode;
+use function implode;
 use function iconv;
 use function is_string;
 use function preg_match;
+use function round;
 use function rtrim;
 use function sha1;
 use function sprintf;
@@ -32,6 +35,7 @@ use function str_starts_with;
 use function strcasecmp;
 use function strlen;
 use function strtolower;
+use function strtoupper;
 use function substr;
 use function trim;
 
@@ -50,6 +54,11 @@ final readonly class IsoBmffExtractor
      * FourCC for QuickTime metadata box.
      */
     private const string BOX_META = 'meta';
+
+    /**
+     * FourCC for file type box describing the major brand.
+     */
+    private const string BOX_FTYP = 'ftyp';
 
     /**
      * FourCC for QuickTime movie box.
@@ -100,6 +109,41 @@ final readonly class IsoBmffExtractor
      * FourCC for QuickTime user data box.
      */
     private const string BOX_UDTA = 'udta';
+
+    /**
+     * FourCC for QuickTime track container.
+     */
+    private const string BOX_TRAK = 'trak';
+
+    /**
+     * FourCC for track header box.
+     */
+    private const string BOX_TKHD = 'tkhd';
+
+    /**
+     * FourCC for media container box.
+     */
+    private const string BOX_MDIA = 'mdia';
+
+    /**
+     * FourCC for handler reference box.
+     */
+    private const string BOX_HDLR = 'hdlr';
+
+    /**
+     * FourCC for media information box.
+     */
+    private const string BOX_MINF = 'minf';
+
+    /**
+     * FourCC for sample table box.
+     */
+    private const string BOX_STBL = 'stbl';
+
+    /**
+     * FourCC for sample description box.
+     */
+    private const string BOX_STSD = 'stsd';
 
     /**
      * FourCC for item information entry box.
@@ -169,7 +213,9 @@ final readonly class IsoBmffExtractor
         $xmpHashes     = [];
 
         foreach ($this->walkTopLevelBoxes() as $box) {
-            if ($box->type === self::BOX_META) {
+            if ($box->type === self::BOX_FTYP) {
+                $qtKeys = $this->mergeAssociative($qtKeys, $this->parseFtyp($box));
+            } elseif ($box->type === self::BOX_META) {
                 $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             } elseif ($box->type === self::BOX_MOOV) {
                 $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
@@ -224,8 +270,41 @@ final readonly class IsoBmffExtractor
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             } elseif ($child->type === self::BOX_UDTA) {
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
+            } elseif ($child->type === self::BOX_TRAK) {
+                $qtKeys = $this->mergeAssociative($qtKeys, $this->parseTrak($child));
             }
         }
+    }
+
+    /**
+     * Parses the file type box (`ftyp`) and exposes container brands as metadata keys.
+     *
+     * @param BoxDescriptor $ftyp Box descriptor representing the file type declaration.
+     *
+     * @return array<string, string|int>
+     */
+    private function parseFtyp(BoxDescriptor $ftyp): array
+    {
+        $win = $ftyp->window;
+        $win->seek(0);
+
+        if ($ftyp->contentSize < 8) {
+            return [];
+        }
+
+        $majorBrand = $this->normaliseFourcc($win->read(4));
+        $minor      = $win->readU32BE();
+
+        $brands = [];
+        while ($win->tell() + 4 <= $ftyp->contentSize) {
+            $brands[] = $this->normaliseFourcc($win->read(4));
+        }
+
+        return [
+            QuickTimeMeta::MAJOR_BRAND_KEY        => $majorBrand,
+            QuickTimeMeta::MINOR_VERSION_KEY      => $minor,
+            QuickTimeMeta::COMPATIBLE_BRANDS_KEY  => $brands === [] ? '' : implode(' ', $brands),
+        ];
     }
 
     /**
@@ -244,6 +323,335 @@ final readonly class IsoBmffExtractor
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
             }
         }
+    }
+
+    /**
+     * Parses a track box and surfaces relevant video/audio details as QuickTime keys.
+     *
+     * @param BoxDescriptor $trak Box descriptor for the track container.
+     *
+     * @return array<string, string|int>
+     */
+    private function parseTrak(BoxDescriptor $trak): array
+    {
+        $tkhdWidth  = null;
+        $tkhdHeight = null;
+        $handler    = null;
+        $handlerName = null;
+        $sampleInfo = [];
+
+        foreach ($this->walkChildren($trak) as $child) {
+            if ($child->type === self::BOX_TKHD) {
+                [$tkhdWidth, $tkhdHeight] = $this->parseTkhd($child);
+            } elseif ($child->type === self::BOX_MDIA) {
+                [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child);
+            }
+        }
+
+        if ($handler === null) {
+            return [];
+        }
+
+        $result = [];
+
+        if ($handlerName !== null && $handlerName !== '') {
+            $result[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
+        }
+
+        if ($handler === 'vide') {
+            $width  = $sampleInfo['width'] ?? $tkhdWidth;
+            $height = $sampleInfo['height'] ?? $tkhdHeight;
+
+            if ($width !== null && $width > 0) {
+                $result[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
+            }
+
+            if ($height !== null && $height > 0) {
+                $result[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
+            }
+
+            if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+                $result[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
+            }
+
+            if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
+                $result[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
+            }
+        } elseif ($handler === 'soun') {
+            if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+                $result[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
+                $result[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
+            }
+
+            if (isset($sampleInfo['channels'])) {
+                $result[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
+            }
+
+            if (isset($sampleInfo['bitsPerSample'])) {
+                $result[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
+            }
+
+            if (isset($sampleInfo['sampleRate'])) {
+                $result[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Parses the track header box (`tkhd`) and extracts display width/height.
+     *
+     * @param BoxDescriptor $tkhd Track header descriptor.
+     *
+     * @return array{0: ?int, 1: ?int}
+     */
+    private function parseTkhd(BoxDescriptor $tkhd): array
+    {
+        $win = $tkhd->window;
+        $win->seek(0);
+
+        if ($tkhd->contentSize < 84) {
+            throw new ParseError('tkhd box truncated');
+        }
+
+        $version = $win->readU8();
+        $this->readUInt24($win); // flags
+
+        if ($version === 1) {
+            if ($tkhd->contentSize < 96) {
+                throw new ParseError('tkhd version 1 box truncated');
+            }
+
+            $win->read(8 + 8 + 4 + 4 + 8); // creation, modification, track id, reserved, duration
+        } else {
+            $win->read(4 + 4 + 4 + 4 + 4); // creation, modification, track id, reserved, duration
+        }
+
+        $win->read(8); // reserved
+        $win->read(2); // layer
+        $win->read(2); // alternate group
+        $win->read(2); // volume
+        $win->read(2); // reserved
+        $win->read(36); // matrix
+
+        $widthFixed  = $win->readU32BE();
+        $heightFixed = $win->readU32BE();
+
+        $width  = $widthFixed > 0 ? intdiv($widthFixed, 1 << 16) : null;
+        $height = $heightFixed > 0 ? intdiv($heightFixed, 1 << 16) : null;
+
+        return [$width, $height];
+    }
+
+    /**
+     * Parses the media box (`mdia`) and returns handler/sample information.
+     *
+     * @param BoxDescriptor $mdia Media box descriptor.
+     *
+     * @return array{0: ?string, 1: ?string, 2: array<string, int|string>}
+     */
+    private function parseMdia(BoxDescriptor $mdia): array
+    {
+        $handler    = null;
+        $handlerName = null;
+        $sampleInfo = [];
+
+        foreach ($this->walkChildren($mdia) as $child) {
+            if ($child->type === self::BOX_HDLR) {
+                [$handler, $handlerName] = $this->parseHdlr($child);
+            } elseif ($child->type === self::BOX_MINF) {
+                $sampleInfo = $this->parseMinf($child, $handler);
+            }
+        }
+
+        return [$handler, $handlerName, $sampleInfo];
+    }
+
+    /**
+     * Parses the handler reference box (`hdlr`).
+     *
+     * @param BoxDescriptor $hdlr Handler box descriptor.
+     *
+     * @return array{0: ?string, 1: ?string}
+     */
+    private function parseHdlr(BoxDescriptor $hdlr): array
+    {
+        $win = $hdlr->window;
+        $win->seek(0);
+
+        if ($hdlr->contentSize < 24) {
+            throw new ParseError('hdlr box truncated');
+        }
+
+        $win->read(4); // version/flags
+        $win->read(4); // pre-defined
+        $handler = $win->read(4);
+        $win->read(12); // reserved
+
+        $nameBytes = '';
+        if ($win->tell() < $hdlr->contentSize) {
+            $nameBytes = $win->read($hdlr->contentSize - $win->tell());
+        }
+
+        $handlerType = $this->normaliseFourcc($handler);
+        $name        = trim($nameBytes, "\0");
+
+        return [$handlerType === '' ? null : $handlerType, $name === '' ? null : $name];
+    }
+
+    /**
+     * Parses the media information box (`minf`) to find sample table details.
+     *
+     * @param BoxDescriptor $minf        Media information descriptor.
+     * @param string|null   $handlerType Declared handler type for the media.
+     *
+     * @return array<string, int|string>
+     */
+    private function parseMinf(BoxDescriptor $minf, ?string $handlerType): array
+    {
+        if ($handlerType === null) {
+            return [];
+        }
+
+        foreach ($this->walkChildren($minf) as $child) {
+            if ($child->type === self::BOX_STBL) {
+                return $this->parseStbl($child, $handlerType);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Parses the sample table box (`stbl`).
+     *
+     * @param BoxDescriptor $stbl        Sample table descriptor.
+     * @param string        $handlerType Media handler type.
+     *
+     * @return array<string, int|string>
+     */
+    private function parseStbl(BoxDescriptor $stbl, string $handlerType): array
+    {
+        foreach ($this->walkChildren($stbl) as $child) {
+            if ($child->type === self::BOX_STSD) {
+                return $this->parseStsd($child, $handlerType);
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Parses the sample description box (`stsd`).
+     *
+     * @param BoxDescriptor $stsd        Sample description descriptor.
+     * @param string        $handlerType Handler type describing the media kind.
+     *
+     * @return array<string, int|string>
+     */
+    private function parseStsd(BoxDescriptor $stsd, string $handlerType): array
+    {
+        $win = $stsd->window;
+        $win->seek(0);
+
+        if ($stsd->contentSize < 8) {
+            throw new ParseError('stsd box truncated');
+        }
+
+        $win->read(4); // version/flags
+        $entryCount = $win->readU32BE();
+        $result     = [];
+        $pos        = $win->tell();
+
+        for ($i = 0; $i < $entryCount; ++$i) {
+            if ($pos + 8 > $stsd->contentSize) {
+                throw new ParseError('stsd entry truncated');
+            }
+
+            $win->seek($pos);
+            $entrySize = $win->readU32BE();
+            $format    = $win->read(4);
+
+            if ($entrySize < 16 || $pos + $entrySize > $stsd->contentSize) {
+                throw new ParseError('invalid stsd entry size');
+            }
+
+            $entryStart = $win->tell();
+            $entryEnd   = $pos + $entrySize;
+
+            $win->read(6); // reserved
+            $win->readU16BE(); // data reference index
+
+            if ($handlerType === 'vide') {
+                if ($win->tell() + 70 > $entryEnd) {
+                    throw new ParseError('video sample entry truncated');
+                }
+
+                $win->read(16); // pre-defined/reserved
+                $width  = $win->readU16BE();
+                $height = $win->readU16BE();
+                $win->readU32BE(); // horiz resolution
+                $win->readU32BE(); // vert resolution
+                $win->read(4); // reserved
+                $win->readU16BE(); // frame count
+
+                $nameLength = $win->readU8();
+                $nameData   = $win->read(31);
+                $compressor = substr($nameData, 0, min($nameLength, 31));
+                $compressor = trim($compressor);
+
+                $win->readU16BE(); // depth
+                $win->readU16BE(); // pre-defined
+
+                $result = [
+                    'format'         => $this->normaliseFourcc($format),
+                    'width'          => $width,
+                    'height'         => $height,
+                    'compressorName' => $compressor,
+                ];
+            } elseif ($handlerType === 'soun') {
+                if ($win->tell() + 20 > $entryEnd) {
+                    throw new ParseError('audio sample entry truncated');
+                }
+
+                $win->read(8); // reserved
+                $channels = $win->readU16BE();
+                $sampleSize = $win->readU16BE();
+                $win->readU16BE(); // pre-defined
+                $win->readU16BE(); // reserved
+                $sampleRate = $win->readU32BE();
+
+                $result = [
+                    'format'        => $this->normaliseFourcc($format),
+                    'channels'      => $channels,
+                    'bitsPerSample' => $sampleSize,
+                    'sampleRate'    => (int) round($sampleRate / 65536),
+                ];
+            }
+
+            $pos += $entrySize;
+        }
+
+        if ($pos !== $stsd->contentSize) {
+            throw new ParseError('stsd entries do not fill container');
+        }
+
+        return $result;
+    }
+
+    /**
+     * Normalises a four-character code into a printable identifier.
+     *
+     * @param string $fourcc Raw four-character code bytes.
+     */
+    private function normaliseFourcc(string $fourcc): string
+    {
+        if ($this->isPrintableFourcc($fourcc)) {
+            return $fourcc;
+        }
+
+        return strtoupper(bin2hex($fourcc));
     }
 
     /**

@@ -1737,6 +1737,55 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('Metadata Tool Z', $structured->device->metadataEditingSoftware);
     }
 
+    #[Test]
+    public function mapsQuickTimeMetadataIntoContainerVideoAndAudio(): void
+    {
+        $quickTime = new QuickTimeMeta([
+            QuickTimeMeta::MAJOR_BRAND_KEY            => 'qt  ',
+            QuickTimeMeta::COMPATIBLE_BRANDS_KEY      => 'qt  iso2',
+            QuickTimeMeta::MINOR_VERSION_KEY          => 512,
+            QuickTimeMeta::COMPRESSOR_NAME_KEY        => 'Apple ProRes 422',
+            QuickTimeMeta::VIDEO_CODEC_KEY            => 'apcn',
+            QuickTimeMeta::VIDEO_WIDTH_KEY            => 1920,
+            QuickTimeMeta::VIDEO_HEIGHT_KEY           => 1080,
+            QuickTimeMeta::AUDIO_FORMAT_KEY           => 'lpcm',
+            QuickTimeMeta::AUDIO_CHANNELS_KEY         => 2,
+            QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY      => 48000,
+            QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY  => 24,
+            QuickTimeMeta::HANDLER_DESCRIPTION_KEY    => 'Apple Video Media Handler',
+            'com.apple.quicktime.encoder'             => 'Apple Encoder',
+            'com.apple.quicktime.avgBitrate'          => 22000000,
+            'com.apple.quicktime.duration'            => 12.5,
+            'com.apple.quicktime.videoFrameRate'      => 24.0,
+            'com.apple.quicktime.hdrFormat'           => true,
+            'com.apple.quicktime.transferFunction'    => 'PQ',
+            'com.apple.quicktime.colorPrimaries'      => 'BT2020',
+        ]);
+
+        $metadata   = new Metadata([], $quickTime);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('qt', $structured->container->format);
+        self::assertSame('Apple Encoder', $structured->container->encoder);
+        self::assertSame(22000000, $structured->container->bitrate);
+        self::assertSame('Apple ProRes 422', $structured->container->videoCodec);
+        self::assertSame('lpcm', $structured->container->audioCodec);
+
+        self::assertEqualsWithDelta(12.5, $structured->video->durationSec, 1e-6);
+        self::assertSame(24.0, $structured->video->frameRate);
+        self::assertSame(1920, $structured->video->width);
+        self::assertSame(1080, $structured->video->height);
+        self::assertSame('Apple ProRes 422', $structured->video->codec);
+        self::assertTrue($structured->video->hdr);
+        self::assertSame('PQ', $structured->video->transferFunction);
+        self::assertSame('BT2020', $structured->video->colorPrimaries);
+
+        self::assertSame(2, $structured->audio->channels);
+        self::assertSame(48000, $structured->audio->sampleRate);
+        self::assertSame('lpcm', $structured->audio->codec);
+        self::assertSame(24, $structured->audio->bitDepth);
+    }
+
     /**
      * Ensures JPEG frame metadata backfills TIFF characteristics when EXIF is absent.
      */
