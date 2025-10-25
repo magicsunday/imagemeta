@@ -653,10 +653,15 @@ final class StructuredMetadataBuilder
         Apple $apple,
         ?int $faceCount,
     ): Scene {
+        $flags = $apple->flags;
+        if (!is_array($flags)) {
+            $flags = [];
+        }
+
         $hdr   = $quickTime->string('HDRImageType');
         $night = $quickTime->bool('NightMode');
-        if ($night === null) {
-            $night = $apple->flags['nightMode'] ?? null;
+        if ($night === null && array_key_exists('nightMode', $flags)) {
+            $night = $flags['nightMode'];
         }
 
         $hdrScene = null;
@@ -666,11 +671,11 @@ final class StructuredMetadataBuilder
             $hdrHeadroom = $apple->hdrHeadroom;
             if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
                 $hdrScene = true;
-            } else {
-                $flags = $apple->flags;
-                if (($flags['hdrEnabled'] ?? false) || ($flags['hdrAuto'] ?? false)) {
-                    $hdrScene = true;
-                }
+            } elseif (
+                (array_key_exists('hdrEnabled', $flags) && $flags['hdrEnabled'])
+                || (array_key_exists('hdrAuto', $flags) && $flags['hdrAuto'])
+            ) {
+                $hdrScene = true;
             }
         }
 
