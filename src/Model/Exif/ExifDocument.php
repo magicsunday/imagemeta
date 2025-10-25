@@ -31,8 +31,8 @@ use function round;
 use function rtrim;
 use function str_pad;
 use function str_replace;
-use function strtoupper;
 use function strlen;
+use function strtoupper;
 use function substr;
 use function trim;
 
@@ -494,17 +494,7 @@ final readonly class ExifDocument
     {
         $raw = $this->value($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
 
-        if (
-            $raw === null
-            || (
-                !is_int($raw)
-                && !is_float($raw)
-                && !is_string($raw)
-                && !$raw instanceof ExifRational
-                && !$raw instanceof ExifRationalList
-                && !$raw instanceof ExifNumericList
-            )
-        ) {
+        if ($raw === null) {
             return null;
         }
 
@@ -1271,8 +1261,10 @@ final readonly class ExifDocument
 
     /**
      * Returns a single value from the cached GPS metadata map.
+     *
+     * @return string|int|float|DateTimeImmutable|null
      */
-    private function gpsValue(string $key): mixed
+    private function gpsValue(string $key): string|int|float|DateTimeImmutable|null
     {
         $gps = $this->gps();
 
@@ -1407,15 +1399,7 @@ final readonly class ExifDocument
     {
         $value = $this->value($ifd, $tag);
 
-        if (
-            $value !== null
-            && !is_int($value)
-            && !is_float($value)
-            && !is_string($value)
-            && !$value instanceof ExifRational
-            && !$value instanceof ExifRationalList
-            && !$value instanceof ExifNumericList
-        ) {
+        if ($value === null) {
             return null;
         }
 
@@ -1424,8 +1408,10 @@ final readonly class ExifDocument
 
     /**
      * Retrieves the raw entry value for the provided tag.
+     *
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
-    private function value(?Ifd $ifd, int $tag): mixed
+    private function value(?Ifd $ifd, int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
         if (!$ifd instanceof Ifd) {
             return null;
