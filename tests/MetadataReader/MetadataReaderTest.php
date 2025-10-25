@@ -46,6 +46,8 @@ final class MetadataReaderTest extends TestCase
 
     private const int MARKER_APP1 = 0xE1;
 
+    private const int MARKER_SOF0 = 0xC0;
+
     /**
      * Ensures JPEG detection extracts EXIF and XMP payloads with parsed documents.
      */
@@ -129,6 +131,39 @@ final class MetadataReaderTest extends TestCase
         $structured = $metadata->structured();
         self::assertSame($expectedSha1, $structured->file->digestSha1);
         self::assertSame($expectedMd5, $structured->file->digestMd5);
+    }
+
+    #[Test]
+    public function testStructuredImageBitsPerSampleFallsBackToFramePrecision(): void
+    {
+        $makerNote = 'sof-maker-note';
+        $tiff      = $this->littleEndianTiffWithMakerNote('Fallback', 'Sample', $makerNote);
+
+        $sofPayload = chr(12)
+            . pack('n', 64)
+            . pack('n', 80)
+            . chr(3)
+            . chr(1) . chr(0x22) . chr(0)
+            . chr(2) . chr(0x11) . chr(1)
+            . chr(3) . chr(0x11) . chr(1);
+
+        $jpeg = "\xFF\xD8"
+            . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(self::MARKER_SOF0, $sofPayload)
+            . "\xFF\xD9";
+
+        $path = $this->writeTempFile($jpeg);
+
+        try {
+            $metadata = (new MetadataReader())->read($path);
+        } finally {
+            @unlink($path);
+        }
+
+        self::assertSame(12, $metadata->jpegBitsPerSample);
+
+        $structured = $metadata->structured();
+        self::assertSame(12, $structured->image->bitsPerSample);
     }
 
     /**

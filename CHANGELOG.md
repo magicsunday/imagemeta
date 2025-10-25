@@ -17,6 +17,7 @@
 
 ### Changed
 - Renamed the diagonal field-of-view helper from `fovDeg` to `fovDiagonalDeg`; consumers should switch to the new property name.
+- Ensured structured JPEG image bit depth falls back to the frame sample precision when the EXIF `BitsPerSample` tag is absent.
 
 ### Removed
 - Dropped the implicit QuickTime video metadata fallback to avoid mixing still-image data with movie track information.

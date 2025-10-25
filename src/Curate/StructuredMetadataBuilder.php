@@ -201,7 +201,12 @@ final class StructuredMetadataBuilder
 
         $camera = $this->buildCamera($exifResolver);
         $lens   = $this->buildLens($exifResolver);
-        $image  = $this->buildImage($exifResolver, $metadata->jpegFrameWidth, $metadata->jpegFrameHeight);
+        $image  = $this->buildImage(
+            $exifResolver,
+            $metadata->jpegFrameWidth,
+            $metadata->jpegFrameHeight,
+            $metadata->jpegBitsPerSample,
+        );
 
         $exposure = new Exposure(
             iso: CompositeResolver::intISO($exifResolver),
@@ -654,14 +659,19 @@ final class StructuredMetadataBuilder
     /**
      * Builds the image value object using EXIF metadata.
      *
-     * @param ExifTagResolver $exif        Resolver exposing image related EXIF tags.
-     * @param int|null        $frameWidth  Optional JPEG frame width used as fallback when EXIF is missing dimensions.
-     * @param int|null        $frameHeight Optional JPEG frame height used as fallback when EXIF is missing dimensions.
+     * @param ExifTagResolver $exif          Resolver exposing image related EXIF tags.
+     * @param int|null        $frameWidth    Optional JPEG frame width used as fallback when EXIF is missing dimensions.
+     * @param int|null        $frameHeight   Optional JPEG frame height used as fallback when EXIF is missing dimensions.
+     * @param int|null        $bitsPerSample Optional JPEG sample precision used when EXIF lacks bit depth information.
      *
      * @return Image Normalised image metadata aggregate.
      */
-    private function buildImage(ExifTagResolver $exif, ?int $frameWidth, ?int $frameHeight): Image
-    {
+    private function buildImage(
+        ExifTagResolver $exif,
+        ?int $frameWidth,
+        ?int $frameHeight,
+        ?int $bitsPerSample,
+    ): Image {
         [$width, $height] = CompositeResolver::dimensions($exif);
 
         $orientation = $exif->orientation();
@@ -673,11 +683,16 @@ final class StructuredMetadataBuilder
             $height = $frameHeight;
         }
 
+        $imageBitsPerSample = $exif->bitsPerSample();
+        if ($imageBitsPerSample === null) {
+            $imageBitsPerSample = $bitsPerSample;
+        }
+
         return new Image(
             width: $width,
             height: $height,
             orientation: $orientation,
-            bitsPerSample: $exif->bitsPerSample(),
+            bitsPerSample: $imageBitsPerSample,
             colorSpace: $this->normalizedColorSpace($exif),
             imageUniqueId: $exif->imageUniqueId(),
             imageNumber: $exif->imageNumber(),
