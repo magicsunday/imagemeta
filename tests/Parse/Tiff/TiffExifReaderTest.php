@@ -320,6 +320,41 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures FlashPix defaults to version 1.00 when the tag is absent.
+     */
+    #[Test]
+    public function defaultsFlashpixVersionWhenTagMissing(): void
+    {
+        $blob     = $this->buildClassicVersionBlobWithoutFlashpixTag();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $exifIfd = $document->exifIfd;
+        self::assertNotNull($exifIfd);
+        self::assertNull($exifIfd->get(ExifTag::FLASHPIX_VERSION));
+
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('1.00', $resolver->flashpixVersion());
+    }
+
+    /**
+     * Ensures FlashPix padding values are normalised to the default version.
+     */
+    #[Test]
+    public function defaultsFlashpixVersionWhenTagContainsOnlyPadding(): void
+    {
+        $blob     = $this->buildClassicFlashpixPaddingBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $exifIfd = $document->exifIfd;
+        self::assertNotNull($exifIfd);
+
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('1.00', $resolver->flashpixVersion());
+    }
+
+    /**
      * Ensures PrintIM payloads preserve their binary data and are decoded into structured output.
      */
     #[Test]
@@ -1170,6 +1205,53 @@ final class TiffExifReaderTest extends TestCase
         $exifEntries = [
             self::packClassicEntry(ExifTag::EXIF_VERSION, 7, 4, self::inlineAsciiToInt('0232', 4)),
             self::packClassicEntry(ExifTag::FLASHPIX_VERSION, 7, 4, self::inlineAsciiToInt('0100', 4)),
+        ];
+
+        $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd;
+    }
+
+    /**
+     * Builds a Classic TIFF blob without a FlashPix version tag.
+     */
+    private function buildClassicVersionBlobWithoutFlashpixTag(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $exifIfdOffset = 8 + 2 + 12 + 4;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+        ];
+        $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+
+        $exifEntries = [
+            self::packClassicEntry(ExifTag::EXIF_VERSION, 7, 4, self::inlineAsciiToInt('0232', 4)),
+        ];
+
+        $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd;
+    }
+
+    /**
+     * Builds a Classic TIFF blob with a padded FlashPix version tag.
+     */
+    private function buildClassicFlashpixPaddingBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $exifIfdOffset = 8 + 2 + 12 + 4;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+        ];
+        $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+
+        $exifEntries = [
+            self::packClassicEntry(ExifTag::EXIF_VERSION, 7, 4, self::inlineAsciiToInt('0232', 4)),
+            self::packClassicEntry(ExifTag::FLASHPIX_VERSION, 7, 4, self::inlineAsciiToInt('', 4)),
         ];
 
         $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);

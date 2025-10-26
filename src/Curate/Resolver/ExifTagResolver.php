@@ -1146,18 +1146,20 @@ final readonly class ExifTagResolver
 
     /**
      * Returns the FlashPix version string if present.
+     *
+     * Defaults to '1.00' when the tag is missing or contains only padding.
      */
     public function flashpixVersion(): ?string
     {
         $value = $this->stringValue($this->document?->exifIfd, ExifTag::FLASHPIX_VERSION);
 
         if ($value === null) {
-            return null;
+            return '1.00';
         }
 
         $trimmed = trim($value, "\0");
         if ($trimmed === '') {
-            return null;
+            return '1.00';
         }
 
         return CoreValueConverters::toExifVersion($trimmed);

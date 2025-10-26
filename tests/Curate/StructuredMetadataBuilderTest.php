@@ -1966,6 +1966,11 @@ final class StructuredMetadataBuilderTest extends TestCase
                     continue;
                 }
 
+                if ($name === 'standards' && $field === 'flashpixVersion') {
+                    self::assertSame('1.00', $fieldValue, 'standards::flashpixVersion should fall back to the FlashPix 1.00 default');
+                    continue;
+                }
+
                 if (is_array($fieldValue)) {
                     self::assertSame([], $fieldValue, sprintf('%s::%s should be an empty array when metadata is missing', $name, $field));
                     continue;
