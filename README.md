@@ -65,7 +65,7 @@ used directly without consulting tag identifiers.
 | `Interop` | `index`, `version` | `InteropIndex`, `InteropVersion` | Hex fallback for binary data |
 | `TiffData` | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities` | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities` | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()` |
 | `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal` | `CompositeImage`, `SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage` | `CompositeImage`, rational to float |
-| `Standards` | `exifVersion`, `flashpixVersion` | `ExifVersion`, `FlashpixVersion` | `ValueConverters::toExifVersion()` |
+| `Standards` | `exifVersion`, `flashpixVersion` | `ExifVersion`, `FlashpixVersion` | `ValueConverters::toExifVersion()` (defaults FlashPix to `1.00` when missing) |
 | `Lens` | `lensSpecification`, `maxApertureFNumber` | `LensSpecification`, `MaxApertureValue` | `ValueConverters::apexToFNumber()` |
 | `Exposure` | `exposureBiasEv`, `gainControl`, `contrast` | `ExposureBiasValue`, `GainControl`, `Contrast` | `GainControl` enum |
 | `Scene` | `subjectDistanceRange` | `SubjectDistanceRange` | `SubjectDistanceRange` enum |
