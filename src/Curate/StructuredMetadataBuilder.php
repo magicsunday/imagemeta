@@ -211,6 +211,7 @@ final class StructuredMetadataBuilder
             profile: $profile,
             flashpixVersion: $exifResolver->flashpixVersion(),
             tiffEpStandardId: $exifResolver->tiffEpStandardId(),
+            tiffEpStandardString: $exifResolver->tiffEpStandardIdString(),
         );
 
         $flashPix = new FlashPix($metadata->flashPixStreams);
@@ -344,9 +345,9 @@ final class StructuredMetadataBuilder
         );
 
         $processing = new ProcessingSettings(
-            sharpness: null,
-            contrast: null,
-            saturation: null,
+            sharpness: $exifResolver->sharpness(),
+            contrast: $exifResolver->contrast(),
+            saturation: $exifResolver->saturation(),
             pictureStyle: null,
             noiseReduction: $exifResolver->noiseReduction(),
             clarity: null,

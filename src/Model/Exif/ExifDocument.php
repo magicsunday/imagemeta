@@ -19,8 +19,11 @@ use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 
 use function array_key_exists;
 use function array_map;
@@ -56,6 +59,13 @@ final readonly class ExifDocument
     private bool $exifThreeOrNewer;
 
     /**
+     * @var list<int>|null
+     */
+    private ?array $tiffEpStandardId;
+
+    private ?string $tiffEpStandardIdString;
+
+    /**
      * @param Ifd                     $ifd0            Root IFD of the TIFF structure.
      * @param Ifd|null                $exifIfd         Sub IFD containing EXIF-specific tags.
      * @param Ifd|null                $gpsIfd          Sub IFD containing GPS-related tags.
@@ -80,6 +90,11 @@ final readonly class ExifDocument
         $this->exifVersion               = CoreValueConverters::toExifVersion($rawVersion);
         $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
         $this->exifThreeOrNewer          = (float) $this->exifProfile >= 3.0;
+
+        $tiffEpBytes    = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
+        $tiffEpStandard = ValueConverters::tiffEpStandardId($tiffEpBytes);
+        $this->tiffEpStandardId       = $tiffEpStandard['bytes'] ?? null;
+        $this->tiffEpStandardIdString = $tiffEpStandard['string'] ?? null;
     }
 
     /**
@@ -580,6 +595,7 @@ final readonly class ExifDocument
 
         return $counts ?? $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
     }
+
     /**
      * Returns the transfer function lookup table when available.
      *
@@ -691,9 +707,15 @@ final readonly class ExifDocument
      */
     public function tiffEpStandardId(): ?array
     {
-        $values = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
+        return $this->tiffEpStandardId;
+    }
 
-        return $values;
+    /**
+     * Returns the TIFF/EP standard identifier as a normalised string representation.
+     */
+    public function tiffEpStandardIdString(): ?string
+    {
+        return $this->tiffEpStandardIdString;
     }
 
     /**
@@ -1338,6 +1360,36 @@ final readonly class ExifDocument
         $value = $this->int($this->exifIfd, ExifTag::CUSTOM_RENDERED);
 
         return CustomRendered::fromExifValue($value);
+    }
+
+    /**
+     * Returns the in-camera contrast setting.
+     */
+    public function contrast(): ?Contrast
+    {
+        $value = $this->int($this->exifIfd, ExifTag::CONTRAST);
+
+        return Contrast::fromExifValue($value);
+    }
+
+    /**
+     * Returns the in-camera saturation setting.
+     */
+    public function saturation(): ?Saturation
+    {
+        $value = $this->int($this->exifIfd, ExifTag::SATURATION);
+
+        return Saturation::fromExifValue($value);
+    }
+
+    /**
+     * Returns the in-camera sharpness setting.
+     */
+    public function sharpness(): ?Sharpness
+    {
+        $value = $this->int($this->exifIfd, ExifTag::SHARPNESS);
+
+        return Sharpness::fromExifValue($value);
     }
 
     /**
