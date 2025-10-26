@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Exif;
 
+use MagicSunday\ImageMeta\Core\Util\UInt64;
+
 use function array_values;
 use function count;
 use function is_array;
@@ -20,7 +22,7 @@ use function is_int;
 /**
  * Represents a single entry within an image file directory (IFD).
  *
- * @phpstan-type ExifScalarValue int|float|string|ExifRational|ExifRationalList|ExifNumericList
+ * @phpstan-type ExifScalarValue int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
  * @phpstan-type ExifInputValue ExifScalarValue|array<int|string, int|float|array<int|string, int|float>>
  */
 final readonly class IfdEntry
@@ -31,7 +33,7 @@ final readonly class IfdEntry
 
     public int $count;
 
-    public int|float|string|ExifRational|ExifRationalList|ExifNumericList $value;
+    public int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value;
 
     /**
      * Normalises raw decoded values so callers may provide convenient array representations.
@@ -45,7 +47,7 @@ final readonly class IfdEntry
         int $tag,
         int $type,
         int $count,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|array $value,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|array $value,
     ) {
         $this->tag   = $tag;
         $this->type  = $type;
@@ -65,8 +67,8 @@ final readonly class IfdEntry
     private function normaliseValue(
         int $type,
         int $count,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|array $value,
-    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList {
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|array $value,
+    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 {
         if (!is_array($value)) {
             return $value;
         }

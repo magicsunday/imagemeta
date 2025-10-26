@@ -465,7 +465,7 @@ final class TiffExifReader
     }
 
     /**
-     * Converts decoded UInt64 values into integers to keep downstream models scalar.
+     * Converts decoded UInt64 values into integers when possible, preserving oversize pointer offsets.
      *
      * @param string $rawBytes Raw bytes backing the decoded value.
      */
@@ -475,7 +475,7 @@ final class TiffExifReader
         int $count,
         string $rawBytes,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value,
-    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList {
+    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 {
         if ($value instanceof UInt64) {
             return $this->normaliseScalarUInt64($tag, $value);
         }
@@ -501,16 +501,18 @@ final class TiffExifReader
     }
 
     /**
-     * Normalises a UInt64 scalar into an integer, applying bounds checks for offsets.
+     * Normalises a UInt64 scalar into an integer when possible, preserving oversized pointer values.
+     *
+     * @return int|UInt64
      */
-    private function normaliseScalarUInt64(int $tag, UInt64 $value): int
+    private function normaliseScalarUInt64(int $tag, UInt64 $value): int|UInt64
     {
         if ($this->isPointerTag($tag)) {
-            if (!$value->fitsSignedInt()) {
-                throw new BoundsError(sprintf('IFD tag 0x%04X exceeds supported integer range.', $tag));
+            if ($value->fitsSignedInt()) {
+                return $value->toInt(sprintf('IFD pointer tag 0x%04X', $tag));
             }
 
-            return $value->toInt(sprintf('IFD tag 0x%04X', $tag));
+            return $value;
         }
 
         return $value->toInt(sprintf('IFD tag 0x%04X value', $tag));
@@ -1276,9 +1278,7 @@ final class TiffExifReader
      */
     private function unpackU64(string $b): UInt64
     {
-        [$hi, $lo] = $this->unpackU64Parts($b);
-
-        return Unpack::combineUint32($hi, $lo);
+        return Unpack::uint64($b, $this->bo === Endian::Little, '64-bit value from TIFF bytes');
     }
 
     /**
@@ -1290,10 +1290,12 @@ final class TiffExifReader
      */
     private function unpackS64(string $b): int
     {
-        [$hi, $lo] = $this->unpackU64Parts($b);
+        $unsigned = $this->unpackU64($b);
+        $hi       = $unsigned->high();
+        $lo       = $unsigned->low();
 
         if (($hi & 0x80000000) === 0) {
-            return Unpack::combineUint32($hi, $lo)->toInt('Signed 64-bit integer');
+            return $unsigned->toInt('Signed 64-bit integer');
         }
 
         $hiComplement = (~$hi) & 0xFFFFFFFF;
@@ -1301,26 +1303,6 @@ final class TiffExifReader
         $magnitude    = Unpack::combineUint32($hiComplement, $loComplement)->addSmall(1)->toInt('Signed 64-bit integer magnitude');
 
         return -$magnitude;
-    }
-
-    /**
-     * Reads the high and low 32-bit components of a 64-bit value according to the current endianness.
-     *
-     * @param string $b Source bytes.
-     *
-     * @return array{0:int,1:int}
-     */
-    private function unpackU64Parts(string $b): array
-    {
-        if ($this->bo === Endian::Little) {
-            $lo = $this->unpackU32(substr($b, 0, 4));
-            $hi = $this->unpackU32(substr($b, 4, 4));
-        } else {
-            $hi = $this->unpackU32(substr($b, 0, 4));
-            $lo = $this->unpackU32(substr($b, 4, 4));
-        }
-
-        return [$hi, $lo];
     }
 
     /**

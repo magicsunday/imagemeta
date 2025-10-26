@@ -426,6 +426,7 @@ final class TiffExifReaderTest extends TestCase
         $blob = self::buildBigTiffOutOfRangeOffsetBlob();
 
         $this->expectException(BoundsError::class);
+        $this->expectExceptionMessage('IFD pointer tag 0x8825 exceeds TIFF data length.');
 
         (new TiffExifReader())->parseFromBlob($blob);
     }
