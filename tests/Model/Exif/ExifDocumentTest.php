@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use function pack;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -559,6 +560,8 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function exposesTable65Extensions(): void
     {
+        $sfrPayload = self::buildSpatialFrequencyResponsePayload();
+
         $ifd0 = new Ifd([
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Coastal cliffs'),
             ExifTag::IMAGE_TITLE       => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Cliffside Dusk'),
@@ -585,7 +588,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(50, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 1, 'clip.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(150, 10)),
-            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, 1, 'SFR Data'),
+            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, strlen($sfrPayload), $sfrPayload),
             ExifTag::FOCAL_PLANE_X_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(8000, 100)),
             ExifTag::FOCAL_PLANE_Y_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(7900, 100)),
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, 2),
@@ -624,7 +627,19 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(5.0, $doc->cameraElevationAngleDeg(), 0.0001);
         self::assertSame('clip.wav', $doc->relatedSoundFile());
         self::assertEqualsWithDelta(15.0, $doc->flashEnergy() ?? 0.0, 0.0001);
-        self::assertSame('SFR Data', $doc->spatialFrequencyResponse());
+        $sfr = $doc->spatialFrequencyResponse();
+        self::assertNotNull($sfr);
+        self::assertSame(3, $sfr['columns']);
+        self::assertSame(2, $sfr['rows']);
+        self::assertSame(['10lp/mm', '20lp/mm', '40lp/mm'], $sfr['labels']['columns']);
+        self::assertSame(['Luminance', 'Chrominance'], $sfr['labels']['rows']);
+        self::assertCount(2, $sfr['values']);
+        self::assertEqualsWithDelta(0.9, $sfr['values'][0][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.75, $sfr['values'][0][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.6, $sfr['values'][0][2] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.85, $sfr['values'][1][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.7, $sfr['values'][1][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.55, $sfr['values'][1][2] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(80.0, $doc->focalPlaneXResolution() ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(79.0, $doc->focalPlaneYResolution() ?? 0.0, 0.0001);
         self::assertSame(2, $doc->focalPlaneResolutionUnit());
@@ -839,4 +854,32 @@ final class ExifDocumentTest extends TestCase
         self::assertSame(2, $document->gpsDifferential());
         self::assertEqualsWithDelta(1.5, $document->gpsHorizontalPositioningError(), 0.000001);
     }
+
+    private static function buildSpatialFrequencyResponsePayload(): string
+    {
+        $columns = 3;
+        $rows    = 2;
+
+        $payload = pack('n', $columns) . pack('n', $rows);
+        $payload .= "10lp/mm\0";
+        $payload .= "20lp/mm\0";
+        $payload .= "40lp/mm\0";
+        $payload .= "Luminance\0";
+        $payload .= "Chrominance\0";
+
+        $payload .= self::packSrational(90, 100);
+        $payload .= self::packSrational(75, 100);
+        $payload .= self::packSrational(60, 100);
+        $payload .= self::packSrational(85, 100);
+        $payload .= self::packSrational(70, 100);
+        $payload .= self::packSrational(55, 100);
+
+        return $payload;
+    }
+
+    private static function packSrational(int $numerator, int $denominator): string
+    {
+        return pack('N', $numerator) . pack('N', $denominator);
+    }
+
 }

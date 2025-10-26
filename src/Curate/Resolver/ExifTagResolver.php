@@ -545,9 +545,11 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the spatial frequency response payload.
+     * Returns the decoded spatial frequency response table.
+     *
+     * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
      */
-    public function spatialFrequencyResponse(): ?string
+    public function spatialFrequencyResponse(): ?array
     {
         return $this->document?->spatialFrequencyResponse();
     }

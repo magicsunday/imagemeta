@@ -55,6 +55,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+use function pack;
 use function str_repeat;
 
 /**
@@ -69,6 +70,8 @@ final class StructuredMetadataBuilderTest extends TestCase
     #[Test]
     public function buildsStructuredAggregateForDslrJpeg(): void
     {
+        $sfrPayload = self::buildSpatialFrequencyResponsePayload();
+
         $ifd0 = new Ifd([
             ExifTag::IMAGE_WIDTH                    => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 6720),
             ExifTag::IMAGE_HEIGHT                   => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 4480),
@@ -158,7 +161,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 10, 'sound.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(250, 10)),
-            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, 12, 'SFR-Curve-01'),
+            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, strlen($sfrPayload), $sfrPayload),
             ExifTag::FOCAL_PLANE_X_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(4321, 100)),
             ExifTag::FOCAL_PLANE_Y_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(4300, 100)),
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, ResolutionUnit::CENTIMETER->value),
@@ -302,6 +305,16 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('Standard Spectral', $structured->sensor->spectralSensitivity);
         self::assertSame('OECF-DATA-01', $structured->sensor->oecf);
+        $sensorSfr = $structured->sensor->spatialFrequencyResponse;
+        self::assertNotNull($sensorSfr);
+        self::assertSame(['10lp/mm', '20lp/mm', '40lp/mm'], $sensorSfr['labels']['columns']);
+        self::assertSame(['Luminance', 'Chrominance'], $sensorSfr['labels']['rows']);
+        self::assertEqualsWithDelta(0.9, $sensorSfr['values'][0][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.75, $sensorSfr['values'][0][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.6, $sensorSfr['values'][0][2] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.85, $sensorSfr['values'][1][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.7, $sensorSfr['values'][1][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.55, $sensorSfr['values'][1][2] ?? 0.0, 0.0001);
         self::assertSame([2, 1, 1, 0], $structured->sensor->cfaPattern);
         self::assertEqualsWithDelta(43.21, $structured->sensor->focalPlaneXResolution, 0.001);
         self::assertEqualsWithDelta(43.0, $structured->sensor->focalPlaneYResolution, 0.001);
@@ -1860,4 +1873,32 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         return (int) ($value[1] ?? 0);
     }
+
+    private static function buildSpatialFrequencyResponsePayload(): string
+    {
+        $columns = 3;
+        $rows    = 2;
+
+        $payload = pack('n', $columns) . pack('n', $rows);
+        $payload .= "10lp/mm\0";
+        $payload .= "20lp/mm\0";
+        $payload .= "40lp/mm\0";
+        $payload .= "Luminance\0";
+        $payload .= "Chrominance\0";
+
+        $payload .= self::packSrational(90, 100);
+        $payload .= self::packSrational(75, 100);
+        $payload .= self::packSrational(60, 100);
+        $payload .= self::packSrational(85, 100);
+        $payload .= self::packSrational(70, 100);
+        $payload .= self::packSrational(55, 100);
+
+        return $payload;
+    }
+
+    private static function packSrational(int $numerator, int $denominator): string
+    {
+        return pack('N', $numerator) . pack('N', $denominator);
+    }
+
 }

@@ -447,6 +447,7 @@ final class StructuredMetadataBuilder
             cfaPattern: $exifResolver->cfaPattern(),
             spectralSensitivity: $exifResolver->spectralSensitivity(),
             oecf: $exifResolver->oecf(),
+            spatialFrequencyResponse: $exifResolver->spatialFrequencyResponse(),
             focalPlaneXResolution: $exifResolver->focalPlaneXResolution(),
             focalPlaneYResolution: $exifResolver->focalPlaneYResolution(),
             focalPlaneResolutionUnit: $exifResolver->focalPlaneResolutionUnit(),
