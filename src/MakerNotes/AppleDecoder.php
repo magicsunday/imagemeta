@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
-use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
+use MagicSunday\ImageMeta\Value\RunTime;
 
 use function array_is_list;
 use function array_key_exists;
