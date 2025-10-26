@@ -385,7 +385,15 @@ final class StructuredMetadataBuilder
 
         $flatKeywords         = $xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'subject');
         $hierarchicalKeywords = $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
-        $keywords             = new Keywords(
+
+        if ($flatKeywords === []) {
+            $xpKeywords = $exifResolver->xpKeywords();
+            if ($xpKeywords !== null) {
+                $flatKeywords = $xpKeywords;
+            }
+        }
+
+        $keywords = new Keywords(
             flat: $flatKeywords,
             hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
         );
@@ -698,7 +706,7 @@ final class StructuredMetadataBuilder
             colorSpace: $this->normalizedColorSpace($exif),
             imageUniqueId: $exif->imageUniqueId(),
             imageNumber: $exif->imageNumber(),
-            documentName: null,
+            documentName: $exif->documentName(),
             description: $exif->imageDescription(),
             title: $exif->imageTitle(),
             componentsConfiguration: $exif->componentsConfiguration(),

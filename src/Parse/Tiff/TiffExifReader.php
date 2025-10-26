@@ -27,15 +27,20 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 
 use function chr;
+use function function_exists;
+use function iconv;
+use function in_array;
 use function is_float;
 use function is_int;
 use function is_string;
+use function mb_convert_encoding;
 use function ord;
 use function pack;
 use function rtrim;
 use function sha1;
 use function sprintf;
 use function strlen;
+use function strncmp;
 use function substr;
 
 /**
@@ -78,6 +83,21 @@ final class TiffExifReader
     private const int TYPE_SLONG8 = 17;
 
     private const int TYPE_IFD8 = 18;
+
+    /**
+     * XP metadata tags stored as UTF-16LE byte sequences.
+     *
+     * @var list<int>
+     */
+    private const array UTF16LE_STRING_TAGS = [
+        ExifTag::XP_TITLE,
+        ExifTag::XP_COMMENT,
+        ExifTag::XP_AUTHOR,
+        ExifTag::XP_KEYWORDS,
+        ExifTag::XP_SUBJECT,
+    ];
+
+    private const string UNICODE_REPLACEMENT = "\u{FFFD}";
 
     private MemoryBuffer $buf;
 
@@ -235,6 +255,10 @@ final class TiffExifReader
         [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
 
+        if (in_array($tag, self::UTF16LE_STRING_TAGS, true)) {
+            $value = $this->decodeUtf16LeString($rawBytes);
+        }
+
         if ($tag === ExifTag::MAKER_NOTE) {
             $this->makerNoteRaw = $rawBytes;
         }
@@ -327,6 +351,149 @@ final class TiffExifReader
         }
 
         return $count === 1 ? $vals[0] : new ExifNumericList($vals);
+    }
+
+    /**
+     * Decodes a UTF-16LE encoded XP string into UTF-8.
+     */
+    private function decodeUtf16LeString(string $bytes): string
+    {
+        if ($bytes === '') {
+            return '';
+        }
+
+        $trimmed = $this->trimUtf16LeNullTerminators($bytes);
+
+        if ($trimmed === '') {
+            return '';
+        }
+
+        if ((strlen($trimmed) & 1) === 1) {
+            $trimmed = substr($trimmed, 0, -1);
+        }
+
+        if ($trimmed === '') {
+            return '';
+        }
+
+        if (strncmp($trimmed, "\xFF\xFE", 2) === 0) {
+            $trimmed = substr($trimmed, 2);
+        }
+
+        if ($trimmed === '') {
+            return '';
+        }
+
+        if (function_exists('mb_convert_encoding')) {
+            $converted = mb_convert_encoding($trimmed, 'UTF-8', 'UTF-16LE');
+            if ($converted !== '') {
+                return $converted;
+            }
+        }
+
+        if (function_exists('iconv')) {
+            $converted = iconv('UTF-16LE', 'UTF-8//IGNORE', $trimmed);
+            if (is_string($converted) && $converted !== '') {
+                return $converted;
+            }
+        }
+
+        return $this->decodeUtf16LeManually($trimmed);
+    }
+
+    /**
+     * Removes trailing UTF-16LE NULL terminators from a byte sequence.
+     */
+    private function trimUtf16LeNullTerminators(string $bytes): string
+    {
+        $length      = strlen($bytes);
+        $initialSize = $length;
+
+        while ($length >= 2 && $bytes[$length - 1] === "\0" && $bytes[$length - 2] === "\0") {
+            $length -= 2;
+        }
+
+        if ($length <= 0) {
+            return '';
+        }
+
+        if ($length === $initialSize) {
+            return $bytes;
+        }
+
+        return substr($bytes, 0, $length);
+    }
+
+    /**
+     * Converts a UTF-16LE encoded byte sequence into UTF-8 without extensions.
+     */
+    private function decodeUtf16LeManually(string $bytes): string
+    {
+        $length = strlen($bytes);
+
+        if ($length === 0) {
+            return '';
+        }
+
+        $result = '';
+
+        for ($i = 0; $i + 1 < $length; $i += 2) {
+            $unit = ord($bytes[$i]) | (ord($bytes[$i + 1]) << 8);
+
+            if ($unit >= 0xD800 && $unit <= 0xDBFF) {
+                if ($i + 3 >= $length) {
+                    $result .= self::UNICODE_REPLACEMENT;
+                    break;
+                }
+
+                $low = ord($bytes[$i + 2]) | (ord($bytes[$i + 3]) << 8);
+
+                if ($low < 0xDC00 || $low > 0xDFFF) {
+                    $result .= self::UNICODE_REPLACEMENT;
+                    continue;
+                }
+
+                $codePoint = 0x10000 + (($unit - 0xD800) << 10) + ($low - 0xDC00);
+                $i += 2;
+            } elseif ($unit >= 0xDC00 && $unit <= 0xDFFF) {
+                $result .= self::UNICODE_REPLACEMENT;
+                continue;
+            } else {
+                $codePoint = $unit;
+            }
+
+            $result .= $this->codePointToUtf8($codePoint);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Encodes a Unicode code point into UTF-8.
+     */
+    private function codePointToUtf8(int $codePoint): string
+    {
+        if ($codePoint <= 0x7F) {
+            return chr($codePoint);
+        }
+
+        if ($codePoint <= 0x7FF) {
+            return chr(0xC0 | ($codePoint >> 6))
+                . chr(0x80 | ($codePoint & 0x3F));
+        }
+
+        if ($codePoint <= 0xFFFF) {
+            return chr(0xE0 | ($codePoint >> 12))
+                . chr(0x80 | (($codePoint >> 6) & 0x3F))
+                . chr(0x80 | ($codePoint & 0x3F));
+        }
+
+        $codePoint = $codePoint > 0x10FFFF ? 0x10FFFF : $codePoint;
+
+        return chr(0xF0 | ($codePoint >> 18))
+            . chr(0x80 | (($codePoint >> 12) & 0x3F))
+            . chr(0x80 | (($codePoint >> 6) & 0x3F))
+            . chr(0x80 | ($codePoint & 0x3F));
     }
 
     /**
