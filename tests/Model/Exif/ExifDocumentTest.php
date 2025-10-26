@@ -1002,6 +1002,26 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function exifVersionDefaultsToTwoPointTwoWhenTagMissing(): void
+    {
+        $doc = new ExifDocument(new Ifd([]), null, null, null, null);
+
+        self::assertSame('2.2', $doc->exifVersion());
+    }
+
+    #[Test]
+    public function exifVersionDefaultsToTwoPointTwoWhenTagEmpty(): void
+    {
+        $emptyExifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, "\x00\x00\x00\x00"),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $emptyExifIfd, null, null, null);
+
+        self::assertSame('2.2', $doc->exifVersion());
+    }
+
+    #[Test]
     public function exifThreeOmitsLegacySoftwareVersions(): void
     {
         $ifd0 = new Ifd([
