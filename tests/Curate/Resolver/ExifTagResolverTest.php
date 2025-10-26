@@ -268,6 +268,7 @@ final class ExifTagResolverTest extends TestCase
             ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 6, '+01:45'),
             ExifTag::TIME_ZONE_OFFSET       => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 2, new ExifNumericList([-1, 2])),
             ExifTag::SELF_TIMER_MODE        => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 7),
+            ExifTag::BATTERY_LEVEL          => new IfdEntry(ExifTag::BATTERY_LEVEL, 2, 3, '85%'),
             ExifTag::INTERLACE              => new IfdEntry(ExifTag::INTERLACE, 3, 1, 1),
         ]);
 
@@ -282,6 +283,9 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('+01:45', $resolver->offsetTimeDigitized());
         self::assertSame([-60, 120], $resolver->timeZoneOffsetMinutes());
         self::assertSame(7, $resolver->selfTimerModeSeconds());
+        $battery = $resolver->batteryLevelPercent();
+        self::assertNotNull($battery);
+        self::assertEqualsWithDelta(85.0, $battery, 0.0001);
         self::assertSame(1, $resolver->interlace());
     }
 

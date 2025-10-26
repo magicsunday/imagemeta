@@ -84,16 +84,17 @@ final class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        $jpeg          = new JpegExtractor($stream);
-        $exifBlobs     = $jpeg->extractExifBlobs();
-        $xmpBlobs      = $jpeg->extractXmpPackets();
-        $iccProfile    = $jpeg->getIccProfile();
-        $iccSegments   = $jpeg->getIccSegments();
-        $bitsPerSample = $jpeg->getFrameSamplePrecision();
-        $frameHeight   = $jpeg->getFrameHeight();
-        $frameWidth    = $jpeg->getFrameWidth();
-        $sampling      = $jpeg->getFrameComponentSamplingFactors();
-        $subSampling   = $jpeg->getFrameYCbCrSubSampling();
+        $jpeg             = new JpegExtractor($stream);
+        $exifBlobs        = $jpeg->extractExifBlobs();
+        $xmpBlobs         = $jpeg->extractXmpPackets();
+        $iccProfile       = $jpeg->getIccProfile();
+        $iccSegments      = $jpeg->getIccSegments();
+        $flashPixStreams  = $jpeg->getFlashPixStreams();
+        $bitsPerSample    = $jpeg->getFrameSamplePrecision();
+        $frameHeight      = $jpeg->getFrameHeight();
+        $frameWidth       = $jpeg->getFrameWidth();
+        $sampling         = $jpeg->getFrameComponentSamplingFactors();
+        $subSampling      = $jpeg->getFrameYCbCrSubSampling();
 
         $exifDoc    = null;
         $xmpDoc     = null;
@@ -117,6 +118,7 @@ final class MetadataReader
             $makerNotes,
             $iccProfile,
             $iccSegments,
+            $flashPixStreams,
             $bitsPerSample,
             $sampling,
             $subSampling,
@@ -173,6 +175,7 @@ final class MetadataReader
             $xmpDoc,
             $makerNotes,
             null,
+            [],
             [],
             null,
             null,

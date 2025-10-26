@@ -156,12 +156,14 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::TEMPERATURE                 => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(215, 10)),
             ExifTag::HUMIDITY                    => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(600, 10)),
             ExifTag::PRESSURE                    => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(101325, 100)),
+            ExifTag::BATTERY_LEVEL               => new IfdEntry(ExifTag::BATTERY_LEVEL, 5, 1, new ExifRational(82, 100)),
             ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(150, 10)),
             ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(98, 10)),
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 10, 'sound.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(250, 10)),
-            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, strlen($sfrPayload), $sfrPayload),
+            ExifTag::NOISE                       => new IfdEntry(ExifTag::NOISE, 5, 1, new ExifRational(456, 10)),
+            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, 12, 'SFR-Curve-01'),
             ExifTag::FOCAL_PLANE_X_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(4321, 100)),
             ExifTag::FOCAL_PLANE_Y_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(4300, 100)),
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, ResolutionUnit::CENTIMETER->value),
@@ -186,6 +188,9 @@ final class StructuredMetadataBuilderTest extends TestCase
         $interopIfd = new Ifd([
             ExifTag::INTEROPERABILITY_INDEX   => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, 'R98'),
             ExifTag::INTEROPERABILITY_VERSION => new IfdEntry(ExifTag::INTEROPERABILITY_VERSION, 7, 6, "0100\0 "),
+            ExifTag::RELATED_IMAGE_FILE_FORMAT => new IfdEntry(ExifTag::RELATED_IMAGE_FILE_FORMAT, 2, 4, 'JPEG'),
+            ExifTag::RELATED_IMAGE_WIDTH       => new IfdEntry(ExifTag::RELATED_IMAGE_WIDTH, 4, 1, 4000),
+            ExifTag::RELATED_IMAGE_LENGTH      => new IfdEntry(ExifTag::RELATED_IMAGE_LENGTH, 4, 1, 3000),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
@@ -209,7 +214,16 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame(['index' => 'R98', 'version' => '0100'], get_object_vars($structured->interop));
+        self::assertSame(
+            [
+                'index' => 'R98',
+                'version' => '0100',
+                'relatedImageFileFormat' => 'JPEG',
+                'relatedImageWidth' => 4000,
+                'relatedImageLength' => 3000,
+            ],
+            get_object_vars($structured->interop),
+        );
 
         self::assertSame(Compression::JPEG, $structured->tiff->compression);
         self::assertSame(Photometric::YCBCR, $structured->tiff->photometric);
@@ -232,6 +246,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('1.2.3', $structured->camera->firmware);
         self::assertSame(FileSource::DIGITAL_CAMERA, $structured->camera->fileSource);
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $structured->camera->sensingMethod);
+        self::assertSame([], $structured->flashPix->streams);
 
         self::assertSame('EF 85mm f/1.4L', $structured->lens->lensModel);
         self::assertSame(85.0, $structured->lens->focalLengthMm);
@@ -294,6 +309,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
         self::assertEqualsWithDelta(21.5, $structured->capture->temperatureC, 0.001);
+        self::assertEqualsWithDelta(82.0, $structured->capture->batteryLevelPercent, 0.001);
         self::assertEqualsWithDelta(60.0, $structured->capture->humidityPercent, 0.001);
         self::assertEqualsWithDelta(1013.25, $structured->capture->pressureHPa, 0.001);
         self::assertEqualsWithDelta(15.0, $structured->capture->waterDepthM, 0.001);
@@ -322,6 +338,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('Profile:Portrait', $structured->processing->deviceSettingDescription);
         self::assertSame(1, $structured->processing->customRendered);
+        self::assertEqualsWithDelta(45.6, $structured->processing->noiseReduction, 0.0001);
 
         self::assertSame('Jane D. Photographer', $structured->author->photographer);
         self::assertSame('John Editor', $structured->author->imageEditor);
@@ -369,6 +386,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             null,
             null,
             null,
+            [],
             [],
             null,
             null,
@@ -1042,7 +1060,16 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame(['index' => null, 'version' => null], get_object_vars($structured->interop));
+        self::assertSame(
+            [
+                'index' => null,
+                'version' => null,
+                'relatedImageFileFormat' => null,
+                'relatedImageWidth' => null,
+                'relatedImageLength' => null,
+            ],
+            get_object_vars($structured->interop),
+        );
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
         self::assertSame('2.2', $structured->standards->profile);
@@ -1620,6 +1647,31 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures FlashPix streams collected on the metadata aggregate are forwarded into the structured view.
+     */
+    #[Test]
+    public function forwardsFlashPixStreams(): void
+    {
+        $flashPix = [7 => 'flashpix-stream'];
+
+        $metadata = new Metadata(
+            [],
+            null,
+            null,
+            [],
+            null,
+            null,
+            null,
+            [],
+            $flashPix,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame($flashPix, $structured->flashPix->streams);
+    }
+
+    /**
      * Ensures XMP region metadata is propagated to the structured output including face counts.
      */
     #[Test]
@@ -1814,6 +1866,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             null,
             null,
             null,
+            [],
             [],
             8,
             [

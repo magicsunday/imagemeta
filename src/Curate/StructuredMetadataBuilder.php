@@ -40,6 +40,7 @@ use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\Focus;
+use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
@@ -151,7 +152,13 @@ final class StructuredMetadataBuilder
         $gpsResolver       = new GpsResolver();
         $regionsResolver   = new RegionsResolver();
 
-        $interop = new Interop(index: $exifResolver->interopIndex(), version: $exifResolver->interopVersion());
+        $interop = new Interop(
+            index: $exifResolver->interopIndex(),
+            version: $exifResolver->interopVersion(),
+            relatedImageFileFormat: $exifResolver->relatedImageFileFormat(),
+            relatedImageWidth: $exifResolver->relatedImageWidth(),
+            relatedImageLength: $exifResolver->relatedImageLength(),
+        );
 
         $bitsPerSample    = $exifResolver->bitsPerSample() ?? $metadata->jpegBitsPerSample;
         $ycbcrSubSampling = $exifResolver->ycbcrSubSampling();
@@ -199,6 +206,8 @@ final class StructuredMetadataBuilder
             tiffEpStandardId: $exifResolver->tiffEpStandardId(),
         );
 
+        $flashPix = new FlashPix($metadata->flashPixStreams);
+
         $camera = $this->buildCamera($exifResolver);
         $lens   = $this->buildLens($exifResolver);
         $image  = $this->buildImage($metadata, $exifResolver);
@@ -232,6 +241,7 @@ final class StructuredMetadataBuilder
             temperatureC: $exifResolver->temperatureCelsius(),
             humidityPercent: $exifResolver->humidityPercent(),
             pressureHPa: $exifResolver->pressureHPa(),
+            batteryLevelPercent: $exifResolver->batteryLevelPercent(),
             waterDepthM: $exifResolver->waterDepthMeters(),
             accelerationMs2: $exifResolver->accelerationMs2(),
             cameraElevationAngleDeg: $exifResolver->cameraElevationAngleDeg(),
@@ -322,7 +332,7 @@ final class StructuredMetadataBuilder
             contrast: null,
             saturation: null,
             pictureStyle: null,
-            noiseReduction: null,
+            noiseReduction: $exifResolver->noiseReduction(),
             clarity: null,
             customRendered: $exifResolver->customRendered()?->value,
             deviceSettingDescription: $exifResolver->deviceSettingDescription(),
@@ -469,6 +479,7 @@ final class StructuredMetadataBuilder
             tiff: $tiff,
             composite: $composite,
             standards: $standards,
+            flashPix: $flashPix,
             camera: $camera,
             lens: $lens,
             image: $image,

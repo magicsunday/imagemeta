@@ -473,6 +473,30 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the related image file format declared in the interoperability IFD.
+     */
+    public function relatedImageFileFormat(): ?string
+    {
+        return $this->str($this->interopIfd, ExifTag::RELATED_IMAGE_FILE_FORMAT);
+    }
+
+    /**
+     * Returns the related image width declared in the interoperability IFD.
+     */
+    public function relatedImageWidth(): ?int
+    {
+        return $this->int($this->interopIfd, ExifTag::RELATED_IMAGE_WIDTH);
+    }
+
+    /**
+     * Returns the related image length declared in the interoperability IFD.
+     */
+    public function relatedImageLength(): ?int
+    {
+        return $this->int($this->interopIfd, ExifTag::RELATED_IMAGE_LENGTH);
+    }
+
+    /**
      * Returns the interlace flag when recorded.
      */
     public function interlace(): ?int
@@ -753,6 +777,14 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the noise measurement recorded by the camera.
+     */
+    public function noise(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::NOISE);
+    }
+
+    /**
      * Returns the CFA pattern definition as a list of component identifiers.
      *
      * @return list<int>|null
@@ -822,6 +854,16 @@ final readonly class ExifDocument
     public function selfTimerModeSeconds(): ?int
     {
         return $this->int($this->exifIfd, ExifTag::SELF_TIMER_MODE);
+    }
+
+    /**
+     * Returns the camera battery level as a percentage when provided.
+     */
+    public function batteryLevelPercent(): ?float
+    {
+        $value = $this->value($this->exifIfd, ExifTag::BATTERY_LEVEL);
+
+        return ValueConverters::batteryLevelToPercent($value);
     }
 
     /**

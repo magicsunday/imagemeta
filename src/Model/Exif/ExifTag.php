@@ -121,6 +121,8 @@ final readonly class ExifTag
     public const int INTEROPERABILITY_IFD_POINTER = 0xA005;
 
     // EXIF sub IFD
+    public const int BATTERY_LEVEL = 0x828F;
+
     public const int EXPOSURE_TIME = 0x829A;
 
     public const int F_NUMBER = 0x829D;
@@ -307,6 +309,8 @@ final readonly class ExifTag
 
     public const int SPATIAL_FREQUENCY_RESPONSE = 0xA20C;
 
+    public const int NOISE = 0xA20D;
+
     public const int FOCAL_PLANE_X_RESOLUTION = 0xA20E;
 
     public const int FOCAL_PLANE_Y_RESOLUTION = 0xA20F;
@@ -432,6 +436,12 @@ final readonly class ExifTag
     public const int INTEROPERABILITY_INDEX = 0x0001;
 
     public const int INTEROPERABILITY_VERSION = 0x0002;
+
+    public const int RELATED_IMAGE_FILE_FORMAT = 0x1000;
+
+    public const int RELATED_IMAGE_WIDTH = 0x1001;
+
+    public const int RELATED_IMAGE_LENGTH = 0x1002;
 
     /**
      * Prevent instantiation of this constants-only utility class.

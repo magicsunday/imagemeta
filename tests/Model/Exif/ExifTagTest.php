@@ -107,6 +107,7 @@ final class ExifTagTest extends TestCase
             'INTEROPERABILITY_IFD_POINTER' => 0xA005,
 
             // EXIF sub IFD
+            'BATTERY_LEVEL'                          => 0x828F,
             'EXPOSURE_TIME'                            => 0x829A,
             'F_NUMBER'                                 => 0x829D,
             'EXPOSURE_PROGRAM'                         => 0x8822,
@@ -154,6 +155,7 @@ final class ExifTagTest extends TestCase
             'RELATED_SOUND_FILE'                       => 0xA004,
             'FLASH_ENERGY'                             => 0xA20B,
             'SPATIAL_FREQUENCY_RESPONSE'               => 0xA20C,
+            'NOISE'                                    => 0xA20D,
             'FOCAL_PLANE_X_RESOLUTION'                 => 0xA20E,
             'FOCAL_PLANE_Y_RESOLUTION'                 => 0xA20F,
             'FOCAL_PLANE_RESOLUTION_UNIT'              => 0xA210,
@@ -214,6 +216,9 @@ final class ExifTagTest extends TestCase
             // Interoperability IFD
             'INTEROPERABILITY_INDEX'   => 0x0001,
             'INTEROPERABILITY_VERSION' => 0x0002,
+            'RELATED_IMAGE_FILE_FORMAT' => 0x1000,
+            'RELATED_IMAGE_WIDTH'       => 0x1001,
+            'RELATED_IMAGE_LENGTH'      => 0x1002,
         ];
 
         $reflection = new ReflectionClass(ExifTag::class);
@@ -232,7 +237,6 @@ final class ExifTagTest extends TestCase
         $constants = array_flip((new ReflectionClass(ExifTag::class))->getConstants());
 
         self::assertArrayNotHasKey(0x013C, $constants);
-        self::assertArrayNotHasKey(0xA20D, $constants);
     }
 
     /**

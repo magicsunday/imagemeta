@@ -48,6 +48,11 @@ final class Metadata
      */
     public readonly array $iccSegments;
 
+    /**
+     * @var array<int, string>
+     */
+    public readonly array $flashPixStreams;
+
     public readonly ?int $jpegBitsPerSample;
 
     /** @var array<int, array{horizontal:int, vertical:int}>|null */
@@ -81,6 +86,7 @@ final class Metadata
      * @param MakerNotesMetadata|null                              $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
      * @param string|null                                          $iccProfile               Binary ICC profile when available.
      * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order.
+     * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by identifier.
      * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header.
      * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by
      *                                                                                       identifier.
@@ -102,6 +108,7 @@ final class Metadata
         ?MakerNotesMetadata $makerNotes = null,
         ?string $iccProfile = null,
         array $iccSegments = [],
+        array $flashPixStreams = [],
         ?int $jpegBitsPerSample = null,
         ?array $jpegFrameSamplingFactors = null,
         ?array $jpegYCbCrSubSampling = null,
@@ -121,6 +128,7 @@ final class Metadata
         $this->makerNotes               = $makerNotes;
         $this->iccProfile               = $iccProfile;
         $this->iccSegments              = $iccSegments;
+        $this->flashPixStreams          = $flashPixStreams;
         $this->jpegBitsPerSample        = $jpegBitsPerSample;
         $this->jpegFrameSamplingFactors = $jpegFrameSamplingFactors;
         $this->jpegYCbCrSubSampling     = $jpegYCbCrSubSampling;

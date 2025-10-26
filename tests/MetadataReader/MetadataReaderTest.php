@@ -85,6 +85,7 @@ final class MetadataReaderTest extends TestCase
         self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
         self::assertNull($metadata->iccProfile);
         self::assertSame([], $metadata->iccSegments);
+        self::assertSame([], $metadata->flashPixStreams);
         self::assertSame('image/jpeg', $metadata->mimeType);
         self::assertSame(strlen($jpeg), $metadata->fileSize);
         self::assertSame('jpg', $metadata->extension);
