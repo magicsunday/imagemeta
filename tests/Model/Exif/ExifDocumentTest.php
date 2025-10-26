@@ -26,14 +26,15 @@ use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
-use function iconv;
-use function pack;
-use function strlen;
-use function substr;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+
+use function iconv;
+use function pack;
+use function strlen;
+use function substr;
 
 /**
  * @covers \MagicSunday\ImageMeta\Model\Exif\ExifDocument
@@ -176,13 +177,13 @@ final class ExifDocumentTest extends TestCase
         $ifd0 = new Ifd([]);
 
         $exifIfd = new Ifd([
-            ExifTag::COMPOSITE_IMAGE                          => new IfdEntry(
+            ExifTag::COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::COMPOSITE_IMAGE,
                 3,
                 1,
                 CompositeImage::GENERAL_COMPOSITE->value,
             ),
-            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE   => new IfdEntry(
+            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE,
                 3,
                 2,
@@ -348,7 +349,7 @@ final class ExifDocumentTest extends TestCase
     {
         $payload = $this->buildPrintImPayload();
 
-        $ifd0 = new Ifd([]);
+        $ifd0    = new Ifd([]);
         $exifIfd = new Ifd([
             ExifTag::PRINT_IMAGE_MATCHING => new IfdEntry(
                 ExifTag::PRINT_IMAGE_MATCHING,
@@ -378,7 +379,7 @@ final class ExifDocumentTest extends TestCase
         $payload   = $this->buildPrintImPayload();
         $truncated = substr($payload, 0, -1);
 
-        $ifd0 = new Ifd([]);
+        $ifd0    = new Ifd([]);
         $exifIfd = new Ifd([
             ExifTag::PRINT_IMAGE_MATCHING => new IfdEntry(
                 ExifTag::PRINT_IMAGE_MATCHING,
@@ -509,8 +510,8 @@ final class ExifDocumentTest extends TestCase
                 2,
                 new ExifNumericList([256, 512]),
             ),
-            ExifTag::TILE_WIDTH => new IfdEntry(ExifTag::TILE_WIDTH, 4, 1, 320),
-            ExifTag::TILE_LENGTH => new IfdEntry(ExifTag::TILE_LENGTH, 4, 1, 640),
+            ExifTag::TILE_WIDTH   => new IfdEntry(ExifTag::TILE_WIDTH, 4, 1, 320),
+            ExifTag::TILE_LENGTH  => new IfdEntry(ExifTag::TILE_LENGTH, 4, 1, 640),
             ExifTag::TILE_OFFSETS => new IfdEntry(
                 ExifTag::TILE_OFFSETS,
                 4,
@@ -851,8 +852,8 @@ final class ExifDocumentTest extends TestCase
             ExifTag::MAKER_NOTE_SAFETY => new IfdEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, 0),
         ]);
 
-        $safeDoc   = new ExifDocument(new Ifd([]), $safeExifIfd, null, null, null);
-        $unsafeDoc = new ExifDocument(new Ifd([]), $unsafeExifIfd, null, null, null);
+        $safeDoc    = new ExifDocument(new Ifd([]), $safeExifIfd, null, null, null);
+        $unsafeDoc  = new ExifDocument(new Ifd([]), $unsafeExifIfd, null, null, null);
         $missingDoc = new ExifDocument(new Ifd([]), null, null, null, null);
 
         self::assertTrue($safeDoc->makerNoteSafety());
@@ -901,47 +902,50 @@ final class ExifDocumentTest extends TestCase
             ExifTag::IMAGE_EDITOR      => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Chris Edit'),
         ]);
 
-        $exifIfd = new Ifd([
-            ExifTag::COMPONENTS_CONFIGURATION    => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
-            ExifTag::COMPRESSED_BITS_PER_PIXEL   => new IfdEntry(ExifTag::COMPRESSED_BITS_PER_PIXEL, 5, 1, new ExifRational(45, 10)),
-            ExifTag::USER_COMMENT                => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, "ASCII\0\0\0Calibrated output\0"),
-            ExifTag::SPECTRAL_SENSITIVITY        => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 1, 'Spectral A'),
-            ExifTag::OECF                        => new IfdEntry(ExifTag::OECF, 7, strlen($oecfPayload), $oecfPayload),
-            ExifTag::ISO_SPEED_LATITUDE_YYY      => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 3, 1, 200),
-            ExifTag::ISO_SPEED_LATITUDE_ZZZ      => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 3, 1, 400),
-            ExifTag::IMAGE_NUMBER                => new IfdEntry(ExifTag::IMAGE_NUMBER, 3, 1, 512),
-            ExifTag::SECURITY_CLASSIFICATION     => new IfdEntry(ExifTag::SECURITY_CLASSIFICATION, 2, 1, 'Confidential'),
-            ExifTag::IMAGE_HISTORY               => new IfdEntry(ExifTag::IMAGE_HISTORY, 2, 1, 'Processed in RawLab'),
-            ExifTag::TEMPERATURE                 => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(200, 10)),
-            ExifTag::HUMIDITY                    => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(550, 10)),
-            ExifTag::PRESSURE                    => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(100000, 100)),
-            ExifTag::BATTERY_LEVEL               => new IfdEntry(ExifTag::BATTERY_LEVEL, 5, 1, new ExifRational(3, 4)),
-            ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(30, 10)),
-            ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(10, 1)),
-            ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(50, 10)),
-            ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 1, 'clip.wav'),
-            ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(150, 10)),
-            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, strlen($sfrPayload), $sfrPayload),
-            ExifTag::FOCAL_PLANE_X_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(8000, 100)),
-            ExifTag::FOCAL_PLANE_Y_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(7900, 100)),
-            ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, 2),
-            ExifTag::TIFF_EP_STANDARD_ID         => new IfdEntry(ExifTag::TIFF_EP_STANDARD_ID, 1, 4, new ExifNumericList([2, 0, 0, 0])),
-            ExifTag::SUBJECT_LOCATION            => new IfdEntry(ExifTag::SUBJECT_LOCATION, 3, 2, new ExifNumericList([1024, 768])),
-            ExifTag::EXPOSURE_INDEX              => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(320, 1)),
-            ExifTag::SCENE_TYPE                  => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
-            ExifTag::CFA_PATTERN                 => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x02\x01\x01\x02"),
-            ExifTag::CUSTOM_RENDERED             => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
-            ExifTag::DEVICE_SETTING_DESCRIPTION  => new IfdEntry(ExifTag::DEVICE_SETTING_DESCRIPTION, 7, 1, 'Neutral profile'),
-            ExifTag::CAMERA_FIRMWARE             => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 2.0'),
-            ExifTag::RAW_DEVELOPING_SOFTWARE     => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RawLab'),
-            ExifTag::IMAGE_EDITING_SOFTWARE      => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'EditLab'),
-            ExifTag::METADATA_EDITING_SOFTWARE   => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'MetaLab'),
-            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'EditLab'),
-            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'MetaLab'),
-            ExifTag::CAMERA_FIRMWARE_LEGACY      => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW 2.0'),
+        $gpsIfd = new Ifd([
+            ExifTag::TEMPERATURE            => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(200, 10)),
+            ExifTag::HUMIDITY               => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(550, 10)),
+            ExifTag::PRESSURE               => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(100000, 100)),
+            ExifTag::WATER_DEPTH            => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(30, 10)),
+            ExifTag::ACCELERATION           => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(10, 1)),
+            ExifTag::CAMERA_ELEVATION_ANGLE => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(50, 10)),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifIfd = new Ifd([
+            ExifTag::COMPONENTS_CONFIGURATION         => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
+            ExifTag::COMPRESSED_BITS_PER_PIXEL        => new IfdEntry(ExifTag::COMPRESSED_BITS_PER_PIXEL, 5, 1, new ExifRational(45, 10)),
+            ExifTag::USER_COMMENT                     => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, "ASCII\0\0\0Calibrated output\0"),
+            ExifTag::SPECTRAL_SENSITIVITY             => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 1, 'Spectral A'),
+            ExifTag::OECF                             => new IfdEntry(ExifTag::OECF, 7, strlen($oecfPayload), $oecfPayload),
+            ExifTag::ISO_SPEED_LATITUDE_YYY           => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 3, 1, 200),
+            ExifTag::ISO_SPEED_LATITUDE_ZZZ           => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 3, 1, 400),
+            ExifTag::IMAGE_NUMBER                     => new IfdEntry(ExifTag::IMAGE_NUMBER, 3, 1, 512),
+            ExifTag::SECURITY_CLASSIFICATION          => new IfdEntry(ExifTag::SECURITY_CLASSIFICATION, 2, 1, 'Confidential'),
+            ExifTag::IMAGE_HISTORY                    => new IfdEntry(ExifTag::IMAGE_HISTORY, 2, 1, 'Processed in RawLab'),
+            ExifTag::BATTERY_LEVEL                    => new IfdEntry(ExifTag::BATTERY_LEVEL, 5, 1, new ExifRational(3, 4)),
+            ExifTag::RELATED_SOUND_FILE               => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 1, 'clip.wav'),
+            ExifTag::FLASH_ENERGY                     => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(150, 10)),
+            ExifTag::SPATIAL_FREQUENCY_RESPONSE       => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, strlen($sfrPayload), $sfrPayload),
+            ExifTag::FOCAL_PLANE_X_RESOLUTION         => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(8000, 100)),
+            ExifTag::FOCAL_PLANE_Y_RESOLUTION         => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(7900, 100)),
+            ExifTag::FOCAL_PLANE_RESOLUTION_UNIT      => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, 2),
+            ExifTag::TIFF_EP_STANDARD_ID              => new IfdEntry(ExifTag::TIFF_EP_STANDARD_ID, 1, 4, new ExifNumericList([2, 0, 0, 0])),
+            ExifTag::SUBJECT_LOCATION                 => new IfdEntry(ExifTag::SUBJECT_LOCATION, 3, 2, new ExifNumericList([1024, 768])),
+            ExifTag::EXPOSURE_INDEX                   => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(320, 1)),
+            ExifTag::SCENE_TYPE                       => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
+            ExifTag::CFA_PATTERN                      => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x02\x01\x01\x02"),
+            ExifTag::CUSTOM_RENDERED                  => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
+            ExifTag::DEVICE_SETTING_DESCRIPTION       => new IfdEntry(ExifTag::DEVICE_SETTING_DESCRIPTION, 7, 1, 'Neutral profile'),
+            ExifTag::CAMERA_FIRMWARE                  => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 2.0'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE          => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RawLab'),
+            ExifTag::IMAGE_EDITING_SOFTWARE           => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'EditLab'),
+            ExifTag::METADATA_EDITING_SOFTWARE        => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'MetaLab'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'EditLab'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'MetaLab'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW 2.0'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);
 
         self::assertSame([1, 2, 3, 0], $doc->componentsConfiguration());
         self::assertSame(['Y', 'Cb', 'Cr', '-'], $doc->componentsConfigurationLabels());
@@ -1038,7 +1042,7 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function exposesAccelerationVectorWhenPresent(): void
     {
-        $exifIfd = new Ifd([
+        $gpsIfd = new Ifd([
             ExifTag::ACCELERATION => new IfdEntry(
                 ExifTag::ACCELERATION,
                 10,
@@ -1051,7 +1055,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
 
         $vector = $doc->accelerationVector();
         self::assertNotNull($vector);
@@ -1060,6 +1064,36 @@ final class ExifDocumentTest extends TestCase
         $magnitude = $doc->accelerationMs2();
         self::assertNotNull($magnitude);
         self::assertEqualsWithDelta(5.0, $magnitude, 0.0001);
+    }
+
+    #[Test]
+    public function accelerationFallsBackToExifWhenGpsMissing(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ACCELERATION => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(0, 1),
+                    new ExifRational(0, 1),
+                    new ExifRational(98, 10),
+                ]),
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        $vector = $doc->accelerationVector();
+        self::assertNotNull($vector);
+        self::assertCount(3, $vector);
+        self::assertEqualsWithDelta(0.0, $vector[0], 0.0001);
+        self::assertEqualsWithDelta(0.0, $vector[1], 0.0001);
+        self::assertEqualsWithDelta(9.8, $vector[2], 0.0001);
+
+        $magnitude = $doc->accelerationMs2();
+        self::assertNotNull($magnitude);
+        self::assertEqualsWithDelta(9.8, $magnitude, 0.0001);
     }
 
     /**
@@ -1071,7 +1105,7 @@ final class ExifDocumentTest extends TestCase
         $ifd0 = new Ifd([]);
 
         $commentUtf8 = '富士山でのテスト';
-        $encoded = iconv('UTF-8', 'SJIS', $commentUtf8);
+        $encoded     = iconv('UTF-8', 'SJIS', $commentUtf8);
         self::assertNotFalse($encoded, 'Expected iconv to produce Shift-JIS bytes');
 
         // Shift-JIS bytes produced from the UTF-8 phrase ensure the documented round-trip behaviour.
@@ -1196,12 +1230,12 @@ final class ExifDocumentTest extends TestCase
     public function exifTwoPrefersLegacySoftwareNamesOverVersionStrings(): void
     {
         $exifIfd = new Ifd([
-            ExifTag::EXIF_VERSION                    => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
-            ExifTag::CAMERA_FIRMWARE                 => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 1.2.3'),
-            ExifTag::IMAGE_EDITING_SOFTWARE          => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Edit Suite 4.5'),
-            ExifTag::METADATA_EDITING_SOFTWARE       => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Suite 6.7'),
-            ExifTag::CAMERA_FIRMWARE_LEGACY          => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy Firmware Name'),
-            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY   => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Editor Name'),
+            ExifTag::EXIF_VERSION                     => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+            ExifTag::CAMERA_FIRMWARE                  => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 1.2.3'),
+            ExifTag::IMAGE_EDITING_SOFTWARE           => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Edit Suite 4.5'),
+            ExifTag::METADATA_EDITING_SOFTWARE        => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Suite 6.7'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy Firmware Name'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Editor Name'),
             ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Metadata Name'),
         ]);
 
@@ -1290,11 +1324,11 @@ final class ExifDocumentTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::EXIF_VERSION               => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
-            ExifTag::CAMERA_FIRMWARE            => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'Firmware Build 5'),
-            ExifTag::RAW_DEVELOPING_SOFTWARE    => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Developer X'),
-            ExifTag::IMAGE_EDITING_SOFTWARE     => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Image Editor Y'),
-            ExifTag::METADATA_EDITING_SOFTWARE  => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Metadata Tool Z'),
+            ExifTag::EXIF_VERSION              => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+            ExifTag::CAMERA_FIRMWARE           => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'Firmware Build 5'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Developer X'),
+            ExifTag::IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Image Editor Y'),
+            ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Metadata Tool Z'),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -1416,14 +1450,47 @@ final class ExifDocumentTest extends TestCase
     {
         $ifd0    = new Ifd([]);
         $exifIfd = new Ifd([
-            ExifTag::AIRCRAFT_MAKE        => new IfdEntry(ExifTag::AIRCRAFT_MAKE, 2, 1, 'DJI'),
-            ExifTag::AIRCRAFT_MODEL       => new IfdEntry(ExifTag::AIRCRAFT_MODEL, 2, 1, 'Mavic 3'),
-            ExifTag::CAMERA_YAW_DEGREE    => new IfdEntry(ExifTag::CAMERA_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
-            ExifTag::CAMERA_PITCH_DEGREE  => new IfdEntry(ExifTag::CAMERA_PITCH_DEGREE, 10, 1, new ExifRational(-45, 10)),
-            ExifTag::CAMERA_ROLL_DEGREE   => new IfdEntry(ExifTag::CAMERA_ROLL_DEGREE, 10, 1, new ExifRational(15, 10)),
-            ExifTag::GIMBAL_YAW_DEGREE    => new IfdEntry(ExifTag::GIMBAL_YAW_DEGREE, 10, 1, new ExifRational(321, 10)),
-            ExifTag::GIMBAL_PITCH_DEGREE  => new IfdEntry(ExifTag::GIMBAL_PITCH_DEGREE, 10, 1, new ExifRational(-210, 10)),
-            ExifTag::GIMBAL_ROLL_DEGREE   => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(-5, 10)),
+            ExifTag::AIRCRAFT_MAKE  => new IfdEntry(ExifTag::AIRCRAFT_MAKE, 2, 1, 'DJI'),
+            ExifTag::AIRCRAFT_MODEL => new IfdEntry(ExifTag::AIRCRAFT_MODEL, 2, 1, 'Mavic 3'),
+        ]);
+
+        $gpsIfd = new Ifd([
+            ExifTag::CAMERA_YAW_DEGREE   => new IfdEntry(ExifTag::CAMERA_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
+            ExifTag::CAMERA_PITCH_DEGREE => new IfdEntry(ExifTag::CAMERA_PITCH_DEGREE, 10, 1, new ExifRational(-45, 10)),
+            ExifTag::CAMERA_ROLL_DEGREE  => new IfdEntry(ExifTag::CAMERA_ROLL_DEGREE, 10, 1, new ExifRational(15, 10)),
+            ExifTag::GIMBAL_YAW_DEGREE   => new IfdEntry(ExifTag::GIMBAL_YAW_DEGREE, 10, 1, new ExifRational(321, 10)),
+            ExifTag::GIMBAL_PITCH_DEGREE => new IfdEntry(ExifTag::GIMBAL_PITCH_DEGREE, 10, 1, new ExifRational(-210, 10)),
+            ExifTag::GIMBAL_ROLL_DEGREE  => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(-5, 10)),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);
+
+        self::assertSame('DJI', $document->aircraftMake());
+        self::assertSame('Mavic 3', $document->aircraftModel());
+        self::assertEqualsWithDelta(12.3, $document->cameraYawDeg(), 0.0001);
+        self::assertEqualsWithDelta(-4.5, $document->cameraPitchDeg(), 0.0001);
+        self::assertEqualsWithDelta(1.5, $document->cameraRollDeg(), 0.0001);
+        self::assertEqualsWithDelta(12.3, $document->flightYawDeg(), 0.0001);
+        self::assertEqualsWithDelta(-4.5, $document->flightPitchDeg(), 0.0001);
+        self::assertEqualsWithDelta(1.5, $document->flightRollDeg(), 0.0001);
+        self::assertEqualsWithDelta(32.1, $document->gimbalYawDeg(), 0.0001);
+        self::assertEqualsWithDelta(-21.0, $document->gimbalPitchDeg(), 0.0001);
+        self::assertEqualsWithDelta(-0.5, $document->gimbalRollDeg(), 0.0001);
+    }
+
+    #[Test]
+    public function exposesUavMetadataFromExifWhenGpsMissing(): void
+    {
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::AIRCRAFT_MAKE       => new IfdEntry(ExifTag::AIRCRAFT_MAKE, 2, 1, 'DJI'),
+            ExifTag::AIRCRAFT_MODEL      => new IfdEntry(ExifTag::AIRCRAFT_MODEL, 2, 1, 'Mavic 3'),
+            ExifTag::CAMERA_YAW_DEGREE   => new IfdEntry(ExifTag::CAMERA_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
+            ExifTag::CAMERA_PITCH_DEGREE => new IfdEntry(ExifTag::CAMERA_PITCH_DEGREE, 10, 1, new ExifRational(-45, 10)),
+            ExifTag::CAMERA_ROLL_DEGREE  => new IfdEntry(ExifTag::CAMERA_ROLL_DEGREE, 10, 1, new ExifRational(15, 10)),
+            ExifTag::GIMBAL_YAW_DEGREE   => new IfdEntry(ExifTag::GIMBAL_YAW_DEGREE, 10, 1, new ExifRational(321, 10)),
+            ExifTag::GIMBAL_PITCH_DEGREE => new IfdEntry(ExifTag::GIMBAL_PITCH_DEGREE, 10, 1, new ExifRational(-210, 10)),
+            ExifTag::GIMBAL_ROLL_DEGREE  => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(-5, 10)),
         ]);
 
         $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -1486,5 +1553,4 @@ final class ExifDocumentTest extends TestCase
     {
         return pack('N', $numerator) . pack('N', $denominator);
     }
-
 }
