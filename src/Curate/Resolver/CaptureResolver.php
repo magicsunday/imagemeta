@@ -52,6 +52,7 @@ final readonly class CaptureResolver
             batteryLevelPercent: $exifDocument?->batteryLevelPercent(),
             waterDepthM: null,
             accelerationMs2: null,
+            accelerationVectorMs2: null,
             cameraElevationAngleDeg: null,
             selfTimerModeSeconds: $exifDocument?->selfTimerModeSeconds(),
         );

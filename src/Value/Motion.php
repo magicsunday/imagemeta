@@ -26,6 +26,7 @@ final readonly class Motion
      * @param float|null $gyroX    Gyroscope reading around the X axis.
      * @param float|null $gyroY    Gyroscope reading around the Y axis.
      * @param float|null $gyroZ    Gyroscope reading around the Z axis.
+     * @param list<float>|null $accelerationVectorMs2 Acceleration vector sourced from EXIF measurements.
      */
     public function __construct(
         public ?float $rollDeg,
@@ -37,6 +38,7 @@ final readonly class Motion
         public ?float $gyroX,
         public ?float $gyroY,
         public ?float $gyroZ,
+        public ?array $accelerationVectorMs2,
     ) {
     }
 }

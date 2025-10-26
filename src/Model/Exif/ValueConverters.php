@@ -198,6 +198,45 @@ final readonly class ValueConverters
     }
 
     /**
+     * Normalises the EXIF acceleration vector to a list of floats.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw acceleration value.
+     *
+     * @return list<float>|null
+     */
+    public static function accelerationVector(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?array {
+        if ($value instanceof ExifRationalList) {
+            if (count($value->values) !== 3) {
+                return null;
+            }
+
+            $vector = [];
+            foreach ($value->values as $component) {
+                $float = self::rationalToFloat($component);
+                if ($float === null) {
+                    return null;
+                }
+
+                $vector[] = $float;
+            }
+
+            return $vector;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            if (count($value->values) !== 3) {
+                return null;
+            }
+
+            return array_map(static fn (int|float $component): float => (float) $component, $value->values);
+        }
+
+        return null;
+    }
+
+    /**
      * Scales ratios to percentages when battery readings are encoded as fractions.
      */
     private static function normaliseBatteryPercent(float $value): float

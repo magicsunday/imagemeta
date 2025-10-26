@@ -785,7 +785,16 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PRESSURE                    => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(100000, 100)),
             ExifTag::BATTERY_LEVEL               => new IfdEntry(ExifTag::BATTERY_LEVEL, 5, 1, new ExifRational(3, 4)),
             ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(30, 10)),
-            ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(10, 1)),
+            ExifTag::ACCELERATION                => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(6, 1),
+                    new ExifRational(8, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(50, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 1, 'clip.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(150, 10)),
@@ -838,6 +847,11 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(55.0, $doc->humidityPercent(), 0.0001);
         self::assertEqualsWithDelta(1000.0, $doc->pressureHPa(), 0.0001);
         self::assertEqualsWithDelta(3.0, $doc->waterDepthMeters(), 0.0001);
+        $accelerationVector = $doc->accelerationVectorMs2();
+        self::assertNotNull($accelerationVector);
+        self::assertEqualsWithDelta(6.0, $accelerationVector[0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(8.0, $accelerationVector[1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.0, $accelerationVector[2] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(10.0, $doc->accelerationMs2(), 0.0001);
         self::assertEqualsWithDelta(5.0, $doc->cameraElevationAngleDeg(), 0.0001);
         self::assertSame('clip.wav', $doc->relatedSoundFile());

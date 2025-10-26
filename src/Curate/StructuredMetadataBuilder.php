@@ -248,6 +248,7 @@ final class StructuredMetadataBuilder
             batteryLevelPercent: $exifResolver->batteryLevelPercent(),
             waterDepthM: $exifResolver->waterDepthMeters(),
             accelerationMs2: $exifResolver->accelerationMs2(),
+            accelerationVectorMs2: $exifResolver->accelerationVectorMs2(),
             cameraElevationAngleDeg: $exifResolver->cameraElevationAngleDeg(),
             selfTimerModeSeconds: $exifResolver->selfTimerModeSeconds(),
         );
@@ -1049,19 +1050,32 @@ final class StructuredMetadataBuilder
         $pitchDeg = $exif->cameraPitchDeg();
         $yawDeg   = $exif->cameraYawDeg();
 
-        $vector = $apple->accelerationVector;
+        $appleVector = is_array($apple->accelerationVector) ? $apple->accelerationVector : null;
+        $exifVector  = $exif->accelerationVectorMs2();
 
         $accelX = null;
         $accelY = null;
         $accelZ = null;
 
-        if (is_array($vector)) {
-            $accelX = $vector[0] ?? null;
-            $accelY = $vector[1] ?? null;
-            $accelZ = $vector[2] ?? null;
+        if (is_array($appleVector)) {
+            $accelX = $appleVector[0] ?? null;
+            $accelY = $appleVector[1] ?? null;
+            $accelZ = $appleVector[2] ?? null;
         }
 
-        return new Motion($rollDeg, $pitchDeg, $yawDeg, $accelX, $accelY, $accelZ, null, null, null);
+        if ($accelX === null && is_array($exifVector)) {
+            $accelX = $exifVector[0] ?? null;
+        }
+
+        if ($accelY === null && is_array($exifVector)) {
+            $accelY = $exifVector[1] ?? null;
+        }
+
+        if ($accelZ === null && is_array($exifVector)) {
+            $accelZ = $exifVector[2] ?? null;
+        }
+
+        return new Motion($rollDeg, $pitchDeg, $yawDeg, $accelX, $accelY, $accelZ, null, null, null, $exifVector);
     }
 
     private function buildUav(ExifTagResolver $exif, QuickTimeResolver $quickTime): Uav

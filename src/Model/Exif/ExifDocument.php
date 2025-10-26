@@ -32,6 +32,7 @@ use function ord;
 use function preg_replace;
 use function preg_split;
 use function rtrim;
+use function sqrt;
 use function str_pad;
 use function str_replace;
 use function strlen;
@@ -1166,10 +1167,28 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the camera acceleration in metres per second squared.
+     * Returns the camera acceleration vector in metres per second squared.
+     *
+     * @return list<float>|null
+     */
+    public function accelerationVectorMs2(): ?array
+    {
+        $value = $this->value($this->exifIfd, ExifTag::ACCELERATION);
+
+        return ValueConverters::accelerationVector($value);
+    }
+
+    /**
+     * Returns the camera acceleration magnitude in metres per second squared.
      */
     public function accelerationMs2(): ?float
     {
+        $vector = $this->accelerationVectorMs2();
+
+        if (is_array($vector)) {
+            return sqrt(($vector[0] ** 2) + ($vector[1] ** 2) + ($vector[2] ** 2));
+        }
+
         return $this->rational($this->exifIfd, ExifTag::ACCELERATION);
     }
 

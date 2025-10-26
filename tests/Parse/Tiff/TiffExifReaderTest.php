@@ -150,6 +150,27 @@ final class TiffExifReaderTest extends TestCase
     }
 
     #[Test]
+    public function normalisesAccelerationVector(): void
+    {
+        $blob      = self::buildClassicAccelerationVectorBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $vector = $document->accelerationVectorMs2();
+        self::assertNotNull($vector);
+        self::assertEqualsWithDelta(0.1, $vector[0] ?? 0.0, 1e-12);
+        self::assertEqualsWithDelta(0.2, $vector[1] ?? 0.0, 1e-12);
+        self::assertEqualsWithDelta(-0.3, $vector[2] ?? 0.0, 1e-12);
+        self::assertEqualsWithDelta(0.3741657387, $document->accelerationMs2() ?? 0.0, 1e-10);
+
+        $resolver = new ExifTagResolver($document);
+        $resolvedVector = $resolver->accelerationVectorMs2();
+        self::assertNotNull($resolvedVector);
+        self::assertEqualsWithDelta(0.1, $resolvedVector[0] ?? 0.0, 1e-12);
+        self::assertEqualsWithDelta(0.2, $resolvedVector[1] ?? 0.0, 1e-12);
+        self::assertEqualsWithDelta(-0.3, $resolvedVector[2] ?? 0.0, 1e-12);
+    }
+
+    #[Test]
     public function parsesLinkedIfdChain(): void
     {
         $blob      = $this->buildClassicLinkedIfdBlob();
@@ -876,6 +897,34 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Builds a Classic TIFF blob that encodes a three-component acceleration vector.
+     */
+    private static function buildClassicAccelerationVectorBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $exifIfdOffset = 8 + 2 + 12 + 4;
+        $vectorOffset  = $exifIfdOffset + 2 + 12 + 4;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+        ];
+
+        $vector = self::packSignedRationalLE(1, 10)
+            . self::packSignedRationalLE(2, 10)
+            . self::packSignedRationalLE(-3, 10);
+
+        $exifEntries = [
+            self::packClassicEntry(ExifTag::ACCELERATION, 10, 3, $vectorOffset),
+        ];
+
+        $ifd0    = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+        $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd . $vector;
+    }
+
+    /**
      * Builds a Classic TIFF blob containing a PrintIM payload.
      *
      * @return array{0: string, 1: string}
@@ -1413,6 +1462,14 @@ final class TiffExifReaderTest extends TestCase
     private static function packRationalLE(int $numerator, int $denominator): string
     {
         return pack('V', $numerator) . pack('V', $denominator);
+    }
+
+    /**
+     * Packs a signed rational number using little-endian byte order.
+     */
+    private static function packSignedRationalLE(int $numerator, int $denominator): string
+    {
+        return pack('l', $numerator) . pack('l', $denominator);
     }
 
     /**

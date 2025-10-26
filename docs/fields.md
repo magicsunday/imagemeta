@@ -17,8 +17,8 @@ circle of confusion (CoC) model used by the derived metrics helper.
   * `Capture::cameraElevationAngleDeg`
   * `Gps::track`, `Gps::imageDirection`, `Gps::destinationBearing`
 * **Metres per second squared (m/s²)**
-  * `Capture::accelerationMs2`
-  * `Motion::accelX`, `Motion::accelY`, `Motion::accelZ`
+  * `Capture::accelerationMs2`, `Capture::accelerationVectorMs2`
+  * `Motion::accelX`, `Motion::accelY`, `Motion::accelZ`, `Motion::accelerationVectorMs2`
 
 Unless stated otherwise, temperatures recorded via EXIF tags (for example `Capture::temperatureC`) remain in Celsius.
 Time zone offsets in `Temporal` are expressed as raw EXIF strings and minutes (`timeZoneOffsetMinutes`). GPS speed values
