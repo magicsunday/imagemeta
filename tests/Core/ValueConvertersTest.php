@@ -36,6 +36,8 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function normalisesExifVersionAndFlash(): void
     {
+        self::assertSame('1.00', ValueConverters::toExifVersion('0100'));
+        self::assertSame('1.00', ValueConverters::toExifVersion("0100\0\0"));
         self::assertSame('2.00', ValueConverters::toExifVersion('0200'));
         self::assertSame('2.20', ValueConverters::toExifVersion('0220'));
         self::assertSame('2.31', ValueConverters::toExifVersion('0231'));

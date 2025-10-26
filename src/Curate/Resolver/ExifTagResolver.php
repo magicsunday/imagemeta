@@ -1007,7 +1007,16 @@ final readonly class ExifTagResolver
     {
         $value = $this->stringValue($this->document?->exifIfd, ExifTag::FLASHPIX_VERSION);
 
-        return $value !== null ? trim($value, "\0") : null;
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value, "\0");
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return CoreValueConverters::toExifVersion($trimmed);
     }
 
     /**
