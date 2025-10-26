@@ -581,11 +581,21 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the opto-electronic conversion function payload.
+     * Returns the opto-electronic conversion function data.
+     *
+     * @return array{payload:string, matrix:(array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null)}|null
      */
-    public function oecf(): ?string
+    public function oecf(): ?array
     {
         return $this->document?->oecf();
+    }
+
+    /**
+     * Returns the raw opto-electronic conversion function payload.
+     */
+    public function oecfPayload(): ?string
+    {
+        return $this->document?->oecfPayload();
     }
 
     /**

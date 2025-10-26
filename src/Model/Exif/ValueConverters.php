@@ -94,9 +94,9 @@ use function trim;
  */
 final readonly class ValueConverters
 {
-    private const MAX_SFR_DIMENSION = 64;
-    private const MAX_SFR_LABEL_LENGTH = 255;
-    private const SFR_VALUE_SIZE = 8;
+    private const MAX_SRATIONAL_MATRIX_DIMENSION = 64;
+    private const MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
+    private const SRATIONAL_VALUE_SIZE = 8;
     private const MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
 
     /**
@@ -251,13 +251,37 @@ final readonly class ValueConverters
     }
 
     /**
-     * Decodes the Spatial Frequency Response payload as defined by EXIF figure 14.
+     * Decodes the spatial frequency response payload as defined by EXIF figure 14.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
      * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
      */
     public static function decodeSpatialFrequencyResponse(?string $payload): ?array
+    {
+        return self::decodeSrationalMatrix($payload);
+    }
+
+    /**
+     * Decodes the opto-electronic conversion function payload as defined by EXIF table 15.
+     *
+     * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
+     *
+     * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
+     */
+    public static function decodeOecf(?string $payload): ?array
+    {
+        return self::decodeSrationalMatrix($payload);
+    }
+
+    /**
+     * Decodes an EXIF SRATIONAL matrix that contains labelled columns and rows.
+     *
+     * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
+     *
+     * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
+     */
+    private static function decodeSrationalMatrix(?string $payload): ?array
     {
         if ($payload === null || $payload === '') {
             return null;
@@ -280,7 +304,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        if ($columns > self::MAX_SFR_DIMENSION || $rows > self::MAX_SFR_DIMENSION) {
+        if ($columns > self::MAX_SRATIONAL_MATRIX_DIMENSION || $rows > self::MAX_SRATIONAL_MATRIX_DIMENSION) {
             return null;
         }
 
@@ -291,7 +315,7 @@ final readonly class ValueConverters
         $offset = 4;
         $columnLabels = [];
         for ($i = 0; $i < $columns; $i++) {
-            $labelData = self::consumeSfrLabel($payload, $offset, $length);
+            $labelData = self::consumeSrationalMatrixLabel($payload, $offset, $length);
             if ($labelData === null) {
                 return null;
             }
@@ -302,7 +326,7 @@ final readonly class ValueConverters
 
         $rowLabels = [];
         for ($i = 0; $i < $rows; $i++) {
-            $labelData = self::consumeSfrLabel($payload, $offset, $length);
+            $labelData = self::consumeSrationalMatrixLabel($payload, $offset, $length);
             if ($labelData === null) {
                 return null;
             }
@@ -312,11 +336,11 @@ final readonly class ValueConverters
         }
 
         $cells = $columns * $rows;
-        if ($cells > intdiv(PHP_INT_MAX, self::SFR_VALUE_SIZE)) {
+        if ($cells > intdiv(PHP_INT_MAX, self::SRATIONAL_VALUE_SIZE)) {
             return null;
         }
 
-        $required = $cells * self::SFR_VALUE_SIZE;
+        $required = $cells * self::SRATIONAL_VALUE_SIZE;
         if ($required > $length - $offset) {
             return null;
         }
@@ -326,13 +350,13 @@ final readonly class ValueConverters
             $rowValues = [];
 
             for ($colIndex = 0; $colIndex < $columns; $colIndex++) {
-                $numerator = self::readSfrInt32($payload, $offset, $length);
-                $denominator = self::readSfrInt32($payload, $offset + 4, $length);
+                $numerator = self::readSrationalInt32($payload, $offset, $length);
+                $denominator = self::readSrationalInt32($payload, $offset + 4, $length);
                 if ($numerator === null || $denominator === null) {
                     return null;
                 }
 
-                $offset += self::SFR_VALUE_SIZE;
+                $offset += self::SRATIONAL_VALUE_SIZE;
 
                 if ($denominator === 0) {
                     $rowValues[] = null;
@@ -889,11 +913,11 @@ final readonly class ValueConverters
     }
 
     /**
-     * Extracts a null-terminated label from the SFR payload.
+     * Extracts a null-terminated label from the SRATIONAL matrix payload.
      *
      * @return array{0:string,1:int}|null
      */
-    private static function consumeSfrLabel(string $payload, int $offset, int $length): ?array
+    private static function consumeSrationalMatrixLabel(string $payload, int $offset, int $length): ?array
     {
         if ($offset >= $length) {
             return null;
@@ -905,7 +929,7 @@ final readonly class ValueConverters
         }
 
         $labelLength = $end - $offset;
-        if ($labelLength < 0 || $labelLength > self::MAX_SFR_LABEL_LENGTH) {
+        if ($labelLength < 0 || $labelLength > self::MAX_SRATIONAL_MATRIX_LABEL_LENGTH) {
             return null;
         }
 
@@ -916,9 +940,9 @@ final readonly class ValueConverters
     }
 
     /**
-     * Reads a signed 32-bit integer from the SFR payload.
+     * Reads a signed 32-bit integer from the SRATIONAL matrix payload.
      */
-    private static function readSfrInt32(string $payload, int $offset, int $length): ?int
+    private static function readSrationalInt32(string $payload, int $offset, int $length): ?int
     {
         if ($offset + 4 > $length) {
             return null;

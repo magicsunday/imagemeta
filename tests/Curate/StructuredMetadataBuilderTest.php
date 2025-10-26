@@ -73,7 +73,8 @@ final class StructuredMetadataBuilderTest extends TestCase
     #[Test]
     public function buildsStructuredAggregateForDslrJpeg(): void
     {
-        $sfrPayload = self::buildSpatialFrequencyResponsePayload();
+        $oecfPayload = self::buildOecfPayload();
+        $sfrPayload  = self::buildSpatialFrequencyResponsePayload();
 
         $ifd0 = new Ifd([
             ExifTag::IMAGE_WIDTH                    => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 6720),
@@ -146,7 +147,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::LENS_MAKE                   => new IfdEntry(ExifTag::LENS_MAKE, 2, 5, 'Canon'),
             ExifTag::LENS_SERIAL_NUMBER          => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 10, '1234ABC'),
             ExifTag::SPECTRAL_SENSITIVITY        => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 16, 'Standard Spectral'),
-            ExifTag::OECF                        => new IfdEntry(ExifTag::OECF, 7, 12, 'OECF-DATA-01'),
+            ExifTag::OECF                        => new IfdEntry(ExifTag::OECF, 7, strlen($oecfPayload), $oecfPayload),
             ExifTag::USER_COMMENT                => new IfdEntry(ExifTag::USER_COMMENT, 7, 28, "ASCII\0\0\0Shot with ND filter\0"),
             ExifTag::SUB_SEC_TIME                => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 3, '321'),
             ExifTag::SUB_SEC_TIME_ORIGINAL       => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '123'),
@@ -351,7 +352,17 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('sound.wav', $structured->related->relatedSoundFile);
 
         self::assertSame('Standard Spectral', $structured->sensor->spectralSensitivity);
-        self::assertSame('OECF-DATA-01', $structured->sensor->oecf);
+        $sensorOecf = $structured->sensor->oecf;
+        self::assertNotNull($sensorOecf);
+        self::assertSame($oecfPayload, $sensorOecf['payload']);
+        $sensorOecfMatrix = $sensorOecf['matrix'];
+        self::assertNotNull($sensorOecfMatrix);
+        self::assertSame(['Input 0', 'Input 1'], $sensorOecfMatrix['labels']['columns']);
+        self::assertSame(['Channel R', 'Channel G'], $sensorOecfMatrix['labels']['rows']);
+        self::assertEqualsWithDelta(0.1, $sensorOecfMatrix['values'][0][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.2, $sensorOecfMatrix['values'][0][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.3, $sensorOecfMatrix['values'][1][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.4, $sensorOecfMatrix['values'][1][1] ?? 0.0, 0.0001);
         $sensorSfr = $structured->sensor->spatialFrequencyResponse;
         self::assertNotNull($sensorSfr);
         self::assertSame(['10lp/mm', '20lp/mm', '40lp/mm'], $sensorSfr['labels']['columns']);
@@ -2120,6 +2131,25 @@ final class StructuredMetadataBuilderTest extends TestCase
         $value = unpack('V', $bytes);
 
         return (int) ($value[1] ?? 0);
+    }
+
+    private static function buildOecfPayload(): string
+    {
+        $columns = 2;
+        $rows    = 2;
+
+        $payload = pack('n', $columns) . pack('n', $rows);
+        $payload .= "Input 0\0";
+        $payload .= "Input 1\0";
+        $payload .= "Channel R\0";
+        $payload .= "Channel G\0";
+
+        $payload .= self::packSrational(1, 10);
+        $payload .= self::packSrational(2, 10);
+        $payload .= self::packSrational(3, 10);
+        $payload .= self::packSrational(4, 10);
+
+        return $payload;
     }
 
     private static function buildSpatialFrequencyResponsePayload(): string

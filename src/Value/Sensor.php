@@ -26,7 +26,7 @@ final readonly class Sensor
      * @param bool|null           $ibis                     Indicates in-body image stabilisation support.
      * @param list<int>|null      $cfaPattern               Colour filter array pattern definition.
      * @param string|null         $spectralSensitivity      Spectral sensitivity description.
-     * @param string|null         $oecf                     Opto-electronic conversion function payload.
+     * @param array{payload:string, matrix:(array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null)}|null $oecf Opto-electronic conversion function payload and decoded matrix.
      * @param array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null $spatialFrequencyResponse Spatial frequency response table decoded from the EXIF payload.
      * @param float|null          $focalPlaneXResolution    Focal plane X resolution.
      * @param float|null          $focalPlaneYResolution    Focal plane Y resolution.
@@ -40,7 +40,7 @@ final readonly class Sensor
         public ?bool $ibis,
         public ?array $cfaPattern,
         public ?string $spectralSensitivity,
-        public ?string $oecf,
+        public ?array $oecf,
         public ?array $spatialFrequencyResponse,
         public ?float $focalPlaneXResolution,
         public ?float $focalPlaneYResolution,

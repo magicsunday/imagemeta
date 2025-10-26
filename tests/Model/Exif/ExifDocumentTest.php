@@ -734,7 +734,8 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function exposesTable65Extensions(): void
     {
-        $sfrPayload = self::buildSpatialFrequencyResponsePayload();
+        $oecfPayload = self::buildOecfPayload();
+        $sfrPayload  = self::buildSpatialFrequencyResponsePayload();
 
         $ifd0 = new Ifd([
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Coastal cliffs'),
@@ -748,7 +749,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::COMPRESSED_BITS_PER_PIXEL   => new IfdEntry(ExifTag::COMPRESSED_BITS_PER_PIXEL, 5, 1, new ExifRational(45, 10)),
             ExifTag::USER_COMMENT                => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, "ASCII\0\0\0Calibrated output\0"),
             ExifTag::SPECTRAL_SENSITIVITY        => new IfdEntry(ExifTag::SPECTRAL_SENSITIVITY, 2, 1, 'Spectral A'),
-            ExifTag::OECF                        => new IfdEntry(ExifTag::OECF, 7, 1, 'OECF Blob'),
+            ExifTag::OECF                        => new IfdEntry(ExifTag::OECF, 7, strlen($oecfPayload), $oecfPayload),
             ExifTag::ISO_SPEED_LATITUDE_YYY      => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 3, 1, 200),
             ExifTag::ISO_SPEED_LATITUDE_ZZZ      => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 3, 1, 400),
             ExifTag::IMAGE_NUMBER                => new IfdEntry(ExifTag::IMAGE_NUMBER, 3, 1, 512),
@@ -788,7 +789,20 @@ final class ExifDocumentTest extends TestCase
         self::assertSame(4.5, $doc->compressedBitsPerPixel());
         self::assertSame('Calibrated output', $doc->userComment());
         self::assertSame('Spectral A', $doc->spectralSensitivity());
-        self::assertSame('OECF Blob', $doc->oecf());
+        $oecf = $doc->oecf();
+        self::assertNotNull($oecf);
+        self::assertSame($oecfPayload, $oecf['payload']);
+        $oecfMatrix = $oecf['matrix'];
+        self::assertNotNull($oecfMatrix);
+        self::assertSame(2, $oecfMatrix['columns']);
+        self::assertSame(2, $oecfMatrix['rows']);
+        self::assertSame(['Input 0', 'Input 1'], $oecfMatrix['labels']['columns']);
+        self::assertSame(['Channel R', 'Channel G'], $oecfMatrix['labels']['rows']);
+        self::assertEqualsWithDelta(0.1, $oecfMatrix['values'][0][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.2, $oecfMatrix['values'][0][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.3, $oecfMatrix['values'][1][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.4, $oecfMatrix['values'][1][1] ?? 0.0, 0.0001);
+        self::assertSame($oecfPayload, $doc->oecfPayload());
         self::assertSame(200, $doc->isoSpeedLatitudeYyy());
         self::assertSame(400, $doc->isoSpeedLatitudeZzz());
         self::assertSame(512, $doc->imageNumber());
@@ -1143,6 +1157,25 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(32.1, $document->gimbalYawDeg(), 0.0001);
         self::assertEqualsWithDelta(-21.0, $document->gimbalPitchDeg(), 0.0001);
         self::assertEqualsWithDelta(-0.5, $document->gimbalRollDeg(), 0.0001);
+    }
+
+    private static function buildOecfPayload(): string
+    {
+        $columns = 2;
+        $rows    = 2;
+
+        $payload = pack('n', $columns) . pack('n', $rows);
+        $payload .= "Input 0\0";
+        $payload .= "Input 1\0";
+        $payload .= "Channel R\0";
+        $payload .= "Channel G\0";
+
+        $payload .= self::packSrational(1, 10);
+        $payload .= self::packSrational(2, 10);
+        $payload .= self::packSrational(3, 10);
+        $payload .= self::packSrational(4, 10);
+
+        return $payload;
     }
 
     private static function buildSpatialFrequencyResponsePayload(): string
