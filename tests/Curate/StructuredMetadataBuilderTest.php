@@ -102,6 +102,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::MAKE                           => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
             ExifTag::MODEL                          => new IfdEntry(ExifTag::MODEL, 2, 8, 'EOS R6 II'),
             ExifTag::SOFTWARE                       => new IfdEntry(ExifTag::SOFTWARE, 2, 8, 'Firmware1'),
+            ExifTag::PROCESSING_SOFTWARE            => new IfdEntry(ExifTag::PROCESSING_SOFTWARE, 2, 18, "ImageMeta Studio\0\0"),
             ExifTag::IMAGE_DESCRIPTION              => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 16, 'Sunset over Alps'),
             ExifTag::ORIENTATION                    => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::RIGHT_TOP->value),
             ExifTag::ARTIST                         => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
@@ -383,6 +384,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('Profile:Portrait', $structured->processing->deviceSettingDescription);
         self::assertSame(1, $structured->processing->customRendered);
+        self::assertSame('ImageMeta Studio', $structured->processing->processingSoftware);
         self::assertEqualsWithDelta(45.6, $structured->processing->noiseReduction, 0.0001);
 
         self::assertSame('Jane D. Photographer', $structured->author->photographer);

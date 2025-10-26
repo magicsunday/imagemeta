@@ -134,6 +134,7 @@ final readonly class ExifTagResolver
             'interopindex'        => $this->interopIndex(),
             'interopversion'      => $this->interopVersion(),
             'relatedimagefileformat' => $this->relatedImageFileFormat(),
+            'processingsoftware'  => $this->processingSoftware(),
             'hostcomputer'        => $this->hostComputer(),
             default               => null,
         };
@@ -276,16 +277,24 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the processing software string when recorded.
+     */
+    public function processingSoftware(): ?string
+    {
+        return $this->document?->processingSoftware();
+    }
+
+    /**
      * Returns the software tag value.
      */
     public function software(): ?string
     {
-        $ifd0 = $this->document?->ifd0;
-
-        $processingSoftware = $this->stringValue($ifd0, ExifTag::PROCESSING_SOFTWARE);
+        $processingSoftware = $this->processingSoftware();
         if ($processingSoftware !== null) {
             return $processingSoftware;
         }
+
+        $ifd0 = $this->document?->ifd0;
 
         return $this->stringValue($ifd0, ExifTag::SOFTWARE);
     }

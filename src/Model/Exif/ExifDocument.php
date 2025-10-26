@@ -370,6 +370,14 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the processing software string recorded during final image adjustments.
+     */
+    public function processingSoftware(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::PROCESSING_SOFTWARE);
+    }
+
+    /**
      * Returns the legacy host computer string retained for pre-EXIF 3.0 metadata.
      */
     public function hostComputer(): ?string
