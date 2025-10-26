@@ -30,6 +30,7 @@ use function chr;
 use function function_exists;
 use function iconv;
 use function in_array;
+use function is_finite;
 use function is_float;
 use function is_int;
 use function is_string;
@@ -278,7 +279,7 @@ final class TiffExifReader
         $tag      = $this->readU16();
         $type     = $this->readU16();
         $cnt      = $this->bigTiff ? $this->readU64() : $this->readU32();
-        $valOrOff = $this->bigTiff ? $this->readU64() : $this->readU32();
+        $valOrOff = $this->bigTiff ? $this->readValueOrOffset($type, $cnt) : $this->readU32();
 
         [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
@@ -620,6 +621,33 @@ final class TiffExifReader
     }
 
     /**
+     * Reads the 4- or 8-byte value/offset field for a directory entry.
+     *
+     * @param int $type  TIFF field type code.
+     * @param int $count Number of values represented.
+     *
+     * @return int
+     */
+    private function readValueOrOffset(int $type, int $count): int
+    {
+        if (!$this->bigTiff) {
+            return $this->readU32();
+        }
+
+        $componentSize    = $this->bytesPerComponent($type);
+        $inlineThreshold  = 8;
+        $inlineValueBytes = $componentSize * $count;
+
+        if ($inlineValueBytes <= $inlineThreshold && $type === self::TYPE_SLONG8) {
+            $bytes = $this->buf->read($inlineThreshold);
+
+            return $this->unpackS64($bytes);
+        }
+
+        return $this->readU64();
+    }
+
+    /**
      * Extracts the raw bytes addressed by a directory entry.
      *
      * @param int $type          TIFF field type code.
@@ -831,7 +859,13 @@ final class TiffExifReader
      */
     private function readU64(): int
     {
-        return $this->bo === Endian::Little ? $this->buf->readU64LE() : $this->buf->readU64BE();
+        $value = $this->bo === Endian::Little ? $this->buf->readU64LE() : $this->buf->readU64BE();
+
+        if ($value < 0) {
+            throw new ParseError('64-bit unsigned value exceeds PHP_INT_MAX.');
+        }
+
+        return $value;
     }
 
     /**
@@ -1048,24 +1082,66 @@ final class TiffExifReader
         $value = $entry->value;
 
         if (is_int($value)) {
-            return $value;
+            return $this->validatePointerOffset($value, $entry->tag);
         }
 
         if (is_float($value)) {
-            return (int) $value;
+            return $this->pointerOffsetFromFloat($value, $entry->tag);
         }
 
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
             if (is_int($first)) {
-                return $first;
+                return $this->validatePointerOffset($first, $entry->tag);
             }
 
             if (is_float($first)) {
-                return (int) $first;
+                return $this->pointerOffsetFromFloat($first, $entry->tag);
             }
         }
 
         throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $entry->tag));
+    }
+
+    /**
+     * Validates that an offset fits within the supported integer range.
+     *
+     * @param int $offset Candidate offset.
+     * @param int $tag    Tag identifier emitting the offset.
+     *
+     * @return int
+     */
+    private function validatePointerOffset(int $offset, int $tag): int
+    {
+        if ($offset < 0) {
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X must not be negative.', $tag));
+        }
+
+        if ($offset > PHP_INT_MAX) {
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X is out of range.', $tag));
+        }
+
+        return $offset;
+    }
+
+    /**
+     * Normalises a floating-point offset representation to a validated integer.
+     *
+     * @param float $value Floating-point representation to normalise.
+     * @param int   $tag   Tag identifier emitting the offset.
+     *
+     * @return int
+     */
+    private function pointerOffsetFromFloat(float $value, int $tag): int
+    {
+        if (!is_finite($value) || (float) (int) $value !== $value) {
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain an integer offset.', $tag));
+        }
+
+        if ($value < 0.0 || $value > PHP_INT_MAX) {
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X is out of range.', $tag));
+        }
+
+        return $this->validatePointerOffset((int) $value, $tag);
     }
 }

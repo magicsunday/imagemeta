@@ -255,6 +255,25 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures BigTIFF headers with an overflowing first IFD offset are rejected.
+     */
+    #[Test]
+    public function rejectsBigTiffFirstIfdOffsetOverflow(): void
+    {
+        $blob = 'II'
+            . pack('v', 0x002B)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('V', 0x00000000)
+            . pack('V', 0x80000000);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('exceeds PHP_INT_MAX');
+
+        (new TiffExifReader())->parseFromBlob($blob);
+    }
+
+    /**
      * Ensures that invalid pointer offsets trigger bounds checking errors.
      */
     #[Test]
