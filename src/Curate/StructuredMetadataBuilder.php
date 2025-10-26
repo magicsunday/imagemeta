@@ -151,7 +151,13 @@ final class StructuredMetadataBuilder
         $gpsResolver       = new GpsResolver();
         $regionsResolver   = new RegionsResolver();
 
-        $interop = new Interop(index: $exifResolver->interopIndex(), version: $exifResolver->interopVersion());
+        $interop = new Interop(
+            index: $exifResolver->interopIndex(),
+            version: $exifResolver->interopVersion(),
+            relatedImageFileFormat: $exifResolver->relatedImageFileFormat(),
+            relatedImageWidth: $exifResolver->relatedImageWidth(),
+            relatedImageLength: $exifResolver->relatedImageLength(),
+        );
 
         $bitsPerSample    = $exifResolver->bitsPerSample() ?? $metadata->jpegBitsPerSample;
         $ycbcrSubSampling = $exifResolver->ycbcrSubSampling();

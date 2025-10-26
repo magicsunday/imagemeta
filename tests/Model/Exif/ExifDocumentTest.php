@@ -209,6 +209,23 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('2022-08-09T10:11:12.321-03:00', $capture->format(self::ISO_8601_MILLISECONDS));
     }
 
+    #[Test]
+    public function exposesRelatedImageMetadataFromInteroperabilityIfd(): void
+    {
+        $ifd0       = new Ifd([]);
+        $interopIfd = new Ifd([
+            ExifTag::RELATED_IMAGE_FILE_FORMAT => new IfdEntry(ExifTag::RELATED_IMAGE_FILE_FORMAT, 2, 4, "JPEG\0"),
+            ExifTag::RELATED_IMAGE_WIDTH       => new IfdEntry(ExifTag::RELATED_IMAGE_WIDTH, 4, 1, 4000),
+            ExifTag::RELATED_IMAGE_LENGTH      => new IfdEntry(ExifTag::RELATED_IMAGE_LENGTH, 4, 1, 3000),
+        ]);
+
+        $doc = new ExifDocument($ifd0, null, null, $interopIfd, null);
+
+        self::assertSame('JPEG', $doc->relatedImageFileFormat());
+        self::assertSame(4000, $doc->relatedImageWidth());
+        self::assertSame(3000, $doc->relatedImageLength());
+    }
+
     /**
      * Uses the legacy ModifyDate tag when original and digitised timestamps are absent.
      */

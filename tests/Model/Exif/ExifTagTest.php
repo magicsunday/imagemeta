@@ -214,6 +214,9 @@ final class ExifTagTest extends TestCase
             // Interoperability IFD
             'INTEROPERABILITY_INDEX'   => 0x0001,
             'INTEROPERABILITY_VERSION' => 0x0002,
+            'RELATED_IMAGE_FILE_FORMAT' => 0x1000,
+            'RELATED_IMAGE_WIDTH'       => 0x1001,
+            'RELATED_IMAGE_LENGTH'      => 0x1002,
         ];
 
         $reflection = new ReflectionClass(ExifTag::class);

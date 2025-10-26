@@ -88,6 +88,8 @@ final readonly class ExifTagResolver
             'imagewidth'                => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_WIDTH),
             'exifimageheight'           => $this->numericValue($this->document?->exifIfd, ExifTag::PIXEL_Y_DIMENSION),
             'imagelength'               => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_HEIGHT),
+            'relatedimagewidth'         => $this->relatedImageWidth(),
+            'relatedimagelength'        => $this->relatedImageLength(),
             'flash'                     => $this->numericValue($this->document?->exifIfd, ExifTag::FLASH),
             'contrast'                  => $this->numericValue($this->document?->exifIfd, ExifTag::CONTRAST),
             'saturation'                => $this->numericValue($this->document?->exifIfd, ExifTag::SATURATION),
@@ -131,6 +133,7 @@ final readonly class ExifTagResolver
             'subsectimedigitized' => $this->subSecTimeDigitized(),
             'interopindex'        => $this->interopIndex(),
             'interopversion'      => $this->interopVersion(),
+            'relatedimagefileformat' => $this->relatedImageFileFormat(),
             default               => null,
         };
     }
@@ -628,6 +631,30 @@ final readonly class ExifTagResolver
     public function relatedSoundFile(): ?string
     {
         return $this->document?->relatedSoundFile();
+    }
+
+    /**
+     * Returns the related image file format from the interoperability IFD.
+     */
+    public function relatedImageFileFormat(): ?string
+    {
+        return $this->document?->relatedImageFileFormat();
+    }
+
+    /**
+     * Returns the related image width from the interoperability IFD.
+     */
+    public function relatedImageWidth(): ?int
+    {
+        return $this->document?->relatedImageWidth();
+    }
+
+    /**
+     * Returns the related image length from the interoperability IFD.
+     */
+    public function relatedImageLength(): ?int
+    {
+        return $this->document?->relatedImageLength();
     }
 
     /**
