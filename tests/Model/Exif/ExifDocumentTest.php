@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
@@ -246,6 +247,48 @@ final class ExifDocumentTest extends TestCase
         ]);
 
         self::assertNull((new ExifDocument($ifd0, $invalidCount, null, null, null))->cfaRepeatPatternDim());
+    }
+
+    #[Test]
+    public function exposesPreviewMetadataFromExifThreeTags(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 122_880),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4_096),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START         => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 32_768),
+            ExifTag::PREVIEW_IMAGE_LENGTH        => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 16_384),
+            ExifTag::PREVIEW_IMAGE_WIDTH         => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 1_600),
+            ExifTag::PREVIEW_IMAGE_HEIGHT        => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 900),
+            ExifTag::PREVIEW_IMAGE_COLOR_SPACE   => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
+                3,
+                1,
+                ColorSpace::ADOBE_RGB->value,
+            ),
+            ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:10:25 18:45:30'),
+            ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:10:25 18:40:00'),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertTrue($document->hasThumbnail());
+        self::assertSame(32_768, $document->previewImageOffset());
+        self::assertSame(16_384, $document->previewImageLength());
+        self::assertTrue($document->hasPreviewImage());
+        self::assertSame(1_600, $document->previewImageWidth());
+        self::assertSame(900, $document->previewImageHeight());
+        self::assertSame(ColorSpace::ADOBE_RGB->value, $document->previewColorSpace());
+
+        $previewDateTime = $document->previewDateTime();
+        self::assertInstanceOf(DateTimeImmutable::class, $previewDateTime);
+        self::assertSame('2024-10-25T18:45:30+00:00', $previewDateTime->format(DATE_ATOM));
+
+        $previewDigitized = $document->previewDateTimeDigitized();
+        self::assertInstanceOf(DateTimeImmutable::class, $previewDigitized);
+        self::assertSame('2024-10-25T18:40:00+00:00', $previewDigitized->format(DATE_ATOM));
     }
 
     /**
