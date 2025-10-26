@@ -324,6 +324,20 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures FlashPix version defaults to 1.00 when the tag is absent.
+     */
+    #[Test]
+    public function defaultsFlashpixVersionWhenTagMissing(): void
+    {
+        $blob     = $this->buildClassicVersionBlobWithoutFlashpix();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertNull($document->flashpixVersion());
+        self::assertSame('1.00', $resolver->flashpixVersion());
+    }
+
+    /**
      * Ensures PrintIM payloads preserve their binary data and are decoded into structured output.
      */
     #[Test]
@@ -1171,6 +1185,29 @@ final class TiffExifReaderTest extends TestCase
             . pack('V', 0);
 
         return $header . $ifd0 . $ifd1 . $ifd2;
+    }
+
+    /**
+     * Builds a Classic TIFF blob with an EXIF version entry but no FlashPix version tag.
+     */
+    private function buildClassicVersionBlobWithoutFlashpix(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $exifIfdOffset = 8 + 2 + 12 + 4;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+        ];
+        $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+
+        $exifEntries = [
+            self::packClassicEntry(ExifTag::EXIF_VERSION, 7, 4, self::inlineAsciiToInt('0232', 4)),
+        ];
+
+        $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd;
     }
 
     /**

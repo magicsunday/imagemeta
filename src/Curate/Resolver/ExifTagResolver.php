@@ -1230,11 +1230,35 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the FlashPix version string if present.
+     * Returns the FlashPix version string, defaulting to '1.00' when missing or padded.
      */
     public function flashpixVersion(): ?string
     {
-        return $this->document?->flashpixVersion();
+        if (!$this->document instanceof ExifDocument) {
+            return null;
+        }
+
+        $version = $this->document->flashpixVersion();
+        if ($version !== null) {
+            return $version;
+        }
+
+        $entry = $this->getEntry($this->document->exifIfd, ExifTag::FLASHPIX_VERSION);
+        if (!$entry instanceof IfdEntry) {
+            return '1.00';
+        }
+
+        $value = $entry->value;
+        if (!is_string($value)) {
+            return '1.00';
+        }
+
+        $trimmed = trim($value, "\0 ");
+        if ($trimmed === '') {
+            return '1.00';
+        }
+
+        return null;
     }
 
     /**
