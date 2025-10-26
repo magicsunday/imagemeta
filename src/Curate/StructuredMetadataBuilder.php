@@ -322,7 +322,7 @@ final class StructuredMetadataBuilder
             contrast: null,
             saturation: null,
             pictureStyle: null,
-            noiseReduction: null,
+            noiseReduction: $exifResolver->noiseReduction(),
             clarity: null,
             customRendered: $exifResolver->customRendered()?->value,
             deviceSettingDescription: $exifResolver->deviceSettingDescription(),

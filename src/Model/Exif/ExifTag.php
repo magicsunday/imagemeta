@@ -307,6 +307,8 @@ final readonly class ExifTag
 
     public const int SPATIAL_FREQUENCY_RESPONSE = 0xA20C;
 
+    public const int NOISE = 0xA20D;
+
     public const int FOCAL_PLANE_X_RESOLUTION = 0xA20E;
 
     public const int FOCAL_PLANE_Y_RESOLUTION = 0xA20F;

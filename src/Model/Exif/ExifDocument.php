@@ -749,6 +749,14 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the noise measurement recorded by the camera.
+     */
+    public function noise(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::NOISE);
+    }
+
+    /**
      * Returns the CFA pattern definition as a list of component identifiers.
      *
      * @return list<int>|null
