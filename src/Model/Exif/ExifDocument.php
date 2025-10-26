@@ -958,11 +958,48 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the Epson Print Image Matching parameter block when available.
+     *
+     * @return array{header:string, version:string, parameters:list<array{id:int, value:int}>}|null
+     */
+    public function printImageMatching(): ?array
+    {
+        $payload = $this->rawString($this->exifIfd, ExifTag::PRINT_IMAGE_MATCHING);
+
+        return ValueConverters::decodePrintImageMatching($payload);
+    }
+
+    /**
      * Returns the noise measurement recorded by the camera.
      */
     public function noise(): ?float
     {
         return $this->rational($this->exifIfd, ExifTag::NOISE);
+    }
+
+    /**
+     * Returns the CFA repeat pattern dimensions when valid.
+     *
+     * @return array{width:int, height:int}|null
+     */
+    public function cfaRepeatPatternDim(): ?array
+    {
+        $values = $this->numericList($this->exifIfd, ExifTag::CFA_REPEAT_PATTERN_DIM);
+
+        if ($values === null || count($values) !== 2) {
+            return null;
+        }
+
+        [$width, $height] = $values;
+
+        if (!is_int($width) || !is_int($height) || $width <= 0 || $height <= 0) {
+            return null;
+        }
+
+        return [
+            'width'  => $width,
+            'height' => $height,
+        ];
     }
 
     /**

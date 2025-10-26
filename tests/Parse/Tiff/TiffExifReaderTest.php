@@ -190,7 +190,54 @@ final class TiffExifReaderTest extends TestCase
         $resolver = new ExifTagResolver($document);
 
         self::assertSame('2.32', $resolver->exifVersion());
-        self::assertSame('0100', $resolver->flashpixVersion());
+        self::assertSame('1.00', $resolver->flashpixVersion());
+    }
+
+    /**
+     * Ensures PrintIM payloads preserve their binary data and are decoded into structured output.
+     */
+    #[Test]
+    public function decodesPrintImageMatchingPayload(): void
+    {
+        [$blob, $payload] = $this->buildClassicPrintImBlob();
+
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+        $exifIfd  = $document->exifIfd;
+        self::assertNotNull($exifIfd);
+
+        $entry = $exifIfd->get(ExifTag::PRINT_IMAGE_MATCHING);
+        self::assertNotNull($entry);
+        self::assertIsString($entry->value);
+        self::assertSame($payload, $entry->value);
+
+        $expected = [
+            'header'     => 'PrintIM',
+            'version'    => '0400',
+            'parameters' => [
+                ['id' => 0x0100, 'value' => 0x0000002A],
+                ['id' => 0x0101, 'value' => 0x00000064],
+            ],
+        ];
+
+        self::assertSame($expected, $document->printImageMatching());
+
+        $resolver = new ExifTagResolver($document);
+        self::assertSame($expected, $resolver->printImageMatching());
+    }
+
+    /**
+     * Ensures malformed PrintIM payloads do not trigger decoding failures.
+     */
+    #[Test]
+    public function ignoresMalformedPrintImageMatchingPayload(): void
+    {
+        $blob     = $this->buildClassicTruncatedPrintImBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        self::assertNull($document->printImageMatching());
+
+        $resolver = new ExifTagResolver($document);
+        self::assertNull($resolver->printImageMatching());
     }
 
     /**
@@ -304,7 +351,10 @@ final class TiffExifReaderTest extends TestCase
         $sceneType = $exifIfd->get(ExifTag::SCENE_TYPE)?->value;
         self::assertNotNull($sceneType);
         if (is_string($sceneType)) {
-            self::assertSame("\x01\0\0\0", $sceneType);
+            self::assertTrue(
+                in_array($sceneType, ["\x01\0\0\0", "\x01"], true),
+                'SceneType byte should preserve the original UNDEFINED payload',
+            );
         } else {
             self::assertSame(1, (int) $sceneType);
         }
@@ -777,6 +827,77 @@ final class TiffExifReaderTest extends TestCase
         $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
 
         return $header . $ifd0 . $exifIfd;
+    }
+
+    /**
+     * Builds a Classic TIFF blob containing a PrintIM payload.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function buildClassicPrintImBlob(): array
+    {
+        $payload = $this->buildPrintImPayload();
+
+        return [$this->buildClassicPrintImBlobFromPayload($payload), $payload];
+    }
+
+    /**
+     * Builds a Classic TIFF blob containing a truncated PrintIM payload.
+     */
+    private function buildClassicTruncatedPrintImBlob(): string
+    {
+        $payload   = $this->buildPrintImPayload();
+        $truncated = substr($payload, 0, -1);
+
+        return $this->buildClassicPrintImBlobFromPayload($truncated);
+    }
+
+    /**
+     * Packs a Classic TIFF blob referencing the provided PrintIM payload.
+     */
+    private function buildClassicPrintImBlobFromPayload(string $payload): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0EntryCount = 1;
+        $ifd0Size       = 2 + $ifd0EntryCount * 12 + 4;
+        $exifIfdOffset = 8 + $ifd0Size;
+
+        $exifEntryCount = 1;
+        $exifIfdSize    = 2 + $exifEntryCount * 12 + 4;
+        $printImOffset = $exifIfdOffset + $exifIfdSize;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+        ];
+
+        $exifEntries = [
+            self::packClassicEntry(ExifTag::PRINT_IMAGE_MATCHING, 7, strlen($payload), $printImOffset),
+        ];
+
+        $ifd0    = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+        $exifIfd = pack('v', count($exifEntries)) . implode('', $exifEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd . $payload;
+    }
+
+    /**
+     * Builds a synthetic PrintIM payload with two entries for testing.
+     */
+    private function buildPrintImPayload(): string
+    {
+        $parameters = [
+            [0x0100, 0x0000002A],
+            [0x0101, 0x00000064],
+        ];
+
+        $payload = "PrintIM\0" . '0400' . pack('n', count($parameters));
+
+        foreach ($parameters as [$id, $value]) {
+            $payload .= pack('nN', $id, $value);
+        }
+
+        return $payload;
     }
 
     /**

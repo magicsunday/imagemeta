@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
@@ -60,6 +61,7 @@ final readonly class StructuredMetadata
      * @param CompositeImageInfo  $composite           Composite capture information for multi-image scenes.
      * @param Standards           $standards           Metadata standard identifiers and versions.
      * @param FlashPix            $flashPix            FlashPix extension streams extracted from APP2 markers.
+     * @param MultiPicture        $multiPicture        Multi-picture format data extracted from MPF APP2 segments.
      * @param Camera              $camera              Camera manufacturer and model information.
      * @param Lens                $lens                Lens identification and optical properties.
      * @param Image               $image               Image dimensions and orientation details.
@@ -97,6 +99,7 @@ final readonly class StructuredMetadata
         public CompositeImageInfo $composite,
         public Standards $standards,
         public FlashPix $flashPix,
+        public MultiPicture $multiPicture,
         public Camera $camera,
         public Lens $lens,
         public Image $image,

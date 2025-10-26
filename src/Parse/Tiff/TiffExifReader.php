@@ -392,9 +392,12 @@ final class TiffExifReader
             return rtrim($bytes, "\0");
         }
 
-        // Printable ASCII stored as UNDEFINED → treat as string
-        if ($type === self::TYPE_UNDEFINED && $this->isPrintableAsciiOrNull($bytes)) {
-            return rtrim($bytes, "\0");
+        if ($type === self::TYPE_UNDEFINED) {
+            if ($this->isPrintableAsciiOrNull($bytes)) {
+                return rtrim($bytes, "\0");
+            }
+
+            return $bytes;
         }
 
         // RATIONAL / SRATIONAL
@@ -417,8 +420,6 @@ final class TiffExifReader
             $vals[] = match ($type) {
                 // BYTE
                 self::TYPE_BYTE,
-                // UNDEFINED → return as byte
-                self::TYPE_UNDEFINED => ord($bytes[$cursor]),
                 // SBYTE
                 self::TYPE_SBYTE => $this->toSigned(ord($bytes[$cursor]), 8),
                 // SHORT

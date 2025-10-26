@@ -599,6 +599,16 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the Epson Print Image Matching parameter block.
+     *
+     * @return array{header:string, version:string, parameters:list<array{id:int, value:int}>}|null
+     */
+    public function printImageMatching(): ?array
+    {
+        return $this->document?->printImageMatching();
+    }
+
+    /**
      * Returns the focal length in millimetres.
      */
     public function focalLength(): ?float
@@ -658,6 +668,26 @@ final readonly class ExifTagResolver
     public function cfaPatternColors(): ?array
     {
         return $this->document?->cfaPatternColors();
+    }
+
+    /**
+     * Returns the width component of the CFA repeat pattern dimensions.
+     */
+    public function cfaRepeatPatternWidth(): ?int
+    {
+        $dimensions = $this->document?->cfaRepeatPatternDim();
+
+        return $dimensions['width'] ?? null;
+    }
+
+    /**
+     * Returns the height component of the CFA repeat pattern dimensions.
+     */
+    public function cfaRepeatPatternHeight(): ?int
+    {
+        $dimensions = $this->document?->cfaRepeatPatternDim();
+
+        return $dimensions['height'] ?? null;
     }
 
     /**
@@ -1023,7 +1053,16 @@ final readonly class ExifTagResolver
     {
         $value = $this->stringValue($this->document?->exifIfd, ExifTag::FLASHPIX_VERSION);
 
-        return $value !== null ? trim($value, "\0") : null;
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value, "\0");
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return CoreValueConverters::toExifVersion($trimmed);
     }
 
     /**

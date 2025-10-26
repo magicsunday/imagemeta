@@ -324,6 +324,7 @@ final class ExifTagResolverTest extends TestCase
         $exifIfd = new Ifd([
             ExifTag::COMPONENTS_CONFIGURATION  => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
             ExifTag::SCENE_TYPE                => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
+            ExifTag::CFA_REPEAT_PATTERN_DIM    => new IfdEntry(ExifTag::CFA_REPEAT_PATTERN_DIM, 3, 2, new ExifNumericList([6, 4])),
             ExifTag::CFA_PATTERN               => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x00\x01\x02\x03"),
             ExifTag::CUSTOM_RENDERED           => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
             ExifTag::CAMERA_FIRMWARE           => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW Main'),
@@ -344,6 +345,8 @@ final class ExifTagResolverTest extends TestCase
             CfaPatternColor::BLUE,
             CfaPatternColor::CYAN,
         ], $resolver->cfaPatternColors());
+        self::assertSame(6, $resolver->cfaRepeatPatternWidth());
+        self::assertSame(4, $resolver->cfaRepeatPatternHeight());
         self::assertSame(CustomRendered::CUSTOM_PROCESS, $resolver->customRendered());
         self::assertSame('Evening Glow', $resolver->imageTitle());
         self::assertSame('Jamie Doe', $resolver->photographer());

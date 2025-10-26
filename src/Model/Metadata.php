@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
@@ -53,6 +54,8 @@ final class Metadata
      */
     public readonly array $flashPixStreams;
 
+    public readonly ?MpfDocument $mpfDocument;
+
     public readonly ?int $jpegBitsPerSample;
 
     /** @var array<int, array{horizontal:int, vertical:int}>|null */
@@ -87,6 +90,7 @@ final class Metadata
      * @param string|null                                          $iccProfile               Binary ICC profile when available.
      * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order.
      * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by identifier.
+     * @param MpfDocument|null                                     $mpfDocument              Parsed MPF document derived from APP2 segments.
      * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header.
      * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by
      *                                                                                       identifier.
@@ -109,6 +113,7 @@ final class Metadata
         ?string $iccProfile = null,
         array $iccSegments = [],
         array $flashPixStreams = [],
+        ?MpfDocument $mpfDocument = null,
         ?int $jpegBitsPerSample = null,
         ?array $jpegFrameSamplingFactors = null,
         ?array $jpegYCbCrSubSampling = null,
@@ -129,6 +134,7 @@ final class Metadata
         $this->iccProfile               = $iccProfile;
         $this->iccSegments              = $iccSegments;
         $this->flashPixStreams          = $flashPixStreams;
+        $this->mpfDocument              = $mpfDocument;
         $this->jpegBitsPerSample        = $jpegBitsPerSample;
         $this->jpegFrameSamplingFactors = $jpegFrameSamplingFactors;
         $this->jpegYCbCrSubSampling     = $jpegYCbCrSubSampling;

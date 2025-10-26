@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\ValueConverters;
 use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
+use MagicSunday\ImageMeta\Curate\Resolver\MultiPictureResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
@@ -151,6 +152,7 @@ final class StructuredMetadataBuilder
         $appleMakerNotes   = $metadata->makerNotes?->apple();
         $gpsResolver       = new GpsResolver();
         $regionsResolver   = new RegionsResolver();
+        $multiPictureResolver = new MultiPictureResolver();
 
         $interop = new Interop(
             index: $exifResolver->interopIndex(),
@@ -207,6 +209,7 @@ final class StructuredMetadataBuilder
         );
 
         $flashPix = new FlashPix($metadata->flashPixStreams);
+        $multiPicture = $multiPictureResolver->resolve($metadata->mpfDocument);
 
         $camera = $this->buildCamera($exifResolver);
         $lens   = $this->buildLens($exifResolver);
@@ -458,8 +461,8 @@ final class StructuredMetadataBuilder
 
         $sensor = new Sensor(
             pixelPitchUm: null,
-            cfaWidth: null,
-            cfaHeight: null,
+            cfaWidth: $exifResolver->cfaRepeatPatternWidth(),
+            cfaHeight: $exifResolver->cfaRepeatPatternHeight(),
             sensorType: null,
             ibis: null,
             cfaPattern: $exifResolver->cfaPattern(),
@@ -494,6 +497,7 @@ final class StructuredMetadataBuilder
             composite: $composite,
             standards: $standards,
             flashPix: $flashPix,
+            multiPicture: $multiPicture,
             camera: $camera,
             lens: $lens,
             image: $image,

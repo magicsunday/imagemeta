@@ -155,7 +155,14 @@ final readonly class ExifTag
     public const int INTEROPERABILITY_IFD_POINTER = 0xA005;
 
     // EXIF sub IFD
+    public const int CFA_REPEAT_PATTERN_DIM = 0x828D;
+
     public const int BATTERY_LEVEL = 0x828F;
+
+    /**
+     * Epson Print Image Matching (PrintIM) parameter block.
+     */
+    public const int PRINT_IMAGE_MATCHING = 0xC4A5;
 
     public const int MAKER_NOTE_SAFETY = 0xC635;
 

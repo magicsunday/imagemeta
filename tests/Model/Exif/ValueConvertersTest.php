@@ -626,6 +626,21 @@ final class ValueConvertersTest extends TestCase
     }
 
     #[Test]
+    public function decodeSpatialFrequencyResponseReturnsLabels(): void
+    {
+        $payload = pack('n', 1) . pack('n', 1);
+        $payload .= "Alpha\0";
+        $payload .= "Beta\0";
+        $payload .= self::packSrational(1, 1);
+
+        $result = ValueConverters::decodeSpatialFrequencyResponse($payload);
+
+        self::assertNotNull($result);
+        self::assertSame(['Alpha'], $result['labels']['columns']);
+        self::assertSame(['Beta'], $result['labels']['rows']);
+    }
+
+    #[Test]
     public function decodeSpatialFrequencyResponseParsesTable(): void
     {
         $payload = self::buildSpatialFrequencyResponsePayload();
