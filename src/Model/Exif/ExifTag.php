@@ -455,11 +455,23 @@ final readonly class ExifTag
 
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
-    public const int FLIGHT_YAW_DEGREE = 0x9406;
+    public const int CAMERA_YAW_DEGREE = 0x9406;
 
-    public const int FLIGHT_PITCH_DEGREE = 0x9407;
+    public const int CAMERA_PITCH_DEGREE = 0x9407;
 
-    public const int FLIGHT_ROLL_DEGREE = 0x9408;
+    public const int CAMERA_ROLL_DEGREE = 0x9408;
+
+    /**
+     * Legacy identifiers retained for backwards compatibility with pre-EXIF 3.0 metadata.
+     *
+     * The EXIF 3.0 specification renamed the tags to the CAMERA_* variants, but older drone
+     * metadata may still expose the historic FLIGHT_* names.
+     */
+    public const int FLIGHT_YAW_DEGREE = self::CAMERA_YAW_DEGREE;
+
+    public const int FLIGHT_PITCH_DEGREE = self::CAMERA_PITCH_DEGREE;
+
+    public const int FLIGHT_ROLL_DEGREE = self::CAMERA_ROLL_DEGREE;
 
     public const int GIMBAL_YAW_DEGREE = 0x9409;
 

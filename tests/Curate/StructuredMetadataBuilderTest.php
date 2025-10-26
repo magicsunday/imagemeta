@@ -165,9 +165,9 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
             ExifTag::AIRCRAFT_MAKE               => new IfdEntry(ExifTag::AIRCRAFT_MAKE, 2, 3, 'DJI'),
             ExifTag::AIRCRAFT_MODEL              => new IfdEntry(ExifTag::AIRCRAFT_MODEL, 2, 6, 'Mavic 3'),
-            ExifTag::FLIGHT_YAW_DEGREE           => new IfdEntry(ExifTag::FLIGHT_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
-            ExifTag::FLIGHT_PITCH_DEGREE         => new IfdEntry(ExifTag::FLIGHT_PITCH_DEGREE, 10, 1, new ExifRational(-35, 10)),
-            ExifTag::FLIGHT_ROLL_DEGREE          => new IfdEntry(ExifTag::FLIGHT_ROLL_DEGREE, 10, 1, new ExifRational(20, 10)),
+            ExifTag::CAMERA_YAW_DEGREE           => new IfdEntry(ExifTag::CAMERA_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
+            ExifTag::CAMERA_PITCH_DEGREE         => new IfdEntry(ExifTag::CAMERA_PITCH_DEGREE, 10, 1, new ExifRational(-35, 10)),
+            ExifTag::CAMERA_ROLL_DEGREE          => new IfdEntry(ExifTag::CAMERA_ROLL_DEGREE, 10, 1, new ExifRational(20, 10)),
             ExifTag::GIMBAL_YAW_DEGREE           => new IfdEntry(ExifTag::GIMBAL_YAW_DEGREE, 10, 1, new ExifRational(210, 10)),
             ExifTag::GIMBAL_PITCH_DEGREE         => new IfdEntry(ExifTag::GIMBAL_PITCH_DEGREE, 10, 1, new ExifRational(-110, 10)),
             ExifTag::GIMBAL_ROLL_DEGREE          => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(5, 10)),
@@ -338,6 +338,15 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(21.0, $structured->uav->gimbalYaw ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(-11.0, $structured->uav->gimbalPitch ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(0.5, $structured->uav->gimbalRoll ?? 0.0, 0.0001);
+        $motionRoll  = $structured->motion->rollDeg;
+        $motionPitch = $structured->motion->pitchDeg;
+        $motionYaw   = $structured->motion->yawDeg;
+        self::assertNotNull($motionRoll);
+        self::assertNotNull($motionPitch);
+        self::assertNotNull($motionYaw);
+        self::assertEqualsWithDelta(2.0, $motionRoll, 0.0001);
+        self::assertEqualsWithDelta(-3.5, $motionPitch, 0.0001);
+        self::assertEqualsWithDelta(12.3, $motionYaw, 0.0001);
 
         self::assertSame('sound.wav', $structured->related->relatedSoundFile);
 
@@ -710,6 +719,9 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(9, $structured->apple->runTime?->flags);
 
         self::assertSame(4300, $structured->whiteBalanceDetails->kelvin);
+        self::assertNull($structured->motion->rollDeg);
+        self::assertNull($structured->motion->pitchDeg);
+        self::assertNull($structured->motion->yawDeg);
         self::assertEqualsWithDelta(0.05, $structured->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
@@ -785,6 +797,9 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('qt-content', $structured->apple->contentIdentifier);
         self::assertSame([0.12, -0.34, 0.56], $structured->apple->accelerationVector);
+        self::assertNull($structured->motion->rollDeg);
+        self::assertNull($structured->motion->pitchDeg);
+        self::assertNull($structured->motion->yawDeg);
         self::assertEqualsWithDelta(0.12, $structured->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(-0.34, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(0.56, $structured->motion->accelZ, 1e-12);

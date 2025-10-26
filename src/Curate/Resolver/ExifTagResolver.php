@@ -1784,6 +1784,30 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the camera yaw in degrees.
+     */
+    public function cameraYawDeg(): ?float
+    {
+        return $this->document?->cameraYawDeg();
+    }
+
+    /**
+     * Returns the camera pitch in degrees.
+     */
+    public function cameraPitchDeg(): ?float
+    {
+        return $this->document?->cameraPitchDeg();
+    }
+
+    /**
+     * Returns the camera roll in degrees.
+     */
+    public function cameraRollDeg(): ?float
+    {
+        return $this->document?->cameraRollDeg();
+    }
+
+    /**
      * Returns the aircraft flight yaw in degrees.
      */
     public function flightYawDeg(): ?float

@@ -1133,11 +1133,35 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera yaw in degrees.
+     */
+    public function cameraYawDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::CAMERA_YAW_DEGREE);
+    }
+
+    /**
+     * Returns the camera pitch in degrees.
+     */
+    public function cameraPitchDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::CAMERA_PITCH_DEGREE);
+    }
+
+    /**
+     * Returns the camera roll in degrees.
+     */
+    public function cameraRollDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::CAMERA_ROLL_DEGREE);
+    }
+
+    /**
      * Returns the aircraft flight yaw in degrees.
      */
     public function flightYawDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::FLIGHT_YAW_DEGREE);
+        return $this->cameraYawDeg();
     }
 
     /**
@@ -1145,7 +1169,7 @@ final readonly class ExifDocument
      */
     public function flightPitchDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::FLIGHT_PITCH_DEGREE);
+        return $this->cameraPitchDeg();
     }
 
     /**
@@ -1153,7 +1177,7 @@ final readonly class ExifDocument
      */
     public function flightRollDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::FLIGHT_ROLL_DEGREE);
+        return $this->cameraRollDeg();
     }
 
     /**

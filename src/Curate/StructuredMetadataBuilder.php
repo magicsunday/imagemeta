@@ -375,7 +375,7 @@ final class StructuredMetadataBuilder
             afMode: null,
         );
 
-        $motion = $this->buildMotion($apple);
+        $motion = $this->buildMotion($exifResolver, $apple);
 
         $regions = $regionsResolver->resolve($xmpDocument);
 
@@ -1031,14 +1031,19 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds the motion metadata aggregate from the Apple acceleration vector.
+     * Builds the motion metadata aggregate from EXIF and Apple motion sources.
      *
-     * @param Apple $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
+     * @param ExifTagResolver $exif  Resolver exposing EXIF camera orientation measurements.
+     * @param Apple           $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
-     * @return Motion Motion metadata aggregate with per-axis acceleration.
+     * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
      */
-    private function buildMotion(Apple $apple): Motion
+    private function buildMotion(ExifTagResolver $exif, Apple $apple): Motion
     {
+        $rollDeg  = $exif->cameraRollDeg();
+        $pitchDeg = $exif->cameraPitchDeg();
+        $yawDeg   = $exif->cameraYawDeg();
+
         $vector = $apple->accelerationVector;
 
         $accelX = null;
@@ -1051,7 +1056,7 @@ final class StructuredMetadataBuilder
             $accelZ = $vector[2] ?? null;
         }
 
-        return new Motion(null, null, null, $accelX, $accelY, $accelZ, null, null, null);
+        return new Motion($rollDeg, $pitchDeg, $yawDeg, $accelX, $accelY, $accelZ, null, null, null);
     }
 
     private function buildUav(ExifTagResolver $exif, QuickTimeResolver $quickTime): Uav

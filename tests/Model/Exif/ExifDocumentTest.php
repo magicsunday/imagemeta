@@ -1122,9 +1122,9 @@ final class ExifDocumentTest extends TestCase
         $exifIfd = new Ifd([
             ExifTag::AIRCRAFT_MAKE        => new IfdEntry(ExifTag::AIRCRAFT_MAKE, 2, 1, 'DJI'),
             ExifTag::AIRCRAFT_MODEL       => new IfdEntry(ExifTag::AIRCRAFT_MODEL, 2, 1, 'Mavic 3'),
-            ExifTag::FLIGHT_YAW_DEGREE    => new IfdEntry(ExifTag::FLIGHT_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
-            ExifTag::FLIGHT_PITCH_DEGREE  => new IfdEntry(ExifTag::FLIGHT_PITCH_DEGREE, 10, 1, new ExifRational(-45, 10)),
-            ExifTag::FLIGHT_ROLL_DEGREE   => new IfdEntry(ExifTag::FLIGHT_ROLL_DEGREE, 10, 1, new ExifRational(15, 10)),
+            ExifTag::CAMERA_YAW_DEGREE    => new IfdEntry(ExifTag::CAMERA_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
+            ExifTag::CAMERA_PITCH_DEGREE  => new IfdEntry(ExifTag::CAMERA_PITCH_DEGREE, 10, 1, new ExifRational(-45, 10)),
+            ExifTag::CAMERA_ROLL_DEGREE   => new IfdEntry(ExifTag::CAMERA_ROLL_DEGREE, 10, 1, new ExifRational(15, 10)),
             ExifTag::GIMBAL_YAW_DEGREE    => new IfdEntry(ExifTag::GIMBAL_YAW_DEGREE, 10, 1, new ExifRational(321, 10)),
             ExifTag::GIMBAL_PITCH_DEGREE  => new IfdEntry(ExifTag::GIMBAL_PITCH_DEGREE, 10, 1, new ExifRational(-210, 10)),
             ExifTag::GIMBAL_ROLL_DEGREE   => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(-5, 10)),
@@ -1134,6 +1134,9 @@ final class ExifDocumentTest extends TestCase
 
         self::assertSame('DJI', $document->aircraftMake());
         self::assertSame('Mavic 3', $document->aircraftModel());
+        self::assertEqualsWithDelta(12.3, $document->cameraYawDeg(), 0.0001);
+        self::assertEqualsWithDelta(-4.5, $document->cameraPitchDeg(), 0.0001);
+        self::assertEqualsWithDelta(1.5, $document->cameraRollDeg(), 0.0001);
         self::assertEqualsWithDelta(12.3, $document->flightYawDeg(), 0.0001);
         self::assertEqualsWithDelta(-4.5, $document->flightPitchDeg(), 0.0001);
         self::assertEqualsWithDelta(1.5, $document->flightRollDeg(), 0.0001);
