@@ -126,6 +126,13 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame(4096, $document->jpegThumbnailLength());
         self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $document->referenceBlackWhite());
         self::assertSame('Jane Doe', $document->copyright());
+        self::assertSame("Sunrise \u{1F305}", $document->xpTitle());
+        self::assertSame("Shot on \u{2615}", $document->xpComment());
+        self::assertSame("Åsa K.", $document->xpAuthor());
+        self::assertSame(['旅', '海'], $document->xpKeywords());
+        self::assertSame("Project \u{2728}", $document->xpSubject());
+        self::assertSame("Project \u{2728}", $document->documentName());
+        self::assertSame("Shot on \u{2615}", $document->imageDescription());
 
         self::assertSame([512], $resolver->stripOffsets());
         self::assertSame([1024], $resolver->stripByteCounts());
@@ -134,6 +141,13 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame(4096, $resolver->jpegThumbnailLength());
         self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $resolver->referenceBlackWhite());
         self::assertSame('Jane Doe', $resolver->copyright());
+        self::assertSame("Sunrise \u{1F305}", $resolver->xpTitle());
+        self::assertSame("Shot on \u{2615}", $resolver->xpComment());
+        self::assertSame("Åsa K.", $resolver->xpAuthor());
+        self::assertSame(['旅', '海'], $resolver->xpKeywords());
+        self::assertSame("Project \u{2728}", $resolver->xpSubject());
+        self::assertSame("Project \u{2728}", $resolver->documentName());
+        self::assertSame("Shot on \u{2615}", $resolver->imageDescription());
     }
 
     #[Test]
@@ -533,8 +547,13 @@ final class TiffExifReaderTest extends TestCase
             . self::packRationalLE(0, 1)
             . self::packRationalLE(255, 1);
         $copyrightString = "Jane Doe\0";
+        $xpTitleBytes    = self::packUtf16LeString([0x0053, 0x0075, 0x006E, 0x0072, 0x0069, 0x0073, 0x0065, 0x0020, 0x1F305]);
+        $xpCommentBytes  = self::packUtf16LeString([0x0053, 0x0068, 0x006F, 0x0074, 0x0020, 0x006F, 0x006E, 0x0020, 0x2615]);
+        $xpAuthorBytes   = self::packUtf16LeString([0x00C5, 0x0073, 0x0061, 0x0020, 0x004B, 0x002E]);
+        $xpKeywordsBytes = self::packUtf16LeString([0x65C5, 0x003B, 0x6D77]);
+        $xpSubjectBytes  = self::packUtf16LeString([0x0050, 0x0072, 0x006F, 0x006A, 0x0065, 0x0063, 0x0074, 0x0020, 0x2728]);
 
-        $ifd0EntryCount = 11;
+        $ifd0EntryCount = 16;
         $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
         $baseOffset     = strlen($header) + $ifd0Length;
 
@@ -542,7 +561,12 @@ final class TiffExifReaderTest extends TestCase
         $transferFunctionOffset    = $makeOffset + strlen($makeString);
         $referenceBlackWhiteOffset = $transferFunctionOffset + strlen($transferFunctionBytes);
         $copyrightOffset           = $referenceBlackWhiteOffset + strlen($referenceBlackWhite);
-        $exifIfdOffset             = $copyrightOffset + strlen($copyrightString);
+        $xpTitleOffset             = $copyrightOffset + strlen($copyrightString);
+        $xpCommentOffset           = $xpTitleOffset + strlen($xpTitleBytes);
+        $xpAuthorOffset            = $xpCommentOffset + strlen($xpCommentBytes);
+        $xpKeywordsOffset          = $xpAuthorOffset + strlen($xpAuthorBytes);
+        $xpSubjectOffset           = $xpKeywordsOffset + strlen($xpKeywordsBytes);
+        $exifIfdOffset             = $xpSubjectOffset + strlen($xpSubjectBytes);
 
         $exifEntryCount   = 3;
         $exifIfdLength    = 2 + ($exifEntryCount * 12) + 4;
@@ -572,6 +596,11 @@ final class TiffExifReaderTest extends TestCase
             self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4096),
             self::packClassicEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, $referenceBlackWhiteOffset),
             self::packClassicEntry(ExifTag::COPYRIGHT, 2, strlen($copyrightString), $copyrightOffset),
+            self::packClassicEntry(ExifTag::XP_TITLE, 1, strlen($xpTitleBytes), $xpTitleOffset),
+            self::packClassicEntry(ExifTag::XP_COMMENT, 1, strlen($xpCommentBytes), $xpCommentOffset),
+            self::packClassicEntry(ExifTag::XP_AUTHOR, 1, strlen($xpAuthorBytes), $xpAuthorOffset),
+            self::packClassicEntry(ExifTag::XP_KEYWORDS, 1, strlen($xpKeywordsBytes), $xpKeywordsOffset),
+            self::packClassicEntry(ExifTag::XP_SUBJECT, 1, strlen($xpSubjectBytes), $xpSubjectOffset),
             self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
             self::packClassicEntry(ExifTag::GPS_IFD_POINTER, 4, 1, $gpsIfdOffset),
         ];
@@ -582,6 +611,11 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $transferFunctionBytes;
         $blob .= $referenceBlackWhite;
         $blob .= $copyrightString;
+        $blob .= $xpTitleBytes;
+        $blob .= $xpCommentBytes;
+        $blob .= $xpAuthorBytes;
+        $blob .= $xpKeywordsBytes;
+        $blob .= $xpSubjectBytes;
 
         $exifEntries = [
             self::packClassicEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 200),
@@ -1042,6 +1076,31 @@ final class TiffExifReaderTest extends TestCase
     private static function packRationalLE(int $numerator, int $denominator): string
     {
         return pack('V', $numerator) . pack('V', $denominator);
+    }
+
+    /**
+     * Encodes a list of Unicode code points into a UTF-16LE string with a NUL terminator.
+     *
+     * @param list<int> $codePoints
+     */
+    private static function packUtf16LeString(array $codePoints): string
+    {
+        $bytes = '';
+
+        foreach ($codePoints as $codePoint) {
+            if ($codePoint <= 0xFFFF) {
+                $bytes .= pack('v', $codePoint);
+                continue;
+            }
+
+            $codePoint -= 0x10000;
+            $high = 0xD800 | ($codePoint >> 10);
+            $low  = 0xDC00 | ($codePoint & 0x3FF);
+
+            $bytes .= pack('v*', $high, $low);
+        }
+
+        return $bytes . "\0\0";
     }
 
     /**

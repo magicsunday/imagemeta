@@ -32,6 +32,31 @@ final readonly class ExifTag
     public const int IMAGE_TITLE = 0xA436;
 
     /**
+     * Microsoft XPTitle property encoded as UTF-16LE.
+     */
+    public const int XP_TITLE = 0x9C9B;
+
+    /**
+     * Microsoft XPComment property encoded as UTF-16LE.
+     */
+    public const int XP_COMMENT = 0x9C9C;
+
+    /**
+     * Microsoft XPAuthor property encoded as UTF-16LE.
+     */
+    public const int XP_AUTHOR = 0x9C9D;
+
+    /**
+     * Microsoft XPKeywords property encoded as UTF-16LE.
+     */
+    public const int XP_KEYWORDS = 0x9C9E;
+
+    /**
+     * Microsoft XPSubject property encoded as UTF-16LE.
+     */
+    public const int XP_SUBJECT = 0x9C9F;
+
+    /**
      * Legacy EXIF 2.x tag that stored the document name within IFD0.
      *
      * Retained for backwards compatibility with images that have not been

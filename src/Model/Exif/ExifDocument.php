@@ -23,12 +23,14 @@ use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
 use function array_key_exists;
 use function array_map;
+use function array_values;
 use function iconv;
 use function is_float;
 use function is_int;
 use function is_string;
 use function ord;
 use function preg_replace;
+use function preg_split;
 use function rtrim;
 use function str_pad;
 use function str_replace;
@@ -247,6 +249,12 @@ final readonly class ExifDocument
             return $value;
         }
 
+        $value = $this->xpTitle();
+
+        if ($value !== null) {
+            return $value;
+        }
+
         $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE_LEGACY);
 
         if ($value !== null) {
@@ -254,6 +262,46 @@ final readonly class ExifDocument
         }
 
         return $this->str($this->ifd0, ExifTag::IMAGE_DESCRIPTION);
+    }
+
+    /**
+     * Returns the document name preferring EXIF 3.0 tags with XP fallbacks.
+     */
+    public function documentName(): ?string
+    {
+        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $this->str($this->exifIfd, ExifTag::IMAGE_TITLE);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE_LEGACY);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->xpSubject();
+    }
+
+    /**
+     * Returns the EXIF image description or XPComment when available.
+     */
+    public function imageDescription(): ?string
+    {
+        $value = $this->str($this->ifd0, ExifTag::IMAGE_DESCRIPTION);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->xpComment();
     }
 
     /**
@@ -268,6 +316,12 @@ final readonly class ExifDocument
         }
 
         $value = $this->str($this->exifIfd, ExifTag::PHOTOGRAPHER);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $this->xpAuthor();
 
         if ($value !== null) {
             return $value;
@@ -295,7 +349,80 @@ final readonly class ExifDocument
 
         $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITOR);
 
-        return $value ?? $this->str($this->ifd0, ExifTag::IMAGE_EDITOR_LEGACY);
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $this->xpAuthor();
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->str($this->ifd0, ExifTag::IMAGE_EDITOR_LEGACY);
+    }
+
+    /**
+     * Returns the decoded Microsoft XPTitle value.
+     */
+    public function xpTitle(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::XP_TITLE);
+    }
+
+    /**
+     * Returns the decoded Microsoft XPComment value.
+     */
+    public function xpComment(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::XP_COMMENT);
+    }
+
+    /**
+     * Returns the decoded Microsoft XPAuthor value.
+     */
+    public function xpAuthor(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::XP_AUTHOR);
+    }
+
+    /**
+     * Returns the decoded Microsoft XPSubject value.
+     */
+    public function xpSubject(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::XP_SUBJECT);
+    }
+
+    /**
+     * Returns the decoded Microsoft XPKeywords value as a list.
+     *
+     * @return list<string>|null
+     */
+    public function xpKeywords(): ?array
+    {
+        $raw = $this->str($this->ifd0, ExifTag::XP_KEYWORDS);
+
+        if ($raw === null) {
+            return null;
+        }
+
+        $parts = preg_split('/;+/', $raw, -1, PREG_SPLIT_NO_EMPTY);
+
+        if (!is_array($parts)) {
+            return null;
+        }
+
+        $keywords = [];
+
+        foreach ($parts as $part) {
+            $keyword = trim($part);
+            if ($keyword !== '') {
+                $keywords[] = $keyword;
+            }
+        }
+
+        return $keywords === [] ? null : array_values($keywords);
     }
 
     /**

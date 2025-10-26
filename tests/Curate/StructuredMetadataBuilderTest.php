@@ -163,7 +163,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 10, 'sound.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(250, 10)),
             ExifTag::NOISE                       => new IfdEntry(ExifTag::NOISE, 5, 1, new ExifRational(456, 10)),
-            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, 12, 'SFR-Curve-01'),
+            ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, strlen($sfrPayload), $sfrPayload),
             ExifTag::FOCAL_PLANE_X_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(4321, 100)),
             ExifTag::FOCAL_PLANE_Y_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(4300, 100)),
             ExifTag::FOCAL_PLANE_RESOLUTION_UNIT => new IfdEntry(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 3, 1, ResolutionUnit::CENTIMETER->value),
@@ -266,7 +266,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(Orientation::RIGHT_TOP, $structured->image->orientation);
         self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
         self::assertSame(128, $structured->image->imageNumber);
-        self::assertNull($structured->image->documentName);
+        self::assertSame('Sunset Title', $structured->image->documentName);
         self::assertSame('Sunset over Alps', $structured->image->description);
         self::assertSame('Sunset Title', $structured->image->title);
         self::assertSame([1, 2, 3, 0], $structured->image->componentsConfiguration);
@@ -370,6 +370,28 @@ final class StructuredMetadataBuilderTest extends TestCase
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
         self::assertSame(Orientation::UNKNOWN, $structured->image->orientation);
+    }
+
+    #[Test]
+    public function populatesXpMetadataWhenExif30FieldsMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::XP_TITLE    => new IfdEntry(ExifTag::XP_TITLE, 1, 1, 'XP Title'),
+            ExifTag::XP_COMMENT  => new IfdEntry(ExifTag::XP_COMMENT, 1, 1, 'XP Comment'),
+            ExifTag::XP_AUTHOR   => new IfdEntry(ExifTag::XP_AUTHOR, 1, 1, 'XP Author'),
+            ExifTag::XP_KEYWORDS => new IfdEntry(ExifTag::XP_KEYWORDS, 1, 1, 'Alpha;Beta'),
+            ExifTag::XP_SUBJECT  => new IfdEntry(ExifTag::XP_SUBJECT, 1, 1, 'XP Subject'),
+        ]);
+
+        $structured = (new StructuredMetadataBuilder())
+            ->build(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
+
+        self::assertSame('XP Subject', $structured->image->documentName);
+        self::assertSame('XP Title', $structured->image->title);
+        self::assertSame('XP Comment', $structured->image->description);
+        self::assertSame('XP Author', $structured->author->photographer);
+        self::assertSame('XP Author', $structured->author->imageEditor);
+        self::assertSame(['Alpha', 'Beta'], $structured->keywords->flat);
     }
 
     /**

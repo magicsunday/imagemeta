@@ -464,6 +464,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the document name value with XP fallbacks.
+     */
+    public function documentName(): ?string
+    {
+        return $this->document?->documentName();
+    }
+
+    /**
      * Returns the photographer string when available.
      */
     public function photographer(): ?string
@@ -624,7 +632,53 @@ final readonly class ExifTagResolver
      */
     public function imageDescription(): ?string
     {
-        return $this->stringValue($this->document?->ifd0, ExifTag::IMAGE_DESCRIPTION);
+        if ($this->document instanceof ExifDocument) {
+            return $this->document->imageDescription();
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the decoded XP comment string when available.
+     */
+    public function xpComment(): ?string
+    {
+        return $this->document?->xpComment();
+    }
+
+    /**
+     * Returns the decoded XP title string when available.
+     */
+    public function xpTitle(): ?string
+    {
+        return $this->document?->xpTitle();
+    }
+
+    /**
+     * Returns the decoded XP subject string when available.
+     */
+    public function xpSubject(): ?string
+    {
+        return $this->document?->xpSubject();
+    }
+
+    /**
+     * Returns the decoded XP author string when available.
+     */
+    public function xpAuthor(): ?string
+    {
+        return $this->document?->xpAuthor();
+    }
+
+    /**
+     * Returns decoded XP keywords as a list when available.
+     *
+     * @return list<string>|null
+     */
+    public function xpKeywords(): ?array
+    {
+        return $this->document?->xpKeywords();
     }
 
     /**

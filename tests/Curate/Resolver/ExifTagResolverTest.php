@@ -384,6 +384,32 @@ final class ExifTagResolverTest extends TestCase
     }
 
     #[Test]
+    public function resolvesXpStringFallbacks(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::XP_TITLE    => new IfdEntry(ExifTag::XP_TITLE, 1, 1, 'XP Title'),
+            ExifTag::XP_COMMENT  => new IfdEntry(ExifTag::XP_COMMENT, 1, 1, 'XP Comment'),
+            ExifTag::XP_AUTHOR   => new IfdEntry(ExifTag::XP_AUTHOR, 1, 1, 'XP Author'),
+            ExifTag::XP_KEYWORDS => new IfdEntry(ExifTag::XP_KEYWORDS, 1, 1, 'One;Two'),
+            ExifTag::XP_SUBJECT  => new IfdEntry(ExifTag::XP_SUBJECT, 1, 1, 'XP Subject'),
+        ]);
+
+        $document = new ExifDocument($ifd0, null, null, null, null);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('XP Title', $resolver->imageTitle());
+        self::assertSame('XP Subject', $resolver->documentName());
+        self::assertSame('XP Comment', $resolver->imageDescription());
+        self::assertSame('XP Author', $resolver->photographer());
+        self::assertSame('XP Author', $resolver->imageEditor());
+        self::assertSame('XP Title', $resolver->xpTitle());
+        self::assertSame('XP Comment', $resolver->xpComment());
+        self::assertSame('XP Author', $resolver->xpAuthor());
+        self::assertSame('XP Subject', $resolver->xpSubject());
+        self::assertSame(['One', 'Two'], $resolver->xpKeywords());
+    }
+
+    #[Test]
     public function resolvesLegacySoftwareVersions(): void
     {
         $exifIfd = new Ifd([
