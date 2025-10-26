@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
@@ -1979,6 +1980,25 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(48000, $structured->audio->sampleRate);
         self::assertSame('lpcm', $structured->audio->codec);
         self::assertSame(24, $structured->audio->bitDepth);
+    }
+
+    #[Test]
+    public function forwardsJpegAudioStreamsIntoStructuredMetadata(): void
+    {
+        $audioStream = new JpegAudioStream('PCM', 2, 44_100, 16, 'DATA', '1.00');
+        $metadata    = new Metadata([], null, jpegAudioStreams: [$audioStream]);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertCount(1, $structured->embeddedAudio->clips);
+
+        $clip = $structured->embeddedAudio->clips[0];
+        self::assertSame('PCM', $clip->format);
+        self::assertSame(2, $clip->channels);
+        self::assertSame(44_100, $clip->sampleRate);
+        self::assertSame(16, $clip->bitDepth);
+        self::assertSame('DATA', $clip->data);
+        self::assertSame('1.00', $clip->version);
     }
 
     /**
