@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
@@ -37,6 +38,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \MagicSunday\ImageMeta\Value\Enum\FileSource
  * @covers \MagicSunday\ImageMeta\Value\Enum\SensingMethod
  * @covers \MagicSunday\ImageMeta\Value\Enum\CompositeImage
+ * @covers \MagicSunday\ImageMeta\Value\Enum\LightSource
  */
 final class EnumMappingTest extends TestCase
 {
@@ -54,6 +56,7 @@ final class EnumMappingTest extends TestCase
         self::assertSame(FileSource::DIGITAL_CAMERA, FileSource::fromExifValue(3));
         self::assertSame(SensingMethod::COLOR_SEQUENTIAL_LINEAR, SensingMethod::fromExifValue(8));
         self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue(3));
+        self::assertSame(LightSource::WARM_WHITE_FLUORESCENT, LightSource::fromExifValue(16));
     }
 
     #[Test]
