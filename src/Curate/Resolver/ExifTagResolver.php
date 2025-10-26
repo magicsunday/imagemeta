@@ -92,6 +92,8 @@ final readonly class ExifTagResolver
             'imagewidth'                => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_WIDTH),
             'exifimageheight'           => $this->numericValue($this->document?->exifIfd, ExifTag::PIXEL_Y_DIMENSION),
             'imagelength'               => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_HEIGHT),
+            'tilewidth'                 => $this->tileWidth(),
+            'tilelength'                => $this->tileLength(),
             'relatedimagewidth'         => $this->relatedImageWidth(),
             'relatedimagelength'        => $this->relatedImageLength(),
             'flash'                     => $this->numericValue($this->document?->exifIfd, ExifTag::FLASH),
@@ -118,8 +120,10 @@ final readonly class ExifTagResolver
     public function ints(string $tag): ?array
     {
         return match (strtolower($tag)) {
-            'timezoneoffset' => $this->timeZoneOffsetMinutes(),
-            default          => null,
+            'timezoneoffset'  => $this->timeZoneOffsetMinutes(),
+            'tileoffsets'     => $this->tileOffsets(),
+            'tilebytecounts'  => $this->tileByteCounts(),
+            default           => null,
         };
     }
 
@@ -843,6 +847,22 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the tile width defined in the TIFF IFD.
+     */
+    public function tileWidth(): ?int
+    {
+        return $this->document?->tileWidth();
+    }
+
+    /**
+     * Returns the tile length defined in the TIFF IFD.
+     */
+    public function tileLength(): ?int
+    {
+        return $this->document?->tileLength();
+    }
+
+    /**
      * Returns the strip offsets defined in the TIFF IFD.
      *
      * @return list<int>|null
@@ -860,6 +880,26 @@ final readonly class ExifTagResolver
     public function stripByteCounts(): ?array
     {
         return $this->document?->stripByteCounts();
+    }
+
+    /**
+     * Returns the tile offsets defined in the TIFF IFD.
+     *
+     * @return list<int>|null
+     */
+    public function tileOffsets(): ?array
+    {
+        return $this->document?->tileOffsets();
+    }
+
+    /**
+     * Returns the tile byte counts defined in the TIFF IFD.
+     *
+     * @return list<int>|null
+     */
+    public function tileByteCounts(): ?array
+    {
+        return $this->document?->tileByteCounts();
     }
 
     /**

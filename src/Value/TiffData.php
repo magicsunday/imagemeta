@@ -26,6 +26,8 @@ final readonly class TiffData
      * @param int|null                                                    $samplesPerPixel             Number of samples per pixel.
      * @param int|null                                                    $bitsPerSample               Bits per sample reported for the image.
      * @param int|null                                                    $rowsPerStrip                Number of rows per TIFF strip.
+     * @param int|null                                                    $tileWidth                   Width of an individual tile when tiling is used.
+     * @param int|null                                                    $tileLength                  Length of an individual tile when tiling is used.
      * @param Compression|null                                            $compression                 Compression method used for pixel data.
      * @param Photometric|null                                            $photometric                 Photometric interpretation of the samples.
      * @param PlanarConfiguration|null                                    $planar                      Planar configuration for multi-sample data.
@@ -39,6 +41,8 @@ final readonly class TiffData
      * @param array{0:float,1:float,2:float,3:float,4:float,5:float}|null $primaryChromaticities       Primary chromaticities ordered as R,G,B.
      * @param list<int>|null                                              $stripOffsets                File offsets for TIFF strips.
      * @param list<int>|null                                              $stripByteCounts             Byte counts for each TIFF strip.
+     * @param list<int>|null                                              $tileOffsets                 File offsets for TIFF tiles.
+     * @param list<int>|null                                              $tileByteCounts              Byte counts for each TIFF tile.
      * @param list<int>|null                                              $transferFunction            Transfer function lookup table.
      * @param int|null                                                    $jpegInterchangeFormat       Offset to the JPEG interchange stream.
      * @param int|null                                                    $jpegInterchangeFormatLength Byte length of the JPEG interchange stream.
@@ -49,6 +53,8 @@ final readonly class TiffData
         public ?int $samplesPerPixel,
         public ?int $bitsPerSample,
         public ?int $rowsPerStrip,
+        public ?int $tileWidth,
+        public ?int $tileLength,
         public ?Compression $compression,
         public ?Photometric $photometric,
         public ?PlanarConfiguration $planar,
@@ -62,6 +68,8 @@ final readonly class TiffData
         public ?array $primaryChromaticities,
         public ?array $stripOffsets,
         public ?array $stripByteCounts,
+        public ?array $tileOffsets,
+        public ?array $tileByteCounts,
         public ?array $transferFunction,
         public ?int $jpegInterchangeFormat,
         public ?int $jpegInterchangeFormatLength,

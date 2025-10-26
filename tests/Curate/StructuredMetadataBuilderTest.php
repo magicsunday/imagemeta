@@ -92,8 +92,12 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::YCBCR_COEFFICIENTS             => new IfdEntry(ExifTag::YCBCR_COEFFICIENTS, 5, 3, [[299, 1000], [587, 1000], [114, 1000]]),
             ExifTag::WHITE_POINT                    => new IfdEntry(ExifTag::WHITE_POINT, 5, 2, [[3127, 10000], [3290, 10000]]),
             ExifTag::PRIMARY_CHROMATICITIES         => new IfdEntry(ExifTag::PRIMARY_CHROMATICITIES, 5, 6, [[6400, 10000], [3300, 10000], [3000, 10000], [6000, 10000], [1500, 10000], [6000, 10000]]),
+            ExifTag::TILE_WIDTH                    => new IfdEntry(ExifTag::TILE_WIDTH, 4, 1, 256),
+            ExifTag::TILE_LENGTH                   => new IfdEntry(ExifTag::TILE_LENGTH, 4, 1, 256),
             ExifTag::STRIP_OFFSETS                  => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 3, new ExifNumericList([512, 1024, 1536])),
             ExifTag::STRIP_BYTE_COUNTS              => new IfdEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 3, new ExifNumericList([2048, 2048, 1024])),
+            ExifTag::TILE_OFFSETS                   => new IfdEntry(ExifTag::TILE_OFFSETS, 4, 3, new ExifNumericList([4096, 8192, 12288])),
+            ExifTag::TILE_BYTE_COUNTS               => new IfdEntry(ExifTag::TILE_BYTE_COUNTS, 4, 3, new ExifNumericList([1024, 2048, 2048])),
             ExifTag::TRANSFER_FUNCTION              => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, new ExifNumericList([0, 32768, 65535])),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 24576),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
@@ -249,6 +253,10 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], $structured->tiff->primaryChromaticities);
         self::assertSame([512, 1024, 1536], $structured->tiff->stripOffsets);
         self::assertSame([2048, 2048, 1024], $structured->tiff->stripByteCounts);
+        self::assertSame(256, $structured->tiff->tileWidth);
+        self::assertSame(256, $structured->tiff->tileLength);
+        self::assertSame([4096, 8192, 12288], $structured->tiff->tileOffsets);
+        self::assertSame([1024, 2048, 2048], $structured->tiff->tileByteCounts);
         self::assertSame([0, 32768, 65535], $structured->tiff->transferFunction);
         self::assertSame(24576, $structured->tiff->jpegInterchangeFormat);
         self::assertSame(8192, $structured->tiff->jpegInterchangeFormatLength);
