@@ -44,6 +44,8 @@ final class JpegExtractorTest extends TestCase
 
     private const string FPXR_SIGNATURE = 'FPXR';
 
+    private const string EXIF_AUDIO_SIGNATURE = "Exif\0\0Audio\0";
+
     private const int MARKER_APP1 = 0xE1;
 
     private const int MARKER_APP2 = 0xE2;
@@ -192,6 +194,44 @@ final class JpegExtractorTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$streamId => $partOne . $partTwo], $extractor->getFlashPixStreams());
+    }
+
+    /**
+     * Confirms EXIF audio APP2 fragments are reassembled and exposed via the accessor.
+     */
+    #[Test]
+    public function testExifAudioSegmentsAreMerged(): void
+    {
+        $first  = self::segment(self::MARKER_APP2, self::exifAudioPayload(5, 1, 2, 0, 1, 8000, 8, 'pcm-a'));
+        $second = self::segment(self::MARKER_APP2, self::exifAudioPayload(5, 2, 2, 0, 1, 8000, 8, 'pcm-b'));
+
+        $jpeg = $this->jpeg($second, $first);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([
+            [
+                'codec'      => 'pcm',
+                'channels'   => 1,
+                'sampleRate' => 8000,
+                'bitDepth'   => 8,
+                'data'       => 'pcm-apcm-b',
+            ],
+        ], $extractor->getExifAudioStreams());
+    }
+
+    /**
+     * Ensures malformed EXIF audio headers raise a parse error.
+     */
+    #[Test]
+    public function testExifAudioSegmentWithUnsupportedSampleRateThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, self::exifAudioPayload(1, 1, 1, 0, 1, 12_000, 8, 'pcm'));
+
+        $extractor = $this->createExtractor($this->jpeg($payload));
+
+        $this->expectException(ParseError::class);
+        $extractor->getExifAudioStreams();
     }
 
     /**
@@ -371,6 +411,25 @@ final class JpegExtractorTest extends TestCase
     private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
+    }
+
+    /**
+     * Builds an EXIF audio APP2 payload for tests.
+     */
+    private static function exifAudioPayload(
+        int $streamId,
+        int $sequenceNumber,
+        int $sequenceCount,
+        int $codecId,
+        int $channels,
+        int $sampleRate,
+        int $bitDepth,
+        string $data,
+        int $reserved = 0,
+    ): string {
+        $header = pack('nCCCCNCC', $streamId, $sequenceNumber, $sequenceCount, $codecId, $channels, $sampleRate, $bitDepth, $reserved);
+
+        return self::EXIF_AUDIO_SIGNATURE . $header . $data;
     }
 
     /**

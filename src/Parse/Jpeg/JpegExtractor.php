@@ -19,6 +19,7 @@ use function array_key_exists;
 use function array_keys;
 use function count;
 use function implode;
+use function in_array;
 use function ksort;
 use function min;
 use function ord;
@@ -67,6 +68,25 @@ final class JpegExtractor
 
     private const string FPXR_SIGNATURE = 'FPXR';
 
+    private const string EXIF_AUDIO_SIGNATURE = "Exif\0\0Audio\0";
+
+    private const int EXIF_AUDIO_HEADER_LENGTH = 12;
+
+    /**
+     * Audio codec identifiers permitted by the EXIF audio specification.
+     */
+    private const array EXIF_AUDIO_CODECS = [
+        0x00 => 'pcm',
+        0x01 => 'mulaw',
+        0x02 => 'ima_adpcm',
+    ];
+
+    /** @var list<int> */
+    private const array EXIF_AUDIO_SAMPLE_RATES = [8000, 11025, 22050, 44100];
+
+    /** @var list<int> */
+    private const array EXIF_AUDIO_BIT_DEPTHS = [4, 8, 16];
+
     /**
      * Scan and termination markers that end metadata scanning.
      */
@@ -106,6 +126,16 @@ final class JpegExtractor
 
     /** @var list<string> */
     private array $iptcPayloads = [];
+
+    /**
+     * @var list<array{codec:string, channels:int, sampleRate:int, bitDepth:int, data:string}>
+     */
+    private array $exifAudioStreams = [];
+
+    /**
+     * @var array<int, array{codec:string, channels:int, sampleRate:int, bitDepth:int, expectedCount:int, fragments:array<int,string>}>
+     */
+    private array $exifAudioSequences = [];
 
     private ?int $frameBitsPerSample = null;
 
@@ -201,6 +231,18 @@ final class JpegExtractor
     }
 
     /**
+     * Returns decoded EXIF audio streams extracted from APP2 segments.
+     *
+     * @return list<array{codec:string, channels:int, sampleRate:int, bitDepth:int, data:string}>
+     */
+    public function getExifAudioStreams(): array
+    {
+        $this->parseIfNeeded();
+
+        return $this->exifAudioStreams;
+    }
+
+    /**
      * Returns the precision in bits reported by the primary start of frame segment.
      */
     public function getFrameSamplePrecision(): ?int
@@ -277,6 +319,8 @@ final class JpegExtractor
         $this->flashPixSequences       = [];
         $this->flashPixExpectedCounts  = [];
         $this->flashPixStreams         = [];
+        $this->exifAudioStreams        = [];
+        $this->exifAudioSequences      = [];
         $this->iptcPayloads            = [];
         $this->xmpPacketHashes         = [];
         $this->frameBitsPerSample      = null;
@@ -479,9 +523,145 @@ final class JpegExtractor
             return;
         }
 
+        if (str_starts_with($payload, self::EXIF_AUDIO_SIGNATURE)) {
+            $this->handleExifAudioSegment($payload, $offset);
+
+            return;
+        }
+
         if (str_starts_with($payload, self::FPXR_SIGNATURE)) {
             $this->handleFlashPixSegment($payload, $offset);
         }
+    }
+
+    /**
+     * Processes EXIF audio segments contained within APP2 markers.
+     *
+     * @param string $payload Raw segment payload including signature.
+     * @param int    $offset  Offset in the stream where the marker begins.
+     */
+    private function handleExifAudioSegment(string $payload, int $offset): void
+    {
+        $signatureLength = strlen(self::EXIF_AUDIO_SIGNATURE);
+        $minimumLength   = $signatureLength + self::EXIF_AUDIO_HEADER_LENGTH;
+        if (strlen($payload) < $minimumLength) {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d is too short', $offset));
+        }
+
+        $header = substr($payload, $signatureLength, self::EXIF_AUDIO_HEADER_LENGTH);
+        /** @var array{stream:int,sequence:int,count:int,codec:int,channels:int,sampleRate:int,bitDepth:int,reserved:int}|false $fields */
+        $fields = unpack('nstream/Csequence/Ccount/Ccodec/Cchannels/NsampleRate/CbitDepth/Creserved', $header);
+        if ($fields === false) {
+            throw new ParseError(sprintf('Unable to parse EXIF audio header at offset %d', $offset));
+        }
+
+        $streamId       = (int) $fields['stream'];
+        $sequenceNumber = (int) $fields['sequence'];
+        $sequenceCount  = (int) $fields['count'];
+        $codecId        = (int) $fields['codec'];
+        $channels       = (int) $fields['channels'];
+        $sampleRate     = (int) $fields['sampleRate'];
+        $bitDepth       = (int) $fields['bitDepth'];
+        $reserved       = (int) $fields['reserved'];
+
+        if ($streamId === 0) {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d uses invalid stream identifier 0', $offset));
+        }
+
+        if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
+            $this->exifAudioSequences[$streamId] = [
+                'codec'         => '',
+                'channels'      => 0,
+                'sampleRate'    => 0,
+                'bitDepth'      => 0,
+                'expectedCount' => 0,
+                'fragments'     => [],
+            ];
+
+            return;
+        }
+
+        if (!array_key_exists($codecId, self::EXIF_AUDIO_CODECS)) {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d declares unsupported codec 0x%02X', $offset, $codecId));
+        }
+
+        if ($channels <= 0) {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d declares invalid channel count %d', $offset, $channels));
+        }
+
+        if (!in_array($sampleRate, self::EXIF_AUDIO_SAMPLE_RATES, true)) {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d declares unsupported sample rate %d', $offset, $sampleRate));
+        }
+
+        if (!in_array($bitDepth, self::EXIF_AUDIO_BIT_DEPTHS, true)) {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d declares unsupported bit depth %d', $offset, $bitDepth));
+        }
+
+        if ($reserved !== 0) {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d uses non-zero reserved field %d', $offset, $reserved));
+        }
+
+        $audioData = substr($payload, $minimumLength);
+        if ($audioData === '') {
+            throw new ParseError(sprintf('EXIF audio segment at offset %d contains no payload data', $offset));
+        }
+
+        $codec = self::EXIF_AUDIO_CODECS[$codecId];
+
+        $sequence = $this->exifAudioSequences[$streamId] ?? null;
+        if ($sequence === null || $sequence['expectedCount'] === 0) {
+            $sequence = [
+                'codec'         => $codec,
+                'channels'      => $channels,
+                'sampleRate'    => $sampleRate,
+                'bitDepth'      => $bitDepth,
+                'expectedCount' => $sequenceCount,
+                'fragments'     => [],
+            ];
+        } else {
+            if (
+                $sequence['codec'] !== $codec
+                || $sequence['channels'] !== $channels
+                || $sequence['sampleRate'] !== $sampleRate
+                || $sequence['bitDepth'] !== $bitDepth
+                || $sequence['expectedCount'] !== $sequenceCount
+            ) {
+                $this->exifAudioSequences[$streamId] = [
+                    'codec'         => '',
+                    'channels'      => 0,
+                    'sampleRate'    => 0,
+                    'bitDepth'      => 0,
+                    'expectedCount' => 0,
+                    'fragments'     => [],
+                ];
+
+                return;
+            }
+        }
+
+        if (!array_key_exists($sequenceNumber, $sequence['fragments'])) {
+            $sequence['fragments'][$sequenceNumber] = $audioData;
+        }
+
+        $this->exifAudioSequences[$streamId] = $sequence;
+
+        if (count($sequence['fragments']) !== $sequence['expectedCount']) {
+            return;
+        }
+
+        $fragments = $sequence['fragments'];
+        ksort($fragments);
+        $data = implode('', $fragments);
+
+        $this->exifAudioStreams[] = [
+            'codec'      => $sequence['codec'],
+            'channels'   => $sequence['channels'],
+            'sampleRate' => $sequence['sampleRate'],
+            'bitDepth'   => $sequence['bitDepth'],
+            'data'       => $data,
+        ];
+
+        unset($this->exifAudioSequences[$streamId]);
     }
 
     /**

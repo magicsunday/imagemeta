@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Curate;
 
 use MagicSunday\ImageMeta\Value\Apple;
 use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClip;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
@@ -74,6 +75,7 @@ final readonly class StructuredMetadata
      * @param Preview             $preview             Embedded preview information.
      * @param Video               $video               Video track metadata when available.
      * @param Audio               $audio               Audio track metadata when available.
+     * @param list<AudioClip>     $audioClips          Raw EXIF audio streams decoded from JPEG APP2 segments.
      * @param ColorProfile        $colorProfile        Colour profile information.
      * @param ProcessingSettings  $processing          Image processing metadata.
      * @param WhiteBalanceDetails $whiteBalanceDetails White balance analysis details.
@@ -111,6 +113,7 @@ final readonly class StructuredMetadata
         public Preview $preview,
         public Video $video,
         public Audio $audio,
+        /** @var list<AudioClip> */ public array $audioClips = [],
         public ColorProfile $colorProfile,
         public ProcessingSettings $processing,
         public WhiteBalanceDetails $whiteBalanceDetails,

@@ -412,6 +412,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             null,
             [],
             [],
+            [],
             null,
             null,
             null,
@@ -1675,6 +1676,12 @@ final class StructuredMetadataBuilderTest extends TestCase
         $structured = (new StructuredMetadataBuilder())->build(new Metadata([], null, null, []));
 
         foreach (get_object_vars($structured) as $name => $value) {
+            if ($name === 'audioClips') {
+                self::assertIsArray($value);
+
+                continue;
+            }
+
             self::assertIsObject($value, sprintf('Expected %s to be an object value object', $name));
 
             foreach (get_object_vars($value) as $field => $fieldValue) {
@@ -1901,6 +1908,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(48000, $structured->audio->sampleRate);
         self::assertSame('lpcm', $structured->audio->codec);
         self::assertSame(24, $structured->audio->bitDepth);
+        self::assertSame([], $structured->audioClips);
     }
 
     /**
@@ -1919,6 +1927,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             null,
             [],
             [],
+            [],
             8,
             [
                 1 => ['horizontal' => 2, 'vertical' => 2],
@@ -1932,6 +1941,49 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame(8, $structured->tiff->bitsPerSample);
         self::assertSame([2, 2], $structured->tiff->ycbcrSubSampling);
+    }
+
+    /**
+     * Falls back to JPEG-derived audio metadata when QuickTime lacks audio information.
+     */
+    #[Test]
+    public function derivesAudioFromJpegAudioStreamsWhenQuickTimeMissing(): void
+    {
+        $jpegAudio = [[
+            'codec'      => 'pcm',
+            'channels'   => 1,
+            'sampleRate' => 8000,
+            'bitDepth'   => 8,
+            'data'       => 'pcm-audio',
+        ]];
+
+        $metadata = new Metadata(
+            [],
+            null,
+            null,
+            [],
+            null,
+            null,
+            null,
+            [],
+            [],
+            $jpegAudio,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(1, $structured->audio->channels);
+        self::assertSame(8000, $structured->audio->sampleRate);
+        self::assertSame('pcm', $structured->audio->codec);
+        self::assertSame(8, $structured->audio->bitDepth);
+        self::assertCount(1, $structured->audioClips);
+
+        $clip = $structured->audioClips[0];
+        self::assertSame('pcm-audio', $clip->data);
+        self::assertSame(1, $clip->channels);
+        self::assertSame(8000, $clip->sampleRate);
+        self::assertSame('pcm', $clip->codec);
+        self::assertSame(8, $clip->bitDepth);
     }
 
     /**

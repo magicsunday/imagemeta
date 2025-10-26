@@ -84,6 +84,7 @@ final class MetadataTest extends TestCase
             $iccProfile,
             $iccSegments,
             [],
+            [],
             12,
             $sampling,
             [2, 1],
@@ -103,6 +104,7 @@ final class MetadataTest extends TestCase
         self::assertSame($xmpDoc, $metadata->xmpDoc);
         self::assertSame($iccProfile, $metadata->iccProfile);
         self::assertSame($iccSegments, $metadata->iccSegments);
+        self::assertSame([], $metadata->jpegAudioStreams);
         self::assertSame(12, $metadata->jpegBitsPerSample);
         self::assertSame($sampling, $metadata->jpegFrameSamplingFactors);
         self::assertSame([2, 1], $metadata->jpegYCbCrSubSampling);
@@ -128,6 +130,7 @@ final class MetadataTest extends TestCase
         self::assertNull($metadata->exifDoc);
         self::assertSame([], $metadata->xmpBlobs);
         self::assertNull($metadata->xmpDoc);
+        self::assertSame([], $metadata->jpegAudioStreams);
         self::assertNull($metadata->jpegBitsPerSample);
         self::assertNull($metadata->jpegFrameSamplingFactors);
         self::assertNull($metadata->jpegYCbCrSubSampling);

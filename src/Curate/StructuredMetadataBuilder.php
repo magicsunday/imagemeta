@@ -28,6 +28,7 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\Apple;
 use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClip;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
@@ -303,15 +304,48 @@ final class StructuredMetadataBuilder
             colorPrimaries: $quickTimeResolver->string('com.apple.quicktime.colorPrimaries'),
         );
 
+        $primaryJpegAudio = $metadata->jpegAudioStreams[0] ?? null;
+
+        $audioChannels = $quickTimeResolver->int(QuickTimeMeta::AUDIO_CHANNELS_KEY);
+        if ($audioChannels === null && $primaryJpegAudio !== null) {
+            $audioChannels = $primaryJpegAudio['channels'];
+        }
+
+        $audioSampleRate = $quickTimeResolver->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY);
+        if ($audioSampleRate === null && $primaryJpegAudio !== null) {
+            $audioSampleRate = $primaryJpegAudio['sampleRate'];
+        }
+
+        $audioCodec = CompositeResolver::first([
+            fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_FORMAT_KEY),
+            fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_CODEC_KEY),
+        ]);
+        if ($audioCodec === null && $primaryJpegAudio !== null) {
+            $audioCodec = $primaryJpegAudio['codec'];
+        }
+
+        $audioBitDepth = $quickTimeResolver->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY);
+        if ($audioBitDepth === null && $primaryJpegAudio !== null) {
+            $audioBitDepth = $primaryJpegAudio['bitDepth'];
+        }
+
         $audio = new Audio(
-            channels: $quickTimeResolver->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
-            sampleRate: $quickTimeResolver->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
-            codec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_FORMAT_KEY),
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_CODEC_KEY),
-            ]),
-            bitDepth: $quickTimeResolver->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
+            channels: $audioChannels,
+            sampleRate: $audioSampleRate,
+            codec: $audioCodec,
+            bitDepth: $audioBitDepth,
         );
+
+        $audioClips = [];
+        foreach ($metadata->jpegAudioStreams as $stream) {
+            $audioClips[] = new AudioClip(
+                data: $stream['data'],
+                channels: $stream['channels'],
+                sampleRate: $stream['sampleRate'],
+                codec: $stream['codec'],
+                bitDepth: $stream['bitDepth'],
+            );
+        }
 
         $iccData = null;
         if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
@@ -508,6 +542,7 @@ final class StructuredMetadataBuilder
             preview: $preview,
             video: $video,
             audio: $audio,
+            audioClips: $audioClips,
             colorProfile: $colorProfile,
             processing: $processing,
             whiteBalanceDetails: $whiteBalanceDetails,
