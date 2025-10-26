@@ -894,6 +894,16 @@ final class TiffExifReaderTest extends TestCase
         $pointerMethod->invoke($reader, $jpegEntry);
     }
 
+    #[Test]
+    public function decodesInlineBigTiffDouble(): void
+    {
+        $document = (new TiffExifReader())->parseFromBlob(self::buildBigTiffInlineDoubleBlob());
+
+        $entry = $document->ifd0->get(ExifTag::CAMERA_YAW_DEGREE);
+        self::assertNotNull($entry);
+        self::assertSame(-5.0, $entry->value);
+    }
+
     /**
      * Builds a Classic TIFF little-endian EXIF payload with nested IFDs.
      */
@@ -1524,6 +1534,32 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $tileByteCountsData;
 
         return $blob;
+    }
+
+    /**
+     * Builds a minimal BigTIFF payload containing an inline DOUBLE value.
+     */
+    private static function buildBigTiffInlineDoubleBlob(): string
+    {
+        $header = 'II'
+            . pack('v', 0x002B)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('V', 16)
+            . pack('V', 0);
+
+        $yawBytes = pack('e', -5.0);
+        /** @var array{1:int,2:int} $components */
+        $components = unpack('V2', $yawBytes);
+        $entryValue = [$components[1], $components[2]];
+
+        $entries = [
+            self::packBigTiffEntry(ExifTag::CAMERA_YAW_DEGREE, 12, 1, $entryValue),
+        ];
+
+        $ifd0 = pack('V', count($entries)) . pack('V', 0) . implode('', $entries) . pack('V', 0) . pack('V', 0);
+
+        return $header . $ifd0;
     }
 
     /**

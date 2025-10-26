@@ -313,12 +313,19 @@ final class TiffExifReader
      */
     private function readDirEntry(): array
     {
-        $tag      = $this->readU16();
-        $type     = $this->readU16();
-        $cnt      = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
-        $valOrOff = $this->bigTiff ? $this->readValueOrOffset($type, $cnt) : $this->readU32();
+        $tag  = $this->readU16();
+        $type = $this->readU16();
 
-        [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff);
+        if ($this->bigTiff) {
+            $cnt = $this->readU64()->toInt('directory entry value count');
+            [$valOrOff, $inlineValueBytes] = $this->readValueOrOffset($type, $cnt);
+        } else {
+            $cnt              = $this->readU32();
+            $valOrOff         = $this->readU32();
+            $inlineValueBytes = null;
+        }
+
+        [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff, $inlineValueBytes);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
         $value      = $this->convertUInt64Values($tag, $type, $cnt, $rawBytes, $value);
 
@@ -846,25 +853,21 @@ final class TiffExifReader
      * @param int $type  TIFF field type code.
      * @param int $count Number of values represented.
      *
-     * @return int|UInt64
+     * @return array{0: int|UInt64, 1: string|null}
      */
-    private function readValueOrOffset(int $type, int $count): int|UInt64
+    private function readValueOrOffset(int $type, int $count): array
     {
-        if (!$this->bigTiff) {
-            return $this->readU32();
-        }
-
         $componentSize    = $this->bytesPerComponent($type);
         $inlineThreshold  = 8;
         $inlineValueBytes = $componentSize * $count;
 
-        if ($inlineValueBytes <= $inlineThreshold && $type === self::TYPE_SLONG8) {
+        if ($inlineValueBytes <= $inlineThreshold) {
             $bytes = $this->buf->read($inlineThreshold);
 
-            return $this->unpackS64($bytes);
+            return [0, $bytes];
         }
 
-        return $this->readU64();
+        return [$this->readU64(), null];
     }
 
     /**
@@ -916,20 +919,26 @@ final class TiffExifReader
     /**
      * Extracts the raw bytes addressed by a directory entry.
      *
-     * @param int        $type          TIFF field type code.
-     * @param int        $count         Number of values represented.
-     * @param int|UInt64 $valueOrOffset Inline value bytes or an offset into the blob.
+     * @param int         $type             TIFF field type code.
+     * @param int         $count            Number of values represented.
+     * @param int|UInt64  $valueOrOffset    Inline value bytes or an offset into the blob.
+     * @param string|null $inlineValueBytes Raw inline value bytes captured from the directory entry.
      *
      * @return array{0: string, 1: int|null}
      */
-    private function valueBytes(int $type, int $count, int|UInt64 $valueOrOffset): array
+    private function valueBytes(
+        int $type,
+        int $count,
+        int|UInt64 $valueOrOffset,
+        ?string $inlineValueBytes = null
+    ): array
     {
         $unitSize        = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
         $inlineThreshold = $this->bigTiff ? 8 : 4;
 
         if ($dataSize <= $inlineThreshold) {
-            $raw = $this->uXToBytes($valueOrOffset, $inlineThreshold);
+            $raw = $inlineValueBytes ?? $this->uXToBytes($valueOrOffset, $inlineThreshold);
 
             return [substr($raw, 0, $dataSize), null];
         }
