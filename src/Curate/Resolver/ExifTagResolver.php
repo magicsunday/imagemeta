@@ -1142,18 +1142,7 @@ final readonly class ExifTagResolver
      */
     public function flashpixVersion(): ?string
     {
-        $value = $this->stringValue($this->document?->exifIfd, ExifTag::FLASHPIX_VERSION);
-
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value, "\0");
-        if ($trimmed === '') {
-            return null;
-        }
-
-        return CoreValueConverters::toExifVersion($trimmed);
+        return $this->document?->flashpixVersion();
     }
 
     /**
