@@ -35,6 +35,8 @@ final class ExifCapabilitiesTest extends TestCase
     {
         yield 'null defaults to 2.2' => ['2.2', null];
         yield 'empty string defaults to 2.2' => ['2.2', ''];
+        yield 'raw 0220 maps to 2.2' => ['2.2', '0220'];
+        yield 'decimal 2.20 maps to 2.2' => ['2.2', '2.20'];
         yield 'numeric 0200 maps to 2.0' => ['2.0', '0200'];
         yield 'decimal 2.00 maps to 2.0' => ['2.0', '2.00'];
         yield 'raw 0221 maps to 2.21' => ['2.21', '0221'];
@@ -44,5 +46,7 @@ final class ExifCapabilitiesTest extends TestCase
         yield 'raw 0232 maps to 2.32' => ['2.32', '0232'];
         yield 'decimal 2.32 maps to 2.32' => ['2.32', '2.32'];
         yield 'raw 0230 stays grouped as 2.3' => ['2.3', '0230'];
+        yield 'malformed digits return sentinel' => [ExifCapabilities::UNKNOWN, '9999'];
+        yield 'non numeric strings return sentinel' => [ExifCapabilities::UNKNOWN, 'foo'];
     }
 }

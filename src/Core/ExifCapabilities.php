@@ -21,6 +21,8 @@ use function trim;
  */
 final class ExifCapabilities
 {
+    public const UNKNOWN = 'unknown';
+
     /**
      * Maps a raw or normalised EXIF version string to the capability profile identifier.
      */
@@ -57,12 +59,13 @@ final class ExifCapabilities
                 '0110' => '1.1',
                 '0200' => '2.0',
                 '0210' => '2.1',
+                '0220' => '2.2',
                 '0221' => '2.21',
                 '0230' => '2.3',
                 '0231' => '2.31',
                 '0232' => '2.32',
                 '0300'  => '3.0',
-                default => '2.2',
+                default => self::UNKNOWN,
             };
         }
 
@@ -71,12 +74,13 @@ final class ExifCapabilities
             '1.10', '1.1' => '1.1',
             '2.00', '2.0' => '2.0',
             '2.10', '2.1' => '2.1',
+            '2.20', '2.2' => '2.2',
             '2.21' => '2.21',
             '2.30', '2.3' => '2.3',
             '2.31' => '2.31',
             '2.32' => '2.32',
             '3.00', '3.0' => '3.0',
-            default => '2.2',
+            default => self::UNKNOWN,
         };
     }
 }
