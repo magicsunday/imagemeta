@@ -694,11 +694,29 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the opto-electronic conversion function data as a string.
+     * Returns the opto-electronic conversion function data.
+     *
+     * @return array{payload:string, matrix:(array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null)}|null
      */
-    public function oecf(): ?string
+    public function oecf(): ?array
     {
-        return $this->binaryString($this->exifIfd, ExifTag::OECF);
+        $payload = $this->oecfPayload();
+        if ($payload === null) {
+            return null;
+        }
+
+        return [
+            'payload' => $payload,
+            'matrix' => ValueConverters::decodeOecf($payload),
+        ];
+    }
+
+    /**
+     * Returns the raw opto-electronic conversion function payload.
+     */
+    public function oecfPayload(): ?string
+    {
+        return $this->rawString($this->exifIfd, ExifTag::OECF);
     }
 
     /**
