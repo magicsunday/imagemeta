@@ -97,6 +97,7 @@ final readonly class ValueConverters
     private const MAX_SFR_DIMENSION = 64;
     private const MAX_SFR_LABEL_LENGTH = 255;
     private const SFR_VALUE_SIZE = 8;
+    private const MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
 
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
@@ -808,6 +809,83 @@ final readonly class ValueConverters
         $result['h_positioning_error'] = self::rationalToFloat($hPositionEntry?->value);
 
         return $result;
+    }
+
+    /**
+     * Decodes the Epson Print Image Matching parameter block stored in tag 0xC4A5.
+     *
+     * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
+     *
+     * @return array{header:string, version:string, parameters:list<array{id:int, value:int}>}|null
+     */
+    public static function decodePrintImageMatching(?string $payload): ?array
+    {
+        if ($payload === null || $payload === '') {
+            return null;
+        }
+
+        $length = strlen($payload);
+        if ($length < 14) {
+            return null;
+        }
+
+        $header = substr($payload, 0, 8);
+        if (!str_starts_with($header, 'PrintIM')) {
+            return null;
+        }
+
+        $versionRaw = substr($payload, 8, 4);
+        $countBytes = substr($payload, 12, 2);
+
+        if ($countBytes === false || strlen($countBytes) !== 2) {
+            return null;
+        }
+
+        $countData = unpack('ncount', $countBytes);
+        if (!is_array($countData)) {
+            return null;
+        }
+
+        $count = (int) ($countData['count'] ?? 0);
+        if ($count < 0 || $count > self::MAX_PRINT_IMAGE_MATCHING_PARAMETERS) {
+            return null;
+        }
+
+        $required = 14 + ($count * 6);
+        if ($required > $length) {
+            return null;
+        }
+
+        $parameters = [];
+        $offset     = 14;
+        for ($i = 0; $i < $count; ++$i) {
+            if ($offset + 6 > $length) {
+                return null;
+            }
+
+            $entryData = substr($payload, $offset, 6);
+            if ($entryData === false || strlen($entryData) !== 6) {
+                return null;
+            }
+
+            $entry = unpack('nid/Nvalue', $entryData);
+            if (!is_array($entry) || !isset($entry['id'], $entry['value'])) {
+                return null;
+            }
+
+            $parameters[] = [
+                'id'    => (int) $entry['id'],
+                'value' => (int) $entry['value'],
+            ];
+
+            $offset += 6;
+        }
+
+        return [
+            'header'     => rtrim($header, "\0"),
+            'version'    => rtrim($versionRaw, "\0"),
+            'parameters' => $parameters,
+        ];
     }
 
     /**

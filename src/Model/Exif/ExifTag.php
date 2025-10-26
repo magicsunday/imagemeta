@@ -157,6 +157,11 @@ final readonly class ExifTag
     // EXIF sub IFD
     public const int BATTERY_LEVEL = 0x828F;
 
+    /**
+     * Epson Print Image Matching (PrintIM) parameter block.
+     */
+    public const int PRINT_IMAGE_MATCHING = 0xC4A5;
+
     public const int MAKER_NOTE_SAFETY = 0xC635;
 
     public const int EXPOSURE_TIME = 0x829A;
