@@ -261,7 +261,7 @@ final class StructuredMetadataBuilder
 
         $device = $this->buildDevice($exifResolver, $quickTimeResolver, $xmpResolver);
 
-        $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime);
+        $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime, $exifResolver);
         $xmp   = $xmpResolver->value();
 
         $file = new File(
@@ -853,6 +853,7 @@ final class StructuredMetadataBuilder
      * @param AppleMakerNotes|null $makerNotes        Parsed Apple maker note payload.
      * @param QuickTimeResolver    $quickTimeResolver Resolver exposing QuickTime metadata entries.
      * @param QuickTimeMeta|null   $quickTimeMeta     QuickTime metadata container used for content identifiers.
+     * @param ExifTagResolver      $exifResolver      Resolver exposing EXIF fallback values.
      *
      * @return Apple Apple metadata value object with normalised fields.
      */
@@ -860,6 +861,7 @@ final class StructuredMetadataBuilder
         ?AppleMakerNotes $makerNotes,
         QuickTimeResolver $quickTimeResolver,
         ?QuickTimeMeta $quickTimeMeta,
+        ExifTagResolver $exifResolver,
     ): Apple {
         $contentIdentifier = $makerNotes?->contentIdentifier;
         if ($contentIdentifier === null) {
@@ -938,6 +940,10 @@ final class StructuredMetadataBuilder
         $accelerationVector = $makerNotes?->accelerationVector;
         if ($accelerationVector === null) {
             $accelerationVector = $this->quickTimeFloatList($quickTimeResolver, 'AccelerationVector');
+        }
+
+        if ($accelerationVector === null) {
+            $accelerationVector = $exifResolver->accelerationVector();
         }
 
         $flags          = $makerNotes instanceof AppleMakerNotes ? $makerNotes->flags : [];
