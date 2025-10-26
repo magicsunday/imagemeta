@@ -19,8 +19,11 @@ use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 
 use function array_key_exists;
 use function array_map;
@@ -1269,6 +1272,36 @@ final readonly class ExifDocument
         $value = $this->int($this->exifIfd, ExifTag::CUSTOM_RENDERED);
 
         return CustomRendered::fromExifValue($value);
+    }
+
+    /**
+     * Returns the in-camera contrast setting.
+     */
+    public function contrast(): ?Contrast
+    {
+        $value = $this->int($this->exifIfd, ExifTag::CONTRAST);
+
+        return Contrast::fromExifValue($value);
+    }
+
+    /**
+     * Returns the in-camera saturation setting.
+     */
+    public function saturation(): ?Saturation
+    {
+        $value = $this->int($this->exifIfd, ExifTag::SATURATION);
+
+        return Saturation::fromExifValue($value);
+    }
+
+    /**
+     * Returns the in-camera sharpness setting.
+     */
+    public function sharpness(): ?Sharpness
+    {
+        $value = $this->int($this->exifIfd, ExifTag::SHARPNESS);
+
+        return Sharpness::fromExifValue($value);
     }
 
     /**

@@ -11,15 +11,19 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
+
 /**
  * Describes in-camera processing adjustments such as sharpness and saturation.
  */
 final readonly class ProcessingSettings
 {
     /**
-     * @param int|null    $sharpness                Sharpness adjustment level.
-     * @param int|null    $contrast                 Contrast adjustment level.
-     * @param int|null    $saturation               Saturation adjustment level.
+     * @param Sharpness|null $sharpness             Sharpness adjustment level.
+     * @param Contrast|null  $contrast              Contrast adjustment level.
+     * @param Saturation|null $saturation           Saturation adjustment level.
      * @param string|null $pictureStyle             Vendor specific picture style identifier.
      * @param float|null  $noiseReduction           Noise reduction strength as reported by the camera.
      * @param int|null    $clarity                  Clarity adjustment level.
@@ -28,9 +32,9 @@ final readonly class ProcessingSettings
      * @param string|null $processingSoftware       Final processing software recorded by the camera.
      */
     public function __construct(
-        public ?int $sharpness,
-        public ?int $contrast,
-        public ?int $saturation,
+        public ?Sharpness $sharpness,
+        public ?Contrast $contrast,
+        public ?Saturation $saturation,
         public ?string $pictureStyle,
         public ?float $noiseReduction,
         public ?int $clarity,

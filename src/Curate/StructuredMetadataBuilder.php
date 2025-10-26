@@ -344,9 +344,9 @@ final class StructuredMetadataBuilder
         );
 
         $processing = new ProcessingSettings(
-            sharpness: null,
-            contrast: null,
-            saturation: null,
+            sharpness: $exifResolver->sharpness(),
+            contrast: $exifResolver->contrast(),
+            saturation: $exifResolver->saturation(),
             pictureStyle: null,
             noiseReduction: $exifResolver->noiseReduction(),
             clarity: null,
