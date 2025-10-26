@@ -336,6 +336,21 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures BYTE tags retain their unsigned interpretation for high-bit values.
+     */
+    #[Test]
+    public function decodesUnsignedByteValues(): void
+    {
+        $blob = $this->buildClassicHighByteTagBlob();
+
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        $entry = $document->ifd0->get(ExifTag::GPS_ALTITUDE_REF);
+        self::assertNotNull($entry);
+        self::assertSame(0xFF, $entry->value);
+    }
+
+    /**
      * Ensures newly introduced scene and software tags are decoded from Classic TIFF payloads.
      */
     #[Test]
@@ -970,6 +985,20 @@ final class TiffExifReaderTest extends TestCase
 
         $inlineValue = $this->inlineBytes([1, 2, 3], 4);
         $entry       = self::packClassicEntry(ExifTag::GPS_ALTITUDE_REF, 1, 3, $inlineValue);
+        $ifd0        = pack('v', 1) . $entry . pack('V', 0);
+
+        return $header . $ifd0;
+    }
+
+    /**
+     * Builds a Classic TIFF blob containing a BYTE tag with a high-bit value.
+     */
+    private function buildClassicHighByteTagBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $inlineValue = $this->inlineBytes([0xFF], 4);
+        $entry       = self::packClassicEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, $inlineValue);
         $ifd0        = pack('v', 1) . $entry . pack('V', 0);
 
         return $header . $ifd0;
