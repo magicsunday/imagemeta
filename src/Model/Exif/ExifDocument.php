@@ -67,14 +67,14 @@ final readonly class ExifDocument
     private ?string $tiffEpStandardIdString;
 
     /**
-     * @param Ifd                     $ifd0            Root IFD of the TIFF structure.
-     * @param Ifd|null                $exifIfd         Sub IFD containing EXIF-specific tags.
-     * @param Ifd|null                $gpsIfd          Sub IFD containing GPS-related tags.
-     * @param Ifd|null                $interopIfd      Sub IFD containing interoperability tags.
-     * @param Ifd|null                $ifd1            Optional next IFD, typically thumbnails.
-     * @param MakerNotesMetadata|null $makerNotes      Decoded maker note metadata provided by vendor decoders.
+     * @param Ifd                     $ifd0           Root IFD of the TIFF structure.
+     * @param Ifd|null                $exifIfd        Sub IFD containing EXIF-specific tags.
+     * @param Ifd|null                $gpsIfd         Sub IFD containing GPS-related tags.
+     * @param Ifd|null                $interopIfd     Sub IFD containing interoperability tags.
+     * @param Ifd|null                $ifd1           Optional next IFD, typically thumbnails.
+     * @param MakerNotesMetadata|null $makerNotes     Decoded maker note metadata provided by vendor decoders.
      * @param list<Ifd>               $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
-     * @param array<int, Ifd>         $subIfds         Parsed SubIFDs indexed by their file offsets.
+     * @param array<int, Ifd>         $subIfds        Parsed SubIFDs indexed by their file offsets.
      */
     public function __construct(
         public Ifd $ifd0,
@@ -86,14 +86,14 @@ final readonly class ExifDocument
         public array $subsequentIfds = [],
         public array $subIfds = [],
     ) {
-        $rawVersion                        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
+        $rawVersion                      = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
         $this->exifVersionMissingOrEmpty = $rawVersion === null || trim($rawVersion) === '';
         $this->exifVersion               = CoreValueConverters::toExifVersion($rawVersion);
         $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
         $this->exifThreeOrNewer          = (float) $this->exifProfile >= 3.0;
 
-        $tiffEpBytes    = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
-        $tiffEpStandard = ValueConverters::tiffEpStandardId($tiffEpBytes);
+        $tiffEpBytes                  = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
+        $tiffEpStandard               = ValueConverters::tiffEpStandardId($tiffEpBytes);
         $this->tiffEpStandardId       = $tiffEpStandard['bytes'] ?? null;
         $this->tiffEpStandardIdString = $tiffEpStandard['string'] ?? null;
     }
@@ -807,7 +807,7 @@ final readonly class ExifDocument
 
         return [
             'payload' => $payload,
-            'matrix' => ValueConverters::decodeOecf($payload),
+            'matrix'  => ValueConverters::decodeOecf($payload),
         ];
     }
 
@@ -1424,7 +1424,7 @@ final readonly class ExifDocument
      */
     public function temperatureCelsius(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::TEMPERATURE);
+        return $this->rationalFromGpsOrExif(ExifTag::TEMPERATURE);
     }
 
     /**
@@ -1432,7 +1432,7 @@ final readonly class ExifDocument
      */
     public function humidityPercent(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::HUMIDITY);
+        return $this->rationalFromGpsOrExif(ExifTag::HUMIDITY);
     }
 
     /**
@@ -1440,7 +1440,7 @@ final readonly class ExifDocument
      */
     public function pressureHPa(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::PRESSURE);
+        return $this->rationalFromGpsOrExif(ExifTag::PRESSURE);
     }
 
     /**
@@ -1448,7 +1448,7 @@ final readonly class ExifDocument
      */
     public function waterDepthMeters(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::WATER_DEPTH);
+        return $this->rationalFromGpsOrExif(ExifTag::WATER_DEPTH);
     }
 
     /**
@@ -1458,7 +1458,7 @@ final readonly class ExifDocument
      */
     public function accelerationVector(): ?array
     {
-        $value = $this->value($this->exifIfd, ExifTag::ACCELERATION);
+        $value = $this->valueFromGpsOrExif(ExifTag::ACCELERATION);
 
         if (!$value instanceof ExifRationalList) {
             return null;
@@ -1472,7 +1472,7 @@ final readonly class ExifDocument
      */
     public function accelerationMs2(): ?float
     {
-        $value = $this->value($this->exifIfd, ExifTag::ACCELERATION);
+        $value = $this->valueFromGpsOrExif(ExifTag::ACCELERATION);
 
         if ($value instanceof ExifRationalList) {
             $vector = ValueConverters::srationalTripletToFloatVector($value);
@@ -1491,7 +1491,7 @@ final readonly class ExifDocument
      */
     public function cameraElevationAngleDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::CAMERA_ELEVATION_ANGLE);
+        return $this->rationalFromGpsOrExif(ExifTag::CAMERA_ELEVATION_ANGLE);
     }
 
     /**
@@ -1499,7 +1499,7 @@ final readonly class ExifDocument
      */
     public function cameraYawDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::CAMERA_YAW_DEGREE);
+        return $this->rationalFromGpsOrExif(ExifTag::CAMERA_YAW_DEGREE);
     }
 
     /**
@@ -1507,7 +1507,7 @@ final readonly class ExifDocument
      */
     public function cameraPitchDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::CAMERA_PITCH_DEGREE);
+        return $this->rationalFromGpsOrExif(ExifTag::CAMERA_PITCH_DEGREE);
     }
 
     /**
@@ -1515,7 +1515,7 @@ final readonly class ExifDocument
      */
     public function cameraRollDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::CAMERA_ROLL_DEGREE);
+        return $this->rationalFromGpsOrExif(ExifTag::CAMERA_ROLL_DEGREE);
     }
 
     /**
@@ -1547,7 +1547,7 @@ final readonly class ExifDocument
      */
     public function gimbalYawDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::GIMBAL_YAW_DEGREE);
+        return $this->rationalFromGpsOrExif(ExifTag::GIMBAL_YAW_DEGREE);
     }
 
     /**
@@ -1555,7 +1555,7 @@ final readonly class ExifDocument
      */
     public function gimbalPitchDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::GIMBAL_PITCH_DEGREE);
+        return $this->rationalFromGpsOrExif(ExifTag::GIMBAL_PITCH_DEGREE);
     }
 
     /**
@@ -1563,7 +1563,7 @@ final readonly class ExifDocument
      */
     public function gimbalRollDeg(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::GIMBAL_ROLL_DEGREE);
+        return $this->rationalFromGpsOrExif(ExifTag::GIMBAL_ROLL_DEGREE);
     }
 
     /**
@@ -2211,6 +2211,36 @@ final readonly class ExifDocument
         }
 
         return ValueConverters::rationalToFloat($value);
+    }
+
+    /**
+     * Returns a rational or numeric entry converted to float, preferring GPS data when available.
+     */
+    private function rationalFromGpsOrExif(int $tag): ?float
+    {
+        $value = $this->valueFromGpsOrExif($tag);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return ValueConverters::rationalToFloat($value);
+    }
+
+    /**
+     * Retrieves a raw entry value preferring the GPS IFD before falling back to the EXIF IFD.
+     *
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     */
+    private function valueFromGpsOrExif(int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+    {
+        $value = $this->value($this->gpsIfd, $tag);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->value($this->exifIfd, $tag);
     }
 
     /**
