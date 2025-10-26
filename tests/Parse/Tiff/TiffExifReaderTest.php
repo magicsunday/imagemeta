@@ -914,6 +914,20 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame(0x80, ord($value[7]));
     }
 
+    #[Test]
+    public function decodesBigTiffInlineNegativeDouble(): void
+    {
+        $reader   = new TiffExifReader();
+        $document = $reader->parseFromBlob(self::buildBigTiffInlineNegativeDoubleBlob());
+
+        $entry = $document->ifd0->get(ExifTag::CAMERA_YAW_DEGREE);
+        self::assertNotNull($entry);
+
+        $value = $entry->value;
+        self::assertIsFloat($value);
+        self::assertSame(-5.0, $value);
+    }
+
     /**
      * Builds a Classic TIFF little-endian EXIF payload with nested IFDs.
      */
@@ -1571,6 +1585,32 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Builds a minimal BigTIFF payload containing an inline DOUBLE value.
+     */
+    private static function buildBigTiffInlineNegativeDoubleBlob(): string
+    {
+        $header = 'II'
+            . pack('v', 0x002B)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('V', 16)
+            . pack('V', 0);
+
+        $components = self::inlineDoubleComponents(-5.0);
+
+        $entry = self::packBigTiffEntry(
+            ExifTag::CAMERA_YAW_DEGREE,
+            12,
+            1,
+            $components,
+        );
+
+        $ifd0 = pack('V', 1) . pack('V', 0) . $entry . pack('V', 0) . pack('V', 0);
+
+        return $header . $ifd0;
+    }
+
+    /**
      * Builds a BigTIFF payload exercising LONG8/SLONG8/IFD8 field types with offsets beyond 4 GB.
      */
     private static function buildBigTiffLong8OffsetsBlob(): string
@@ -1823,6 +1863,24 @@ final class TiffExifReaderTest extends TestCase
         $bytes = str_pad($ascii, $width, "\0");
 
         return self::toLittleEndianInteger($bytes);
+    }
+
+    /**
+     * Splits a little-endian DOUBLE value into inline low/high 32-bit components.
+     *
+     * @return array{0:int,1:int}
+     */
+    private static function inlineDoubleComponents(float $value): array
+    {
+        $parts = unpack('V2', pack('e', $value));
+        if ($parts === false) {
+            throw new RuntimeException('Unable to split inline DOUBLE components.');
+        }
+
+        return [
+            (int) ($parts[1] & 0xFFFFFFFF),
+            (int) ($parts[2] & 0xFFFFFFFF),
+        ];
     }
 
     /**
