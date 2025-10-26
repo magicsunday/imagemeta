@@ -613,6 +613,102 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the camera calibration signature from the EXIF payload.
+     */
+    public function cameraCalibrationSignature(): ?string
+    {
+        return $this->document?->cameraCalibrationSignature();
+    }
+
+    /**
+     * Returns the profile calibration signature from the EXIF payload.
+     */
+    public function profileCalibrationSignature(): ?string
+    {
+        return $this->document?->profileCalibrationSignature();
+    }
+
+    /**
+     * Returns the ProfileHueSatMap dimensions.
+     *
+     * @return list<int>|null
+     */
+    public function profileHueSatMapDims(): ?array
+    {
+        return $this->document?->profileHueSatMapDims();
+    }
+
+    /**
+     * Returns the ProfileHueSatMapData1 coefficients.
+     *
+     * @return list<float>|null
+     */
+    public function profileHueSatMapData1(): ?array
+    {
+        return $this->document?->profileHueSatMapData1();
+    }
+
+    /**
+     * Returns the ProfileHueSatMapData2 coefficients.
+     *
+     * @return list<float>|null
+     */
+    public function profileHueSatMapData2(): ?array
+    {
+        return $this->document?->profileHueSatMapData2();
+    }
+
+    /**
+     * Returns the ProfileHueSatMapData3 coefficients.
+     *
+     * @return list<float>|null
+     */
+    public function profileHueSatMapData3(): ?array
+    {
+        return $this->document?->profileHueSatMapData3();
+    }
+
+    /**
+     * Returns the ProfileLookTable dimensions.
+     *
+     * @return list<int>|null
+     */
+    public function profileLookTableDims(): ?array
+    {
+        return $this->document?->profileLookTableDims();
+    }
+
+    /**
+     * Returns the ProfileLookTableData coefficients.
+     *
+     * @return list<float>|null
+     */
+    public function profileLookTableData(): ?array
+    {
+        return $this->document?->profileLookTableData();
+    }
+
+    /**
+     * Returns the ProfileToneCurve values.
+     *
+     * @return list<float>|null
+     */
+    public function profileToneCurve(): ?array
+    {
+        return $this->document?->profileToneCurve();
+    }
+
+    /**
+     * Returns the ProfileGainTableMap values.
+     *
+     * @return list<float>|null
+     */
+    public function profileGainTableMap(): ?array
+    {
+        return $this->document?->profileGainTableMap();
+    }
+
+    /**
      * Returns the opto-electronic conversion function data.
      *
      * @return array{payload:string, matrix:(array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null)}|null

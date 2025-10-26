@@ -213,6 +213,18 @@ final class ExifTagTest extends TestCase
             'SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE' => 0xA462,
             'GAMMA'                                    => 0xA500,
 
+            // Camera color profile
+            'PROFILE_HUE_SAT_MAP_DIMS'                  => 0xC6B0,
+            'PROFILE_HUE_SAT_MAP_DATA1'                 => 0xC6B1,
+            'PROFILE_HUE_SAT_MAP_DATA2'                 => 0xC6B2,
+            'PROFILE_HUE_SAT_MAP_DATA3'                 => 0xC6B3,
+            'PROFILE_LOOK_TABLE_DIMS'                   => 0xC6B4,
+            'PROFILE_LOOK_TABLE_DATA'                   => 0xC6B5,
+            'PROFILE_TONE_CURVE'                        => 0xC6B6,
+            'PROFILE_GAIN_TABLE_MAP'                    => 0xC6B7,
+            'CAMERA_CALIBRATION_SIGNATURE'              => 0xC6F3,
+            'PROFILE_CALIBRATION_SIGNATURE'             => 0xC6F4,
+
             // Environmental sensing and processing notes
             'TEMPERATURE'                      => 0x9400,
             'HUMIDITY'                         => 0x9401,

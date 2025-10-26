@@ -728,6 +728,102 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera calibration signature recorded by the camera profile.
+     */
+    public function cameraCalibrationSignature(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
+    }
+
+    /**
+     * Returns the profile calibration signature recorded by the color profile.
+     */
+    public function profileCalibrationSignature(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
+    }
+
+    /**
+     * Returns the ProfileHueSatMap dimensions declared in the EXIF payload.
+     *
+     * @return list<int>|null
+     */
+    public function profileHueSatMapDims(): ?array
+    {
+        return $this->numericList($this->exifIfd, ExifTag::PROFILE_HUE_SAT_MAP_DIMS);
+    }
+
+    /**
+     * Returns the ProfileHueSatMapData1 coefficients as floating point values.
+     *
+     * @return list<float>|null
+     */
+    public function profileHueSatMapData1(): ?array
+    {
+        return $this->rationalList($this->exifIfd, ExifTag::PROFILE_HUE_SAT_MAP_DATA1);
+    }
+
+    /**
+     * Returns the ProfileHueSatMapData2 coefficients as floating point values.
+     *
+     * @return list<float>|null
+     */
+    public function profileHueSatMapData2(): ?array
+    {
+        return $this->rationalList($this->exifIfd, ExifTag::PROFILE_HUE_SAT_MAP_DATA2);
+    }
+
+    /**
+     * Returns the ProfileHueSatMapData3 coefficients as floating point values.
+     *
+     * @return list<float>|null
+     */
+    public function profileHueSatMapData3(): ?array
+    {
+        return $this->rationalList($this->exifIfd, ExifTag::PROFILE_HUE_SAT_MAP_DATA3);
+    }
+
+    /**
+     * Returns the ProfileLookTable dimensions declared in the EXIF payload.
+     *
+     * @return list<int>|null
+     */
+    public function profileLookTableDims(): ?array
+    {
+        return $this->numericList($this->exifIfd, ExifTag::PROFILE_LOOK_TABLE_DIMS);
+    }
+
+    /**
+     * Returns the ProfileLookTableData coefficients as floating point values.
+     *
+     * @return list<float>|null
+     */
+    public function profileLookTableData(): ?array
+    {
+        return $this->rationalList($this->exifIfd, ExifTag::PROFILE_LOOK_TABLE_DATA);
+    }
+
+    /**
+     * Returns the ProfileToneCurve as a floating point list.
+     *
+     * @return list<float>|null
+     */
+    public function profileToneCurve(): ?array
+    {
+        return $this->rationalList($this->exifIfd, ExifTag::PROFILE_TONE_CURVE);
+    }
+
+    /**
+     * Returns the ProfileGainTableMap as a floating point list.
+     *
+     * @return list<float>|null
+     */
+    public function profileGainTableMap(): ?array
+    {
+        return $this->rationalList($this->exifIfd, ExifTag::PROFILE_GAIN_TABLE_MAP);
+    }
+
+    /**
      * Returns the opto-electronic conversion function data.
      *
      * @return array{payload:string, matrix:(array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null)}|null

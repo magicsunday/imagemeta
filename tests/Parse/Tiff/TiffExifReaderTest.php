@@ -150,6 +150,39 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures camera profile related EXIF tags are surfaced through the document and resolver.
+     */
+    #[Test]
+    public function surfacesColorProfileTags(): void
+    {
+        $blob      = self::buildClassicColorProfileBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('ImageMeta Camera', $document->cameraCalibrationSignature());
+        self::assertSame('Profile Signature', $document->profileCalibrationSignature());
+        self::assertSame([6, 4, 2], $document->profileHueSatMapDims());
+        self::assertSame([1.0, 2.0, 3.0], $document->profileHueSatMapData1());
+        self::assertSame([4.0, 5.0, 6.0], $document->profileHueSatMapData2());
+        self::assertSame([7.0, 8.0, 9.0], $document->profileHueSatMapData3());
+        self::assertSame([5, 3, 1], $document->profileLookTableDims());
+        self::assertSame([10.0, 11.0, 12.0], $document->profileLookTableData());
+        self::assertSame([0.0, 0.5, 1.0, 1.5], $document->profileToneCurve());
+        self::assertSame([2.0, 3.0, 4.0], $document->profileGainTableMap());
+
+        self::assertSame('ImageMeta Camera', $resolver->cameraCalibrationSignature());
+        self::assertSame('Profile Signature', $resolver->profileCalibrationSignature());
+        self::assertSame([6, 4, 2], $resolver->profileHueSatMapDims());
+        self::assertSame([1.0, 2.0, 3.0], $resolver->profileHueSatMapData1());
+        self::assertSame([4.0, 5.0, 6.0], $resolver->profileHueSatMapData2());
+        self::assertSame([7.0, 8.0, 9.0], $resolver->profileHueSatMapData3());
+        self::assertSame([5, 3, 1], $resolver->profileLookTableDims());
+        self::assertSame([10.0, 11.0, 12.0], $resolver->profileLookTableData());
+        self::assertSame([0.0, 0.5, 1.0, 1.5], $resolver->profileToneCurve());
+        self::assertSame([2.0, 3.0, 4.0], $resolver->profileGainTableMap());
+    }
+
+    /**
      * Ensures the DocumentName tag is surfaced even when newer aliases are absent.
      */
     #[Test]
@@ -857,7 +890,90 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Builds a Classic TIFF blob that embeds camera profile tags within the EXIF IFD.
+     */
+    private static function buildClassicColorProfileBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0EntryCount = 1;
+        $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
+        $exifIfdOffset  = strlen($header) + $ifd0Length;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+        ];
+
+        $blob = $header;
+        $blob .= pack('v', $ifd0EntryCount) . implode('', $ifd0Entries) . pack('V', 0);
+
+        $cameraSignature  = "ImageMeta Camera\0";
+        $profileSignature = "Profile Signature\0";
+        $hueSatDims       = pack('v*', 6, 4, 2);
+        $lookDims         = pack('v*', 5, 3, 1);
+        $hueSatData1      = self::packFloatArrayLE([1.0, 2.0, 3.0]);
+        $hueSatData2      = self::packFloatArrayLE([4.0, 5.0, 6.0]);
+        $hueSatData3      = self::packFloatArrayLE([7.0, 8.0, 9.0]);
+        $lookData         = self::packFloatArrayLE([10.0, 11.0, 12.0]);
+        $toneCurve        = self::packFloatArrayLE([0.0, 0.5, 1.0, 1.5]);
+        $gainTableMap     = self::packFloatArrayLE([2.0, 3.0, 4.0]);
+
+        $exifEntryCount = 10;
+        $exifIfdLength  = 2 + ($exifEntryCount * 12) + 4;
+        $dataOffset     = $exifIfdOffset + $exifIfdLength;
+
+        $cameraSignatureOffset  = $dataOffset;
+        $dataOffset            += strlen($cameraSignature);
+        $profileSignatureOffset = $dataOffset;
+        $dataOffset            += strlen($profileSignature);
+        $hueSatDimsOffset       = $dataOffset;
+        $dataOffset            += strlen($hueSatDims);
+        $hueSatData1Offset      = $dataOffset;
+        $dataOffset            += strlen($hueSatData1);
+        $hueSatData2Offset      = $dataOffset;
+        $dataOffset            += strlen($hueSatData2);
+        $hueSatData3Offset      = $dataOffset;
+        $dataOffset            += strlen($hueSatData3);
+        $lookDimsOffset         = $dataOffset;
+        $dataOffset            += strlen($lookDims);
+        $lookDataOffset         = $dataOffset;
+        $dataOffset            += strlen($lookData);
+        $toneCurveOffset        = $dataOffset;
+        $dataOffset            += strlen($toneCurve);
+        $gainTableOffset        = $dataOffset;
+        $dataOffset            += strlen($gainTableMap);
+
+        $exifEntries = [
+            self::packClassicEntry(ExifTag::CAMERA_CALIBRATION_SIGNATURE, 2, strlen($cameraSignature), $cameraSignatureOffset),
+            self::packClassicEntry(ExifTag::PROFILE_CALIBRATION_SIGNATURE, 2, strlen($profileSignature), $profileSignatureOffset),
+            self::packClassicEntry(ExifTag::PROFILE_HUE_SAT_MAP_DIMS, 3, 3, $hueSatDimsOffset),
+            self::packClassicEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA1, 11, 3, $hueSatData1Offset),
+            self::packClassicEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA2, 11, 3, $hueSatData2Offset),
+            self::packClassicEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA3, 11, 3, $hueSatData3Offset),
+            self::packClassicEntry(ExifTag::PROFILE_LOOK_TABLE_DIMS, 3, 3, $lookDimsOffset),
+            self::packClassicEntry(ExifTag::PROFILE_LOOK_TABLE_DATA, 11, 3, $lookDataOffset),
+            self::packClassicEntry(ExifTag::PROFILE_TONE_CURVE, 11, 4, $toneCurveOffset),
+            self::packClassicEntry(ExifTag::PROFILE_GAIN_TABLE_MAP, 11, 3, $gainTableOffset),
+        ];
+
+        $blob .= pack('v', $exifEntryCount) . implode('', $exifEntries) . pack('V', 0);
+        $blob .= $cameraSignature;
+        $blob .= $profileSignature;
+        $blob .= $hueSatDims;
+        $blob .= $hueSatData1;
+        $blob .= $hueSatData2;
+        $blob .= $hueSatData3;
+        $blob .= $lookDims;
+        $blob .= $lookData;
+        $blob .= $toneCurve;
+        $blob .= $gainTableMap;
+
+        return $blob;
+    }
+
+    /**
      * Builds a Classic TIFF blob that only exposes the legacy DocumentName tag.
+
      */
     private static function buildClassicDocumentNameBlob(): string
     {
@@ -1464,6 +1580,16 @@ final class TiffExifReaderTest extends TestCase
     private static function packRationalLE(int $numerator, int $denominator): string
     {
         return pack('V', $numerator) . pack('V', $denominator);
+    }
+
+    /**
+     * Packs single precision floating point values using little-endian byte order.
+     *
+     * @param list<float> $values
+     */
+    private static function packFloatArrayLE(array $values): string
+    {
+        return pack('g*', ...$values);
     }
 
     /**
