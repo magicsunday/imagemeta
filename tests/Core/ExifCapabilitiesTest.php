@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -21,9 +22,27 @@ use PHPUnit\Framework\TestCase;
 final class ExifCapabilitiesTest extends TestCase
 {
     #[Test]
-    public function mapsExifVersionToCapabilityProfile(): void
+    #[DataProvider('exifVersionProvider')]
+    public function mapsExifVersionToCapabilityProfile(string $expected, ?string $input): void
     {
-        self::assertSame('2.0', ExifCapabilities::fromVersion('0200'));
-        self::assertSame('2.0', ExifCapabilities::fromVersion('2.00'));
+        self::assertSame($expected, ExifCapabilities::fromVersion($input));
+    }
+
+    /**
+     * @return iterable<string, array{0: string, 1: ?string}>
+     */
+    public static function exifVersionProvider(): iterable
+    {
+        yield 'null defaults to 2.2' => ['2.2', null];
+        yield 'empty string defaults to 2.2' => ['2.2', ''];
+        yield 'numeric 0200 maps to 2.0' => ['2.0', '0200'];
+        yield 'decimal 2.00 maps to 2.0' => ['2.0', '2.00'];
+        yield 'raw 0221 maps to 2.21' => ['2.21', '0221'];
+        yield 'decimal 2.21 maps to 2.21' => ['2.21', '2.21'];
+        yield 'raw 0231 maps to 2.31' => ['2.31', '0231'];
+        yield 'decimal 2.31 maps to 2.31' => ['2.31', '2.31'];
+        yield 'raw 0232 maps to 2.32' => ['2.32', '0232'];
+        yield 'decimal 2.32 maps to 2.32' => ['2.32', '2.32'];
+        yield 'raw 0230 stays grouped as 2.3' => ['2.3', '0230'];
     }
 }
