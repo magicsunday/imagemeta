@@ -846,9 +846,9 @@ final class TiffExifReader
      * @param int $type  TIFF field type code.
      * @param int $count Number of values represented.
      *
-     * @return int|UInt64
+     * @return int|UInt64|string
      */
-    private function readValueOrOffset(int $type, int $count): int|UInt64
+    private function readValueOrOffset(int $type, int $count): int|UInt64|string
     {
         if (!$this->bigTiff) {
             return $this->readU32();
@@ -858,10 +858,14 @@ final class TiffExifReader
         $inlineThreshold  = 8;
         $inlineValueBytes = $componentSize * $count;
 
-        if ($inlineValueBytes <= $inlineThreshold && $type === self::TYPE_SLONG8) {
+        if ($inlineValueBytes <= $inlineThreshold) {
             $bytes = $this->buf->read($inlineThreshold);
 
-            return $this->unpackS64($bytes);
+            if ($inlineValueBytes === $inlineThreshold) {
+                return $bytes;
+            }
+
+            return substr($bytes, 0, $inlineValueBytes);
         }
 
         return $this->readU64();
@@ -918,17 +922,32 @@ final class TiffExifReader
      *
      * @param int        $type          TIFF field type code.
      * @param int        $count         Number of values represented.
-     * @param int|UInt64 $valueOrOffset Inline value bytes or an offset into the blob.
+     * @param int|UInt64|string $valueOrOffset Inline value bytes or an offset into the blob.
      *
      * @return array{0: string, 1: int|null}
      */
-    private function valueBytes(int $type, int $count, int|UInt64 $valueOrOffset): array
+    private function valueBytes(int $type, int $count, int|UInt64|string $valueOrOffset): array
     {
         $unitSize        = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
         $inlineThreshold = $this->bigTiff ? 8 : 4;
 
         if ($dataSize <= $inlineThreshold) {
+            if (is_string($valueOrOffset)) {
+                if (strlen($valueOrOffset) < $dataSize) {
+                    throw new ParseError(
+                        sprintf(
+                            'Inline value for TIFF type %d truncated (expected %d bytes, got %d)',
+                            $type,
+                            $dataSize,
+                            strlen($valueOrOffset),
+                        ),
+                    );
+                }
+
+                return [$valueOrOffset, null];
+            }
+
             $raw = $this->uXToBytes($valueOrOffset, $inlineThreshold);
 
             return [substr($raw, 0, $dataSize), null];
