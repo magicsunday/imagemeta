@@ -18,12 +18,14 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
 use function array_key_exists;
 use function array_map;
 use function array_values;
+use function count;
 use function iconv;
 use function is_float;
 use function is_int;
@@ -1024,6 +1026,48 @@ final readonly class ExifDocument
     public function noise(): ?float
     {
         return $this->rational($this->exifIfd, ExifTag::NOISE);
+    }
+
+    /**
+     * Returns the composite image classification when available.
+     */
+    public function compositeImage(): ?CompositeImage
+    {
+        $value = $this->int($this->exifIfd, ExifTag::COMPOSITE_IMAGE);
+
+        return $value !== null ? CompositeImage::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns the number of source images contributing to the composite result.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    public function sourceImageNumberOfCompositeImage(): ?array
+    {
+        $values = $this->numericList($this->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
+
+        if ($values === null || count($values) !== 2) {
+            return null;
+        }
+
+        return [(int) $values[0], (int) $values[1]];
+    }
+
+    /**
+     * Returns the exposure times for each source image used in the composite.
+     *
+     * @return list<float>|null
+     */
+    public function sourceExposureTimesOfCompositeImage(): ?array
+    {
+        $values = $this->rationalList($this->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
+
+        if ($values === null || $values === []) {
+            return null;
+        }
+
+        return $values;
     }
 
     /**
