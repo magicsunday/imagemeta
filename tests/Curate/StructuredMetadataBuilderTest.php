@@ -163,6 +163,14 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(150, 10)),
             ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(98, 10)),
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
+            ExifTag::AIRCRAFT_MAKE               => new IfdEntry(ExifTag::AIRCRAFT_MAKE, 2, 3, 'DJI'),
+            ExifTag::AIRCRAFT_MODEL              => new IfdEntry(ExifTag::AIRCRAFT_MODEL, 2, 6, 'Mavic 3'),
+            ExifTag::FLIGHT_YAW_DEGREE           => new IfdEntry(ExifTag::FLIGHT_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
+            ExifTag::FLIGHT_PITCH_DEGREE         => new IfdEntry(ExifTag::FLIGHT_PITCH_DEGREE, 10, 1, new ExifRational(-35, 10)),
+            ExifTag::FLIGHT_ROLL_DEGREE          => new IfdEntry(ExifTag::FLIGHT_ROLL_DEGREE, 10, 1, new ExifRational(20, 10)),
+            ExifTag::GIMBAL_YAW_DEGREE           => new IfdEntry(ExifTag::GIMBAL_YAW_DEGREE, 10, 1, new ExifRational(210, 10)),
+            ExifTag::GIMBAL_PITCH_DEGREE         => new IfdEntry(ExifTag::GIMBAL_PITCH_DEGREE, 10, 1, new ExifRational(-110, 10)),
+            ExifTag::GIMBAL_ROLL_DEGREE          => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(5, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 10, 'sound.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(250, 10)),
             ExifTag::NOISE                       => new IfdEntry(ExifTag::NOISE, 5, 1, new ExifRational(456, 10)),
@@ -322,6 +330,14 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(9.8, $structured->capture->accelerationMs2, 0.001);
         self::assertEqualsWithDelta(15.0, $structured->capture->cameraElevationAngleDeg, 0.001);
         self::assertSame(10, $structured->capture->selfTimerModeSeconds);
+        self::assertSame('DJI', $structured->uav->manufacturer);
+        self::assertSame('Mavic 3', $structured->uav->model);
+        self::assertEqualsWithDelta(12.3, $structured->uav->flightYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-3.5, $structured->uav->flightPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(2.0, $structured->uav->flightRoll ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(21.0, $structured->uav->gimbalYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-11.0, $structured->uav->gimbalPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.5, $structured->uav->gimbalRoll ?? 0.0, 0.0001);
 
         self::assertSame('sound.wav', $structured->related->relatedSoundFile);
 
@@ -380,6 +396,35 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(Orientation::UNKNOWN, $structured->image->orientation);
     }
 
+    #[Test]
+    public function buildsUavFromQuickTimeFallbackWhenExifFieldsMissing(): void
+    {
+        $exifDocument = new ExifDocument(new Ifd([]), new Ifd([]), null, null, null);
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.make'             => 'Parrot',
+            'com.apple.quicktime.model'            => 'Anafi',
+            'com.apple.quicktime.flightYawDegree'  => 72.5,
+            'com.apple.quicktime.flightPitchDegree'=> -12.0,
+            'com.apple.quicktime.flightRollDegree' => 3.2,
+            'com.apple.quicktime.gimbalYawDegree'  => 15.4,
+            'com.apple.quicktime.gimbalPitchDegree'=> -8.6,
+            'com.apple.quicktime.gimbalRollDegree' => 1.1,
+        ]);
+
+        $metadata   = new Metadata(['primary'], $quickTime, $exifDocument);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('Parrot', $structured->uav->manufacturer);
+        self::assertSame('Anafi', $structured->uav->model);
+        self::assertEqualsWithDelta(72.5, $structured->uav->flightYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-12.0, $structured->uav->flightPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(3.2, $structured->uav->flightRoll ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(15.4, $structured->uav->gimbalYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-8.6, $structured->uav->gimbalPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(1.1, $structured->uav->gimbalRoll ?? 0.0, 0.0001);
+    }
+  
     #[Test]
     public function leavesSensorCfaDimensionsNullWhenInvalid(): void
     {

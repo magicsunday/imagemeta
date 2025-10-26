@@ -474,7 +474,7 @@ final class StructuredMetadataBuilder
             focalPlaneResolutionUnit: $exifResolver->focalPlaneResolutionUnit(),
         );
 
-        $uav = new Uav(null, null, null, null, null, null, null, null);
+        $uav = $this->buildUav($exifResolver, $quickTimeResolver);
 
         $hasHistory      = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
         $makerNotesSafe  = $metadata->makerNotes?->isSafe();
@@ -1052,6 +1052,60 @@ final class StructuredMetadataBuilder
         }
 
         return new Motion(null, null, null, $accelX, $accelY, $accelZ, null, null, null);
+    }
+
+    private function buildUav(ExifTagResolver $exif, QuickTimeResolver $quickTime): Uav
+    {
+        $manufacturer = $exif->aircraftMake();
+        if ($manufacturer === null) {
+            $manufacturer = $quickTime->string('com.apple.quicktime.make');
+        }
+
+        $model = $exif->aircraftModel();
+        if ($model === null) {
+            $model = $quickTime->string('com.apple.quicktime.model');
+        }
+
+        $flightYaw = $exif->flightYawDeg();
+        if ($flightYaw === null) {
+            $flightYaw = $quickTime->float('com.apple.quicktime.flightYawDegree');
+        }
+
+        $flightPitch = $exif->flightPitchDeg();
+        if ($flightPitch === null) {
+            $flightPitch = $quickTime->float('com.apple.quicktime.flightPitchDegree');
+        }
+
+        $flightRoll = $exif->flightRollDeg();
+        if ($flightRoll === null) {
+            $flightRoll = $quickTime->float('com.apple.quicktime.flightRollDegree');
+        }
+
+        $gimbalYaw = $exif->gimbalYawDeg();
+        if ($gimbalYaw === null) {
+            $gimbalYaw = $quickTime->float('com.apple.quicktime.gimbalYawDegree');
+        }
+
+        $gimbalPitch = $exif->gimbalPitchDeg();
+        if ($gimbalPitch === null) {
+            $gimbalPitch = $quickTime->float('com.apple.quicktime.gimbalPitchDegree');
+        }
+
+        $gimbalRoll = $exif->gimbalRollDeg();
+        if ($gimbalRoll === null) {
+            $gimbalRoll = $quickTime->float('com.apple.quicktime.gimbalRollDegree');
+        }
+
+        return new Uav(
+            manufacturer: $manufacturer,
+            model: $model,
+            flightYaw: $flightYaw,
+            flightPitch: $flightPitch,
+            flightRoll: $flightRoll,
+            gimbalYaw: $gimbalYaw,
+            gimbalPitch: $gimbalPitch,
+            gimbalRoll: $gimbalRoll,
+        );
     }
 
     /**

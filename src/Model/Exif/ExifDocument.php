@@ -139,6 +139,22 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the aircraft manufacturer string if present.
+     */
+    public function aircraftMake(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::AIRCRAFT_MAKE);
+    }
+
+    /**
+     * Returns the aircraft model string if present.
+     */
+    public function aircraftModel(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::AIRCRAFT_MODEL);
+    }
+
+    /**
      * Returns the lens model string if present.
      *
      * @return string|null
@@ -1114,6 +1130,54 @@ final readonly class ExifDocument
     public function cameraElevationAngleDeg(): ?float
     {
         return $this->rational($this->exifIfd, ExifTag::CAMERA_ELEVATION_ANGLE);
+    }
+
+    /**
+     * Returns the aircraft flight yaw in degrees.
+     */
+    public function flightYawDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FLIGHT_YAW_DEGREE);
+    }
+
+    /**
+     * Returns the aircraft flight pitch in degrees.
+     */
+    public function flightPitchDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FLIGHT_PITCH_DEGREE);
+    }
+
+    /**
+     * Returns the aircraft flight roll in degrees.
+     */
+    public function flightRollDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FLIGHT_ROLL_DEGREE);
+    }
+
+    /**
+     * Returns the gimbal yaw in degrees.
+     */
+    public function gimbalYawDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::GIMBAL_YAW_DEGREE);
+    }
+
+    /**
+     * Returns the gimbal pitch in degrees.
+     */
+    public function gimbalPitchDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::GIMBAL_PITCH_DEGREE);
+    }
+
+    /**
+     * Returns the gimbal roll in degrees.
+     */
+    public function gimbalRollDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::GIMBAL_ROLL_DEGREE);
     }
 
     /**
