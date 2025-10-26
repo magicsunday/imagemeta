@@ -13,7 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Curate\Resolver;
 
 use MagicSunday\ImageMeta\Curate\Resolver\AppleResolver;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use MagicSunday\ImageMeta\Value\Apple;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -50,7 +50,7 @@ final class AppleResolverTest extends TestCase
 
         $apple = $resolver->resolve($quickTime);
 
-        self::assertInstanceOf(Apple::class, $apple);
+        self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('qt-content', $apple->contentIdentifier);
         self::assertSame('Wide', $apple->cameraType);
         self::assertSame([1.1, 1.2, 1.3], $apple->hdrGain);

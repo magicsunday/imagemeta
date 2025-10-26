@@ -56,7 +56,6 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
-use MagicSunday\ImageMeta\Value\RunTime as ValueRunTime;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -797,7 +796,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('maker-photo', $structured->apple->photoIdentifier);
         self::assertEqualsWithDelta(0.85, $structured->apple->afMeasuredDepth, 1e-12);
         self::assertEqualsWithDelta(0.76, $structured->apple->afConfidence, 1e-12);
-        self::assertInstanceOf(ValueRunTime::class, $structured->apple->runTime);
+        self::assertInstanceOf(AppleRunTime::class, $structured->apple->runTime);
         self::assertSame(7, $structured->apple->runTime?->epoch);
         self::assertSame(20, $structured->apple->runTime?->timescale);
         self::assertSame(100, $structured->apple->runTime?->value);
