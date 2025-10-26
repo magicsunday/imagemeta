@@ -305,7 +305,11 @@ final class TiffExifReader
      */
     private function collectSubIfds(IfdEntry $entry): void
     {
-        if ($entry->type !== self::TYPE_IFD && $entry->type !== self::TYPE_IFD8) {
+        if (
+            $entry->type !== self::TYPE_IFD
+            && $entry->type !== self::TYPE_IFD8
+            && $entry->type !== self::TYPE_LONG
+        ) {
             return;
         }
 
@@ -344,18 +348,19 @@ final class TiffExifReader
         if ($value instanceof ExifNumericList) {
             $offsets = [];
             foreach ($value->values as $component) {
-                if (!is_int($component)) {
+                if (!is_int($component) && !is_float($component)) {
                     continue;
                 }
 
-                $offsets[] = $component;
+                $offsetEntry = new IfdEntry($entry->tag, $entry->type, 1, $component);
+                $offsets[]   = $this->pointerOffset($offsetEntry);
             }
 
             return $offsets;
         }
 
-        if (is_int($value)) {
-            return [$value];
+        if (is_int($value) || is_float($value)) {
+            return [$this->pointerOffset($entry)];
         }
 
         return [];
