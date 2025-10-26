@@ -35,14 +35,23 @@ final class ExifCapabilitiesTest extends TestCase
     {
         yield 'null defaults to 2.2' => ['2.2', null];
         yield 'empty string defaults to 2.2' => ['2.2', ''];
+        yield 'decimal 1.0 maps to 1.0' => ['1.0', '1.0'];
+        yield 'decimal 1.1 maps to 1.1' => ['1.1', '1.1'];
         yield 'numeric 0200 maps to 2.0' => ['2.0', '0200'];
+        yield 'decimal 2.0 maps to 2.0' => ['2.0', '2.0'];
         yield 'decimal 2.00 maps to 2.0' => ['2.0', '2.00'];
+        yield 'numeric 0210 maps to 2.1' => ['2.1', '0210'];
+        yield 'decimal 2.1 maps to 2.1' => ['2.1', '2.1'];
+        yield 'decimal 2.2 defaults to 2.2' => ['2.2', '2.2'];
         yield 'raw 0221 maps to 2.21' => ['2.21', '0221'];
         yield 'decimal 2.21 maps to 2.21' => ['2.21', '2.21'];
+        yield 'raw 0230 stays grouped as 2.3' => ['2.3', '0230'];
+        yield 'decimal 2.3 maps to 2.3' => ['2.3', '2.3'];
         yield 'raw 0231 maps to 2.31' => ['2.31', '0231'];
         yield 'decimal 2.31 maps to 2.31' => ['2.31', '2.31'];
         yield 'raw 0232 maps to 2.32' => ['2.32', '0232'];
         yield 'decimal 2.32 maps to 2.32' => ['2.32', '2.32'];
-        yield 'raw 0230 stays grouped as 2.3' => ['2.3', '0230'];
+        yield 'numeric 0300 maps to 3.0' => ['3.0', '0300'];
+        yield 'decimal 3.0 maps to 3.0' => ['3.0', '3.0'];
     }
 }
