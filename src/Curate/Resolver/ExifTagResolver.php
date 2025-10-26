@@ -219,6 +219,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Indicates whether the maker note payload is marked as safe to edit.
+     */
+    public function makerNoteSafety(): ?bool
+    {
+        return $this->document?->makerNoteSafety();
+    }
+
+    /**
      * Returns the camera model when available.
      */
     public function cameraModel(): ?string

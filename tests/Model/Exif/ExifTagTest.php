@@ -149,6 +149,7 @@ final class ExifTagTest extends TestCase
             'FOCAL_LENGTH'                             => 0x920A,
             'SUBJECT_AREA'                             => 0x9214,
             'MAKER_NOTE'                               => 0x927C,
+            'MAKER_NOTE_SAFETY'                        => 0xC635,
             'USER_COMMENT'                             => 0x9286,
             'SUB_SEC_TIME'                             => 0x9290,
             'SUB_SEC_TIME_ORIGINAL'                    => 0x9291,

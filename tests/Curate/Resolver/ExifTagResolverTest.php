@@ -424,4 +424,24 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('RawLab 5.2.1', $resolver->rawDevelopingSoftwareVersion());
         self::assertSame('MetaLab 1.0.0', $resolver->metadataEditingSoftwareVersion());
     }
+
+    #[Test]
+    public function resolvesMakerNoteSafetyFlag(): void
+    {
+        $safeIfd = new Ifd([
+            ExifTag::MAKER_NOTE_SAFETY => new IfdEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, 1),
+        ]);
+
+        $unsafeIfd = new Ifd([
+            ExifTag::MAKER_NOTE_SAFETY => new IfdEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, 0),
+        ]);
+
+        $safeResolver   = new ExifTagResolver(new ExifDocument(new Ifd([]), $safeIfd, null, null, null));
+        $unsafeResolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $unsafeIfd, null, null, null));
+        $missingResolver = new ExifTagResolver(new ExifDocument(new Ifd([]), null, null, null, null));
+
+        self::assertTrue($safeResolver->makerNoteSafety());
+        self::assertFalse($unsafeResolver->makerNoteSafety());
+        self::assertNull($missingResolver->makerNoteSafety());
+    }
 }

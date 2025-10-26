@@ -83,6 +83,20 @@ final readonly class ExifDocument
     }
 
     /**
+     * Indicates whether the maker note is considered safe to modify according to EXIF tag 0xC635.
+     */
+    public function makerNoteSafety(): ?bool
+    {
+        $value = $this->int($this->exifIfd, ExifTag::MAKER_NOTE_SAFETY);
+
+        return match ($value) {
+            0       => false,
+            1       => true,
+            default => null,
+        };
+    }
+
+    /**
      * Returns any additional image file directories linked from IFD0.
      *
      * @return list<Ifd>

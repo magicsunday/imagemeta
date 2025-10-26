@@ -32,6 +32,7 @@ final readonly class MakerNotesMetadata
         private int $length,
         private string $sha1,
         private ?AppleMakerNotes $apple = null,
+        private ?bool $isSafe = null,
     ) {
         if ($vendor === '') {
             throw new InvalidArgumentException('The vendor must not be empty.');
@@ -76,5 +77,13 @@ final readonly class MakerNotesMetadata
     public function apple(): ?AppleMakerNotes
     {
         return $this->apple;
+    }
+
+    /**
+     * Returns whether the maker note payload is marked safe to edit.
+     */
+    public function isSafe(): ?bool
+    {
+        return $this->isSafe;
     }
 }

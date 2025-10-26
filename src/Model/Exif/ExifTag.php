@@ -148,6 +148,8 @@ final readonly class ExifTag
     // EXIF sub IFD
     public const int BATTERY_LEVEL = 0x828F;
 
+    public const int MAKER_NOTE_SAFETY = 0xC635;
+
     public const int EXPOSURE_TIME = 0x829A;
 
     public const int F_NUMBER = 0x829D;

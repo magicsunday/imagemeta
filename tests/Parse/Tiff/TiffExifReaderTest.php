@@ -362,6 +362,7 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame('DATA', $makerNotes->vendor());
         self::assertSame(strlen($makerNoteData), $makerNotes->length());
         self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
+        self::assertNull($makerNotes->isSafe());
     }
 
     /**
@@ -387,6 +388,55 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame('Unknown', $makerNotes->vendor());
         self::assertSame(strlen($makerNoteData), $makerNotes->length());
         self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
+        self::assertNull($makerNotes->isSafe());
+    }
+
+    /**
+     * Ensures the maker note safety flag propagates when the metadata is decoded via a registry.
+     */
+    #[Test]
+    public function propagatesMakerNoteSafetyForRegisteredDecoder(): void
+    {
+        [$blob] = $this->buildClassicMakerNoteBlob(1);
+
+        $decoder = new class implements MakerNotesDecoderInterface {
+            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            {
+                return new MakerNotesMetadata('SafeVendor', strlen($raw), sha1($raw));
+            }
+        };
+
+        $registry = new Registry();
+        $registry->register('AcmeCam', $decoder);
+
+        $document   = (new TiffExifReader())->parseFromBlob($blob, $registry);
+        $makerNotes = $document->makerNotes();
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertTrue($document->makerNoteSafety());
+        self::assertTrue($makerNotes->isSafe());
+
+        $resolver = new ExifTagResolver($document);
+        self::assertTrue($resolver->makerNoteSafety());
+    }
+
+    /**
+     * Ensures the maker note safety flag propagates when falling back to a digest.
+     */
+    #[Test]
+    public function propagatesMakerNoteSafetyForDigestFallback(): void
+    {
+        [$blob] = $this->buildClassicMakerNoteBlob(0);
+
+        $document   = (new TiffExifReader())->parseFromBlob($blob);
+        $makerNotes = $document->makerNotes();
+
+        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertFalse($document->makerNoteSafety());
+        self::assertFalse($makerNotes->isSafe());
+
+        $resolver = new ExifTagResolver($document);
+        self::assertFalse($resolver->makerNoteSafety());
     }
 
     /**
@@ -1015,7 +1065,7 @@ final class TiffExifReaderTest extends TestCase
      *
      * @return array{0: string, 1: string}
      */
-    private function buildClassicMakerNoteBlob(): array
+    private function buildClassicMakerNoteBlob(?int $safety = null): array
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
@@ -1040,12 +1090,15 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $makeString;
         $blob .= $modelString;
 
-        $exifEntryCount  = 1;
-        $exifIfdSize     = 2 + 12 + 4;
+        $exifEntryCount  = $safety === null ? 1 : 2;
+        $exifIfdSize     = 2 + $exifEntryCount * 12 + 4;
         $makerNoteOffset = $exifOffset + $exifIfdSize;
         $exifEntries     = [
             self::packClassicEntry(ExifTag::MAKER_NOTE, 7, strlen($makerNote), $makerNoteOffset),
         ];
+        if ($safety !== null) {
+            $exifEntries[] = self::packClassicEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, $safety);
+        }
         $blob .= pack('v', $exifEntryCount) . implode('', $exifEntries) . pack('V', 0);
         $blob .= $makerNote;
 

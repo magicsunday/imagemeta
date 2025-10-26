@@ -473,13 +473,19 @@ final class StructuredMetadataBuilder
 
         $uav = new Uav(null, null, null, null, null, null, null, null);
 
-        $hasHistory = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
-        $integrity  = new Integrity(
+        $hasHistory      = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
+        $makerNotesSafe  = $metadata->makerNotes?->isSafe();
+        if ($makerNotesSafe === null) {
+            $makerNotesSafe = $exifResolver->makerNoteSafety();
+        }
+
+        $integrity = new Integrity(
             originalFileName: $xmpResolver->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
             edited: $hasHistory ? true : null,
             historyLastSoftware: null,
             imageHistory: $exifResolver->imageHistory(),
+            makerNotesSafe: $makerNotesSafe,
         );
 
         return new StructuredMetadata(
