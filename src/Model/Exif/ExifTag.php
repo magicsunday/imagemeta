@@ -448,6 +448,22 @@ final readonly class ExifTag
 
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
+    public const int FLIGHT_YAW_DEGREE = 0x9406;
+
+    public const int FLIGHT_PITCH_DEGREE = 0x9407;
+
+    public const int FLIGHT_ROLL_DEGREE = 0x9408;
+
+    public const int GIMBAL_YAW_DEGREE = 0x9409;
+
+    public const int GIMBAL_PITCH_DEGREE = 0x940A;
+
+    public const int GIMBAL_ROLL_DEGREE = 0x940B;
+
+    public const int AIRCRAFT_MAKE = 0x940C;
+
+    public const int AIRCRAFT_MODEL = 0x940D;
+
     /**
      * Legacy Microsoft EXIF tag that stored the camera firmware string.
      */

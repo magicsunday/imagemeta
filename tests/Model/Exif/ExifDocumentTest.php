@@ -986,6 +986,33 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(1.5, $document->gpsHorizontalPositioningError(), 0.000001);
     }
 
+    #[Test]
+    public function exposesUavMetadataWhenPresent(): void
+    {
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::AIRCRAFT_MAKE        => new IfdEntry(ExifTag::AIRCRAFT_MAKE, 2, 1, 'DJI'),
+            ExifTag::AIRCRAFT_MODEL       => new IfdEntry(ExifTag::AIRCRAFT_MODEL, 2, 1, 'Mavic 3'),
+            ExifTag::FLIGHT_YAW_DEGREE    => new IfdEntry(ExifTag::FLIGHT_YAW_DEGREE, 10, 1, new ExifRational(123, 10)),
+            ExifTag::FLIGHT_PITCH_DEGREE  => new IfdEntry(ExifTag::FLIGHT_PITCH_DEGREE, 10, 1, new ExifRational(-45, 10)),
+            ExifTag::FLIGHT_ROLL_DEGREE   => new IfdEntry(ExifTag::FLIGHT_ROLL_DEGREE, 10, 1, new ExifRational(15, 10)),
+            ExifTag::GIMBAL_YAW_DEGREE    => new IfdEntry(ExifTag::GIMBAL_YAW_DEGREE, 10, 1, new ExifRational(321, 10)),
+            ExifTag::GIMBAL_PITCH_DEGREE  => new IfdEntry(ExifTag::GIMBAL_PITCH_DEGREE, 10, 1, new ExifRational(-210, 10)),
+            ExifTag::GIMBAL_ROLL_DEGREE   => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(-5, 10)),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('DJI', $document->aircraftMake());
+        self::assertSame('Mavic 3', $document->aircraftModel());
+        self::assertEqualsWithDelta(12.3, $document->flightYawDeg(), 0.0001);
+        self::assertEqualsWithDelta(-4.5, $document->flightPitchDeg(), 0.0001);
+        self::assertEqualsWithDelta(1.5, $document->flightRollDeg(), 0.0001);
+        self::assertEqualsWithDelta(32.1, $document->gimbalYawDeg(), 0.0001);
+        self::assertEqualsWithDelta(-21.0, $document->gimbalPitchDeg(), 0.0001);
+        self::assertEqualsWithDelta(-0.5, $document->gimbalRollDeg(), 0.0001);
+    }
+
     private static function buildSpatialFrequencyResponsePayload(): string
     {
         $columns = 3;

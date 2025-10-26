@@ -236,6 +236,22 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the aircraft manufacturer when available.
+     */
+    public function aircraftMake(): ?string
+    {
+        return $this->document?->aircraftMake();
+    }
+
+    /**
+     * Returns the aircraft model when available.
+     */
+    public function aircraftModel(): ?string
+    {
+        return $this->document?->aircraftModel();
+    }
+
+    /**
      * Returns the artist tag value when present.
      */
     public function artist(): ?string
@@ -1726,6 +1742,54 @@ final readonly class ExifTagResolver
     public function cameraElevationAngleDeg(): ?float
     {
         return $this->document?->cameraElevationAngleDeg();
+    }
+
+    /**
+     * Returns the aircraft flight yaw in degrees.
+     */
+    public function flightYawDeg(): ?float
+    {
+        return $this->document?->flightYawDeg();
+    }
+
+    /**
+     * Returns the aircraft flight pitch in degrees.
+     */
+    public function flightPitchDeg(): ?float
+    {
+        return $this->document?->flightPitchDeg();
+    }
+
+    /**
+     * Returns the aircraft flight roll in degrees.
+     */
+    public function flightRollDeg(): ?float
+    {
+        return $this->document?->flightRollDeg();
+    }
+
+    /**
+     * Returns the gimbal yaw in degrees.
+     */
+    public function gimbalYawDeg(): ?float
+    {
+        return $this->document?->gimbalYawDeg();
+    }
+
+    /**
+     * Returns the gimbal pitch in degrees.
+     */
+    public function gimbalPitchDeg(): ?float
+    {
+        return $this->document?->gimbalPitchDeg();
+    }
+
+    /**
+     * Returns the gimbal roll in degrees.
+     */
+    public function gimbalRollDeg(): ?float
+    {
+        return $this->document?->gimbalRollDeg();
     }
 
     /**
