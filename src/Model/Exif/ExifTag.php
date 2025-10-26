@@ -32,6 +32,13 @@ final readonly class ExifTag
 
     public const int PHOTOMETRIC_INTERPRETATION = 0x0106;
 
+    /**
+     * Legacy EXIF ≤ 2.x tag storing the document name within IFD0.
+     *
+     * Retained for backwards compatibility alongside the EXIF 3.0 IMAGE_TITLE tag.
+     */
+    public const int DOCUMENT_NAME = 0x010D;
+
     public const int IMAGE_DESCRIPTION = 0x010E;
 
     public const int SUB_IFDS = 0x014A;

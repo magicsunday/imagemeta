@@ -311,6 +311,18 @@ final readonly class ExifDocument
      */
     public function documentName(): ?string
     {
+        $value = $this->str($this->ifd0, ExifTag::DOCUMENT_NAME);
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        $value = $this->str($this->exifIfd, ExifTag::DOCUMENT_NAME);
+
+        if ($value !== null) {
+            return $value;
+        }
+
         $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
 
         if ($value !== null) {
