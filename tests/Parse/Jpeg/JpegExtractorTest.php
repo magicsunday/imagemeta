@@ -272,6 +272,22 @@ final class JpegExtractorTest extends TestCase
     }
 
     /**
+     * Ensures μ-law APP2 segments only accept 8 kHz sampling rate.
+     */
+    #[Test]
+    public function testMuLawAudioSegmentWithNonEightKilohertzSampleRateThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, self::audioPayload(1, 1, 11_025, 8, str_repeat("\x00", 8)));
+        $jpeg    = $this->jpeg($payload);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getAudioStreams();
+    }
+
+    /**
      * Ensures MPF APP2 payloads are buffered across segments and decoded.
      */
     #[Test]
