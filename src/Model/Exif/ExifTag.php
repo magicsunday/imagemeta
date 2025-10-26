@@ -400,26 +400,56 @@ final readonly class ExifTag
 
     public const int DEVICE_SETTING_DESCRIPTION = 0xA40B;
 
-    // DNG profile calibration tags
+    // DNG colour profile tags (EXIF 2.3/3.0)
+    /**
+     * DNG camera calibration signature string recorded alongside the profile data.
+     */
     public const int CAMERA_CALIBRATION_SIGNATURE = 0xC6F3;
 
+    /**
+     * DNG profile calibration signature string supplied by the camera vendor.
+     */
     public const int PROFILE_CALIBRATION_SIGNATURE = 0xC6F4;
 
-    public const int PROFILE_HUE_SAT_MAP_DIMS = 0xC6F2;
+    /**
+     * Records the hue/saturation/value grid dimensions used by the profile maps.
+     */
+    public const int PROFILE_HUE_SAT_MAP_DIMS = 0xC726;
 
-    public const int PROFILE_HUE_SAT_MAP_DATA_1 = 0xC6F3;
+    /**
+     * Primary hue/saturation/value adjustment map encoded as IEEE-754 floats.
+     */
+    public const int PROFILE_HUE_SAT_MAP_DATA_1 = 0xC727;
 
-    public const int PROFILE_HUE_SAT_MAP_DATA_2 = 0xC6F4;
+    /**
+     * Secondary hue/saturation/value adjustment map encoded as IEEE-754 floats.
+     */
+    public const int PROFILE_HUE_SAT_MAP_DATA_2 = 0xC728;
 
-    public const int PROFILE_HUE_SAT_MAP_DATA_3 = 0xC6F5;
+    /**
+     * Tertiary hue/saturation/value adjustment map encoded as IEEE-754 floats.
+     */
+    public const int PROFILE_HUE_SAT_MAP_DATA_3 = 0xC729;
 
-    public const int PROFILE_LOOK_TABLE_DIMS = 0xC6F6;
+    /**
+     * Defines the hue/saturation/value grid dimensions used by the look table.
+     */
+    public const int PROFILE_LOOK_TABLE_DIMS = 0xC72A;
 
-    public const int PROFILE_LOOK_TABLE_DATA = 0xC6F7;
+    /**
+     * Profile look table entries encoded as triplets of IEEE-754 floats.
+     */
+    public const int PROFILE_LOOK_TABLE_DATA = 0xC72B;
 
-    public const int PROFILE_TONE_CURVE = 0xC6F8;
+    /**
+     * Optional tone curve defined as normalised IEEE-754 float pairs.
+     */
+    public const int PROFILE_TONE_CURVE = 0xC72C;
 
-    public const int PROFILE_GAIN_TABLE_MAP = 0xC6F9;
+    /**
+     * Optional profile gain table map encoded as IEEE-754 floats.
+     */
+    public const int PROFILE_GAIN_TABLE_MAP = 0xC72D;
 
     // GPS sub IFD (Table 66 – EXIF 3.0)
     public const int GPS_VERSION_ID = 0x0000;

@@ -2115,16 +2115,9 @@ final readonly class ExifTagResolver
      */
     public function cameraCalibrationSignature(): ?string
     {
-        if (!$this->document instanceof ExifDocument) {
-            return null;
-        }
-
-        $signature = $this->stringValue($this->document->exifIfd, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
-        if ($signature !== null) {
-            return $signature;
-        }
-
-        return $this->stringValue($this->document->ifd0, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
+        return $this->document instanceof ExifDocument
+            ? $this->document->cameraCalibrationSignature()
+            : null;
     }
 
     /**
@@ -2132,16 +2125,9 @@ final readonly class ExifTagResolver
      */
     public function profileCalibrationSignature(): ?string
     {
-        if (!$this->document instanceof ExifDocument) {
-            return null;
-        }
-
-        $signature = $this->stringValue($this->document->exifIfd, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
-        if ($signature !== null) {
-            return $signature;
-        }
-
-        return $this->stringValue($this->document->ifd0, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
+        return $this->document instanceof ExifDocument
+            ? $this->document->profileCalibrationSignature()
+            : null;
     }
 
     /**
@@ -2149,27 +2135,25 @@ final readonly class ExifTagResolver
      */
     public function profileHueSatMap(): ?ColorProfileHueSatMap
     {
-        foreach ($this->profileIfds() as $ifd) {
-            $dims = $this->intListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS));
-            $map1 = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DATA_1));
-            $map2 = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DATA_2));
-            $map3 = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DATA_3));
-
-            if ($dims === null && $map1 === null && $map2 === null && $map3 === null) {
-                continue;
-            }
-
-            return new ColorProfileHueSatMap(
-                $dims[0] ?? null,
-                $dims[1] ?? null,
-                $dims[2] ?? null,
-                $map1,
-                $map2,
-                $map3,
-            );
+        if (!$this->document instanceof ExifDocument) {
+            return null;
         }
 
-        return null;
+        $map = $this->document->profileHueSatMap();
+        if ($map === null) {
+            return null;
+        }
+
+        $dimensions = $map['dimensions'] ?? null;
+
+        return new ColorProfileHueSatMap(
+            $dimensions[0] ?? null,
+            $dimensions[1] ?? null,
+            $dimensions[2] ?? null,
+            $map['map1'] ?? null,
+            $map['map2'] ?? null,
+            $map['map3'] ?? null,
+        );
     }
 
     /**
@@ -2177,34 +2161,32 @@ final readonly class ExifTagResolver
      */
     public function profileLookTable(): ?ColorProfileLookTable
     {
-        foreach ($this->profileIfds() as $ifd) {
-            $dimsEntry = $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS);
-            $dataEntry = $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DATA);
-
-            $dims = $this->intListFromEntry($dimsEntry);
-            $data = $this->floatListFromEntry($dataEntry);
-
-            if ($dims === null && $data === null) {
-                continue;
-            }
-
-            $entries = null;
-            if ($data !== null) {
-                $entries = $this->chunkTripletEntries($data);
-                if ($entries === []) {
-                    $entries = null;
-                }
-            }
-
-            return new ColorProfileLookTable(
-                $dims[0] ?? null,
-                $dims[1] ?? null,
-                $dims[2] ?? null,
-                $entries,
-            );
+        if (!$this->document instanceof ExifDocument) {
+            return null;
         }
 
-        return null;
+        $table = $this->document->profileLookTable();
+        if ($table === null) {
+            return null;
+        }
+
+        $dimensions = $table['dimensions'] ?? null;
+        $data       = $table['data'] ?? null;
+
+        $entries = null;
+        if (is_array($data)) {
+            $entries = $this->chunkTripletEntries($data);
+            if ($entries === []) {
+                $entries = null;
+            }
+        }
+
+        return new ColorProfileLookTable(
+            $dimensions[0] ?? null,
+            $dimensions[1] ?? null,
+            $dimensions[2] ?? null,
+            $entries,
+        );
     }
 
     /**
@@ -2212,21 +2194,21 @@ final readonly class ExifTagResolver
      */
     public function profileToneCurve(): ?ColorProfileToneCurve
     {
-        foreach ($this->profileIfds() as $ifd) {
-            $values = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_TONE_CURVE));
-            if ($values === null) {
-                continue;
-            }
-
-            $points = $this->chunkPairEntries($values);
-            if ($points === []) {
-                continue;
-            }
-
-            return new ColorProfileToneCurve($points);
+        if (!$this->document instanceof ExifDocument) {
+            return null;
         }
 
-        return null;
+        $values = $this->document->profileToneCurve();
+        if ($values === null) {
+            return null;
+        }
+
+        $points = $this->chunkPairEntries($values);
+        if ($points === []) {
+            return null;
+        }
+
+        return new ColorProfileToneCurve($points);
     }
 
     /**
@@ -2234,90 +2216,16 @@ final readonly class ExifTagResolver
      */
     public function profileGainMap(): ?ColorProfileGainMap
     {
-        foreach ($this->profileIfds() as $ifd) {
-            $values = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_GAIN_TABLE_MAP));
-            if ($values === null || $values === []) {
-                continue;
-            }
-
-            return new ColorProfileGainMap($values);
-        }
-
-        return null;
-    }
-
-    /**
-     * @return list<Ifd>
-     */
-    private function profileIfds(): array
-    {
         if (!$this->document instanceof ExifDocument) {
-            return [];
-        }
-
-        $candidates = [];
-
-        $sources = [$this->document->exifIfd, $this->document->ifd0, $this->document->ifd1];
-        foreach ($this->document->subsequentIfds as $ifd) {
-            $sources[] = $ifd;
-        }
-
-        foreach ($this->document->subIfds as $ifd) {
-            $sources[] = $ifd;
-        }
-
-        foreach ($sources as $ifd) {
-            if (!$ifd instanceof Ifd) {
-                continue;
-            }
-
-            if ($this->isProfileIfd($ifd)) {
-                $candidates[] = $ifd;
-            }
-        }
-
-        return $candidates;
-    }
-
-    private function isProfileIfd(Ifd $ifd): bool
-    {
-        return $ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS) instanceof IfdEntry
-            || $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS) instanceof IfdEntry
-            || $ifd->get(ExifTag::PROFILE_TONE_CURVE) instanceof IfdEntry
-            || $ifd->get(ExifTag::PROFILE_GAIN_TABLE_MAP) instanceof IfdEntry;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    private function intListFromEntry(?IfdEntry $entry): ?array
-    {
-        if (!$entry instanceof IfdEntry) {
             return null;
         }
 
-        $values = $this->normalizeNumericList($entry->value);
-        if ($values === []) {
+        $values = $this->document->profileGainTableMap();
+        if ($values === null || $values === []) {
             return null;
         }
 
-        $mapped = array_map(static fn (int|float $value): int => (int) $value, $values);
-
-        return $mapped === [] ? null : $mapped;
-    }
-
-    /**
-     * @return list<float>|null
-     */
-    private function floatListFromEntry(?IfdEntry $entry): ?array
-    {
-        if (!$entry instanceof IfdEntry) {
-            return null;
-        }
-
-        $values = $this->normalizeRationalList($entry->value);
-
-        return $values === [] ? null : $values;
+        return new ColorProfileGainMap($values);
     }
 
     /**

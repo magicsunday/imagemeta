@@ -1118,6 +1118,120 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the DNG camera calibration signature recorded by the capture device.
+     */
+    public function cameraCalibrationSignature(): ?string
+    {
+        $signature = $this->str($this->exifIfd, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
+
+        return $signature !== null
+            ? $signature
+            : $this->str($this->ifd0, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
+    }
+
+    /**
+     * Returns the DNG profile calibration signature when available.
+     */
+    public function profileCalibrationSignature(): ?string
+    {
+        $signature = $this->str($this->exifIfd, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
+
+        return $signature !== null
+            ? $signature
+            : $this->str($this->ifd0, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
+    }
+
+    /**
+     * Returns the hue/saturation/value profile adjustment maps.
+     *
+     * @return array{dimensions:list<int>|null,map1:list<float>|null,map2:list<float>|null,map3:list<float>|null}|null
+     */
+    public function profileHueSatMap(): ?array
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $dimensions = $this->numericList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DIMS);
+            $map1       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_1);
+            $map2       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_2);
+            $map3       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_3);
+
+            if ($dimensions === null && $map1 === null && $map2 === null && $map3 === null) {
+                continue;
+            }
+
+            return [
+                'dimensions' => $dimensions,
+                'map1'       => $map1,
+                'map2'       => $map2,
+                'map3'       => $map3,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the optional profile look table definition.
+     *
+     * @return array{dimensions:list<int>|null,data:list<float>|null}|null
+     */
+    public function profileLookTable(): ?array
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $dimensions = $this->numericList($ifd, ExifTag::PROFILE_LOOK_TABLE_DIMS);
+            $data       = $this->rationalList($ifd, ExifTag::PROFILE_LOOK_TABLE_DATA);
+
+            if ($dimensions === null && $data === null) {
+                continue;
+            }
+
+            return [
+                'dimensions' => $dimensions,
+                'data'       => $data,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the optional profile tone curve points.
+     *
+     * @return list<float>|null
+     */
+    public function profileToneCurve(): ?array
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $values = $this->rationalList($ifd, ExifTag::PROFILE_TONE_CURVE);
+            if ($values === null || $values === []) {
+                continue;
+            }
+
+            return $values;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the optional profile gain table map payload.
+     *
+     * @return list<float>|null
+     */
+    public function profileGainTableMap(): ?array
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $values = $this->rationalList($ifd, ExifTag::PROFILE_GAIN_TABLE_MAP);
+            if ($values === null || $values === []) {
+                continue;
+            }
+
+            return $values;
+        }
+
+        return null;
+    }
+
+    /**
      * Returns the noise measurement recorded by the camera.
      */
     public function noise(): ?float
@@ -1982,6 +2096,53 @@ final readonly class ExifDocument
             $this->offsetTime(),
             $this->subSecTime(),
         );
+    }
+
+    /**
+     * @return list<Ifd>
+     */
+    private function profileSourceIfds(): array
+    {
+        $sources = [];
+
+        foreach ([$this->exifIfd, $this->ifd0, $this->ifd1] as $ifd) {
+            if ($ifd instanceof Ifd) {
+                $sources[] = $ifd;
+            }
+        }
+
+        foreach ($this->subsequentIfds as $ifd) {
+            if ($ifd instanceof Ifd) {
+                $sources[] = $ifd;
+            }
+        }
+
+        foreach ($this->subIfds as $ifd) {
+            if ($ifd instanceof Ifd) {
+                $sources[] = $ifd;
+            }
+        }
+
+        return $sources;
+    }
+
+    /**
+     * @return list<Ifd>
+     */
+    private function profileIfds(): array
+    {
+        $candidates = [];
+
+        foreach ($this->profileSourceIfds() as $ifd) {
+            if ($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS) instanceof IfdEntry
+                || $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS) instanceof IfdEntry
+                || $ifd->get(ExifTag::PROFILE_TONE_CURVE) instanceof IfdEntry
+                || $ifd->get(ExifTag::PROFILE_GAIN_TABLE_MAP) instanceof IfdEntry) {
+                $candidates[] = $ifd;
+            }
+        }
+
+        return $candidates;
     }
 
     /**
