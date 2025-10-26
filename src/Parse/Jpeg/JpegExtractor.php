@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 
 use function array_key_exists;
@@ -66,6 +67,16 @@ final class JpegExtractor
 
     private const string MPF_SIGNATURE = "MPF\0";
 
+    private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
+
+    private const int AUDIO_HEADER_LENGTH = 24;
+
+    private const int AUDIO_FORMAT_PCM = 0;
+
+    private const int AUDIO_FORMAT_MU_LAW = 1;
+
+    private const int AUDIO_FORMAT_IMA_ADPCM = 2;
+
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
     private const string FPXR_SIGNATURE = 'FPXR';
@@ -113,6 +124,9 @@ final class JpegExtractor
     private ?int $mpfFirstOffset = null;
 
     private ?MpfDocument $mpfDocument = null;
+
+    /** @var list<\MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream> */
+    private array $audioStreams = [];
 
     /** @var list<string> */
     private array $iptcPayloads = [];
@@ -210,6 +224,18 @@ final class JpegExtractor
         return $this->flashPixStreams;
     }
 
+    /**
+     * Returns EXIF audio streams discovered in APP2 markers.
+     *
+     * @return list<JpegAudioStream>
+     */
+    public function getAudioStreams(): array
+    {
+        $this->parseIfNeeded();
+
+        return $this->audioStreams;
+    }
+
     public function getMpfDocument(): ?MpfDocument
     {
         $this->parseIfNeeded();
@@ -297,6 +323,7 @@ final class JpegExtractor
         $this->mpfSegments             = [];
         $this->mpfFirstOffset          = null;
         $this->mpfDocument             = null;
+        $this->audioStreams            = [];
         $this->iptcPayloads            = [];
         $this->xmpPacketHashes         = [];
         $this->frameBitsPerSample      = null;
@@ -523,6 +550,12 @@ final class JpegExtractor
 
         if (str_starts_with($payload, self::FPXR_SIGNATURE)) {
             $this->handleFlashPixSegment($payload, $offset);
+
+            return;
+        }
+
+        if (str_starts_with($payload, self::AUDIO_SIGNATURE)) {
+            $this->handleAudioSegment($payload, $offset);
         }
     }
 
@@ -562,6 +595,97 @@ final class JpegExtractor
         if (!array_key_exists($sequenceNumber, $this->iccSequence)) {
             $this->iccSequence[$sequenceNumber] = $iccData;
         }
+    }
+
+    /**
+     * Processes EXIF audio APP2 segments and validates their headers.
+     *
+     * @param string $payload Raw segment payload including signature.
+     * @param int    $offset  Offset in the stream where the marker begins.
+     */
+    private function handleAudioSegment(string $payload, int $offset): void
+    {
+        $length = strlen($payload);
+        if ($length < self::AUDIO_HEADER_LENGTH) {
+            throw new ParseError(sprintf('Audio segment at offset %d is too short', $offset));
+        }
+
+        $signatureLength = strlen(self::AUDIO_SIGNATURE);
+        $major           = ord($payload[$signatureLength]);
+        $minor           = ord($payload[$signatureLength + 1]);
+        $format          = ord($payload[$signatureLength + 2]);
+        $channels        = ord($payload[$signatureLength + 3]);
+
+        $sampleRateData = substr($payload, $signatureLength + 4, 4);
+        $sampleRateUnpack = unpack('Nrate', $sampleRateData);
+        if ($sampleRateUnpack === false) {
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset));
+        }
+
+        $sampleRate = (int) $sampleRateUnpack['rate'];
+        $bitDepth   = ord($payload[$signatureLength + 8]);
+
+        $sampleCountData = substr($payload, $signatureLength + 9, 4);
+        $sampleCountUnpack = unpack('Ncount', $sampleCountData);
+        if ($sampleCountUnpack === false) {
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset));
+        }
+
+        $sampleCount = (int) $sampleCountUnpack['count'];
+        $data        = substr($payload, self::AUDIO_HEADER_LENGTH);
+
+        if ($channels === 0 || $channels > 2) {
+            throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels));
+        }
+
+        $allowedSampleRates = [8_000, 11_025, 22_050, 44_100];
+        if (!in_array($sampleRate, $allowedSampleRates, true)) {
+            throw new ParseError(sprintf('Audio segment at offset %d uses unsupported sample rate %d', $offset, $sampleRate));
+        }
+
+        $formatName = match ($format) {
+            self::AUDIO_FORMAT_PCM       => 'PCM',
+            self::AUDIO_FORMAT_MU_LAW    => 'MU_LAW_PCM',
+            self::AUDIO_FORMAT_IMA_ADPCM => 'IMA_ADPCM',
+            default => null,
+        };
+
+        if ($formatName === null) {
+            throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $format));
+        }
+
+        if ($format === self::AUDIO_FORMAT_PCM && !in_array($bitDepth, [8, 16], true)) {
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid PCM bit depth %d', $offset, $bitDepth));
+        }
+
+        if ($format === self::AUDIO_FORMAT_MU_LAW && $bitDepth !== 8) {
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid μ-law bit depth %d', $offset, $bitDepth));
+        }
+
+        if ($format === self::AUDIO_FORMAT_IMA_ADPCM && $bitDepth !== 4) {
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid IMA-ADPCM bit depth %d', $offset, $bitDepth));
+        }
+
+        if ($sampleCount > 0 && $format !== self::AUDIO_FORMAT_IMA_ADPCM) {
+            $bytesPerSample = (int) (($bitDepth / 8) * $channels);
+            if ($bytesPerSample > 0) {
+                $expectedLength = (int) ($sampleCount * $bytesPerSample);
+                if ($expectedLength !== strlen($data)) {
+                    throw new ParseError(sprintf('Audio segment at offset %d has inconsistent data length', $offset));
+                }
+            }
+        }
+
+        $version = sprintf('%d.%02d', $major, $minor);
+
+        $this->audioStreams[] = new JpegAudioStream(
+            $formatName,
+            $channels,
+            $sampleRate,
+            $bitDepth,
+            $data,
+            $version,
+        );
     }
 
     /**

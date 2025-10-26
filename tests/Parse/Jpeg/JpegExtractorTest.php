@@ -48,6 +48,8 @@ final class JpegExtractorTest extends TestCase
 
     private const string FPXR_SIGNATURE = 'FPXR';
 
+    private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
+
     private const int MARKER_APP1 = 0xE1;
 
     private const int MARKER_APP2 = 0xE2;
@@ -217,6 +219,56 @@ final class JpegExtractorTest extends TestCase
             1 => 'stream-one',
             2 => 'alpha-beta-gamma',
         ], $extractor->getFlashPixStreams());
+    }
+
+    /**
+     * Ensures EXIF audio APP2 segments are decoded and exposed with metadata.
+     */
+    #[Test]
+    public function testAudioSegmentsAreCollected(): void
+    {
+        $muLawData   = str_repeat("\x01\x02", 4);
+        $pcmData     = pack('n*', 0x0102, 0x0304, 0x0506, 0x0708);
+        $muLawSegment = self::segment(self::MARKER_APP2, self::audioPayload(1, 1, 8_000, 8, $muLawData));
+        $pcmSegment   = self::segment(self::MARKER_APP2, self::audioPayload(0, 2, 44_100, 16, $pcmData));
+
+        $jpeg      = $this->jpeg($muLawSegment . $pcmSegment);
+        $extractor = $this->createExtractor($jpeg);
+
+        $streams = $extractor->getAudioStreams();
+        self::assertCount(2, $streams);
+
+        $muLaw = $streams[0];
+        self::assertSame('MU_LAW_PCM', $muLaw->format);
+        self::assertSame(1, $muLaw->channels);
+        self::assertSame(8_000, $muLaw->sampleRate);
+        self::assertSame(8, $muLaw->bitDepth);
+        self::assertSame('1.00', $muLaw->version);
+        self::assertSame($muLawData, $muLaw->data);
+
+        $pcm = $streams[1];
+        self::assertSame('PCM', $pcm->format);
+        self::assertSame(2, $pcm->channels);
+        self::assertSame(44_100, $pcm->sampleRate);
+        self::assertSame(16, $pcm->bitDepth);
+        self::assertSame('1.00', $pcm->version);
+        self::assertSame($pcmData, $pcm->data);
+    }
+
+    /**
+     * Ensures unsupported sampling rates raise parse errors for audio APP2 segments.
+     */
+    #[Test]
+    public function testAudioSegmentWithUnsupportedSampleRateThrows(): void
+    {
+        $payload = self::segment(self::MARKER_APP2, self::audioPayload(0, 1, 12_000, 16, str_repeat("\x00", 4)));
+        $jpeg    = $this->jpeg($payload);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getAudioStreams();
     }
 
     /**
@@ -507,6 +559,31 @@ final class JpegExtractorTest extends TestCase
     private static function fpxrPayload(int $streamId, int $sequence, int $count, string $data): string
     {
         return self::FPXR_SIGNATURE . pack('n', $streamId) . chr($sequence) . chr($count) . $data;
+    }
+
+    /**
+     * Builds an EXIF audio APP2 payload with the provided metadata fields.
+     */
+    private static function audioPayload(int $format, int $channels, int $sampleRate, int $bitDepth, string $data): string
+    {
+        $sampleCount = 0;
+        if ($format !== 2) {
+            $bytesPerSample = (int) (($bitDepth / 8) * $channels);
+            if ($bytesPerSample > 0) {
+                $sampleCount = (int) (strlen($data) / $bytesPerSample);
+            }
+        }
+
+        $header = self::AUDIO_SIGNATURE
+            . chr(1) // major version
+            . chr(0) // minor version
+            . chr($format)
+            . chr($channels)
+            . pack('N', $sampleRate)
+            . chr($bitDepth)
+            . pack('N', $sampleCount);
+
+        return $header . $data;
     }
 
     /**

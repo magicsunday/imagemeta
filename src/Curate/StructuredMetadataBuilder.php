@@ -28,6 +28,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\Apple;
+use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
@@ -316,6 +317,8 @@ final class StructuredMetadataBuilder
             bitDepth: $quickTimeResolver->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
         );
 
+        $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
+
         $iccData = null;
         if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
             $iccData = (new IccDecoder())->decode($metadata->iccProfile, $metadata->iccSegments);
@@ -512,6 +515,7 @@ final class StructuredMetadataBuilder
             preview: $preview,
             video: $video,
             audio: $audio,
+            embeddedAudio: $embeddedAudio,
             colorProfile: $colorProfile,
             processing: $processing,
             whiteBalanceDetails: $whiteBalanceDetails,
