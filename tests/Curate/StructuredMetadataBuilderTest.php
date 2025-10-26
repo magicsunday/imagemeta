@@ -890,6 +890,42 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(0.56, $structured->motion->accelZ, 1e-12);
     }
 
+    /**
+     * Ensures EXIF acceleration vector data is used when maker notes and QuickTime values are absent.
+     */
+    #[Test]
+    public function usesExifAccelerationVectorWhenOtherSourcesMissing(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ACCELERATION => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(1, 5),
+                    new ExifRational(-3, 10),
+                    new ExifRational(7, 20),
+                ]),
+            ),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        $metadata   = new Metadata(['primary'], null, $exifDocument, []);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        $vector = $structured->apple->accelerationVector;
+        self::assertNotNull($vector);
+        self::assertCount(3, $vector);
+        self::assertEqualsWithDelta(0.2, $vector[0], 1e-12);
+        self::assertEqualsWithDelta(-0.3, $vector[1], 1e-12);
+        self::assertEqualsWithDelta(0.35, $vector[2], 1e-12);
+
+        self::assertEqualsWithDelta(0.2, $structured->motion->accelX, 1e-12);
+        self::assertEqualsWithDelta(-0.3, $structured->motion->accelY, 1e-12);
+        self::assertEqualsWithDelta(0.35, $structured->motion->accelZ, 1e-12);
+    }
+
     #[Test]
     public function usesQuickTimeEnumeratedValuesWhenMakerNotesMissing(): void
     {
