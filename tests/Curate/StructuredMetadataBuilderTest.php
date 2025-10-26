@@ -160,6 +160,9 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(150, 10)),
             ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(98, 10)),
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
+            ExifTag::CAMERA_ROLL_ANGLE           => new IfdEntry(ExifTag::CAMERA_ROLL_ANGLE, 10, 1, new ExifRational(15, 10)),
+            ExifTag::CAMERA_PITCH_ANGLE          => new IfdEntry(ExifTag::CAMERA_PITCH_ANGLE, 10, 1, new ExifRational(300, 10)),
+            ExifTag::CAMERA_YAW_ANGLE            => new IfdEntry(ExifTag::CAMERA_YAW_ANGLE, 10, 1, new ExifRational(450, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 10, 'sound.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(250, 10)),
             ExifTag::NOISE                       => new IfdEntry(ExifTag::NOISE, 5, 1, new ExifRational(456, 10)),
@@ -317,6 +320,9 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(15.0, $structured->capture->waterDepthM, 0.001);
         self::assertEqualsWithDelta(9.8, $structured->capture->accelerationMs2, 0.001);
         self::assertEqualsWithDelta(15.0, $structured->capture->cameraElevationAngleDeg, 0.001);
+        self::assertEqualsWithDelta(1.5, $structured->motion->rollDeg, 0.001);
+        self::assertEqualsWithDelta(30.0, $structured->motion->pitchDeg, 0.001);
+        self::assertEqualsWithDelta(45.0, $structured->motion->yawDeg, 0.001);
         self::assertSame(10, $structured->capture->selfTimerModeSeconds);
 
         self::assertSame('sound.wav', $structured->related->relatedSoundFile);
@@ -639,6 +645,9 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(0.05, $structured->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
+        self::assertNull($structured->motion->rollDeg);
+        self::assertNull($structured->motion->pitchDeg);
+        self::assertNull($structured->motion->yawDeg);
         self::assertFalse($structured->scene->nightMode);
         self::assertFalse($structured->integrity->makerNotesSafe);
     }
@@ -714,6 +723,9 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(0.12, $structured->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(-0.34, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(0.56, $structured->motion->accelZ, 1e-12);
+        self::assertNull($structured->motion->rollDeg);
+        self::assertNull($structured->motion->pitchDeg);
+        self::assertNull($structured->motion->yawDeg);
     }
 
     #[Test]

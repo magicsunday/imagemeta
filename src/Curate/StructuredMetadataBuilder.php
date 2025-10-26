@@ -372,7 +372,7 @@ final class StructuredMetadataBuilder
             afMode: null,
         );
 
-        $motion = $this->buildMotion($apple);
+        $motion = $this->buildMotion($exifResolver, $apple);
 
         $regions = $regionsResolver->resolve($xmpDocument);
 
@@ -1027,13 +1027,14 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds the motion metadata aggregate from the Apple acceleration vector.
+     * Builds the motion metadata aggregate from EXIF angles and the Apple acceleration vector.
      *
-     * @param Apple $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
+     * @param ExifTagResolver $resolver Resolver supplying EXIF orientation angles.
+     * @param Apple           $apple    Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
-     * @return Motion Motion metadata aggregate with per-axis acceleration.
+     * @return Motion Motion metadata aggregate including orientation and per-axis acceleration.
      */
-    private function buildMotion(Apple $apple): Motion
+    private function buildMotion(ExifTagResolver $resolver, Apple $apple): Motion
     {
         $vector = $apple->accelerationVector;
 
@@ -1047,7 +1048,17 @@ final class StructuredMetadataBuilder
             $accelZ = $vector[2] ?? null;
         }
 
-        return new Motion(null, null, null, $accelX, $accelY, $accelZ, null, null, null);
+        return new Motion(
+            $resolver->cameraRollAngleDeg(),
+            $resolver->cameraPitchAngleDeg(),
+            $resolver->cameraYawAngleDeg(),
+            $accelX,
+            $accelY,
+            $accelZ,
+            null,
+            null,
+            null,
+        );
     }
 
     /**

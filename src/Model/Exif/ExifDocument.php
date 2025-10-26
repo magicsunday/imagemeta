@@ -1080,6 +1080,30 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera roll angle in degrees.
+     */
+    public function cameraRollAngleDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::CAMERA_ROLL_ANGLE);
+    }
+
+    /**
+     * Returns the camera pitch angle in degrees.
+     */
+    public function cameraPitchAngleDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::CAMERA_PITCH_ANGLE);
+    }
+
+    /**
+     * Returns the camera yaw angle in degrees.
+     */
+    public function cameraYawAngleDeg(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::CAMERA_YAW_ANGLE);
+    }
+
+    /**
      * Returns the camera firmware string when present.
      */
     public function cameraFirmware(): ?string

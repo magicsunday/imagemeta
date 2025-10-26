@@ -632,6 +632,9 @@ final class ExifDocumentTest extends TestCase
             ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(30, 10)),
             ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(10, 1)),
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(50, 10)),
+            ExifTag::CAMERA_ROLL_ANGLE           => new IfdEntry(ExifTag::CAMERA_ROLL_ANGLE, 10, 1, new ExifRational(15, 10)),
+            ExifTag::CAMERA_PITCH_ANGLE          => new IfdEntry(ExifTag::CAMERA_PITCH_ANGLE, 10, 1, new ExifRational(300, 10)),
+            ExifTag::CAMERA_YAW_ANGLE            => new IfdEntry(ExifTag::CAMERA_YAW_ANGLE, 10, 1, new ExifRational(450, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 1, 'clip.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(150, 10)),
             ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, strlen($sfrPayload), $sfrPayload),
@@ -672,6 +675,9 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(3.0, $doc->waterDepthMeters(), 0.0001);
         self::assertEqualsWithDelta(10.0, $doc->accelerationMs2(), 0.0001);
         self::assertEqualsWithDelta(5.0, $doc->cameraElevationAngleDeg(), 0.0001);
+        self::assertEqualsWithDelta(1.5, $doc->cameraRollAngleDeg(), 0.0001);
+        self::assertEqualsWithDelta(30.0, $doc->cameraPitchAngleDeg(), 0.0001);
+        self::assertEqualsWithDelta(45.0, $doc->cameraYawAngleDeg(), 0.0001);
         self::assertSame('clip.wav', $doc->relatedSoundFile());
         self::assertEqualsWithDelta(15.0, $doc->flashEnergy() ?? 0.0, 0.0001);
         $sfr = $doc->spatialFrequencyResponse();

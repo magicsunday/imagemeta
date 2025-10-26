@@ -448,6 +448,12 @@ final readonly class ExifTag
 
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
+    public const int CAMERA_ROLL_ANGLE = 0x9406;
+
+    public const int CAMERA_PITCH_ANGLE = 0x9407;
+
+    public const int CAMERA_YAW_ANGLE = 0x9408;
+
     /**
      * Legacy Microsoft EXIF tag that stored the camera firmware string.
      */

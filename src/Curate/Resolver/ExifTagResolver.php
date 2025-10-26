@@ -1721,6 +1721,30 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the camera roll angle in degrees.
+     */
+    public function cameraRollAngleDeg(): ?float
+    {
+        return $this->document?->cameraRollAngleDeg();
+    }
+
+    /**
+     * Returns the camera pitch angle in degrees.
+     */
+    public function cameraPitchAngleDeg(): ?float
+    {
+        return $this->document?->cameraPitchAngleDeg();
+    }
+
+    /**
+     * Returns the camera yaw angle in degrees.
+     */
+    public function cameraYawAngleDeg(): ?float
+    {
+        return $this->document?->cameraYawAngleDeg();
+    }
+
+    /**
      * Returns the camera elevation angle in degrees.
      */
     public function cameraElevationAngleDeg(): ?float
