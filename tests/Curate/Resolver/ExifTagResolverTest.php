@@ -262,6 +262,7 @@ final class ExifTagResolverTest extends TestCase
     public function exposesTemporalMetadata(): void
     {
         $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION               => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
             ExifTag::SUB_SEC_TIME           => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 3, '987'),
             ExifTag::SUB_SEC_TIME_ORIGINAL  => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 3, '123'),
             ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '456'),
@@ -326,6 +327,7 @@ final class ExifTagResolverTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION               => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
             ExifTag::COMPONENTS_CONFIGURATION  => new IfdEntry(ExifTag::COMPONENTS_CONFIGURATION, 7, 4, new ExifNumericList([1, 2, 3, 0])),
             ExifTag::SCENE_TYPE                => new IfdEntry(ExifTag::SCENE_TYPE, 7, 1, chr(1)),
             ExifTag::CFA_REPEAT_PATTERN_DIM    => new IfdEntry(ExifTag::CFA_REPEAT_PATTERN_DIM, 3, 2, new ExifNumericList([6, 4])),
@@ -373,7 +375,11 @@ final class ExifTagResolverTest extends TestCase
             ExifTag::SOFTWARE => new IfdEntry(ExifTag::SOFTWARE, 2, 1, 'Legacy Writer'),
         ]);
 
-        $resolver = new ExifTagResolver(new ExifDocument($ifd0, null, null, null, null));
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument($ifd0, $exifIfd, null, null, null));
 
         self::assertSame('Legacy Writer', $resolver->software());
     }
