@@ -198,6 +198,20 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera serial number, preferring the EXIF 3.0 tag when available.
+     */
+    public function cameraSerialNumber(): ?string
+    {
+        $serial = $this->str($this->exifIfd, ExifTag::CAMERA_SERIAL_NUMBER);
+
+        if ($serial !== null) {
+            return $serial;
+        }
+
+        return $this->bodySerialNumber();
+    }
+
+    /**
      * Returns the lens serial number if present.
      *
      * @return string|null

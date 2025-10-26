@@ -277,6 +277,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the preferred camera serial number across EXIF versions.
+     */
+    public function cameraSerialNumber(): ?string
+    {
+        return $this->document?->cameraSerialNumber();
+    }
+
+    /**
      * Returns the processing software string when recorded.
      */
     public function processingSoftware(): ?string

@@ -709,6 +709,32 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function cameraSerialNumberPrefersNewTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_SERIAL_NUMBER => new IfdEntry(ExifTag::CAMERA_SERIAL_NUMBER, 2, 1, "CAMERA-0001\0"),
+            ExifTag::BODY_SERIAL_NUMBER   => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'BODY-LEGACY'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('CAMERA-0001', $doc->cameraSerialNumber());
+        self::assertSame('BODY-LEGACY', $doc->bodySerialNumber());
+    }
+
+    #[Test]
+    public function cameraSerialNumberFallsBackToBodyTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'BODY-ONLY'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('BODY-ONLY', $doc->cameraSerialNumber());
+    }
+
+    #[Test]
     public function makerNoteSafetyMapsNumericValues(): void
     {
         $safeExifIfd = new Ifd([
