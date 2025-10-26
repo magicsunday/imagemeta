@@ -24,6 +24,8 @@ use function fwrite;
 use function implode;
 use function pack;
 use function rewind;
+use function str_pad;
+use function substr;
 use function str_repeat;
 use function strlen;
 
@@ -39,6 +41,8 @@ final class JpegExtractorTest extends TestCase
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
+
+    private const string MPF_SIGNATURE = "MPF\0";
 
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
@@ -216,6 +220,62 @@ final class JpegExtractorTest extends TestCase
     }
 
     /**
+     * Ensures MPF APP2 payloads are buffered across segments and decoded.
+     */
+    #[Test]
+    public function testMpfSegmentsAreBufferedAndParsed(): void
+    {
+        $mpfBody = self::buildMpfPayload();
+        $split   = 24;
+
+        $segmentOne = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE . substr($mpfBody, 0, $split));
+        $segmentTwo = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE . substr($mpfBody, $split));
+
+        $jpeg = $this->jpeg($segmentOne, $segmentTwo);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $document = $extractor->getMpfDocument();
+
+        self::assertNotNull($document);
+        self::assertSame('0100', $document->version);
+        self::assertSame(2, $document->imageCount);
+        self::assertCount(2, $document->entries);
+
+        $first = $document->entries[0];
+        self::assertSame(0x20000001, $first->attributes);
+        self::assertSame(12345, $first->imageSize);
+        self::assertSame(1000, $first->dataOffset);
+
+        $second = $document->entries[1];
+        self::assertSame(0x00000002, $second->attributes);
+        self::assertSame(54321, $second->imageSize);
+        self::assertSame(2000, $second->dataOffset);
+        self::assertSame(1, $second->dependentImage1);
+
+        $attributes = $document->attributes;
+        self::assertNotNull($attributes);
+        self::assertSame(5, $attributes->totalFrames);
+        self::assertSame(1, $attributes->individualImageNumber);
+    }
+
+    /**
+     * Ensures MPF segments missing payload raise a parse error.
+     */
+    #[Test]
+    public function testMpfSegmentWithoutPayloadThrowsParseError(): void
+    {
+        $segment = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE);
+        $jpeg    = $this->jpeg($segment);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+
+        $extractor->getMpfDocument();
+    }
+
+    /**
      * Ensures inconsistent FlashPix sequence counts discard accumulated fragments.
      */
     #[Test]
@@ -371,6 +431,74 @@ final class JpegExtractorTest extends TestCase
     private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
+    }
+
+    /**
+     * Builds a FlashPix APP2 payload with the provided header parameters.
+     */
+    /**
+     * Builds a synthetic MPF payload containing two entries and attribute metadata.
+     */
+    private static function buildMpfPayload(): string
+    {
+        $entries = [
+            self::mpfEntry(0x20000001, 12345, 1000, 0, 0),
+            self::mpfEntry(0x00000002, 54321, 2000, 1, 0),
+        ];
+
+        $entryData  = implode('', $entries);
+        $imageCount = count($entries);
+
+        $header          = 'II' . pack('v', 42) . pack('V', 8);
+        $entryCount      = 3;
+        $indexIfdLength  = 2 + ($entryCount * 12) + 4;
+        $mpEntryOffset   = 8 + $indexIfdLength;
+        $attributeOffset = $mpEntryOffset + strlen($entryData);
+
+        $indexIfd = pack('v', $entryCount)
+            . self::mpfIfdEntry(0xB000, 7, 4, '0100')
+            . self::mpfIfdEntry(0xB001, 4, 1, pack('V', $imageCount))
+            . self::mpfIfdEntry(0xB002, 7, strlen($entryData), offset: $mpEntryOffset)
+            . pack('V', $attributeOffset);
+
+        $attributeIfd = pack('v', 2)
+            . self::mpfIfdEntry(0xB004, 4, 1, pack('V', 5))
+            . self::mpfIfdEntry(0xB005, 4, 1, pack('V', 1))
+            . pack('V', 0);
+
+        return $header . $indexIfd . $entryData . $attributeIfd;
+    }
+
+    private static function mpfEntry(int $attributes, int $size, int $offset, int $dependent1, int $dependent2): string
+    {
+        return pack('V', $attributes)
+            . pack('V', $size)
+            . pack('V', $offset)
+            . pack('v', $dependent1)
+            . pack('v', $dependent2);
+    }
+
+    private static function mpfIfdEntry(int $tag, int $type, int $count, string $value = '', ?int $offset = null): string
+    {
+        $entry = pack('v', $tag) . pack('v', $type) . pack('V', $count);
+
+        if ($offset !== null) {
+            return $entry . pack('V', $offset);
+        }
+
+        $typeSizes = [
+            1 => 1,
+            2 => 1,
+            3 => 2,
+            4 => 4,
+            5 => 8,
+            7 => 1,
+        ];
+
+        $byteCount = ($typeSizes[$type] ?? 1) * $count;
+        $padded    = str_pad(substr($value, 0, $byteCount), 4, "\0", STR_PAD_RIGHT);
+
+        return $entry . $padded;
     }
 
     /**

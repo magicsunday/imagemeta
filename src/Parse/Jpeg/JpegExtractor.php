@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 
 use function array_key_exists;
 use function array_keys;
@@ -63,6 +64,8 @@ final class JpegExtractor
 
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
+    private const string MPF_SIGNATURE = "MPF\0";
+
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
     private const string FPXR_SIGNATURE = 'FPXR';
@@ -103,6 +106,13 @@ final class JpegExtractor
 
     /** @var array<int, string> */
     private array $flashPixStreams = [];
+
+    /** @var list<string> */
+    private array $mpfSegments = [];
+
+    private ?int $mpfFirstOffset = null;
+
+    private ?MpfDocument $mpfDocument = null;
 
     /** @var list<string> */
     private array $iptcPayloads = [];
@@ -200,6 +210,13 @@ final class JpegExtractor
         return $this->flashPixStreams;
     }
 
+    public function getMpfDocument(): ?MpfDocument
+    {
+        $this->parseIfNeeded();
+
+        return $this->mpfDocument;
+    }
+
     /**
      * Returns the precision in bits reported by the primary start of frame segment.
      */
@@ -277,6 +294,9 @@ final class JpegExtractor
         $this->flashPixSequences       = [];
         $this->flashPixExpectedCounts  = [];
         $this->flashPixStreams         = [];
+        $this->mpfSegments             = [];
+        $this->mpfFirstOffset          = null;
+        $this->mpfDocument             = null;
         $this->iptcPayloads            = [];
         $this->xmpPacketHashes         = [];
         $this->frameBitsPerSample      = null;
@@ -346,6 +366,22 @@ final class JpegExtractor
 
             if ($this->flashPixStreams !== []) {
                 ksort($this->flashPixStreams);
+            }
+        }
+
+        if ($this->mpfSegments !== []) {
+            $payload = implode('', $this->mpfSegments);
+
+            try {
+                $this->mpfDocument = (new MpfParser())->parse($payload);
+            } catch (ParseError $exception) {
+                $offset = $this->mpfFirstOffset ?? 0;
+
+                throw new ParseError(
+                    sprintf('Invalid MPF payload at offset %d', $offset),
+                    0,
+                    $exception,
+                );
             }
         }
 
@@ -479,6 +515,12 @@ final class JpegExtractor
             return;
         }
 
+        if (str_starts_with($payload, self::MPF_SIGNATURE)) {
+            $this->handleMpfSegment($payload, $offset);
+
+            return;
+        }
+
         if (str_starts_with($payload, self::FPXR_SIGNATURE)) {
             $this->handleFlashPixSegment($payload, $offset);
         }
@@ -520,6 +562,23 @@ final class JpegExtractor
         if (!array_key_exists($sequenceNumber, $this->iccSequence)) {
             $this->iccSequence[$sequenceNumber] = $iccData;
         }
+    }
+
+    /**
+     * Collects MPF APP2 segments to be parsed after the marker scan completes.
+     */
+    private function handleMpfSegment(string $payload, int $offset): void
+    {
+        $signatureLength = strlen(self::MPF_SIGNATURE);
+        if (strlen($payload) <= $signatureLength) {
+            throw new ParseError(sprintf('MPF segment at offset %d is too short', $offset));
+        }
+
+        if ($this->mpfSegments === []) {
+            $this->mpfFirstOffset = $offset;
+        }
+
+        $this->mpfSegments[] = substr($payload, $signatureLength);
     }
 
     /**

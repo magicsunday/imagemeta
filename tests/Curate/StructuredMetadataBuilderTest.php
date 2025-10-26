@@ -25,6 +25,9 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
+use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
@@ -403,23 +406,24 @@ final class StructuredMetadataBuilderTest extends TestCase
     public function propagatesFileInformationFromMetadataAggregate(): void
     {
         $metadata = new Metadata(
-            [],
-            null,
-            null,
-            [],
-            null,
-            null,
-            null,
-            [],
-            [],
-            null,
-            null,
-            null,
-            'image/jpeg',
-            54321,
-            'jpg',
-            'sha1-digest',
-            'md5-digest',
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: null,
+            makerNotes: null,
+            iccProfile: null,
+            iccSegments: [],
+            flashPixStreams: [],
+            mpfDocument: null,
+            jpegBitsPerSample: null,
+            jpegFrameSamplingFactors: null,
+            jpegYCbCrSubSampling: null,
+            mimeType: 'image/jpeg',
+            fileSize: 54321,
+            extension: 'jpg',
+            digestSha1: 'sha1-digest',
+            digestMd5: 'md5-digest',
         );
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
@@ -1692,6 +1696,10 @@ final class StructuredMetadataBuilderTest extends TestCase
                     continue;
                 }
 
+                if ($name === 'multiPicture' && $field === 'imageCount' && $fieldValue === 0) {
+                    continue;
+                }
+
                 self::fail(sprintf('%s::%s expected null/empty, got %s', $name, $field, var_export($fieldValue, true)));
             }
         }
@@ -1910,22 +1918,23 @@ final class StructuredMetadataBuilderTest extends TestCase
     public function backfillsTiffDataFromJpegFrameWhenExifMissing(): void
     {
         $metadata = new Metadata(
-            [],
-            null,
-            null,
-            [],
-            null,
-            null,
-            null,
-            [],
-            [],
-            8,
-            [
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: null,
+            makerNotes: null,
+            iccProfile: null,
+            iccSegments: [],
+            flashPixStreams: [],
+            mpfDocument: null,
+            jpegBitsPerSample: 8,
+            jpegFrameSamplingFactors: [
                 1 => ['horizontal' => 2, 'vertical' => 2],
                 2 => ['horizontal' => 1, 'vertical' => 1],
                 3 => ['horizontal' => 1, 'vertical' => 1],
             ],
-            [2, 2],
+            jpegYCbCrSubSampling: [2, 2],
         );
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
@@ -1933,6 +1942,56 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(8, $structured->tiff->bitsPerSample);
         self::assertSame([2, 2], $structured->tiff->ycbcrSubSampling);
     }
+
+    /**
+     * Ensures MPF documents are exposed via the structured multi-picture value.
+     */
+    #[Test]
+    public function exposesMultiPictureValueFromMpfDocument(): void
+    {
+        $mpfDocument = new MpfDocument(
+            version: '0100',
+            imageCount: 2,
+            entries: [
+                new MpfEntry(0x10000001, 2048, 8192, 0, 0),
+                new MpfEntry(0x00000002, 1024, 16384, 1, 0),
+            ],
+            attributes: new MpfAttributes(
+                imageUidList: null,
+                totalFrames: 3,
+                individualImageNumber: 1,
+                panoramaAngle: null,
+                panoramaAxis: null,
+                additionalTags: [],
+            ),
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: null,
+            makerNotes: null,
+            iccProfile: null,
+            iccSegments: [],
+            flashPixStreams: [],
+            mpfDocument: $mpfDocument,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $multiPicture = $structured->multiPicture;
+
+        self::assertSame('0100', $multiPicture->version);
+        self::assertSame(2, $multiPicture->imageCount);
+        self::assertCount(2, $multiPicture->entries);
+        self::assertSame(3, $multiPicture->totalFrames);
+        self::assertSame(1, $multiPicture->individualImageNumber);
+        self::assertSame(0x10000001, $multiPicture->entries[0]->attributes);
+        self::assertSame(8192, $multiPicture->entries[0]->dataOffset);
+        self::assertSame(1, $multiPicture->entries[1]->dependentImage1);
+    }
+
 
     /**
      * Builds a Classic TIFF blob with EXIF/Flashpix version tags encoded as printable UNDEFINED values.
