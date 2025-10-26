@@ -389,11 +389,22 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the processing software string recorded during final image adjustments.
+     * Returns the processing software string recorded during final image adjustments,
+     * falling back to the legacy software tag for EXIF 2.x payloads.
      */
     public function processingSoftware(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::PROCESSING_SOFTWARE);
+        $value = null;
+
+        if ($this->exifThreeOrNewer) {
+            $value = $this->str($this->ifd0, ExifTag::PROCESSING_SOFTWARE);
+        }
+
+        if ($value !== null) {
+            return $value;
+        }
+
+        return $this->str($this->ifd0, ExifTag::SOFTWARE);
     }
 
     /**

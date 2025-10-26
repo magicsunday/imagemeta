@@ -305,18 +305,11 @@ final readonly class ExifTagResolver
     }
 
     /**
-     * Returns the software tag value.
+     * Returns the software tag value while mirroring the document fallback.
      */
     public function software(): ?string
     {
-        $processingSoftware = $this->processingSoftware();
-        if ($processingSoftware !== null) {
-            return $processingSoftware;
-        }
-
-        $ifd0 = $this->document?->ifd0;
-
-        return $this->stringValue($ifd0, ExifTag::SOFTWARE);
+        return $this->document?->processingSoftware();
     }
 
     /**

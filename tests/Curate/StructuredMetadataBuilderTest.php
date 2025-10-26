@@ -646,7 +646,11 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::SOFTWARE            => new IfdEntry(ExifTag::SOFTWARE, 2, 1, 'Legacy Writer'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, null, null, null, null);
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
         $metadata = new Metadata(
             ['primary'],

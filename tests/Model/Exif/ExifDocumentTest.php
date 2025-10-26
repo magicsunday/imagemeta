@@ -1090,9 +1090,29 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PROCESSING_SOFTWARE => new IfdEntry(ExifTag::PROCESSING_SOFTWARE, 2, 1, "PixelLab\0\0"),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, null);
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('PixelLab', $doc->processingSoftware());
+    }
+
+    #[Test]
+    public function processingSoftwareFallsBackToLegacyForExifTwo(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::SOFTWARE => new IfdEntry(ExifTag::SOFTWARE, 2, 1, 'Legacy Editor'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('Legacy Editor', $doc->processingSoftware());
     }
 
     #[Test]
