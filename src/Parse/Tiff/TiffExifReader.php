@@ -533,7 +533,7 @@ final class TiffExifReader
         $dataSize        = $unitSize * $count;
         $inlineThreshold = $this->bigTiff ? 8 : 4;
 
-        if ($type !== self::TYPE_IFD && $dataSize <= $inlineThreshold) {
+        if ($dataSize <= $inlineThreshold) {
             $raw = $this->uXToBytes($valueOrOffset, $inlineThreshold);
 
             return [substr($raw, 0, $dataSize), null];
