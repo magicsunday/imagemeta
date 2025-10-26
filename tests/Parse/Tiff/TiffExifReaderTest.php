@@ -56,6 +56,10 @@ final class TiffExifReaderTest extends TestCase
 {
     private const int CUSTOM_SIGNED_LONG8_TAG = 0xC7A1;
 
+    private const int BIG_TIFF_INLINE_UNDEFINED_TAG = 0xC7A2;
+
+    private const string BIG_TIFF_INLINE_UNDEFINED_BYTES = "\x01\x00\x00\x00\x00\x00\x00\x80";
+
     /**
      * Expected StripOffsets values captured from ExifTool parsing the synthetic BigTIFF LONG8 fixture.
      *
@@ -894,6 +898,21 @@ final class TiffExifReaderTest extends TestCase
         $pointerMethod->invoke($reader, $jpegEntry);
     }
 
+    #[Test]
+    public function preservesBigTiffInlineUndefinedHighBit(): void
+    {
+        $reader   = new TiffExifReader();
+        $document = $reader->parseFromBlob(self::buildBigTiffInlineUndefinedHighBitBlob());
+
+        $entry = $document->ifd0->get(self::BIG_TIFF_INLINE_UNDEFINED_TAG);
+        self::assertNotNull($entry);
+
+        $value = $entry->value;
+        self::assertIsString($value);
+        self::assertSame(self::BIG_TIFF_INLINE_UNDEFINED_BYTES, $value);
+        self::assertSame(0x80, ord($value[7]));
+    }
+
     /**
      * Builds a Classic TIFF little-endian EXIF payload with nested IFDs.
      */
@@ -1524,6 +1543,30 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $tileByteCountsData;
 
         return $blob;
+    }
+
+    /**
+     * Builds a minimal BigTIFF payload containing an inline UNDEFINED value with the high bit set.
+     */
+    private static function buildBigTiffInlineUndefinedHighBitBlob(): string
+    {
+        $header = 'II'
+            . pack('v', 0x002B)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('V', 16)
+            . pack('V', 0);
+
+        $entry = self::packBigTiffEntry(
+            self::BIG_TIFF_INLINE_UNDEFINED_TAG,
+            7,
+            strlen(self::BIG_TIFF_INLINE_UNDEFINED_BYTES),
+            [0x00000001, 0x80000000],
+        );
+
+        $ifd0 = pack('V', 1) . pack('V', 0) . $entry . pack('V', 0) . pack('V', 0);
+
+        return $header . $ifd0;
     }
 
     /**
