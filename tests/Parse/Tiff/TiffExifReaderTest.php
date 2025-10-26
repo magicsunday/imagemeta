@@ -301,6 +301,37 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Ensures SubIFDs pointers stored using the LONG field type are followed correctly.
+     */
+    #[Test]
+    public function decodesLongTypedSubIfdPointers(): void
+    {
+        [$blob, $firstSubIfdOffset, $secondSubIfdOffset] = $this->buildClassicLongSubIfdBlob();
+
+        $document     = (new TiffExifReader())->parseFromBlob($blob);
+        $subIfdsEntry = $document->ifd0->get(ExifTag::SUB_IFDS);
+
+        self::assertNotNull($subIfdsEntry);
+        self::assertInstanceOf(ExifNumericList::class, $subIfdsEntry->value);
+        self::assertSame([$firstSubIfdOffset, $secondSubIfdOffset], $subIfdsEntry->value->values);
+
+        $subIfds = $document->subIfds();
+
+        self::assertCount(2, $subIfds);
+        self::assertArrayHasKey($firstSubIfdOffset, $subIfds);
+        self::assertArrayHasKey($secondSubIfdOffset, $subIfds);
+
+        $firstSubIfdEntry = $subIfds[$firstSubIfdOffset]->get(ExifTag::ORIENTATION);
+        self::assertNotNull($firstSubIfdEntry);
+        self::assertSame(1, $firstSubIfdEntry->value);
+
+        $secondSubIfdEntry = $subIfds[$secondSubIfdOffset]->get(ExifTag::BITS_PER_SAMPLE);
+        self::assertNotNull($secondSubIfdEntry);
+        self::assertSame(16, $secondSubIfdEntry->value);
+    }
+
+
+    /**
      * Ensures SubIFD pointers stored inline using the IFD field type remain offsets.
      */
     #[Test]
@@ -947,6 +978,49 @@ final class TiffExifReaderTest extends TestCase
         $blob .= pack('v', count($subIfdEntries)) . implode('', $subIfdEntries) . pack('V', 0);
 
         return [$blob, $subIfdOffset];
+    }
+
+
+    /**
+     * Builds a Classic TIFF blob whose SubIFDs tag stores offsets using the LONG type.
+     *
+     * @return array{0: string, 1: int, 2: int}
+     */
+    private function buildClassicLongSubIfdBlob(): array
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0EntryCount     = 1;
+        $pointerCount       = 2;
+        $ifd0Size           = 2 + ($ifd0EntryCount * 12) + 4;
+        $pointerArrayOffset = 8 + $ifd0Size;
+        $firstSubIfdOffset  = 96;
+        $secondSubIfdOffset = 160;
+
+        $ifd0Entries = [
+            self::packClassicEntry(ExifTag::SUB_IFDS, 4, $pointerCount, $pointerArrayOffset),
+        ];
+
+        $blob = $header;
+        $blob .= pack('v', $ifd0EntryCount) . implode('', $ifd0Entries) . pack('V', 0);
+        $blob .= pack('V', $firstSubIfdOffset);
+        $blob .= pack('V', $secondSubIfdOffset);
+
+        $blob = str_pad($blob, $firstSubIfdOffset, "\0", STR_PAD_RIGHT);
+
+        $firstSubIfdEntries = [
+            self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1),
+        ];
+        $blob .= pack('v', count($firstSubIfdEntries)) . implode('', $firstSubIfdEntries) . pack('V', 0);
+
+        $blob = str_pad($blob, $secondSubIfdOffset, "\0", STR_PAD_RIGHT);
+
+        $secondSubIfdEntries = [
+            self::packClassicEntry(ExifTag::BITS_PER_SAMPLE, 3, 1, 16),
+        ];
+        $blob .= pack('v', count($secondSubIfdEntries)) . implode('', $secondSubIfdEntries) . pack('V', 0);
+
+        return [$blob, $firstSubIfdOffset, $secondSubIfdOffset];
     }
 
     /**
