@@ -183,4 +183,42 @@ final class GpsResolverTest extends TestCase
         self::assertEqualsWithDelta(1.5, $gps->destinationDistanceOriginal ?? 0.0, 1e-6);
         self::assertSame('2024-05-06T10:34:56+00:00', $gps->timestamp?->format(DATE_ATOM));
     }
+
+    #[Test]
+    public function defaultsGpsVersionWhenExifTagMissing(): void
+    {
+        $gpsIfd = new Ifd([
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
+                ExifTag::GPS_LATITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(40, 1),
+                    new ExifRational(0, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(
+                ExifTag::GPS_LONGITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(8, 1),
+                    new ExifRational(0, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+        ]);
+
+        $exifDocument = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+
+        $resolver = new GpsResolver();
+        $gps      = $resolver->resolve($exifDocument, null);
+
+        self::assertInstanceOf(Gps::class, $gps);
+        self::assertSame('2.0.0.0', $gps->version);
+        self::assertNull($gps->versionRaw);
+    }
 }

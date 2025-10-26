@@ -626,6 +626,30 @@ final class ValueConvertersTest extends TestCase
     }
 
     #[Test]
+    public function defaultsGpsVersionWhenEntryMissing(): void
+    {
+        $gps = new Ifd([]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertSame('2.0.0.0', $result['version']);
+        self::assertNull($result['version_raw']);
+    }
+
+    #[Test]
+    public function defaultsGpsVersionWhenStringPayloadEmpty(): void
+    {
+        $gps = new Ifd([
+            ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 4, "\0\0\0\0"),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertSame('2.0.0.0', $result['version']);
+        self::assertSame("\0\0\0\0", $result['version_raw']);
+    }
+
+    #[Test]
     public function decodeSpatialFrequencyResponseReturnsLabels(): void
     {
         $payload = pack('n', 1) . pack('n', 1);

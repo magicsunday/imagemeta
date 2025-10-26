@@ -24,6 +24,8 @@ Unless stated otherwise, temperatures recorded via EXIF tags (for example `Captu
 Time zone offsets in `Temporal` are expressed as raw EXIF strings and minutes (`timeZoneOffsetMinutes`). GPS speed values
 (`Gps::speedMs`) are normalised to metres per second.
 
+When the EXIF GPS IFD omits `GPSVersionID` or only includes null padding, `Gps::version` resolves to the EXIF default `2.0.0.0`.
+
 ## Circle of confusion model
 
 `ValueConverters::calcCircleOfConfusionMm()` assumes a full-frame reference circle of confusion of 0.030&nbsp;mm. When a crop

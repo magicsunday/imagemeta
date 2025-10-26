@@ -43,6 +43,8 @@ final readonly class GpsResolver
 
     /**
      * Builds a GPS value object from the available metadata.
+     *
+     * The GPS version defaults to 2.0.0.0 whenever EXIF omits the tag or only exposes padding bytes.
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Gps
     {
