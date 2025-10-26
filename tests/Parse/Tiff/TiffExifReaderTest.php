@@ -190,7 +190,7 @@ final class TiffExifReaderTest extends TestCase
         $resolver = new ExifTagResolver($document);
 
         self::assertSame('2.32', $resolver->exifVersion());
-        self::assertSame('0100', $resolver->flashpixVersion());
+        self::assertSame('1.00', $resolver->flashpixVersion());
     }
 
     /**
