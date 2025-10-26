@@ -317,6 +317,18 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the legacy host computer string retained for pre-EXIF 3.0 metadata.
+     */
+    public function hostComputer(): ?string
+    {
+        if ($this->exifThreeOrNewer) {
+            return null;
+        }
+
+        return $this->str($this->ifd0, ExifTag::HOST_COMPUTER);
+    }
+
+    /**
      * Returns the photographer name if present.
      */
     public function photographer(): ?string

@@ -106,6 +106,13 @@ final readonly class ExifTag
 
     public const int ARTIST = 0x013B;
 
+    /**
+     * Legacy EXIF 2.x identifier retained for backwards compatibility.
+     *
+     * Removed from the EXIF 3.0 registry but still exposed for older files.
+     */
+    public const int HOST_COMPUTER = 0x013C;
+
     public const int PHOTOGRAPHER = 0xA437;
 
     /**

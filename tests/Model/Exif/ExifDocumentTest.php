@@ -807,6 +807,38 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function hostComputerReturnsLegacyValue(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::HOST_COMPUTER => new IfdEntry(ExifTag::HOST_COMPUTER, 2, 1, 'PowerMac G4'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('PowerMac G4', $doc->hostComputer());
+    }
+
+    #[Test]
+    public function hostComputerOmittedForExifThree(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::HOST_COMPUTER => new IfdEntry(ExifTag::HOST_COMPUTER, 2, 1, 'Workstation'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertNull($doc->hostComputer());
+    }
+
+    #[Test]
     public function exifThreeOmitsLegacySoftwareVersions(): void
     {
         $ifd0 = new Ifd([
