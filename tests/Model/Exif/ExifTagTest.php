@@ -69,6 +69,7 @@ final class ExifTagTest extends TestCase
             'BITS_PER_SAMPLE'                => 0x0102,
             'COMPRESSION'                    => 0x0103,
             'PHOTOMETRIC_INTERPRETATION'     => 0x0106,
+            'DOCUMENT_NAME'                   => 0x010D,
             'IMAGE_DESCRIPTION'              => 0x010E,
             'IMAGE_TITLE'                    => 0xA436,
             'XP_TITLE'                       => 0x9C9B,

@@ -728,6 +728,31 @@ final class ExifDocumentTest extends TestCase
         self::assertNull($missingDoc->makerNoteSafety());
     }
 
+    #[Test]
+    public function documentNameUsesLegacyDocumentNameWhenAlone(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DOCUMENT_NAME => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 1, 'Archive Page'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, null, null, null, null);
+
+        self::assertSame('Archive Page', $doc->documentName());
+    }
+
+    #[Test]
+    public function documentNamePrefersLegacyDocumentNameTag(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DOCUMENT_NAME => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 1, "Scan 001\0"),
+            ExifTag::XP_SUBJECT    => new IfdEntry(ExifTag::XP_SUBJECT, 1, 1, 'XP Subject'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, null, null, null, null);
+
+        self::assertSame('Scan 001', $doc->documentName());
+    }
+
     /**
      * Ensures Table 65 extension tags are exposed via dedicated getters.
      */

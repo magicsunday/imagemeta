@@ -402,6 +402,19 @@ final class ExifTagResolverTest extends TestCase
     }
 
     #[Test]
+    public function resolvesDocumentNameTag(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DOCUMENT_NAME => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 1, 'Scan 42'),
+        ]);
+
+        $document = new ExifDocument($ifd0, null, null, null, null);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('Scan 42', $resolver->documentName());
+    }
+
+    #[Test]
     public function resolvesXpStringFallbacks(): void
     {
         $ifd0 = new Ifd([

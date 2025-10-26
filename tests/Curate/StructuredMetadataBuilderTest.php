@@ -469,6 +469,19 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     #[Test]
+    public function usesDocumentNameTagWhenAvailable(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DOCUMENT_NAME => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 1, 'Legacy Document'),
+        ]);
+
+        $structured = (new StructuredMetadataBuilder())
+            ->build(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
+
+        self::assertSame('Legacy Document', $structured->image->documentName);
+    }
+
+    #[Test]
     public function populatesXpMetadataWhenExif30FieldsMissing(): void
     {
         $ifd0 = new Ifd([
