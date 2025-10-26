@@ -419,7 +419,7 @@ final class TiffExifReader
         for ($i = 0; $i < $count; ++$i) {
             $vals[] = match ($type) {
                 // BYTE
-                self::TYPE_BYTE,
+                self::TYPE_BYTE => ord($bytes[$cursor]),
                 // SBYTE
                 self::TYPE_SBYTE => $this->toSigned(ord($bytes[$cursor]), 8),
                 // SHORT
