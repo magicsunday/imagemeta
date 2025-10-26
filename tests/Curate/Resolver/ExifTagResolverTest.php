@@ -319,6 +319,8 @@ final class ExifTagResolverTest extends TestCase
             ExifTag::IMAGE_TITLE       => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 1, 'Evening Glow'),
             ExifTag::PHOTOGRAPHER      => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 1, 'Jamie Doe'),
             ExifTag::IMAGE_EDITOR      => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 1, 'Casey Edit'),
+            ExifTag::PROCESSING_SOFTWARE => new IfdEntry(ExifTag::PROCESSING_SOFTWARE, 2, 1, 'ImageMeta Studio'),
+            ExifTag::SOFTWARE            => new IfdEntry(ExifTag::SOFTWARE, 2, 1, 'Legacy Writer'),
         ]);
 
         $exifIfd = new Ifd([
@@ -355,6 +357,19 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame('Raw Studio', $resolver->rawDevelopingSoftware());
         self::assertSame('Pixel Edit', $resolver->imageEditingSoftware());
         self::assertSame('Meta Desk', $resolver->metadataEditingSoftware());
+        self::assertSame('ImageMeta Studio', $resolver->software());
+    }
+
+    #[Test]
+    public function fallsBackToLegacySoftwareTag(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::SOFTWARE => new IfdEntry(ExifTag::SOFTWARE, 2, 1, 'Legacy Writer'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument($ifd0, null, null, null, null));
+
+        self::assertSame('Legacy Writer', $resolver->software());
     }
 
     #[Test]

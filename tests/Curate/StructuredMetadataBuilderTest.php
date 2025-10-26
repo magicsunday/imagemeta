@@ -597,6 +597,29 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     #[Test]
+    public function prefersProcessingSoftwareOverLegacyTag(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PROCESSING_SOFTWARE => new IfdEntry(ExifTag::PROCESSING_SOFTWARE, 2, 1, 'ImageMeta Studio'),
+            ExifTag::SOFTWARE            => new IfdEntry(ExifTag::SOFTWARE, 2, 1, 'Legacy Writer'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, null, null, null, null);
+
+        $metadata = new Metadata(
+            ['primary'],
+            new QuickTimeMeta([]),
+            $exifDocument,
+            [],
+            new XmpDocument([]),
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('ImageMeta Studio', $structured->device->software);
+    }
+
+    #[Test]
     public function usesHostComputerWhenSoftwareResolversEmpty(): void
     {
         $ifd0 = new Ifd([

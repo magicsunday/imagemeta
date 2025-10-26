@@ -280,7 +280,14 @@ final readonly class ExifTagResolver
      */
     public function software(): ?string
     {
-        return $this->stringValue($this->document?->ifd0, ExifTag::SOFTWARE);
+        $ifd0 = $this->document?->ifd0;
+
+        $processingSoftware = $this->stringValue($ifd0, ExifTag::PROCESSING_SOFTWARE);
+        if ($processingSoftware !== null) {
+            return $processingSoftware;
+        }
+
+        return $this->stringValue($ifd0, ExifTag::SOFTWARE);
     }
 
     /**

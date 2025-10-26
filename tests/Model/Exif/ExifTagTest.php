@@ -63,6 +63,7 @@ final class ExifTagTest extends TestCase
             'GPS_H_POSITIONING_ERROR' => 0x001F,
 
             // Image file directory (IFD0)
+            'PROCESSING_SOFTWARE'           => 0x000B,
             'IMAGE_WIDTH'                    => 0x0100,
             'IMAGE_HEIGHT'                   => 0x0101,
             'BITS_PER_SAMPLE'                => 0x0102,

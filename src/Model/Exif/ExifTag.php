@@ -17,6 +17,11 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 final readonly class ExifTag
 {
     // Image file directory (IFD0)
+    /**
+     * EXIF 3.0 tag recording the software responsible for final image processing.
+     */
+    public const int PROCESSING_SOFTWARE = 0x000B;
+
     public const int IMAGE_WIDTH = 0x0100;
 
     public const int IMAGE_HEIGHT = 0x0101;
