@@ -1330,9 +1330,15 @@ final readonly class ExifDocument
      */
     public function cameraFirmware(): ?string
     {
-        $value = $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
+        if ($this->exifThreeOrNewer) {
+            $value = $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
 
-        return $value ?? $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_LEGACY);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_LEGACY);
     }
 
     /**
@@ -1381,9 +1387,15 @@ final readonly class ExifDocument
      */
     public function imageEditingSoftware(): ?string
     {
-        $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
+        if ($this->exifThreeOrNewer) {
+            $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
 
-        return $value ?? $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY);
     }
 
     /**
@@ -1391,9 +1403,15 @@ final readonly class ExifDocument
      */
     public function metadataEditingSoftware(): ?string
     {
-        $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
+        if ($this->exifThreeOrNewer) {
+            $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
 
-        return $value ?? $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
     }
 
     /**

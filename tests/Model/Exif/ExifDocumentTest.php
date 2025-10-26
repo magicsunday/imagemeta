@@ -844,7 +844,9 @@ final class ExifDocumentTest extends TestCase
             ExifTag::RAW_DEVELOPING_SOFTWARE     => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RawLab'),
             ExifTag::IMAGE_EDITING_SOFTWARE      => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'EditLab'),
             ExifTag::METADATA_EDITING_SOFTWARE   => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'MetaLab'),
-            ExifTag::CAMERA_FIRMWARE_LEGACY      => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW Legacy'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'EditLab'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'MetaLab'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY      => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW 2.0'),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -1055,6 +1057,26 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('Legacy Raw', $doc->rawDevelopingSoftware());
         self::assertSame('Legacy Edit', $doc->imageEditingSoftware());
         self::assertSame('Legacy Meta', $doc->metadataEditingSoftware());
+    }
+
+    #[Test]
+    public function exifTwoPrefersLegacySoftwareNamesOverVersionStrings(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION                    => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+            ExifTag::CAMERA_FIRMWARE                 => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 1.2.3'),
+            ExifTag::IMAGE_EDITING_SOFTWARE          => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Edit Suite 4.5'),
+            ExifTag::METADATA_EDITING_SOFTWARE       => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Suite 6.7'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY          => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy Firmware Name'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY   => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Editor Name'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Metadata Name'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('Legacy Firmware Name', $doc->cameraFirmware());
+        self::assertSame('Legacy Editor Name', $doc->imageEditingSoftware());
+        self::assertSame('Legacy Metadata Name', $doc->metadataEditingSoftware());
     }
 
     #[Test]
