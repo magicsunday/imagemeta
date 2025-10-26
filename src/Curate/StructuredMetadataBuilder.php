@@ -250,7 +250,7 @@ final class StructuredMetadataBuilder
 
         $gps = $gpsResolver->resolve($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
-        $device = $this->buildDevice($exifResolver, $quickTimeResolver);
+        $device = $this->buildDevice($exifResolver, $quickTimeResolver, $xmpResolver);
 
         $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime);
         $xmp   = $xmpResolver->value();
@@ -522,18 +522,21 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds the device metadata aggregate by combining EXIF and QuickTime sources.
+     * Builds the device metadata aggregate by combining EXIF, QuickTime and XMP sources.
      *
      * @param ExifTagResolver   $exif              Resolver exposing EXIF tag helpers.
      * @param QuickTimeResolver $quickTimeResolver Resolver exposing QuickTime metadata fields.
+     * @param XmpResolver       $xmpResolver       Resolver exposing XMP metadata fields.
      *
      * @return Device Device value object describing capture hardware and software.
      */
-    private function buildDevice(ExifTagResolver $exif, QuickTimeResolver $quickTimeResolver): Device
+    private function buildDevice(ExifTagResolver $exif, QuickTimeResolver $quickTimeResolver, XmpResolver $xmpResolver): Device
     {
         $softwareChain = CompositeResolver::first([
             fn (): ?string => $quickTimeResolver->string('com.apple.quicktime.software'),
+            fn (): ?string => $xmpResolver->string('http://ns.adobe.com/xap/1.0/', 'CreatorTool'),
             $exif->software(...),
+            $exif->hostComputer(...),
         ]);
 
         return new Device(

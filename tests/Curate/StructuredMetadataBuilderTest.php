@@ -511,6 +511,32 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('+01:00', $structured->temporal->original?->format('P'));
     }
 
+    #[Test]
+    public function usesHostComputerWhenSoftwareResolversEmpty(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::HOST_COMPUTER => new IfdEntry(ExifTag::HOST_COMPUTER, 2, 1, 'PowerMac G4'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $metadata = new Metadata(
+            ['primary'],
+            new QuickTimeMeta([]),
+            $exifDocument,
+            [],
+            new XmpDocument([]),
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('PowerMac G4', $structured->device->software);
+    }
+
     /**
      * Ensures maker notes Apple data is preferred over QuickTime metadata and propagates to white balance and motion.
      */

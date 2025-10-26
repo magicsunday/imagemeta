@@ -23,7 +23,7 @@ use ReflectionClass;
 final class ExifTagTest extends TestCase
 {
     /**
-     * Ensures the constant map exactly reflects the EXIF 3.0 tag registry.
+     * Ensures the constant map matches the EXIF 3.0 tag registry with legacy additions.
      */
     public function testConstantsMatchExif30(): void
     {
@@ -231,17 +231,22 @@ final class ExifTagTest extends TestCase
         ksort($constants);
         ksort($expected);
 
-        self::assertSame($expected, $constants);
+        $legacyOnly = [
+            'HOST_COMPUTER' => 0x013C,
+        ];
+
+        $combined = $expected + $legacyOnly;
+        ksort($combined);
+
+        self::assertSame($combined, $constants);
     }
 
     /**
-     * Ensures removed EXIF tags such as HostComputer stay absent from the registry.
+     * Ensures the legacy HostComputer tag remains available for EXIF 2.x images.
      */
-    public function testRemovedTagsAreNotDeclared(): void
+    public function testHostComputerConstantIsRetained(): void
     {
-        $constants = array_flip((new ReflectionClass(ExifTag::class))->getConstants());
-
-        self::assertArrayNotHasKey(0x013C, $constants);
+        self::assertSame(0x013C, ExifTag::HOST_COMPUTER);
     }
 
     /**

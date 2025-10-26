@@ -134,6 +134,7 @@ final readonly class ExifTagResolver
             'interopindex'        => $this->interopIndex(),
             'interopversion'      => $this->interopVersion(),
             'relatedimagefileformat' => $this->relatedImageFileFormat(),
+            'hostcomputer'        => $this->hostComputer(),
             default               => null,
         };
     }
@@ -256,6 +257,14 @@ final readonly class ExifTagResolver
     public function software(): ?string
     {
         return $this->stringValue($this->document?->ifd0, ExifTag::SOFTWARE);
+    }
+
+    /**
+     * Returns the legacy host computer tag when available.
+     */
+    public function hostComputer(): ?string
+    {
+        return $this->document?->hostComputer();
     }
 
     /**
