@@ -925,6 +925,18 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function processingSoftwareReturnsTrimmedString(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PROCESSING_SOFTWARE => new IfdEntry(ExifTag::PROCESSING_SOFTWARE, 2, 1, "PixelLab\0\0"),
+        ]);
+
+        $doc = new ExifDocument($ifd0, null, null, null, null);
+
+        self::assertSame('PixelLab', $doc->processingSoftware());
+    }
+
+    #[Test]
     public function textualSoftwareTagsFallbackToLegacyIdentifiers(): void
     {
         $ifd0 = new Ifd([

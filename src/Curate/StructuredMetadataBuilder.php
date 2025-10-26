@@ -342,6 +342,7 @@ final class StructuredMetadataBuilder
             clarity: null,
             customRendered: $exifResolver->customRendered()?->value,
             deviceSettingDescription: $exifResolver->deviceSettingDescription(),
+            processingSoftware: $exifResolver->processingSoftware(),
         );
 
         $whiteBalanceKelvin = $apple->colorTemperature;

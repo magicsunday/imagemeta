@@ -25,6 +25,7 @@ final readonly class ProcessingSettings
      * @param int|null    $clarity                  Clarity adjustment level.
      * @param int|null    $customRendered           Indicates whether a custom rendering was applied in-camera.
      * @param string|null $deviceSettingDescription Binary device setting description payload.
+     * @param string|null $processingSoftware       Final processing software recorded by the camera.
      */
     public function __construct(
         public ?int $sharpness,
@@ -35,6 +36,7 @@ final readonly class ProcessingSettings
         public ?int $clarity,
         public ?int $customRendered,
         public ?string $deviceSettingDescription,
+        public ?string $processingSoftware,
     ) {
     }
 }
