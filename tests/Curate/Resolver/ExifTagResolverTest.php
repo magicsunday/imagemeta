@@ -484,6 +484,32 @@ final class ExifTagResolverTest extends TestCase
     }
 
     #[Test]
+    public function cameraSerialNumberPrefersNewTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_SERIAL_NUMBER => new IfdEntry(ExifTag::CAMERA_SERIAL_NUMBER, 2, 1, 'NEW-SERIAL'),
+            ExifTag::BODY_SERIAL_NUMBER   => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'LEGACY-SERIAL'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        self::assertSame('NEW-SERIAL', $resolver->cameraSerialNumber());
+        self::assertSame('LEGACY-SERIAL', $resolver->bodySerialNumber());
+    }
+
+    #[Test]
+    public function cameraSerialNumberFallsBackToLegacyTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'LEGACY-ONLY'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        self::assertSame('LEGACY-ONLY', $resolver->cameraSerialNumber());
+    }
+
+    #[Test]
     public function resolvesMakerNoteSafetyFlag(): void
     {
         $safeIfd = new Ifd([

@@ -307,6 +307,8 @@ final readonly class ExifTag
 
     public const int BODY_SERIAL_NUMBER = 0xA431;
 
+    public const int CAMERA_SERIAL_NUMBER = 0xC62F;
+
     public const int LENS_SPECIFICATION = 0xA432;
 
     public const int LENS_MAKE = 0xA433;

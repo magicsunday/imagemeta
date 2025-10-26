@@ -659,7 +659,7 @@ final class StructuredMetadataBuilder
             make: $exif->cameraMake(),
             model: $exif->cameraModel(),
             ownerName: $exif->ownerName(),
-            serialNumber: $exif->bodySerialNumber(),
+            serialNumber: $exif->cameraSerialNumber(),
             firmware: CompositeResolver::first($firmwareCandidates),
             fileSource: $exif->fileSource(),
             sensingMethod: $exif->sensingMethod(),
