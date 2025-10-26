@@ -107,6 +107,7 @@ final class ExifTagTest extends TestCase
             'IMAGE_EDITOR_LEGACY'            => 0xE92E,
 
             // Pointer tags
+            'SUB_IFDS'                    => 0x014A,
             'EXIF_IFD_POINTER'             => 0x8769,
             'GPS_IFD_POINTER'              => 0x8825,
             'INTEROPERABILITY_IFD_POINTER' => 0xA005,

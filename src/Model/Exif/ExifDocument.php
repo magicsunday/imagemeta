@@ -58,6 +58,7 @@ final readonly class ExifDocument
      * @param Ifd|null                $ifd1            Optional next IFD, typically thumbnails.
      * @param MakerNotesMetadata|null $makerNotes      Decoded maker note metadata provided by vendor decoders.
      * @param list<Ifd>               $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
+     * @param array<int, Ifd>         $subIfds         Parsed SubIFDs indexed by their file offsets.
      */
     public function __construct(
         public Ifd $ifd0,
@@ -67,6 +68,7 @@ final readonly class ExifDocument
         public ?Ifd $ifd1,
         public ?MakerNotesMetadata $makerNotes = null,
         public array $subsequentIfds = [],
+        public array $subIfds = [],
     ) {
         $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
         $this->exifVersion = CoreValueConverters::toExifVersion($rawVersion);
@@ -90,6 +92,16 @@ final readonly class ExifDocument
     public function subsequentIfds(): array
     {
         return $this->subsequentIfds;
+    }
+
+    /**
+     * Returns the parsed SubIFDs keyed by their offset within the TIFF blob.
+     *
+     * @return array<int, Ifd>
+     */
+    public function subIfds(): array
+    {
+        return $this->subIfds;
     }
 
     /**
