@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use function iconv;
 use function pack;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -689,6 +690,58 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('RawLab', $doc->rawDevelopingSoftware());
         self::assertSame('EditLab', $doc->imageEditingSoftware());
         self::assertSame('MetaLab', $doc->metadataEditingSoftware());
+    }
+
+    /**
+     * Decodes user comments tagged as Shift-JIS into UTF-8 strings.
+     */
+    #[Test]
+    public function decodesShiftJisUserComments(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $commentUtf8 = '富士山でのテスト';
+        $encoded = iconv('UTF-8', 'SJIS', $commentUtf8);
+        self::assertNotFalse($encoded, 'Expected iconv to produce Shift-JIS bytes');
+
+        // Shift-JIS bytes produced from the UTF-8 phrase ensure the documented round-trip behaviour.
+        $payload = "JIS\0\0\0\0\0" . $encoded . "\0";
+
+        $exifIfd = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(
+            $commentUtf8,
+            $doc->userComment(),
+            'Expected Shift-JIS encoded bytes to decode to the documented UTF-8 phrase',
+        );
+    }
+
+    /**
+     * Falls back to a sanitized ASCII string when Shift-JIS decoding fails.
+     */
+    #[Test]
+    public function fallsBackWhenShiftJisDecodingFails(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        // Leading 0xFF bytes cannot be decoded via Shift-JIS and trigger the ASCII fallback behaviour.
+        $payload = "JIS\0\0\0\0\0\xFF\xFF Invalid metadata\0";
+
+        $exifIfd = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(
+            'Invalid metadata',
+            $doc->userComment(),
+            'Fallback should strip non-ASCII bytes and trim the decoded output',
+        );
     }
 
     /**
