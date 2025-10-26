@@ -348,6 +348,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the image editing software version string when recorded via legacy tags.
+     */
+    public function imageEditingSoftwareVersion(): ?string
+    {
+        return $this->document?->imageEditingSoftwareVersion();
+    }
+
+    /**
      * Returns the metadata editing software string.
      */
     public function metadataEditingSoftware(): ?string
