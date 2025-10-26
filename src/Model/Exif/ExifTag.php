@@ -392,6 +392,27 @@ final readonly class ExifTag
 
     public const int DEVICE_SETTING_DESCRIPTION = 0xA40B;
 
+    // DNG profile calibration tags
+    public const int CAMERA_CALIBRATION_SIGNATURE = 0xC6F3;
+
+    public const int PROFILE_CALIBRATION_SIGNATURE = 0xC6F4;
+
+    public const int PROFILE_HUE_SAT_MAP_DIMS = 0xC6F2;
+
+    public const int PROFILE_HUE_SAT_MAP_DATA_1 = 0xC6F3;
+
+    public const int PROFILE_HUE_SAT_MAP_DATA_2 = 0xC6F4;
+
+    public const int PROFILE_HUE_SAT_MAP_DATA_3 = 0xC6F5;
+
+    public const int PROFILE_LOOK_TABLE_DIMS = 0xC6F6;
+
+    public const int PROFILE_LOOK_TABLE_DATA = 0xC6F7;
+
+    public const int PROFILE_TONE_CURVE = 0xC6F8;
+
+    public const int PROFILE_GAIN_TABLE_MAP = 0xC6F9;
+
     // GPS sub IFD (Table 66 – EXIF 3.0)
     public const int GPS_VERSION_ID = 0x0000;
 

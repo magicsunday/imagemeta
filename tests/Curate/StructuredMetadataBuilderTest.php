@@ -1697,6 +1697,84 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('Media-Relative Colorimetric', $profile->renderingIntent);
         self::assertSame('00112233445566778899AABBCCDDEEFF', $profile->profileId);
         self::assertNull($profile->gamma);
+        self::assertNull($profile->cameraCalibrationSignature);
+        self::assertNull($profile->profileCalibrationSignature);
+        self::assertNull($profile->hueSatMap);
+        self::assertNull($profile->lookTable);
+        self::assertNull($profile->toneCurve);
+        self::assertNull($profile->gainMap);
+    }
+
+    /**
+     * Ensures DNG calibration fields from EXIF metadata populate the colour profile value object.
+     */
+    #[Test]
+    public function populatesColorProfileCalibrationFromExif(): void
+    {
+        $profileIfd = new Ifd([
+            ExifTag::PROFILE_HUE_SAT_MAP_DIMS    => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DIMS, 4, 3, new ExifNumericList([6, 3, 2])),
+            ExifTag::PROFILE_HUE_SAT_MAP_DATA_1 => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA_1, 11, 12, new ExifNumericList([
+                0.1,
+                0.2,
+                0.3,
+                0.4,
+                0.5,
+                0.6,
+                0.7,
+                0.8,
+                0.9,
+                1.0,
+                1.1,
+                1.2,
+            ])),
+            ExifTag::PROFILE_HUE_SAT_MAP_DATA_2 => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA_2, 11, 3, new ExifNumericList([1.3, 1.4, 1.5])),
+            ExifTag::PROFILE_HUE_SAT_MAP_DATA_3 => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA_3, 11, 3, new ExifNumericList([1.6, 1.7, 1.8])),
+            ExifTag::PROFILE_LOOK_TABLE_DIMS     => new IfdEntry(ExifTag::PROFILE_LOOK_TABLE_DIMS, 4, 3, new ExifNumericList([2, 2, 1])),
+            ExifTag::PROFILE_LOOK_TABLE_DATA     => new IfdEntry(ExifTag::PROFILE_LOOK_TABLE_DATA, 11, 6, new ExifNumericList([
+                0.05,
+                0.06,
+                0.07,
+                0.08,
+                0.09,
+                0.1,
+            ])),
+            ExifTag::PROFILE_TONE_CURVE          => new IfdEntry(ExifTag::PROFILE_TONE_CURVE, 11, 4, new ExifNumericList([0.0, 0.0, 0.5, 0.6])),
+            ExifTag::PROFILE_GAIN_TABLE_MAP      => new IfdEntry(ExifTag::PROFILE_GAIN_TABLE_MAP, 11, 4, new ExifNumericList([1.0, 1.05, 0.95, 1.1])),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_CALIBRATION_SIGNATURE  => new IfdEntry(ExifTag::CAMERA_CALIBRATION_SIGNATURE, 2, 16, 'CameraSig v1.0'),
+            ExifTag::PROFILE_CALIBRATION_SIGNATURE => new IfdEntry(ExifTag::PROFILE_CALIBRATION_SIGNATURE, 2, 15, 'ProfileSig v2'),
+        ]);
+
+        $document = new ExifDocument(new Ifd([]), $exifIfd, null, null, null, null, [], [
+            0 => $profileIfd,
+        ]);
+
+        $metadata   = new Metadata(['primary'], null, $document);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        $profile = $structured->colorProfile;
+        self::assertSame('CameraSig v1.0', $profile->cameraCalibrationSignature);
+        self::assertSame('ProfileSig v2', $profile->profileCalibrationSignature);
+        self::assertNotNull($profile->hueSatMap);
+        self::assertSame(6, $profile->hueSatMap->hueDivisions);
+        self::assertSame(3, $profile->hueSatMap->saturationDivisions);
+        self::assertSame(2, $profile->hueSatMap->valueDivisions);
+        self::assertNotNull($profile->hueSatMap->mapData1);
+        self::assertCount(12, $profile->hueSatMap->mapData1);
+        self::assertNotNull($profile->hueSatMap->mapData2);
+        self::assertSame([1.3, 1.4, 1.5], $profile->hueSatMap->mapData2);
+        self::assertNotNull($profile->hueSatMap->mapData3);
+        self::assertSame([1.6, 1.7, 1.8], $profile->hueSatMap->mapData3);
+        self::assertNotNull($profile->lookTable);
+        self::assertNotNull($profile->lookTable->entries);
+        self::assertSame([0.05, 0.06, 0.07], $profile->lookTable->entries[0]);
+        self::assertSame([0.08, 0.09, 0.1], $profile->lookTable->entries[1]);
+        self::assertNotNull($profile->toneCurve);
+        self::assertSame([[0.0, 0.0], [0.5, 0.6]], $profile->toneCurve->points);
+        self::assertNotNull($profile->gainMap);
+        self::assertSame([1.0, 1.05, 0.95, 1.1], $profile->gainMap->values);
     }
 
     /**
