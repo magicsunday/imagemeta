@@ -461,6 +461,20 @@ final class ExifDocumentTest extends TestCase
                 2,
                 new ExifNumericList([256, 512]),
             ),
+            ExifTag::TILE_WIDTH => new IfdEntry(ExifTag::TILE_WIDTH, 4, 1, 320),
+            ExifTag::TILE_LENGTH => new IfdEntry(ExifTag::TILE_LENGTH, 4, 1, 640),
+            ExifTag::TILE_OFFSETS => new IfdEntry(
+                ExifTag::TILE_OFFSETS,
+                4,
+                3,
+                new ExifNumericList([1024, 2048, 3072]),
+            ),
+            ExifTag::TILE_BYTE_COUNTS => new IfdEntry(
+                ExifTag::TILE_BYTE_COUNTS,
+                4,
+                3,
+                new ExifNumericList([4096, 4096, 8192]),
+            ),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 4096),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
         ]);
@@ -469,6 +483,10 @@ final class ExifDocumentTest extends TestCase
 
         self::assertSame([64, 128], $doc->stripOffsets());
         self::assertSame([256, 512], $doc->stripByteCounts());
+        self::assertSame(320, $doc->tileWidth());
+        self::assertSame(640, $doc->tileLength());
+        self::assertSame([1024, 2048, 3072], $doc->tileOffsets());
+        self::assertSame([4096, 4096, 8192], $doc->tileByteCounts());
         self::assertSame([0, 32768, 65535], $doc->transferFunction());
         self::assertSame(4096, $doc->jpegThumbnailOffset());
         self::assertSame(8192, $doc->jpegThumbnailLength());

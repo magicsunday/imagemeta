@@ -29,6 +29,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use RuntimeException;
 
 use function array_map;
 use function call_user_func;
@@ -75,6 +76,42 @@ final class TiffExifReaderTest extends TestCase
 
     private const int BIG_TIFF_LONG8_JPEG_OFFSET = 0x0000000200000000;
 
+    private const int CLASSIC_TILE_WIDTH = 256;
+
+    private const int CLASSIC_TILE_LENGTH = 128;
+
+    /**
+     * @var array<int>
+     */
+    private const array CLASSIC_TILE_OFFSETS = [8192];
+
+    /**
+     * @var array<int>
+     */
+    private const array CLASSIC_TILE_BYTE_COUNTS = [4096];
+
+    private const int BIG_TIFF_TILE_WIDTH = 1024;
+
+    private const int BIG_TIFF_TILE_LENGTH = 768;
+
+    /**
+     * @var array<int>
+     */
+    private const array BIG_TIFF_TILE_OFFSETS = [
+        0x0000000200000100,
+        0x0000000200000200,
+        0x0000000200000300,
+    ];
+
+    /**
+     * @var array<int>
+     */
+    private const array BIG_TIFF_TILE_BYTE_COUNTS = [
+        0x0000000100000000,
+        0x0000000100000200,
+        0x0000000100000400,
+    ];
+
     /**
      * Provides representative Classic TIFF and BigTIFF payloads.
      *
@@ -120,6 +157,10 @@ final class TiffExifReaderTest extends TestCase
 
         self::assertSame([512], $document->stripOffsets());
         self::assertSame([1024], $document->stripByteCounts());
+        self::assertSame(self::CLASSIC_TILE_WIDTH, $document->tileWidth());
+        self::assertSame(self::CLASSIC_TILE_LENGTH, $document->tileLength());
+        self::assertSame(self::CLASSIC_TILE_OFFSETS, $document->tileOffsets());
+        self::assertSame(self::CLASSIC_TILE_BYTE_COUNTS, $document->tileByteCounts());
         self::assertSame([0, 32768, 65535], $document->transferFunction());
         self::assertSame(2048, $document->jpegThumbnailOffset());
         self::assertSame(4096, $document->jpegThumbnailLength());
@@ -591,6 +632,10 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame(1, $doc->ifd0->get(ExifTag::ORIENTATION)?->value);
         self::assertSame(512, $doc->ifd0->get(ExifTag::STRIP_OFFSETS)?->value);
         self::assertSame(1024, $doc->ifd0->get(ExifTag::STRIP_BYTE_COUNTS)?->value);
+        self::assertSame(self::CLASSIC_TILE_WIDTH, $doc->ifd0->get(ExifTag::TILE_WIDTH)?->value);
+        self::assertSame(self::CLASSIC_TILE_LENGTH, $doc->ifd0->get(ExifTag::TILE_LENGTH)?->value);
+        self::assertSame(self::CLASSIC_TILE_OFFSETS[0], $doc->ifd0->get(ExifTag::TILE_OFFSETS)?->value);
+        self::assertSame(self::CLASSIC_TILE_BYTE_COUNTS[0], $doc->ifd0->get(ExifTag::TILE_BYTE_COUNTS)?->value);
         self::assertSame(2048, $doc->ifd0->get(ExifTag::JPEG_INTERCHANGE_FORMAT)?->value);
         self::assertSame(4096, $doc->ifd0->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH)?->value);
 
@@ -608,6 +653,11 @@ final class TiffExifReaderTest extends TestCase
         $copyright = $doc->ifd0->get(ExifTag::COPYRIGHT)?->value;
         self::assertIsString($copyright);
         self::assertSame('Jane Doe', trim($copyright, "\0"));
+
+        self::assertSame(self::CLASSIC_TILE_WIDTH, $doc->tileWidth());
+        self::assertSame(self::CLASSIC_TILE_LENGTH, $doc->tileLength());
+        self::assertSame(self::CLASSIC_TILE_OFFSETS, $doc->tileOffsets());
+        self::assertSame(self::CLASSIC_TILE_BYTE_COUNTS, $doc->tileByteCounts());
 
         $exifIfd = $doc->exifIfd;
         self::assertNotNull($exifIfd);
@@ -658,6 +708,20 @@ final class TiffExifReaderTest extends TestCase
     {
         self::assertSame('BigCamXL', $doc->ifd0->get(ExifTag::MAKE)?->value);
         self::assertSame(3, $doc->ifd0->get(ExifTag::ORIENTATION)?->value);
+        self::assertSame(self::BIG_TIFF_TILE_WIDTH, $doc->ifd0->get(ExifTag::TILE_WIDTH)?->value);
+        self::assertSame(self::BIG_TIFF_TILE_LENGTH, $doc->ifd0->get(ExifTag::TILE_LENGTH)?->value);
+
+        $tileOffsetsEntry = $doc->ifd0->get(ExifTag::TILE_OFFSETS);
+        self::assertNotNull($tileOffsetsEntry);
+        $tileOffsets = $tileOffsetsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $tileOffsets);
+        self::assertSame(self::BIG_TIFF_TILE_OFFSETS, $tileOffsets->values);
+
+        $tileByteCountsEntry = $doc->ifd0->get(ExifTag::TILE_BYTE_COUNTS);
+        self::assertNotNull($tileByteCountsEntry);
+        $tileByteCounts = $tileByteCountsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $tileByteCounts);
+        self::assertSame(self::BIG_TIFF_TILE_BYTE_COUNTS, $tileByteCounts->values);
 
         $exifIfd = $doc->exifIfd;
         self::assertNotNull($exifIfd);
@@ -697,6 +761,11 @@ final class TiffExifReaderTest extends TestCase
         self::assertEqualsWithDelta(51.504167, $gps['lat'], 1e-6);
         self::assertEqualsWithDelta(-8.208333, $gps['lon'], 1e-6);
         self::assertEqualsWithDelta(-50.0, $gps['alt'], 1e-3);
+
+        self::assertSame(self::BIG_TIFF_TILE_WIDTH, $doc->tileWidth());
+        self::assertSame(self::BIG_TIFF_TILE_LENGTH, $doc->tileLength());
+        self::assertSame(self::BIG_TIFF_TILE_OFFSETS, $doc->tileOffsets());
+        self::assertSame(self::BIG_TIFF_TILE_BYTE_COUNTS, $doc->tileByteCounts());
     }
 
     /**
@@ -762,7 +831,7 @@ final class TiffExifReaderTest extends TestCase
         $xpKeywordsBytes = self::packUtf16LeString([0x65C5, 0x003B, 0x6D77]);
         $xpSubjectBytes  = self::packUtf16LeString([0x0050, 0x0072, 0x006F, 0x006A, 0x0065, 0x0063, 0x0074, 0x0020, 0x2728]);
 
-        $ifd0EntryCount = 16;
+        $ifd0EntryCount = 20;
         $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
         $baseOffset     = strlen($header) + $ifd0Length;
 
@@ -800,6 +869,10 @@ final class TiffExifReaderTest extends TestCase
             self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1),
             self::packClassicEntry(ExifTag::STRIP_OFFSETS, 4, 1, 512),
             self::packClassicEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 1, 1024),
+            self::packClassicEntry(ExifTag::TILE_WIDTH, 4, 1, self::CLASSIC_TILE_WIDTH),
+            self::packClassicEntry(ExifTag::TILE_LENGTH, 4, 1, self::CLASSIC_TILE_LENGTH),
+            self::packClassicEntry(ExifTag::TILE_OFFSETS, 4, 1, self::CLASSIC_TILE_OFFSETS[0]),
+            self::packClassicEntry(ExifTag::TILE_BYTE_COUNTS, 4, 1, self::CLASSIC_TILE_BYTE_COUNTS[0]),
             self::packClassicEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, $transferFunctionOffset),
             self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 2048),
             self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4096),
@@ -1141,17 +1214,73 @@ final class TiffExifReaderTest extends TestCase
             . pack('V', 16)
             . pack('V', 0);
 
+        $tileOffsetsValues    = self::BIG_TIFF_TILE_OFFSETS;
+        $tileByteCountsValues = self::BIG_TIFF_TILE_BYTE_COUNTS;
+
+        $makeData   = "BigCamXL\0";
+        $makeLength = strlen($makeData);
+
+        $gpsLatData = self::packRationalTripletLE([51, 1], [30, 1], [15, 1]);
+        $gpsLonData = self::packRationalTripletLE([8, 1], [12, 1], [30, 1]);
+
+        $tileOffsetsData    = implode('', array_map([self::class, 'packUInt64LE'], $tileOffsetsValues));
+        $tileByteCountsData = implode('', array_map([self::class, 'packUInt64LE'], $tileByteCountsValues));
+
+        $ifd0EntryCount = 8;
+        $ifd0Length     = 8 + ($ifd0EntryCount * 20) + 8;
+        $baseOffset     = strlen($header) + $ifd0Length;
+
+        $exifEntryCount    = 3;
+        $exifIfdLength     = 8 + ($exifEntryCount * 20) + 8;
+        $interopEntryCount = 1;
+        $interopIfdLength  = 8 + ($interopEntryCount * 20) + 8;
+        $gpsEntryCount     = 6;
+        $gpsIfdLength      = 8 + ($gpsEntryCount * 20) + 8;
+
+        $cursor = $baseOffset;
+
+        $makeOffset = $cursor;
+        $cursor += $makeLength;
+        $cursor = self::alignOffset($cursor, 8);
+
+        $exifIfdOffset = $cursor;
+        $cursor += $exifIfdLength;
+        $cursor = self::alignOffset($cursor, 8);
+
+        $interopIfdOffset = $cursor;
+        $cursor += $interopIfdLength;
+        $cursor = self::alignOffset($cursor, 8);
+
+        $gpsIfdOffset = $cursor;
+        $cursor += $gpsIfdLength;
+
+        $gpsLatOffset = $cursor;
+        $cursor += strlen($gpsLatData);
+
+        $gpsLonOffset = $cursor;
+        $cursor += strlen($gpsLonData);
+
+        $cursor = self::alignOffset($cursor, 8);
+
+        $tileOffsetsOffset = $cursor;
+        $cursor += strlen($tileOffsetsData);
+
+        $cursor = self::alignOffset($cursor, 8);
+
+        $tileByteCountsOffset = $cursor;
+        $cursor += strlen($tileByteCountsData);
+
         $ifd0Entries = [
-            self::packBigTiffEntry(ExifTag::MAKE, 2, 9, 112),
+            self::packBigTiffEntry(ExifTag::MAKE, 2, $makeLength, $makeOffset),
             self::packBigTiffEntry(ExifTag::ORIENTATION, 3, 1, 3),
-            self::packBigTiffEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, 128),
-            self::packBigTiffEntry(ExifTag::GPS_IFD_POINTER, 4, 1, 256),
+            self::packBigTiffEntry(ExifTag::TILE_WIDTH, 4, 1, self::BIG_TIFF_TILE_WIDTH),
+            self::packBigTiffEntry(ExifTag::TILE_LENGTH, 4, 1, self::BIG_TIFF_TILE_LENGTH),
+            self::packBigTiffEntry(ExifTag::TILE_OFFSETS, 18, count($tileOffsetsValues), $tileOffsetsOffset),
+            self::packBigTiffEntry(ExifTag::TILE_BYTE_COUNTS, 16, count($tileByteCountsValues), $tileByteCountsOffset),
+            self::packBigTiffEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
+            self::packBigTiffEntry(ExifTag::GPS_IFD_POINTER, 4, 1, $gpsIfdOffset),
         ];
         $ifd0 = pack('V', count($ifd0Entries)) . pack('V', 0) . implode('', $ifd0Entries) . pack('V', 0) . pack('V', 0);
-
-        $blob = $header . $ifd0;
-        $blob .= "BigCamXL\0"; // offset 112
-        $blob .= str_repeat("\0", 7); // pad to 128
 
         $exifEntries = [
             self::packBigTiffEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 320),
@@ -1161,10 +1290,9 @@ final class TiffExifReaderTest extends TestCase
                 1,
                 self::toLittleEndianInteger(self::packRationalLE(35, 10)),
             ),
-            self::packBigTiffEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, 220),
+            self::packBigTiffEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, $interopIfdOffset),
         ];
-        $blob .= pack('V', count($exifEntries)) . pack('V', 0) . implode('', $exifEntries) . pack('V', 0) . pack('V', 0);
-        $blob .= str_repeat("\0", 16); // pad to 220
+        $exifIfd = pack('V', count($exifEntries)) . pack('V', 0) . implode('', $exifEntries) . pack('V', 0) . pack('V', 0);
 
         $interopEntries = [
             self::packBigTiffEntry(
@@ -1174,13 +1302,13 @@ final class TiffExifReaderTest extends TestCase
                 self::inlineAsciiToInt('R98', 8),
             ),
         ];
-        $blob .= pack('V', count($interopEntries)) . pack('V', 0) . implode('', $interopEntries) . pack('V', 0) . pack('V', 0);
+        $interopIfd = pack('V', count($interopEntries)) . pack('V', 0) . implode('', $interopEntries) . pack('V', 0) . pack('V', 0);
 
         $gpsEntries = [
             self::packBigTiffEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, self::inlineAsciiToInt('N', 8)),
-            self::packBigTiffEntry(ExifTag::GPS_LATITUDE, 5, 3, 392),
+            self::packBigTiffEntry(ExifTag::GPS_LATITUDE, 5, 3, $gpsLatOffset),
             self::packBigTiffEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, self::inlineAsciiToInt('W', 8)),
-            self::packBigTiffEntry(ExifTag::GPS_LONGITUDE, 5, 3, 416),
+            self::packBigTiffEntry(ExifTag::GPS_LONGITUDE, 5, 3, $gpsLonOffset),
             self::packBigTiffEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 1),
             self::packBigTiffEntry(
                 ExifTag::GPS_ALTITUDE,
@@ -1189,10 +1317,33 @@ final class TiffExifReaderTest extends TestCase
                 self::toLittleEndianInteger(self::packRationalLE(500, 10)),
             ),
         ];
-        $blob .= pack('V', count($gpsEntries)) . pack('V', 0) . implode('', $gpsEntries) . pack('V', 0) . pack('V', 0);
+        $gpsIfd = pack('V', count($gpsEntries)) . pack('V', 0) . implode('', $gpsEntries) . pack('V', 0) . pack('V', 0);
 
-        $blob .= self::packRationalTripletLE([51, 1], [30, 1], [15, 1]);
-        $blob .= self::packRationalTripletLE([8, 1], [12, 1], [30, 1]);
+        $blob = $header . $ifd0;
+
+        self::padBufferTo($blob, $makeOffset);
+        $blob .= $makeData;
+
+        self::padBufferTo($blob, $exifIfdOffset);
+        $blob .= $exifIfd;
+
+        self::padBufferTo($blob, $interopIfdOffset);
+        $blob .= $interopIfd;
+
+        self::padBufferTo($blob, $gpsIfdOffset);
+        $blob .= $gpsIfd;
+
+        self::padBufferTo($blob, $gpsLatOffset);
+        $blob .= $gpsLatData;
+
+        self::padBufferTo($blob, $gpsLonOffset);
+        $blob .= $gpsLonData;
+
+        self::padBufferTo($blob, $tileOffsetsOffset);
+        $blob .= $tileOffsetsData;
+
+        self::padBufferTo($blob, $tileByteCountsOffset);
+        $blob .= $tileByteCountsData;
 
         return $blob;
     }
@@ -1506,6 +1657,38 @@ final class TiffExifReaderTest extends TestCase
         }
 
         return $value;
+    }
+
+    /**
+     * Aligns an offset to the provided power-of-two boundary.
+     */
+    private static function alignOffset(int $offset, int $alignment): int
+    {
+        $remainder = $offset % $alignment;
+
+        if ($remainder === 0) {
+            return $offset;
+        }
+
+        return $offset + ($alignment - $remainder);
+    }
+
+    /**
+     * Pads the buffer with NUL bytes until it reaches the requested offset.
+     */
+    private static function padBufferTo(string &$buffer, int $targetOffset): void
+    {
+        $length = strlen($buffer);
+
+        if ($length > $targetOffset) {
+            throw new RuntimeException('Buffer already beyond target offset.');
+        }
+
+        if ($length === $targetOffset) {
+            return;
+        }
+
+        $buffer .= str_repeat("\0", $targetOffset - $length);
     }
 
     /**
