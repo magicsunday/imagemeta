@@ -11,10 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 
 /**
@@ -34,9 +37,9 @@ final readonly class Exposure
      * @param float|null           $brightnessEv     Scene brightness value in EV.
      * @param ExposureMode|null    $exposureMode     Exposure mode selection.
      * @param GainControl|null     $gainControl      Applied gain control.
-     * @param int|null             $contrast         Contrast processing setting.
-     * @param int|null             $saturation       Saturation processing setting.
-     * @param int|null             $sharpness        Sharpness processing setting.
+     * @param Contrast|null        $contrast         Contrast processing setting.
+     * @param Saturation|null      $saturation       Saturation processing setting.
+     * @param Sharpness|null       $sharpness        Sharpness processing setting.
      * @param float|null           $digitalZoomRatio Applied digital zoom ratio.
      * @param float|null           $shutterSpeedEv   Shutter speed expressed as APEX value.
      * @param float|null           $apertureEv       Aperture expressed as APEX value.
@@ -57,9 +60,9 @@ final readonly class Exposure
         public ?float $brightnessEv,
         public ?ExposureMode $exposureMode,
         public ?GainControl $gainControl,
-        public ?int $contrast,
-        public ?int $saturation,
-        public ?int $sharpness,
+        public ?Contrast $contrast,
+        public ?Saturation $saturation,
+        public ?Sharpness $sharpness,
         public ?float $digitalZoomRatio,
         public ?float $shutterSpeedEv,
         public ?float $apertureEv,

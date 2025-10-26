@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
@@ -42,9 +43,11 @@ use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
@@ -1336,31 +1339,25 @@ final readonly class ExifTagResolver
     /**
      * Returns the contrast processing setting.
      */
-    public function contrast(): ?int
+    public function contrast(): ?Contrast
     {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::CONTRAST);
-
-        return $value;
+        return $this->document?->contrast();
     }
 
     /**
      * Returns the saturation processing setting.
      */
-    public function saturation(): ?int
+    public function saturation(): ?Saturation
     {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::SATURATION);
-
-        return $value;
+        return $this->document?->saturation();
     }
 
     /**
      * Returns the sharpness processing setting.
      */
-    public function sharpness(): ?int
+    public function sharpness(): ?Sharpness
     {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::SHARPNESS);
-
-        return $value;
+        return $this->document?->sharpness();
     }
 
     /**
