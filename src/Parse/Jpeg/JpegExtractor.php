@@ -643,6 +643,10 @@ final class JpegExtractor
             throw new ParseError(sprintf('Audio segment at offset %d uses unsupported sample rate %d', $offset, $sampleRate));
         }
 
+        if ($format === self::AUDIO_FORMAT_MU_LAW && $sampleRate !== 8_000) {
+            throw new ParseError(sprintf('Audio segment at offset %d uses unsupported μ-law sample rate %d', $offset, $sampleRate));
+        }
+
         $formatName = match ($format) {
             self::AUDIO_FORMAT_PCM       => 'PCM',
             self::AUDIO_FORMAT_MU_LAW    => 'MU_LAW_PCM',
