@@ -1123,6 +1123,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the noise reduction strength encoded by the camera.
+     */
+    public function noiseReduction(): ?float
+    {
+        return $this->rationalValue($this->document?->exifIfd, ExifTag::NOISE);
+    }
+
+    /**
      * Returns the device setting description payload.
      */
     public function deviceSettingDescription(): ?string

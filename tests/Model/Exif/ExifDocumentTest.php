@@ -77,6 +77,12 @@ final class ExifDocumentTest extends TestCase
                 1,
                 new ExifRational(50, 1),
             ),
+            ExifTag::NOISE => new IfdEntry(
+                ExifTag::NOISE,
+                5,
+                1,
+                new ExifRational(123, 10),
+            ),
             ExifTag::LENS_MODEL             => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'RF50mm F1.2L USM'),
             ExifTag::DATETIME_ORIGINAL      => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01 12:34:56'),
             ExifTag::SUB_SEC_TIME_ORIGINAL  => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 1, '123'),
@@ -126,6 +132,7 @@ final class ExifDocumentTest extends TestCase
         self::assertSame(0.008, $doc->exposureTime());
         self::assertSame(2.8, $doc->fNumber());
         self::assertSame(50.0, $doc->focalLengthMm());
+        self::assertEqualsWithDelta(12.3, $doc->noise(), 0.0001);
         self::assertSame('2024:05:01 12:34:56', $doc->dateTimeOriginalRaw());
         self::assertSame('+02:00', $doc->offsetTimeOriginalRaw());
 

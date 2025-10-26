@@ -158,6 +158,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
             ExifTag::RELATED_SOUND_FILE          => new IfdEntry(ExifTag::RELATED_SOUND_FILE, 2, 10, 'sound.wav'),
             ExifTag::FLASH_ENERGY                => new IfdEntry(ExifTag::FLASH_ENERGY, 5, 1, new ExifRational(250, 10)),
+            ExifTag::NOISE                       => new IfdEntry(ExifTag::NOISE, 5, 1, new ExifRational(456, 10)),
             ExifTag::SPATIAL_FREQUENCY_RESPONSE  => new IfdEntry(ExifTag::SPATIAL_FREQUENCY_RESPONSE, 7, 12, 'SFR-Curve-01'),
             ExifTag::FOCAL_PLANE_X_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_X_RESOLUTION, 5, 1, new ExifRational(4321, 100)),
             ExifTag::FOCAL_PLANE_Y_RESOLUTION    => new IfdEntry(ExifTag::FOCAL_PLANE_Y_RESOLUTION, 5, 1, new ExifRational(4300, 100)),
@@ -309,6 +310,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         self::assertSame('Profile:Portrait', $structured->processing->deviceSettingDescription);
         self::assertSame(1, $structured->processing->customRendered);
+        self::assertEqualsWithDelta(45.6, $structured->processing->noiseReduction, 0.0001);
 
         self::assertSame('Jane D. Photographer', $structured->author->photographer);
         self::assertSame('John Editor', $structured->author->imageEditor);
