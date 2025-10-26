@@ -109,7 +109,7 @@ final class StreamWindowTest extends TestCase
         self::assertSame(0xAA, $window->readU8());
         self::assertSame(0xBEEF, $window->readU16BE());
         self::assertSame(0x01020304, $window->readU32BE());
-        self::assertSame(0x0123456789ABCDEF, $window->readU64BE());
+        self::assertSame(0x0123456789ABCDEF, $window->readU64BE()->toInt('test value'));
         self::assertSame(strlen($payload), $window->tell());
     }
 

@@ -1387,7 +1387,7 @@ final readonly class IsoBmffExtractor
             2       => $window->readU16BE(),
             3       => Unpack::int('N', "\0" . $window->read(3), '24-bit integer value'),
             4       => $window->readU32BE(),
-            8       => $window->readU64BE(),
+            8       => $window->readU64BE()->toInt('64-bit integer value'),
             default => throw new ParseError('unsupported integer size ' . $bytes),
         };
     }
@@ -1490,7 +1490,7 @@ final readonly class IsoBmffExtractor
         if ($size32 === 0) {
             $size = $limit - $offset;
         } elseif ($size32 === 1) {
-            $size = $this->stream->readU64BE();
+            $size = $this->stream->readU64BE()->toInt('extended box size');
             $headerSize += 8;
         }
 

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Exif;
 
 use InvalidArgumentException;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use function array_is_list;
 use function is_float;
@@ -23,7 +24,7 @@ use function is_int;
 final readonly class ExifNumericList
 {
     /**
-     * @var list<int|float>
+     * @var list<int|float|UInt64>
      */
     public array $values;
 
@@ -37,18 +38,14 @@ final readonly class ExifNumericList
         }
 
         foreach ($values as $value) {
-            if (is_int($value)) {
+            if (is_int($value) || is_float($value) || $value instanceof UInt64) {
                 continue;
             }
 
-            if (is_float($value)) {
-                continue;
-            }
-
-            throw new InvalidArgumentException('Numeric EXIF lists may only contain integers or floats.');
+            throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
         }
 
-        /** @var list<int|float> $values */
+        /** @var list<int|float|UInt64> $values */
         $this->values = $values;
     }
 

@@ -321,8 +321,8 @@ final class TiffExifReaderTest extends TestCase
             . pack('V', 0x00000000)
             . pack('V', 0x80000000);
 
-        $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('exceeds PHP_INT_MAX');
+        $this->expectException(BoundsError::class);
+        $this->expectExceptionMessage('IFD offset exceeds TIFF data length.');
 
         (new TiffExifReader())->parseFromBlob($blob);
     }
@@ -339,6 +339,19 @@ final class TiffExifReaderTest extends TestCase
         $ifd0    = pack('v', 1) . $entries . pack('V', 0);
 
         $blob = $header . $ifd0;
+
+        $this->expectException(BoundsError::class);
+
+        (new TiffExifReader())->parseFromBlob($blob);
+    }
+
+    /**
+     * Ensures BigTIFF pointer offsets beyond the signed 63-bit range are rejected with a bounds error.
+     */
+    #[Test]
+    public function failsOnOutOfRangeBigTiffPointer(): void
+    {
+        $blob = self::buildBigTiffOutOfRangeOffsetBlob();
 
         $this->expectException(BoundsError::class);
 
@@ -803,10 +816,10 @@ final class TiffExifReaderTest extends TestCase
         $pointerMethod = $refClass->getMethod('pointerOffset');
         $pointerMethod->setAccessible(true);
 
-        self::assertSame(
-            self::BIG_TIFF_LONG8_JPEG_OFFSET,
-            $pointerMethod->invoke($reader, $jpegEntry),
-        );
+        $this->expectException(BoundsError::class);
+        $this->expectExceptionMessage('IFD pointer tag 0x0201 exceeds TIFF data length.');
+
+        $pointerMethod->invoke($reader, $jpegEntry);
     }
 
     /**
@@ -1385,6 +1398,31 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Builds a BigTIFF payload where an IFD pointer exceeds the signed 63-bit range.
+     */
+    private static function buildBigTiffOutOfRangeOffsetBlob(): string
+    {
+        $header = 'II'
+            . pack('v', 0x002B)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('V', 16)
+            . pack('V', 0);
+
+        $entries = [
+            self::packBigTiffEntry(ExifTag::GPS_IFD_POINTER, 18, 1, [0x00000001, 0x80000000]),
+        ];
+
+        $ifd0 = pack('V', count($entries))
+            . pack('V', 0)
+            . implode('', $entries)
+            . pack('V', 0)
+            . pack('V', 0);
+
+        return $header . $ifd0;
+    }
+
+    /**
      * Builds a minimal Classic TIFF payload containing scene and software tags inline.
      */
     private function buildClassicSceneSoftwareBlob(): string
@@ -1552,10 +1590,10 @@ final class TiffExifReaderTest extends TestCase
      * @param int $count         Number of values represented.
      * @param int $valueOrOffset Inline value or data offset.
      */
-    private static function packBigTiffEntry(int $tag, int $type, int $count, int $valueOrOffset): string
+    private static function packBigTiffEntry(int $tag, int $type, int $count, int|array $valueOrOffset): string
     {
         [$countLo, $countHi] = self::splitUInt64($count);
-        [$valueLo, $valueHi] = self::splitUInt64($valueOrOffset);
+        [$valueLo, $valueHi] = self::splitUInt64Components($valueOrOffset);
 
         return pack('v', $tag)
             . pack('v', $type)
@@ -1711,10 +1749,26 @@ final class TiffExifReaderTest extends TestCase
      *
      * @param int $value 64-bit integer value to encode.
      */
-    private static function packUInt64LE(int $value): string
+    private static function packUInt64LE(int|array $value): string
     {
-        [$lo, $hi] = self::splitUInt64($value);
+        [$lo, $hi] = self::splitUInt64Components($value);
 
         return pack('V', $lo) . pack('V', $hi);
+    }
+
+    /**
+     * Normalises an unsigned 64-bit representation into low/high components.
+     *
+     * @param int|array{0:int,1:int} $value Unsigned integer or explicit low/high pair.
+     *
+     * @return array{0:int,1:int}
+     */
+    private static function splitUInt64Components(int|array $value): array
+    {
+        if (is_array($value)) {
+            return [$value[0] & 0xFFFFFFFF, $value[1] & 0xFFFFFFFF];
+        }
+
+        return self::splitUInt64($value);
     }
 }

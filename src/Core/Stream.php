@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function fopen;
@@ -164,9 +165,9 @@ final class Stream
     /**
      * Reads an unsigned 64-bit big-endian integer from the stream.
      *
-     * @return int
+     * @return UInt64
      */
-    public function readU64BE(): int
+    public function readU64BE(): UInt64
     {
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();

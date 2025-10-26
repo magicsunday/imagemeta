@@ -153,14 +153,6 @@ final readonly class ExifTag
 
     public const int PRIMARY_CHROMATICITIES = 0x013F;
 
-    public const int TILE_WIDTH = 0x0142;
-
-    public const int TILE_LENGTH = 0x0143;
-
-    public const int TILE_OFFSETS = 0x0144;
-
-    public const int TILE_BYTE_COUNTS = 0x0145;
-
     public const int JPEG_INTERCHANGE_FORMAT = 0x0201;
 
     public const int JPEG_INTERCHANGE_FORMAT_LENGTH = 0x0202;

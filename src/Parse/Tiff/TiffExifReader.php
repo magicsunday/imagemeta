@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
@@ -34,6 +36,7 @@ use function is_finite;
 use function is_float;
 use function is_int;
 use function is_string;
+use function intdiv;
 use function mb_convert_encoding;
 use function ord;
 use function pack;
@@ -110,6 +113,19 @@ final class TiffExifReader
         ExifTag::TILE_BYTE_COUNTS,
     ];
 
+    /**
+     * Tags whose values encode offsets within the TIFF blob.
+     *
+     * @var list<int>
+     */
+    private const array POINTER_TAGS = [
+        ExifTag::EXIF_IFD_POINTER,
+        ExifTag::GPS_IFD_POINTER,
+        ExifTag::INTEROPERABILITY_IFD_POINTER,
+        ExifTag::SUB_IFDS,
+        ExifTag::JPEG_INTERCHANGE_FORMAT,
+    ];
+
     private const string UNICODE_REPLACEMENT = "\u{FFFD}";
 
     private MemoryBuffer $buf;
@@ -117,6 +133,8 @@ final class TiffExifReader
     private Endian $bo;
 
     private bool $bigTiff = false;
+
+    private UInt64 $blobSize;
 
     private ?string $makerNoteRaw = null;
 
@@ -142,6 +160,7 @@ final class TiffExifReader
     {
         $this->buf = new MemoryBuffer($tiffBlob);
         $this->buf->seek(0);
+        $this->blobSize = UInt64::fromInt($this->buf->size());
 
         $this->makerNoteRaw = null;
         $this->subIfds      = [];
@@ -252,31 +271,37 @@ final class TiffExifReader
     /**
      * Parses an image file directory starting at the given byte offset.
      *
-     * @param int $offset Zero-based byte offset to the IFD structure.
+     * @param int|UInt64 $offset Zero-based byte offset to the IFD structure.
      *
      * @return Ifd
      */
-    private function readIfd(int $offset): Ifd
+    private function readIfd(int|UInt64 $offset): Ifd
     {
-        if ($offset <= 0) {
+        if ($offset instanceof UInt64) {
+            if ($offset->isZero()) {
+                return new Ifd([]);
+            }
+        } elseif ($offset <= 0) {
             return new Ifd([]);
         }
 
-        if (isset($this->ifdCache[$offset])) {
-            return $this->ifdCache[$offset];
+        $offsetInt = $this->ensureOffset($offset, 'IFD offset');
+
+        if (isset($this->ifdCache[$offsetInt])) {
+            return $this->ifdCache[$offsetInt];
         }
 
-        $this->buf->seek($offset);
-        $entryCount = $this->bigTiff ? $this->readU64() : $this->readU16();
+        $this->buf->seek($offsetInt);
+        $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
         $entries    = [];
         for ($i = 0; $i < $entryCount; ++$i) {
             $entries += $this->readDirEntry();
         }
 
-        $next = $this->bigTiff ? $this->readU64() : $this->readU32();
+        $next = $this->bigTiff ? $this->normaliseOptionalOffset($this->readU64(), 'IFD next offset') : $this->readU32();
         $ifd  = new Ifd($entries, $next > 0 ? $next : null);
 
-        $this->ifdCache[$offset] = $ifd;
+        $this->ifdCache[$offsetInt] = $ifd;
 
         return $ifd;
     }
@@ -290,11 +315,12 @@ final class TiffExifReader
     {
         $tag      = $this->readU16();
         $type     = $this->readU16();
-        $cnt      = $this->bigTiff ? $this->readU64() : $this->readU32();
+        $cnt      = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
         $valOrOff = $this->bigTiff ? $this->readValueOrOffset($type, $cnt) : $this->readU32();
 
         [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
+        $value      = $this->convertUInt64Values($tag, $type, $cnt, $rawBytes, $value);
 
         if (in_array($tag, self::UTF16LE_STRING_TAGS, true)) {
             $value = $this->decodeUtf16LeString($rawBytes);
@@ -305,7 +331,7 @@ final class TiffExifReader
         }
 
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
-            $value = $this->normaliseCountedImageDataField($type, $cnt, $rawBytes, $value);
+            $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
         }
 
         $entry = new IfdEntry($tag, $type, $cnt, $value);
@@ -328,6 +354,7 @@ final class TiffExifReader
      * @return int|ExifNumericList
      */
     private function normaliseCountedImageDataField(
+        int $tag,
         int $type,
         int $count,
         string $rawBytes,
@@ -336,6 +363,9 @@ final class TiffExifReader
         if ($count <= 0) {
             return new ExifNumericList([]);
         }
+
+        $isOffsetTag = $tag === ExifTag::STRIP_OFFSETS || $tag === ExifTag::TILE_OFFSETS;
+        $context     = sprintf('IFD tag 0x%04X', $tag);
 
         if ($count === 1) {
             if ($value instanceof ExifNumericList) {
@@ -358,7 +388,7 @@ final class TiffExifReader
                 return (int) $value;
             }
 
-            $components = $this->decodeCountedComponents($type, $rawBytes, $count);
+            $components = $this->decodeCountedComponents($tag, $type, $rawBytes, $count);
 
             return $components[0] ?? 0;
         }
@@ -380,7 +410,7 @@ final class TiffExifReader
             return new ExifNumericList($normalised);
         }
 
-        $components = $this->decodeCountedComponents($type, $rawBytes, $count);
+        $components = $this->decodeCountedComponents($tag, $type, $rawBytes, $count);
 
         return new ExifNumericList($components);
     }
@@ -388,13 +418,14 @@ final class TiffExifReader
     /**
      * Decodes numeric components for counted strip/tile entries into integers.
      *
+     * @param int    $tag      TIFF tag identifier used to determine bounds checks.
      * @param int    $type     TIFF field type code.
      * @param string $rawBytes Raw bytes representing the values.
      * @param int    $count    Number of values represented.
      *
      * @return list<int>
      */
-    private function decodeCountedComponents(int $type, string $rawBytes, int $count): array
+    private function decodeCountedComponents(int $tag, int $type, string $rawBytes, int $count): array
     {
         $componentSize   = $this->bytesPerComponent($type);
         $expectedLength  = $componentSize * $count;
@@ -409,7 +440,7 @@ final class TiffExifReader
         for ($i = 0; $i < $count; ++$i) {
             $chunk = substr($rawBytes, $i * $componentSize, $componentSize);
 
-            $components[] = match ($type) {
+            $value = match ($type) {
                 self::TYPE_SHORT => $this->unpackU16($chunk),
                 self::TYPE_SSHORT => $this->unpackS16($chunk),
                 self::TYPE_LONG,
@@ -420,9 +451,74 @@ final class TiffExifReader
                 self::TYPE_SLONG8 => $this->unpackS64($chunk),
                 default => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type),
             };
+
+            if ($value instanceof UInt64) {
+                $value = ($tag === ExifTag::STRIP_OFFSETS || $tag === ExifTag::TILE_OFFSETS)
+                    ? $this->ensureOffset($value, sprintf('IFD tag 0x%04X', $tag))
+                    : $value->toInt(sprintf('IFD tag 0x%04X', $tag));
+            }
+
+            $components[] = $value;
         }
 
         return $components;
+    }
+
+    /**
+     * Converts decoded UInt64 values into integers to keep downstream models scalar.
+     *
+     * @param string $rawBytes Raw bytes backing the decoded value.
+     */
+    private function convertUInt64Values(
+        int $tag,
+        int $type,
+        int $count,
+        string $rawBytes,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value,
+    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList {
+        if ($value instanceof UInt64) {
+            return $this->normaliseScalarUInt64($tag, $value);
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $converted       = [];
+            $needsConversion = false;
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    $converted[] = $this->normaliseScalarUInt64($tag, $component);
+                    $needsConversion = true;
+                } elseif (is_int($component) || is_float($component)) {
+                    $converted[] = $component;
+                }
+            }
+
+            if ($needsConversion) {
+                return new ExifNumericList($converted);
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * Normalises a UInt64 scalar into an integer, applying bounds checks for offsets.
+     */
+    private function normaliseScalarUInt64(int $tag, UInt64 $value): int
+    {
+        if ($this->isPointerTag($tag)) {
+            if (!$value->fitsSignedInt()) {
+                throw new BoundsError(sprintf('IFD tag 0x%04X exceeds supported integer range.', $tag));
+            }
+
+            return $value->toInt(sprintf('IFD tag 0x%04X', $tag));
+        }
+
+        return $value->toInt(sprintf('IFD tag 0x%04X value', $tag));
+    }
+
+    private function isPointerTag(int $tag): bool
+    {
+        return in_array($tag, self::POINTER_TAGS, true);
     }
 
     /**
@@ -473,7 +569,7 @@ final class TiffExifReader
         if ($value instanceof ExifNumericList) {
             $offsets = [];
             foreach ($value->values as $component) {
-                if (!is_int($component) && !is_float($component)) {
+                if (!is_int($component) && !is_float($component) && !$component instanceof UInt64) {
                     continue;
                 }
 
@@ -498,9 +594,9 @@ final class TiffExifReader
      * @param int    $count Number of values represented.
      * @param string $bytes Raw value bytes read from the blob.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
      */
-    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList
+    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
     {
         $componentSize = $this->bytesPerComponent($type);
         $bytesLength   = strlen($bytes);
@@ -750,9 +846,9 @@ final class TiffExifReader
      * @param int $type  TIFF field type code.
      * @param int $count Number of values represented.
      *
-     * @return int
+     * @return int|UInt64
      */
-    private function readValueOrOffset(int $type, int $count): int
+    private function readValueOrOffset(int $type, int $count): int|UInt64
     {
         if (!$this->bigTiff) {
             return $this->readU32();
@@ -772,15 +868,61 @@ final class TiffExifReader
     }
 
     /**
+     * Ensures that an offset lies within the TIFF blob and returns it as an integer.
+     */
+    private function ensureOffset(int|UInt64 $offset, string $context, int $length = 0): int
+    {
+        $offset64 = $offset instanceof UInt64 ? $offset : UInt64::fromInt($offset);
+
+        $this->assertOffsetRange($offset64, $length, $context);
+
+        return $offset64->toInt($context);
+    }
+
+    /**
+     * Normalises an optional offset that may be zero.
+     */
+    private function normaliseOptionalOffset(UInt64 $offset, string $context): int
+    {
+        if ($offset->isZero()) {
+            return 0;
+        }
+
+        return $this->ensureOffset($offset, $context);
+    }
+
+    /**
+     * Verifies that an offset and optional length are contained within the TIFF blob.
+     */
+    private function assertOffsetRange(UInt64 $offset, int $length, string $context): void
+    {
+        if ($offset->compare($this->blobSize) > 0) {
+            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
+        }
+
+        $size = $this->buf->size();
+
+        if ($length > $size) {
+            throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length));
+        }
+
+        $offsetInt = $offset->toInt($context);
+
+        if ($length > 0 && $offsetInt > $size - $length) {
+            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
+        }
+    }
+
+    /**
      * Extracts the raw bytes addressed by a directory entry.
      *
-     * @param int $type          TIFF field type code.
-     * @param int $count         Number of values represented.
-     * @param int $valueOrOffset Inline value bytes or an offset into the blob.
+     * @param int        $type          TIFF field type code.
+     * @param int        $count         Number of values represented.
+     * @param int|UInt64 $valueOrOffset Inline value bytes or an offset into the blob.
      *
      * @return array{0: string, 1: int|null}
      */
-    private function valueBytes(int $type, int $count, int $valueOrOffset): array
+    private function valueBytes(int $type, int $count, int|UInt64 $valueOrOffset): array
     {
         $unitSize        = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
@@ -792,7 +934,7 @@ final class TiffExifReader
             return [substr($raw, 0, $dataSize), null];
         }
 
-        $offset  = $valueOrOffset;
+        $offset  = $this->ensureOffset($valueOrOffset, sprintf('Value offset for TIFF type %d', $type), $dataSize);
         $current = $this->buf->tell();
         $this->buf->seek($offset);
         $bytes = $this->buf->read($dataSize);
@@ -979,45 +1121,47 @@ final class TiffExifReader
     /**
      * Reads an unsigned 64-bit integer using the file byte order.
      *
-     * @return int
+     * @return UInt64
      */
-    private function readU64(): int
+    private function readU64(): UInt64
     {
-        $value = $this->bo === Endian::Little ? $this->buf->readU64LE() : $this->buf->readU64BE();
-
-        if ($value < 0) {
-            throw new ParseError('64-bit unsigned value exceeds PHP_INT_MAX.');
-        }
-
-        return $value;
+        return $this->bo === Endian::Little ? $this->buf->readU64LE() : $this->buf->readU64BE();
     }
 
     /**
      * Converts an integer into a byte string respecting the configured endianness.
      *
-     * @param int $v     Integer value to convert.
+     * @param int|UInt64 $v     Integer value to convert.
      * @param int $bytes Number of bytes to output.
      *
      * @return string
      */
-    private function uXToBytes(int $v, int $bytes): string
+    private function uXToBytes(int|UInt64 $v, int $bytes): string
     {
         // Convert integer to a byte string of specific length using current endianness
         if ($bytes === 4) {
-            return $this->bo === Endian::Little ? pack('V', $v) : pack('N', $v);
+            $value = $v instanceof UInt64 ? $v->toInt('Inline 32-bit value') : $v;
+
+            return $this->bo === Endian::Little ? pack('V', $value) : pack('N', $value);
         }
 
         if ($bytes === 8) {
-            $hi = ($v >> 32) & 0xFFFFFFFF;
-            $lo = $v & 0xFFFFFFFF;
+            if ($v instanceof UInt64) {
+                $hi = $v->high();
+                $lo = $v->low();
+            } else {
+                $lo = $v & 0xFFFFFFFF;
+                $hi = (int) intdiv($v, 0x100000000);
+            }
 
             return $this->bo === Endian::Little ? pack('V2', $lo, $hi) : pack('N2', $hi, $lo);
         }
 
         // fallback (shouldn't happen here)
         $bin = '';
+        $value = $v instanceof UInt64 ? $v->toInt('Inline value') : $v;
         for ($i = 0; $i < $bytes; ++$i) {
-            $bin = chr(($v >> ($this->bo === Endian::Little ? ($i * 8) : (($bytes - 1 - $i) * 8))) & 0xFF) . $bin;
+            $bin = chr(($value >> ($this->bo === Endian::Little ? ($i * 8) : (($bytes - 1 - $i) * 8))) & 0xFF) . $bin;
         }
 
         return $bin;
@@ -1128,9 +1272,9 @@ final class TiffExifReader
      *
      * @param string $b Source bytes.
      *
-     * @return int
+     * @return UInt64
      */
-    private function unpackU64(string $b): int
+    private function unpackU64(string $b): UInt64
     {
         [$hi, $lo] = $this->unpackU64Parts($b);
 
@@ -1149,12 +1293,12 @@ final class TiffExifReader
         [$hi, $lo] = $this->unpackU64Parts($b);
 
         if (($hi & 0x80000000) === 0) {
-            return Unpack::combineUint32($hi, $lo);
+            return Unpack::combineUint32($hi, $lo)->toInt('Signed 64-bit integer');
         }
 
         $hiComplement = (~$hi) & 0xFFFFFFFF;
         $loComplement = (~$lo) & 0xFFFFFFFF;
-        $magnitude    = Unpack::combineUint32($hiComplement, $loComplement) + 1;
+        $magnitude    = Unpack::combineUint32($hiComplement, $loComplement)->addSmall(1)->toInt('Signed 64-bit integer magnitude');
 
         return -$magnitude;
     }
@@ -1209,6 +1353,10 @@ final class TiffExifReader
             return $this->validatePointerOffset($value, $entry->tag);
         }
 
+        if ($value instanceof UInt64) {
+            return $this->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
+        }
+
         if (is_float($value)) {
             return $this->pointerOffsetFromFloat($value, $entry->tag);
         }
@@ -1217,6 +1365,10 @@ final class TiffExifReader
             $first = $value->values[0] ?? null;
             if (is_int($first)) {
                 return $this->validatePointerOffset($first, $entry->tag);
+            }
+
+            if ($first instanceof UInt64) {
+                return $this->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
             }
 
             if (is_float($first)) {
@@ -1241,11 +1393,7 @@ final class TiffExifReader
             throw new ParseError(sprintf('IFD pointer tag 0x%04X must not be negative.', $tag));
         }
 
-        if ($offset > PHP_INT_MAX) {
-            throw new ParseError(sprintf('IFD pointer tag 0x%04X is out of range.', $tag));
-        }
-
-        return $offset;
+        return $this->ensureOffset($offset, sprintf('IFD pointer tag 0x%04X', $tag));
     }
 
     /**
@@ -1262,10 +1410,10 @@ final class TiffExifReader
             throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain an integer offset.', $tag));
         }
 
-        if ($value < 0.0 || $value > PHP_INT_MAX) {
-            throw new ParseError(sprintf('IFD pointer tag 0x%04X is out of range.', $tag));
+        if ($value < 0.0) {
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X must not be negative.', $tag));
         }
 
-        return $this->validatePointerOffset((int) $value, $tag);
+        return $this->ensureOffset((int) $value, sprintf('IFD pointer tag 0x%04X', $tag));
     }
 }

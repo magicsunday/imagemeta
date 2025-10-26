@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core\Util;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use function is_float;
 use function is_int;
@@ -56,35 +57,11 @@ final class Unpack
      * @param int $hi High-order 32 bits.
      * @param int $lo Low-order 32 bits.
      *
-     * @return int
+     * @return UInt64
      */
-    public static function combineUint32(int $hi, int $lo): int
+    public static function combineUint32(int $hi, int $lo): UInt64
     {
-        if (PHP_INT_SIZE < 8) {
-            throw new ParseError('64-bit integers are not supported on this platform.');
-        }
-
-        $hiUnsigned = $hi & 0xFFFFFFFF;
-        $loUnsigned = $lo & 0xFFFFFFFF;
-
-        $isNegative = ($hiUnsigned & 0x80000000) !== 0;
-
-        if ($isNegative) {
-            $hiComplement = (~$hiUnsigned) & 0xFFFFFFFF;
-            $loComplement = (~$loUnsigned) & 0xFFFFFFFF;
-            $magnitude    = ($hiComplement << 32) | $loComplement;
-
-            return -1 - $magnitude;
-        }
-
-        $maxHi = PHP_INT_MAX >> 32;
-        $maxLo = PHP_INT_MAX & 0xFFFFFFFF;
-
-        if ($hiUnsigned > $maxHi || ($hiUnsigned === $maxHi && $loUnsigned > $maxLo)) {
-            throw new ParseError('64-bit unsigned value exceeds PHP_INT_MAX.');
-        }
-
-        return ($hiUnsigned << 32) | $loUnsigned;
+        return UInt64::fromUInt32($hi, $lo);
     }
 
     /**
