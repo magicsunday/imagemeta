@@ -697,9 +697,9 @@ final readonly class ValueConverters
     /**
      * Normalises EXIF offset time values to a canonical "+HH:MM" representation.
      *
-     * @param int|float|string|null $value The raw offset value.
+     * @param int|float|string|ExifRational|ExifRationalList|null $value The raw offset value.
      */
-    public static function parseOffsetString(int|float|string|null $value): ?string
+    public static function parseOffsetString(int|float|string|ExifRational|ExifRationalList|null $value): ?string
     {
         $components = self::parseOffsetComponents($value);
 
@@ -717,7 +717,7 @@ final readonly class ValueConverters
      *
      * @param int|float|string|null $value The raw offset value.
      */
-    public static function offsetToMinutes(int|float|string|null $value): ?int
+    public static function offsetToMinutes(int|float|string|ExifRational|ExifRationalList|null $value): ?int
     {
         $components = self::parseOffsetComponents($value);
 
@@ -1391,14 +1391,32 @@ final readonly class ValueConverters
     /**
      * Parses numeric and textual offset encodings into sign, hour and minute components.
      *
-     * @param int|float|string|null $value The raw value to parse.
+     * @param int|float|string|ExifRational|ExifRationalList|null $value The raw value to parse.
      *
      * @return array{sign:int, hours:int, minutes:int}|null
      */
-    private static function parseOffsetComponents(int|float|string|null $value): ?array
+    private static function parseOffsetComponents(int|float|string|ExifRational|ExifRationalList|null $value): ?array
     {
         if ($value === null) {
             return null;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            if ($first instanceof ExifRational) {
+                return self::parseOffsetComponents($first);
+            }
+
+            return null;
+        }
+
+        if ($value instanceof ExifRational) {
+            if ($value->denominator === 0) {
+                return null;
+            }
+
+            $value = (float) $value->numerator / (float) $value->denominator;
         }
 
         $raw = is_string($value) ? trim($value) : (string) $value;

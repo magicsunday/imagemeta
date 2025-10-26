@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 
+use function abs;
 use function array_key_exists;
 use function array_map;
 use function array_values;
@@ -38,6 +39,7 @@ use function ord;
 use function preg_replace;
 use function preg_split;
 use function rtrim;
+use function sprintf;
 use function sqrt;
 use function str_pad;
 use function str_replace;
@@ -45,6 +47,7 @@ use function strlen;
 use function strtoupper;
 use function substr;
 use function trim;
+use function intdiv;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
@@ -1746,25 +1749,71 @@ final readonly class ExifDocument
      */
     public function timeZoneOffsetMinutes(): ?array
     {
-        $values = $this->numericList($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
+        $value = $this->value($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
 
-        if ($values === null || $values === []) {
+        if ($value === null) {
             return null;
         }
 
-        $minutes = [];
-
-        foreach ($values as $value) {
-            $converted = ValueConverters::offsetToMinutes($value);
-
-            if ($converted === null) {
+        if ($value instanceof ExifRationalList) {
+            if ($value->values === []) {
                 return null;
             }
 
-            $minutes[] = $converted;
+            $minutes = [];
+
+            foreach ($value->values as $component) {
+                $converted = ValueConverters::offsetToMinutes($component);
+                if ($converted === null) {
+                    return null;
+                }
+
+                $minutes[] = $converted;
+            }
+
+            return $minutes;
         }
 
-        return $minutes;
+        if ($value instanceof ExifNumericList) {
+            if ($value->values === []) {
+                return null;
+            }
+
+            $minutes = [];
+
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    $component = $component->toInt('EXIF numeric list component');
+                }
+
+                if (!is_int($component) && !is_float($component)) {
+                    return null;
+                }
+
+                $converted = ValueConverters::offsetToMinutes($component);
+                if ($converted === null) {
+                    return null;
+                }
+
+                $minutes[] = $converted;
+            }
+
+            return $minutes;
+        }
+
+        if ($value instanceof ExifRational) {
+            $converted = ValueConverters::offsetToMinutes($value);
+
+            return $converted === null ? null : [$converted];
+        }
+
+        if (is_int($value) || is_float($value) || is_string($value)) {
+            $converted = ValueConverters::offsetToMinutes($value);
+
+            return $converted === null ? null : [$converted];
+        }
+
+        return null;
     }
 
     /**
@@ -2428,13 +2477,19 @@ final readonly class ExifDocument
      */
     private function derivedOffsetFromTimeZoneOffset(int $component = 0): ?string
     {
-        $values = $this->numericList($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
+        $values = $this->timeZoneOffsetMinutes();
 
         if ($values === null || !array_key_exists($component, $values)) {
             return null;
         }
 
-        return ValueConverters::parseOffsetString($values[$component]);
+        $minutes = $values[$component];
+        $sign    = $minutes < 0 ? '-' : '+';
+        $absolute = abs($minutes);
+        $hours    = intdiv($absolute, 60);
+        $remainingMinutes = $absolute % 60;
+
+        return sprintf('%s%02d:%02d', $sign, $hours, $remainingMinutes);
     }
 
     /**

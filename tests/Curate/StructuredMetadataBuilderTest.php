@@ -1376,6 +1376,35 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('-02:00', $structured->temporal->original?->format('P'));
     }
 
+    #[Test]
+    public function buildsTemporalFromSrationalTimeZoneOffset(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:06:15 09:30:00'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:06:15 09:30:00'),
+            ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(
+                ExifTag::TIME_ZONE_OFFSET,
+                10,
+                1,
+                new ExifRationalList([
+                    new ExifRational(11, 2),
+                ]),
+            ),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
+        self::assertSame('+05:30', $structured->temporal->original?->format('P'));
+        self::assertSame([330], $structured->temporal->timeZoneOffsetMinutes);
+    }
+
     /**
      * Ensures DateTimeOriginal does not leak the PHP default timezone when offset metadata is missing.
      */
