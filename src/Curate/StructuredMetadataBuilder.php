@@ -1073,6 +1073,10 @@ final class StructuredMetadataBuilder
 
         $vector = $apple->accelerationVector;
 
+        if (!is_array($vector)) {
+            $vector = $exif->accelerationVector();
+        }
+
         $accelX = null;
         $accelY = null;
         $accelZ = null;

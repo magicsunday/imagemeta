@@ -867,6 +867,38 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures EXIF acceleration vectors populate motion when Apple data is absent.
+     */
+    #[Test]
+    public function usesExifAccelerationVectorWhenAppleDataMissing(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::ACCELERATION => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(-3, 1),
+                    new ExifRational(4, 1),
+                    new ExifRational(1, 2),
+                ]),
+            ),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $metadata   = new Metadata(['primary'], null, $exifDocument, []);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNull($structured->apple->accelerationVector);
+        self::assertEqualsWithDelta(-3.0, $structured->motion->accelX, 1e-12);
+        self::assertEqualsWithDelta(4.0, $structured->motion->accelY, 1e-12);
+        self::assertEqualsWithDelta(0.5, $structured->motion->accelZ, 1e-12);
+    }
+
+    /**
      * Ensures QuickTime metadata provides an acceleration vector when maker notes are absent.
      */
     #[Test]
