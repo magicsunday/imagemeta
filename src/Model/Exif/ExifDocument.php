@@ -15,6 +15,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
@@ -2248,7 +2249,16 @@ final readonly class ExifDocument
         $value = $this->value($ifd, $tag);
 
         if ($value instanceof ExifNumericList) {
-            return array_map(static fn (int|float $v): int => (int) $v, $value->values);
+            return array_map(
+                static function (int|float|UInt64 $component): int {
+                    if ($component instanceof UInt64) {
+                        return $component->toInt('EXIF numeric list component');
+                    }
+
+                    return (int) $component;
+                },
+                $value->values,
+            );
         }
 
         if (is_int($value)) {

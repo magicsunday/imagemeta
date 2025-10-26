@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function ord;
@@ -58,17 +59,14 @@ final class MemoryBuffer
     /**
      * Moves the read cursor to an absolute offset within the buffer.
      *
-     * @param int $offset absolute position in bytes
+     * @param int|UInt64 $offset absolute position in bytes
      *
      * @throws BoundsError when the requested offset is outside the buffer
      */
-    public function seek(int $offset): void
+    public function seek(int|UInt64 $offset): void
     {
-        if ($offset < 0 || $offset > $this->size()) {
-            throw new BoundsError('MemoryBuffer seek out of range: ' . $offset);
-        }
-
-        $this->pos = $offset;
+        $offsetInt   = $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range');
+        $this->pos   = $offsetInt;
     }
 
     /**
@@ -76,26 +74,28 @@ final class MemoryBuffer
      *
      * The cursor advances by the number of requested bytes.
      *
-     * @param int $length number of bytes to consume
+     * @param int|UInt64 $length number of bytes to consume
      *
      * @return string raw binary data with the requested length
      *
      * @throws BoundsError when the requested length exceeds the buffer
      * @throws ParseError  when the read returns fewer bytes than requested
      */
-    public function read(int $length): string
+    public function read(int|UInt64 $length): string
     {
-        if ($length === 0) {
+        $len = $this->normaliseLength($length);
+
+        if ($len === 0) {
             return '';
         }
 
-        $end = $this->pos + $length;
-        if ($length < 0 || $end > $this->size()) {
-            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $length);
+        $end = $this->pos + $len;
+        if ($end > $this->size()) {
+            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len);
         }
 
-        $chunk = substr($this->data, $this->pos, $length);
-        if (strlen($chunk) !== $length) {
+        $chunk = substr($this->data, $this->pos, $len);
+        if (strlen($chunk) !== $len) {
             throw new ParseError('MemoryBuffer short read');
         }
 
@@ -157,9 +157,9 @@ final class MemoryBuffer
     /**
      * Reads an unsigned 64-bit integer using little-endian byte order.
      *
-     * @return int unsigned 64-bit integer
+     * @return UInt64 unsigned 64-bit integer
      */
-    public function readU64LE(): int
+    public function readU64LE(): UInt64
     {
         $lo = $this->readU32LE();
         $hi = $this->readU32LE();
@@ -170,9 +170,9 @@ final class MemoryBuffer
     /**
      * Reads an unsigned 64-bit integer using big-endian byte order.
      *
-     * @return int unsigned 64-bit integer
+     * @return UInt64 unsigned 64-bit integer
      */
-    public function readU64BE(): int
+    public function readU64BE(): UInt64
     {
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
@@ -193,5 +193,52 @@ final class MemoryBuffer
         $bytes = $this->read($length);
 
         return Unpack::int($format, $bytes, 'integer from buffer');
+    }
+
+    private function normaliseOffset(int|UInt64 $offset, int $length, string $message): int
+    {
+        if ($offset instanceof UInt64) {
+            $offsetInt = $this->normaliseUInt64($offset, $length, $message);
+
+            return $offsetInt;
+        }
+
+        if ($offset < 0) {
+            throw new BoundsError($message . ': ' . $offset);
+        }
+
+        if ($offset > $this->size() - $length) {
+            throw new BoundsError($message . ': ' . $offset);
+        }
+
+        return $offset;
+    }
+
+    private function normaliseLength(int|UInt64 $length): int
+    {
+        if ($length instanceof UInt64) {
+            return $this->normaliseUInt64($length, 0, 'MemoryBuffer read length out of range');
+        }
+
+        if ($length < 0) {
+            throw new BoundsError('MemoryBuffer read length out of range: ' . $length);
+        }
+
+        return $length;
+    }
+
+    private function normaliseUInt64(UInt64 $value, int $padding, string $message): int
+    {
+        if ($value->compareInt($this->size()) > 0) {
+            throw new BoundsError($message . ': ' . $value->toHex());
+        }
+
+        $intValue = $value->toInt($message);
+
+        if ($intValue > $this->size() - $padding) {
+            throw new BoundsError($message . ': ' . $value->toHex());
+        }
+
+        return $intValue;
     }
 }

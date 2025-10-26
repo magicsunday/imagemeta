@@ -48,7 +48,7 @@ final class StreamTest extends TestCase
         self::assertSame(2, $stream->tell());
         self::assertSame(0x10203040, $stream->readU32BE());
         self::assertSame(6, $stream->tell());
-        self::assertSame(0x0123456789ABCDEF, $stream->readU64BE());
+        self::assertSame(0x0123456789ABCDEF, $stream->readU64BE()->toInt('test value'));
         self::assertSame(14, $stream->tell());
     }
 

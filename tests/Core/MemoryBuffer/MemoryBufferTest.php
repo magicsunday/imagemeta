@@ -166,8 +166,8 @@ namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
             self::assertSame(0x1234, $buffer->readU16BE());
             self::assertSame(0x78563412, $buffer->readU32LE());
             self::assertSame(0x12345678, $buffer->readU32BE());
-            self::assertSame(0x0123456789ABCDEF, $buffer->readU64LE());
-            self::assertSame(0x0123456789ABCDEF, $buffer->readU64BE());
+            self::assertSame(0x0123456789ABCDEF, $buffer->readU64LE()->toInt('test value'));
+            self::assertSame(0x0123456789ABCDEF, $buffer->readU64BE()->toInt('test value'));
             self::assertSame($buffer->size(), $buffer->tell());
         }
     }
