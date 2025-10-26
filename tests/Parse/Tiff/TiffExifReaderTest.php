@@ -116,6 +116,46 @@ final class TiffExifReaderTest extends TestCase
         0x0000000100000400,
     ];
 
+    private const int BIG_TIFF_OFFSET16_TILE_WIDTH = 4096;
+
+    private const int BIG_TIFF_OFFSET16_TILE_LENGTH = 2048;
+
+    /**
+     * @var array<int>
+     */
+    private const array BIG_TIFF_OFFSET16_STRIP_OFFSETS = [
+        0x0000000300000100,
+        0x0000000300000200,
+        0x0000000300000300,
+    ];
+
+    /**
+     * @var array<int>
+     */
+    private const array BIG_TIFF_OFFSET16_STRIP_BYTE_COUNTS = [
+        0x0000000000002000,
+        0x0000000000001000,
+        0x0000000000000800,
+    ];
+
+    /**
+     * @var array<int>
+     */
+    private const array BIG_TIFF_OFFSET16_TILE_OFFSETS = [
+        0x0000000400000100,
+        0x0000000400000200,
+        0x0000000400000300,
+    ];
+
+    /**
+     * @var array<int>
+     */
+    private const array BIG_TIFF_OFFSET16_TILE_BYTE_COUNTS = [
+        0x0000000000004000,
+        0x0000000000002000,
+        0x0000000000001000,
+    ];
+
     /**
      * Provides representative Classic TIFF and BigTIFF payloads.
      *
@@ -131,6 +171,11 @@ final class TiffExifReaderTest extends TestCase
         yield 'big_tiff' => [
             self::buildBigTiffBlob(),
             'assertBigTiffDocument',
+        ];
+
+        yield 'big_tiff_offset16' => [
+            self::buildBigTiffOffset16Blob(),
+            'assertBigTiffOffset16Document',
         ];
     }
 
@@ -854,6 +899,56 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Asserts the decoded values of the BigTIFF payload using 16-byte offsets.
+     */
+    private static function assertBigTiffOffset16Document(ExifDocument $doc): void
+    {
+        self::assertSame(self::BIG_TIFF_OFFSET16_TILE_WIDTH, $doc->ifd0->get(ExifTag::TILE_WIDTH)?->value);
+        self::assertSame(self::BIG_TIFF_OFFSET16_TILE_LENGTH, $doc->ifd0->get(ExifTag::TILE_LENGTH)?->value);
+
+        $stripOffsetsEntry = $doc->ifd0->get(ExifTag::STRIP_OFFSETS);
+        self::assertNotNull($stripOffsetsEntry);
+        $stripOffsets = $stripOffsetsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $stripOffsets);
+        self::assertSame(self::BIG_TIFF_OFFSET16_STRIP_OFFSETS, $stripOffsets->values);
+
+        $stripByteCountsEntry = $doc->ifd0->get(ExifTag::STRIP_BYTE_COUNTS);
+        self::assertNotNull($stripByteCountsEntry);
+        $stripByteCounts = $stripByteCountsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $stripByteCounts);
+        self::assertSame(self::BIG_TIFF_OFFSET16_STRIP_BYTE_COUNTS, $stripByteCounts->values);
+
+        $tileOffsetsEntry = $doc->ifd0->get(ExifTag::TILE_OFFSETS);
+        self::assertNotNull($tileOffsetsEntry);
+        $tileOffsets = $tileOffsetsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $tileOffsets);
+        self::assertSame(self::BIG_TIFF_OFFSET16_TILE_OFFSETS, $tileOffsets->values);
+
+        $tileByteCountsEntry = $doc->ifd0->get(ExifTag::TILE_BYTE_COUNTS);
+        self::assertNotNull($tileByteCountsEntry);
+        $tileByteCounts = $tileByteCountsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $tileByteCounts);
+        self::assertSame(self::BIG_TIFF_OFFSET16_TILE_BYTE_COUNTS, $tileByteCounts->values);
+
+        self::assertSame(
+            self::BIG_TIFF_OFFSET16_STRIP_OFFSETS,
+            $doc->stripOffsets(),
+        );
+        self::assertSame(
+            self::BIG_TIFF_OFFSET16_STRIP_BYTE_COUNTS,
+            $doc->stripByteCounts(),
+        );
+        self::assertSame(
+            self::BIG_TIFF_OFFSET16_TILE_OFFSETS,
+            $doc->tileOffsets(),
+        );
+        self::assertSame(
+            self::BIG_TIFF_OFFSET16_TILE_BYTE_COUNTS,
+            $doc->tileByteCounts(),
+        );
+    }
+
+    /**
      * Ensures BigTIFF LONG8/SLONG8/IFD8 entries are decoded exactly like ExifTool.
      */
     #[Test]
@@ -1527,6 +1622,75 @@ final class TiffExifReaderTest extends TestCase
     }
 
     /**
+     * Builds a BigTIFF payload using 16-byte offsets for directory fields.
+     */
+    private static function buildBigTiffOffset16Blob(): string
+    {
+        $offsetSize     = 16;
+        $firstIfdOffset = 256;
+
+        $header = 'II'
+            . pack('v', 0x002B)
+            . pack('v', $offsetSize)
+            . pack('v', 0)
+            . self::packBigTiffOffsetValue($firstIfdOffset, $offsetSize);
+
+        $entryCount = 6;
+        $entrySize  = 2 + 2 + 8 + $offsetSize;
+        $ifdLength  = 8 + ($entryCount * $entrySize) + $offsetSize;
+
+        $baseOffset = $firstIfdOffset + $ifdLength;
+        $cursor     = self::alignOffset($baseOffset, $offsetSize);
+
+        $stripOffsetsData = implode('', array_map([self::class, 'packUInt64LE'], self::BIG_TIFF_OFFSET16_STRIP_OFFSETS));
+        $stripOffsetsOffset = $cursor;
+        $cursor = self::alignOffset($cursor + strlen($stripOffsetsData), $offsetSize);
+
+        $stripByteCountsData = implode('', array_map([self::class, 'packUInt64LE'], self::BIG_TIFF_OFFSET16_STRIP_BYTE_COUNTS));
+        $stripByteCountsOffset = $cursor;
+        $cursor = self::alignOffset($cursor + strlen($stripByteCountsData), $offsetSize);
+
+        $tileOffsetsData = implode('', array_map([self::class, 'packUInt64LE'], self::BIG_TIFF_OFFSET16_TILE_OFFSETS));
+        $tileOffsetsOffset = $cursor;
+        $cursor = self::alignOffset($cursor + strlen($tileOffsetsData), $offsetSize);
+
+        $tileByteCountsData = implode('', array_map([self::class, 'packUInt64LE'], self::BIG_TIFF_OFFSET16_TILE_BYTE_COUNTS));
+        $tileByteCountsOffset = $cursor;
+
+        $ifd0Entries = [
+            self::packBigTiffEntry(ExifTag::TILE_WIDTH, 4, 1, self::BIG_TIFF_OFFSET16_TILE_WIDTH, $offsetSize),
+            self::packBigTiffEntry(ExifTag::TILE_LENGTH, 4, 1, self::BIG_TIFF_OFFSET16_TILE_LENGTH, $offsetSize),
+            self::packBigTiffEntry(ExifTag::STRIP_OFFSETS, 16, count(self::BIG_TIFF_OFFSET16_STRIP_OFFSETS), $stripOffsetsOffset, $offsetSize),
+            self::packBigTiffEntry(ExifTag::STRIP_BYTE_COUNTS, 16, count(self::BIG_TIFF_OFFSET16_STRIP_BYTE_COUNTS), $stripByteCountsOffset, $offsetSize),
+            self::packBigTiffEntry(ExifTag::TILE_OFFSETS, 16, count(self::BIG_TIFF_OFFSET16_TILE_OFFSETS), $tileOffsetsOffset, $offsetSize),
+            self::packBigTiffEntry(ExifTag::TILE_BYTE_COUNTS, 16, count(self::BIG_TIFF_OFFSET16_TILE_BYTE_COUNTS), $tileByteCountsOffset, $offsetSize),
+        ];
+
+        $ifd0 = pack('V', count($ifd0Entries))
+            . pack('V', 0)
+            . implode('', $ifd0Entries)
+            . self::packBigTiffOffsetValue(0, $offsetSize);
+
+        $blob = $header;
+        self::padBufferTo($blob, $firstIfdOffset);
+        $blob .= $ifd0;
+
+        self::padBufferTo($blob, $stripOffsetsOffset);
+        $blob .= $stripOffsetsData;
+
+        self::padBufferTo($blob, $stripByteCountsOffset);
+        $blob .= $stripByteCountsData;
+
+        self::padBufferTo($blob, $tileOffsetsOffset);
+        $blob .= $tileOffsetsData;
+
+        self::padBufferTo($blob, $tileByteCountsOffset);
+        $blob .= $tileByteCountsData;
+
+        return $blob;
+    }
+
+    /**
      * Builds a BigTIFF payload exercising LONG8/SLONG8/IFD8 field types with offsets beyond 4 GB.
      */
     private static function buildBigTiffLong8OffsetsBlob(): string
@@ -1755,17 +1919,60 @@ final class TiffExifReaderTest extends TestCase
      * @param int $count         Number of values represented.
      * @param int $valueOrOffset Inline value or data offset.
      */
-    private static function packBigTiffEntry(int $tag, int $type, int $count, int|array $valueOrOffset): string
+    private static function packBigTiffEntry(int $tag, int $type, int $count, int|array $valueOrOffset, int $offsetSize = 8): string
     {
         [$countLo, $countHi] = self::splitUInt64($count);
-        [$valueLo, $valueHi] = self::splitUInt64Components($valueOrOffset);
+        $valueBytes           = self::packBigTiffFieldValue($valueOrOffset, $offsetSize);
 
         return pack('v', $tag)
             . pack('v', $type)
             . pack('V', $countLo)
             . pack('V', $countHi)
-            . pack('V', $valueLo)
-            . pack('V', $valueHi);
+            . $valueBytes;
+    }
+
+    /**
+     * Packs the value/offset field for a BigTIFF entry respecting the offset size.
+     *
+     * @param int|array<int> $valueOrOffset Inline value or referenced offset.
+     */
+    private static function packBigTiffFieldValue(int|array $valueOrOffset, int $offsetSize): string
+    {
+        if ($offsetSize === 8) {
+            [$valueLo, $valueHi] = self::splitUInt64Components($valueOrOffset);
+
+            return pack('V', $valueLo) . pack('V', $valueHi);
+        }
+
+        if ($offsetSize === 16) {
+            if (is_array($valueOrOffset)) {
+                $low  = $valueOrOffset[0] ?? 0;
+                $high = $valueOrOffset[1] ?? 0;
+            } else {
+                $low  = $valueOrOffset;
+                $high = 0;
+            }
+
+            return self::packUInt64LE($low) . self::packUInt64LE($high);
+        }
+
+        throw new RuntimeException('Unsupported BigTIFF offset size: ' . $offsetSize);
+    }
+
+    /**
+     * Packs a BigTIFF offset value with the configured offset size.
+     */
+    private static function packBigTiffOffsetValue(int $value, int $offsetSize): string
+    {
+        if ($offsetSize === 8) {
+            return self::packUInt64LE($value);
+        }
+
+        if ($offsetSize === 16) {
+            return self::packUInt64LE($value) . self::packUInt64LE(0);
+        }
+
+        throw new RuntimeException('Unsupported BigTIFF offset size: ' . $offsetSize);
     }
 
     /**

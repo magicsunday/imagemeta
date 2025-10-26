@@ -44,6 +44,7 @@ use function rtrim;
 use function sha1;
 use function sprintf;
 use function strlen;
+use function str_pad;
 use function strncmp;
 use function substr;
 
@@ -134,6 +135,8 @@ final class TiffExifReader
 
     private bool $bigTiff = false;
 
+    private int $bigTiffOffsetSize = 8;
+
     private UInt64 $blobSize;
 
     private ?string $makerNoteRaw = null;
@@ -162,9 +165,10 @@ final class TiffExifReader
         $this->buf->seek(0);
         $this->blobSize = UInt64::fromInt($this->buf->size());
 
-        $this->makerNoteRaw = null;
-        $this->subIfds      = [];
-        $this->ifdCache     = [];
+        $this->makerNoteRaw      = null;
+        $this->subIfds           = [];
+        $this->ifdCache          = [];
+        $this->bigTiffOffsetSize = 8;
 
         // byte order
         $boSig    = $this->buf->read(2);
@@ -178,7 +182,7 @@ final class TiffExifReader
         if ($magic === self::TIFF_MAGIC_BIG) {
             $this->bigTiff = true;
             $this->parseBigTiffHeader();
-            $firstIfd = $this->readU64();
+            $firstIfd = $this->readBigTiffOffset();
             $ifd0     = $this->readIfd($firstIfd);
         } elseif ($magic === self::TIFF_MAGIC_CLASSIC) {
             $this->bigTiff = false;
@@ -255,17 +259,19 @@ final class TiffExifReader
      */
     private function parseBigTiffHeader(): void
     {
-        // BigTIFF header after magic: 2 bytes: offset size (should be 8), 2 bytes: zero/reserved, then 8‑byte first IFD offset
+        // BigTIFF header after magic: 2 bytes offset size, 2 bytes reserved
         $offSize  = $this->readU16();
         $reserved = $this->readU16();
 
-        if ($offSize !== 8) {
-            throw new ParseError('Unsupported BigTIFF offset size (expected 8)');
+        if ($offSize !== 8 && $offSize !== 16) {
+            throw new ParseError('Unsupported BigTIFF offset size (expected 8 or 16)');
         }
 
         if ($reserved !== 0) {
             throw new ParseError('Bad BigTIFF header (reserved != 0)');
         }
+
+        $this->bigTiffOffsetSize = $offSize;
     }
 
     /**
@@ -275,7 +281,7 @@ final class TiffExifReader
      *
      * @return Ifd
      */
-    private function readIfd(int|UInt64 $offset): Ifd
+    private function readIfd(int|UInt64|string $offset): Ifd
     {
         if ($offset instanceof UInt64) {
             if ($offset->isZero()) {
@@ -298,7 +304,7 @@ final class TiffExifReader
             $entries += $this->readDirEntry();
         }
 
-        $next = $this->bigTiff ? $this->normaliseOptionalOffset($this->readU64(), 'IFD next offset') : $this->readU32();
+        $next = $this->bigTiff ? $this->normaliseOptionalOffset($this->readBigTiffOffset(), 'IFD next offset') : $this->readU32();
         $ifd  = new Ifd($entries, $next > 0 ? $next : null);
 
         $this->ifdCache[$offsetInt] = $ifd;
@@ -313,12 +319,19 @@ final class TiffExifReader
      */
     private function readDirEntry(): array
     {
-        $tag      = $this->readU16();
-        $type     = $this->readU16();
-        $cnt      = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
-        $valOrOff = $this->bigTiff ? $this->readValueOrOffset($type, $cnt) : $this->readU32();
+        $tag  = $this->readU16();
+        $type = $this->readU16();
 
-        [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff);
+        if ($this->bigTiff) {
+            $cnt = $this->readU64()->toInt('directory entry value count');
+            [$valOrOff, $inlineBytes] = $this->readValueOrOffset($type, $cnt);
+        } else {
+            $cnt        = $this->readU32();
+            $valOrOff   = $this->readU32();
+            $inlineBytes = null;
+        }
+
+        [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff, $inlineBytes);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
         $value      = $this->convertUInt64Values($tag, $type, $cnt, $rawBytes, $value);
 
@@ -846,32 +859,110 @@ final class TiffExifReader
      * @param int $type  TIFF field type code.
      * @param int $count Number of values represented.
      *
-     * @return int|UInt64
+     * @return array{0:int|UInt64|string,1:?string}
      */
-    private function readValueOrOffset(int $type, int $count): int|UInt64
+    private function readValueOrOffset(int $type, int $count): array
     {
         if (!$this->bigTiff) {
-            return $this->readU32();
+            return [$this->readU32(), null];
         }
 
         $componentSize    = $this->bytesPerComponent($type);
-        $inlineThreshold  = 8;
+        $inlineThreshold  = $this->bigTiffOffsetSize;
         $inlineValueBytes = $componentSize * $count;
 
-        if ($inlineValueBytes <= $inlineThreshold && $type === self::TYPE_SLONG8) {
-            $bytes = $this->buf->read($inlineThreshold);
+        $fieldBytes = $this->buf->read($this->bigTiffOffsetSize);
 
-            return $this->unpackS64($bytes);
+        if ($inlineValueBytes <= $inlineThreshold) {
+            return [0, $fieldBytes];
         }
 
-        return $this->readU64();
+        return [$this->decodeOffsetField($fieldBytes), null];
+    }
+
+    /**
+     * Reads a BigTIFF offset value honouring the configured offset size.
+     */
+    private function readBigTiffOffset(): int|UInt64|string
+    {
+        $bytes = $this->buf->read($this->bigTiffOffsetSize);
+
+        return $this->decodeOffsetField($bytes);
+    }
+
+    /**
+     * Converts a raw BigTIFF offset field into a PHP representation.
+     *
+     * @param string $bytes Raw bytes of length {@see $bigTiffOffsetSize}.
+     *
+     * @return int|UInt64|string
+     */
+    private function decodeOffsetField(string $bytes): int|UInt64|string
+    {
+        if (strlen($bytes) !== $this->bigTiffOffsetSize) {
+            throw new ParseError('Truncated BigTIFF offset field.');
+        }
+
+        if ($this->bigTiffOffsetSize === 8) {
+            return $this->unpackU64($bytes);
+        }
+
+        if ($this->bigTiffOffsetSize !== 16) {
+            throw new ParseError('Unsupported BigTIFF offset size: ' . $this->bigTiffOffsetSize);
+        }
+
+        if ($this->bo === Endian::Little) {
+            $lowBytes  = substr($bytes, 0, 8);
+            $highBytes = substr($bytes, 8, 8);
+        } else {
+            $highBytes = substr($bytes, 0, 8);
+            $lowBytes  = substr($bytes, 8, 8);
+        }
+
+        $low  = $this->unpackU64($lowBytes);
+        $high = $this->unpackU64($highBytes);
+
+        if ($high->isZero()) {
+            if ($low->fitsSignedInt()) {
+                return $low->toInt('BigTIFF offset');
+            }
+
+            return $this->formatOffsetString(null, $low);
+        }
+
+        return $this->formatOffsetString($high, $low);
+    }
+
+    /**
+     * Formats UInt64 components into a hexadecimal offset string.
+     */
+    private function formatOffsetString(?UInt64 $high, UInt64 $low): string
+    {
+        if ($high === null || $high->isZero()) {
+            $hex = ltrim($low->toHex(), '0');
+
+            return '0x' . ($hex === '' ? '0' : $hex);
+        }
+
+        $hexHigh = ltrim($high->toHex(), '0');
+        if ($hexHigh === '') {
+            $hexHigh = '0';
+        }
+
+        $hexLow = $low->toHex();
+
+        return '0x' . $hexHigh . str_pad($hexLow, 16, '0', STR_PAD_LEFT);
     }
 
     /**
      * Ensures that an offset lies within the TIFF blob and returns it as an integer.
      */
-    private function ensureOffset(int|UInt64 $offset, string $context, int $length = 0): int
+    private function ensureOffset(int|UInt64|string $offset, string $context, int $length = 0): int
     {
+        if (is_string($offset)) {
+            throw new BoundsError(sprintf('%s exceeds supported integer range (%s).', $context, $offset));
+        }
+
         $offset64 = $offset instanceof UInt64 ? $offset : UInt64::fromInt($offset);
 
         $this->assertOffsetRange($offset64, $length, $context);
@@ -882,9 +973,25 @@ final class TiffExifReader
     /**
      * Normalises an optional offset that may be zero.
      */
-    private function normaliseOptionalOffset(UInt64 $offset, string $context): int
+    private function normaliseOptionalOffset(int|UInt64|string $offset, string $context): int
     {
-        if ($offset->isZero()) {
+        if (is_int($offset)) {
+            if ($offset <= 0) {
+                return 0;
+            }
+
+            return $this->ensureOffset($offset, $context);
+        }
+
+        if ($offset instanceof UInt64) {
+            if ($offset->isZero()) {
+                return 0;
+            }
+
+            return $this->ensureOffset($offset, $context);
+        }
+
+        if ($offset === '0x0') {
             return 0;
         }
 
@@ -916,17 +1023,26 @@ final class TiffExifReader
     /**
      * Extracts the raw bytes addressed by a directory entry.
      *
-     * @param int        $type          TIFF field type code.
-     * @param int        $count         Number of values represented.
-     * @param int|UInt64 $valueOrOffset Inline value bytes or an offset into the blob.
+     * @param int                      $type          TIFF field type code.
+     * @param int                      $count         Number of values represented.
+     * @param int|UInt64|string        $valueOrOffset Inline value bytes or an offset into the blob.
+     * @param string|null              $inlineBytes   Raw inline value bytes for BigTIFF entries.
      *
      * @return array{0: string, 1: int|null}
      */
-    private function valueBytes(int $type, int $count, int|UInt64 $valueOrOffset): array
+    private function valueBytes(int $type, int $count, int|UInt64|string $valueOrOffset, ?string $inlineBytes = null): array
     {
         $unitSize        = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
-        $inlineThreshold = $this->bigTiff ? 8 : 4;
+        $inlineThreshold = $this->bigTiff ? $this->bigTiffOffsetSize : 4;
+
+        if ($inlineBytes !== null) {
+            if (strlen($inlineBytes) < $dataSize) {
+                throw new ParseError('Truncated inline value for BigTIFF directory entry.');
+            }
+
+            return [substr($inlineBytes, 0, $dataSize), null];
+        }
 
         if ($dataSize <= $inlineThreshold) {
             $raw = $this->uXToBytes($valueOrOffset, $inlineThreshold);
