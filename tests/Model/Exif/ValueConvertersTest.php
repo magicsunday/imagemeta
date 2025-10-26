@@ -28,6 +28,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use function pack;
+use function substr;
 
 /**
  * @covers \MagicSunday\ImageMeta\Model\Exif\ValueConverters
@@ -576,4 +578,60 @@ final class ValueConvertersTest extends TestCase
         self::assertSame('2.3.4.5', $result['version']);
         self::assertNull($result['version_raw']);
     }
+
+    #[Test]
+    public function decodeSpatialFrequencyResponseParsesTable(): void
+    {
+        $payload = self::buildSpatialFrequencyResponsePayload();
+
+        $result = ValueConverters::decodeSpatialFrequencyResponse($payload);
+
+        self::assertNotNull($result);
+        self::assertSame(3, $result['columns']);
+        self::assertSame(2, $result['rows']);
+        self::assertSame(['10lp/mm', '20lp/mm', '40lp/mm'], $result['labels']['columns']);
+        self::assertSame(['Luminance', 'Chrominance'], $result['labels']['rows']);
+        self::assertEqualsWithDelta(0.9, $result['values'][0][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.75, $result['values'][0][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.6, $result['values'][0][2] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.85, $result['values'][1][0] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.7, $result['values'][1][1] ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.55, $result['values'][1][2] ?? 0.0, 0.0001);
+    }
+
+    #[Test]
+    public function decodeSpatialFrequencyResponseRejectsInvalidPayload(): void
+    {
+        $payload = substr(self::buildSpatialFrequencyResponsePayload(), 0, 8);
+
+        self::assertNull(ValueConverters::decodeSpatialFrequencyResponse($payload));
+    }
+
+    private static function buildSpatialFrequencyResponsePayload(): string
+    {
+        $columns = 3;
+        $rows    = 2;
+
+        $payload = pack('n', $columns) . pack('n', $rows);
+        $payload .= "10lp/mm\0";
+        $payload .= "20lp/mm\0";
+        $payload .= "40lp/mm\0";
+        $payload .= "Luminance\0";
+        $payload .= "Chrominance\0";
+
+        $payload .= self::packSrational(90, 100);
+        $payload .= self::packSrational(75, 100);
+        $payload .= self::packSrational(60, 100);
+        $payload .= self::packSrational(85, 100);
+        $payload .= self::packSrational(70, 100);
+        $payload .= self::packSrational(55, 100);
+
+        return $payload;
+    }
+
+    private static function packSrational(int $numerator, int $denominator): string
+    {
+        return pack('N', $numerator) . pack('N', $denominator);
+    }
+
 }

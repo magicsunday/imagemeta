@@ -24,6 +24,7 @@ use function explode;
 use function floor;
 use function fmod;
 use function implode;
+use function intdiv;
 use function is_array;
 use function is_float;
 use function is_int;
@@ -35,6 +36,8 @@ use function preg_match;
 use function round;
 use function rtrim;
 use function sprintf;
+use function strpos;
+use function unpack;
 use function str_contains;
 use function str_replace;
 use function str_starts_with;
@@ -89,6 +92,10 @@ use function trim;
  */
 final readonly class ValueConverters
 {
+    private const MAX_SFR_DIMENSION = 64;
+    private const MAX_SFR_LABEL_LENGTH = 255;
+    private const SFR_VALUE_SIZE = 8;
+
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
@@ -238,6 +245,112 @@ final readonly class ValueConverters
         }
 
         return 2 ** (-$apex);
+    }
+
+    /**
+     * Decodes the Spatial Frequency Response payload as defined by EXIF figure 14.
+     *
+     * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
+     *
+     * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
+     */
+    public static function decodeSpatialFrequencyResponse(?string $payload): ?array
+    {
+        if ($payload === null || $payload === '') {
+            return null;
+        }
+
+        $length = strlen($payload);
+        if ($length < 4) {
+            return null;
+        }
+
+        $header = unpack('ncolumns/nrows', substr($payload, 0, 4));
+        if (!is_array($header)) {
+            return null;
+        }
+
+        $columns = (int) ($header['columns'] ?? 0);
+        $rows    = (int) ($header['rows'] ?? 0);
+
+        if ($columns <= 0 || $rows <= 0) {
+            return null;
+        }
+
+        if ($columns > self::MAX_SFR_DIMENSION || $rows > self::MAX_SFR_DIMENSION) {
+            return null;
+        }
+
+        if ($columns > intdiv(PHP_INT_MAX, $rows)) {
+            return null;
+        }
+
+        $offset = 4;
+        $columnLabels = [];
+        for ($i = 0; $i < $columns; $i++) {
+            $labelData = self::consumeSfrLabel($payload, $offset, $length);
+            if ($labelData === null) {
+                return null;
+            }
+
+            [$label, $offset] = $labelData;
+            $columnLabels[]   = $label;
+        }
+
+        $rowLabels = [];
+        for ($i = 0; $i < $rows; $i++) {
+            $labelData = self::consumeSfrLabel($payload, $offset, $length);
+            if ($labelData === null) {
+                return null;
+            }
+
+            [$label, $offset] = $labelData;
+            $rowLabels[]      = $label;
+        }
+
+        $cells = $columns * $rows;
+        if ($cells > intdiv(PHP_INT_MAX, self::SFR_VALUE_SIZE)) {
+            return null;
+        }
+
+        $required = $cells * self::SFR_VALUE_SIZE;
+        if ($required > $length - $offset) {
+            return null;
+        }
+
+        $values = [];
+        for ($rowIndex = 0; $rowIndex < $rows; $rowIndex++) {
+            $rowValues = [];
+
+            for ($colIndex = 0; $colIndex < $columns; $colIndex++) {
+                $numerator = self::readSfrInt32($payload, $offset, $length);
+                $denominator = self::readSfrInt32($payload, $offset + 4, $length);
+                if ($numerator === null || $denominator === null) {
+                    return null;
+                }
+
+                $offset += self::SFR_VALUE_SIZE;
+
+                if ($denominator === 0) {
+                    $rowValues[] = null;
+                    continue;
+                }
+
+                $rowValues[] = (float) $numerator / (float) $denominator;
+            }
+
+            $values[] = $rowValues;
+        }
+
+        return [
+            'columns' => $columns,
+            'rows' => $rows,
+            'labels' => [
+                'columns' => $columnLabels,
+                'rows' => $rowLabels,
+            ],
+            'values' => $values,
+        ];
     }
 
     /**
@@ -693,6 +806,55 @@ final readonly class ValueConverters
         $result['h_positioning_error'] = self::rationalToFloat($hPositionEntry?->value);
 
         return $result;
+    }
+
+    /**
+     * Extracts a null-terminated label from the SFR payload.
+     *
+     * @return array{0:string,1:int}|null
+     */
+    private static function consumeSfrLabel(string $payload, int $offset, int $length): ?array
+    {
+        if ($offset >= $length) {
+            return null;
+        }
+
+        $end = strpos($payload, " ", $offset);
+        if ($end === false) {
+            return null;
+        }
+
+        $labelLength = $end - $offset;
+        if ($labelLength < 0 || $labelLength > self::MAX_SFR_LABEL_LENGTH) {
+            return null;
+        }
+
+        $label  = trim(substr($payload, $offset, $labelLength));
+        $offset = $end + 1;
+
+        return [$label, $offset];
+    }
+
+    /**
+     * Reads a signed 32-bit integer from the SFR payload.
+     */
+    private static function readSfrInt32(string $payload, int $offset, int $length): ?int
+    {
+        if ($offset + 4 > $length) {
+            return null;
+        }
+
+        $value = unpack('N', substr($payload, $offset, 4));
+        if (!is_array($value)) {
+            return null;
+        }
+
+        $int = (int) $value[1];
+        if ($int >= 0x80000000) {
+            $int -= 0x100000000;
+        }
+
+        return $int;
     }
 
     /**

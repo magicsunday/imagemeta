@@ -27,6 +27,7 @@ final readonly class Sensor
      * @param list<int>|null      $cfaPattern               Colour filter array pattern definition.
      * @param string|null         $spectralSensitivity      Spectral sensitivity description.
      * @param string|null         $oecf                     Opto-electronic conversion function payload.
+     * @param array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null $spatialFrequencyResponse Spatial frequency response table decoded from the EXIF payload.
      * @param float|null          $focalPlaneXResolution    Focal plane X resolution.
      * @param float|null          $focalPlaneYResolution    Focal plane Y resolution.
      * @param ResolutionUnit|null $focalPlaneResolutionUnit Focal plane resolution unit.
@@ -40,6 +41,7 @@ final readonly class Sensor
         public ?array $cfaPattern,
         public ?string $spectralSensitivity,
         public ?string $oecf,
+        public ?array $spatialFrequencyResponse,
         public ?float $focalPlaneXResolution,
         public ?float $focalPlaneYResolution,
         public ?ResolutionUnit $focalPlaneResolutionUnit,
