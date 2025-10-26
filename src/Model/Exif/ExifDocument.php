@@ -16,7 +16,6 @@ use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -91,7 +90,7 @@ final readonly class ExifDocument
     ) {
         $rawVersion                      = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
         $this->exifVersionMissingOrEmpty = $rawVersion === null || trim($rawVersion) === '';
-        $this->exifVersion               = CoreValueConverters::toExifVersion($rawVersion);
+        $this->exifVersion               = ValueConverters::toExifVersion($rawVersion);
         $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
         $this->exifThreeOrNewer          = (float) $this->exifProfile >= 3.0;
 
@@ -330,7 +329,7 @@ final readonly class ExifDocument
             return null;
         }
 
-        return CoreValueConverters::toExifVersion($trimmed);
+        return ValueConverters::toExifVersion($trimmed);
     }
 
     /**

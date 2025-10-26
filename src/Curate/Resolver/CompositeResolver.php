@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Curate\Resolver;
 use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
-use MagicSunday\ImageMeta\Core\ValueConverters;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 
 use function abs;
 use function intdiv;

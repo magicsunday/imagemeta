@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Curate\Resolver;
 use BackedEnum;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -225,7 +224,7 @@ final readonly class ExifTagResolver
     {
         $value = $this->int($tag);
 
-        return CoreValueConverters::toEnumOrNull($enumClass, $value);
+        return ExifValueConverters::toEnumOrNull($enumClass, $value);
     }
 
     /**
@@ -484,7 +483,7 @@ final readonly class ExifTagResolver
             return null;
         }
 
-        return CoreValueConverters::apexToFNumber($apex);
+        return ExifValueConverters::apexToFNumber($apex);
     }
 
     /**
@@ -1120,7 +1119,7 @@ final readonly class ExifTagResolver
         }
 
         if (is_string($entry->value)) {
-            return CoreValueConverters::ycbcrSubSamplingToPair($entry->value);
+            return ExifValueConverters::ycbcrSubSamplingToPair($entry->value);
         }
 
         $values = $this->normalizeNumericList($entry->value);
@@ -1156,7 +1155,7 @@ final readonly class ExifTagResolver
         $value = $this->getValue($this->document?->ifd0, ExifTag::WHITE_POINT);
 
         if ($value instanceof ExifRationalList || $value instanceof ExifNumericList) {
-            return CoreValueConverters::toWhitePoint($value);
+            return ExifValueConverters::toWhitePoint($value);
         }
 
         return null;
@@ -1172,7 +1171,7 @@ final readonly class ExifTagResolver
         $value = $this->getValue($this->document?->ifd0, ExifTag::PRIMARY_CHROMATICITIES);
 
         if ($value instanceof ExifRationalList || $value instanceof ExifNumericList) {
-            return CoreValueConverters::toPrimaryChromaticities($value);
+            return ExifValueConverters::toPrimaryChromaticities($value);
         }
 
         return null;
@@ -1396,7 +1395,7 @@ final readonly class ExifTagResolver
             return null;
         }
 
-        return CoreValueConverters::flashFromShort($flashValue);
+        return ExifValueConverters::flashFromShort($flashValue);
     }
 
     /**
@@ -2478,7 +2477,7 @@ final readonly class ExifTagResolver
             return null;
         }
 
-        return CoreValueConverters::rationalToFloat($value);
+        return ExifValueConverters::rationalToFloat($value);
     }
 
     /**
@@ -2500,7 +2499,7 @@ final readonly class ExifTagResolver
         if ($value instanceof ExifRationalList) {
             $floats = [];
             foreach ($value->values as $rational) {
-                $float = CoreValueConverters::rationalToFloat($rational);
+                $float = ExifValueConverters::rationalToFloat($rational);
                 if ($float === null) {
                     return [];
                 }
@@ -2512,7 +2511,7 @@ final readonly class ExifTagResolver
         }
 
         if ($value instanceof ExifRational) {
-            $float = CoreValueConverters::rationalToFloat($value);
+            $float = ExifValueConverters::rationalToFloat($value);
 
             return $float !== null ? [$float] : [];
         }
@@ -2528,7 +2527,7 @@ final readonly class ExifTagResolver
                     return [];
                 }
 
-                $float = CoreValueConverters::rationalToFloat($sanitised);
+                $float = ExifValueConverters::rationalToFloat($sanitised);
                 if ($float === null) {
                     return [];
                 }
@@ -2544,7 +2543,7 @@ final readonly class ExifTagResolver
             return [];
         }
 
-        $float = CoreValueConverters::rationalToFloat($sanitised);
+        $float = ExifValueConverters::rationalToFloat($sanitised);
 
         return $float !== null ? [$float] : [];
     }

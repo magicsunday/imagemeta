@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Curate;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
-use MagicSunday\ImageMeta\Core\ValueConverters;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
