@@ -121,6 +121,8 @@ final readonly class ExifTag
     public const int INTEROPERABILITY_IFD_POINTER = 0xA005;
 
     // EXIF sub IFD
+    public const int BATTERY_LEVEL = 0x828F;
+
     public const int EXPOSURE_TIME = 0x829A;
 
     public const int F_NUMBER = 0x829D;

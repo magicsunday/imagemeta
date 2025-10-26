@@ -853,6 +853,16 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera battery level as a percentage when provided.
+     */
+    public function batteryLevelPercent(): ?float
+    {
+        $value = $this->value($this->exifIfd, ExifTag::BATTERY_LEVEL);
+
+        return ValueConverters::batteryLevelToPercent($value);
+    }
+
+    /**
      * Returns the recorded temperature in Celsius.
      */
     public function temperatureCelsius(): ?float

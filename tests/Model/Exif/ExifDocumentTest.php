@@ -604,6 +604,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::TEMPERATURE                 => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(200, 10)),
             ExifTag::HUMIDITY                    => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(550, 10)),
             ExifTag::PRESSURE                    => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(100000, 100)),
+            ExifTag::BATTERY_LEVEL               => new IfdEntry(ExifTag::BATTERY_LEVEL, 5, 1, new ExifRational(3, 4)),
             ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(30, 10)),
             ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(10, 1)),
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(50, 10)),
@@ -641,6 +642,7 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('Confidential', $doc->securityClassification());
         self::assertSame('Processed in RawLab', $doc->imageHistory());
         self::assertEqualsWithDelta(20.0, $doc->temperatureCelsius(), 0.0001);
+        self::assertEqualsWithDelta(75.0, $doc->batteryLevelPercent() ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(55.0, $doc->humidityPercent(), 0.0001);
         self::assertEqualsWithDelta(1000.0, $doc->pressureHPa(), 0.0001);
         self::assertEqualsWithDelta(3.0, $doc->waterDepthMeters(), 0.0001);

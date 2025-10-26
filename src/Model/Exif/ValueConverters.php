@@ -132,6 +132,74 @@ final readonly class ValueConverters
     }
 
     /**
+     * Normalises EXIF battery level readings to a percentage.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw battery level value.
+     */
+    public static function batteryLevelToPercent(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $numeric = self::rationalToFloat($value);
+        if ($numeric !== null) {
+            return self::normaliseBatteryPercent($numeric);
+        }
+
+        if (!is_string($value)) {
+            return null;
+        }
+
+        $normalized = trim($value);
+        if ($normalized === '') {
+            return null;
+        }
+
+        if (preg_match('/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/', $normalized, $matches) === 1) {
+            $denominator = (float) $matches[2];
+            if ($denominator == 0.0) {
+                return null;
+            }
+
+            return self::normaliseBatteryPercent((float) $matches[1] / $denominator);
+        }
+
+        if ($normalized !== '' && $normalized[strlen($normalized) - 1] === '%') {
+            $numericPart = rtrim(substr($normalized, 0, -1));
+            if ($numericPart === '') {
+                return null;
+            }
+
+            if (preg_match('/^(-?\d+(?:\.\d+)?)$/', $numericPart, $matches) !== 1) {
+                return null;
+            }
+
+            return (float) $matches[1];
+        }
+
+        if (preg_match('/^(-?\d+(?:\.\d+)?)$/', $normalized, $matches) === 1) {
+            $numericValue = (float) $matches[1];
+
+            return self::normaliseBatteryPercent($numericValue);
+        }
+
+        return null;
+    }
+
+    /**
+     * Scales ratios to percentages when battery readings are encoded as fractions.
+     */
+    private static function normaliseBatteryPercent(float $value): float
+    {
+        if ($value >= -1.0 && $value <= 1.0) {
+            return $value * 100.0;
+        }
+
+        return $value;
+    }
+
+    /**
      * Converts a stored APEX aperture value into a traditional f-number.
      *
      * @param ExifScalar $value The APEX value to convert.

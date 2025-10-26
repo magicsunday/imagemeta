@@ -153,6 +153,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::TEMPERATURE                 => new IfdEntry(ExifTag::TEMPERATURE, 10, 1, new ExifRational(215, 10)),
             ExifTag::HUMIDITY                    => new IfdEntry(ExifTag::HUMIDITY, 10, 1, new ExifRational(600, 10)),
             ExifTag::PRESSURE                    => new IfdEntry(ExifTag::PRESSURE, 10, 1, new ExifRational(101325, 100)),
+            ExifTag::BATTERY_LEVEL               => new IfdEntry(ExifTag::BATTERY_LEVEL, 5, 1, new ExifRational(82, 100)),
             ExifTag::WATER_DEPTH                 => new IfdEntry(ExifTag::WATER_DEPTH, 10, 1, new ExifRational(150, 10)),
             ExifTag::ACCELERATION                => new IfdEntry(ExifTag::ACCELERATION, 10, 1, new ExifRational(98, 10)),
             ExifTag::CAMERA_ELEVATION_ANGLE      => new IfdEntry(ExifTag::CAMERA_ELEVATION_ANGLE, 10, 1, new ExifRational(150, 10)),
@@ -304,6 +305,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
         self::assertEqualsWithDelta(21.5, $structured->capture->temperatureC, 0.001);
+        self::assertEqualsWithDelta(82.0, $structured->capture->batteryLevelPercent, 0.001);
         self::assertEqualsWithDelta(60.0, $structured->capture->humidityPercent, 0.001);
         self::assertEqualsWithDelta(1013.25, $structured->capture->pressureHPa, 0.001);
         self::assertEqualsWithDelta(15.0, $structured->capture->waterDepthM, 0.001);
