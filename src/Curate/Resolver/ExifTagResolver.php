@@ -1659,6 +1659,8 @@ final readonly class ExifTagResolver
 
     /**
      * Returns the GPS version identifier string.
+     *
+     * Falls back to the EXIF default (2.0.0.0) when the IFD omits the tag or only reports padding.
      */
     public function gpsVersion(): ?string
     {

@@ -25,7 +25,7 @@ final readonly class Gps
      * @param string|null            $longitudeRef               Longitude hemisphere reference (E/W).
      * @param float|null             $altitude                   Altitude in metres relative to sea level.
      * @param int|null               $altitudeRef                Altitude reference (0 = above, 1 = below sea level).
-     * @param string|null            $version                    GPS metadata version string.
+     * @param string|null            $version                    GPS metadata version string (defaults to 2.0.0.0 when omitted).
      * @param string|null            $versionRaw                 Raw GPS version payload without normalisation.
      * @param string|null            $satellites                 Satellites used for measurement.
      * @param string|null            $status                     Receiver status at capture time.

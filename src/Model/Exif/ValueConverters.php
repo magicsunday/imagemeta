@@ -101,6 +101,7 @@ final readonly class ValueConverters
     private const MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
     private const PRINTABLE_ASCII_MIN = 0x20;
     private const PRINTABLE_ASCII_MAX = 0x7E;
+    private const DEFAULT_GPS_VERSION = '2.0.0.0';
 
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
@@ -1107,6 +1108,9 @@ final readonly class ValueConverters
             $components = array_map(static fn (int|float $component): int => (int) $component, $value->values);
 
             $normalized = implode('.', $components);
+            if ($normalized === '') {
+                $normalized = self::DEFAULT_GPS_VERSION;
+            }
 
             return [
                 'normalized' => $normalized,
@@ -1118,10 +1122,15 @@ final readonly class ValueConverters
             $clean = trim(str_replace("\0", '', $value));
             if ($clean !== '') {
                 $normalized = $clean;
+
+                return [
+                    'normalized' => $normalized,
+                    'raw' => $raw,
+                ];
             }
 
             return [
-                'normalized' => $normalized,
+                'normalized' => self::DEFAULT_GPS_VERSION,
                 'raw' => $raw,
             ];
         }
@@ -1145,7 +1154,7 @@ final readonly class ValueConverters
         }
 
         return [
-            'normalized' => null,
+            'normalized' => self::DEFAULT_GPS_VERSION,
             'raw' => $raw,
         ];
     }

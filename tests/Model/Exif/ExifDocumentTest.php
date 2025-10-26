@@ -151,6 +151,9 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(40.441666, $gps['lat'], 0.000001);
         self::assertEqualsWithDelta(79.983333, $gps['lon'], 0.000001);
         self::assertEquals(123.0, $gps['alt']);
+        self::assertSame('2.0.0.0', $gps['version']);
+        self::assertArrayHasKey('version_raw', $gps);
+        self::assertNull($gps['version_raw']);
     }
 
     #[Test]
