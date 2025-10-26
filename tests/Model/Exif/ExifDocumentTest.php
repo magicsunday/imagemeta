@@ -315,6 +315,35 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function normalisesSrationalTimeZoneOffsetValues(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:03:01 06:07:08'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:03:01 06:07:08'),
+            ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(
+                ExifTag::TIME_ZONE_OFFSET,
+                10,
+                2,
+                new ExifRationalList([
+                    new ExifRational(11, 2),
+                    new ExifRational(-23, 4),
+                ]),
+            ),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame([330, -345], $document->timeZoneOffsetMinutes());
+
+        $capture = $document->captureDateTime();
+        self::assertNotNull($capture);
+        self::assertSame('2024-03-01T06:07:08.000+05:30', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    #[Test]
     public function decodesPrintImageMatchingPayload(): void
     {
         $payload = $this->buildPrintImPayload();

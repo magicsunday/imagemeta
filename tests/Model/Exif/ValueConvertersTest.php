@@ -304,6 +304,13 @@ final class ValueConvertersTest extends TestCase
         yield 'positive offset' => ['+01:30', 90];
         yield 'negative compact' => ['-0330', -210];
         yield 'decimal hours' => ['2.25', 135];
+        yield 'srational positive' => [new ExifRational(11, 2), 330];
+        yield 'srational list negative' => [
+            new ExifRationalList([
+                new ExifRational(-11, 2),
+            ]),
+            -330,
+        ];
         yield 'invalid input' => ['invalid', null];
     }
 
