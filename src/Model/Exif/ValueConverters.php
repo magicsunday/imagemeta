@@ -142,6 +142,29 @@ final readonly class ValueConverters
     }
 
     /**
+     * Converts a SRATIONAL[3] list into a three-element float vector.
+     *
+     * @return array{0:float,1:float,2:float}|null
+     */
+    public static function srationalTripletToFloatVector(ExifRationalList $value): ?array
+    {
+        if (count($value->values) !== 3) {
+            return null;
+        }
+
+        $vector = [];
+        foreach ($value->values as $index => $component) {
+            if ($component->denominator === 0) {
+                return null;
+            }
+
+            $vector[$index] = (float) $component->numerator / (float) $component->denominator;
+        }
+
+        return $vector;
+    }
+
+    /**
      * Normalises EXIF battery level readings to a percentage.
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw battery level value.

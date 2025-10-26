@@ -880,6 +880,33 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('MetaLab', $doc->metadataEditingSoftware());
     }
 
+    #[Test]
+    public function exposesAccelerationVectorWhenPresent(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ACCELERATION => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(-3, 1),
+                    new ExifRational(4, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        $vector = $doc->accelerationVector();
+        self::assertNotNull($vector);
+        self::assertSame([-3.0, 4.0, 0.0], $vector);
+
+        $magnitude = $doc->accelerationMs2();
+        self::assertNotNull($magnitude);
+        self::assertEqualsWithDelta(5.0, $magnitude, 0.0001);
+    }
+
     /**
      * Decodes user comments tagged as Shift-JIS into UTF-8 strings.
      */
