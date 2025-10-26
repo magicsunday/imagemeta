@@ -175,6 +175,8 @@ final readonly class ExifTagResolver
             'datetimeoriginal'  => $this->captureDateTime(),
             'datetimedigitized' => $this->digitizedDateTime(),
             'datetime'          => $this->fileDateTime(),
+            'previewdatetime'   => $this->previewDateTime(),
+            'previewdatetimedigitized' => $this->previewDateTimeDigitized(),
             default             => null,
         };
     }
@@ -515,6 +517,78 @@ final readonly class ExifTagResolver
     public function imageHeight(): ?int
     {
         return $this->document?->imageHeight();
+    }
+
+    /**
+     * Indicates whether a JPEG thumbnail is referenced within the EXIF payload.
+     */
+    public function hasThumbnail(): ?bool
+    {
+        return $this->document?->hasThumbnail();
+    }
+
+    /**
+     * Indicates whether an EXIF 3.0 preview image is referenced.
+     */
+    public function hasPreviewImage(): ?bool
+    {
+        return $this->document?->hasPreviewImage();
+    }
+
+    /**
+     * Returns the preview image offset when provided by EXIF 3.0 tags.
+     */
+    public function previewImageOffset(): ?int
+    {
+        return $this->document?->previewImageOffset();
+    }
+
+    /**
+     * Returns the preview image byte length when provided by EXIF 3.0 tags.
+     */
+    public function previewImageLength(): ?int
+    {
+        return $this->document?->previewImageLength();
+    }
+
+    /**
+     * Returns the preview width when provided by EXIF 3.0 tags.
+     */
+    public function previewImageWidth(): ?int
+    {
+        return $this->document?->previewImageWidth();
+    }
+
+    /**
+     * Returns the preview height when provided by EXIF 3.0 tags.
+     */
+    public function previewImageHeight(): ?int
+    {
+        return $this->document?->previewImageHeight();
+    }
+
+    /**
+     * Returns the preview image colour space as an enum value.
+     */
+    public function previewColorSpace(): ?ColorSpace
+    {
+        return ColorSpace::fromExifValue($this->document?->previewColorSpace());
+    }
+
+    /**
+     * Returns the preview modification datetime.
+     */
+    public function previewDateTime(): ?DateTimeImmutable
+    {
+        return $this->document?->previewDateTime();
+    }
+
+    /**
+     * Returns the preview digitised datetime.
+     */
+    public function previewDateTimeDigitized(): ?DateTimeImmutable
+    {
+        return $this->document?->previewDateTimeDigitized();
     }
 
     /**

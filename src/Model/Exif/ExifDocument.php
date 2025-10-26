@@ -662,6 +662,116 @@ final readonly class ExifDocument
     }
 
     /**
+     * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
+     */
+    public function hasThumbnail(): ?bool
+    {
+        $offset = $this->jpegThumbnailOffset();
+        $length = $this->jpegThumbnailLength();
+
+        if ($offset === null && $length === null) {
+            return null;
+        }
+
+        if ($offset === null || $length === null) {
+            return false;
+        }
+
+        return $length > 0;
+    }
+
+    /**
+     * Returns the preview image offset stored in the EXIF 3.0 preview tags.
+     */
+    public function previewImageOffset(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
+    }
+
+    /**
+     * Returns the preview image byte length stored in the EXIF 3.0 preview tags.
+     */
+    public function previewImageLength(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
+    }
+
+    /**
+     * Indicates whether an EXIF 3.0 preview image is referenced.
+     */
+    public function hasPreviewImage(): ?bool
+    {
+        $offset = $this->previewImageOffset();
+        $length = $this->previewImageLength();
+
+        if ($offset === null && $length === null) {
+            return null;
+        }
+
+        if ($offset === null || $length === null) {
+            return false;
+        }
+
+        return $length > 0;
+    }
+
+    /**
+     * Returns the preview image width in pixels.
+     */
+    public function previewImageWidth(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_WIDTH);
+    }
+
+    /**
+     * Returns the preview image height in pixels.
+     */
+    public function previewImageHeight(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_HEIGHT);
+    }
+
+    /**
+     * Returns the preview image colour space identifier when present.
+     */
+    public function previewColorSpace(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_COLOR_SPACE);
+    }
+
+    /**
+     * Returns the raw preview modification datetime string.
+     */
+    public function previewDateTimeRaw(): ?string
+    {
+        return $this->rawString($this->exifIfd, ExifTag::PREVIEW_DATE_TIME);
+    }
+
+    /**
+     * Returns the raw preview digitised datetime string.
+     */
+    public function previewDateTimeDigitizedRaw(): ?string
+    {
+        return $this->rawString($this->exifIfd, ExifTag::PREVIEW_DATE_TIME_DIGITIZED);
+    }
+
+    /**
+     * Returns the preview modification datetime as an immutable value.
+     */
+    public function previewDateTime(): ?DateTimeImmutable
+    {
+        return $this->parseExifDateTime($this->previewDateTimeRaw(), null, null);
+    }
+
+    /**
+     * Returns the preview digitised datetime as an immutable value.
+     */
+    public function previewDateTimeDigitized(): ?DateTimeImmutable
+    {
+        return $this->parseExifDateTime($this->previewDateTimeDigitizedRaw(), null, null);
+    }
+
+    /**
      * Returns the reference black and white point values as floating point numbers.
      *
      * @return list<float>|null

@@ -296,7 +296,12 @@ final class StructuredMetadataBuilder
             ]),
         );
 
-        $preview = new Preview(null, null, null, null);
+        $preview = new Preview(
+            $exifResolver->hasThumbnail(),
+            $exifResolver->hasPreviewImage(),
+            $exifResolver->previewImageWidth(),
+            $exifResolver->previewImageHeight(),
+        );
 
         $video = new Video(
             durationSec: $quickTimeResolver->float('com.apple.quicktime.duration'),

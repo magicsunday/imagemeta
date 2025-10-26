@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
@@ -198,6 +199,48 @@ final class ExifTagResolverTest extends TestCase
         $horizontalError = $resolver->gpsHorizontalPositioningError();
         self::assertIsFloat($horizontalError);
         self::assertEqualsWithDelta(1.5, $horizontalError, 0.000001);
+    }
+
+    #[Test]
+    public function exposesPreviewMetadataFromExifThreeTags(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 262_144),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 12_288),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START         => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 65_536),
+            ExifTag::PREVIEW_IMAGE_LENGTH        => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 32_768),
+            ExifTag::PREVIEW_IMAGE_WIDTH         => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 800),
+            ExifTag::PREVIEW_IMAGE_HEIGHT        => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 600),
+            ExifTag::PREVIEW_IMAGE_COLOR_SPACE   => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
+                3,
+                1,
+                ColorSpace::SRGB->value,
+            ),
+            ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:06:15 10:20:30'),
+            ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:06:15 10:15:00'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument($ifd0, $exifIfd, null, null, null));
+
+        self::assertTrue($resolver->hasThumbnail());
+        self::assertTrue($resolver->hasPreviewImage());
+        self::assertSame(65_536, $resolver->previewImageOffset());
+        self::assertSame(32_768, $resolver->previewImageLength());
+        self::assertSame(800, $resolver->previewImageWidth());
+        self::assertSame(600, $resolver->previewImageHeight());
+        self::assertSame(ColorSpace::SRGB, $resolver->previewColorSpace());
+
+        $previewDate = $resolver->previewDateTime();
+        self::assertInstanceOf(DateTimeImmutable::class, $previewDate);
+        self::assertSame('2024-06-15T10:20:30+00:00', $previewDate->format(DATE_ATOM));
+
+        $previewDigitized = $resolver->previewDateTimeDigitized();
+        self::assertInstanceOf(DateTimeImmutable::class, $previewDigitized);
+        self::assertSame('2024-06-15T10:15:00+00:00', $previewDigitized->format(DATE_ATOM));
     }
 
     /**

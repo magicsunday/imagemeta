@@ -167,6 +167,27 @@ final readonly class ExifTag
 
     public const int JPEG_INTERCHANGE_FORMAT_LENGTH = 0x0202;
 
+    // EXIF 3.0 preview tags
+    public const int PREVIEW_IMAGE_START = 0xC51B;
+
+    public const int PREVIEW_IMAGE_LENGTH = 0xC51C;
+
+    public const int PREVIEW_IMAGE_ENCODING = 0xC51D;
+
+    public const int PREVIEW_IMAGE_MIME_TYPE = 0xC51E;
+
+    public const int PREVIEW_IMAGE_WIDTH = 0xC51F;
+
+    public const int PREVIEW_IMAGE_HEIGHT = 0xC520;
+
+    public const int PREVIEW_IMAGE_COLOR_SPACE = 0xC521;
+
+    public const int PREVIEW_IMAGE_BIT_DEPTH = 0xC522;
+
+    public const int PREVIEW_DATE_TIME = 0xC523;
+
+    public const int PREVIEW_DATE_TIME_DIGITIZED = 0xC524;
+
     public const int YCBCR_COEFFICIENTS = 0x0211;
 
     public const int YCBCR_SUB_SAMPLING = 0x0212;

@@ -121,6 +121,18 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::IMAGE_EDITOR                => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 12, 'John Editor'),
             ExifTag::EXIF_VERSION                => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
             ExifTag::FLASHPIX_VERSION            => new IfdEntry(ExifTag::FLASHPIX_VERSION, 7, 4, '0100'),
+            ExifTag::PREVIEW_IMAGE_START         => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 131_072),
+            ExifTag::PREVIEW_IMAGE_LENGTH        => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 65_536),
+            ExifTag::PREVIEW_IMAGE_WIDTH         => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 2_048),
+            ExifTag::PREVIEW_IMAGE_HEIGHT        => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 1_152),
+            ExifTag::PREVIEW_IMAGE_COLOR_SPACE   => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
+                3,
+                1,
+                ColorSpace::ADOBE_RGB->value,
+            ),
+            ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:05:01 12:40:00'),
+            ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:05:01 12:35:00'),
             ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
             ExifTag::ISO_SPEED_LATITUDE_YYY      => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 3, 1, 320),
             ExifTag::ISO_SPEED_LATITUDE_ZZZ      => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 3, 1, 540),
@@ -302,6 +314,10 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('Shot with ND filter', $structured->image->userComment);
         self::assertSame('Developed in Raw Studio', $structured->integrity->imageHistory);
         self::assertTrue($structured->integrity->makerNotesSafe);
+        self::assertTrue($structured->preview->hasThumbnail);
+        self::assertTrue($structured->preview->hasPreview);
+        self::assertSame(2_048, $structured->preview->previewWidth);
+        self::assertSame(1_152, $structured->preview->previewHeight);
 
         self::assertSame(400, $structured->exposure->iso);
         self::assertSame(0.008, $structured->exposure->exposureTimeSec);
