@@ -42,6 +42,8 @@ final class JpegExtractorTest extends TestCase
 
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
+    private const string FPXR_SIGNATURE = 'FPXR';
+
     private const int MARKER_APP1 = 0xE1;
 
     private const int MARKER_APP2 = 0xE2;
@@ -173,6 +175,63 @@ final class JpegExtractorTest extends TestCase
     }
 
     /**
+     * Confirms FlashPix APP2 segments are reordered and merged per stream identifier.
+     */
+    #[Test]
+    public function testFlashPixSegmentsAreMerged(): void
+    {
+        $streamId = 3;
+        $partOne  = 'flashpix-part-one';
+        $partTwo  = 'flashpix-part-two';
+
+        $segment1 = self::segment(self::MARKER_APP2, self::fpxrPayload($streamId, 1, 2, $partOne));
+        $segment2 = self::segment(self::MARKER_APP2, self::fpxrPayload($streamId, 2, 2, $partTwo));
+
+        $jpeg = $this->jpeg($segment2, $segment1);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$streamId => $partOne . $partTwo], $extractor->getFlashPixStreams());
+    }
+
+    /**
+     * Ensures multiple FlashPix streams are merged independently and keyed by identifier.
+     */
+    #[Test]
+    public function testFlashPixMultipleStreamsAreHandled(): void
+    {
+        $streamOne = self::segment(self::MARKER_APP2, self::fpxrPayload(1, 1, 1, 'stream-one'));
+        $streamTwoA = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 1, 3, 'alpha-'));
+        $streamTwoB = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 2, 3, 'beta-'));
+        $streamTwoC = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 3, 3, 'gamma'));
+
+        $jpeg = $this->jpeg($streamTwoB, $streamOne, $streamTwoC, $streamTwoA);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([
+            1 => 'stream-one',
+            2 => 'alpha-beta-gamma',
+        ], $extractor->getFlashPixStreams());
+    }
+
+    /**
+     * Ensures inconsistent FlashPix sequence counts discard accumulated fragments.
+     */
+    #[Test]
+    public function testFlashPixInvalidSequenceDiscardsStream(): void
+    {
+        $segment1 = self::segment(self::MARKER_APP2, self::fpxrPayload(5, 1, 2, 'first'));
+        $segment2 = self::segment(self::MARKER_APP2, self::fpxrPayload(5, 2, 3, 'second'));
+
+        $jpeg = $this->jpeg($segment1, $segment2);
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([], $extractor->getFlashPixStreams());
+    }
+
+    /**
      * Ensures APP13 segments with the Photoshop signature are stored verbatim.
      */
     #[Test]
@@ -237,9 +296,11 @@ final class JpegExtractorTest extends TestCase
     {
         $lengthTooSmall   = "\xFF\xD8\xFF\xE1\x00\x01\xFF\xD9";
         $truncatedPayload = "\xFF\xD8\xFF\xE1" . pack('n', 10) . 'abcde' . "\xFF\xD9";
+        $shortFlashPix    = "\xFF\xD8" . self::segment(self::MARKER_APP2, self::FPXR_SIGNATURE . "\x00\x01\x02") . "\xFF\xD9";
 
         yield 'length-smaller-than-two' => [$lengthTooSmall, '/length/i'];
         yield 'truncated-payload' => [$truncatedPayload, '/truncated/i'];
+        yield 'flashpix-short-header' => [$shortFlashPix, '/FlashPix segment/i'];
     }
 
     #[Test]
@@ -310,6 +371,14 @@ final class JpegExtractorTest extends TestCase
     private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
+    }
+
+    /**
+     * Builds a FlashPix APP2 payload with the provided header parameters.
+     */
+    private static function fpxrPayload(int $streamId, int $sequence, int $count, string $data): string
+    {
+        return self::FPXR_SIGNATURE . pack('n', $streamId) . chr($sequence) . chr($count) . $data;
     }
 
     /**

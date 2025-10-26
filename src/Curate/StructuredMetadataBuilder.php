@@ -40,6 +40,7 @@ use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\Focus;
+use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
@@ -204,6 +205,8 @@ final class StructuredMetadataBuilder
             flashpixVersion: $exifResolver->flashpixVersion(),
             tiffEpStandardId: $exifResolver->tiffEpStandardId(),
         );
+
+        $flashPix = new FlashPix($metadata->flashPixStreams);
 
         $camera = $this->buildCamera($exifResolver);
         $lens   = $this->buildLens($exifResolver);
@@ -475,6 +478,7 @@ final class StructuredMetadataBuilder
             tiff: $tiff,
             composite: $composite,
             standards: $standards,
+            flashPix: $flashPix,
             camera: $camera,
             lens: $lens,
             image: $image,

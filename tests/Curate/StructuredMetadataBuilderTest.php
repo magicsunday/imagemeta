@@ -243,6 +243,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('1.2.3', $structured->camera->firmware);
         self::assertSame(FileSource::DIGITAL_CAMERA, $structured->camera->fileSource);
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $structured->camera->sensingMethod);
+        self::assertSame([], $structured->flashPix->streams);
 
         self::assertSame('EF 85mm f/1.4L', $structured->lens->lensModel);
         self::assertSame(85.0, $structured->lens->focalLengthMm);
@@ -372,6 +373,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             null,
             null,
             null,
+            [],
             [],
             null,
             null,
@@ -1632,6 +1634,31 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures FlashPix streams collected on the metadata aggregate are forwarded into the structured view.
+     */
+    #[Test]
+    public function forwardsFlashPixStreams(): void
+    {
+        $flashPix = [7 => 'flashpix-stream'];
+
+        $metadata = new Metadata(
+            [],
+            null,
+            null,
+            [],
+            null,
+            null,
+            null,
+            [],
+            $flashPix,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame($flashPix, $structured->flashPix->streams);
+    }
+
+    /**
      * Ensures XMP region metadata is propagated to the structured output including face counts.
      */
     #[Test]
@@ -1826,6 +1853,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             null,
             null,
             null,
+            [],
             [],
             8,
             [

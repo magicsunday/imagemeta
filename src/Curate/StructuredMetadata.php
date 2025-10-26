@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
+use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
@@ -58,6 +59,7 @@ final readonly class StructuredMetadata
      * @param TiffData            $tiff                TIFF-related imaging parameters.
      * @param CompositeImageInfo  $composite           Composite capture information for multi-image scenes.
      * @param Standards           $standards           Metadata standard identifiers and versions.
+     * @param FlashPix            $flashPix            FlashPix extension streams extracted from APP2 markers.
      * @param Camera              $camera              Camera manufacturer and model information.
      * @param Lens                $lens                Lens identification and optical properties.
      * @param Image               $image               Image dimensions and orientation details.
@@ -94,6 +96,7 @@ final readonly class StructuredMetadata
         public TiffData $tiff,
         public CompositeImageInfo $composite,
         public Standards $standards,
+        public FlashPix $flashPix,
         public Camera $camera,
         public Lens $lens,
         public Image $image,
