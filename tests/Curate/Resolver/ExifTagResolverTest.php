@@ -447,6 +447,22 @@ final class ExifTagResolverTest extends TestCase
     }
 
     #[Test]
+    public function resolvesSubfileTypeTags(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::NEW_SUBFILE_TYPE => new IfdEntry(ExifTag::NEW_SUBFILE_TYPE, 4, 1, 2),
+            ExifTag::SUBFILE_TYPE     => new IfdEntry(ExifTag::SUBFILE_TYPE, 3, 1, 1),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument($ifd0, null, null, null, null));
+
+        self::assertSame(2, $resolver->newSubfileType());
+        self::assertSame(1, $resolver->subfileType());
+        self::assertSame(2, $resolver->int('newsubfiletype'));
+        self::assertSame(1, $resolver->int('subfiletype'));
+    }
+
+    #[Test]
     public function resolvesXpStringFallbacks(): void
     {
         $ifd0 = new Ifd([

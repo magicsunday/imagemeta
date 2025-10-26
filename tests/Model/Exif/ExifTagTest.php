@@ -63,6 +63,8 @@ final class ExifTagTest extends TestCase
             'GPS_H_POSITIONING_ERROR' => 0x001F,
 
             // Image file directory (IFD0)
+            'NEW_SUBFILE_TYPE'             => 0x00FE,
+            'SUBFILE_TYPE'                 => 0x00FF,
             'PROCESSING_SOFTWARE'           => 0x000B,
             'IMAGE_WIDTH'                    => 0x0100,
             'IMAGE_HEIGHT'                   => 0x0101,
@@ -283,6 +285,15 @@ final class ExifTagTest extends TestCase
     public function testHostComputerConstantIsRetained(): void
     {
         self::assertSame(0x013C, ExifTag::HOST_COMPUTER);
+    }
+
+    /**
+     * Ensures the TIFF subfile type identifiers match the registry values.
+     */
+    public function testSubfileTypeConstantsMatchSpecification(): void
+    {
+        self::assertSame(0x00FE, ExifTag::NEW_SUBFILE_TYPE);
+        self::assertSame(0x00FF, ExifTag::SUBFILE_TYPE);
     }
 
     /**

@@ -18,6 +18,16 @@ final readonly class ExifTag
 {
     // Image file directory (IFD0)
     /**
+     * TIFF 6.0 subfile type bitfield describing the purpose of the image data.
+     */
+    public const int NEW_SUBFILE_TYPE = 0x00FE;
+
+    /**
+     * Legacy TIFF 5.0 subfile type value describing the image purpose.
+     */
+    public const int SUBFILE_TYPE = 0x00FF;
+
+    /**
      * EXIF 3.0 tag recording the software responsible for final image processing.
      */
     public const int PROCESSING_SOFTWARE = 0x000B;
