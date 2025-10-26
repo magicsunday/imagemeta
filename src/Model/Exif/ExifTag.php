@@ -414,42 +414,42 @@ final readonly class ExifTag
     /**
      * Records the hue/saturation/value grid dimensions used by the profile maps.
      */
-    public const int PROFILE_HUE_SAT_MAP_DIMS = 0xC726;
+    public const int PROFILE_HUE_SAT_MAP_DIMS = 0xC6F6;
 
     /**
      * Primary hue/saturation/value adjustment map encoded as IEEE-754 floats.
      */
-    public const int PROFILE_HUE_SAT_MAP_DATA_1 = 0xC727;
+    public const int PROFILE_HUE_SAT_MAP_DATA_1 = 0xC6F7;
 
     /**
      * Secondary hue/saturation/value adjustment map encoded as IEEE-754 floats.
      */
-    public const int PROFILE_HUE_SAT_MAP_DATA_2 = 0xC728;
+    public const int PROFILE_HUE_SAT_MAP_DATA_2 = 0xC6F8;
 
     /**
      * Tertiary hue/saturation/value adjustment map encoded as IEEE-754 floats.
      */
-    public const int PROFILE_HUE_SAT_MAP_DATA_3 = 0xC729;
+    public const int PROFILE_HUE_SAT_MAP_DATA_3 = 0xC6F9;
 
     /**
      * Defines the hue/saturation/value grid dimensions used by the look table.
      */
-    public const int PROFILE_LOOK_TABLE_DIMS = 0xC72A;
+    public const int PROFILE_LOOK_TABLE_DIMS = 0xC6FA;
 
     /**
      * Profile look table entries encoded as triplets of IEEE-754 floats.
      */
-    public const int PROFILE_LOOK_TABLE_DATA = 0xC72B;
+    public const int PROFILE_LOOK_TABLE_DATA = 0xC6FB;
 
     /**
      * Optional tone curve defined as normalised IEEE-754 float pairs.
      */
-    public const int PROFILE_TONE_CURVE = 0xC72C;
+    public const int PROFILE_TONE_CURVE = 0xC6FC;
 
     /**
      * Optional profile gain table map encoded as IEEE-754 floats.
      */
-    public const int PROFILE_GAIN_TABLE_MAP = 0xC72D;
+    public const int PROFILE_GAIN_TABLE_MAP = 0xC7A4;
 
     // GPS sub IFD (Table 66 – EXIF 3.0)
     public const int GPS_VERSION_ID = 0x0000;
