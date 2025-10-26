@@ -83,6 +83,7 @@ final class MetadataTest extends TestCase
             null,
             $iccProfile,
             $iccSegments,
+            [],
             12,
             $sampling,
             [2, 1],

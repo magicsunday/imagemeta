@@ -65,6 +65,8 @@ final class JpegExtractor
 
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
+    private const string FPXR_SIGNATURE = 'FPXR';
+
     /**
      * Scan and termination markers that end metadata scanning.
      */
@@ -92,6 +94,15 @@ final class JpegExtractor
     private ?int $iccExpectedCount = null;
 
     private ?string $iccProfile = null;
+
+    /** @var array<int, array<int, string>> */
+    private array $flashPixSequences = [];
+
+    /** @var array<int, int> */
+    private array $flashPixExpectedCounts = [];
+
+    /** @var array<int, string> */
+    private array $flashPixStreams = [];
 
     /** @var list<string> */
     private array $iptcPayloads = [];
@@ -178,6 +189,18 @@ final class JpegExtractor
     }
 
     /**
+     * Returns concatenated FlashPix extension streams keyed by their stream identifier.
+     *
+     * @return array<int, string>
+     */
+    public function getFlashPixStreams(): array
+    {
+        $this->parseIfNeeded();
+
+        return $this->flashPixStreams;
+    }
+
+    /**
      * Returns the precision in bits reported by the primary start of frame segment.
      */
     public function getFrameSamplePrecision(): ?int
@@ -251,8 +274,11 @@ final class JpegExtractor
         $this->iccSequence            = [];
         $this->iccExpectedCount       = null;
         $this->iccProfile             = null;
-        $this->iptcPayloads           = [];
-        $this->xmpPacketHashes        = [];
+        $this->flashPixSequences       = [];
+        $this->flashPixExpectedCounts  = [];
+        $this->flashPixStreams         = [];
+        $this->iptcPayloads            = [];
+        $this->xmpPacketHashes         = [];
         $this->frameBitsPerSample      = null;
         $this->frameComponentSampling  = null;
         $this->frameYCbCrSubSampling   = null;
@@ -297,6 +323,29 @@ final class JpegExtractor
             if ($presentSequence === $expectedSequence) {
                 ksort($this->iccSequence);
                 $this->iccProfile = implode('', $this->iccSequence);
+            }
+        }
+
+        if ($this->flashPixSequences !== []) {
+            foreach ($this->flashPixSequences as $streamId => $fragments) {
+                $expectedCount = $this->flashPixExpectedCounts[$streamId] ?? 0;
+                if ($expectedCount === 0 || count($fragments) !== $expectedCount) {
+                    continue;
+                }
+
+                $sequenceNumbers = array_keys($fragments);
+                sort($sequenceNumbers);
+
+                if ($sequenceNumbers !== range(1, $expectedCount)) {
+                    continue;
+                }
+
+                ksort($fragments);
+                $this->flashPixStreams[$streamId] = implode('', $fragments);
+            }
+
+            if ($this->flashPixStreams !== []) {
+                ksort($this->flashPixStreams);
             }
         }
 
@@ -424,10 +473,25 @@ final class JpegExtractor
      */
     private function handleApp2(string $payload, int $offset): void
     {
-        if (!str_starts_with($payload, self::ICC_SIGNATURE)) {
+        if (str_starts_with($payload, self::ICC_SIGNATURE)) {
+            $this->handleIccSegment($payload, $offset);
+
             return;
         }
 
+        if (str_starts_with($payload, self::FPXR_SIGNATURE)) {
+            $this->handleFlashPixSegment($payload, $offset);
+        }
+    }
+
+    /**
+     * Processes ICC profile segments contained within APP2 markers.
+     *
+     * @param string $payload Raw segment payload including signature.
+     * @param int    $offset  Offset in the stream where the marker begins.
+     */
+    private function handleIccSegment(string $payload, int $offset): void
+    {
         $signatureLength = strlen(self::ICC_SIGNATURE);
         if (strlen($payload) < $signatureLength + 2) {
             throw new ParseError(sprintf('ICC segment at offset %d is too short', $offset));
@@ -455,6 +519,55 @@ final class JpegExtractor
 
         if (!array_key_exists($sequenceNumber, $this->iccSequence)) {
             $this->iccSequence[$sequenceNumber] = $iccData;
+        }
+    }
+
+    /**
+     * Processes FlashPix extension segments contained within APP2 markers.
+     *
+     * @param string $payload Raw segment payload including signature.
+     * @param int    $offset  Offset in the stream where the marker begins.
+     */
+    private function handleFlashPixSegment(string $payload, int $offset): void
+    {
+        $signatureLength = strlen(self::FPXR_SIGNATURE);
+        if (strlen($payload) < $signatureLength + 4) {
+            throw new ParseError(sprintf('FlashPix segment at offset %d is too short', $offset));
+        }
+
+        $header = substr($payload, $signatureLength, 4);
+        $unpacked = unpack('nstream/Csequence/Ccount', $header);
+        if ($unpacked === false) {
+            throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset));
+        }
+
+        $streamId = (int) $unpacked['stream'];
+        $sequenceNumber = (int) $unpacked['sequence'];
+        $sequenceCount = (int) $unpacked['count'];
+        $data = substr($payload, $signatureLength + 4);
+
+        if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
+            $this->flashPixExpectedCounts[$streamId] = 0;
+            unset($this->flashPixSequences[$streamId]);
+
+            return;
+        }
+
+        if (!array_key_exists($streamId, $this->flashPixExpectedCounts)) {
+            $this->flashPixExpectedCounts[$streamId] = $sequenceCount;
+        } elseif ($this->flashPixExpectedCounts[$streamId] !== $sequenceCount) {
+            $this->flashPixExpectedCounts[$streamId] = 0;
+            unset($this->flashPixSequences[$streamId]);
+
+            return;
+        }
+
+        if (!array_key_exists($streamId, $this->flashPixSequences)) {
+            $this->flashPixSequences[$streamId] = [];
+        }
+
+        if (!array_key_exists($sequenceNumber, $this->flashPixSequences[$streamId])) {
+            $this->flashPixSequences[$streamId][$sequenceNumber] = $data;
         }
     }
 
