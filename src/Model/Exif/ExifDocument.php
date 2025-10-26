@@ -311,6 +311,26 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the normalised FlashPix version string when present.
+     */
+    public function flashpixVersion(): ?string
+    {
+        $value = $this->rawString($this->exifIfd, ExifTag::FLASHPIX_VERSION);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value, "\0 ");
+
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return CoreValueConverters::toExifVersion($trimmed);
+    }
+
+    /**
      * Returns the derived EXIF capability profile identifier.
      */
     public function exifProfile(): string

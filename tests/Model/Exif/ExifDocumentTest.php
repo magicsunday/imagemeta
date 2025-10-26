@@ -152,6 +152,25 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function normalisesFlashpixVersionFromPaddedNumericString(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::FLASHPIX_VERSION => new IfdEntry(
+                ExifTag::FLASHPIX_VERSION,
+                2,
+                1,
+                pack('A8', '0300'),
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('3.00', $doc->flashpixVersion());
+    }
+
+    #[Test]
     public function exposesCompositeImageMetadata(): void
     {
         $ifd0 = new Ifd([]);
