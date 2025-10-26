@@ -42,7 +42,8 @@ final class ExifCapabilitiesTest extends TestCase
         yield 'decimal 2.00 maps to 2.0' => ['2.0', '2.00'];
         yield 'numeric 0210 maps to 2.1' => ['2.1', '0210'];
         yield 'decimal 2.1 maps to 2.1' => ['2.1', '2.1'];
-        yield 'decimal 2.2 defaults to 2.2' => ['2.2', '2.2'];
+        yield 'decimal 2.2 maps to 2.2' => ['2.2', '2.2'];
+        yield 'raw 0220 maps to 2.2' => ['2.2', '0220'];
         yield 'raw 0221 maps to 2.21' => ['2.21', '0221'];
         yield 'decimal 2.21 maps to 2.21' => ['2.21', '2.21'];
         yield 'raw 0230 stays grouped as 2.3' => ['2.3', '0230'];
@@ -53,5 +54,7 @@ final class ExifCapabilitiesTest extends TestCase
         yield 'decimal 2.32 maps to 2.32' => ['2.32', '2.32'];
         yield 'numeric 0300 maps to 3.0' => ['3.0', '0300'];
         yield 'decimal 3.0 maps to 3.0' => ['3.0', '3.0'];
+        yield 'unknown when digits do not match revision' => ['unknown', '9999'];
+        yield 'unknown when format malformed' => ['unknown', 'abc'];
     }
 }
