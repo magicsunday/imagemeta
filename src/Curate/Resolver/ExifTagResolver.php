@@ -1565,6 +1565,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the camera battery level percentage when available.
+     */
+    public function batteryLevelPercent(): ?float
+    {
+        return $this->document?->batteryLevelPercent();
+    }
+
+    /**
      * Returns the recorded temperature in Celsius.
      */
     public function temperatureCelsius(): ?float

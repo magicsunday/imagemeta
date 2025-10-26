@@ -49,6 +49,7 @@ final readonly class CaptureResolver
             temperatureC: null,
             humidityPercent: null,
             pressureHPa: null,
+            batteryLevelPercent: $exifDocument?->batteryLevelPercent(),
             waterDepthM: null,
             accelerationMs2: null,
             cameraElevationAngleDeg: null,

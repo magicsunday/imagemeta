@@ -170,6 +170,33 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * @param mixed      $value    Raw battery level value.
+     * @param float|null $expected Normalised percentage value.
+     */
+    #[Test]
+    #[DataProvider('provideBatteryLevelValues')]
+    public function normalisesBatteryLevelToPercent(mixed $value, ?float $expected): void
+    {
+        self::assertSame($expected, ValueConverters::batteryLevelToPercent($value));
+    }
+
+    /**
+     * @return iterable<string, array{mixed, float|null}>
+     */
+    public static function provideBatteryLevelValues(): iterable
+    {
+        yield 'rational fraction' => [new ExifRational(1, 2), 50.0];
+        yield 'rational percent' => [new ExifRational(75, 1), 75.0];
+        yield 'string fraction' => ['1/4', 25.0];
+        yield 'string percent' => ['80%', 80.0];
+        yield 'ratio string' => ['0.2', 20.0];
+        yield 'numeric percent string' => ['55.5', 55.5];
+        yield 'invalid string' => ['battery low', null];
+        yield 'empty string' => ['', null];
+        yield 'null value' => [null, null];
+    }
+
+    /**
      * @param string|null $ref      The speed reference.
      * @param mixed       $value    The raw speed value.
      * @param float|null  $expected The expected metres per second.

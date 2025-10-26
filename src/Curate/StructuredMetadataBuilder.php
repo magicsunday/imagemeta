@@ -232,6 +232,7 @@ final class StructuredMetadataBuilder
             temperatureC: $exifResolver->temperatureCelsius(),
             humidityPercent: $exifResolver->humidityPercent(),
             pressureHPa: $exifResolver->pressureHPa(),
+            batteryLevelPercent: $exifResolver->batteryLevelPercent(),
             waterDepthM: $exifResolver->waterDepthMeters(),
             accelerationMs2: $exifResolver->accelerationMs2(),
             cameraElevationAngleDeg: $exifResolver->cameraElevationAngleDeg(),
