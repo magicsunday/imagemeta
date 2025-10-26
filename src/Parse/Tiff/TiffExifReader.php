@@ -29,6 +29,7 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 
 use function chr;
+use function ctype_digit;
 use function function_exists;
 use function iconv;
 use function in_array;
@@ -45,6 +46,7 @@ use function sha1;
 use function sprintf;
 use function strlen;
 use function strncmp;
+use function strrev;
 use function substr;
 
 /**
@@ -134,6 +136,8 @@ final class TiffExifReader
 
     private bool $bigTiff = false;
 
+    private int $bigTiffOffsetSize = 8;
+
     private UInt64 $blobSize;
 
     private ?string $makerNoteRaw = null;
@@ -177,9 +181,8 @@ final class TiffExifReader
         $magic = $this->readU16();
         if ($magic === self::TIFF_MAGIC_BIG) {
             $this->bigTiff = true;
-            $this->parseBigTiffHeader();
-            $firstIfd = $this->readU64();
-            $ifd0     = $this->readIfd($firstIfd);
+            $firstIfd      = $this->parseBigTiffHeader();
+            $ifd0          = $this->readIfd($firstIfd);
         } elseif ($magic === self::TIFF_MAGIC_CLASSIC) {
             $this->bigTiff = false;
             $firstIfd      = $this->readU32();
@@ -253,19 +256,23 @@ final class TiffExifReader
     /**
      * Validates the BigTIFF header following the magic identifier.
      */
-    private function parseBigTiffHeader(): void
+    private function parseBigTiffHeader(): int|UInt64|string
     {
-        // BigTIFF header after magic: 2 bytes: offset size (should be 8), 2 bytes: zero/reserved, then 8‑byte first IFD offset
+        // BigTIFF header after magic: 2 bytes: offset size, 2 bytes: zero/reserved, followed by the first IFD offset
         $offSize  = $this->readU16();
         $reserved = $this->readU16();
 
-        if ($offSize !== 8) {
-            throw new ParseError('Unsupported BigTIFF offset size (expected 8)');
+        if ($offSize !== 8 && $offSize !== 16) {
+            throw new ParseError('Unsupported BigTIFF offset size (expected 8 or 16)');
         }
+
+        $this->bigTiffOffsetSize = $offSize;
 
         if ($reserved !== 0) {
             throw new ParseError('Bad BigTIFF header (reserved != 0)');
         }
+
+        return $this->readBigTiffOffsetValue('BigTIFF first IFD offset');
     }
 
     /**
@@ -275,10 +282,14 @@ final class TiffExifReader
      *
      * @return Ifd
      */
-    private function readIfd(int|UInt64 $offset): Ifd
+    private function readIfd(int|UInt64|string $offset): Ifd
     {
         if ($offset instanceof UInt64) {
             if ($offset->isZero()) {
+                return new Ifd([]);
+            }
+        } elseif (is_string($offset)) {
+            if ($this->isDecimalZero($offset)) {
                 return new Ifd([]);
             }
         } elseif ($offset <= 0) {
@@ -298,8 +309,13 @@ final class TiffExifReader
             $entries += $this->readDirEntry();
         }
 
-        $next = $this->bigTiff ? $this->normaliseOptionalOffset($this->readU64(), 'IFD next offset') : $this->readU32();
-        $ifd  = new Ifd($entries, $next > 0 ? $next : null);
+        if ($this->bigTiff) {
+            $nextValue = $this->readBigTiffOffsetValue('IFD next offset');
+            $next      = $this->normaliseOptionalOffset($nextValue, 'IFD next offset');
+        } else {
+            $next = $this->readU32();
+        }
+        $ifd = new Ifd($entries, $next > 0 ? $next : null);
 
         $this->ifdCache[$offsetInt] = $ifd;
 
@@ -857,7 +873,7 @@ final class TiffExifReader
         }
 
         $componentSize    = $this->bytesPerComponent($type);
-        $inlineThreshold  = 8;
+        $inlineThreshold  = $this->bigTiffOffsetSize;
         $inlineValueBytes = $componentSize * $count;
 
         if ($inlineValueBytes <= $inlineThreshold) {
@@ -870,14 +886,53 @@ final class TiffExifReader
             return substr($bytes, 0, $inlineValueBytes);
         }
 
-        return $this->readU64();
+        $context = sprintf('TIFF type %d offset', $type);
+
+        return $this->readBigTiffOffsetValue($context);
+    }
+
+    /**
+     * Reads a BigTIFF offset field according to the configured offset size.
+     *
+     * @param string $context Human-readable description used in error messages.
+     *
+     * @return int|UInt64|string
+     */
+    private function readBigTiffOffsetValue(string $context): int|UInt64|string
+    {
+        if ($this->bigTiffOffsetSize === 8) {
+            return $this->readU64();
+        }
+
+        $bytes = $this->buf->read($this->bigTiffOffsetSize);
+
+        if ($this->bo === Endian::Little) {
+            $bytes = strrev($bytes);
+        }
+
+        $decimal    = $this->bytesToDecimalString($bytes);
+        $normalised = ltrim($decimal, '0');
+
+        if ($normalised === '') {
+            return 0;
+        }
+
+        if ($this->decimalExceedsPhpInt($normalised)) {
+            return $normalised;
+        }
+
+        return $this->decimalStringToInt($normalised, $context);
     }
 
     /**
      * Ensures that an offset lies within the TIFF blob and returns it as an integer.
      */
-    private function ensureOffset(int|UInt64 $offset, string $context, int $length = 0): int
+    private function ensureOffset(int|UInt64|string $offset, string $context, int $length = 0): int
     {
+        if (is_string($offset)) {
+            $offset = $this->decimalStringToInt($offset, $context);
+        }
+
         $offset64 = $offset instanceof UInt64 ? $offset : UInt64::fromInt($offset);
 
         $this->assertOffsetRange($offset64, $length, $context);
@@ -888,9 +943,17 @@ final class TiffExifReader
     /**
      * Normalises an optional offset that may be zero.
      */
-    private function normaliseOptionalOffset(UInt64 $offset, string $context): int
+    private function normaliseOptionalOffset(int|UInt64|string $offset, string $context): int
     {
-        if ($offset->isZero()) {
+        if ($offset instanceof UInt64) {
+            if ($offset->isZero()) {
+                return 0;
+            }
+        } elseif (is_string($offset)) {
+            if ($this->isDecimalZero($offset)) {
+                return 0;
+            }
+        } elseif ($offset <= 0) {
             return 0;
         }
 
@@ -920,6 +983,147 @@ final class TiffExifReader
     }
 
     /**
+     * Converts a big-endian byte string into a decimal representation.
+     *
+     * @param string $bytes Unsigned integer bytes in big-endian order.
+     */
+    private function bytesToDecimalString(string $bytes): string
+    {
+        $value  = '0';
+        $length = strlen($bytes);
+
+        for ($i = 0; $i < $length; ++$i) {
+            $value = $this->decimalMultiplySmall($value, 256);
+            $value = $this->decimalAddSmall($value, ord($bytes[$i]));
+        }
+
+        return $value;
+    }
+
+    /**
+     * Multiplies a decimal string with a small integer factor.
+     *
+     * @param string $value  Decimal string to multiply.
+     * @param int    $factor Factor to apply.
+     */
+    private function decimalMultiplySmall(string $value, int $factor): string
+    {
+        if ($value === '0' || $factor === 0) {
+            return '0';
+        }
+
+        $carry  = 0;
+        $result = '';
+
+        for ($i = strlen($value) - 1; $i >= 0; --$i) {
+            $digit   = ord($value[$i]) - 48;
+            $product = ($digit * $factor) + $carry;
+            $result  = chr(($product % 10) + 48) . $result;
+            $carry   = intdiv($product, 10);
+        }
+
+        while ($carry > 0) {
+            $result = chr(($carry % 10) + 48) . $result;
+            $carry  = intdiv($carry, 10);
+        }
+
+        return ltrim($result, '0') ?: '0';
+    }
+
+    /**
+     * Adds a small integer value to a decimal string.
+     *
+     * @param string $value  Decimal string augend.
+     * @param int    $addend Non-negative integer addend.
+     */
+    private function decimalAddSmall(string $value, int $addend): string
+    {
+        if ($addend === 0) {
+            return $value;
+        }
+
+        $result = '';
+        $carry  = $addend;
+
+        for ($i = strlen($value) - 1; $i >= 0; --$i) {
+            $digit = ord($value[$i]) - 48;
+            $sum   = $digit + ($carry % 10);
+            $carry = intdiv($carry, 10);
+
+            if ($sum >= 10) {
+                $sum -= 10;
+                ++$carry;
+            }
+
+            $result = chr($sum + 48) . $result;
+        }
+
+        while ($carry > 0) {
+            $digit = $carry % 10;
+            $carry = intdiv($carry, 10);
+            $result = chr($digit + 48) . $result;
+        }
+
+        return ltrim($result, '0') ?: '0';
+    }
+
+    /**
+     * Determines whether a decimal string exceeds PHP's integer range.
+     */
+    private function decimalExceedsPhpInt(string $value): bool
+    {
+        $phpMax   = (string) PHP_INT_MAX;
+        $length   = strlen($value);
+        $maxLength = strlen($phpMax);
+
+        if ($length !== $maxLength) {
+            return $length > $maxLength;
+        }
+
+        return $value > $phpMax;
+    }
+
+    /**
+     * Converts a decimal string into an integer while validating its range.
+     *
+     * @param string $value   Decimal representation to convert.
+     * @param string $context Human-readable context for error messages.
+     */
+    private function decimalStringToInt(string $value, string $context): int
+    {
+        if (!ctype_digit($value)) {
+            throw new ParseError(sprintf('%s must contain a non-negative decimal value.', $context));
+        }
+
+        $normalised = ltrim($value, '0');
+        if ($normalised === '') {
+            return 0;
+        }
+
+        if ($this->decimalExceedsPhpInt($normalised)) {
+            throw new ParseError(sprintf('%s exceeds supported integer range.', $context));
+        }
+
+        $result = 0;
+        $length = strlen($normalised);
+
+        for ($i = 0; $i < $length; ++$i) {
+            $digit  = ord($normalised[$i]) - 48;
+            $result = ($result * 10) + $digit;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Checks whether the provided decimal string represents zero.
+     */
+    private function isDecimalZero(string $value): bool
+    {
+        return ctype_digit($value) && ltrim($value, '0') === '';
+    }
+
+    /**
      * Extracts the raw bytes addressed by a directory entry.
      *
      * @param int        $type          TIFF field type code.
@@ -932,7 +1136,7 @@ final class TiffExifReader
     {
         $unitSize        = $this->bytesPerComponent($type);
         $dataSize        = $unitSize * $count;
-        $inlineThreshold = $this->bigTiff ? 8 : 4;
+        $inlineThreshold = $this->bigTiff ? $this->bigTiffOffsetSize : 4;
 
         if ($dataSize <= $inlineThreshold) {
             if (is_string($valueOrOffset)) {
@@ -1358,6 +1562,10 @@ final class TiffExifReader
             return $this->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
         }
 
+        if (is_string($value)) {
+            return $this->pointerOffsetFromString($value, $entry->tag);
+        }
+
         if (is_float($value)) {
             return $this->pointerOffsetFromFloat($value, $entry->tag);
         }
@@ -1370,6 +1578,10 @@ final class TiffExifReader
 
             if ($first instanceof UInt64) {
                 return $this->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
+            }
+
+            if (is_string($first)) {
+                return $this->pointerOffsetFromString($first, $entry->tag);
             }
 
             if (is_float($first)) {
@@ -1395,6 +1607,21 @@ final class TiffExifReader
         }
 
         return $this->ensureOffset($offset, sprintf('IFD pointer tag 0x%04X', $tag));
+    }
+
+    /**
+     * Normalises a string offset representation to a validated integer.
+     *
+     * @param string $value Decimal offset string.
+     * @param int    $tag   Tag identifier emitting the offset.
+     */
+    private function pointerOffsetFromString(string $value, int $tag): int
+    {
+        if (!ctype_digit($value)) {
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $tag));
+        }
+
+        return $this->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $tag));
     }
 
     /**
