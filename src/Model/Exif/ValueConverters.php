@@ -23,6 +23,7 @@ use function ctype_digit;
 use function explode;
 use function floor;
 use function fmod;
+use function iconv;
 use function implode;
 use function intdiv;
 use function is_array;
@@ -33,6 +34,7 @@ use function is_string;
 use function ltrim;
 use function ord;
 use function preg_match;
+use function preg_replace;
 use function round;
 use function rtrim;
 use function sprintf;
@@ -973,24 +975,71 @@ final readonly class ValueConverters
             return null;
         }
 
-        $data     = $value;
+        $payload  = $value;
+        $encoding = null;
+
         $prefixes = [
-            "ASCII\0\0\0",
-            "UNICODE\0",
-            "JIS\0\0\0\0\0",
+            "ASCII\0\0\0"    => 'ASCII',
+            "UNICODE\0"        => 'UNICODE',
+            "JIS\0\0\0\0\0" => 'JIS',
         ];
 
-        foreach ($prefixes as $prefix) {
-            if (str_starts_with($data, $prefix)) {
-                $data = substr($data, strlen($prefix));
+        foreach ($prefixes as $prefix => $label) {
+            if (str_starts_with($payload, $prefix)) {
+                $payload  = substr($payload, strlen($prefix));
+                $encoding = $label;
                 break;
             }
         }
 
-        $data = str_replace("\0", '', $data);
-        $data = trim($data);
+        return match ($encoding) {
+            'UNICODE' => self::decodeUndefinedUnicode($payload),
+            'JIS'     => self::decodeUndefinedJis($payload),
+            default   => self::sanitizeString($payload),
+        };
+    }
 
-        return $data === '' ? null : $data;
+    /**
+     * Decodes a UTF-16 encoded undefined GPS string into UTF-8.
+     */
+    private static function decodeUndefinedUnicode(string $payload): ?string
+    {
+        if ($payload === '') {
+            return null;
+        }
+
+        $converted = @iconv('UTF-16LE', 'UTF-8', $payload);
+        if ($converted === false) {
+            $converted = @iconv('UTF-16BE', 'UTF-8', $payload);
+        }
+
+        if ($converted !== false) {
+            return self::sanitizeString($converted);
+        }
+
+        $stripped = preg_replace('/\x00/u', '', $payload);
+        if ($stripped === null) {
+            return null;
+        }
+
+        return self::sanitizeString($stripped);
+    }
+
+    /**
+     * Decodes a Shift-JIS encoded undefined GPS string into UTF-8.
+     */
+    private static function decodeUndefinedJis(string $payload): ?string
+    {
+        if ($payload === '') {
+            return null;
+        }
+
+        $converted = @iconv('SJIS', 'UTF-8', $payload);
+        if ($converted !== false) {
+            return self::sanitizeString($converted);
+        }
+
+        return self::sanitizeString($payload);
     }
 
     /**
