@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use function iconv;
@@ -148,6 +149,45 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(40.441666, $gps['lat'], 0.000001);
         self::assertEqualsWithDelta(79.983333, $gps['lon'], 0.000001);
         self::assertEquals(123.0, $gps['alt']);
+    }
+
+    #[Test]
+    public function exposesCompositeImageMetadata(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COMPOSITE_IMAGE                          => new IfdEntry(
+                ExifTag::COMPOSITE_IMAGE,
+                3,
+                1,
+                CompositeImage::GENERAL_COMPOSITE->value,
+            ),
+            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE   => new IfdEntry(
+                ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE,
+                3,
+                2,
+                new ExifNumericList([5, 2]),
+            ),
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
+                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
+                5,
+                3,
+                [[1, 30], [1, 15], [1, 8]],
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $doc->compositeImage());
+        self::assertSame([5, 2], $doc->sourceImageNumberOfCompositeImage());
+
+        $exposureTimes = $doc->sourceExposureTimesOfCompositeImage();
+        self::assertNotNull($exposureTimes);
+        self::assertCount(3, $exposureTimes);
+        self::assertEqualsWithDelta(0.0333333333, $exposureTimes[0], 1e-10);
+        self::assertEqualsWithDelta(0.0666666666, $exposureTimes[1], 1e-10);
+        self::assertEqualsWithDelta(0.125, $exposureTimes[2], 1e-10);
     }
 
     #[Test]
