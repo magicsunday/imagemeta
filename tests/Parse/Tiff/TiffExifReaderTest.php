@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -329,6 +330,49 @@ final class TiffExifReaderTest extends TestCase
         self::assertNotNull($secondSubIfdEntry);
         self::assertSame(16, $secondSubIfdEntry->value);
     }
+
+    /**
+     * Ensures SubIFDs pointers stored using the LONG8 field type are followed correctly.
+     */
+    #[Test]
+    public function decodesLong8SubIfdPointers(): void
+    {
+        [$blob, $firstSubIfdOffset, $secondSubIfdOffset] = $this->buildBigTiffLong8SubIfdBlob();
+
+        $reader   = new TiffExifReader();
+        $document = $reader->parseFromBlob($blob);
+
+        $subIfdsEntry = $document->ifd0->get(ExifTag::SUB_IFDS);
+        self::assertNotNull($subIfdsEntry);
+        self::assertInstanceOf(ExifNumericList::class, $subIfdsEntry->value);
+        self::assertSame([$firstSubIfdOffset, $secondSubIfdOffset], $subIfdsEntry->value->values);
+
+        $subIfds = $document->subIfds();
+
+        self::assertCount(2, $subIfds);
+        self::assertArrayHasKey($firstSubIfdOffset, $subIfds);
+        self::assertArrayHasKey($secondSubIfdOffset, $subIfds);
+
+        $firstSubIfdEntry = $subIfds[$firstSubIfdOffset]->get(ExifTag::ORIENTATION);
+        self::assertNotNull($firstSubIfdEntry);
+        self::assertSame(1, $firstSubIfdEntry->value);
+
+        $secondSubIfdEntry = $subIfds[$secondSubIfdOffset]->get(ExifTag::BITS_PER_SAMPLE);
+        self::assertNotNull($secondSubIfdEntry);
+        self::assertSame(16, $secondSubIfdEntry->value);
+
+        $refClass      = new ReflectionClass($reader);
+        $pointerMethod = $refClass->getMethod('pointerOffset');
+        $pointerMethod->setAccessible(true);
+
+        $long8Entry = new IfdEntry(ExifTag::SUB_IFDS, 16, 1, self::BIG_TIFF_LONG8_JPEG_OFFSET);
+
+        self::assertSame(
+            self::BIG_TIFF_LONG8_JPEG_OFFSET,
+            $pointerMethod->invoke($reader, $long8Entry),
+        );
+    }
+
 
 
     /**
@@ -1048,6 +1092,65 @@ final class TiffExifReaderTest extends TestCase
         $blob .= pack('v', count($subIfdEntries)) . implode('', $subIfdEntries) . pack('V', 0);
 
         return [$blob, $subIfdOffset];
+    }
+
+
+    /**
+     * Builds a BigTIFF blob whose SubIFDs tag stores offsets using the LONG8 type.
+     *
+     * @return array{0: string, 1: int, 2: int}
+     */
+    private function buildBigTiffLong8SubIfdBlob(): array
+    {
+        $entryCount         = 1;
+        $pointerCount       = 2;
+        $pointerArrayOffset = 160;
+        $firstSubIfdOffset  = 192;
+        $secondSubIfdOffset = 256;
+
+        $header = 'II'
+            . pack('v', 0x002B)
+            . pack('v', 8)
+            . pack('v', 0)
+            . pack('V', 16)
+            . pack('V', 0);
+
+        $ifd0Entries = [
+            self::packBigTiffEntry(ExifTag::SUB_IFDS, 16, $pointerCount, $pointerArrayOffset),
+        ];
+
+        $ifd0 = pack('V', $entryCount)
+            . pack('V', 0)
+            . implode('', $ifd0Entries)
+            . pack('V', 0)
+            . pack('V', 0);
+
+        $blob = $header . $ifd0;
+        $blob = str_pad($blob, $pointerArrayOffset, "\0", STR_PAD_RIGHT);
+        $blob .= self::packUInt64LE($firstSubIfdOffset);
+        $blob .= self::packUInt64LE($secondSubIfdOffset);
+
+        $blob = str_pad($blob, $firstSubIfdOffset, "\0", STR_PAD_RIGHT);
+        $firstSubIfdEntries = [
+            self::packBigTiffEntry(ExifTag::ORIENTATION, 3, 1, 1),
+        ];
+        $blob .= pack('V', count($firstSubIfdEntries))
+            . pack('V', 0)
+            . implode('', $firstSubIfdEntries)
+            . pack('V', 0)
+            . pack('V', 0);
+
+        $blob = str_pad($blob, $secondSubIfdOffset, "\0", STR_PAD_RIGHT);
+        $secondSubIfdEntries = [
+            self::packBigTiffEntry(ExifTag::BITS_PER_SAMPLE, 3, 1, 16),
+        ];
+        $blob .= pack('V', count($secondSubIfdEntries))
+            . pack('V', 0)
+            . implode('', $secondSubIfdEntries)
+            . pack('V', 0)
+            . pack('V', 0);
+
+        return [$blob, $firstSubIfdOffset, $secondSubIfdOffset];
     }
 
     /**

@@ -30,6 +30,7 @@ use function chr;
 use function function_exists;
 use function iconv;
 use function in_array;
+use function is_finite;
 use function is_float;
 use function is_int;
 use function is_string;
@@ -309,6 +310,7 @@ final class TiffExifReader
             $entry->type !== self::TYPE_IFD
             && $entry->type !== self::TYPE_IFD8
             && $entry->type !== self::TYPE_LONG
+            && $entry->type !== self::TYPE_LONG8
         ) {
             return;
         }
@@ -1047,25 +1049,35 @@ final class TiffExifReader
     {
         $value = $entry->value;
 
+        if ($value instanceof ExifNumericList) {
+            $value = $value->values[0] ?? null;
+        }
+
         if (is_int($value)) {
-            return $value;
+            return $this->assertNonNegativeOffset($value, $entry->tag);
         }
 
         if (is_float($value)) {
-            return (int) $value;
-        }
-
-        if ($value instanceof ExifNumericList) {
-            $first = $value->values[0] ?? null;
-            if (is_int($first)) {
-                return $first;
+            $intValue = (int) $value;
+            if (!is_finite($value) || (float) $intValue !== $value) {
+                throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain an integer offset.', $entry->tag));
             }
 
-            if (is_float($first)) {
-                return (int) $first;
-            }
+            return $this->assertNonNegativeOffset($intValue, $entry->tag);
         }
 
         throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $entry->tag));
+    }
+
+    /**
+     * Ensures offsets do not underflow when normalised to PHP integers.
+     */
+    private function assertNonNegativeOffset(int $offset, int $tag): int
+    {
+        if ($offset < 0) {
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X overflowed the supported offset range.', $tag));
+        }
+
+        return $offset;
     }
 }
