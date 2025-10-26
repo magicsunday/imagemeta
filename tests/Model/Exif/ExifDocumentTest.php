@@ -148,6 +148,64 @@ final class ExifDocumentTest extends TestCase
         self::assertEquals(123.0, $gps['alt']);
     }
 
+    #[Test]
+    public function returnsCfaRepeatPatternDimensions(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::CFA_REPEAT_PATTERN_DIM => new IfdEntry(
+                ExifTag::CFA_REPEAT_PATTERN_DIM,
+                3,
+                2,
+                new ExifNumericList([4, 2]),
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(
+            ['width' => 4, 'height' => 2],
+            $doc->cfaRepeatPatternDim(),
+        );
+    }
+
+    #[Test]
+    public function returnsNullWhenCfaRepeatPatternDimensionsMissing(): void
+    {
+        $doc = new ExifDocument(new Ifd([]), new Ifd([]), null, null, null);
+
+        self::assertNull($doc->cfaRepeatPatternDim());
+    }
+
+    #[Test]
+    public function returnsNullWhenCfaRepeatPatternDimensionsInvalid(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $invalidZero = new Ifd([
+            ExifTag::CFA_REPEAT_PATTERN_DIM => new IfdEntry(
+                ExifTag::CFA_REPEAT_PATTERN_DIM,
+                3,
+                2,
+                new ExifNumericList([4, 0]),
+            ),
+        ]);
+
+        self::assertNull((new ExifDocument($ifd0, $invalidZero, null, null, null))->cfaRepeatPatternDim());
+
+        $invalidCount = new Ifd([
+            ExifTag::CFA_REPEAT_PATTERN_DIM => new IfdEntry(
+                ExifTag::CFA_REPEAT_PATTERN_DIM,
+                3,
+                1,
+                new ExifNumericList([4]),
+            ),
+        ]);
+
+        self::assertNull((new ExifDocument($ifd0, $invalidCount, null, null, null))->cfaRepeatPatternDim());
+    }
+
     /**
      * Falls back to DateTimeDigitized when DateTimeOriginal is missing.
      */

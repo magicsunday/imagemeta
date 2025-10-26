@@ -458,8 +458,8 @@ final class StructuredMetadataBuilder
 
         $sensor = new Sensor(
             pixelPitchUm: null,
-            cfaWidth: null,
-            cfaHeight: null,
+            cfaWidth: $exifResolver->cfaRepeatPatternWidth(),
+            cfaHeight: $exifResolver->cfaRepeatPatternHeight(),
             sensorType: null,
             ibis: null,
             cfaPattern: $exifResolver->cfaPattern(),

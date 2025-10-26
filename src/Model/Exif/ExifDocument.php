@@ -950,6 +950,31 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the CFA repeat pattern dimensions when valid.
+     *
+     * @return array{width:int, height:int}|null
+     */
+    public function cfaRepeatPatternDim(): ?array
+    {
+        $values = $this->numericList($this->exifIfd, ExifTag::CFA_REPEAT_PATTERN_DIM);
+
+        if ($values === null || count($values) !== 2) {
+            return null;
+        }
+
+        [$width, $height] = $values;
+
+        if (!is_int($width) || !is_int($height) || $width <= 0 || $height <= 0) {
+            return null;
+        }
+
+        return [
+            'width'  => $width,
+            'height' => $height,
+        ];
+    }
+
+    /**
      * Returns the CFA pattern definition as a list of component identifiers.
      *
      * @return list<int>|null

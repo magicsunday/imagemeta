@@ -176,6 +176,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::FILE_SOURCE                 => new IfdEntry(ExifTag::FILE_SOURCE, 7, 1, chr(FileSource::DIGITAL_CAMERA->value)),
             ExifTag::SENSING_METHOD              => new IfdEntry(ExifTag::SENSING_METHOD, 3, 1, SensingMethod::ONE_CHIP_COLOR_AREA->value),
             ExifTag::GAMMA                       => new IfdEntry(ExifTag::GAMMA, 5, 1, [[22, 10]]),
+            ExifTag::CFA_REPEAT_PATTERN_DIM      => new IfdEntry(ExifTag::CFA_REPEAT_PATTERN_DIM, 3, 2, new ExifNumericList([8, 6])),
             ExifTag::CFA_PATTERN                 => new IfdEntry(ExifTag::CFA_PATTERN, 7, 4, "\x02\x01\x01\x00"),
             ExifTag::CUSTOM_RENDERED             => new IfdEntry(ExifTag::CUSTOM_RENDERED, 3, 1, 1),
             ExifTag::DEVICE_SETTING_DESCRIPTION  => new IfdEntry(ExifTag::DEVICE_SETTING_DESCRIPTION, 7, 12, 'Profile:Portrait'),
@@ -333,6 +334,8 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(0.85, $sensorSfr['values'][1][0] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(0.7, $sensorSfr['values'][1][1] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(0.55, $sensorSfr['values'][1][2] ?? 0.0, 0.0001);
+        self::assertSame(8, $structured->sensor->cfaWidth);
+        self::assertSame(6, $structured->sensor->cfaHeight);
         self::assertSame([2, 1, 1, 0], $structured->sensor->cfaPattern);
         self::assertEqualsWithDelta(43.21, $structured->sensor->focalPlaneXResolution, 0.001);
         self::assertEqualsWithDelta(43.0, $structured->sensor->focalPlaneYResolution, 0.001);
@@ -372,6 +375,28 @@ final class StructuredMetadataBuilderTest extends TestCase
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
         self::assertSame(Orientation::UNKNOWN, $structured->image->orientation);
+    }
+
+    #[Test]
+    public function leavesSensorCfaDimensionsNullWhenInvalid(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::CFA_REPEAT_PATTERN_DIM => new IfdEntry(
+                ExifTag::CFA_REPEAT_PATTERN_DIM,
+                3,
+                1,
+                new ExifNumericList([5]),
+            ),
+        ]);
+
+        $metadata = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNull($structured->sensor->cfaWidth);
+        self::assertNull($structured->sensor->cfaHeight);
     }
 
     #[Test]
