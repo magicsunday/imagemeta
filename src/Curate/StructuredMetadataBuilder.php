@@ -1469,8 +1469,15 @@ final class StructuredMetadataBuilder
 
         if ($colorSpace === ColorSpace::UNCALIBRATED) {
             $interopIndex = $resolver->string('InteropIndex');
-            if ($interopIndex !== null && strtoupper($interopIndex) === 'R03') {
-                return ColorSpace::ADOBE_RGB;
+            if ($interopIndex !== null) {
+                $normalizedInteropIndex = strtoupper($interopIndex);
+                if ($normalizedInteropIndex === 'R03') {
+                    return ColorSpace::ADOBE_RGB;
+                }
+
+                if ($normalizedInteropIndex === 'R98') {
+                    return ColorSpace::SRGB;
+                }
             }
         }
 
