@@ -1298,15 +1298,35 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
-     * Verifies the ISO fallback uses the Standard Output Sensitivity tag when available.
+     * @return array<string, array{int, int}>
      */
-    #[Test]
-    public function usesStandardOutputSensitivityFallback(): void
+    public static function structuredIsoSensitivityTypeProvider(): array
     {
-        $ifd0    = new Ifd([]);
+        return [
+            'standard-output'          => [1, 640],
+            'recommended-exposure'     => [2, 320],
+            'iso-speed'                => [3, 160],
+            'standard-over-recommended' => [4, 640],
+            'standard-over-iso-speed'  => [5, 640],
+            'recommended-over-iso'     => [6, 320],
+            'all-types'                => [7, 640],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('structuredIsoSensitivityTypeProvider')]
+    public function usesSensitivityTypePriorities(int $sensitivityType, int $expectedIso): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 80),
+        ]);
+
         $exifIfd = new Ifd([
-            ExifTag::SENSITIVITY_TYPE            => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 1),
+            ExifTag::SENSITIVITY_TYPE            => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, $sensitivityType),
+            ExifTag::ISO_SPEED                   => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 160),
             ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 640),
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX  => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 1280),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -1314,7 +1334,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame(640, $structured->exposure->iso);
+        self::assertSame($expectedIso, $structured->exposure->iso);
     }
 
     /**

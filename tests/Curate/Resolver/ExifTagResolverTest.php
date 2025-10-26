@@ -27,6 +27,7 @@ use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
@@ -476,4 +477,43 @@ final class ExifTagResolverTest extends TestCase
         self::assertFalse($unsafeResolver->makerNoteSafety());
         self::assertNull($missingResolver->makerNoteSafety());
     }
+    /**
+     * @return array<string, array{int, int}>
+     */
+    public static function isoResolvesAccordingToSensitivityTypeProvider(): array
+    {
+        return [
+            'standard-output'          => [1, 640],
+            'recommended-exposure'     => [2, 320],
+            'iso-speed'                => [3, 160],
+            'standard-over-recommended' => [4, 640],
+            'standard-over-iso-speed'  => [5, 640],
+            'recommended-over-iso'     => [6, 320],
+            'all-types'                => [7, 640],
+        ];
+    }
+
+    #[Test]
+    #[DataProvider('isoResolvesAccordingToSensitivityTypeProvider')]
+    public function resolvesIsoUsingSensitivityType(int $sensitivityType, int $expectedIso): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 80),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::SENSITIVITY_TYPE            => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, $sensitivityType),
+            ExifTag::ISO_SPEED                   => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 160),
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 640),
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX  => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 1280),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame($expectedIso, $resolver->iso());
+    }
+
+
 }

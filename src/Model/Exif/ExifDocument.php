@@ -757,6 +757,18 @@ final readonly class ExifDocument
      */
     public function iso(): ?int
     {
+        $sensitivityType = $this->int($this->exifIfd, ExifTag::SENSITIVITY_TYPE);
+        if ($sensitivityType !== null) {
+            foreach ($this->sensitivityTagPriority($sensitivityType) as $tag) {
+                $value = $this->int($this->exifIfd, $tag);
+                if ($value !== null) {
+                    return $value;
+                }
+            }
+
+            return null;
+        }
+
         $iso = $this->int($this->exifIfd, ExifTag::ISO_SPEED);
         if ($iso !== null) {
             return $iso;
@@ -778,6 +790,25 @@ final readonly class ExifDocument
         }
 
         return $this->int($this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
+    }
+
+    /**
+     * Maps the EXIF sensitivity type enumeration to ISO-related tag priorities.
+     *
+     * @return list<int>
+     */
+    private function sensitivityTagPriority(int $type): array
+    {
+        return match ($type) {
+            1       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            2       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            3       => [ExifTag::ISO_SPEED],
+            4       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            5       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
+            6       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            7       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            default => [],
+        };
     }
 
     /**
