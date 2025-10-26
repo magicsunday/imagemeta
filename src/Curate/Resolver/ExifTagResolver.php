@@ -655,6 +655,26 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the width component of the CFA repeat pattern dimensions.
+     */
+    public function cfaRepeatPatternWidth(): ?int
+    {
+        $dimensions = $this->document?->cfaRepeatPatternDim();
+
+        return $dimensions['width'] ?? null;
+    }
+
+    /**
+     * Returns the height component of the CFA repeat pattern dimensions.
+     */
+    public function cfaRepeatPatternHeight(): ?int
+    {
+        $dimensions = $this->document?->cfaRepeatPatternDim();
+
+        return $dimensions['height'] ?? null;
+    }
+
+    /**
      * Returns the image description field.
      */
     public function imageDescription(): ?string

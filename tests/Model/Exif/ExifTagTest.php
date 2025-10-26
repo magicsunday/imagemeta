@@ -113,6 +113,7 @@ final class ExifTagTest extends TestCase
             'INTEROPERABILITY_IFD_POINTER' => 0xA005,
 
             // EXIF sub IFD
+            'CFA_REPEAT_PATTERN_DIM'                 => 0x828D,
             'BATTERY_LEVEL'                          => 0x828F,
             'EXPOSURE_TIME'                            => 0x829A,
             'F_NUMBER'                                 => 0x829D,
