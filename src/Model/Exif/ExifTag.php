@@ -92,6 +92,14 @@ final readonly class ExifTag
 
     public const int STRIP_BYTE_COUNTS = 0x0117;
 
+    public const int TILE_WIDTH = 0x0142;
+
+    public const int TILE_LENGTH = 0x0143;
+
+    public const int TILE_OFFSETS = 0x0144;
+
+    public const int TILE_BYTE_COUNTS = 0x0145;
+
     public const int X_RESOLUTION = 0x011A;
 
     public const int Y_RESOLUTION = 0x011B;

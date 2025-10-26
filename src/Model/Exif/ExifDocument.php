@@ -538,6 +538,50 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the tile width defined for the primary or thumbnail image data.
+     */
+    public function tileWidth(): ?int
+    {
+        $width = $this->int($this->ifd0, ExifTag::TILE_WIDTH);
+
+        return $width ?? $this->int($this->ifd1, ExifTag::TILE_WIDTH);
+    }
+
+    /**
+     * Returns the tile length defined for the primary or thumbnail image data.
+     */
+    public function tileLength(): ?int
+    {
+        $length = $this->int($this->ifd0, ExifTag::TILE_LENGTH);
+
+        return $length ?? $this->int($this->ifd1, ExifTag::TILE_LENGTH);
+    }
+
+    /**
+     * Returns the tile offsets defined for the primary or thumbnail image data.
+     *
+     * @return list<int>|null
+     */
+    public function tileOffsets(): ?array
+    {
+        $offsets = $this->numericList($this->ifd0, ExifTag::TILE_OFFSETS);
+
+        return $offsets ?? $this->numericList($this->ifd1, ExifTag::TILE_OFFSETS);
+    }
+
+    /**
+     * Returns the tile byte counts defined for the primary or thumbnail image data.
+     *
+     * @return list<int>|null
+     */
+    public function tileByteCounts(): ?array
+    {
+        $counts = $this->numericList($this->ifd0, ExifTag::TILE_BYTE_COUNTS);
+
+        return $counts ?? $this->numericList($this->ifd1, ExifTag::TILE_BYTE_COUNTS);
+    }
+
+    /**
      * Returns the transfer function lookup table when available.
      *
      * @return list<int>|null

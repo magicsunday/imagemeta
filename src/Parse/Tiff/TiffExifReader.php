@@ -98,6 +98,18 @@ final class TiffExifReader
         ExifTag::XP_SUBJECT,
     ];
 
+    /**
+     * Tag identifiers that store counted image data such as strips or tiles.
+     *
+     * @var list<int>
+     */
+    private const array COUNTED_IMAGE_DATA_TAGS = [
+        ExifTag::STRIP_OFFSETS,
+        ExifTag::STRIP_BYTE_COUNTS,
+        ExifTag::TILE_OFFSETS,
+        ExifTag::TILE_BYTE_COUNTS,
+    ];
+
     private const string UNICODE_REPLACEMENT = "\u{FFFD}";
 
     private MemoryBuffer $buf;
@@ -292,6 +304,10 @@ final class TiffExifReader
             $this->makerNoteRaw = $rawBytes;
         }
 
+        if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
+            $value = $this->normaliseCountedImageDataField($type, $cnt, $rawBytes, $value);
+        }
+
         $entry = new IfdEntry($tag, $type, $cnt, $value);
 
         if ($tag === ExifTag::SUB_IFDS) {
@@ -299,6 +315,114 @@ final class TiffExifReader
         }
 
         return [$tag => $entry];
+    }
+
+    /**
+     * Normalises numeric list fields that describe strip or tile data.
+     *
+     * @param int    $type     TIFF field type code.
+     * @param int    $count    Number of values represented.
+     * @param string $rawBytes Raw value bytes read for the entry.
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList $value
+     *
+     * @return int|ExifNumericList
+     */
+    private function normaliseCountedImageDataField(
+        int $type,
+        int $count,
+        string $rawBytes,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList $value,
+    ): int|ExifNumericList {
+        if ($count <= 0) {
+            return new ExifNumericList([]);
+        }
+
+        if ($count === 1) {
+            if ($value instanceof ExifNumericList) {
+                $first = $value->values[0] ?? null;
+
+                if (is_int($first)) {
+                    return $first;
+                }
+
+                if (is_float($first)) {
+                    return (int) $first;
+                }
+            }
+
+            if (is_int($value)) {
+                return $value;
+            }
+
+            if (is_float($value)) {
+                return (int) $value;
+            }
+
+            $components = $this->decodeCountedComponents($type, $rawBytes, $count);
+
+            return $components[0] ?? 0;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $normalised = [];
+
+            foreach ($value->values as $component) {
+                if (is_int($component)) {
+                    $normalised[] = $component;
+                    continue;
+                }
+
+                if (is_float($component)) {
+                    $normalised[] = (int) $component;
+                }
+            }
+
+            return new ExifNumericList($normalised);
+        }
+
+        $components = $this->decodeCountedComponents($type, $rawBytes, $count);
+
+        return new ExifNumericList($components);
+    }
+
+    /**
+     * Decodes numeric components for counted strip/tile entries into integers.
+     *
+     * @param int    $type     TIFF field type code.
+     * @param string $rawBytes Raw bytes representing the values.
+     * @param int    $count    Number of values represented.
+     *
+     * @return list<int>
+     */
+    private function decodeCountedComponents(int $type, string $rawBytes, int $count): array
+    {
+        $componentSize   = $this->bytesPerComponent($type);
+        $expectedLength  = $componentSize * $count;
+        $availableLength = strlen($rawBytes);
+
+        if ($availableLength < $expectedLength) {
+            throw new ParseError('Truncated numeric components for TIFF entry.');
+        }
+
+        $components = [];
+
+        for ($i = 0; $i < $count; ++$i) {
+            $chunk = substr($rawBytes, $i * $componentSize, $componentSize);
+
+            $components[] = match ($type) {
+                self::TYPE_SHORT => $this->unpackU16($chunk),
+                self::TYPE_SSHORT => $this->unpackS16($chunk),
+                self::TYPE_LONG,
+                self::TYPE_IFD => $this->unpackU32($chunk),
+                self::TYPE_SLONG => $this->unpackS32($chunk),
+                self::TYPE_LONG8,
+                self::TYPE_IFD8 => $this->unpackU64($chunk),
+                self::TYPE_SLONG8 => $this->unpackS64($chunk),
+                default => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type),
+            };
+        }
+
+        return $components;
     }
 
     /**
