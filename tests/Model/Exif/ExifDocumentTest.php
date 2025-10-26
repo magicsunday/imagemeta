@@ -996,6 +996,7 @@ final class ExifDocumentTest extends TestCase
         $exifIfd = new Ifd([
             ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY, 2, 1, 'FW 3.1.0'),
             ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY, 2, 1, 'RawLab 5.2.1'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'ImageLab 2.3'),
             ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'MetaLab 1.0.0'),
         ]);
 
@@ -1003,6 +1004,7 @@ final class ExifDocumentTest extends TestCase
 
         self::assertSame('FW 3.1.0', $doc->cameraFirmwareVersion());
         self::assertSame('RawLab 5.2.1', $doc->rawDevelopingSoftwareVersion());
+        self::assertSame('ImageLab 2.3', $doc->imageEditingSoftwareVersion());
         self::assertSame('MetaLab 1.0.0', $doc->metadataEditingSoftwareVersion());
     }
 
@@ -1083,6 +1085,7 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('Raw Developer X', $doc->rawDevelopingSoftware());
         self::assertNull($doc->rawDevelopingSoftwareVersion());
         self::assertSame('Image Editor Y', $doc->imageEditingSoftware());
+        self::assertNull($doc->imageEditingSoftwareVersion());
         self::assertSame('Metadata Tool Z', $doc->metadataEditingSoftware());
         self::assertNull($doc->metadataEditingSoftwareVersion());
     }

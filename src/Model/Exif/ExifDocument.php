@@ -1315,6 +1315,21 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the image editing software version string when legacy tags are provided.
+     *
+     * EXIF 3.0 reassigned the identifier to IMAGE_EDITING_SOFTWARE, so only legacy
+     * metadata produces a value.
+     */
+    public function imageEditingSoftwareVersion(): ?string
+    {
+        if ($this->exifThreeOrNewer) {
+            return null;
+        }
+
+        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY);
+    }
+
+    /**
      * Returns the metadata editing software string.
      */
     public function metadataEditingSoftware(): ?string
