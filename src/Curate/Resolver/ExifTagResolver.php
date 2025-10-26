@@ -277,6 +277,14 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the preferred camera serial number across EXIF versions.
+     */
+    public function cameraSerialNumber(): ?string
+    {
+        return $this->document?->cameraSerialNumber();
+    }
+
+    /**
      * Returns the processing software string when recorded.
      */
     public function processingSoftware(): ?string
@@ -345,6 +353,14 @@ final readonly class ExifTagResolver
     public function imageEditingSoftware(): ?string
     {
         return $this->document?->imageEditingSoftware();
+    }
+
+    /**
+     * Returns the image editing software version string when recorded via legacy tags.
+     */
+    public function imageEditingSoftwareVersion(): ?string
+    {
+        return $this->document?->imageEditingSoftwareVersion();
     }
 
     /**
@@ -1794,6 +1810,16 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the camera acceleration vector in m/s².
+     *
+     * @return array{0:float,1:float,2:float}|null
+     */
+    public function accelerationVector(): ?array
+    {
+        return $this->document?->accelerationVector();
+    }
+
+    /**
      * Returns the camera acceleration in m/s².
      */
     public function accelerationMs2(): ?float
@@ -1991,9 +2017,11 @@ final readonly class ExifTagResolver
      */
     public function compositeImage(): ?CompositeImage
     {
-        $value = $this->numericValue($this->document?->exifIfd, ExifTag::COMPOSITE_IMAGE);
+        if ($this->document instanceof ExifDocument) {
+            return $this->document->compositeImage();
+        }
 
-        return $value !== null ? CompositeImage::fromExifValue($value) : null;
+        return null;
     }
 
     /**
@@ -2003,14 +2031,11 @@ final readonly class ExifTagResolver
      */
     public function sourceImageNumberOfCompositeImage(): ?array
     {
-        $values = $this->normalizeNumericList(
-            $this->getValue($this->document?->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE),
-        );
-        if (count($values) !== 2) {
-            return null;
+        if ($this->document instanceof ExifDocument) {
+            return $this->document->sourceImageNumberOfCompositeImage();
         }
 
-        return [(int) $values[0], (int) $values[1]];
+        return null;
     }
 
     /**
@@ -2020,11 +2045,11 @@ final readonly class ExifTagResolver
      */
     public function sourceExposureTimesOfCompositeImage(): ?array
     {
-        $values = $this->normalizeRationalList(
-            $this->getValue($this->document?->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE),
-        );
+        if ($this->document instanceof ExifDocument) {
+            return $this->document->sourceExposureTimesOfCompositeImage();
+        }
 
-        return $values !== [] ? $values : null;
+        return null;
     }
 
     /**

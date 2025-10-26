@@ -30,6 +30,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use function sqrt;
 
 /**
  * @covers \MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver
@@ -334,6 +335,9 @@ final class ExifTagResolverTest extends TestCase
             ExifTag::RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'Raw Studio'),
             ExifTag::IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Pixel Edit'),
             ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Desk'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY      => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW Main'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Pixel Edit'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Meta Desk'),
         ]);
 
         $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -404,6 +408,26 @@ final class ExifTagResolverTest extends TestCase
     }
 
     #[Test]
+    public function exifTwoResolverPrefersLegacySoftwareNamesOverVersionStrings(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION                    => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+            ExifTag::CAMERA_FIRMWARE                 => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 1.2.3'),
+            ExifTag::IMAGE_EDITING_SOFTWARE          => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Edit Suite 4.5'),
+            ExifTag::METADATA_EDITING_SOFTWARE       => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Suite 6.7'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY          => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy Firmware Name'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY   => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Editor Name'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Metadata Name'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        self::assertSame('Legacy Firmware Name', $resolver->cameraFirmware());
+        self::assertSame('Legacy Editor Name', $resolver->imageEditingSoftware());
+        self::assertSame('Legacy Metadata Name', $resolver->metadataEditingSoftware());
+    }
+
+    #[Test]
     public function resolvesDocumentNameTag(): void
     {
         $ifd0 = new Ifd([
@@ -448,6 +472,7 @@ final class ExifTagResolverTest extends TestCase
         $exifIfd = new Ifd([
             ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY, 2, 1, 'FW 3.1.0'),
             ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY, 2, 1, 'RawLab 5.2.1'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'ImageLab 2.3'),
             ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'MetaLab 1.0.0'),
         ]);
 
@@ -455,7 +480,34 @@ final class ExifTagResolverTest extends TestCase
 
         self::assertSame('FW 3.1.0', $resolver->cameraFirmwareVersion());
         self::assertSame('RawLab 5.2.1', $resolver->rawDevelopingSoftwareVersion());
+        self::assertSame('ImageLab 2.3', $resolver->imageEditingSoftwareVersion());
         self::assertSame('MetaLab 1.0.0', $resolver->metadataEditingSoftwareVersion());
+    }
+
+    #[Test]
+    public function cameraSerialNumberPrefersNewTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_SERIAL_NUMBER => new IfdEntry(ExifTag::CAMERA_SERIAL_NUMBER, 2, 1, 'NEW-SERIAL'),
+            ExifTag::BODY_SERIAL_NUMBER   => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'LEGACY-SERIAL'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        self::assertSame('NEW-SERIAL', $resolver->cameraSerialNumber());
+        self::assertSame('LEGACY-SERIAL', $resolver->bodySerialNumber());
+    }
+
+    #[Test]
+    public function cameraSerialNumberFallsBackToLegacyTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'LEGACY-ONLY'),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        self::assertSame('LEGACY-ONLY', $resolver->cameraSerialNumber());
     }
 
     #[Test]
@@ -515,5 +567,30 @@ final class ExifTagResolverTest extends TestCase
         self::assertSame($expectedIso, $resolver->iso());
     }
 
+    #[Test]
+    public function exposesAccelerationVector(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ACCELERATION => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(1, 10),
+                    new ExifRational(2, 10),
+                    new ExifRational(-3, 10),
+                ]),
+            ),
+        ]);
 
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        $vector = $resolver->accelerationVector();
+        self::assertNotNull($vector);
+        self::assertSame([0.1, 0.2, -0.3], $vector);
+
+        $magnitude = $resolver->accelerationMs2();
+        self::assertNotNull($magnitude);
+        self::assertEqualsWithDelta(sqrt(0.14), $magnitude, 0.000001);
+    }
 }

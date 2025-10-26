@@ -195,6 +195,7 @@ final class ExifTagTest extends TestCase
             'IMAGE_UNIQUE_ID'                          => 0xA420,
             'CAMERA_OWNER_NAME'                        => 0xA430,
             'BODY_SERIAL_NUMBER'                       => 0xA431,
+            'CAMERA_SERIAL_NUMBER'                     => 0xC62F,
             'LENS_SPECIFICATION'                       => 0xA432,
             'LENS_MAKE'                                => 0xA433,
             'LENS_MODEL'                               => 0xA434,

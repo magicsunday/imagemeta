@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use function iconv;
@@ -148,6 +149,45 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(40.441666, $gps['lat'], 0.000001);
         self::assertEqualsWithDelta(79.983333, $gps['lon'], 0.000001);
         self::assertEquals(123.0, $gps['alt']);
+    }
+
+    #[Test]
+    public function exposesCompositeImageMetadata(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COMPOSITE_IMAGE                          => new IfdEntry(
+                ExifTag::COMPOSITE_IMAGE,
+                3,
+                1,
+                CompositeImage::GENERAL_COMPOSITE->value,
+            ),
+            ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE   => new IfdEntry(
+                ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE,
+                3,
+                2,
+                new ExifNumericList([5, 2]),
+            ),
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
+                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
+                5,
+                3,
+                [[1, 30], [1, 15], [1, 8]],
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $doc->compositeImage());
+        self::assertSame([5, 2], $doc->sourceImageNumberOfCompositeImage());
+
+        $exposureTimes = $doc->sourceExposureTimesOfCompositeImage();
+        self::assertNotNull($exposureTimes);
+        self::assertCount(3, $exposureTimes);
+        self::assertEqualsWithDelta(0.0333333333, $exposureTimes[0], 1e-10);
+        self::assertEqualsWithDelta(0.0666666666, $exposureTimes[1], 1e-10);
+        self::assertEqualsWithDelta(0.125, $exposureTimes[2], 1e-10);
     }
 
     #[Test]
@@ -709,6 +749,32 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function cameraSerialNumberPrefersNewTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_SERIAL_NUMBER => new IfdEntry(ExifTag::CAMERA_SERIAL_NUMBER, 2, 1, "CAMERA-0001\0"),
+            ExifTag::BODY_SERIAL_NUMBER   => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'BODY-LEGACY'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('CAMERA-0001', $doc->cameraSerialNumber());
+        self::assertSame('BODY-LEGACY', $doc->bodySerialNumber());
+    }
+
+    #[Test]
+    public function cameraSerialNumberFallsBackToBodyTag(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'BODY-ONLY'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('BODY-ONLY', $doc->cameraSerialNumber());
+    }
+
+    #[Test]
     public function makerNoteSafetyMapsNumericValues(): void
     {
         $safeExifIfd = new Ifd([
@@ -804,7 +870,9 @@ final class ExifDocumentTest extends TestCase
             ExifTag::RAW_DEVELOPING_SOFTWARE     => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RawLab'),
             ExifTag::IMAGE_EDITING_SOFTWARE      => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'EditLab'),
             ExifTag::METADATA_EDITING_SOFTWARE   => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'MetaLab'),
-            ExifTag::CAMERA_FIRMWARE_LEGACY      => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW Legacy'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'EditLab'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'MetaLab'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY      => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW 2.0'),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -878,6 +946,33 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('RawLab', $doc->rawDevelopingSoftware());
         self::assertSame('EditLab', $doc->imageEditingSoftware());
         self::assertSame('MetaLab', $doc->metadataEditingSoftware());
+    }
+
+    #[Test]
+    public function exposesAccelerationVectorWhenPresent(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ACCELERATION => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(-3, 1),
+                    new ExifRational(4, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        $vector = $doc->accelerationVector();
+        self::assertNotNull($vector);
+        self::assertSame([-3.0, 4.0, 0.0], $vector);
+
+        $magnitude = $doc->accelerationMs2();
+        self::assertNotNull($magnitude);
+        self::assertEqualsWithDelta(5.0, $magnitude, 0.0001);
     }
 
     /**
@@ -991,11 +1086,32 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function exifTwoPrefersLegacySoftwareNamesOverVersionStrings(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION                    => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
+            ExifTag::CAMERA_FIRMWARE                 => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'FW 1.2.3'),
+            ExifTag::IMAGE_EDITING_SOFTWARE          => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Edit Suite 4.5'),
+            ExifTag::METADATA_EDITING_SOFTWARE       => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Meta Suite 6.7'),
+            ExifTag::CAMERA_FIRMWARE_LEGACY          => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'Legacy Firmware Name'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY   => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Editor Name'),
+            ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Metadata Name'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('Legacy Firmware Name', $doc->cameraFirmware());
+        self::assertSame('Legacy Editor Name', $doc->imageEditingSoftware());
+        self::assertSame('Legacy Metadata Name', $doc->metadataEditingSoftware());
+    }
+
+    #[Test]
     public function textualSoftwareVersionsUseLegacyTags(): void
     {
         $exifIfd = new Ifd([
             ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY, 2, 1, 'FW 3.1.0'),
             ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY, 2, 1, 'RawLab 5.2.1'),
+            ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'ImageLab 2.3'),
             ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'MetaLab 1.0.0'),
         ]);
 
@@ -1003,6 +1119,7 @@ final class ExifDocumentTest extends TestCase
 
         self::assertSame('FW 3.1.0', $doc->cameraFirmwareVersion());
         self::assertSame('RawLab 5.2.1', $doc->rawDevelopingSoftwareVersion());
+        self::assertSame('ImageLab 2.3', $doc->imageEditingSoftwareVersion());
         self::assertSame('MetaLab 1.0.0', $doc->metadataEditingSoftwareVersion());
     }
 
@@ -1083,6 +1200,7 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('Raw Developer X', $doc->rawDevelopingSoftware());
         self::assertNull($doc->rawDevelopingSoftwareVersion());
         self::assertSame('Image Editor Y', $doc->imageEditingSoftware());
+        self::assertNull($doc->imageEditingSoftwareVersion());
         self::assertSame('Metadata Tool Z', $doc->metadataEditingSoftware());
         self::assertNull($doc->metadataEditingSoftwareVersion());
     }

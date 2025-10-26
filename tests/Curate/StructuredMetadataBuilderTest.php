@@ -1634,6 +1634,33 @@ final class StructuredMetadataBuilderTest extends TestCase
     }
 
     /**
+     * Ensures an uncalibrated color space is normalized to sRGB when interoperability index R98 is present.
+     */
+    #[Test]
+    public function normalizesUncalibratedColorSpaceViaInteropR98(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 1024),
+            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 768),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::UNCALIBRATED->value),
+        ]);
+
+        $interopIfd = new Ifd([
+            ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 3, 'R98'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
+    }
+
+    /**
      * Confirms that lenses providing only MAX_APERTURE_VALUE still expose the derived f-number.
      */
     #[Test]

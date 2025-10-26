@@ -18,12 +18,14 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\ValueConverters as CoreValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 
 use function array_key_exists;
 use function array_map;
 use function array_values;
+use function count;
 use function iconv;
 use function is_float;
 use function is_int;
@@ -32,6 +34,7 @@ use function ord;
 use function preg_replace;
 use function preg_split;
 use function rtrim;
+use function sqrt;
 use function str_pad;
 use function str_replace;
 use function strlen;
@@ -198,6 +201,20 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera serial number, preferring the EXIF 3.0 tag when available.
+     */
+    public function cameraSerialNumber(): ?string
+    {
+        $serial = $this->str($this->exifIfd, ExifTag::CAMERA_SERIAL_NUMBER);
+
+        if ($serial !== null) {
+            return $serial;
+        }
+
+        return $this->bodySerialNumber();
+    }
+
+    /**
      * Returns the lens serial number if present.
      *
      * @return string|null
@@ -322,34 +339,20 @@ final readonly class ExifDocument
      */
     public function documentName(): ?string
     {
-        $value = $this->str($this->ifd0, ExifTag::DOCUMENT_NAME);
+        $candidates = [
+            [$this->ifd0, ExifTag::DOCUMENT_NAME],
+            [$this->exifIfd, ExifTag::DOCUMENT_NAME],
+            [$this->ifd0, ExifTag::IMAGE_TITLE],
+            [$this->exifIfd, ExifTag::IMAGE_TITLE],
+            [$this->ifd0, ExifTag::IMAGE_TITLE_LEGACY],
+        ];
 
-        if ($value !== null) {
-            return $value;
-        }
+        foreach ($candidates as [$ifd, $tag]) {
+            $value = $this->str($ifd, $tag);
 
-        $value = $this->str($this->exifIfd, ExifTag::DOCUMENT_NAME);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->str($this->exifIfd, ExifTag::IMAGE_TITLE);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE_LEGACY);
-
-        if ($value !== null) {
-            return $value;
+            if ($value !== null) {
+                return $value;
+            }
         }
 
         return $this->xpSubject();
@@ -1058,6 +1061,48 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the composite image classification when available.
+     */
+    public function compositeImage(): ?CompositeImage
+    {
+        $value = $this->int($this->exifIfd, ExifTag::COMPOSITE_IMAGE);
+
+        return $value !== null ? CompositeImage::fromExifValue($value) : null;
+    }
+
+    /**
+     * Returns the number of source images contributing to the composite result.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    public function sourceImageNumberOfCompositeImage(): ?array
+    {
+        $values = $this->numericList($this->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
+
+        if ($values === null || count($values) !== 2) {
+            return null;
+        }
+
+        return [(int) $values[0], (int) $values[1]];
+    }
+
+    /**
+     * Returns the exposure times for each source image used in the composite.
+     *
+     * @return list<float>|null
+     */
+    public function sourceExposureTimesOfCompositeImage(): ?array
+    {
+        $values = $this->rationalList($this->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
+
+        if ($values === null || $values === []) {
+            return null;
+        }
+
+        return $values;
+    }
+
+    /**
      * Returns the CFA repeat pattern dimensions when valid.
      *
      * @return array{width:int, height:int}|null
@@ -1197,11 +1242,38 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the camera acceleration vector in metres per second squared.
+     *
+     * @return array{0:float,1:float,2:float}|null
+     */
+    public function accelerationVector(): ?array
+    {
+        $value = $this->value($this->exifIfd, ExifTag::ACCELERATION);
+
+        if (!$value instanceof ExifRationalList) {
+            return null;
+        }
+
+        return ValueConverters::srationalTripletToFloatVector($value);
+    }
+
+    /**
      * Returns the camera acceleration in metres per second squared.
      */
     public function accelerationMs2(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::ACCELERATION);
+        $value = $this->value($this->exifIfd, ExifTag::ACCELERATION);
+
+        if ($value instanceof ExifRationalList) {
+            $vector = ValueConverters::srationalTripletToFloatVector($value);
+            if ($vector === null) {
+                return null;
+            }
+
+            return sqrt(($vector[0] ** 2) + ($vector[1] ** 2) + ($vector[2] ** 2));
+        }
+
+        return ValueConverters::rationalToFloat($value);
     }
 
     /**
@@ -1289,9 +1361,15 @@ final readonly class ExifDocument
      */
     public function cameraFirmware(): ?string
     {
-        $value = $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
+        if ($this->exifThreeOrNewer) {
+            $value = $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
 
-        return $value ?? $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_LEGACY);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_LEGACY);
     }
 
     /**
@@ -1340,9 +1418,30 @@ final readonly class ExifDocument
      */
     public function imageEditingSoftware(): ?string
     {
-        $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
+        if ($this->exifThreeOrNewer) {
+            $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
 
-        return $value ?? $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY);
+    }
+
+    /**
+     * Returns the image editing software version string when legacy tags are provided.
+     *
+     * EXIF 3.0 reassigned the identifier to IMAGE_EDITING_SOFTWARE, so only legacy
+     * metadata produces a value.
+     */
+    public function imageEditingSoftwareVersion(): ?string
+    {
+        if ($this->exifThreeOrNewer) {
+            return null;
+        }
+
+        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY);
     }
 
     /**
@@ -1350,9 +1449,15 @@ final readonly class ExifDocument
      */
     public function metadataEditingSoftware(): ?string
     {
-        $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
+        if ($this->exifThreeOrNewer) {
+            $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
 
-        return $value ?? $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
     }
 
     /**
