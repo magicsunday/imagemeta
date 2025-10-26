@@ -184,6 +184,9 @@ final class StructuredMetadataBuilderTest extends TestCase
         $interopIfd = new Ifd([
             ExifTag::INTEROPERABILITY_INDEX   => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, 'R98'),
             ExifTag::INTEROPERABILITY_VERSION => new IfdEntry(ExifTag::INTEROPERABILITY_VERSION, 7, 6, "0100\0 "),
+            ExifTag::RELATED_IMAGE_FILE_FORMAT => new IfdEntry(ExifTag::RELATED_IMAGE_FILE_FORMAT, 2, 4, 'JPEG'),
+            ExifTag::RELATED_IMAGE_WIDTH       => new IfdEntry(ExifTag::RELATED_IMAGE_WIDTH, 4, 1, 4000),
+            ExifTag::RELATED_IMAGE_LENGTH      => new IfdEntry(ExifTag::RELATED_IMAGE_LENGTH, 4, 1, 3000),
         ]);
 
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
@@ -207,7 +210,16 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame(['index' => 'R98', 'version' => '0100'], get_object_vars($structured->interop));
+        self::assertSame(
+            [
+                'index' => 'R98',
+                'version' => '0100',
+                'relatedImageFileFormat' => 'JPEG',
+                'relatedImageWidth' => 4000,
+                'relatedImageLength' => 3000,
+            ],
+            get_object_vars($structured->interop),
+        );
 
         self::assertSame(Compression::JPEG, $structured->tiff->compression);
         self::assertSame(Photometric::YCBCR, $structured->tiff->photometric);
@@ -1031,7 +1043,16 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        self::assertSame(['index' => null, 'version' => null], get_object_vars($structured->interop));
+        self::assertSame(
+            [
+                'index' => null,
+                'version' => null,
+                'relatedImageFileFormat' => null,
+                'relatedImageWidth' => null,
+                'relatedImageLength' => null,
+            ],
+            get_object_vars($structured->interop),
+        );
         self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
         self::assertSame('2.2', $structured->standards->profile);

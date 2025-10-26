@@ -435,6 +435,12 @@ final readonly class ExifTag
 
     public const int INTEROPERABILITY_VERSION = 0x0002;
 
+    public const int RELATED_IMAGE_FILE_FORMAT = 0x1000;
+
+    public const int RELATED_IMAGE_WIDTH = 0x1001;
+
+    public const int RELATED_IMAGE_LENGTH = 0x1002;
+
     /**
      * Prevent instantiation of this constants-only utility class.
      */

@@ -473,6 +473,30 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the related image file format declared in the interoperability IFD.
+     */
+    public function relatedImageFileFormat(): ?string
+    {
+        return $this->str($this->interopIfd, ExifTag::RELATED_IMAGE_FILE_FORMAT);
+    }
+
+    /**
+     * Returns the related image width declared in the interoperability IFD.
+     */
+    public function relatedImageWidth(): ?int
+    {
+        return $this->int($this->interopIfd, ExifTag::RELATED_IMAGE_WIDTH);
+    }
+
+    /**
+     * Returns the related image length declared in the interoperability IFD.
+     */
+    public function relatedImageLength(): ?int
+    {
+        return $this->int($this->interopIfd, ExifTag::RELATED_IMAGE_LENGTH);
+    }
+
+    /**
      * Returns the interlace flag when recorded.
      */
     public function interlace(): ?int
