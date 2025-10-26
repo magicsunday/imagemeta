@@ -27,6 +27,8 @@ use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use function iconv;
 use function pack;
+use function strlen;
+use function substr;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -193,6 +195,75 @@ final class ExifDocumentTest extends TestCase
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
         self::assertSame('2021-02-03T04:05:06.789+09:00', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    #[Test]
+    public function decodesPrintImageMatchingPayload(): void
+    {
+        $payload = $this->buildPrintImPayload();
+
+        $ifd0 = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::PRINT_IMAGE_MATCHING => new IfdEntry(
+                ExifTag::PRINT_IMAGE_MATCHING,
+                7,
+                strlen($payload),
+                $payload,
+            ),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $expected = [
+            'header'     => 'PrintIM',
+            'version'    => '0400',
+            'parameters' => [
+                ['id' => 0x0100, 'value' => 0x0000002A],
+                ['id' => 0x0101, 'value' => 0x00000064],
+            ],
+        ];
+
+        self::assertSame($expected, $document->printImageMatching());
+    }
+
+    #[Test]
+    public function ignoresMalformedPrintImageMatchingPayload(): void
+    {
+        $payload   = $this->buildPrintImPayload();
+        $truncated = substr($payload, 0, -1);
+
+        $ifd0 = new Ifd([]);
+        $exifIfd = new Ifd([
+            ExifTag::PRINT_IMAGE_MATCHING => new IfdEntry(
+                ExifTag::PRINT_IMAGE_MATCHING,
+                7,
+                strlen($truncated),
+                $truncated,
+            ),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertNull($document->printImageMatching());
+    }
+
+    /**
+     * Builds a synthetic PrintIM payload for testing.
+     */
+    private function buildPrintImPayload(): string
+    {
+        $parameters = [
+            [0x0100, 0x0000002A],
+            [0x0101, 0x00000064],
+        ];
+
+        $payload = "PrintIM\0" . '0400' . pack('n', count($parameters));
+
+        foreach ($parameters as [$id, $value]) {
+            $payload .= pack('nN', $id, $value);
+        }
+
+        return $payload;
     }
 
     #[Test]

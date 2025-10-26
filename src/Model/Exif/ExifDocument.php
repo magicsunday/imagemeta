@@ -942,6 +942,18 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the Epson Print Image Matching parameter block when available.
+     *
+     * @return array{header:string, version:string, parameters:list<array{id:int, value:int}>}|null
+     */
+    public function printImageMatching(): ?array
+    {
+        $payload = $this->rawString($this->exifIfd, ExifTag::PRINT_IMAGE_MATCHING);
+
+        return ValueConverters::decodePrintImageMatching($payload);
+    }
+
+    /**
      * Returns the noise measurement recorded by the camera.
      */
     public function noise(): ?float

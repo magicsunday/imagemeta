@@ -583,6 +583,16 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the Epson Print Image Matching parameter block.
+     *
+     * @return array{header:string, version:string, parameters:list<array{id:int, value:int}>}|null
+     */
+    public function printImageMatching(): ?array
+    {
+        return $this->document?->printImageMatching();
+    }
+
+    /**
      * Returns the focal length in millimetres.
      */
     public function focalLength(): ?float
