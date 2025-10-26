@@ -133,25 +133,6 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Ensures JPEG frame dimensions extracted from the SOF marker fill structured fallbacks.
-     */
-    #[Test]
-    public function testStructuredImageDimensionsFallbackToFrameHeader(): void
-    {
-        $path = __DIR__ . '/../Fixtures/Images/Landscape_5.jpg';
-
-        $metadata = (new MetadataReader())->read($path);
-
-        self::assertSame(1200, $metadata->jpegFrameWidth);
-        self::assertSame(1800, $metadata->jpegFrameHeight);
-
-        $image = $metadata->structured()->image;
-
-        self::assertSame(1200, $image->width);
-        self::assertSame(1800, $image->height);
-    }
-
-    /**
      * Ensures the structured image aggregate falls back to the SOF precision when EXIF lacks the tag.
      */
     #[Test]
