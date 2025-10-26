@@ -92,6 +92,8 @@ final readonly class ExifTagResolver
             'standardoutputsensitivity' => $this->numericValue($this->document?->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY),
             'recommendedexposureindex'  => $this->numericValue($this->document?->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX),
             'exifimagewidth'            => $this->numericValue($this->document?->exifIfd, ExifTag::PIXEL_X_DIMENSION),
+            'newsubfiletype'            => $this->numericValue($this->document?->ifd0, ExifTag::NEW_SUBFILE_TYPE),
+            'subfiletype'               => $this->numericValue($this->document?->ifd0, ExifTag::SUBFILE_TYPE),
             'imagewidth'                => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_WIDTH),
             'exifimageheight'           => $this->numericValue($this->document?->exifIfd, ExifTag::PIXEL_Y_DIMENSION),
             'imagelength'               => $this->numericValue($this->document?->ifd0, ExifTag::IMAGE_HEIGHT),
@@ -488,6 +490,22 @@ final readonly class ExifTagResolver
         }
 
         return CoreValueConverters::apexToFNumber($apex);
+    }
+
+    /**
+     * Returns the TIFF 6.0 NewSubfileType bitfield.
+     */
+    public function newSubfileType(): ?int
+    {
+        return $this->numericValue($this->document?->ifd0, ExifTag::NEW_SUBFILE_TYPE);
+    }
+
+    /**
+     * Returns the legacy TIFF 5.0 SubfileType value.
+     */
+    public function subfileType(): ?int
+    {
+        return $this->numericValue($this->document?->ifd0, ExifTag::SUBFILE_TYPE);
     }
 
     /**
