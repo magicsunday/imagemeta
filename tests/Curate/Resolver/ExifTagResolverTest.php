@@ -29,6 +29,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+use function sqrt;
 
 /**
  * @covers \MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver
@@ -475,5 +476,32 @@ final class ExifTagResolverTest extends TestCase
         self::assertTrue($safeResolver->makerNoteSafety());
         self::assertFalse($unsafeResolver->makerNoteSafety());
         self::assertNull($missingResolver->makerNoteSafety());
+    }
+
+    #[Test]
+    public function exposesAccelerationVector(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ACCELERATION => new IfdEntry(
+                ExifTag::ACCELERATION,
+                10,
+                3,
+                new ExifRationalList([
+                    new ExifRational(1, 10),
+                    new ExifRational(2, 10),
+                    new ExifRational(-3, 10),
+                ]),
+            ),
+        ]);
+
+        $resolver = new ExifTagResolver(new ExifDocument(new Ifd([]), $exifIfd, null, null, null));
+
+        $vector = $resolver->accelerationVector();
+        self::assertNotNull($vector);
+        self::assertSame([0.1, 0.2, -0.3], $vector);
+
+        $magnitude = $resolver->accelerationMs2();
+        self::assertNotNull($magnitude);
+        self::assertEqualsWithDelta(sqrt(0.14), $magnitude, 0.000001);
     }
 }

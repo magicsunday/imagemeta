@@ -1794,6 +1794,16 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the camera acceleration vector in m/s².
+     *
+     * @return array{0:float,1:float,2:float}|null
+     */
+    public function accelerationVector(): ?array
+    {
+        return $this->document?->accelerationVector();
+    }
+
+    /**
      * Returns the camera acceleration in m/s².
      */
     public function accelerationMs2(): ?float
