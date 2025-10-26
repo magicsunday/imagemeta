@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use function ctype_digit;
 use function preg_replace;
 use function rtrim;
 use function strlen;
@@ -47,6 +48,7 @@ final class ExifCapabilities
             '1.10', '1.1' => '1.1',
             '2.00', '2.0' => '2.0',
             '2.10', '2.1' => '2.1',
+            '2.20', '2.2' => '2.2',
             '2.21' => '2.21',
             '2.30', '2.3' => '2.3',
             '2.31' => '2.31',
@@ -69,20 +71,25 @@ final class ExifCapabilities
                 $digits = '0' . $digits;
             }
 
-            return match ($digits) {
+            $profile = match ($digits) {
                 '0100' => '1.0',
                 '0110' => '1.1',
                 '0200' => '2.0',
                 '0210' => '2.1',
+                '0220' => '2.2',
                 '0221' => '2.21',
                 '0230' => '2.3',
                 '0231' => '2.31',
                 '0232' => '2.32',
                 '0300'  => '3.0',
-                default => '2.2',
+                default => null,
             };
+
+            if ($profile !== null) {
+                return $profile;
+            }
         }
 
-        return '2.2';
+        return 'unknown';
     }
 }
