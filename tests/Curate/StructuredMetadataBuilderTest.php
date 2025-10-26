@@ -946,12 +946,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
         $structured = (new StructuredMetadataBuilder())->build($metadata);
 
-        $vector = $structured->apple->accelerationVector;
-        self::assertNotNull($vector);
-        self::assertCount(3, $vector);
-        self::assertEqualsWithDelta(0.2, $vector[0], 1e-12);
-        self::assertEqualsWithDelta(-0.3, $vector[1], 1e-12);
-        self::assertEqualsWithDelta(0.35, $vector[2], 1e-12);
+        self::assertNull($structured->apple->accelerationVector);
 
         self::assertEqualsWithDelta(0.2, $structured->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(-0.3, $structured->motion->accelY, 1e-12);
