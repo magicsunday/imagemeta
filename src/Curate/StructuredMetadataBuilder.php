@@ -23,7 +23,6 @@ use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime as AppleRunTime;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
@@ -54,7 +53,7 @@ use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
-use MagicSunday\ImageMeta\Value\RunTime as ValueRunTime;
+use MagicSunday\ImageMeta\Value\RunTime;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\Scene;
@@ -1039,18 +1038,9 @@ final class StructuredMetadataBuilder
     /**
      * Converts a maker note runtime structure into its curated representation.
      */
-    private function appleRunTime(?AppleRunTime $runTime): ?ValueRunTime
+    private function appleRunTime(?RunTime $runTime): ?RunTime
     {
-        if (!$runTime instanceof AppleRunTime) {
-            return null;
-        }
-
-        return new ValueRunTime(
-            $runTime->epoch,
-            $runTime->timescale,
-            $runTime->value,
-            $runTime->flags,
-        );
+        return $runTime;
     }
 
     /**

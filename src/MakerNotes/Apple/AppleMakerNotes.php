@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\Value\RunTime;
+
 /**
  * Represents curated maker note data extracted from Apple devices.
  */

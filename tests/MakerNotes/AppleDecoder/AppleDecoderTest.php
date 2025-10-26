@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\AppleDecoder;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
+use MagicSunday\ImageMeta\Value\RunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use PHPUnit\Framework\Attributes\DataProvider;

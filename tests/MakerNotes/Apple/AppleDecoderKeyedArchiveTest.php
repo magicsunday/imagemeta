@@ -13,7 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
-use MagicSunday\ImageMeta\MakerNotes\Apple\RunTime;
+use MagicSunday\ImageMeta\Value\RunTime;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
