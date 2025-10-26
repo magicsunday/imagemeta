@@ -899,7 +899,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        $end = strpos($payload, " ", $offset);
+        $end = strpos($payload, "\0", $offset);
         if ($end === false) {
             return null;
         }
