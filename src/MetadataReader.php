@@ -90,6 +90,7 @@ final class MetadataReader
         $iccProfile       = $jpeg->getIccProfile();
         $iccSegments      = $jpeg->getIccSegments();
         $flashPixStreams  = $jpeg->getFlashPixStreams();
+        $mpfDocument      = $jpeg->getMpfDocument();
         $bitsPerSample    = $jpeg->getFrameSamplePrecision();
         $frameHeight      = $jpeg->getFrameHeight();
         $frameWidth       = $jpeg->getFrameWidth();
@@ -119,6 +120,7 @@ final class MetadataReader
             $iccProfile,
             $iccSegments,
             $flashPixStreams,
+            $mpfDocument,
             $bitsPerSample,
             $sampling,
             $subSampling,
@@ -177,6 +179,7 @@ final class MetadataReader
             null,
             [],
             [],
+            null,
             null,
             null,
             null,
