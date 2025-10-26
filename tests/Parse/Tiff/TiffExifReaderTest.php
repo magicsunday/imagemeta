@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -49,8 +50,6 @@ use function unpack;
 final class TiffExifReaderTest extends TestCase
 {
     private const int CUSTOM_SIGNED_LONG8_TAG = 0xC7A1;
-
-    private const int SUB_IFDS_TAG = 0x014A;
 
     /**
      * Expected StripOffsets values captured from ExifTool parsing the synthetic BigTIFF LONG8 fixture.
@@ -235,13 +234,23 @@ final class TiffExifReaderTest extends TestCase
         [$blob, $subIfdOffset] = $this->buildClassicSubIfdBlob();
 
         $document   = (new TiffExifReader())->parseFromBlob($blob);
-        $subIfdsEntry = $document->ifd0->get(self::SUB_IFDS_TAG);
+        $subIfdsEntry = $document->ifd0->get(ExifTag::SUB_IFDS);
 
         self::assertNotNull($subIfdsEntry);
 
         $value = $subIfdsEntry->value;
         self::assertInstanceOf(ExifNumericList::class, $value);
         self::assertSame($subIfdOffset, $value->values[0] ?? null);
+
+        $subIfds = $document->subIfds();
+        self::assertArrayHasKey($subIfdOffset, $subIfds);
+
+        $nestedIfd = $subIfds[$subIfdOffset];
+        self::assertInstanceOf(Ifd::class, $nestedIfd);
+
+        $orientation = $nestedIfd->get(ExifTag::ORIENTATION);
+        self::assertNotNull($orientation);
+        self::assertSame(1, $orientation->value);
     }
 
     /**
@@ -253,10 +262,14 @@ final class TiffExifReaderTest extends TestCase
         [$blob, $subIfdOffset] = $this->buildClassicInlineSubIfdBlob();
 
         $document  = (new TiffExifReader())->parseFromBlob($blob);
-        $subIfdEntry = $document->ifd0->get(self::SUB_IFDS_TAG);
+        $subIfdEntry = $document->ifd0->get(ExifTag::SUB_IFDS);
 
         self::assertNotNull($subIfdEntry);
         self::assertSame($subIfdOffset, $subIfdEntry->value);
+
+        $subIfds = $document->subIfds();
+        self::assertArrayHasKey($subIfdOffset, $subIfds);
+        self::assertInstanceOf(Ifd::class, $subIfds[$subIfdOffset]);
     }
 
     /**
@@ -732,7 +745,7 @@ final class TiffExifReaderTest extends TestCase
         $subIfdOffset           = 64;
 
         $ifd0Entries = [
-            self::packClassicEntry(self::SUB_IFDS_TAG, 13, $pointerCount, $pointerArrayOffset),
+            self::packClassicEntry(ExifTag::SUB_IFDS, 13, $pointerCount, $pointerArrayOffset),
         ];
 
         $blob = $header;
@@ -762,7 +775,7 @@ final class TiffExifReaderTest extends TestCase
         $subIfdOffset = 64;
 
         $ifd0Entries = [
-            self::packClassicEntry(self::SUB_IFDS_TAG, 13, 1, $subIfdOffset),
+            self::packClassicEntry(ExifTag::SUB_IFDS, 13, 1, $subIfdOffset),
         ];
 
         $blob = $header;

@@ -108,6 +108,16 @@ final class TiffExifReader
     private ?string $makerNoteRaw = null;
 
     /**
+     * @var array<int, Ifd>
+     */
+    private array $subIfds = [];
+
+    /**
+     * @var array<int, Ifd>
+     */
+    private array $ifdCache = [];
+
+    /**
      * Parses an EXIF TIFF blob into a structured document model.
      *
      * @param string        $tiffBlob           Raw TIFF data including headers.
@@ -121,6 +131,8 @@ final class TiffExifReader
         $this->buf->seek(0);
 
         $this->makerNoteRaw = null;
+        $this->subIfds      = [];
+        $this->ifdCache     = [];
 
         // byte order
         $boSig    = $this->buf->read(2);
@@ -194,7 +206,16 @@ final class TiffExifReader
 
         $makerNotes = $this->resolveMakerNotes($makerNotesRegistry, $ifd0, $exifIfd);
 
-        return new ExifDocument($ifd0, $exifIfd, $gpsIfd, $interopIfd, $ifd1, $makerNotes, $additionalIfds);
+        return new ExifDocument(
+            $ifd0,
+            $exifIfd,
+            $gpsIfd,
+            $interopIfd,
+            $ifd1,
+            $makerNotes,
+            $additionalIfds,
+            $this->subIfds,
+        );
     }
 
     /**
@@ -228,6 +249,10 @@ final class TiffExifReader
             return new Ifd([]);
         }
 
+        if (isset($this->ifdCache[$offset])) {
+            return $this->ifdCache[$offset];
+        }
+
         $this->buf->seek($offset);
         $entryCount = $this->bigTiff ? $this->readU64() : $this->readU16();
         $entries    = [];
@@ -236,8 +261,11 @@ final class TiffExifReader
         }
 
         $next = $this->bigTiff ? $this->readU64() : $this->readU32();
+        $ifd  = new Ifd($entries, $next > 0 ? $next : null);
 
-        return new Ifd($entries, $next > 0 ? $next : null);
+        $this->ifdCache[$offset] = $ifd;
+
+        return $ifd;
     }
 
     /**
@@ -263,7 +291,74 @@ final class TiffExifReader
             $this->makerNoteRaw = $rawBytes;
         }
 
-        return [$tag => new IfdEntry($tag, $type, $cnt, $value)];
+        $entry = new IfdEntry($tag, $type, $cnt, $value);
+
+        if ($tag === ExifTag::SUB_IFDS) {
+            $this->collectSubIfds($entry);
+        }
+
+        return [$tag => $entry];
+    }
+
+    /**
+     * Collects nested image file directories referenced by a SubIFDs entry.
+     */
+    private function collectSubIfds(IfdEntry $entry): void
+    {
+        if ($entry->type !== self::TYPE_IFD && $entry->type !== self::TYPE_IFD8) {
+            return;
+        }
+
+        $offsets = $this->subIfdOffsets($entry);
+
+        if ($offsets === []) {
+            return;
+        }
+
+        $returnPos = $this->buf->tell();
+
+        foreach ($offsets as $offset) {
+            if ($offset <= 0) {
+                continue;
+            }
+
+            if (isset($this->subIfds[$offset])) {
+                continue;
+            }
+
+            $this->subIfds[$offset] = $this->readIfd($offset);
+        }
+
+        $this->buf->seek($returnPos);
+    }
+
+    /**
+     * Normalises the offsets described by a SubIFDs entry.
+     *
+     * @return list<int>
+     */
+    private function subIfdOffsets(IfdEntry $entry): array
+    {
+        $value = $entry->value;
+
+        if ($value instanceof ExifNumericList) {
+            $offsets = [];
+            foreach ($value->values as $component) {
+                if (!is_int($component)) {
+                    continue;
+                }
+
+                $offsets[] = $component;
+            }
+
+            return $offsets;
+        }
+
+        if (is_int($value)) {
+            return [$value];
+        }
+
+        return [];
     }
 
     /**

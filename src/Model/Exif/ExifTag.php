@@ -29,6 +29,8 @@ final readonly class ExifTag
 
     public const int IMAGE_DESCRIPTION = 0x010E;
 
+    public const int SUB_IFDS = 0x014A;
+
     public const int IMAGE_TITLE = 0xA436;
 
     /**
