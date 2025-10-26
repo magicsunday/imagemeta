@@ -224,7 +224,25 @@ final class TiffExifReaderTest extends TestCase
         $subIfdsEntry = $document->ifd0->get(self::SUB_IFDS_TAG);
 
         self::assertNotNull($subIfdsEntry);
-        self::assertSame($subIfdOffset, $subIfdsEntry->value);
+
+        $value = $subIfdsEntry->value;
+        self::assertInstanceOf(ExifNumericList::class, $value);
+        self::assertSame($subIfdOffset, $value->values[0] ?? null);
+    }
+
+    /**
+     * Ensures SubIFD pointers stored inline using the IFD field type remain offsets.
+     */
+    #[Test]
+    public function preservesInlineIfdPointerValues(): void
+    {
+        [$blob, $subIfdOffset] = $this->buildClassicInlineSubIfdBlob();
+
+        $document  = (new TiffExifReader())->parseFromBlob($blob);
+        $subIfdEntry = $document->ifd0->get(self::SUB_IFDS_TAG);
+
+        self::assertNotNull($subIfdEntry);
+        self::assertSame($subIfdOffset, $subIfdEntry->value);
     }
 
     /**
@@ -674,19 +692,48 @@ final class TiffExifReaderTest extends TestCase
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
         $ifd0EntryCount         = 1;
+        $pointerCount          = 2;
         $ifd0Size               = 2 + ($ifd0EntryCount * 12) + 4;
         $pointerArrayOffset     = 8 + $ifd0Size;
         $subIfdOffset           = 64;
 
         $ifd0Entries = [
-            self::packClassicEntry(self::SUB_IFDS_TAG, 13, 1, $pointerArrayOffset),
+            self::packClassicEntry(self::SUB_IFDS_TAG, 13, $pointerCount, $pointerArrayOffset),
         ];
 
         $blob = $header;
         $blob .= pack('v', $ifd0EntryCount) . implode('', $ifd0Entries) . pack('V', 0);
         $blob .= pack('V', $subIfdOffset);
+        $blob .= pack('V', 0);
 
         $blob = str_pad($blob, $subIfdOffset, "\0", STR_PAD_RIGHT);
+
+        $subIfdEntries = [
+            self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1),
+        ];
+        $blob .= pack('v', count($subIfdEntries)) . implode('', $subIfdEntries) . pack('V', 0);
+
+        return [$blob, $subIfdOffset];
+    }
+
+    /**
+     * Builds a Classic TIFF blob whose SubIFDs tag stores the pointer inline.
+     *
+     * @return array{0: string, 1: int}
+     */
+    private function buildClassicInlineSubIfdBlob(): array
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $subIfdOffset = 64;
+
+        $ifd0Entries = [
+            self::packClassicEntry(self::SUB_IFDS_TAG, 13, 1, $subIfdOffset),
+        ];
+
+        $blob = $header;
+        $blob .= pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+        $blob  = str_pad($blob, $subIfdOffset, "\0", STR_PAD_RIGHT);
 
         $subIfdEntries = [
             self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1),
