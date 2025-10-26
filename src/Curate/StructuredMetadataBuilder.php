@@ -331,6 +331,12 @@ final class StructuredMetadataBuilder
             renderingIntent: $iccData['renderingIntent'] ?? null,
             gamma: $exifResolver->gamma(),
             profileId: $iccData['profileId'] ?? null,
+            cameraCalibrationSignature: $exifResolver->cameraCalibrationSignature(),
+            profileCalibrationSignature: $exifResolver->profileCalibrationSignature(),
+            hueSatMap: $exifResolver->profileHueSatMap(),
+            lookTable: $exifResolver->profileLookTable(),
+            toneCurve: $exifResolver->profileToneCurve(),
+            gainMap: $exifResolver->profileGainMap(),
         );
 
         $processing = new ProcessingSettings(

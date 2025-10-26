@@ -23,6 +23,10 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters as ExifValueConverters;
+use MagicSunday\ImageMeta\Value\ColorProfileGainMap;
+use MagicSunday\ImageMeta\Value\ColorProfileHueSatMap;
+use MagicSunday\ImageMeta\Value\ColorProfileLookTable;
+use MagicSunday\ImageMeta\Value\ColorProfileToneCurve;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -2061,6 +2065,263 @@ final readonly class ExifTagResolver
     }
 
     /**
+     * Returns the DNG camera calibration signature when present.
+     */
+    public function cameraCalibrationSignature(): ?string
+    {
+        if (!$this->document instanceof ExifDocument) {
+            return null;
+        }
+
+        $signature = $this->stringValue($this->document->exifIfd, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
+        if ($signature !== null) {
+            return $signature;
+        }
+
+        return $this->stringValue($this->document->ifd0, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
+    }
+
+    /**
+     * Returns the DNG profile calibration signature when present.
+     */
+    public function profileCalibrationSignature(): ?string
+    {
+        if (!$this->document instanceof ExifDocument) {
+            return null;
+        }
+
+        $signature = $this->stringValue($this->document->exifIfd, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
+        if ($signature !== null) {
+            return $signature;
+        }
+
+        return $this->stringValue($this->document->ifd0, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
+    }
+
+    /**
+     * Builds a hue/saturation/value adjustment map extracted from DNG profile tags.
+     */
+    public function profileHueSatMap(): ?ColorProfileHueSatMap
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $dims = $this->intListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS));
+            $map1 = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DATA_1));
+            $map2 = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DATA_2));
+            $map3 = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DATA_3));
+
+            if ($dims === null && $map1 === null && $map2 === null && $map3 === null) {
+                continue;
+            }
+
+            return new ColorProfileHueSatMap(
+                $dims[0] ?? null,
+                $dims[1] ?? null,
+                $dims[2] ?? null,
+                $map1,
+                $map2,
+                $map3,
+            );
+        }
+
+        return null;
+    }
+
+    /**
+     * Builds the optional profile look table when available.
+     */
+    public function profileLookTable(): ?ColorProfileLookTable
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $dimsEntry = $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS);
+            $dataEntry = $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DATA);
+
+            $dims = $this->intListFromEntry($dimsEntry);
+            $data = $this->floatListFromEntry($dataEntry);
+
+            if ($dims === null && $data === null) {
+                continue;
+            }
+
+            $entries = null;
+            if ($data !== null) {
+                $entries = $this->chunkTripletEntries($data);
+                if ($entries === []) {
+                    $entries = null;
+                }
+            }
+
+            return new ColorProfileLookTable(
+                $dims[0] ?? null,
+                $dims[1] ?? null,
+                $dims[2] ?? null,
+                $entries,
+            );
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the optional profile tone curve defined in the DNG profile.
+     */
+    public function profileToneCurve(): ?ColorProfileToneCurve
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $values = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_TONE_CURVE));
+            if ($values === null) {
+                continue;
+            }
+
+            $points = $this->chunkPairEntries($values);
+            if ($points === []) {
+                continue;
+            }
+
+            return new ColorProfileToneCurve($points);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the optional profile gain table map payload.
+     */
+    public function profileGainMap(): ?ColorProfileGainMap
+    {
+        foreach ($this->profileIfds() as $ifd) {
+            $values = $this->floatListFromEntry($ifd->get(ExifTag::PROFILE_GAIN_TABLE_MAP));
+            if ($values === null || $values === []) {
+                continue;
+            }
+
+            return new ColorProfileGainMap($values);
+        }
+
+        return null;
+    }
+
+    /**
+     * @return list<Ifd>
+     */
+    private function profileIfds(): array
+    {
+        if (!$this->document instanceof ExifDocument) {
+            return [];
+        }
+
+        $candidates = [];
+
+        $sources = [$this->document->exifIfd, $this->document->ifd0, $this->document->ifd1];
+        foreach ($this->document->subsequentIfds as $ifd) {
+            $sources[] = $ifd;
+        }
+
+        foreach ($this->document->subIfds as $ifd) {
+            $sources[] = $ifd;
+        }
+
+        foreach ($sources as $ifd) {
+            if (!$ifd instanceof Ifd) {
+                continue;
+            }
+
+            if ($this->isProfileIfd($ifd)) {
+                $candidates[] = $ifd;
+            }
+        }
+
+        return $candidates;
+    }
+
+    private function isProfileIfd(Ifd $ifd): bool
+    {
+        return $ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS) instanceof IfdEntry
+            || $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS) instanceof IfdEntry
+            || $ifd->get(ExifTag::PROFILE_TONE_CURVE) instanceof IfdEntry
+            || $ifd->get(ExifTag::PROFILE_GAIN_TABLE_MAP) instanceof IfdEntry;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    private function intListFromEntry(?IfdEntry $entry): ?array
+    {
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        $values = $this->normalizeNumericList($entry->value);
+        if ($values === []) {
+            return null;
+        }
+
+        $mapped = array_map(static fn (int|float $value): int => (int) $value, $values);
+
+        return $mapped === [] ? null : $mapped;
+    }
+
+    /**
+     * @return list<float>|null
+     */
+    private function floatListFromEntry(?IfdEntry $entry): ?array
+    {
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        $values = $this->normalizeRationalList($entry->value);
+
+        return $values === [] ? null : $values;
+    }
+
+    /**
+     * @param list<float> $values
+     *
+     * @return list<array{0: float, 1: float, 2: float}>
+     */
+    private function chunkTripletEntries(array $values): array
+    {
+        $count = count($values);
+        if ($count < 3 || $count % 3 !== 0) {
+            return [];
+        }
+
+        $entries = [];
+        for ($index = 0; $index < $count; $index += 3) {
+            $entries[] = [
+                (float) $values[$index],
+                (float) $values[$index + 1],
+                (float) $values[$index + 2],
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @param list<float> $values
+     *
+     * @return list<array{0: float, 1: float}>
+     */
+    private function chunkPairEntries(array $values): array
+    {
+        $count = count($values);
+        if ($count < 2 || $count % 2 !== 0) {
+            return [];
+        }
+
+        $pairs = [];
+        for ($index = 0; $index < $count; $index += 2) {
+            $pairs[] = [
+                (float) $values[$index],
+                (float) $values[$index + 1],
+            ];
+        }
+
+        return $pairs;
+    }
+
+    /**
      * Maps the EXIF sensitivity type enumeration to ISO-related tag priorities.
      *
      * @return list<int>
@@ -2178,6 +2439,10 @@ final readonly class ExifTagResolver
     private function normalizeRationalList(
         array|int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
     ): array {
+        if ($value instanceof ExifNumericList) {
+            return array_map(static fn (int|float $component): float => (float) $component, $value->values);
+        }
+
         if ($value instanceof ExifRationalList) {
             $floats = [];
             foreach ($value->values as $rational) {
