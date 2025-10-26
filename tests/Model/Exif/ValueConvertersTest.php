@@ -567,6 +567,52 @@ final class ValueConvertersTest extends TestCase
     }
 
     #[Test]
+    public function decodesGpsUndefinedStringsWithEncodings(): void
+    {
+        $unicodePayload = "UNICODE\0" . pack('v*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F) . "\0\0";
+        $jisPayload     = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E) . "\0";
+
+        $gps = new Ifd([
+            ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
+                ExifTag::GPS_PROCESSING_METHOD,
+                7,
+                strlen($unicodePayload),
+                $unicodePayload,
+            ),
+            ExifTag::GPS_AREA_INFORMATION => new IfdEntry(
+                ExifTag::GPS_AREA_INFORMATION,
+                7,
+                strlen($jisPayload),
+                $jisPayload,
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertSame('測位方式', $result['processing_method']);
+        self::assertSame('東京', $result['area_information']);
+    }
+
+    #[Test]
+    public function returnsNullWhenGpsUndefinedStringEmptyAfterDecoding(): void
+    {
+        $payload = "UNICODE\0\0\0";
+
+        $gps = new Ifd([
+            ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
+                ExifTag::GPS_PROCESSING_METHOD,
+                7,
+                strlen($payload),
+                $payload,
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertNull($result['processing_method']);
+    }
+
+    #[Test]
     public function formatsGpsVersionFromNumericList(): void
     {
         $gps = new Ifd([
