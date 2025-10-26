@@ -947,10 +947,6 @@ final class StructuredMetadataBuilder
             $accelerationVector = $this->quickTimeFloatList($quickTimeResolver, 'AccelerationVector');
         }
 
-        if ($accelerationVector === null) {
-            $accelerationVector = $exifResolver->accelerationVector();
-        }
-
         $flags          = $makerNotes instanceof AppleMakerNotes ? $makerNotes->flags : [];
         $quickTimeFlags = $this->quickTimeFlags($quickTimeResolver);
         foreach ($quickTimeFlags as $key => $value) {
