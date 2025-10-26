@@ -149,6 +149,19 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame("Shot on \u{2615}", $resolver->imageDescription());
     }
 
+    /**
+     * Ensures the DocumentName tag is surfaced even when newer aliases are absent.
+     */
+    #[Test]
+    public function exposesDocumentNameTagWhenAlone(): void
+    {
+        $document = (new TiffExifReader())->parseFromBlob(self::buildClassicDocumentNameBlob());
+        $resolver = new ExifTagResolver($document);
+
+        self::assertSame('Scanned Page', $document->documentName());
+        self::assertSame('Scanned Page', $resolver->documentName());
+    }
+
     #[Test]
     public function parsesLinkedIfdChain(): void
     {
@@ -822,6 +835,25 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $gpsAltData;
 
         return $blob;
+    }
+
+    /**
+     * Builds a Classic TIFF blob that only exposes the legacy DocumentName tag.
+     */
+    private static function buildClassicDocumentNameBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $documentName       = "Scanned Page\0\0";
+        $documentNameOffset = strlen($header) + 2 + 12 + 4;
+
+        $entries = [
+            self::packClassicEntry(ExifTag::DOCUMENT_NAME, 2, strlen($documentName), $documentNameOffset),
+        ];
+
+        $ifd0 = pack('v', count($entries)) . implode('', $entries) . pack('V', 0);
+
+        return $header . $ifd0 . $documentName;
     }
 
     /**
