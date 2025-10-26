@@ -28,6 +28,11 @@ enum LightSource: int
     case DAY_WHITE_FLUORESCENT  = 13;
     case COOL_WHITE_FLUORESCENT = 14;
     case WHITE_FLUORESCENT      = 15;
+
+    /**
+     * Warm white fluorescent light source.
+     */
+    case WARM_WHITE_FLUORESCENT = 16;
     case STANDARD_LIGHT_A       = 17;
     case STANDARD_LIGHT_B       = 18;
     case STANDARD_LIGHT_C       = 19;
