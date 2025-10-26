@@ -46,6 +46,8 @@ final readonly class ExifDocument
 {
     private ?string $exifVersion;
 
+    private bool $exifVersionMissingOrEmpty;
+
     private string $exifProfile;
 
     private bool $exifThreeOrNewer;
@@ -70,10 +72,11 @@ final readonly class ExifDocument
         public array $subsequentIfds = [],
         public array $subIfds = [],
     ) {
-        $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
-        $this->exifVersion = CoreValueConverters::toExifVersion($rawVersion);
-        $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
-        $this->exifThreeOrNewer = (float) $this->exifProfile >= 3.0;
+        $rawVersion                        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
+        $this->exifVersionMissingOrEmpty = $rawVersion === null || trim($rawVersion) === '';
+        $this->exifVersion               = CoreValueConverters::toExifVersion($rawVersion);
+        $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
+        $this->exifThreeOrNewer          = (float) $this->exifProfile >= 3.0;
     }
 
     /**
@@ -259,11 +262,19 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the normalised EXIF version string when present.
+     * Returns the normalised EXIF version string, defaulting to '2.2' when missing.
      */
     public function exifVersion(): ?string
     {
-        return $this->exifVersion;
+        if ($this->exifVersion !== null) {
+            return $this->exifVersion;
+        }
+
+        if ($this->exifVersionMissingOrEmpty) {
+            return '2.2';
+        }
+
+        return null;
     }
 
     /**
