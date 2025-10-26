@@ -142,6 +142,7 @@ final readonly class ExifTagResolver
             'interopindex'        => $this->interopIndex(),
             'interopversion'      => $this->interopVersion(),
             'relatedimagefileformat' => $this->relatedImageFileFormat(),
+            'tiffepstandardid'       => $this->tiffEpStandardIdString(),
             'processingsoftware'  => $this->processingSoftware(),
             'hostcomputer'        => $this->hostComputer(),
             default               => null,
@@ -419,6 +420,14 @@ final readonly class ExifTagResolver
     public function tiffEpStandardId(): ?array
     {
         return $this->document?->tiffEpStandardId();
+    }
+
+    /**
+     * Returns the TIFF/EP standard identifier string when available.
+     */
+    public function tiffEpStandardIdString(): ?string
+    {
+        return $this->document?->tiffEpStandardIdString();
     }
 
     /**

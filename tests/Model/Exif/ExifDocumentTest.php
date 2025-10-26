@@ -945,6 +945,7 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(79.0, $doc->focalPlaneYResolution() ?? 0.0, 0.0001);
         self::assertSame(2, $doc->focalPlaneResolutionUnit());
         self::assertSame([2, 0, 0, 0], $doc->tiffEpStandardId());
+        self::assertSame('2.0.0.0', $doc->tiffEpStandardIdString());
         self::assertSame([1024, 768], $doc->subjectLocation());
         self::assertSame(320.0, $doc->exposureIndex());
         self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $doc->sceneType());
@@ -964,6 +965,26 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('RawLab', $doc->rawDevelopingSoftware());
         self::assertSame('EditLab', $doc->imageEditingSoftware());
         self::assertSame('MetaLab', $doc->metadataEditingSoftware());
+    }
+
+    #[Test]
+    public function decodesPrintableTiffEpStandardIdBytes(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::TIFF_EP_STANDARD_ID => new IfdEntry(
+                ExifTag::TIFF_EP_STANDARD_ID,
+                1,
+                5,
+                new ExifNumericList([0x30, 0x31, 0x30, 0x30, 0]),
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame([48, 49, 48, 48, 0], $doc->tiffEpStandardId());
+        self::assertSame('0100', $doc->tiffEpStandardIdString());
     }
 
     #[Test]

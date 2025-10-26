@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 
 use function abs;
+use function chr;
 use function array_map;
 use function count;
 use function ctype_digit;
@@ -98,6 +99,8 @@ final readonly class ValueConverters
     private const MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
     private const SRATIONAL_VALUE_SIZE = 8;
     private const MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
+    private const PRINTABLE_ASCII_MIN = 0x20;
+    private const PRINTABLE_ASCII_MAX = 0x7E;
 
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
@@ -218,6 +221,82 @@ final readonly class ValueConverters
         }
 
         return null;
+    }
+
+    /**
+     * Normalises the TIFF/EP standard identifier to both byte and string representations.
+     *
+     * @param list<int>|null $bytes Raw TIFF/EP identifier bytes.
+     *
+     * @return array{bytes:list<int>, string:?string}|null
+     */
+    public static function tiffEpStandardId(?array $bytes): ?array
+    {
+        if ($bytes === null) {
+            return null;
+        }
+
+        if ($bytes === []) {
+            return null;
+        }
+
+        $normalised = [];
+        foreach ($bytes as $byte) {
+            if (!is_int($byte)) {
+                return null;
+            }
+
+            if ($byte < 0 || $byte > 0xFF) {
+                return null;
+            }
+
+            $normalised[] = $byte;
+        }
+
+        if ($normalised === []) {
+            return null;
+        }
+
+        return [
+            'bytes'  => $normalised,
+            'string' => self::formatTiffEpStandardIdString($normalised),
+        ];
+    }
+
+    /**
+     * Formats the TIFF/EP identifier bytes into a readable representation.
+     *
+     * @param list<int> $bytes
+     */
+    private static function formatTiffEpStandardIdString(array $bytes): ?string
+    {
+        $hasPrintable = true;
+
+        foreach ($bytes as $byte) {
+            if ($byte === 0) {
+                break;
+            }
+
+            if ($byte < self::PRINTABLE_ASCII_MIN || $byte > self::PRINTABLE_ASCII_MAX) {
+                $hasPrintable = false;
+                break;
+            }
+        }
+
+        if ($hasPrintable) {
+            $string = '';
+            foreach ($bytes as $byte) {
+                if ($byte === 0) {
+                    break;
+                }
+
+                $string .= chr($byte);
+            }
+
+            return $string === '' ? null : $string;
+        }
+
+        return implode('.', array_map(static fn (int $component): string => (string) $component, $bytes));
     }
 
     /**

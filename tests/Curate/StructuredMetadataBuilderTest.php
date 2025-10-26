@@ -330,6 +330,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('3.0', $structured->standards->profile);
         self::assertSame('1.00', $structured->standards->flashpixVersion);
         self::assertSame([1, 0, 0, 0], $structured->standards->tiffEpStandardId);
+        self::assertSame('1.0.0.0', $structured->standards->tiffEpStandardString);
 
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 

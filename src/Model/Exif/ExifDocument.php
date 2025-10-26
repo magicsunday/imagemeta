@@ -56,6 +56,13 @@ final readonly class ExifDocument
     private bool $exifThreeOrNewer;
 
     /**
+     * @var list<int>|null
+     */
+    private ?array $tiffEpStandardId;
+
+    private ?string $tiffEpStandardIdString;
+
+    /**
      * @param Ifd                     $ifd0            Root IFD of the TIFF structure.
      * @param Ifd|null                $exifIfd         Sub IFD containing EXIF-specific tags.
      * @param Ifd|null                $gpsIfd          Sub IFD containing GPS-related tags.
@@ -80,6 +87,11 @@ final readonly class ExifDocument
         $this->exifVersion               = CoreValueConverters::toExifVersion($rawVersion);
         $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
         $this->exifThreeOrNewer          = (float) $this->exifProfile >= 3.0;
+
+        $tiffEpBytes    = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
+        $tiffEpStandard = ValueConverters::tiffEpStandardId($tiffEpBytes);
+        $this->tiffEpStandardId       = $tiffEpStandard['bytes'] ?? null;
+        $this->tiffEpStandardIdString = $tiffEpStandard['string'] ?? null;
     }
 
     /**
@@ -736,9 +748,15 @@ final readonly class ExifDocument
      */
     public function tiffEpStandardId(): ?array
     {
-        $values = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
+        return $this->tiffEpStandardId;
+    }
 
-        return $values;
+    /**
+     * Returns the TIFF/EP standard identifier as a normalised string representation.
+     */
+    public function tiffEpStandardIdString(): ?string
+    {
+        return $this->tiffEpStandardIdString;
     }
 
     /**

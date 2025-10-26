@@ -211,6 +211,7 @@ final class StructuredMetadataBuilder
             profile: $profile,
             flashpixVersion: $exifResolver->flashpixVersion(),
             tiffEpStandardId: $exifResolver->tiffEpStandardId(),
+            tiffEpStandardString: $exifResolver->tiffEpStandardIdString(),
         );
 
         $flashPix = new FlashPix($metadata->flashPixStreams);
