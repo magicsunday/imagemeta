@@ -652,33 +652,90 @@ final class TiffExifReader
             return null;
         }
 
+        $safety = $this->makerNoteSafety($exifIfd);
+
         if (!$registry instanceof Registry || !$exifIfd instanceof Ifd) {
-            return $this->makerNotesDigest();
+            return $this->makerNotesDigest($safety);
         }
 
         $make = $this->stringFromIfd($ifd0, ExifTag::MAKE);
         if ($make === null || $make === '') {
-            return $this->makerNotesDigest();
+            return $this->makerNotesDigest($safety);
         }
 
         $decoder = $registry->find($make);
         if (!$decoder instanceof MakerNotesDecoderInterface) {
-            return $this->makerNotesDigest();
+            return $this->makerNotesDigest($safety);
         }
 
         $model = $this->stringFromIfd($ifd0, ExifTag::MODEL);
 
-        return $decoder->decode($this->makerNoteRaw, $make, $model);
+        $metadata = $decoder->decode($this->makerNoteRaw, $make, $model);
+
+        return $this->applyMakerNoteSafety($metadata, $safety);
     }
 
     /**
      * Creates a digest metadata instance for unknown maker notes.
      */
-    private function makerNotesDigest(): MakerNotesMetadata
+    private function makerNotesDigest(?bool $isSafe): MakerNotesMetadata
     {
         $raw = $this->makerNoteRaw ?? '';
 
-        return new MakerNotesMetadata('Unknown', strlen($raw), sha1($raw));
+        return new MakerNotesMetadata('Unknown', strlen($raw), sha1($raw), null, $isSafe);
+    }
+
+    /**
+     * Applies the maker note safety flag to the provided metadata instance.
+     */
+    private function applyMakerNoteSafety(MakerNotesMetadata $metadata, ?bool $isSafe): MakerNotesMetadata
+    {
+        if ($metadata->isSafe() === $isSafe) {
+            return $metadata;
+        }
+
+        return new MakerNotesMetadata(
+            $metadata->vendor(),
+            $metadata->length(),
+            $metadata->sha1(),
+            $metadata->apple(),
+            $isSafe,
+        );
+    }
+
+    /**
+     * Converts the maker note safety numeric flag into a boolean representation.
+     */
+    private function makerNoteSafety(?Ifd $exifIfd): ?bool
+    {
+        if (!$exifIfd instanceof Ifd) {
+            return null;
+        }
+
+        $entry = $exifIfd->get(ExifTag::MAKER_NOTE_SAFETY);
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        $value = $entry->value;
+
+        if ($value instanceof ExifNumericList) {
+            $value = $value->values[0] ?? null;
+        }
+
+        if (is_float($value)) {
+            $value = (int) $value;
+        }
+
+        if (!is_int($value)) {
+            return null;
+        }
+
+        return match ($value) {
+            0       => false,
+            1       => true,
+            default => null,
+        };
     }
 
     /**

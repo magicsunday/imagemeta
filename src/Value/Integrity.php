@@ -22,6 +22,7 @@ final readonly class Integrity
      * @param bool|null   $edited              Indicates whether editing history is present.
      * @param string|null $historyLastSoftware Last software reported in the editing history.
      * @param string|null $imageHistory        Free-form history description recorded in EXIF.
+     * @param bool|null   $makerNotesSafe      Flag denoting whether the maker notes are safe to edit.
      */
     public function __construct(
         public ?string $originalFileName,
@@ -29,6 +30,7 @@ final readonly class Integrity
         public ?bool $edited,
         public ?string $historyLastSoftware,
         public ?string $imageHistory,
+        public ?bool $makerNotesSafe = null,
     ) {
     }
 }

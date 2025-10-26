@@ -183,6 +183,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::RAW_DEVELOPING_SOFTWARE     => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 11, 'Raw Studio'),
             ExifTag::IMAGE_EDITING_SOFTWARE      => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 13, 'Image Studio'),
             ExifTag::METADATA_EDITING_SOFTWARE   => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 15, 'Metadata Studio'),
+            ExifTag::MAKER_NOTE_SAFETY           => new IfdEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, 1),
         ]);
 
         $interopIfd = new Ifd([
@@ -274,6 +275,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame(1, $structured->image->interlace);
         self::assertSame('Shot with ND filter', $structured->image->userComment);
         self::assertSame('Developed in Raw Studio', $structured->integrity->imageHistory);
+        self::assertTrue($structured->integrity->makerNotesSafe);
 
         self::assertSame(400, $structured->exposure->iso);
         self::assertSame(0.008, $structured->exposure->exposureTimeSec);
@@ -578,7 +580,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             afConfidence: 0.76,
         );
 
-        $makerNotes = new MakerNotesMetadata('Apple', 64, str_repeat('a', 40), $appleMakerNotes);
+        $makerNotes = new MakerNotesMetadata('Apple', 64, str_repeat('a', 40), $appleMakerNotes, false);
 
         $ifd0         = new Ifd([]);
         $exifDocument = new ExifDocument($ifd0, null, null, null, null, $makerNotes);
@@ -638,6 +640,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
         self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
         self::assertFalse($structured->scene->nightMode);
+        self::assertFalse($structured->integrity->makerNotesSafe);
     }
 
     #[Test]

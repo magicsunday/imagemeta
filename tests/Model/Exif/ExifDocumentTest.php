@@ -579,6 +579,26 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('2024-05-02T09:10:11.500+01:30', $fileDate->format(self::ISO_8601_MILLISECONDS));
     }
 
+    #[Test]
+    public function makerNoteSafetyMapsNumericValues(): void
+    {
+        $safeExifIfd = new Ifd([
+            ExifTag::MAKER_NOTE_SAFETY => new IfdEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, 1),
+        ]);
+
+        $unsafeExifIfd = new Ifd([
+            ExifTag::MAKER_NOTE_SAFETY => new IfdEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, 0),
+        ]);
+
+        $safeDoc   = new ExifDocument(new Ifd([]), $safeExifIfd, null, null, null);
+        $unsafeDoc = new ExifDocument(new Ifd([]), $unsafeExifIfd, null, null, null);
+        $missingDoc = new ExifDocument(new Ifd([]), null, null, null, null);
+
+        self::assertTrue($safeDoc->makerNoteSafety());
+        self::assertFalse($unsafeDoc->makerNoteSafety());
+        self::assertNull($missingDoc->makerNoteSafety());
+    }
+
     /**
      * Ensures Table 65 extension tags are exposed via dedicated getters.
      */
