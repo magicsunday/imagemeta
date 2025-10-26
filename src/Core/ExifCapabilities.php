@@ -47,12 +47,13 @@ final class ExifCapabilities
             $digits = $trimmed;
         }
 
-        if (ctype_digit($digits)) {
-            if (strlen($digits) === 3) {
-                $digits = '0' . $digits;
+        if (ctype_digit($trimmed)) {
+            $normalized = $trimmed;
+            if (strlen($normalized) === 3) {
+                $normalized = '0' . $normalized;
             }
 
-            return match ($digits) {
+            return match ($normalized) {
                 '0100' => '1.0',
                 '0110' => '1.1',
                 '0200' => '2.0',
@@ -66,7 +67,27 @@ final class ExifCapabilities
             };
         }
 
-        return match ($digits) {
+        if (ctype_digit($digits) && strlen($digits) >= 3) {
+            $normalized = $digits;
+            if (strlen($normalized) === 3) {
+                $normalized = '0' . $normalized;
+            }
+
+            return match ($normalized) {
+                '0100' => '1.0',
+                '0110' => '1.1',
+                '0200' => '2.0',
+                '0210' => '2.1',
+                '0221' => '2.21',
+                '0230' => '2.3',
+                '0231' => '2.31',
+                '0232' => '2.32',
+                '0300'  => '3.0',
+                default => '2.2',
+            };
+        }
+
+        return match ($trimmed) {
             '1.00', '1.0' => '1.0',
             '1.10', '1.1' => '1.1',
             '2.00', '2.0' => '2.0',
