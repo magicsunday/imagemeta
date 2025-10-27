@@ -737,6 +737,23 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('PowerMac G4', $structured->device->software);
     }
 
+    #[Test]
+    public function fallsBackToQuickTimeSoftwareWhenExifMissing(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifDocument = new ExifDocument($ifd0, null, null, null, null);
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.software' => 'QuickTime Studio',
+        ]);
+
+        $metadata   = new Metadata(['primary'], $quickTime, $exifDocument);
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertSame('QuickTime Studio', $structured->device->software);
+    }
+
     /**
      * Ensures maker notes Apple data is preferred over QuickTime metadata and propagates to white balance and motion.
      */

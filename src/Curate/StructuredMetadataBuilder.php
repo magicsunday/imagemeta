@@ -582,11 +582,11 @@ final class StructuredMetadataBuilder
     }
 
     /**
-     * Builds the device metadata aggregate by combining EXIF, QuickTime and XMP sources.
+     * Builds the device metadata aggregate by combining EXIF helpers with QuickTime fallbacks.
      *
-     * @param ExifDocument   $exif              Resolver exposing EXIF tag helpers.
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata container exposing QuickTime fields.
-     * @param XmpDocument|null   $xmpDocument      XMP document exposing metadata fields.
+     * @param ExifDocument|null   $exif        Resolver exposing EXIF tag helpers.
+     * @param QuickTimeMeta|null  $quickTime   QuickTime metadata container exposing software fields.
+     * @param XmpDocument|null    $xmpDocument Placeholder for future XMP backed device metadata.
      *
      * @return Device Device value object describing capture hardware and software.
      */
@@ -598,6 +598,14 @@ final class StructuredMetadataBuilder
             $softwareCandidates[] = static fn (): ?string => $exif->software();
             $softwareCandidates[] = static fn (): ?string => $exif->hostComputer();
         }
+
+        $softwareCandidates[] = fn (): ?string => $this->quickTimeString(
+            $quickTime,
+            'com.apple.quicktime.software',
+            'Software',
+            'com.apple.quicktime.softwareversion',
+            'com.apple.quicktime.software.version',
+        );
 
         return new Device(
             software: CompositeResolver::first($softwareCandidates),
