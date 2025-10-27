@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate;
 
-use MagicSunday\ImageMeta\Value\Apple;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
@@ -70,7 +70,7 @@ final readonly class StructuredMetadata
      * @param Capture             $capture             Environmental capture metadata.
      * @param Gps                 $gps                 Geographic positioning information.
      * @param Device              $device              Host device information.
-     * @param Apple               $apple               Apple-specific metadata aggregate.
+     * @param AppleMakerNotes     $apple               Apple-specific metadata aggregate.
      * @param Xmp                 $xmp                 Parsed XMP document wrapper.
      * @param File                $file                File level metadata and characteristics.
      * @param Container           $container           Container format metadata.
@@ -109,7 +109,7 @@ final readonly class StructuredMetadata
         public Capture $capture,
         public Gps $gps,
         public Device $device,
-        public Apple $apple,
+        public AppleMakerNotes $apple,
         public Xmp $xmp,
         public File $file,
         public Container $container,
