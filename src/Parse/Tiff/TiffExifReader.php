@@ -27,6 +27,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 
 use function array_slice;
 use function chr;
@@ -1111,25 +1112,7 @@ final class TiffExifReader
             return null;
         }
 
-        $value = $entry->value;
-
-        if ($value instanceof ExifNumericList) {
-            $value = $value->values[0] ?? null;
-        }
-
-        if (is_float($value)) {
-            $value = (int) $value;
-        }
-
-        if (!is_int($value)) {
-            return null;
-        }
-
-        return match ($value) {
-            0       => false,
-            1       => true,
-            default => null,
-        };
+        return ValueConverters::makerNoteSafety($entry->value);
     }
 
     /**

@@ -595,6 +595,40 @@ final readonly class ValueConverters
     }
 
     /**
+     * Converts the maker note safety flag into a boolean representation.
+     *
+     * @param ExifNumericList|int|float|string|null $value Raw maker note safety value.
+     */
+    public static function makerNoteSafety(ExifNumericList|int|float|string|null $value): ?bool
+    {
+        if ($value instanceof ExifNumericList) {
+            $value = $value->values[0] ?? null;
+        }
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_float($value)) {
+            $value = (int) $value;
+        }
+
+        if (is_string($value) && ctype_digit($value)) {
+            $value = (int) $value;
+        }
+
+        if (!is_int($value)) {
+            return null;
+        }
+
+        return match ($value) {
+            0 => false,
+            1 => true,
+            default => null,
+        };
+    }
+
+    /**
      * Normalises the TIFF/EP standard identifier to both byte and string representations.
      *
      * @param list<int>|null $bytes Raw TIFF/EP identifier bytes.
@@ -983,6 +1017,18 @@ final readonly class ValueConverters
             ],
             'values' => $values,
         ];
+    }
+
+    /**
+     * Normalises the components configuration tag into a list of component identifiers.
+     *
+     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value representation.
+     *
+     * @return list<int>|null
+     */
+    public static function componentsConfiguration(array|ExifNumericList|string|int|null $value): ?array
+    {
+        return self::toIntList($value);
     }
 
     /**

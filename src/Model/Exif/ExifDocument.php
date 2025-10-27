@@ -126,13 +126,9 @@ final readonly class ExifDocument
      */
     public function makerNoteSafety(): ?bool
     {
-        $value = $this->int($this->exifIfd, ExifTag::MAKER_NOTE_SAFETY);
+        $value = $this->value($this->exifIfd, ExifTag::MAKER_NOTE_SAFETY);
 
-        return match ($value) {
-            0       => false,
-            1       => true,
-            default => null,
-        };
+        return ValueConverters::makerNoteSafety($value);
     }
 
     /**
@@ -863,7 +859,9 @@ final readonly class ExifDocument
      */
     public function componentsConfiguration(): ?array
     {
-        return $this->numericList($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
+        $value = $this->value($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
+
+        return ValueConverters::componentsConfiguration($value);
     }
 
     /**
@@ -873,9 +871,9 @@ final readonly class ExifDocument
      */
     public function componentsConfigurationLabels(): ?array
     {
-        $components = $this->componentsConfiguration();
+        $value = $this->value($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
-        return $components !== null ? ValueConverters::componentsConfigurationLabels($components) : null;
+        return ValueConverters::componentsConfigurationLabels($value);
     }
 
     /**
@@ -883,9 +881,9 @@ final readonly class ExifDocument
      */
     public function componentsConfigurationDescription(): ?string
     {
-        $components = $this->componentsConfiguration();
+        $value = $this->value($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
-        return $components !== null ? ValueConverters::componentsConfigurationDescription($components) : null;
+        return ValueConverters::componentsConfigurationDescription($value);
     }
 
     /**

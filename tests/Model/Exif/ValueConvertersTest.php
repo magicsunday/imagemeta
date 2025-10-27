@@ -162,6 +162,33 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Ensures components configuration payloads normalise to integer component lists.
+     */
+    #[Test]
+    public function normalisesComponentsConfigurationPayloads(): void
+    {
+        $values = new ExifNumericList([1, 2, 3, 0]);
+
+        self::assertSame([1, 2, 3, 0], ValueConverters::componentsConfiguration($values));
+        self::assertSame([4, 5], ValueConverters::componentsConfiguration([4, 5]));
+        self::assertNull(ValueConverters::componentsConfiguration(new ExifNumericList([])));
+        self::assertNull(ValueConverters::componentsConfiguration(null));
+    }
+
+    /**
+     * Ensures maker note safety flags convert to booleans.
+     */
+    #[Test]
+    public function convertsMakerNoteSafetyFlags(): void
+    {
+        self::assertTrue(ValueConverters::makerNoteSafety(1));
+        self::assertFalse(ValueConverters::makerNoteSafety(0));
+        self::assertTrue(ValueConverters::makerNoteSafety(new ExifNumericList([1])));
+        self::assertNull(ValueConverters::makerNoteSafety(new ExifNumericList([])));
+        self::assertNull(ValueConverters::makerNoteSafety('invalid'));
+    }
+
+    /**
      * @return iterable<string, array{mixed, float|null}>
      */
     public static function provideApexValues(): iterable
