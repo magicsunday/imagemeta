@@ -11,28 +11,17 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates in-camera sharpness processing levels.
  */
 enum Sharpness: int
 {
+    use EnumFromIntStringNullable;
+
     case NORMAL = 0;
     case SOFT   = 1;
     case HARD   = 2;
 
-    /**
-     * Converts a raw EXIF sharpness value into the enum representation.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

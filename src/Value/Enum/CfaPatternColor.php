@@ -11,13 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the colour components referenced by the CFA pattern tag.
  */
 enum CfaPatternColor: int
 {
+    use EnumFromIntStringNullable;
+
     case RED      = 0;
     case GREEN    = 1;
     case BLUE     = 2;
@@ -27,17 +29,4 @@ enum CfaPatternColor: int
     case WHITE    = 6;
     case INFRARED = 7;
 
-    /**
-     * Converts raw EXIF values to the corresponding enum when possible.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

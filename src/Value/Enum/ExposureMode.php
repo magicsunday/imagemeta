@@ -11,28 +11,17 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates camera exposure mode settings.
  */
 enum ExposureMode: int
 {
+    use EnumFromIntStringNullable;
+
     case AUTO         = 0;
     case MANUAL       = 1;
     case AUTO_BRACKET = 2;
 
-    /**
-     * Converts raw EXIF values into the corresponding enum.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

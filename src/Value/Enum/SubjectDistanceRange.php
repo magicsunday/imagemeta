@@ -11,29 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates subject distance range classifications.
  */
 enum SubjectDistanceRange: int
 {
+    use EnumFromIntStringNullable;
+
     case UNKNOWN = 0;
     case MACRO   = 1;
     case CLOSE   = 2;
     case DISTANT = 3;
 
-    /**
-     * Converts a raw distance range value into the enum.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

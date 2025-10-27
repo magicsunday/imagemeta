@@ -11,13 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_int;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Describes the camera's exposure program.
  */
 enum ExposureProgram: int
 {
+    use EnumFromIntStringNullable;
+
     case NOT_DEFINED       = 0;
     case MANUAL            = 1;
     case NORMAL            = 2;
@@ -29,17 +31,4 @@ enum ExposureProgram: int
     case LANDSCAPE_MODE    = 8;
     case BULB              = 9;
 
-    /**
-     * Maps a numeric value to the corresponding enum case when possible.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $intValue = is_int($value) ? $value : (int) $value;
-
-        return self::tryFrom($intValue);
-    }
 }

@@ -11,13 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates TIFF/EXIF compression schemes.
  */
 enum Compression: int
 {
+    use EnumFromIntStringNullable;
+
     case UNCOMPRESSED               = 1;
     case CCITT_MODIFIED_HUFFMAN_RLE = 2;
     case CCITT_T4_GROUP3_FAX        = 3;
@@ -31,17 +33,4 @@ enum Compression: int
     case JPEG_2000                  = 34712;
     case LOSSY_JPEG                 = 34892;
 
-    /**
-     * Converts a raw compression id to the backed enum value.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

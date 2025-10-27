@@ -11,28 +11,17 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates in-camera saturation processing levels.
  */
 enum Saturation: int
 {
+    use EnumFromIntStringNullable;
+
     case NORMAL = 0;
     case LOW    = 1;
     case HIGH   = 2;
 
-    /**
-     * Converts a raw EXIF saturation value into the enum representation.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }
