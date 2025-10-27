@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
 use function array_key_exists;
@@ -35,10 +35,10 @@ final class AppleMakerNotesMapper
      * Merges decoded Apple maker notes with QuickTime metadata fallbacks.
      */
     public function map(
-        ?MakerNotesMetadata $makerNotes,
+        ?MakerNotesRecord $makerNotes,
         ?QuickTimeMeta $quickTime,
-    ): ?MakerNotesMetadata {
-        if ($makerNotes instanceof MakerNotesMetadata && $makerNotes->vendor() !== 'Apple') {
+    ): ?MakerNotesRecord {
+        if ($makerNotes instanceof MakerNotesRecord && $makerNotes->vendor() !== 'Apple') {
             return $makerNotes;
         }
 
@@ -48,8 +48,8 @@ final class AppleMakerNotesMapper
             return $makerNotes;
         }
 
-        if ($makerNotes instanceof MakerNotesMetadata) {
-            return new MakerNotesMetadata(
+        if ($makerNotes instanceof MakerNotesRecord) {
+            return new MakerNotesRecord(
                 $makerNotes->vendor(),
                 $makerNotes->length(),
                 $makerNotes->sha1(),
@@ -59,7 +59,7 @@ final class AppleMakerNotesMapper
         }
 
         if ($quickTime instanceof QuickTimeMeta) {
-            return new MakerNotesMetadata('Apple', 0, str_repeat('0', 40), $apple);
+            return new MakerNotesRecord('Apple', 0, str_repeat('0', 40), $apple);
         }
 
         return $makerNotes;

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\SonyDecoder;
 
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -37,7 +37,7 @@ final class SonyDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Sony', 'ILCE-7RM5');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         self::assertSame('Sony', $metadata->vendor());
         self::assertSame(strlen($raw), $metadata->length());
         self::assertSame(sha1($raw), $metadata->sha1());

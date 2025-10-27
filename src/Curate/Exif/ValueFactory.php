@@ -20,7 +20,7 @@ use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\FileMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\GpsMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\LensMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\MakerNotesMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\MakerNotesView;
 use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\ProcessingMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\RightsMetadata;
@@ -609,7 +609,7 @@ final class ValueFactory
             'processing' => new ProcessingMetadata($processing, $whiteBalanceDetails),
             'technical'  => new TechnicalMetadata($interop, $tiff, $standards, $flashPix, $xmp),
             'rights'     => new RightsMetadata($rights, $author, $related),
-            'makerNotes' => new MakerNotesMetadata($apple),
+            'makerNotes' => new MakerNotesView($apple),
         ];
     }
 

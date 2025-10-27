@@ -13,7 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\NikonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
@@ -58,11 +58,11 @@ final class RegistryTest extends TestCase
              * @param string      $make  The make string associated with the image metadata.
              * @param string|null $model The optional model string associated with the image metadata.
              *
-             * @return MakerNotesMetadata The decoded maker notes metadata instance.
+             * @return MakerNotesRecord The decoded maker notes metadata instance.
              */
-            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
             {
-                return new MakerNotesMetadata('Test', 0, '0000000000000000000000000000000000000000');
+                return new MakerNotesRecord('Test', 0, '0000000000000000000000000000000000000000');
             }
         };
 
@@ -87,11 +87,11 @@ final class RegistryTest extends TestCase
              * @param string      $make  The make string associated with the image metadata.
              * @param string|null $model The optional model string associated with the image metadata.
              *
-             * @return MakerNotesMetadata The decoded maker notes metadata instance.
+             * @return MakerNotesRecord The decoded maker notes metadata instance.
              */
-            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
             {
-                return new MakerNotesMetadata('Canon', 0, '0000000000000000000000000000000000000000');
+                return new MakerNotesRecord('Canon', 0, '0000000000000000000000000000000000000000');
             }
         });
 

@@ -9,20 +9,20 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\MakerNotes\MakerNotesMetadata;
+namespace MagicSunday\ImageMeta\Tests\MakerNotes\MakerNotesRecord;
 
 use InvalidArgumentException;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Validates the maker notes metadata value object.
+ * Validates the maker notes record value object.
  *
- * @covers \MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata
+ * @covers \MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord
  */
-final class MakerNotesMetadataTest extends TestCase
+final class MakerNotesRecordTest extends TestCase
 {
     /**
      * Ensures the metadata value object accepts valid arguments and exposes the expected values.
@@ -30,7 +30,7 @@ final class MakerNotesMetadataTest extends TestCase
     #[Test]
     public function constructorAcceptsValidArguments(): void
     {
-        $metadata = new MakerNotesMetadata('Contoso', 123, '0123456789abcdef0123456789abcdef01234567');
+        $metadata = new MakerNotesRecord('Contoso', 123, '0123456789abcdef0123456789abcdef01234567');
 
         self::assertSame('Contoso', $metadata->vendor());
         self::assertSame(123, $metadata->length());
@@ -38,7 +38,7 @@ final class MakerNotesMetadataTest extends TestCase
         self::assertNull($metadata->apple());
         self::assertNull($metadata->isSafe());
 
-        $safeMetadata = new MakerNotesMetadata('Contoso', 123, '0123456789abcdef0123456789abcdef01234567', null, true);
+        $safeMetadata = new MakerNotesRecord('Contoso', 123, '0123456789abcdef0123456789abcdef01234567', null, true);
 
         self::assertTrue($safeMetadata->isSafe());
     }
@@ -70,6 +70,6 @@ final class MakerNotesMetadataTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
 
-        new MakerNotesMetadata($vendor, $length, $sha1);
+        new MakerNotesRecord($vendor, $length, $sha1);
     }
 }

@@ -26,9 +26,9 @@ final class NikonDecoder implements MakerNotesDecoderInterface
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier for the payload.
      */
-    public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+    public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
-        return new MakerNotesMetadata(
+        return new MakerNotesRecord(
             'Nikon',
             strlen($raw),
             sha1($raw)

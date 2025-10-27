@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -31,7 +31,7 @@ final class MakerNotesPropagationTest extends TestCase
     #[Test]
     public function exifDocumentReturnsMakerNotes(): void
     {
-        $makerNotes = new MakerNotesMetadata('Acme', 4, str_repeat('0', 40));
+        $makerNotes = new MakerNotesRecord('Acme', 4, str_repeat('0', 40));
         $document   = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
 
         self::assertSame($makerNotes, $document->makerNotes());
@@ -43,7 +43,7 @@ final class MakerNotesPropagationTest extends TestCase
     #[Test]
     public function metadataAggregateCarriesMakerNotes(): void
     {
-        $makerNotes = new MakerNotesMetadata('Acme', 4, str_repeat('0', 40));
+        $makerNotes = new MakerNotesRecord('Acme', 4, str_repeat('0', 40));
         $metadata   = new Metadata([], null, null, [], null, $makerNotes);
 
         self::assertSame($makerNotes, $metadata->makerNotes);
