@@ -12,16 +12,14 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
-use function array_is_list;
 use function array_key_exists;
 use function get_object_vars;
 use function is_array;
-use function is_bool;
-use function is_float;
-use function is_int;
 use function is_numeric;
 use function is_string;
 use function preg_split;
@@ -46,6 +44,10 @@ final class AppleMakerNotesMapper
 
         $apple = $this->buildAppleMakerNotes($makerNotes?->apple(), $quickTime);
 
+        if (!$this->hasAppleData($apple)) {
+            return $makerNotes;
+        }
+
         if ($makerNotes instanceof MakerNotesMetadata) {
             return new MakerNotesMetadata(
                 $makerNotes->vendor(),
@@ -56,7 +58,7 @@ final class AppleMakerNotesMapper
             );
         }
 
-        if ($quickTime instanceof QuickTimeMeta && $this->hasAppleData($apple)) {
+        if ($quickTime instanceof QuickTimeMeta) {
             return new MakerNotesMetadata('Apple', 0, str_repeat('0', 40), $apple);
         }
 
@@ -70,61 +72,62 @@ final class AppleMakerNotesMapper
         ?AppleMakerNotes $makerNotes,
         ?QuickTimeMeta $quickTime,
     ): AppleMakerNotes {
+        $lookup = new QuickTimeLookup($quickTime);
         $contentIdentifier = $makerNotes?->contentIdentifier ?? $quickTime?->contentIdentifier();
 
         $cameraType = $makerNotes?->cameraType;
         if ($cameraType === null) {
-            $cameraType = $this->quickTimeString($quickTime, 'CameraType');
+            $cameraType = $lookup->string('CameraType');
         }
 
         $hdrHeadroom = $makerNotes?->hdrHeadroom;
         if ($hdrHeadroom === null) {
-            $hdrHeadroom = $this->quickTimeFloat($quickTime, 'HdrHeadroom', 'HDRHeadroom');
+            $hdrHeadroom = $lookup->float('HdrHeadroom', 'HDRHeadroom');
         }
 
         $hdrGain = $makerNotes?->hdrGain;
         if ($hdrGain === null) {
-            $hdrGain = $this->quickTimeFloatList($quickTime, 'HdrGain', 'HDRGain');
+            $hdrGain = $this->quickTimeFloatList($lookup, 'HdrGain', 'HDRGain');
         }
 
         $snr = $makerNotes?->snr;
         if ($snr === null) {
-            $snr = $this->quickTimeFloat($quickTime, 'SNRSetting', 'SNR');
+            $snr = $lookup->float('SNRSetting', 'SNR');
         }
 
         $focusPosition = $makerNotes?->focusPosition;
         if ($focusPosition === null) {
-            $focusPosition = $this->quickTimeFloat($quickTime, 'FocusPosition');
+            $focusPosition = $lookup->float('FocusPosition');
         }
 
         $livePhotoIndex = $makerNotes?->livePhotoIndex;
         if ($livePhotoIndex === null) {
-            $livePhotoIndex = $this->quickTimeInt($quickTime, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
+            $livePhotoIndex = $lookup->int('LivePhotoVideoIndex', 'LivePhotoMovieIndex');
         }
 
         $livePhotoTime = $makerNotes?->livePhotoTime;
 
         $colorTemperature = $makerNotes?->colorTemperature;
         if ($colorTemperature === null) {
-            $colorTemperature = $this->quickTimeInt($quickTime, 'ColorTemperature');
+            $colorTemperature = $lookup->int('ColorTemperature');
         }
 
         $semanticPreset = $makerNotes?->semanticStylePreset;
         if ($semanticPreset === null) {
-            $semanticPreset = $this->quickTimeString($quickTime, 'SemanticStylePreset');
+            $semanticPreset = $lookup->string('SemanticStylePreset');
         }
 
         $semanticWarmth = $makerNotes?->semanticStyleWarmth;
         if ($semanticWarmth === null) {
-            $semanticWarmth = $this->quickTimeFloat($quickTime, 'SemanticStyleWarmth');
+            $semanticWarmth = $lookup->float('SemanticStyleWarmth');
         }
 
         $semanticTone = $makerNotes?->semanticStyleTone;
         if ($semanticTone === null) {
-            $semanticTone = $this->quickTimeFloat($quickTime, 'SemanticStyleTone');
+            $semanticTone = $lookup->float('SemanticStyleTone');
         }
 
-        $semanticStyleComposite = $this->quickTimeSemanticStyle($quickTime);
+        $semanticStyleComposite = SemanticStyle::fromQuickTime($quickTime);
         if ($semanticStyleComposite !== null) {
             [$compositePreset, $compositeWarmth, $compositeTone] = $semanticStyleComposite;
 
@@ -143,7 +146,7 @@ final class AppleMakerNotesMapper
 
         $accelerationVector = $makerNotes?->accelerationVector;
         if ($accelerationVector === null) {
-            $accelerationVector = $this->quickTimeFloatList($quickTime, 'AccelerationVector');
+            $accelerationVector = $this->quickTimeFloatList($lookup, 'AccelerationVector');
         }
 
         $flags = $makerNotes?->flags ?? [];
@@ -156,67 +159,67 @@ final class AppleMakerNotesMapper
 
         $imageCaptureRequestId = $makerNotes?->imageCaptureRequestId;
         if ($imageCaptureRequestId === null) {
-            $imageCaptureRequestId = $this->quickTimeString($quickTime, 'ImageCaptureRequestID');
+            $imageCaptureRequestId = $lookup->string('ImageCaptureRequestID');
         }
 
         $qualityHint = $makerNotes?->qualityHint;
         if ($qualityHint === null) {
-            $qualityHint = $this->quickTimeStringOrNumeric($quickTime, 'QualityHint');
+            $qualityHint = $this->quickTimeStringOrNumeric($lookup, 'QualityHint');
         }
 
         $colorCorrectionMatrix = $makerNotes?->colorCorrectionMatrix;
         if ($colorCorrectionMatrix === null) {
-            $colorCorrectionMatrix = $this->quickTimeFloatList($quickTime, 'ColorCorrectionMatrix');
+            $colorCorrectionMatrix = $this->quickTimeFloatList($lookup, 'ColorCorrectionMatrix');
         }
 
         $makerNoteVersion = $makerNotes?->makerNoteVersion;
         if ($makerNoteVersion === null) {
-            $makerNoteVersion = $this->quickTimeString($quickTime, 'MakerNoteVersion');
+            $makerNoteVersion = $lookup->string('MakerNoteVersion');
         }
 
         $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, AppleMetadata::HDR_IMAGE_TYPES);
         if ($hdrImageType === null) {
-            $hdrImageType = $this->quickTimeEnumerated($quickTime, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
+            $hdrImageType = $this->quickTimeEnumerated($lookup, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
         }
 
         $burstUuid = $makerNotes?->burstUuid;
         if ($burstUuid === null) {
-            $burstUuid = $this->quickTimeString($quickTime, 'BurstUUID');
+            $burstUuid = $lookup->string('BurstUUID');
         }
 
         $focusDistanceRange = $makerNotes?->focusDistanceRange;
         if ($focusDistanceRange === null) {
-            $focusDistanceRange = $this->quickTimeFocusDistanceRange($quickTime);
+            $focusDistanceRange = $this->quickTimeFocusDistanceRange($lookup);
         }
 
         $oisMode = $makerNotes?->oisMode;
         if ($oisMode === null) {
-            $oisMode = $this->quickTimeStringOrNumeric($quickTime, 'OISMode');
+            $oisMode = $this->quickTimeStringOrNumeric($lookup, 'OISMode');
         }
 
         $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, AppleMetadata::IMAGE_CAPTURE_TYPES);
         if ($imageCaptureType === null) {
-            $imageCaptureType = $this->quickTimeEnumerated($quickTime, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
+            $imageCaptureType = $this->quickTimeEnumerated($lookup, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
         }
 
         $imageUniqueId = $makerNotes?->imageUniqueId;
         if ($imageUniqueId === null) {
-            $imageUniqueId = $this->quickTimeString($quickTime, 'ImageUniqueID');
+            $imageUniqueId = $lookup->string('ImageUniqueID');
         }
 
         $photoIdentifier = $makerNotes?->photoIdentifier;
         if ($photoIdentifier === null) {
-            $photoIdentifier = $this->quickTimeString($quickTime, 'PhotoIdentifier');
+            $photoIdentifier = $lookup->string('PhotoIdentifier');
         }
 
         $afMeasuredDepth = $makerNotes?->afMeasuredDepth;
         if ($afMeasuredDepth === null) {
-            $afMeasuredDepth = $this->quickTimeFloat($quickTime, 'AFMeasuredDepth');
+            $afMeasuredDepth = $lookup->float('AFMeasuredDepth');
         }
 
         $afConfidence = $makerNotes?->afConfidence;
         if ($afConfidence === null) {
-            $afConfidence = $this->quickTimeFloat($quickTime, 'AFConfidence');
+            $afConfidence = $lookup->float('AFConfidence');
         }
 
         return new AppleMakerNotes(
@@ -288,65 +291,13 @@ final class AppleMakerNotesMapper
         return false;
     }
 
-    private function quickTimeString(?QuickTimeMeta $quickTime, string ...$keys): ?string
-    {
-        if ($quickTime === null) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $quickTime->stringValue($key);
-            if ($value !== null && $value !== '') {
-                return $value;
-            }
-        }
-
-        return null;
-    }
-
-    private function quickTimeFloat(?QuickTimeMeta $quickTime, string ...$keys): ?float
-    {
-        if ($quickTime === null) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $quickTime->floatValue($key);
-            if ($value !== null) {
-                return $value;
-            }
-        }
-
-        return null;
-    }
-
-    private function quickTimeInt(?QuickTimeMeta $quickTime, string ...$keys): ?int
-    {
-        if ($quickTime === null) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $quickTime->intValue($key);
-            if ($value !== null) {
-                return $value;
-            }
-        }
-
-        return null;
-    }
-
     /**
      * @return list<float>|null
      */
-    private function quickTimeFloatList(?QuickTimeMeta $quickTime, string ...$keys): ?array
+    private function quickTimeFloatList(QuickTimeLookup $lookup, string ...$keys): ?array
     {
-        if ($quickTime === null) {
-            return null;
-        }
-
         foreach ($keys as $key) {
-            $raw = $this->quickTimeString($quickTime, $key);
+            $raw = $lookup->string($key);
             if ($raw === null) {
                 continue;
             }
@@ -378,15 +329,15 @@ final class AppleMakerNotesMapper
     /**
      * @return list<float>|null
      */
-    private function quickTimeFocusDistanceRange(?QuickTimeMeta $quickTime): ?array
+    private function quickTimeFocusDistanceRange(QuickTimeLookup $lookup): ?array
     {
-        $range = $this->quickTimeFloatList($quickTime, 'FocusDistanceRange');
+        $range = $this->quickTimeFloatList($lookup, 'FocusDistanceRange');
         if ($range !== null) {
             return $range;
         }
 
-        $near = $this->quickTimeFloat($quickTime, 'FocusDistanceRangeNear', 'FocusDistanceNear');
-        $far = $this->quickTimeFloat($quickTime, 'FocusDistanceRangeFar', 'FocusDistanceFar');
+        $near = $lookup->float('FocusDistanceRangeNear', 'FocusDistanceNear');
+        $far  = $lookup->float('FocusDistanceRangeFar', 'FocusDistanceFar');
 
         $values = [];
         if ($near !== null) {
@@ -400,24 +351,20 @@ final class AppleMakerNotesMapper
         return $values !== [] ? $values : null;
     }
 
-    private function quickTimeStringOrNumeric(?QuickTimeMeta $quickTime, string ...$keys): ?string
+    private function quickTimeStringOrNumeric(QuickTimeLookup $lookup, string ...$keys): ?string
     {
-        if ($quickTime === null) {
-            return null;
-        }
-
         foreach ($keys as $key) {
-            $value = $this->quickTimeString($quickTime, $key);
+            $value = $lookup->string($key);
             if ($value !== null) {
                 return $value;
             }
 
-            $intValue = $quickTime->intValue($key);
+            $intValue = $lookup->int($key);
             if ($intValue !== null) {
                 return (string) $intValue;
             }
 
-            $floatValue = $quickTime->floatValue($key);
+            $floatValue = $lookup->float($key);
             if ($floatValue !== null) {
                 return (string) $floatValue;
             }
@@ -452,14 +399,10 @@ final class AppleMakerNotesMapper
     /**
      * @param array<int, string> $map
      */
-    private function quickTimeEnumerated(?QuickTimeMeta $quickTime, array $map, string ...$keys): ?string
+    private function quickTimeEnumerated(QuickTimeLookup $lookup, array $map, string ...$keys): ?string
     {
-        if ($quickTime === null) {
-            return null;
-        }
-
         foreach ($keys as $key) {
-            $string = $this->quickTimeString($quickTime, $key);
+            $string = $lookup->string($key);
             if ($string !== null) {
                 if (is_numeric($string)) {
                     $code = (int) $string;
@@ -470,7 +413,7 @@ final class AppleMakerNotesMapper
                 return $string;
             }
 
-            $code = $quickTime->intValue($key);
+            $code = $lookup->int($key);
             if ($code !== null) {
                 return $map[$code] ?? (string) $code;
             }
@@ -482,123 +425,6 @@ final class AppleMakerNotesMapper
     /**
      * @return array{0:?string,1:?float,2:?float}|null
      */
-    private function quickTimeSemanticStyle(?QuickTimeMeta $meta = null): ?array
-    {
-        if ($meta === null) {
-            return null;
-        }
-
-        $value = $meta->keys['SemanticStyle'] ?? null;
-        if (!is_array($value)) {
-            return null;
-        }
-
-        $entries = $this->normaliseSemanticStyleEntries($value);
-        if ($entries === null) {
-            return null;
-        }
-
-        $presetRaw = $this->semanticStyleEntry($entries, 0);
-        $legacyWarmth = $this->semanticStyleEntry($entries, 1);
-        $modernWarmth = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 2) : null;
-        $warmthRaw = $legacyWarmth ?? $modernWarmth;
-        $toneRawLegacy = $legacyWarmth !== null ? $this->semanticStyleEntry($entries, 2) : null;
-        $toneRawModern = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 3, 2) : null;
-        $toneRaw = $toneRawLegacy ?? $toneRawModern;
-
-        $preset = $this->semanticStylePreset($presetRaw);
-        $warmth = $this->semanticStyleFloat($warmthRaw);
-        $tone = $this->semanticStyleFloat($toneRaw);
-
-        if ($preset === null && $warmth === null && $tone === null) {
-            return null;
-        }
-
-        return [$preset, $warmth, $tone];
-    }
-
-    /**
-     * @param array<int|string, mixed> $semantic
-     *
-     * @return array<int|string, string|int|float|bool|null>|null
-     */
-    private function normaliseSemanticStyleEntries(array $semantic): ?array
-    {
-        if (!array_is_list($semantic)) {
-            foreach (['values', 'Values'] as $key) {
-                if (array_key_exists($key, $semantic) && is_array($semantic[$key])) {
-                    return $this->normaliseSemanticStyleEntries($semantic[$key]);
-                }
-            }
-        }
-
-        return $semantic;
-    }
-
-    /**
-     * @param array<int|string, string|int|float|bool|null> $entries
-     */
-    private function semanticStyleEntry(array $entries, int ...$indexes): string|int|float|bool|null
-    {
-        foreach ($indexes as $index) {
-            $candidates = [$index, (string) $index, '_' . $index];
-            foreach ($candidates as $key) {
-                if (!array_key_exists($key, $entries)) {
-                    continue;
-                }
-
-                $value = $entries[$key];
-                if (is_array($value)) {
-                    foreach (['value', 'Value'] as $innerKey) {
-                        if (array_key_exists($innerKey, $value)) {
-                            $inner = $value[$innerKey];
-                            if (!is_array($inner)) {
-                                $value = $inner;
-                            }
-
-                            break;
-                        }
-                    }
-
-                    if (is_array($value)) {
-                        continue;
-                    }
-                }
-
-                if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
-                    return $value;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private function semanticStylePreset(string|int|float|bool|null $value): ?string
-    {
-        if (is_string($value)) {
-            $trimmed = trim($value);
-            if ($trimmed !== '') {
-                return $trimmed;
-            }
-        }
-
-        return null;
-    }
-
-    private function semanticStyleFloat(string|int|float|bool|null $value): ?float
-    {
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value) || is_numeric($value)) {
-            return (float) $value;
-        }
-
-        return null;
-    }
-
     /**
      * @return array<string, bool>
      */

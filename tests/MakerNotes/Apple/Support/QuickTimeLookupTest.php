@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
+
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use PHPUnit\Framework\TestCase;
+
+final class QuickTimeLookupTest extends TestCase
+{
+    public function testStringReturnsFirstNonEmptyCandidate(): void
+    {
+        $meta = new QuickTimeMeta([
+            'Primary' => '',
+            'Secondary' => '  value  ',
+        ]);
+
+        $lookup = new QuickTimeLookup($meta);
+
+        self::assertSame('value', $lookup->string('Primary', 'Secondary'));
+    }
+
+    public function testFloatFallsBackToNumericString(): void
+    {
+        $meta = new QuickTimeMeta([
+            'First' => 'not-a-number',
+            'Second' => '42.5',
+        ]);
+
+        $lookup = new QuickTimeLookup($meta);
+
+        self::assertSame(42.5, $lookup->float('First', 'Second'));
+    }
+
+    public function testIntReturnsNullWhenMissing(): void
+    {
+        $lookup = new QuickTimeLookup(null);
+
+        self::assertNull($lookup->int('Missing'));
+    }
+
+    public function testBoolReturnsFirstResolvableValue(): void
+    {
+        $meta = new QuickTimeMeta([
+            'Primary' => 'false',
+            'Secondary' => true,
+        ]);
+
+        $lookup = new QuickTimeLookup($meta);
+
+        self::assertFalse($lookup->bool('Primary'));
+        self::assertTrue($lookup->bool('Unknown', 'Secondary'));
+    }
+}

@@ -13,6 +13,8 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
@@ -99,13 +101,14 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
     {
         $appleData = $this->parseAppleData($raw);
-
-        return new MakerNotesMetadata(
+        $metadata  = new MakerNotesMetadata(
             'Apple',
             strlen($raw),
             sha1($raw),
             $appleData
         );
+
+        return (new AppleMakerNotesMapper())->map($metadata, null) ?? $metadata;
     }
 
     /**
@@ -589,7 +592,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             && !array_key_exists('SemanticStyleWarmth', $dictionary)
             && !array_key_exists('SemanticStyleTone', $dictionary)
         ) {
-            $semanticStyleCompact = $this->semanticStyleFromCollection($dictionary);
+            $semanticStyleCompact = SemanticStyle::fromDictionary($dictionary);
             if ($semanticStyleCompact !== null) {
                 [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 
@@ -638,7 +641,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $semanticStylePreset  = $this->stringValue($dictionary, 'SemanticStylePreset');
         $semanticStyleWarmth  = $this->floatValue($dictionary, 'SemanticStyleWarmth');
         $semanticStyleTone    = $this->floatValue($dictionary, 'SemanticStyleTone');
-        $semanticStyleCompact ??= $this->semanticStyleFromCollection($dictionary);
+        $semanticStyleCompact ??= SemanticStyle::fromDictionary($dictionary);
         if ($semanticStyleCompact !== null) {
             [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 
@@ -1397,129 +1400,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @return array{0:?string,1:?float,2:?float}|null
      */
-    private function semanticStyleFromCollection(array $dictionary): ?array
-    {
-        if (!array_key_exists('SemanticStyle', $dictionary)) {
-            return null;
-        }
-
-        $value = $dictionary['SemanticStyle'];
-        if (!is_array($value)) {
-            return null;
-        }
-
-        /** @var array<int|string, mixed> $semantic */
-        $semantic = $value;
-
-        $entries = $this->semanticStyleEntries($semantic);
-        if ($entries === null) {
-            return null;
-        }
-
-        $presetRaw      = $this->semanticStyleEntry($entries, 0);
-        $legacyWarmth   = $this->semanticStyleEntry($entries, 1);
-        $modernWarmth   = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 2) : null;
-        $warmthRaw      = $legacyWarmth ?? $modernWarmth;
-        $toneRawLegacy  = $legacyWarmth !== null ? $this->semanticStyleEntry($entries, 2) : null;
-        $toneRawModern  = $legacyWarmth === null ? $this->semanticStyleEntry($entries, 3, 2) : null;
-        $toneRaw        = $toneRawLegacy ?? $toneRawModern;
-
-        $preset = $this->semanticStylePreset($presetRaw);
-        $warmth = $this->semanticStyleFloat($warmthRaw);
-        $tone   = $this->semanticStyleFloat($toneRaw);
-
-        if ($preset === null && $warmth === null && $tone === null) {
-            return null;
-        }
-
-        return [$preset, $warmth, $tone];
-    }
-
-    /**
-     * @param array<int|string, mixed> $semantic
-     *
-     * @return array<int|string, string|int|float|bool|null>|null
-     */
-    private function semanticStyleEntries(array $semantic): ?array
-    {
-        if (!array_is_list($semantic)) {
-            foreach (['values', 'Values'] as $key) {
-                if (array_key_exists($key, $semantic) && is_array($semantic[$key])) {
-                    /** @var array<int|string, mixed> $values */
-                    $values = $semantic[$key];
-
-                    return $this->semanticStyleEntries($values);
-                }
-            }
-        }
-
-        return $semantic;
-    }
-
-    /**
-     * @param array<int|string, string|int|float|bool|null> $entries
-     */
-    private function semanticStyleEntry(array $entries, int ...$indexes): string|int|float|bool|null
-    {
-        foreach ($indexes as $index) {
-            $candidates = [$index, (string) $index, '_' . $index];
-            foreach ($candidates as $key) {
-                if (!array_key_exists($key, $entries)) {
-                    continue;
-                }
-
-                $value = $entries[$key];
-                if (is_array($value)) {
-                    foreach (['value', 'Value'] as $innerKey) {
-                        if (array_key_exists($innerKey, $value)) {
-                            $inner = $value[$innerKey];
-                            if (!is_array($inner)) {
-                                $value = $inner;
-                            }
-
-                            break;
-                        }
-                    }
-
-                    if (is_array($value)) {
-                        continue;
-                    }
-                }
-
-                if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
-                    return $value;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private function semanticStylePreset(string|int|float|bool|null $value): ?string
-    {
-        if (is_string($value)) {
-            $trimmed = trim($value);
-            if ($trimmed !== '') {
-                return $trimmed;
-            }
-        }
-
-        return null;
-    }
-
-    private function semanticStyleFloat(string|int|float|bool|null $value): ?float
-    {
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value) || is_numeric($value)) {
-            return (float) $value;
-        }
-
-        return null;
-    }
-
     /**
      * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
      *
