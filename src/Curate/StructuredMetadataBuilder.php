@@ -19,7 +19,6 @@ use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\MultiPictureResolver;
-use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
@@ -110,7 +109,7 @@ final class StructuredMetadataBuilder
         $exifDocument      = $metadata->exifDoc;
         $xmpDocument       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $xmpResolver       = new XmpResolver($xmpDocument);
-        $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
+        $quickTimeMeta     = $metadata->quickTime;
         $appleMakerNotes   = $metadata->makerNotes?->apple();
         $gpsResolver       = new GpsResolver();
         $regionsResolver   = new RegionsResolver();
@@ -241,9 +240,9 @@ final class StructuredMetadataBuilder
 
         $gps = $gpsResolver->resolve($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
-        $device = $this->buildDevice($exifDocument, $quickTimeResolver, $xmpResolver);
+        $device = $this->buildDevice($exifDocument, $quickTimeMeta, $xmpResolver);
 
-        $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime, $exifDocument);
+        $apple = $this->buildApple($appleMakerNotes, $quickTimeMeta, $exifDocument);
         $xmp   = $xmpResolver->value();
 
         $file = new File(
@@ -255,26 +254,26 @@ final class StructuredMetadataBuilder
         );
 
         $container = new Container(
-            format: $quickTimeResolver->string(QuickTimeMeta::MAJOR_BRAND_KEY),
+            format: $this->quickTimeString($quickTimeMeta, QuickTimeMeta::MAJOR_BRAND_KEY),
             encoder: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string('com.apple.quicktime.encoder'),
-                fn (): ?string => $quickTimeResolver->string('Encoder'),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.encoder'),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, 'Encoder'),
             ]),
             bitrate: CompositeResolver::first([
-                fn (): ?int => $quickTimeResolver->int('com.apple.quicktime.avgBitrate'),
-                fn (): ?int => $quickTimeResolver->int('com.apple.quicktime.bitrate'),
-                fn (): ?int => $quickTimeResolver->int('com.apple.quicktime.dataRate'),
-                fn (): ?int => $quickTimeResolver->int('AvgBitrate'),
-                fn (): ?int => $quickTimeResolver->int('Bitrate'),
+                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'com.apple.quicktime.avgBitrate'),
+                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'com.apple.quicktime.bitrate'),
+                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'com.apple.quicktime.dataRate'),
+                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'AvgBitrate'),
+                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'Bitrate'),
             ]),
             videoCodec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::COMPRESSOR_NAME_KEY),
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::VIDEO_CODEC_KEY),
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::HANDLER_DESCRIPTION_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::COMPRESSOR_NAME_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::VIDEO_CODEC_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::HANDLER_DESCRIPTION_KEY),
             ]),
             audioCodec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_FORMAT_KEY),
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_CODEC_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_FORMAT_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_CODEC_KEY),
             ]),
         );
 
@@ -286,27 +285,27 @@ final class StructuredMetadataBuilder
         );
 
         $video = new Video(
-            durationSec: $quickTimeResolver->float('com.apple.quicktime.duration'),
-            frameRate: $quickTimeResolver->float('com.apple.quicktime.videoFrameRate'),
-            width: $quickTimeResolver->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
-            height: $quickTimeResolver->int(QuickTimeMeta::VIDEO_HEIGHT_KEY),
+            durationSec: $this->quickTimeFloat($quickTimeMeta, 'com.apple.quicktime.duration'),
+            frameRate: $this->quickTimeFloat($quickTimeMeta, 'com.apple.quicktime.videoFrameRate'),
+            width: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::VIDEO_WIDTH_KEY),
+            height: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::VIDEO_HEIGHT_KEY),
             codec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::COMPRESSOR_NAME_KEY),
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::VIDEO_CODEC_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::COMPRESSOR_NAME_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::VIDEO_CODEC_KEY),
             ]),
-            hdr: $quickTimeResolver->bool('com.apple.quicktime.hdrFormat'),
-            transferFunction: $quickTimeResolver->string('com.apple.quicktime.transferFunction'),
-            colorPrimaries: $quickTimeResolver->string('com.apple.quicktime.colorPrimaries'),
+            hdr: $this->quickTimeBool($quickTimeMeta, 'com.apple.quicktime.hdrFormat'),
+            transferFunction: $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.transferFunction'),
+            colorPrimaries: $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.colorPrimaries'),
         );
 
         $audio = new Audio(
-            channels: $quickTimeResolver->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
-            sampleRate: $quickTimeResolver->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
+            channels: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_CHANNELS_KEY),
+            sampleRate: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
             codec: CompositeResolver::first([
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_FORMAT_KEY),
-                fn (): ?string => $quickTimeResolver->string(QuickTimeMeta::AUDIO_CODEC_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_FORMAT_KEY),
+                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_CODEC_KEY),
             ]),
-            bitDepth: $quickTimeResolver->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
+            bitDepth: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
         );
 
         $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
@@ -395,7 +394,7 @@ final class StructuredMetadataBuilder
 
         $whiteBalanceKelvin = $apple->colorTemperature;
         if ($whiteBalanceKelvin === null) {
-            $whiteBalanceKelvin = $this->quickTimeInt($quickTimeResolver, 'ColorTemperature');
+            $whiteBalanceKelvin = $this->quickTimeInt($quickTimeMeta, 'ColorTemperature');
         }
 
         $whiteBalanceDetails = new WhiteBalanceDetails(
@@ -433,7 +432,7 @@ final class StructuredMetadataBuilder
 
         $scene = $this->buildScene(
             $exifDocument,
-            $quickTimeResolver,
+            $quickTimeMeta,
             $apple,
             $this->countFaceRegions($regions),
         );
@@ -478,7 +477,7 @@ final class StructuredMetadataBuilder
             imageEditor: $exifDocument?->imageEditor(),
         );
 
-        $temporal = $this->buildTemporal($exifDocument, $quickTimeResolver, $xmpResolver);
+        $temporal = $this->buildTemporal($exifDocument, $quickTimeMeta, $xmpResolver);
 
         $cropFactor          = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
         $circleOfConfusionMm = ValueConverters::calcCircleOfConfusionMm($cropFactor);
@@ -504,10 +503,10 @@ final class StructuredMetadataBuilder
         $panoramaFlag = $xmpResolver->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
         $related      = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
-            burstId: $quickTimeResolver->string('BurstUUID'),
-            isPrimaryInBurst: $quickTimeResolver->bool('BurstSelected'),
+            burstId: $this->quickTimeString($quickTimeMeta, 'BurstUUID'),
+            isPrimaryInBurst: $this->quickTimeBool($quickTimeMeta, 'BurstSelected'),
             panoramaId: $panoramaFlag === true ? 'panorama' : null,
-            depthDataId: $quickTimeResolver->string('DepthData'),
+            depthDataId: $this->quickTimeString($quickTimeMeta, 'DepthData'),
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
 
@@ -532,7 +531,7 @@ final class StructuredMetadataBuilder
             focalPlaneResolutionUnit: $focalPlaneUnit,
         );
 
-        $uav = $this->buildUav($exifDocument, $quickTimeResolver);
+        $uav = $this->buildUav($exifDocument, $quickTimeMeta);
 
         $hasHistory      = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
         $makerNotesSafe  = $metadata->makerNotes?->isSafe();
@@ -594,15 +593,15 @@ final class StructuredMetadataBuilder
      * Builds the device metadata aggregate by combining EXIF, QuickTime and XMP sources.
      *
      * @param ExifDocument   $exif              Resolver exposing EXIF tag helpers.
-     * @param QuickTimeResolver $quickTimeResolver Resolver exposing QuickTime metadata fields.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata container exposing QuickTime fields.
      * @param XmpResolver       $xmpResolver       Resolver exposing XMP metadata fields.
      *
      * @return Device Device value object describing capture hardware and software.
      */
-    private function buildDevice(?ExifDocument $exif, QuickTimeResolver $quickTimeResolver, XmpResolver $xmpResolver): Device
+    private function buildDevice(?ExifDocument $exif, ?QuickTimeMeta $quickTime, XmpResolver $xmpResolver): Device
     {
         $softwareCandidates = [
-            fn (): ?string => $quickTimeResolver->string('com.apple.quicktime.software'),
+            fn (): ?string => $this->quickTimeString($quickTime, 'com.apple.quicktime.software'),
             fn (): ?string => $xmpResolver->string('http://ns.adobe.com/xap/1.0/', 'CreatorTool'),
         ];
 
@@ -626,12 +625,12 @@ final class StructuredMetadataBuilder
      * whenever only the original or digitized timestamp carries sub-second precision.
      *
      * @param ExifDocument   $resolver  Resolver exposing EXIF timestamps and offsets.
-     * @param QuickTimeResolver $quickTime QuickTime metadata resolver used for time fallbacks.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata used for time fallbacks.
      * @param XmpResolver       $xmp       Resolver providing XMP timestamp fields.
      *
      * @return Temporal Normalised temporal metadata aggregate.
      */
-    private function buildTemporal(?ExifDocument $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
+    private function buildTemporal(?ExifDocument $resolver, ?QuickTimeMeta $quickTime, XmpResolver $xmp): Temporal
     {
         $exifCreate = $resolver?->dateTimeDigitized();
         $exifModify = $resolver?->dateTime();
@@ -639,8 +638,8 @@ final class StructuredMetadataBuilder
         $xmpCreate       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $xmpModify       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
         $xmpDateCreated  = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
-        $quickTimeCreate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
-        $quickTimeModify = $this->parseFlexibleDate($quickTime->string('ModifyDate'));
+        $quickTimeCreate = $this->parseFlexibleDate($this->quickTimeString($quickTime, 'CreationDate'));
+        $quickTimeModify = $this->parseFlexibleDate($this->quickTimeString($quickTime, 'ModifyDate'));
 
         $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
@@ -839,7 +838,7 @@ final class StructuredMetadataBuilder
      * Builds the scene metadata aggregate using EXIF, QuickTime and Apple sources.
      *
      * @param ExifDocument|null   $exif      Resolver exposing EXIF scene metadata.
-     * @param QuickTimeResolver $quickTime Resolver providing QuickTime scene hints.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata providing scene hints.
      * @param AppleMakerNotes   $apple     Aggregated Apple maker note metadata.
      * @param int|null          $faceCount Number of detected face regions.
      *
@@ -847,7 +846,7 @@ final class StructuredMetadataBuilder
      */
     private function buildScene(
         ?ExifDocument $exif,
-        QuickTimeResolver $quickTime,
+        ?QuickTimeMeta $quickTime,
         AppleMakerNotes $apple,
         ?int $faceCount,
     ): Scene {
@@ -858,9 +857,9 @@ final class StructuredMetadataBuilder
 
         $hdr   = $apple->hdrImageType;
         if ($hdr === null) {
-            $hdr = $quickTime->string('HDRImageType');
+            $hdr = $this->quickTimeString($quickTime, 'HDRImageType');
         }
-        $night = $quickTime->bool('NightMode');
+        $night = $this->quickTimeBool($quickTime, 'NightMode');
         if ($night === null) {
             $night = $this->appleFlag($flags, 'nightMode');
         }
@@ -921,76 +920,74 @@ final class StructuredMetadataBuilder
      * Builds the Apple metadata aggregate by combining maker note values with QuickTime fallbacks.
      *
      * @param AppleMakerNotes|null $makerNotes        Parsed Apple maker note payload.
-     * @param QuickTimeResolver    $quickTimeResolver Resolver exposing QuickTime metadata entries.
-     * @param QuickTimeMeta|null   $quickTimeMeta     QuickTime metadata container used for content identifiers.
+     * @param QuickTimeMeta|null   $quickTime QuickTime metadata container exposing QuickTime entries.
      * @param ExifDocument|null      $exifDocument      Resolver exposing EXIF fallback values.
      *
      * @return AppleMakerNotes Apple metadata value object with normalised fields.
      */
     private function buildApple(
         ?AppleMakerNotes $makerNotes,
-        QuickTimeResolver $quickTimeResolver,
-        ?QuickTimeMeta $quickTimeMeta,
+        ?QuickTimeMeta $quickTime,
         ?ExifDocument $exifDocument,
     ): AppleMakerNotes {
         $contentIdentifier = $makerNotes?->contentIdentifier;
         if ($contentIdentifier === null) {
-            $contentIdentifier = $quickTimeMeta?->contentIdentifier();
+            $contentIdentifier = $quickTime?->contentIdentifier();
         }
 
         $cameraType = $makerNotes?->cameraType;
         if ($cameraType === null) {
-            $cameraType = $this->quickTimeString($quickTimeResolver, 'CameraType');
+            $cameraType = $this->quickTimeString($quickTime, 'CameraType');
         }
 
         $hdrHeadroom = $makerNotes?->hdrHeadroom;
         if ($hdrHeadroom === null) {
-            $hdrHeadroom = $this->quickTimeFloat($quickTimeResolver, 'HdrHeadroom', 'HDRHeadroom');
+            $hdrHeadroom = $this->quickTimeFloat($quickTime, 'HdrHeadroom', 'HDRHeadroom');
         }
 
         $hdrGain = $makerNotes?->hdrGain;
         if ($hdrGain === null) {
-            $hdrGain = $this->quickTimeFloatList($quickTimeResolver, 'HdrGain', 'HDRGain');
+            $hdrGain = $this->quickTimeFloatList($quickTime, 'HdrGain', 'HDRGain');
         }
 
         $snr = $makerNotes?->snr;
         if ($snr === null) {
-            $snr = $this->quickTimeFloat($quickTimeResolver, 'SNRSetting', 'SNR');
+            $snr = $this->quickTimeFloat($quickTime, 'SNRSetting', 'SNR');
         }
 
         $focusPosition = $makerNotes?->focusPosition;
         if ($focusPosition === null) {
-            $focusPosition = $this->quickTimeFloat($quickTimeResolver, 'FocusPosition');
+            $focusPosition = $this->quickTimeFloat($quickTime, 'FocusPosition');
         }
 
         $livePhotoIndex = $makerNotes?->livePhotoIndex;
         if ($livePhotoIndex === null) {
-            $livePhotoIndex = $this->quickTimeInt($quickTimeResolver, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
+            $livePhotoIndex = $this->quickTimeInt($quickTime, 'LivePhotoVideoIndex', 'LivePhotoMovieIndex');
         }
 
         $livePhotoTime = $makerNotes?->livePhotoTime;
 
         $colorTemperature = $makerNotes?->colorTemperature;
         if ($colorTemperature === null) {
-            $colorTemperature = $this->quickTimeInt($quickTimeResolver, 'ColorTemperature');
+            $colorTemperature = $this->quickTimeInt($quickTime, 'ColorTemperature');
         }
 
         $semanticPreset = $makerNotes?->semanticStylePreset;
         if ($semanticPreset === null) {
-            $semanticPreset = $this->quickTimeString($quickTimeResolver, 'SemanticStylePreset');
+            $semanticPreset = $this->quickTimeString($quickTime, 'SemanticStylePreset');
         }
 
         $semanticWarmth = $makerNotes?->semanticStyleWarmth;
         if ($semanticWarmth === null) {
-            $semanticWarmth = $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleWarmth');
+            $semanticWarmth = $this->quickTimeFloat($quickTime, 'SemanticStyleWarmth');
         }
 
         $semanticTone = $makerNotes?->semanticStyleTone;
         if ($semanticTone === null) {
-            $semanticTone = $this->quickTimeFloat($quickTimeResolver, 'SemanticStyleTone');
+            $semanticTone = $this->quickTimeFloat($quickTime, 'SemanticStyleTone');
         }
 
-        $semanticStyleComposite = $this->quickTimeSemanticStyle($quickTimeMeta);
+        $semanticStyleComposite = $this->quickTimeSemanticStyle($quickTime);
         if ($semanticStyleComposite !== null) {
             [$compositePreset, $compositeWarmth, $compositeTone] = $semanticStyleComposite;
 
@@ -1009,11 +1006,11 @@ final class StructuredMetadataBuilder
 
         $accelerationVector = $makerNotes?->accelerationVector;
         if ($accelerationVector === null) {
-            $accelerationVector = $this->quickTimeFloatList($quickTimeResolver, 'AccelerationVector');
+            $accelerationVector = $this->quickTimeFloatList($quickTime, 'AccelerationVector');
         }
 
         $flags          = $makerNotes instanceof AppleMakerNotes ? $makerNotes->flags : [];
-        $quickTimeFlags = $this->quickTimeFlags($quickTimeResolver);
+        $quickTimeFlags = $this->quickTimeFlags($quickTime);
         foreach ($quickTimeFlags as $key => $value) {
             if (!array_key_exists($key, $flags)) {
                 $flags[$key] = $value;
@@ -1032,67 +1029,67 @@ final class StructuredMetadataBuilder
 
         $imageCaptureRequestId = $makerNotes?->imageCaptureRequestId;
         if ($imageCaptureRequestId === null) {
-            $imageCaptureRequestId = $this->quickTimeString($quickTimeResolver, 'ImageCaptureRequestID');
+            $imageCaptureRequestId = $this->quickTimeString($quickTime, 'ImageCaptureRequestID');
         }
 
         $qualityHint = $makerNotes?->qualityHint;
         if ($qualityHint === null) {
-            $qualityHint = $this->quickTimeStringOrNumeric($quickTimeResolver, 'QualityHint');
+            $qualityHint = $this->quickTimeStringOrNumeric($quickTime, 'QualityHint');
         }
 
         $colorCorrectionMatrix = $makerNotes?->colorCorrectionMatrix;
         if ($colorCorrectionMatrix === null) {
-            $colorCorrectionMatrix = $this->quickTimeFloatList($quickTimeResolver, 'ColorCorrectionMatrix');
+            $colorCorrectionMatrix = $this->quickTimeFloatList($quickTime, 'ColorCorrectionMatrix');
         }
 
         $makerNoteVersion = $makerNotes?->makerNoteVersion;
         if ($makerNoteVersion === null) {
-            $makerNoteVersion = $this->quickTimeString($quickTimeResolver, 'MakerNoteVersion');
+            $makerNoteVersion = $this->quickTimeString($quickTime, 'MakerNoteVersion');
         }
 
         $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, AppleMetadata::HDR_IMAGE_TYPES);
         if ($hdrImageType === null) {
-            $hdrImageType = $this->quickTimeEnumerated($quickTimeResolver, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
+            $hdrImageType = $this->quickTimeEnumerated($quickTime, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
         }
 
         $burstUuid = $makerNotes?->burstUuid;
         if ($burstUuid === null) {
-            $burstUuid = $this->quickTimeString($quickTimeResolver, 'BurstUUID');
+            $burstUuid = $this->quickTimeString($quickTime, 'BurstUUID');
         }
 
         $focusDistanceRange = $makerNotes?->focusDistanceRange;
         if ($focusDistanceRange === null) {
-            $focusDistanceRange = $this->quickTimeFocusDistanceRange($quickTimeResolver);
+            $focusDistanceRange = $this->quickTimeFocusDistanceRange($quickTime);
         }
 
         $oisMode = $makerNotes?->oisMode;
         if ($oisMode === null) {
-            $oisMode = $this->quickTimeStringOrNumeric($quickTimeResolver, 'OISMode');
+            $oisMode = $this->quickTimeStringOrNumeric($quickTime, 'OISMode');
         }
 
         $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, AppleMetadata::IMAGE_CAPTURE_TYPES);
         if ($imageCaptureType === null) {
-            $imageCaptureType = $this->quickTimeEnumerated($quickTimeResolver, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
+            $imageCaptureType = $this->quickTimeEnumerated($quickTime, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
         }
 
         $imageUniqueId = $makerNotes?->imageUniqueId;
         if ($imageUniqueId === null) {
-            $imageUniqueId = $this->quickTimeString($quickTimeResolver, 'ImageUniqueID');
+            $imageUniqueId = $this->quickTimeString($quickTime, 'ImageUniqueID');
         }
 
         $photoIdentifier = $makerNotes?->photoIdentifier;
         if ($photoIdentifier === null) {
-            $photoIdentifier = $this->quickTimeString($quickTimeResolver, 'PhotoIdentifier');
+            $photoIdentifier = $this->quickTimeString($quickTime, 'PhotoIdentifier');
         }
 
         $afMeasuredDepth = $makerNotes?->afMeasuredDepth;
         if ($afMeasuredDepth === null) {
-            $afMeasuredDepth = $this->quickTimeFloat($quickTimeResolver, 'AFMeasuredDepth');
+            $afMeasuredDepth = $this->quickTimeFloat($quickTime, 'AFMeasuredDepth');
         }
 
         $afConfidence = $makerNotes?->afConfidence;
         if ($afConfidence === null) {
-            $afConfidence = $this->quickTimeFloat($quickTimeResolver, 'AFConfidence');
+            $afConfidence = $this->quickTimeFloat($quickTime, 'AFConfidence');
         }
 
         return new AppleMakerNotes(
@@ -1175,46 +1172,46 @@ final class StructuredMetadataBuilder
         return new Motion($rollDeg, $pitchDeg, $yawDeg, $accelX, $accelY, $accelZ, null, null, null);
     }
 
-    private function buildUav(?ExifDocument $exif, QuickTimeResolver $quickTime): Uav
+    private function buildUav(?ExifDocument $exif, ?QuickTimeMeta $quickTime): Uav
     {
         $manufacturer = $exif?->aircraftMake();
         if ($manufacturer === null) {
-            $manufacturer = $quickTime->string('com.apple.quicktime.make');
+            $manufacturer = $this->quickTimeString($quickTime, 'com.apple.quicktime.make');
         }
 
         $model = $exif?->aircraftModel();
         if ($model === null) {
-            $model = $quickTime->string('com.apple.quicktime.model');
+            $model = $this->quickTimeString($quickTime, 'com.apple.quicktime.model');
         }
 
         $flightYaw = $exif?->flightYawDeg();
         if ($flightYaw === null) {
-            $flightYaw = $quickTime->float('com.apple.quicktime.flightYawDegree');
+            $flightYaw = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.flightYawDegree');
         }
 
         $flightPitch = $exif?->flightPitchDeg();
         if ($flightPitch === null) {
-            $flightPitch = $quickTime->float('com.apple.quicktime.flightPitchDegree');
+            $flightPitch = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.flightPitchDegree');
         }
 
         $flightRoll = $exif?->flightRollDeg();
         if ($flightRoll === null) {
-            $flightRoll = $quickTime->float('com.apple.quicktime.flightRollDegree');
+            $flightRoll = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.flightRollDegree');
         }
 
         $gimbalYaw = $exif?->gimbalYawDeg();
         if ($gimbalYaw === null) {
-            $gimbalYaw = $quickTime->float('com.apple.quicktime.gimbalYawDegree');
+            $gimbalYaw = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.gimbalYawDegree');
         }
 
         $gimbalPitch = $exif?->gimbalPitchDeg();
         if ($gimbalPitch === null) {
-            $gimbalPitch = $quickTime->float('com.apple.quicktime.gimbalPitchDegree');
+            $gimbalPitch = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.gimbalPitchDegree');
         }
 
         $gimbalRoll = $exif?->gimbalRollDeg();
         if ($gimbalRoll === null) {
-            $gimbalRoll = $quickTime->float('com.apple.quicktime.gimbalRollDegree');
+            $gimbalRoll = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.gimbalRollDegree');
         }
 
         return new Uav(
@@ -1232,15 +1229,19 @@ final class StructuredMetadataBuilder
     /**
      * Resolves the first non-empty QuickTime string value from the supplied keys.
      *
-     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
      * @param string            ...$keys  Candidate metadata keys to inspect in order.
      *
      * @return string|null First matching string value or null when no value is present.
      */
-    private function quickTimeString(QuickTimeResolver $resolver, string ...$keys): ?string
+    private function quickTimeString(?QuickTimeMeta $quickTime, string ...$keys): ?string
     {
+        if ($quickTime === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $value = $resolver->string($key);
+            $value = $quickTime->stringValue($key);
             if ($value !== null && $value !== '') {
                 return $value;
             }
@@ -1252,15 +1253,35 @@ final class StructuredMetadataBuilder
     /**
      * Resolves the first available QuickTime float value from the provided keys.
      *
-     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
      * @param string            ...$keys  Candidate metadata keys to inspect in order.
      *
      * @return float|null First matching float value or null when no value is present.
      */
-    private function quickTimeFloat(QuickTimeResolver $resolver, string ...$keys): ?float
+    private function quickTimeFloat(?QuickTimeMeta $quickTime, string ...$keys): ?float
     {
+        if ($quickTime === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $value = $resolver->float($key);
+            $value = $quickTime->floatValue($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function quickTimeBool(?QuickTimeMeta $quickTime, string ...$keys): ?bool
+    {
+        if ($quickTime === null) {
+            return null;
+        }
+
+        foreach ($keys as $key) {
+            $value = $quickTime->boolValue($key);
             if ($value !== null) {
                 return $value;
             }
@@ -1272,15 +1293,19 @@ final class StructuredMetadataBuilder
     /**
      * Resolves the first available QuickTime integer value from the provided keys.
      *
-     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
      * @param string            ...$keys  Candidate metadata keys to inspect in order.
      *
      * @return int|null First matching integer value or null when no value is present.
      */
-    private function quickTimeInt(QuickTimeResolver $resolver, string ...$keys): ?int
+    private function quickTimeInt(?QuickTimeMeta $quickTime, string ...$keys): ?int
     {
+        if ($quickTime === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $value = $resolver->int($key);
+            $value = $quickTime->intValue($key);
             if ($value !== null) {
                 return $value;
             }
@@ -1292,14 +1317,14 @@ final class StructuredMetadataBuilder
     /**
      * Resolves a list of floating point values from a space or comma separated QuickTime field.
      *
-     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
      * @param string            ...$keys  Candidate metadata keys to inspect in order.
      *
      * @return list<float>|null Normalised list of float values or null when unavailable.
      */
-    private function quickTimeFloatList(QuickTimeResolver $resolver, string ...$keys): ?array
+    private function quickTimeFloatList(?QuickTimeMeta $quickTime, string ...$keys): ?array
     {
-        $raw = $this->quickTimeString($resolver, ...$keys);
+        $raw = $this->quickTimeString($quickTime, ...$keys);
         if ($raw === null) {
             return null;
         }
@@ -1326,15 +1351,15 @@ final class StructuredMetadataBuilder
     /**
      * @return list<float>|null
      */
-    private function quickTimeFocusDistanceRange(QuickTimeResolver $resolver): ?array
+    private function quickTimeFocusDistanceRange(?QuickTimeMeta $quickTime): ?array
     {
-        $range = $this->quickTimeFloatList($resolver, 'FocusDistanceRange');
+        $range = $this->quickTimeFloatList($quickTime, 'FocusDistanceRange');
         if ($range !== null) {
             return $range;
         }
 
-        $near = $this->quickTimeFloat($resolver, 'FocusDistanceRangeNear', 'FocusDistanceNear');
-        $far  = $this->quickTimeFloat($resolver, 'FocusDistanceRangeFar', 'FocusDistanceFar');
+        $near = $this->quickTimeFloat($quickTime, 'FocusDistanceRangeNear', 'FocusDistanceNear');
+        $far  = $this->quickTimeFloat($quickTime, 'FocusDistanceRangeFar', 'FocusDistanceFar');
 
         $values = [];
         if ($near !== null) {
@@ -1348,20 +1373,24 @@ final class StructuredMetadataBuilder
         return $values !== [] ? $values : null;
     }
 
-    private function quickTimeStringOrNumeric(QuickTimeResolver $resolver, string ...$keys): ?string
+    private function quickTimeStringOrNumeric(?QuickTimeMeta $quickTime, string ...$keys): ?string
     {
+        if ($quickTime === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $value = $this->quickTimeString($resolver, $key);
+            $value = $this->quickTimeString($quickTime, $key);
             if ($value !== null) {
                 return $value;
             }
 
-            $intValue = $resolver->int($key);
+            $intValue = $quickTime->intValue($key);
             if ($intValue !== null) {
                 return (string) $intValue;
             }
 
-            $floatValue = $resolver->float($key);
+            $floatValue = $quickTime->floatValue($key);
             if ($floatValue !== null) {
                 return (string) $floatValue;
             }
@@ -1396,10 +1425,14 @@ final class StructuredMetadataBuilder
     /**
      * @param array<int, string> $map
      */
-    private function quickTimeEnumerated(QuickTimeResolver $resolver, array $map, string ...$keys): ?string
+    private function quickTimeEnumerated(?QuickTimeMeta $quickTime, array $map, string ...$keys): ?string
     {
+        if ($quickTime === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $string = $this->quickTimeString($resolver, $key);
+            $string = $this->quickTimeString($quickTime, $key);
             if ($string !== null) {
                 if (is_numeric($string)) {
                     $code = (int) $string;
@@ -1410,7 +1443,7 @@ final class StructuredMetadataBuilder
                 return $string;
             }
 
-            $code = $resolver->int($key);
+            $code = $quickTime->intValue($key);
             if ($code !== null) {
                 return $map[$code] ?? (string) $code;
             }
@@ -1550,15 +1583,19 @@ final class StructuredMetadataBuilder
     /**
      * Builds a normalised map of QuickTime boolean flags relevant to Apple metadata.
      *
-     * @param QuickTimeResolver $resolver Resolver used to read QuickTime metadata keys.
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
      *
      * @return array<string, bool> Normalised flag map keyed by camelCase identifiers.
      */
-    private function quickTimeFlags(QuickTimeResolver $resolver): array
+    private function quickTimeFlags(?QuickTimeMeta $quickTime): array
     {
+        if ($quickTime === null) {
+            return [];
+        }
+
         $flags = [];
         foreach (AppleMetadata::FLAG_MAP as $key => $normalized) {
-            $value = $resolver->bool($key);
+            $value = $quickTime->boolValue($key);
             if ($value !== null) {
                 $flags[$normalized] = $value;
             }
