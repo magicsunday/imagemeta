@@ -109,7 +109,8 @@ use function strtoupper;
 use const PREG_SPLIT_NO_EMPTY;
 
 /**
- * Builds the structured metadata aggregate by orchestrating specialised resolvers.
+ * Builds the structured metadata aggregate by orchestrating value-object creation from
+ * ExifDocument, QuickTimeMeta and MakerNotes sources.
  */
 final class ValueFactory
 {
@@ -677,16 +678,16 @@ final class ValueFactory
      * Fractional seconds are mirrored into the generic field to keep display values consistent
      * whenever only the original or digitized timestamp carries sub-second precision.
      *
-     * @param ExifDocument   $resolver     Resolver exposing EXIF timestamps and offsets.
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata used for time fallbacks.
-     * @param XmpDocument|null   $xmpDocument  XMP document providing timestamp fields.
+     * @param ExifDocument|null $exifDocument EXIF document exposing timestamps and offsets.
+     * @param QuickTimeMeta|null $quickTime   QuickTime metadata used for time fallbacks.
+     * @param XmpDocument|null   $xmpDocument XMP document providing timestamp fields.
      *
      * @return Temporal Normalised temporal metadata aggregate.
      */
-    private function buildTemporal(?ExifDocument $resolver, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Temporal
+    private function buildTemporal(?ExifDocument $exifDocument, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Temporal
     {
-        $exifCreate = $resolver?->dateTimeDigitized();
-        $exifModify = $resolver?->dateTime();
+        $exifCreate = $exifDocument?->dateTimeDigitized();
+        $exifModify = $exifDocument?->dateTime();
 
         $xmpCreate       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $xmpModify       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
@@ -697,26 +698,26 @@ final class ValueFactory
         $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
 
-        [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($resolver);
+        [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($exifDocument);
 
         $originalWithTz = $original;
         if ($original instanceof DateTimeImmutable && $tz instanceof DateTimeZone) {
             $originalWithTz = $original->setTimezone($tz);
         }
 
-        $offsetTime          = $resolver?->offsetTime();
-        $offsetTimeOriginal  = $resolver?->offsetTimeOriginal();
-        $offsetTimeDigitized = $resolver?->offsetTimeDigitized();
+        $offsetTime          = $exifDocument?->offsetTime();
+        $offsetTimeOriginal  = $exifDocument?->offsetTimeOriginal();
+        $offsetTimeDigitized = $exifDocument?->offsetTimeDigitized();
 
-        $subSecTime         = $this->sanitizeSubSeconds($resolver?->subSecTime());
-        $subSecTimeDigitized = $this->sanitizeSubSeconds($resolver?->subSecTimeDigitized());
+        $subSecTime         = $this->sanitizeSubSeconds($exifDocument?->subSecTime());
+        $subSecTimeDigitized = $this->sanitizeSubSeconds($exifDocument?->subSecTimeDigitized());
         $subSecOriginal     = $this->sanitizeSubSeconds($subOriginalRaw);
 
         if ($subSecTime === null) {
             $subSecTime = $subSecOriginal ?? $subSecTimeDigitized;
         }
 
-        $timeZoneOffsets = $resolver?->timeZoneOffsetMinutes();
+        $timeZoneOffsets = $exifDocument?->timeZoneOffsetMinutes();
 
         $tzSource = null;
         if ($tz instanceof DateTimeZone) {
@@ -792,13 +793,13 @@ final class ValueFactory
     /**
      * Builds a camera value object using EXIF metadata.
      *
-     * @param ExifDocument $exif Resolver exposing camera related EXIF tags.
+     * @param ExifDocument|null $exifDocument EXIF document exposing camera related tags.
      *
      * @return Camera Normalised camera metadata aggregate.
      */
-    private function buildCamera(?ExifDocument $exif): Camera
+    private function buildCamera(?ExifDocument $exifDocument): Camera
     {
-        if (!$exif instanceof ExifDocument) {
+        if (!$exifDocument instanceof ExifDocument) {
             return new Camera(
                 make: null,
                 model: null,
@@ -810,39 +811,39 @@ final class ValueFactory
             );
         }
 
-        $profile = (float) $exif->exifProfile();
+        $profile = (float) $exifDocument->exifProfile();
 
-        $firmware = $exif->cameraFirmware();
+        $firmware = $exifDocument->cameraFirmware();
 
         if ($firmware === null && $profile < 3.0) {
-            $firmware = $exif->cameraFirmwareVersion();
+            $firmware = $exifDocument->cameraFirmwareVersion();
         }
 
         if ($firmware === null) {
-            $firmware = $exif->software();
+            $firmware = $exifDocument->software();
         }
 
         return new Camera(
-            make: $exif->cameraMake(),
-            model: $exif->cameraModel(),
-            ownerName: $exif->ownerName(),
-            serialNumber: $exif->cameraSerialNumber(),
+            make: $exifDocument->cameraMake(),
+            model: $exifDocument->cameraModel(),
+            ownerName: $exifDocument->ownerName(),
+            serialNumber: $exifDocument->cameraSerialNumber(),
             firmware: $firmware,
-            fileSource: $exif->fileSource(),
-            sensingMethod: $exif->sensingMethod(),
+            fileSource: $exifDocument->fileSource(),
+            sensingMethod: $exifDocument->sensingMethod(),
         );
     }
 
     /**
      * Builds a lens value object using EXIF metadata.
      *
-     * @param ExifDocument $exif Resolver exposing lens specific EXIF tags.
+     * @param ExifDocument|null $exifDocument EXIF document exposing lens specific tags.
      *
      * @return Lens Normalised lens metadata aggregate.
      */
-    private function buildLens(?ExifDocument $exif): Lens
+    private function buildLens(?ExifDocument $exifDocument): Lens
     {
-        if (!$exif instanceof ExifDocument) {
+        if (!$exifDocument instanceof ExifDocument) {
             return new Lens(
                 lensMake: null,
                 lensModel: null,
@@ -854,17 +855,17 @@ final class ValueFactory
             );
         }
 
-        $maxApex = $exif->maxApertureApex();
+        $maxApex = $exifDocument->maxApertureApex();
         $maxF    = $maxApex !== null ? ValueConverters::apexToFNumber($maxApex) : null;
 
         return new Lens(
-            lensMake: $exif->lensMake(),
-            lensModel: $exif->lensModel(),
-            lensSerialNumber: $exif->lensSerialNumber(),
-            focalLengthMm: $exif->focalLengthMm(),
-            focalLengthIn35mm: $exif->focalLength35Mm(),
+            lensMake: $exifDocument->lensMake(),
+            lensModel: $exifDocument->lensModel(),
+            lensSerialNumber: $exifDocument->lensSerialNumber(),
+            focalLengthMm: $exifDocument->focalLengthMm(),
+            focalLengthIn35mm: $exifDocument->focalLength35Mm(),
             maxApertureFNumber: $maxF,
-            lensSpecification: $exif->lensSpecification(),
+            lensSpecification: $exifDocument->lensSpecification(),
         );
     }
 
@@ -872,18 +873,18 @@ final class ValueFactory
      * Builds the image value object using EXIF metadata.
      *
      * @param Metadata        $metadata Metadata container supplying JPEG frame fallbacks.
-     * @param ExifDocument|null $exif Resolver exposing image related EXIF tags.
+     * @param ExifDocument|null $exifDocument EXIF document exposing image related tags.
      *
      * @return Image Normalised image metadata aggregate.
      */
-    private function buildImage(Metadata $metadata, ?ExifDocument $exif): Image
+    private function buildImage(Metadata $metadata, ?ExifDocument $exifDocument): Image
     {
-        $width  = $exif?->imageWidth() ?? $metadata->jpegFrameWidth;
-        $height = $exif?->imageHeight() ?? $metadata->jpegFrameHeight;
+        $width  = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
+        $height = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
 
-        $orientation = Orientation::fromExifValue($exif?->orientation());
+        $orientation = Orientation::fromExifValue($exifDocument?->orientation());
 
-        $bitsPerSample = $exif?->bitsPerSample();
+        $bitsPerSample = $exifDocument?->bitsPerSample();
         if ($bitsPerSample === null) {
             $bitsPerSample = $metadata->jpegBitsPerSample;
         }
@@ -893,16 +894,16 @@ final class ValueFactory
             height: $height,
             orientation: $orientation,
             bitsPerSample: $bitsPerSample,
-            colorSpace: $this->normalizedColorSpace($exif),
-            imageUniqueId: $exif?->imageUniqueId(),
-            imageNumber: $exif?->imageNumber(),
-            documentName: $exif?->documentName(),
-            description: $exif?->imageDescription(),
-            title: $exif?->imageTitle(),
-            componentsConfiguration: $exif?->componentsConfiguration(),
-            compressedBitsPerPixel: $exif?->compressedBitsPerPixel(),
-            interlace: $exif?->interlace(),
-            userComment: $exif?->userComment(),
+            colorSpace: $this->normalizedColorSpace($exifDocument),
+            imageUniqueId: $exifDocument?->imageUniqueId(),
+            imageNumber: $exifDocument?->imageNumber(),
+            documentName: $exifDocument?->documentName(),
+            description: $exifDocument?->imageDescription(),
+            title: $exifDocument?->imageTitle(),
+            componentsConfiguration: $exifDocument?->componentsConfiguration(),
+            compressedBitsPerPixel: $exifDocument?->compressedBitsPerPixel(),
+            interlace: $exifDocument?->interlace(),
+            userComment: $exifDocument?->userComment(),
         );
     }
 
@@ -1212,20 +1213,20 @@ final class ValueFactory
     /**
      * Normalises the colour space based on interoperability metadata hints.
      *
-     * @param ExifDocument $resolver Resolver exposing colour space and interoperability tags.
+     * @param ExifDocument|null $exifDocument EXIF document exposing colour space and interoperability tags.
      *
      * @return ColorSpace|null Normalised colour space enumeration or null when undefined.
      */
-    private function normalizedColorSpace(?ExifDocument $document): ?ColorSpace
+    private function normalizedColorSpace(?ExifDocument $exifDocument): ?ColorSpace
     {
-        if (!$document instanceof ExifDocument) {
+        if (!$exifDocument instanceof ExifDocument) {
             return null;
         }
 
-        $colorSpace = ColorSpace::fromExifValue($document->colorSpace());
+        $colorSpace = ColorSpace::fromExifValue($exifDocument->colorSpace());
 
         if ($colorSpace === ColorSpace::UNCALIBRATED) {
-            $interopIndex = $document->interopIndex();
+            $interopIndex = $exifDocument->interopIndex();
             if (is_string($interopIndex)) {
                 $normalizedInteropIndex = strtoupper($interopIndex);
                 if ($normalizedInteropIndex === 'R03') {
