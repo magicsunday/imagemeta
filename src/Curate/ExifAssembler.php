@@ -12,19 +12,53 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate;
 
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
+use MagicSunday\ImageMeta\Curate\Resolver\MultiPictureResolver;
+use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\Gps;
 
 /**
  * Assembles structured metadata aggregates from normalised value objects.
  */
 final class ExifAssembler
 {
+    private readonly ValueFactory $valueFactory;
+
+    private readonly GpsResolver $gpsResolver;
+
+    private readonly RegionsResolver $regionsResolver;
+
+    private readonly MultiPictureResolver $multiPictureResolver;
+
+    public function __construct(
+        ?ValueFactory $valueFactory = null,
+        ?GpsResolver $gpsResolver = null,
+        ?RegionsResolver $regionsResolver = null,
+        ?MultiPictureResolver $multiPictureResolver = null,
+    ) {
+        $this->valueFactory         = $valueFactory ?? new ValueFactory();
+        $this->gpsResolver          = $gpsResolver ?? new GpsResolver();
+        $this->regionsResolver      = $regionsResolver ?? new RegionsResolver();
+        $this->multiPictureResolver = $multiPictureResolver ?? new MultiPictureResolver();
+    }
+
     /**
      * Assembles the structured metadata aggregate from the supplied metadata container.
      */
     public function assemble(Metadata $metadata): StructuredMetadata
     {
-        $components = (new ValueFactory())->createComponents($metadata);
+        $xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+
+        $gps = $this->gpsResolver->resolve($metadata->exifDoc, $xmpDocument) ?? new Gps();
+
+        $components = $this->valueFactory->createComponents(
+            metadata: $metadata,
+            gps: $gps,
+            regions: $this->regionsResolver->resolve($xmpDocument),
+            multiPicture: $this->multiPictureResolver->resolve($metadata->mpfDocument),
+            xmpDocument: $xmpDocument,
+        );
 
         return new StructuredMetadata(
             interop: $components['interop'],

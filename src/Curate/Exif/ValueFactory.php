@@ -15,11 +15,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
-use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
-use MagicSunday\ImageMeta\Curate\Resolver\MultiPictureResolver;
-use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -59,6 +55,7 @@ use MagicSunday\ImageMeta\Value\Interop;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
+use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
@@ -76,9 +73,11 @@ use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\Xmp;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 
+use function abs;
 use function array_is_list;
 use function array_key_exists;
 use function count;
+use function intdiv;
 use function is_array;
 use function is_bool;
 use function is_float;
@@ -87,6 +86,7 @@ use function is_numeric;
 use function is_string;
 use function preg_replace;
 use function preg_split;
+use function sprintf;
 use function str_pad;
 use function substr;
 use function str_starts_with;
@@ -101,7 +101,11 @@ final class ValueFactory
     /**
      * Produces normalised value objects derived from the supplied metadata container.
      *
-     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param Metadata     $metadata     Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param Gps          $gps           Pre-resolved GPS aggregate derived from EXIF and XMP sources.
+     * @param Regions      $regions       Annotated region collection supplied by callers.
+     * @param MultiPicture $multiPicture  Multi-picture aggregate resolved from MPF documents.
+     * @param XmpDocument|null $xmpDocument Optional pre-parsed XMP document reused by the caller.
      *
      * @return array{
      *     interop: Interop,
@@ -143,15 +147,17 @@ final class ValueFactory
      *     integrity: Integrity,
      * }
      */
-    public function createComponents(Metadata $metadata): array
-    {
-        $exifDocument      = $metadata->exifDoc;
-        $xmpDocument       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $quickTimeMeta     = $metadata->quickTime;
-        $appleMakerNotes   = $metadata->makerNotes?->apple();
-        $gpsResolver       = new GpsResolver();
-        $regionsResolver   = new RegionsResolver();
-        $multiPictureResolver = new MultiPictureResolver();
+    public function createComponents(
+        Metadata $metadata,
+        Gps $gps,
+        Regions $regions,
+        MultiPicture $multiPicture,
+        ?XmpDocument $xmpDocument = null,
+    ): array {
+        $exifDocument    = $metadata->exifDoc;
+        $xmpDocument   ??= $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $quickTimeMeta   = $metadata->quickTime;
+        $appleMakerNotes = $metadata->makerNotes?->apple();
 
         $interop = new Interop(
             index: $exifDocument?->interopIndex(),
@@ -213,7 +219,6 @@ final class ValueFactory
         );
 
         $flashPix = new FlashPix($metadata->flashPixStreams);
-        $multiPicture = $multiPictureResolver->resolve($metadata->mpfDocument);
 
         $camera = $this->buildCamera($exifDocument);
         $lens   = $this->buildLens($exifDocument);
@@ -276,8 +281,6 @@ final class ValueFactory
             selfTimerModeSeconds: $exifDocument?->selfTimerModeSeconds(),
         );
 
-        $gps = $gpsResolver->resolve($metadata->exifDoc, $xmpDocument) ?? new Gps();
-
         $device = $this->buildDevice($exifDocument, $quickTimeMeta, $xmpDocument);
 
         $apple = $this->buildApple($appleMakerNotes, $quickTimeMeta, $exifDocument);
@@ -293,26 +296,23 @@ final class ValueFactory
 
         $container = new Container(
             format: $this->quickTimeString($quickTimeMeta, QuickTimeMeta::MAJOR_BRAND_KEY),
-            encoder: CompositeResolver::first([
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.encoder'),
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, 'Encoder'),
-            ]),
-            bitrate: CompositeResolver::first([
-                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'com.apple.quicktime.avgBitrate'),
-                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'com.apple.quicktime.bitrate'),
-                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'com.apple.quicktime.dataRate'),
-                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'AvgBitrate'),
-                fn (): ?int => $this->quickTimeInt($quickTimeMeta, 'Bitrate'),
-            ]),
-            videoCodec: CompositeResolver::first([
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::COMPRESSOR_NAME_KEY),
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::VIDEO_CODEC_KEY),
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::HANDLER_DESCRIPTION_KEY),
-            ]),
-            audioCodec: CompositeResolver::first([
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_FORMAT_KEY),
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_CODEC_KEY),
-            ]),
+            encoder: $this->quickTimeString(
+                $quickTimeMeta,
+                'com.apple.quicktime.encoder',
+                'Encoder',
+            ),
+            bitrate: $this->quickTimeInt($quickTimeMeta, 'AvgBitrate', 'Bitrate'),
+            videoCodec: $this->quickTimeString(
+                $quickTimeMeta,
+                QuickTimeMeta::COMPRESSOR_NAME_KEY,
+                QuickTimeMeta::VIDEO_CODEC_KEY,
+                QuickTimeMeta::HANDLER_DESCRIPTION_KEY,
+            ),
+            audioCodec: $this->quickTimeString(
+                $quickTimeMeta,
+                QuickTimeMeta::AUDIO_FORMAT_KEY,
+                QuickTimeMeta::AUDIO_CODEC_KEY,
+            ),
         );
 
         $preview = new Preview(
@@ -327,10 +327,11 @@ final class ValueFactory
             frameRate: $this->quickTimeFloat($quickTimeMeta, 'com.apple.quicktime.videoFrameRate'),
             width: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::VIDEO_WIDTH_KEY),
             height: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::VIDEO_HEIGHT_KEY),
-            codec: CompositeResolver::first([
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::COMPRESSOR_NAME_KEY),
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::VIDEO_CODEC_KEY),
-            ]),
+            codec: $this->quickTimeString(
+                $quickTimeMeta,
+                QuickTimeMeta::COMPRESSOR_NAME_KEY,
+                QuickTimeMeta::VIDEO_CODEC_KEY,
+            ),
             hdr: $this->quickTimeBool($quickTimeMeta, 'com.apple.quicktime.hdrFormat'),
             transferFunction: $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.transferFunction'),
             colorPrimaries: $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.colorPrimaries'),
@@ -339,10 +340,11 @@ final class ValueFactory
         $audio = new Audio(
             channels: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_CHANNELS_KEY),
             sampleRate: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
-            codec: CompositeResolver::first([
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_FORMAT_KEY),
-                fn (): ?string => $this->quickTimeString($quickTimeMeta, QuickTimeMeta::AUDIO_CODEC_KEY),
-            ]),
+            codec: $this->quickTimeString(
+                $quickTimeMeta,
+                QuickTimeMeta::AUDIO_FORMAT_KEY,
+                QuickTimeMeta::AUDIO_CODEC_KEY,
+            ),
             bitDepth: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
         );
 
@@ -465,8 +467,6 @@ final class ValueFactory
         );
 
         $motion = $this->buildMotion($exifDocument, $apple);
-
-        $regions = $regionsResolver->resolve($xmpDocument);
 
         $scene = $this->buildScene(
             $exifDocument,
@@ -630,23 +630,28 @@ final class ValueFactory
      */
     private function buildDevice(?ExifDocument $exif, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Device
     {
-        $softwareCandidates = [];
+        $software = null;
 
         if ($exif instanceof ExifDocument) {
-            $softwareCandidates[] = static fn (): ?string => $exif->software();
-            $softwareCandidates[] = static fn (): ?string => $exif->hostComputer();
+            $software = $exif->software();
+
+            if ($software === null) {
+                $software = $exif->hostComputer();
+            }
         }
 
-        $softwareCandidates[] = fn (): ?string => $this->quickTimeString(
-            $quickTime,
-            'com.apple.quicktime.software',
-            'Software',
-            'com.apple.quicktime.softwareversion',
-            'com.apple.quicktime.software.version',
-        );
+        if ($software === null) {
+            $software = $this->quickTimeString(
+                $quickTime,
+                'com.apple.quicktime.software',
+                'Software',
+                'com.apple.quicktime.softwareversion',
+                'com.apple.quicktime.software.version',
+            );
+        }
 
         return new Device(
-            software: CompositeResolver::first($softwareCandidates),
+            software: $software,
             rawDevelopingSoftware: $exif?->rawDevelopingSoftware(),
             imageEditingSoftware: $exif?->imageEditingSoftware(),
             metadataEditingSoftware: $exif?->metadataEditingSoftware(),
@@ -679,7 +684,7 @@ final class ValueFactory
         $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
 
-        [$original, $tz, $subOriginalRaw] = CompositeResolver::dateOriginal($resolver, ValueConverters::class);
+        [$original, $tz, $subOriginalRaw] = $this->originalTimestampComponents($resolver);
 
         $originalWithTz = $original;
         if ($original instanceof DateTimeImmutable && $tz instanceof DateTimeZone) {
@@ -726,6 +731,52 @@ final class ValueFactory
     }
 
     /**
+     * Extracts the original capture timestamp components from the EXIF document.
+     *
+     * @return array{0:?DateTimeImmutable,1:?DateTimeZone,2:?string}
+     */
+    private function originalTimestampComponents(?ExifDocument $document): array
+    {
+        if (!$document instanceof ExifDocument) {
+            return [null, null, null];
+        }
+
+        $offset = $document->offsetTimeOriginal();
+        if ($offset === null) {
+            $zoneOffsets = $document->timeZoneOffsetMinutes();
+            if (is_array($zoneOffsets) && array_key_exists(0, $zoneOffsets)) {
+                $offset = $zoneOffsets[0];
+            }
+        }
+
+        if (is_int($offset)) {
+            $absOffset = abs($offset);
+            $hours     = $absOffset;
+            $minutes   = 0;
+
+            if ($absOffset > 14) {
+                $hours   = intdiv($absOffset, 60);
+                $minutes = $absOffset % 60;
+            }
+
+            if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
+                $offset = null;
+            } else {
+                $sign   = $offset < 0 ? '-' : '+';
+                $offset = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
+            }
+        }
+
+        $timezone = ValueConverters::parseOffset(is_string($offset) ? $offset : null);
+
+        return [
+            $document->captureDateTime(),
+            $timezone,
+            $document->subSecTimeOriginal(),
+        ];
+    }
+
+    /**
      * Builds a camera value object using EXIF metadata.
      *
      * @param ExifDocument $exif Resolver exposing camera related EXIF tags.
@@ -748,22 +799,22 @@ final class ValueFactory
 
         $profile = (float) $exif->exifProfile();
 
-        $firmwareCandidates = [
-            fn (): ?string => $exif->cameraFirmware(),
-        ];
+        $firmware = $exif->cameraFirmware();
 
-        if ($profile < 3.0) {
-            $firmwareCandidates[] = fn (): ?string => $exif->cameraFirmwareVersion();
+        if ($firmware === null && $profile < 3.0) {
+            $firmware = $exif->cameraFirmwareVersion();
         }
 
-        $firmwareCandidates[] = fn (): ?string => $exif->software();
+        if ($firmware === null) {
+            $firmware = $exif->software();
+        }
 
         return new Camera(
             make: $exif->cameraMake(),
             model: $exif->cameraModel(),
             ownerName: $exif->ownerName(),
             serialNumber: $exif->cameraSerialNumber(),
-            firmware: CompositeResolver::first($firmwareCandidates),
+            firmware: $firmware,
             fileSource: $exif->fileSource(),
             sensingMethod: $exif->sensingMethod(),
         );
