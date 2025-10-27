@@ -24,14 +24,4 @@ enum FlashMode: int
     case COMPULSORY_FIRE     = 1;
     case COMPULSORY_SUPPRESS = 2;
     case AUTO                = 3;
-
-    /**
-     * Builds an enum instance from the bit field representation.
-     */
-    public static function fromFlashBits(int $value): ?self
-    {
-        $modeBits = ($value >> 3) & 0x03;
-
-        return self::tryFrom($modeBits);
-    }
 }
