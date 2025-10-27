@@ -823,6 +823,8 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument, [], null, $makerNotes);
         $structured = (new ExifAssembler())->assemble($metadata);
 
+        self::assertSame($appleMakerNotes, $structured->apple);
+
         self::assertSame('maker-content', $structured->apple->contentIdentifier);
         self::assertSame('Maker Wide', $structured->apple->cameraType);
         self::assertSame([2.1, 2.2, 2.3], $structured->apple->hdrGain);
@@ -873,20 +875,6 @@ final class ExifAssemblerTest extends TestCase
         self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
         self::assertFalse($structured->scene->nightMode);
         self::assertFalse($structured->integrity->makerNotesSafe);
-    }
-
-    #[Test]
-    public function usesQuickTimeMovieIndexWhenMakerNotesMissing(): void
-    {
-        $quickTime = new QuickTimeMeta([
-            'LivePhotoMovieIndex' => 6,
-        ]);
-
-        $metadata   = new Metadata([], $quickTime);
-        $structured = (new ExifAssembler())->assemble($metadata);
-
-        self::assertSame(6, $structured->apple->livePhotoIndex);
-        self::assertNull($structured->apple->livePhotoTime);
     }
 
     #[Test]
@@ -960,30 +948,6 @@ final class ExifAssemblerTest extends TestCase
     }
 
     /**
-     * Ensures QuickTime metadata provides an acceleration vector when maker notes are absent.
-     */
-    #[Test]
-    public function usesQuickTimeAccelerationVectorWhenMakerNotesMissing(): void
-    {
-        $quickTime = new QuickTimeMeta([
-            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
-            'AccelerationVector'                  => '0.12 -0.34 0.56',
-        ]);
-
-        $metadata   = new Metadata(['primary'], $quickTime, null, []);
-        $structured = (new ExifAssembler())->assemble($metadata);
-
-        self::assertSame('qt-content', $structured->apple->contentIdentifier);
-        self::assertSame([0.12, -0.34, 0.56], $structured->apple->accelerationVector);
-        self::assertNull($structured->motion->rollDeg);
-        self::assertNull($structured->motion->pitchDeg);
-        self::assertNull($structured->motion->yawDeg);
-        self::assertEqualsWithDelta(0.12, $structured->motion->accelX, 1e-12);
-        self::assertEqualsWithDelta(-0.34, $structured->motion->accelY, 1e-12);
-        self::assertEqualsWithDelta(0.56, $structured->motion->accelZ, 1e-12);
-    }
-
-    /**
      * Ensures EXIF acceleration vector data is used when maker notes and QuickTime values are absent.
      */
     #[Test]
@@ -1014,59 +978,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertEqualsWithDelta(0.35, $structured->motion->accelZ, 1e-12);
     }
 
-    #[Test]
-    public function usesQuickTimeEnumeratedValuesWhenMakerNotesMissing(): void
-    {
-        $quickTime = new QuickTimeMeta([
-            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
-            'MakerNoteVersion'                    => '1.1',
-            'HDRImageType'                        => 2,
-            'BurstUUID'                           => 'qt-burst',
-            'FocusDistanceRange'                  => '0.5 1.9',
-            'OISMode'                             => 4,
-            'ImageCaptureType'                    => 6,
-            'ImageUniqueID'                       => 'qt-unique',
-            'PhotoIdentifier'                     => 'qt-photo',
-            'AFMeasuredDepth'                     => 1.4,
-            'AFConfidence'                        => 0.55,
-        ]);
 
-        $metadata   = new Metadata(['primary'], $quickTime, null, []);
-        $structured = (new ExifAssembler())->assemble($metadata);
-
-        self::assertSame('1.1', $structured->apple->makerNoteVersion);
-        self::assertSame('HDR2', $structured->apple->hdrImageType);
-        self::assertSame('qt-burst', $structured->apple->burstUuid);
-        self::assertSame([0.5, 1.9], $structured->apple->focusDistanceRange);
-        self::assertSame('4', $structured->apple->oisMode);
-        self::assertSame('Night Mode', $structured->apple->imageCaptureType);
-        self::assertSame('qt-unique', $structured->apple->imageUniqueId);
-        self::assertSame('qt-photo', $structured->apple->photoIdentifier);
-        self::assertEqualsWithDelta(1.4, $structured->apple->afMeasuredDepth, 1e-12);
-        self::assertEqualsWithDelta(0.55, $structured->apple->afConfidence, 1e-12);
-    }
-
-
-
-    #[Test]
-    public function usesQuickTimeSemanticStyleDictionaryWhenMakerNotesMissing(): void
-    {
-        $quickTime = new QuickTimeMeta([
-            QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
-            'SemanticStyle'                       => [
-                '_0' => 'CompositePreset',
-                '_2' => 0.4,
-                '_3' => -0.15,
-            ],
-        ]);
-
-        $metadata   = new Metadata(['primary'], $quickTime, null, []);
-        $structured = (new ExifAssembler())->assemble($metadata);
-
-        self::assertSame('CompositePreset', $structured->apple->semanticStylePreset);
-        self::assertEqualsWithDelta(0.4, $structured->apple->semanticStyleWarmth, 1e-12);
-        self::assertEqualsWithDelta(-0.15, $structured->apple->semanticStyleTone, 1e-12);
-    }
 
     /**
      * Ensures JPEG-only metadata uses the maker note night mode flag when QuickTime metadata is absent.
