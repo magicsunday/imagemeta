@@ -13,7 +13,16 @@ parameters:
 
     paths:
         - %currentWorkingDirectory%/src/
+        - %currentWorkingDirectory%/packages/imagemeta-maker-notes/src/
+        - %currentWorkingDirectory%/packages/imagemeta-quicktime/src/
+        - %currentWorkingDirectory%/packages/imagemeta-xmp/src/
+        - %currentWorkingDirectory%/packages/imagemeta-mpf/src/
+        - %currentWorkingDirectory%/packages/imagemeta-curate-exif/src/
         - %currentWorkingDirectory%/tests/
+        - %currentWorkingDirectory%/packages/imagemeta-maker-notes/tests/
+        - %currentWorkingDirectory%/packages/imagemeta-quicktime/tests/
+        - %currentWorkingDirectory%/packages/imagemeta-xmp/tests/
+        - %currentWorkingDirectory%/packages/imagemeta-curate-exif/tests/
 
     excludePaths:
         - %currentWorkingDirectory%/.build/

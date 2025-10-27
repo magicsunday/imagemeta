@@ -15,12 +15,21 @@
     <testsuites>
         <testsuite name="Unit Tests">
             <directory>../tests</directory>
+            <directory>../packages/imagemeta-maker-notes/tests</directory>
+            <directory>../packages/imagemeta-quicktime/tests</directory>
+            <directory>../packages/imagemeta-xmp/tests</directory>
+            <directory>../packages/imagemeta-curate-exif/tests</directory>
         </testsuite>
     </testsuites>
 
     <source ignoreIndirectDeprecations="true" restrictNotices="true" restrictWarnings="true">
         <include>
             <directory>../src</directory>
+            <directory>../packages/imagemeta-maker-notes/src</directory>
+            <directory>../packages/imagemeta-quicktime/src</directory>
+            <directory>../packages/imagemeta-xmp/src</directory>
+            <directory>../packages/imagemeta-mpf/src</directory>
+            <directory>../packages/imagemeta-curate-exif/src</directory>
         </include>
     </source>
 </phpunit>

@@ -55,7 +55,13 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "MagicSunday\\ImageMeta\\Tests\\": "tests/"
+            "MagicSunday\\ImageMeta\\Tests\\": [
+                "tests/",
+                "packages/imagemeta-maker-notes/tests/",
+                "packages/imagemeta-quicktime/tests/",
+                "packages/imagemeta-xmp/tests/",
+                "packages/imagemeta-curate-exif/tests/"
+            ]
         }
     },
     "suggest": {
