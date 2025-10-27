@@ -15,19 +15,17 @@ use function is_int;
 use function is_numeric;
 
 /**
- * Reusable helper for backed enums converting mixed EXIF values to enum instances.
+ * Reusable helper for backed-enums: normalizes int|string|null to ?self.
  */
 trait EnumFromIntStringNullable
 {
-    /**
-     * Normalizes EXIF values to backed enums.
-     */
     public static function fromExifValue(int|string|null $value): ?self
     {
         if ($value === null || $value === '') {
             return null;
         }
 
+        // int|string → int
         $int = is_int($value) ? $value : (is_numeric($value) ? (int) $value : null);
         if ($int === null) {
             return null;
