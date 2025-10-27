@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
 use MagicSunday\ImageMeta\Value\RunTime;
@@ -48,27 +49,6 @@ use function trim;
 final class AppleDecoder implements MakerNotesDecoderInterface
 {
     /**
-     * Maps maker note keys to normalised flag identifiers.
-     *
-     * @var array<string, string>
-     */
-    private const array FLAG_MAP = [
-        'AEStable'             => 'aeStable',
-        'AFStable'             => 'afStable',
-        'LivePhotoAuto'         => 'livePhotoAuto',
-        'LivePhotoEnabled'      => 'livePhotoEnabled',
-        'LivePhotoActive'       => 'livePhotoActive',
-        'LivePhotoLongExposure' => 'livePhotoLongExposure',
-        'LivePhoto'             => 'livePhoto',
-        'PersonInPhoto'         => 'personInPhoto',
-        'PetInPhoto'            => 'petInPhoto',
-        'HdrAuto'               => 'hdrAuto',
-        'HdrEnabled'            => 'hdrEnabled',
-        'NightMode'             => 'nightMode',
-        'LongExposure'          => 'longExposure',
-    ];
-
-    /**
      * Maps known camera type codes to descriptive labels.
      *
      * @var array<int, string>
@@ -77,38 +57,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         0 => 'Back Wide Angle',
         1 => 'Back Normal',
         6 => 'Front',
-    ];
-
-    /**
-     * Maps HDR image type codes to descriptive labels.
-     *
-     * @var array<int, string>
-     */
-    private const array HDR_IMAGE_TYPE_MAP = [
-        0 => 'Standard',
-        1 => 'HDR',
-        2 => 'HDR2',
-        3 => 'HDR Image',
-        4 => 'Original Image',
-    ];
-
-    /**
-     * Maps image capture type codes to descriptive labels.
-     *
-     * @var array<int, string>
-     */
-    private const array IMAGE_CAPTURE_TYPE_MAP = [
-        0  => 'Unknown',
-        1  => 'ProRAW',
-        2  => 'Portrait',
-        3  => 'Live Photo',
-        4  => 'Live Photo Long Exposure',
-        5  => 'Burst',
-        6  => 'Night Mode',
-        7  => 'Night Mode Portrait',
-        10 => 'Photo',
-        11 => 'Manual Focus',
-        12 => 'Scene',
     ];
 
     /**
@@ -713,11 +661,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $colorCorrectionMatrix   = $this->floatList($dictionary, 'ColorCorrectionMatrix');
 
         $makerNoteVersion   = $this->makerNoteVersionValue($dictionary, 'MakerNoteVersion');
-        $hdrImageType       = $this->enumeratedStringValue($dictionary, self::HDR_IMAGE_TYPE_MAP, 'HDRImageType', 'HdrImageType');
+        $hdrImageType       = $this->enumeratedStringValue($dictionary, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
         $burstUuid          = $this->stringValue($dictionary, 'BurstUUID');
         $focusDistanceRange = $this->focusDistanceRangeValue($dictionary);
         $oisMode            = $this->stringOrNumericValue($dictionary, 'OISMode');
-        $imageCaptureType   = $this->enumeratedStringValue($dictionary, self::IMAGE_CAPTURE_TYPE_MAP, 'ImageCaptureType');
+        $imageCaptureType   = $this->enumeratedStringValue($dictionary, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
         $imageUniqueId      = $this->stringValue($dictionary, 'ImageUniqueID');
         $photoIdentifier    = $this->stringValue($dictionary, 'PhotoIdentifier');
         $afMeasuredDepth    = $this->floatValue($dictionary, 'AFMeasuredDepth');
@@ -1582,7 +1530,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function extractFlags(array $dictionary): array
     {
         $flags = [];
-        foreach (self::FLAG_MAP as $makerKey => $normalized) {
+        foreach (AppleMetadata::FLAG_MAP as $makerKey => $normalized) {
             if (!array_key_exists($makerKey, $dictionary)) {
                 continue;
             }

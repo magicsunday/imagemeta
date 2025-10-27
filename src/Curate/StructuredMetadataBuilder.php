@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
@@ -87,64 +88,15 @@ use function preg_replace;
 use function preg_split;
 use function str_pad;
 use function substr;
+use function str_starts_with;
 use function trim;
 use function strtoupper;
-use function in_array;
 
 /**
  * Builds the structured metadata aggregate by orchestrating specialised resolvers.
  */
 final class StructuredMetadataBuilder
 {
-    /**
-     * @var array<int, string>
-     */
-    private const array APPLE_HDR_IMAGE_TYPE_MAP = [
-        0 => 'Standard',
-        1 => 'HDR',
-        2 => 'HDR2',
-        3 => 'HDR3',
-    ];
-
-    /**
-     * @var list<string>
-     */
-    private const array APPLE_HDR_SCENE_LABELS = ['HDR', 'HDR2', 'HDR3'];
-
-    /**
-     * @var array<int, string>
-     */
-    private const array APPLE_IMAGE_CAPTURE_TYPE_MAP = [
-        0  => 'Unknown',
-        1  => 'ProRAW',
-        2  => 'Portrait',
-        3  => 'Live Photo',
-        4  => 'Live Photo Long Exposure',
-        5  => 'Burst',
-        6  => 'Night Mode',
-        7  => 'Night Mode Portrait',
-        10 => 'Photo',
-        11 => 'Manual Focus',
-        12 => 'Scene',
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    private const array APPLE_FLAG_KEYS = [
-        'LivePhotoAuto'         => 'livePhotoAuto',
-        'LivePhotoEnabled'      => 'livePhotoEnabled',
-        'LivePhotoActive'       => 'livePhotoActive',
-        'LivePhotoLongExposure' => 'livePhotoLongExposure',
-        'LivePhoto'             => 'livePhoto',
-        'HdrAuto'               => 'hdrAuto',
-        'HdrEnabled'            => 'hdrEnabled',
-        'NightMode'             => 'nightMode',
-        'LongExposure'          => 'longExposure',
-        'PersonInPhoto'         => 'personInPhoto',
-        'PetInPhoto'            => 'petInPhoto',
-    ];
-
     /**
      * Builds the structured metadata aggregate from the supplied metadata container.
      *
@@ -950,7 +902,7 @@ final class StructuredMetadataBuilder
     {
         $normalized = strtoupper(trim($label));
 
-        return in_array($normalized, self::APPLE_HDR_SCENE_LABELS, true);
+        return str_starts_with($normalized, 'HDR');
     }
 
     private function appleFlag(array $flags, string $key): ?bool
@@ -1097,9 +1049,9 @@ final class StructuredMetadataBuilder
             $makerNoteVersion = $this->quickTimeString($quickTimeResolver, 'MakerNoteVersion');
         }
 
-        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, self::APPLE_HDR_IMAGE_TYPE_MAP);
+        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, AppleMetadata::HDR_IMAGE_TYPES);
         if ($hdrImageType === null) {
-            $hdrImageType = $this->quickTimeEnumerated($quickTimeResolver, self::APPLE_HDR_IMAGE_TYPE_MAP, 'HDRImageType', 'HdrImageType');
+            $hdrImageType = $this->quickTimeEnumerated($quickTimeResolver, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
         }
 
         $burstUuid = $makerNotes?->burstUuid;
@@ -1117,9 +1069,9 @@ final class StructuredMetadataBuilder
             $oisMode = $this->quickTimeStringOrNumeric($quickTimeResolver, 'OISMode');
         }
 
-        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, self::APPLE_IMAGE_CAPTURE_TYPE_MAP);
+        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, AppleMetadata::IMAGE_CAPTURE_TYPES);
         if ($imageCaptureType === null) {
-            $imageCaptureType = $this->quickTimeEnumerated($quickTimeResolver, self::APPLE_IMAGE_CAPTURE_TYPE_MAP, 'ImageCaptureType');
+            $imageCaptureType = $this->quickTimeEnumerated($quickTimeResolver, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
         }
 
         $imageUniqueId = $makerNotes?->imageUniqueId;
@@ -1604,7 +1556,7 @@ final class StructuredMetadataBuilder
     private function quickTimeFlags(QuickTimeResolver $resolver): array
     {
         $flags = [];
-        foreach (self::APPLE_FLAG_KEYS as $key => $normalized) {
+        foreach (AppleMetadata::FLAG_MAP as $key => $normalized) {
             $value = $resolver->bool($key);
             if ($value !== null) {
                 $flags[$normalized] = $value;
