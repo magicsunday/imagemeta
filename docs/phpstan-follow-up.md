@@ -22,12 +22,6 @@ PHPUNIT
 ### Curate/Resolver/CompositeResolver.php
 - [x] `argument.type`: Parameter `$candidates` of `CompositeResolver::firstInt()` expects `list<(Closure(): int)|float|int|string|null>`; lists of nullable closures reported at lines 77, 92, and 97.
 
-### Curate/Resolver/ExifTagResolver.php
-- [x] `argument.type`: Parameter `$enumClass` of `ValueConverters::toEnumOrNull()` expects `class-string<BackedEnum>`, string given at line 182.
-- [x] `argument.templateType`: Unable to resolve template type `T` in call to `ValueConverters::toEnumOrNull()` at line 182.
-- [x] `arrayValues.list`: `array_values()` called on an array that is already a list at lines 639, 651, 663, and 861.
-- [x] `nullsafe.neverNull`: Nullsafe property access before `??` operator is unnecessary at lines 631-643.
-
 ### Curate/Resolver/RegionsResolver.php
 - [x] `arrayValues.list`: `array_values()` called on an array that is already a list at lines 127 and 188.
 

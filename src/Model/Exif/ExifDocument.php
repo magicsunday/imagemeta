@@ -18,10 +18,22 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
+use MagicSunday\ImageMeta\Value\Enum\FileSource;
+use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\LightSource;
+use MagicSunday\ImageMeta\Value\Enum\Photometric;
+use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
+use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
+use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
+use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 
@@ -243,6 +255,27 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the lens specification describing focal and aperture range.
+     *
+     * @return array{0:float,1:float,2:float,3:float}|null
+     */
+    public function lensSpecification(): ?array
+    {
+        $values = $this->rationalList($this->exifIfd, ExifTag::LENS_SPECIFICATION);
+
+        if (!is_array($values) || count($values) !== 4) {
+            return null;
+        }
+
+        return [
+            $values[0],
+            $values[1],
+            $values[2],
+            $values[3],
+        ];
+    }
+
+    /**
      * Returns the EXIF orientation value if present.
      *
      * @return int|null
@@ -320,16 +353,18 @@ final readonly class ExifDocument
         $value = $this->rawString($this->exifIfd, ExifTag::FLASHPIX_VERSION);
 
         if ($value === null) {
-            return null;
+            return '1.00';
         }
 
         $trimmed = trim($value, "\0 ");
 
         if ($trimmed === '') {
-            return null;
+            return '1.00';
         }
 
-        return ValueConverters::toExifVersion($trimmed);
+        $normalized = ValueConverters::toExifVersion($trimmed);
+
+        return $normalized ?? '1.00';
     }
 
     /**
@@ -427,6 +462,14 @@ final readonly class ExifDocument
         }
 
         return $this->str($this->ifd0, ExifTag::SOFTWARE);
+    }
+
+    /**
+     * Mirrors the legacy resolver accessor for the software tag.
+     */
+    public function software(): ?string
+    {
+        return $this->processingSoftware();
     }
 
     /**
@@ -2340,6 +2383,417 @@ final readonly class ExifDocument
      *
      * @return string|null
      */
+
+    /**
+     * Returns the artist tag value when present.
+     */
+    public function artist(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::ARTIST);
+    }
+
+    /**
+     * Returns the bits per sample defined for the primary image.
+     */
+    public function bitsPerSample(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+    }
+
+    /**
+     * Returns the number of samples per pixel when provided by the TIFF data.
+     */
+    public function samplesPerPixel(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL);
+    }
+
+    /**
+     * Returns the rows per strip value when the image data is organized in strips.
+     */
+    public function rowsPerStrip(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::ROWS_PER_STRIP);
+    }
+
+    /**
+     * Returns the TIFF compression method enum.
+     */
+    public function compression(): ?Compression
+    {
+        $value = $this->value($this->ifd0, ExifTag::COMPRESSION);
+
+        return Compression::fromExifValue($value);
+    }
+
+    /**
+     * Returns the photometric interpretation enum.
+     */
+    public function photometric(): ?Photometric
+    {
+        $value = $this->value($this->ifd0, ExifTag::PHOTOMETRIC_INTERPRETATION);
+
+        return Photometric::fromExifValue($value);
+    }
+
+    /**
+     * Returns the planar configuration enum when recorded.
+     */
+    public function planarConfiguration(): ?PlanarConfiguration
+    {
+        $value = $this->value($this->ifd0, ExifTag::PLANAR_CONFIGURATION);
+
+        return PlanarConfiguration::fromExifValue($value);
+    }
+
+    /**
+     * Returns the resolution unit enum for the reported X/Y resolution values.
+     */
+    public function resolutionUnit(): ?ResolutionUnit
+    {
+        $value = $this->value($this->ifd0, ExifTag::RESOLUTION_UNIT);
+
+        return ResolutionUnit::fromExifValue($value);
+    }
+
+    /**
+     * Returns the horizontal resolution value expressed in the resolution unit.
+     */
+    public function xResolution(): ?float
+    {
+        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION);
+    }
+
+    /**
+     * Returns the vertical resolution value expressed in the resolution unit.
+     */
+    public function yResolution(): ?float
+    {
+        return $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
+    }
+
+    /**
+     * Returns the YCbCr positioning enum describing the chroma siting.
+     */
+    public function ycbcrPositioning(): ?YCbCrPositioning
+    {
+        $value = $this->value($this->ifd0, ExifTag::YCBCR_POSITIONING);
+
+        return YCbCrPositioning::fromExifValue($value);
+    }
+
+    /**
+     * Returns the YCbCr subsampling factors.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    public function ycbcrSubSampling(): ?array
+    {
+        $values = $this->numericList($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
+
+        if ($values !== null) {
+            $normalized = array_values($values);
+            if (count($normalized) === 2) {
+                return [(int) $normalized[0], (int) $normalized[1]];
+            }
+
+            return null;
+        }
+
+        $raw = $this->rawString($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
+
+        return $raw !== null ? ValueConverters::ycbcrSubSamplingToPair($raw) : null;
+    }
+
+    /**
+     * Returns the YCbCr conversion coefficients when provided.
+     *
+     * @return array{0:float,1:float,2:float}|null
+     */
+    public function ycbcrCoefficients(): ?array
+    {
+        $value = $this->value($this->ifd0, ExifTag::YCBCR_COEFFICIENTS);
+
+        if ($value instanceof ExifNumericList) {
+            $coeffs = array_map(static fn (int|float $component): float => (float) $component, $value->values);
+            return count($coeffs) === 3 ? $coeffs : null;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $coeffs = [];
+            foreach ($value->values as $component) {
+                $float = ValueConverters::rationalToFloat($component);
+                if ($float === null) {
+                    return null;
+                }
+
+                $coeffs[] = $float;
+            }
+
+            return count($coeffs) === 3 ? $coeffs : null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the normalized white point coordinates.
+     *
+     * @return array{0:float,1:float}|null
+     */
+    public function whitePoint(): ?array
+    {
+        $value = $this->value($this->ifd0, ExifTag::WHITE_POINT);
+
+        return $value instanceof ExifRationalList || $value instanceof ExifNumericList
+            ? ValueConverters::toWhitePoint($value)
+            : null;
+    }
+
+    /**
+     * Returns the primary chromaticities ordered as R,G,B.
+     *
+     * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
+     */
+    public function primaryChromaticities(): ?array
+    {
+        $value = $this->value($this->ifd0, ExifTag::PRIMARY_CHROMATICITIES);
+
+        return $value instanceof ExifRationalList || $value instanceof ExifNumericList
+            ? ValueConverters::toPrimaryChromaticities($value)
+            : null;
+    }
+
+    /**
+     * Returns the JPEG interchange format offset for legacy thumbnails.
+     */
+    public function jpegInterchangeFormat(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT);
+    }
+
+    /**
+     * Returns the JPEG interchange format length for legacy thumbnails.
+     */
+    public function jpegInterchangeFormatLength(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+    }
+
+    /**
+     * Returns the interoperability index string when recorded.
+     */
+    public function interopIndex(): ?string
+    {
+        return $this->str($this->interopIfd, ExifTag::INTEROPERABILITY_INDEX);
+    }
+
+    /**
+     * Returns the gamma correction value when provided.
+     */
+    public function gamma(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::GAMMA);
+    }
+
+    /**
+     * Returns the digital zoom ratio when encoded by the camera.
+     */
+    public function digitalZoomRatio(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO);
+    }
+
+    /**
+     * Returns the exposure mode enum indicating manual or auto settings.
+     */
+    public function exposureMode(): ?ExposureMode
+    {
+        $value = $this->value($this->exifIfd, ExifTag::EXPOSURE_MODE);
+
+        return ExposureMode::fromExifValue($value);
+    }
+
+    /**
+     * Returns the gain control enum describing in-camera amplification.
+     */
+    public function gainControl(): ?GainControl
+    {
+        $value = $this->value($this->exifIfd, ExifTag::GAIN_CONTROL);
+
+        return GainControl::fromExifValue($value);
+    }
+
+    /**
+     * Returns the EXIF file source enum when provided.
+     */
+    public function fileSource(): ?FileSource
+    {
+        $value = $this->value($this->exifIfd, ExifTag::FILE_SOURCE);
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            if (is_int($first) || is_float($first)) {
+                return FileSource::fromExifValue((int) $first);
+            }
+
+            return null;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return FileSource::fromExifValue((int) $value);
+        }
+
+        if (is_string($value) && $value !== '') {
+            return FileSource::fromExifValue(ord($value[0]));
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the EXIF sensing method enum when provided.
+     */
+    public function sensingMethod(): ?SensingMethod
+    {
+        $value = $this->value($this->exifIfd, ExifTag::SENSING_METHOD);
+
+        return SensingMethod::fromExifValue($value);
+    }
+
+    /**
+     * Returns the light source enum describing the scene illumination.
+     */
+    public function lightSource(): ?LightSource
+    {
+        $value = $this->value($this->exifIfd, ExifTag::LIGHT_SOURCE);
+        if (is_int($value)) {
+            return LightSource::tryFrom($value);
+        }
+
+        if (is_string($value) && $value !== '') {
+            return LightSource::tryFrom((int) $value);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the scene capture type enum when recorded.
+     */
+    public function sceneCaptureType(): ?SceneCaptureType
+    {
+        $value = $this->value($this->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
+        if (is_int($value)) {
+            return SceneCaptureType::tryFrom($value);
+        }
+
+        if (is_string($value) && $value !== '') {
+            return SceneCaptureType::tryFrom((int) $value);
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the subject distance range enum when provided.
+     */
+    public function subjectDistanceRange(): ?SubjectDistanceRange
+    {
+        $value = $this->value($this->exifIfd, ExifTag::SUBJECT_DISTANCE_RANGE);
+
+        return SubjectDistanceRange::fromExifValue($value);
+    }
+
+    /**
+     * Returns the ISO latitude yyy value when available.
+     */
+    public function isoLatitudeYyy(): ?int
+    {
+        return $this->isoSpeedLatitudeYyy();
+    }
+
+    /**
+     * Returns the ISO latitude zzz value when available.
+     */
+    public function isoLatitudeZzz(): ?int
+    {
+        return $this->isoSpeedLatitudeZzz();
+    }
+
+    /**
+     * Returns the shutter speed APEX value.
+     */
+    public function shutterSpeedEv(): ?float
+    {
+        return $this->shutterSpeedValue();
+    }
+
+    /**
+     * Returns the aperture APEX value.
+     */
+    public function apertureEv(): ?float
+    {
+        return $this->apertureValue();
+    }
+
+    /**
+     * Returns the subject distance in metres when provided.
+     */
+    public function subjectDistance(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::SUBJECT_DISTANCE);
+    }
+
+    /**
+     * Returns the EXIF subject area values as integers.
+     *
+     * @return list<int>|null
+     */
+    public function subjectArea(): ?array
+    {
+        $value = $this->value($this->exifIfd, ExifTag::SUBJECT_AREA);
+
+        if ($value instanceof ExifNumericList) {
+            return array_map(static fn (int|float $component): int => (int) $component, $value->values);
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return [(int) $value];
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the CFA repeat pattern width in samples.
+     */
+    public function cfaRepeatPatternWidth(): ?int
+    {
+        $dims = $this->cfaRepeatPatternDim();
+
+        return $dims['width'] ?? null;
+    }
+
+    /**
+     * Returns the CFA repeat pattern height in samples.
+     */
+    public function cfaRepeatPatternHeight(): ?int
+    {
+        $dims = $this->cfaRepeatPatternDim();
+
+        return $dims['height'] ?? null;
+    }
+
+    /**
+     * Returns the noise reduction strength encoded by the camera.
+     */
+    public function noiseReduction(): ?float
+    {
+        return $this->noise();
+    }
+
     private function str(?Ifd $ifd, int $tag): ?string
     {
         $value = $this->value($ifd, $tag);

@@ -45,7 +45,7 @@ ImageMeta mirrors fractional seconds from `SubSecTimeOriginal` or `SubSecTimeDig
 ### GPS metadata coverage
 
 ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decoded data is exposed through
-`ExifDocument::gps()` and the convenience accessors on `Curate\Resolver\ExifTagResolver`. The following fields are
+`ExifDocument::gps()` and dedicated convenience accessors on `ExifDocument`. The following fields are
 available to consumers:
 
 * Coordinate references and values: `lat_ref`, `lat`, `lon_ref`, `lon`, `alt_ref`, `alt`.
