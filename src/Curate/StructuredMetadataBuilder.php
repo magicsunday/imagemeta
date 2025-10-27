@@ -600,14 +600,11 @@ final class StructuredMetadataBuilder
      */
     private function buildDevice(?ExifDocument $exif, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Device
     {
-        $softwareCandidates = [
-            fn (): ?string => $this->quickTimeString($quickTime, 'com.apple.quicktime.software'),
-            fn (): ?string => $xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'CreatorTool'),
-        ];
+        $softwareCandidates = [];
 
         if ($exif instanceof ExifDocument) {
-            $softwareCandidates[] = fn (): ?string => $exif->software();
-            $softwareCandidates[] = fn (): ?string => $exif->hostComputer();
+            $softwareCandidates[] = static fn (): ?string => $exif->software();
+            $softwareCandidates[] = static fn (): ?string => $exif->hostComputer();
         }
 
         return new Device(

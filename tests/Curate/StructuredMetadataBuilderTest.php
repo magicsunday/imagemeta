@@ -597,11 +597,12 @@ final class StructuredMetadataBuilderTest extends TestCase
     public function buildsStructuredAggregateForHeif(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::IMAGE_WIDTH  => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 4032),
-            ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3024),
-            ExifTag::MAKE         => new IfdEntry(ExifTag::MAKE, 2, 5, 'Apple'),
-            ExifTag::MODEL        => new IfdEntry(ExifTag::MODEL, 2, 9, 'iPhone 15'),
-            ExifTag::ORIENTATION  => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::TOP_LEFT->value),
+            ExifTag::IMAGE_WIDTH           => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 4032),
+            ExifTag::IMAGE_HEIGHT          => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3024),
+            ExifTag::MAKE                  => new IfdEntry(ExifTag::MAKE, 2, 5, 'Apple'),
+            ExifTag::MODEL                 => new IfdEntry(ExifTag::MODEL, 2, 9, 'iPhone 15'),
+            ExifTag::ORIENTATION           => new IfdEntry(ExifTag::ORIENTATION, 3, 1, Orientation::TOP_LEFT->value),
+            ExifTag::PROCESSING_SOFTWARE   => new IfdEntry(ExifTag::PROCESSING_SOFTWARE, 2, 8, 'iOS 17.3'),
         ]);
 
         $exifIfd = new Ifd([
@@ -642,7 +643,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             self::assertEqualsWithDelta($expected, $structured->composite->exposureTimesTotal[$idx], 1e-12);
         }
 
-        self::assertSame('17.3', $structured->device->software);
+        self::assertSame('iOS 17.3', $structured->device->software);
 
         self::assertTrue($structured->scene->hdrScene);
         self::assertTrue($structured->scene->nightMode);
