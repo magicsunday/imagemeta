@@ -477,11 +477,6 @@ final readonly class ExifTag
      */
     public const int PROFILE_TONE_CURVE = 0xC6FC;
 
-    /**
-     * Optional profile gain table map encoded as IEEE-754 floats.
-     */
-    public const int PROFILE_GAIN_TABLE_MAP = 0xC7A4;
-
     // GPS sub IFD (Table 66 – EXIF 3.0)
     public const int GPS_VERSION_ID = 0x0000;
 

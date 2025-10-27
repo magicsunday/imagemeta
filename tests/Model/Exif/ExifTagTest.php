@@ -182,7 +182,6 @@ final class ExifTagTest extends TestCase
             'PROFILE_LOOK_TABLE_DIMS'                  => 0xC6FA,
             'PROFILE_LOOK_TABLE_DATA'                  => 0xC6FB,
             'PROFILE_TONE_CURVE'                       => 0xC6FC,
-            'PROFILE_GAIN_TABLE_MAP'                   => 0xC7A4,
             'PROFILE_CALIBRATION_SIGNATURE'            => 0xC6F4,
             'USER_COMMENT'                             => 0x9286,
             'SUB_SEC_TIME'                             => 0x9290,

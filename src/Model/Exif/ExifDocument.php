@@ -32,6 +32,7 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
@@ -1406,8 +1407,10 @@ final readonly class ExifDocument
      */
     public function profileGainTableMap(): ?array
     {
+        $gainTableTag = DngProfileGainTableTag::GAIN_TABLE_MAP;
+
         foreach ($this->profileIfds() as $ifd) {
-            $values = $this->rationalList($ifd, ExifTag::PROFILE_GAIN_TABLE_MAP);
+            $values = $this->rationalList($ifd, $gainTableTag->value);
             if ($values === null || $values === []) {
                 continue;
             }
@@ -2366,11 +2369,13 @@ final readonly class ExifDocument
     {
         $candidates = [];
 
+        $gainTableTag = DngProfileGainTableTag::GAIN_TABLE_MAP;
+
         foreach ($this->profileSourceIfds() as $ifd) {
             if ($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS) instanceof IfdEntry
                 || $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS) instanceof IfdEntry
                 || $ifd->get(ExifTag::PROFILE_TONE_CURVE) instanceof IfdEntry
-                || $ifd->get(ExifTag::PROFILE_GAIN_TABLE_MAP) instanceof IfdEntry) {
+                || $ifd->get($gainTableTag->value) instanceof IfdEntry) {
                 $candidates[] = $ifd;
             }
         }

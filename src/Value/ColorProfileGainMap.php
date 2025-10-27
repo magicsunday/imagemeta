@@ -11,15 +11,28 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
+
 /**
  * Encapsulates the optional DNG profile gain table map payload.
  */
 final readonly class ColorProfileGainMap
 {
     /**
-     * @param list<float> $values Normalised per-pixel gain factors stored in scan-line order.
+     * @param DngProfileGainTableTag $tag    Enumerated gain table tag represented by this payload.
+     * @param list<float>            $values Normalised per-pixel gain factors stored in scan-line order.
      */
-    public function __construct(public array $values)
+    public function __construct(
+        public DngProfileGainTableTag $tag,
+        public array $values,
+    ) {
+    }
+
+    /**
+     * Returns the human readable gain table label.
+     */
+    public function label(): string
     {
+        return $this->tag->label();
     }
 }

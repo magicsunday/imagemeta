@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -1148,7 +1149,7 @@ final class TiffExifReaderTest extends TestCase
             self::packClassicEntry(ExifTag::PROFILE_LOOK_TABLE_DIMS, 3, count($lookDims), $lookDimsOffset),
             self::packClassicEntry(ExifTag::PROFILE_LOOK_TABLE_DATA, 11, count($lookData), $lookDataOffset),
             self::packClassicEntry(ExifTag::PROFILE_TONE_CURVE, 11, count($toneCurve), $toneCurveOffset),
-            self::packClassicEntry(ExifTag::PROFILE_GAIN_TABLE_MAP, 11, count($gainMap), $gainMapOffset),
+            self::packClassicEntry(DngProfileGainTableTag::GAIN_TABLE_MAP->value, 11, count($gainMap), $gainMapOffset),
         ];
 
         $blob .= pack('v', $subIfdEntryCount) . implode('', $subIfdEntries) . pack('V', 0);

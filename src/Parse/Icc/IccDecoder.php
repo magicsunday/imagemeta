@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Parse\Icc;
 use Imagick;
 use ImagickPixel;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 use Throwable;
 
 use function array_key_exists;
@@ -45,16 +46,6 @@ final class IccDecoder
     private const int TAG_RECORD_LENGTH = 12;
 
     private const string ICC_SIGNATURE = 'ICC_PROFILE\0';
-
-    /**
-     * Mapping of ICC rendering intent enumerations to descriptive strings.
-     */
-    private const array RENDERING_INTENT_MAP = [
-        0 => 'Perceptual',
-        1 => 'Media-Relative Colorimetric',
-        2 => 'Saturation',
-        3 => 'ICC-Absolute Colorimetric',
-    ];
 
     /**
      * Decodes the ICC profile payload by extracting header fields and well known tags.
@@ -215,7 +206,7 @@ final class IccDecoder
     {
         $intent = $this->uInt32Be(substr($data, 64, 4));
 
-        return self::RENDERING_INTENT_MAP[$intent] ?? null;
+        return IccRenderingIntent::fromProfileHeaderValue($intent)?->label();
     }
 
     /**
