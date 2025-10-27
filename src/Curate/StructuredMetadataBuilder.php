@@ -203,7 +203,7 @@ final class StructuredMetadataBuilder
         $flashInfo = FlashInfo::fromExifValue($exifDocument?->flash());
 
         $exposure = new Exposure(
-            iso: CompositeResolver::intISO($exifDocument),
+            iso: $exifDocument?->iso(),
             exposureTimeSec: $exifDocument?->exposureTime(),
             fNumber: $exifDocument?->fNumber(),
             exposureBiasEv: $exifDocument?->exposureBias(),
@@ -779,15 +779,8 @@ final class StructuredMetadataBuilder
      */
     private function buildImage(Metadata $metadata, ?ExifDocument $exif): Image
     {
-        [$width, $height] = CompositeResolver::dimensions($exif);
-
-        if ($width === null) {
-            $width = $metadata->jpegFrameWidth;
-        }
-
-        if ($height === null) {
-            $height = $metadata->jpegFrameHeight;
-        }
+        $width  = $exif?->imageWidth() ?? $metadata->jpegFrameWidth;
+        $height = $exif?->imageHeight() ?? $metadata->jpegFrameHeight;
 
         $orientation = Orientation::fromExifValue($exif?->orientation());
 

@@ -1408,6 +1408,36 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertNull($structured->image->documentName);
     }
 
+    #[Test]
+    public function ignoresXmpExposureAndCaptureFallbacks(): void
+    {
+        $ifd0        = new Ifd([]);
+        $exifIfd     = new Ifd([]);
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $xmpDocument = new XmpDocument([
+            '{http://ns.adobe.com/exif/1.0/}ISOSpeedRatings' => 640,
+            '{http://ns.adobe.com/exif/1.0/}ExposureTime'    => 0.01,
+            '{http://ns.adobe.com/exif/1.0/}FNumber'         => 2.8,
+            '{http://ns.adobe.com/exif/1.0/}DateTimeOriginal' => '2024-02-01T10:30:00',
+        ]);
+
+        $metadata = new Metadata(
+            ['primary'],
+            new QuickTimeMeta([]),
+            $exifDocument,
+            ['<xmp/>'],
+            $xmpDocument,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNull($structured->exposure->iso);
+        self::assertNull($structured->exposure->exposureTimeSec);
+        self::assertNull($structured->exposure->fNumber);
+        self::assertNull($structured->capture->dateTime);
+    }
+
     /**
      * @return array<string, array{int, int}>
      */
