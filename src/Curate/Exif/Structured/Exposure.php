@@ -1,0 +1,100 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Curate\Exif\Structured;
+
+use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
+use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Value\Exposure as ExposureValue;
+use MagicSunday\ImageMeta\Value\FlashInfo;
+
+/**
+ * Captures EXIF exposure values alongside derived exposure metrics.
+ */
+final readonly class Exposure
+{
+    public ?int $iso;
+
+    public ?float $exposureTimeSec;
+
+    public ?float $fNumber;
+
+    public ?float $exposureBiasEv;
+
+    public ?ExposureProgram $program;
+
+    public ?MeteringMode $meteringMode;
+
+    public ?FlashInfo $flash;
+
+    public ?WhiteBalance $whiteBalance;
+
+    public ?float $brightnessEv;
+
+    public ?ExposureMode $exposureMode;
+
+    public ?GainControl $gainControl;
+
+    public ?Contrast $contrast;
+
+    public ?Saturation $saturation;
+
+    public ?Sharpness $sharpness;
+
+    public ?float $digitalZoomRatio;
+
+    public ?float $shutterSpeedEv;
+
+    public ?float $apertureEv;
+
+    public ?int $isoLatitudeYyy;
+
+    public ?int $isoLatitudeZzz;
+
+    public ?float $exposureIndex;
+
+    public ?float $flashEnergy;
+
+    public ?float $ev100;
+
+    public function __construct(ExposureValue $exposure, Derived $derived)
+    {
+        $this->iso              = $exposure->iso;
+        $this->exposureTimeSec  = $exposure->exposureTimeSec;
+        $this->fNumber          = $exposure->fNumber;
+        $this->exposureBiasEv   = $exposure->exposureBiasEv;
+        $this->program          = $exposure->program;
+        $this->meteringMode     = $exposure->meteringMode;
+        $this->flash            = $exposure->flash;
+        $this->whiteBalance     = $exposure->whiteBalance;
+        $this->brightnessEv     = $exposure->brightnessEv;
+        $this->exposureMode     = $exposure->exposureMode;
+        $this->gainControl      = $exposure->gainControl;
+        $this->contrast         = $exposure->contrast;
+        $this->saturation       = $exposure->saturation;
+        $this->sharpness        = $exposure->sharpness;
+        $this->digitalZoomRatio = $exposure->digitalZoomRatio;
+        $this->shutterSpeedEv   = $exposure->shutterSpeedEv;
+        $this->apertureEv       = $exposure->apertureEv;
+        $this->isoLatitudeYyy   = $exposure->isoLatitudeYyy;
+        $this->isoLatitudeZzz   = $exposure->isoLatitudeZzz;
+        $this->exposureIndex    = $exposure->exposureIndex;
+        $this->flashEnergy      = $exposure->flashEnergy;
+        $this->ev100            = $derived->ev100;
+    }
+}
