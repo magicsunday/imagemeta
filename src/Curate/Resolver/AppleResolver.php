@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use MagicSunday\ImageMeta\Value\Apple;
 
 use function is_numeric;
 use function preg_split;
@@ -68,9 +68,9 @@ final readonly class AppleResolver
     ];
 
     /**
-     * Builds an Apple value object from available metadata.
+     * Builds an Apple maker note value object from available metadata.
      */
-    public function resolve(?QuickTimeMeta $quickTimeMeta): ?Apple
+    public function resolve(?QuickTimeMeta $quickTimeMeta): ?AppleMakerNotes
     {
         if (!$quickTimeMeta instanceof QuickTimeMeta) {
             return null;
@@ -132,32 +132,42 @@ final readonly class AppleResolver
             return null;
         }
 
-        return new Apple(
-            $identifier,
-            $cameraType,
-            $hdrHeadroom,
-            $hdrGain,
-            $snr,
-            $focusPosition,
-            $livePhotoIndex,
-            null,
-            $colorTemperature,
-            $semanticPreset,
-            $semanticWarmth,
-            $semanticTone,
-            $flags,
-            $accelerationVector,
-            null,
-            $makerNoteVersion,
-            $hdrImageType,
-            $burstUuid,
-            $focusDistanceRange,
-            $oisMode,
-            $imageCaptureType,
-            $imageUniqueId,
-            $photoIdentifier,
-            $afMeasuredDepth,
-            $afConfidence,
+        return new AppleMakerNotes(
+            contentIdentifier: $identifier,
+            cameraType: $cameraType,
+            hdrHeadroom: $hdrHeadroom,
+            hdrGain: $hdrGain,
+            snr: $snr,
+            aeStable: null,
+            aeTarget: null,
+            aeAverage: null,
+            afStable: null,
+            afPerformance: null,
+            signalToNoiseRatioType: null,
+            luminanceNoiseAmplitude: null,
+            focusPosition: $focusPosition,
+            livePhotoIndex: $livePhotoIndex,
+            colorTemperature: $colorTemperature,
+            semanticStylePreset: $semanticPreset,
+            semanticStyleWarmth: $semanticWarmth,
+            semanticStyleTone: $semanticTone,
+            flags: $flags,
+            accelerationVector: $accelerationVector,
+            imageCaptureRequestId: null,
+            qualityHint: null,
+            colorCorrectionMatrix: null,
+            livePhotoTime: null,
+            runTime: null,
+            makerNoteVersion: $makerNoteVersion,
+            hdrImageType: $hdrImageType,
+            burstUuid: $burstUuid,
+            focusDistanceRange: $focusDistanceRange,
+            oisMode: $oisMode,
+            imageCaptureType: $imageCaptureType,
+            imageUniqueId: $imageUniqueId,
+            photoIdentifier: $photoIdentifier,
+            afMeasuredDepth: $afMeasuredDepth,
+            afConfidence: $afConfidence,
         );
     }
 

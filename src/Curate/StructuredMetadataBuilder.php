@@ -26,7 +26,6 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
-use MagicSunday\ImageMeta\Value\Apple;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\Author;
@@ -774,7 +773,7 @@ final class StructuredMetadataBuilder
      *
      * @param ExifTagResolver   $exif      Resolver exposing EXIF scene metadata.
      * @param QuickTimeResolver $quickTime Resolver providing QuickTime scene hints.
-     * @param Apple             $apple     Aggregated Apple maker note metadata.
+     * @param AppleMakerNotes   $apple     Aggregated Apple maker note metadata.
      * @param int|null          $faceCount Number of detected face regions.
      *
      * @return Scene Scene metadata value object.
@@ -782,7 +781,7 @@ final class StructuredMetadataBuilder
     private function buildScene(
         ExifTagResolver $exif,
         QuickTimeResolver $quickTime,
-        Apple $apple,
+        AppleMakerNotes $apple,
         ?int $faceCount,
     ): Scene {
         $flags = $apple->flags;
@@ -859,14 +858,14 @@ final class StructuredMetadataBuilder
      * @param QuickTimeMeta|null   $quickTimeMeta     QuickTime metadata container used for content identifiers.
      * @param ExifTagResolver      $exifResolver      Resolver exposing EXIF fallback values.
      *
-     * @return Apple Apple metadata value object with normalised fields.
+     * @return AppleMakerNotes Apple metadata value object with normalised fields.
      */
     private function buildApple(
         ?AppleMakerNotes $makerNotes,
         QuickTimeResolver $quickTimeResolver,
         ?QuickTimeMeta $quickTimeMeta,
         ExifTagResolver $exifResolver,
-    ): Apple {
+    ): AppleMakerNotes {
         $contentIdentifier = $makerNotes?->contentIdentifier;
         if ($contentIdentifier === null) {
             $contentIdentifier = $quickTimeMeta?->contentIdentifier();
@@ -956,6 +955,29 @@ final class StructuredMetadataBuilder
 
         $runTime = $this->appleRunTime($makerNotes?->runTime);
 
+        $aeStable              = $makerNotes?->aeStable;
+        $aeTarget              = $makerNotes?->aeTarget;
+        $aeAverage             = $makerNotes?->aeAverage;
+        $afStable              = $makerNotes?->afStable;
+        $afPerformance         = $makerNotes?->afPerformance;
+        $signalToNoiseRatioType = $makerNotes?->signalToNoiseRatioType;
+        $luminanceNoiseAmplitude = $makerNotes?->luminanceNoiseAmplitude;
+
+        $imageCaptureRequestId = $makerNotes?->imageCaptureRequestId;
+        if ($imageCaptureRequestId === null) {
+            $imageCaptureRequestId = $this->quickTimeString($quickTimeResolver, 'ImageCaptureRequestID');
+        }
+
+        $qualityHint = $makerNotes?->qualityHint;
+        if ($qualityHint === null) {
+            $qualityHint = $this->quickTimeStringOrNumeric($quickTimeResolver, 'QualityHint');
+        }
+
+        $colorCorrectionMatrix = $makerNotes?->colorCorrectionMatrix;
+        if ($colorCorrectionMatrix === null) {
+            $colorCorrectionMatrix = $this->quickTimeFloatList($quickTimeResolver, 'ColorCorrectionMatrix');
+        }
+
         $makerNoteVersion = $makerNotes?->makerNoteVersion;
         if ($makerNoteVersion === null) {
             $makerNoteVersion = $this->quickTimeString($quickTimeResolver, 'MakerNoteVersion');
@@ -1006,32 +1028,42 @@ final class StructuredMetadataBuilder
             $afConfidence = $this->quickTimeFloat($quickTimeResolver, 'AFConfidence');
         }
 
-        return new Apple(
-            $contentIdentifier,
-            $cameraType,
-            $hdrHeadroom,
-            $hdrGain,
-            $snr,
-            $focusPosition,
-            $livePhotoIndex,
-            $livePhotoTime,
-            $colorTemperature,
-            $semanticPreset,
-            $semanticWarmth,
-            $semanticTone,
-            $flags,
-            $accelerationVector,
-            $runTime,
-            $makerNoteVersion,
-            $hdrImageType,
-            $burstUuid,
-            $focusDistanceRange,
-            $oisMode,
-            $imageCaptureType,
-            $imageUniqueId,
-            $photoIdentifier,
-            $afMeasuredDepth,
-            $afConfidence,
+        return new AppleMakerNotes(
+            contentIdentifier: $contentIdentifier,
+            cameraType: $cameraType,
+            hdrHeadroom: $hdrHeadroom,
+            hdrGain: $hdrGain,
+            snr: $snr,
+            aeStable: $aeStable,
+            aeTarget: $aeTarget,
+            aeAverage: $aeAverage,
+            afStable: $afStable,
+            afPerformance: $afPerformance,
+            signalToNoiseRatioType: $signalToNoiseRatioType,
+            luminanceNoiseAmplitude: $luminanceNoiseAmplitude,
+            focusPosition: $focusPosition,
+            livePhotoIndex: $livePhotoIndex,
+            colorTemperature: $colorTemperature,
+            semanticStylePreset: $semanticPreset,
+            semanticStyleWarmth: $semanticWarmth,
+            semanticStyleTone: $semanticTone,
+            flags: $flags,
+            accelerationVector: $accelerationVector,
+            imageCaptureRequestId: $imageCaptureRequestId,
+            qualityHint: $qualityHint,
+            colorCorrectionMatrix: $colorCorrectionMatrix,
+            livePhotoTime: $livePhotoTime,
+            runTime: $runTime,
+            makerNoteVersion: $makerNoteVersion,
+            hdrImageType: $hdrImageType,
+            burstUuid: $burstUuid,
+            focusDistanceRange: $focusDistanceRange,
+            oisMode: $oisMode,
+            imageCaptureType: $imageCaptureType,
+            imageUniqueId: $imageUniqueId,
+            photoIdentifier: $photoIdentifier,
+            afMeasuredDepth: $afMeasuredDepth,
+            afConfidence: $afConfidence,
         );
     }
 
@@ -1047,11 +1079,11 @@ final class StructuredMetadataBuilder
      * Builds the motion metadata aggregate from EXIF and Apple motion sources.
      *
      * @param ExifTagResolver $exif  Resolver exposing EXIF camera orientation measurements.
-     * @param Apple           $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
+     * @param AppleMakerNotes $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
      */
-    private function buildMotion(ExifTagResolver $exif, Apple $apple): Motion
+    private function buildMotion(ExifTagResolver $exif, AppleMakerNotes $apple): Motion
     {
         $rollDeg  = $exif->cameraRollDeg();
         $pitchDeg = $exif->cameraPitchDeg();
