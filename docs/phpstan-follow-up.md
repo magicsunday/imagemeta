@@ -19,9 +19,6 @@ PHPUNIT
 - [x] `function.alreadyNarrowedType`: Call to function `is_numeric()` with `float|int` will always evaluate to true at lines 196, 209, and 228.
 - [x] `booleanOr.alwaysFalse`: Result of `||` is always false at lines 196, 209, and 228.
 
-### Curate/Resolver/CompositeResolver.php
-- [x] `argument.type`: Parameter `$candidates` of `CompositeResolver::firstInt()` expects `list<(Closure(): int)|float|int|string|null>`; lists of nullable closures reported at lines 77, 92, and 97.
-
 ### Curate/Resolver/RegionsResolver.php
 - [x] `arrayValues.list`: `array_values()` called on an array that is already a list at lines 127 and 188.
 

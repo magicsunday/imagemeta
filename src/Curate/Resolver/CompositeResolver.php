@@ -20,9 +20,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use function abs;
 use function intdiv;
 use function is_array;
-use function is_float;
 use function is_int;
-use function is_numeric;
 use function is_string;
 use function sprintf;
 
@@ -49,51 +47,6 @@ final readonly class CompositeResolver
         }
 
         return null;
-    }
-
-    /**
-     * Selects the first integer value from the candidate list applying numeric normalisation.
-     *
-     * @param array<int, (Closure(): (int|null))|float|int|string|null> $candidates
-     */
-    public static function firstInt(array $candidates): ?int
-    {
-        foreach ($candidates as $candidate) {
-            $value      = $candidate instanceof Closure ? $candidate() : $candidate;
-            $normalized = self::normalizeInteger($value);
-
-            if ($normalized !== null) {
-                return $normalized;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Resolves the ISO sensitivity using EXIF fallbacks.
-     */
-    public static function intISO(?ExifDocument $document): ?int
-    {
-        if (!$document instanceof ExifDocument) {
-            return null;
-        }
-
-        return $document->iso();
-    }
-
-    /**
-     * Resolves the image dimensions using EXIF fallbacks.
-     *
-     * @return array{0:?int,1:?int}
-     */
-    public static function dimensions(?ExifDocument $document): array
-    {
-        if (!$document instanceof ExifDocument) {
-            return [null, null];
-        }
-
-        return [$document->imageWidth(), $document->imageHeight()];
     }
 
     /**
@@ -143,23 +96,4 @@ final readonly class CompositeResolver
         ];
     }
 
-    /**
-     * Normalizes integer candidates coming from various metadata sources.
-     */
-    private static function normalizeInteger(int|float|string|null $value): ?int
-    {
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) $value;
-        }
-
-        if (is_string($value) && $value !== '' && is_numeric($value)) {
-            return (int) $value;
-        }
-
-        return null;
-    }
 }
