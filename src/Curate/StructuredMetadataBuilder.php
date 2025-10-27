@@ -16,7 +16,7 @@ use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Curate\Resolver\CompositeResolver;
-use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
+use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\MultiPictureResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
@@ -33,15 +33,25 @@ use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\ColorProfileGainMap;
+use MagicSunday\ImageMeta\Value\ColorProfileHueSatMap;
+use MagicSunday\ImageMeta\Value\ColorProfileLookTable;
+use MagicSunday\ImageMeta\Value\ColorProfileToneCurve;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
+use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\Orientation;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
@@ -145,7 +155,7 @@ final class StructuredMetadataBuilder
      */
     public function build(Metadata $metadata): StructuredMetadata
     {
-        $exifResolver      = new ExifTagResolver($metadata->exifDoc);
+        $exifDocument      = $metadata->exifDoc;
         $xmpDocument       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $xmpResolver       = new XmpResolver($xmpDocument);
         $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
@@ -155,112 +165,133 @@ final class StructuredMetadataBuilder
         $multiPictureResolver = new MultiPictureResolver();
 
         $interop = new Interop(
-            index: $exifResolver->interopIndex(),
-            version: $exifResolver->interopVersion(),
-            relatedImageFileFormat: $exifResolver->relatedImageFileFormat(),
-            relatedImageWidth: $exifResolver->relatedImageWidth(),
-            relatedImageLength: $exifResolver->relatedImageLength(),
+            index: $exifDocument?->interopIndex(),
+            version: $exifDocument?->interopVersion(),
+            relatedImageFileFormat: $exifDocument?->relatedImageFileFormat(),
+            relatedImageWidth: $exifDocument?->relatedImageWidth(),
+            relatedImageLength: $exifDocument?->relatedImageLength(),
         );
 
-        $bitsPerSample    = $exifResolver->bitsPerSample() ?? $metadata->jpegBitsPerSample;
-        $ycbcrSubSampling = $exifResolver->ycbcrSubSampling();
+        $bitsPerSample    = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
+        $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling();
         if ($ycbcrSubSampling === null) {
             $ycbcrSubSampling = $metadata->jpegYCbCrSubSampling;
         }
 
         $tiff = new TiffData(
-            samplesPerPixel: $exifResolver->samplesPerPixel(),
+            samplesPerPixel: $exifDocument?->samplesPerPixel(),
             bitsPerSample: $bitsPerSample,
-            rowsPerStrip: $exifResolver->rowsPerStrip(),
-            tileWidth: $exifResolver->tileWidth(),
-            tileLength: $exifResolver->tileLength(),
-            compression: $exifResolver->compression(),
-            photometric: $exifResolver->photometric(),
-            planar: $exifResolver->planarConfiguration(),
-            resolutionUnit: $exifResolver->resolutionUnit(),
-            xResolution: $exifResolver->xResolution(),
-            yResolution: $exifResolver->yResolution(),
-            ycbcrPos: $exifResolver->ycbcrPositioning(),
+            rowsPerStrip: $exifDocument?->rowsPerStrip(),
+            tileWidth: $exifDocument?->tileWidth(),
+            tileLength: $exifDocument?->tileLength(),
+            compression: $exifDocument?->compression(),
+            photometric: $exifDocument?->photometric(),
+            planar: $exifDocument?->planarConfiguration(),
+            resolutionUnit: $exifDocument?->resolutionUnit(),
+            xResolution: $exifDocument?->xResolution(),
+            yResolution: $exifDocument?->yResolution(),
+            ycbcrPos: $exifDocument?->ycbcrPositioning(),
             ycbcrSubSampling: $ycbcrSubSampling,
-            ycbcrCoefficients: $exifResolver->ycbcrCoefficients(),
-            whitePoint: $exifResolver->whitePoint(),
-            primaryChromaticities: $exifResolver->primaryChromaticities(),
-            stripOffsets: $exifResolver->stripOffsets(),
-            stripByteCounts: $exifResolver->stripByteCounts(),
-            tileOffsets: $exifResolver->tileOffsets(),
-            tileByteCounts: $exifResolver->tileByteCounts(),
-            transferFunction: $exifResolver->transferFunction(),
-            jpegInterchangeFormat: $exifResolver->jpegInterchangeFormat(),
-            jpegInterchangeFormatLength: $exifResolver->jpegInterchangeFormatLength(),
-            referenceBlackWhite: $exifResolver->referenceBlackWhite(),
-            copyright: $exifResolver->copyright(),
+            ycbcrCoefficients: $exifDocument?->ycbcrCoefficients(),
+            whitePoint: $exifDocument?->whitePoint(),
+            primaryChromaticities: $exifDocument?->primaryChromaticities(),
+            stripOffsets: $exifDocument?->stripOffsets(),
+            stripByteCounts: $exifDocument?->stripByteCounts(),
+            tileOffsets: $exifDocument?->tileOffsets(),
+            tileByteCounts: $exifDocument?->tileByteCounts(),
+            transferFunction: $exifDocument?->transferFunction(),
+            jpegInterchangeFormat: $exifDocument?->jpegInterchangeFormat(),
+            jpegInterchangeFormatLength: $exifDocument?->jpegInterchangeFormatLength(),
+            referenceBlackWhite: $exifDocument?->referenceBlackWhite(),
+            copyright: $exifDocument?->copyright(),
         );
 
         $composite = new CompositeImageInfo(
-            type: $exifResolver->compositeImage(),
-            counts: $exifResolver->sourceImageNumberOfCompositeImage(),
-            exposureTimesTotal: $exifResolver->sourceExposureTimesOfCompositeImage(),
+            type: $exifDocument?->compositeImage(),
+            counts: $exifDocument?->sourceImageNumberOfCompositeImage(),
+            exposureTimesTotal: $exifDocument?->sourceExposureTimesOfCompositeImage(),
         );
 
-        $exifVersion = $exifResolver->exifVersion();
-        $profile     = $exifResolver->exifProfile();
+        $exifVersion = $exifDocument?->exifVersion();
+        $profile     = $exifDocument?->exifProfile() ?? '2.2';
 
         $standards = new Standards(
             exifVersion: $exifVersion,
             profile: $profile,
-            flashpixVersion: $exifResolver->flashpixVersion(),
-            tiffEpStandardId: $exifResolver->tiffEpStandardId(),
-            tiffEpStandardString: $exifResolver->tiffEpStandardIdString(),
+            flashpixVersion: $exifDocument?->flashpixVersion(),
+            tiffEpStandardId: $exifDocument?->tiffEpStandardId(),
+            tiffEpStandardString: $exifDocument?->tiffEpStandardIdString(),
         );
 
         $flashPix = new FlashPix($metadata->flashPixStreams);
         $multiPicture = $multiPictureResolver->resolve($metadata->mpfDocument);
 
-        $camera = $this->buildCamera($exifResolver);
-        $lens   = $this->buildLens($exifResolver);
-        $image  = $this->buildImage($metadata, $exifResolver);
+        $camera = $this->buildCamera($exifDocument);
+        $lens   = $this->buildLens($exifDocument);
+        $image  = $this->buildImage($metadata, $exifDocument);
+
+        $exposureProgram = null;
+        $meteringMode    = null;
+        $whiteBalance    = null;
+
+        $programCode = $exifDocument?->exposureProgram();
+        if ($programCode !== null) {
+            $exposureProgram = ExposureProgram::tryFrom($programCode);
+        }
+
+        $meteringCode = $exifDocument?->meteringMode();
+        if ($meteringCode !== null) {
+            $meteringMode = MeteringMode::tryFrom($meteringCode);
+        }
+
+        $whiteBalanceCode = $exifDocument?->whiteBalance();
+        if ($whiteBalanceCode !== null) {
+            $whiteBalance = WhiteBalance::tryFrom($whiteBalanceCode);
+        }
+
+        $flashInfo = FlashInfo::fromExifValue($exifDocument?->flash());
 
         $exposure = new Exposure(
-            iso: CompositeResolver::intISO($exifResolver),
-            exposureTimeSec: $exifResolver->exposureTime(),
-            fNumber: $exifResolver->fNumber(),
-            exposureBiasEv: $exifResolver->exposureBias(),
-            program: $exifResolver->exposureProgram(),
-            meteringMode: $exifResolver->meteringMode(),
-            flash: $exifResolver->flash(),
-            whiteBalance: $exifResolver->whiteBalance(),
-            brightnessEv: $exifResolver->brightnessValue(),
-            exposureMode: $exifResolver->exposureMode(),
-            gainControl: $exifResolver->gainControl(),
-            contrast: $exifResolver->contrast(),
-            saturation: $exifResolver->saturation(),
-            sharpness: $exifResolver->sharpness(),
-            digitalZoomRatio: $exifResolver->digitalZoomRatio(),
-            shutterSpeedEv: $exifResolver->shutterSpeedEv(),
-            apertureEv: $exifResolver->apertureEv(),
-            isoLatitudeYyy: $exifResolver->isoLatitudeYyy(),
-            isoLatitudeZzz: $exifResolver->isoLatitudeZzz(),
-            exposureIndex: $exifResolver->exposureIndex(),
-            flashEnergy: $exifResolver->flashEnergy(),
+            iso: CompositeResolver::intISO($exifDocument),
+            exposureTimeSec: $exifDocument?->exposureTime(),
+            fNumber: $exifDocument?->fNumber(),
+            exposureBiasEv: $exifDocument?->exposureBias(),
+            program: $exposureProgram,
+            meteringMode: $meteringMode,
+            flash: $flashInfo,
+            whiteBalance: $whiteBalance,
+            brightnessEv: $exifDocument?->brightnessValue(),
+            exposureMode: $exifDocument?->exposureMode(),
+            gainControl: $exifDocument?->gainControl(),
+            contrast: $exifDocument?->contrast(),
+            saturation: $exifDocument?->saturation(),
+            sharpness: $exifDocument?->sharpness(),
+            digitalZoomRatio: $exifDocument?->digitalZoomRatio(),
+            shutterSpeedEv: $exifDocument?->shutterSpeedEv(),
+            apertureEv: $exifDocument?->apertureEv(),
+            isoLatitudeYyy: $exifDocument?->isoLatitudeYyy(),
+            isoLatitudeZzz: $exifDocument?->isoLatitudeZzz(),
+            exposureIndex: $exifDocument?->exposureIndex(),
+            flashEnergy: $exifDocument?->flashEnergy(),
         );
 
         $capture = new Capture(
-            dateTime: $exifResolver->captureDateTime(),
-            temperatureC: $exifResolver->temperatureCelsius(),
-            humidityPercent: $exifResolver->humidityPercent(),
-            pressureHPa: $exifResolver->pressureHPa(),
-            batteryLevelPercent: $exifResolver->batteryLevelPercent(),
-            waterDepthM: $exifResolver->waterDepthMeters(),
-            accelerationMs2: $exifResolver->accelerationMs2(),
-            cameraElevationAngleDeg: $exifResolver->cameraElevationAngleDeg(),
-            selfTimerModeSeconds: $exifResolver->selfTimerModeSeconds(),
+            dateTime: $exifDocument?->captureDateTime(),
+            temperatureC: $exifDocument?->temperatureCelsius(),
+            humidityPercent: $exifDocument?->humidityPercent(),
+            pressureHPa: $exifDocument?->pressureHPa(),
+            batteryLevelPercent: $exifDocument?->batteryLevelPercent(),
+            waterDepthM: $exifDocument?->waterDepthMeters(),
+            accelerationMs2: $exifDocument?->accelerationMs2(),
+            cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
+            selfTimerModeSeconds: $exifDocument?->selfTimerModeSeconds(),
         );
 
         $gps = $gpsResolver->resolve($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
-        $device = $this->buildDevice($exifResolver, $quickTimeResolver, $xmpResolver);
+        $device = $this->buildDevice($exifDocument, $quickTimeResolver, $xmpResolver);
 
-        $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime, $exifResolver);
+        $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime, $exifDocument);
         $xmp   = $xmpResolver->value();
 
         $file = new File(
@@ -296,10 +327,10 @@ final class StructuredMetadataBuilder
         );
 
         $preview = new Preview(
-            $exifResolver->hasThumbnail(),
-            $exifResolver->hasPreviewImage(),
-            $exifResolver->previewImageWidth(),
-            $exifResolver->previewImageHeight(),
+            $exifDocument?->hasThumbnail(),
+            $exifDocument?->hasPreviewImage(),
+            $exifDocument?->previewImageWidth(),
+            $exifDocument?->previewImageHeight(),
         );
 
         $video = new Video(
@@ -333,31 +364,81 @@ final class StructuredMetadataBuilder
             $iccData = (new IccDecoder())->decode($metadata->iccProfile, $metadata->iccSegments);
         }
 
+        $hueSatMap = null;
+        $hueSatMapData = $exifDocument?->profileHueSatMap();
+        if (is_array($hueSatMapData)) {
+            $dimensions = $hueSatMapData['dimensions'] ?? null;
+            $hueSatMap = new ColorProfileHueSatMap(
+                $dimensions[0] ?? null,
+                $dimensions[1] ?? null,
+                $dimensions[2] ?? null,
+                $hueSatMapData['map1'] ?? null,
+                $hueSatMapData['map2'] ?? null,
+                $hueSatMapData['map3'] ?? null,
+            );
+        }
+
+        $lookTable = null;
+        $lookTableData = $exifDocument?->profileLookTable();
+        if (is_array($lookTableData)) {
+            $dimensions = $lookTableData['dimensions'] ?? null;
+            $entries    = null;
+            $data       = $lookTableData['data'] ?? null;
+            if (is_array($data)) {
+                $entries = $this->chunkTripletEntries($data);
+                if ($entries === []) {
+                    $entries = null;
+                }
+            }
+
+            $lookTable = new ColorProfileLookTable(
+                $dimensions[0] ?? null,
+                $dimensions[1] ?? null,
+                $dimensions[2] ?? null,
+                $entries,
+            );
+        }
+
+        $toneCurve = null;
+        $toneCurveData = $exifDocument?->profileToneCurve();
+        if (is_array($toneCurveData) && $toneCurveData !== []) {
+            $points = $this->chunkPairEntries($toneCurveData);
+            if ($points !== []) {
+                $toneCurve = new ColorProfileToneCurve($points);
+            }
+        }
+
+        $gainMap = null;
+        $gainMapData = $exifDocument?->profileGainTableMap();
+        if (is_array($gainMapData) && $gainMapData !== []) {
+            $gainMap = new ColorProfileGainMap($gainMapData);
+        }
+
         $colorProfile = new ColorProfile(
             profileName: $iccData['description'] ?? null,
             profileVersion: $iccData['version'] ?? null,
             pcs: $iccData['pcs'] ?? null,
             renderingIntent: $iccData['renderingIntent'] ?? null,
-            gamma: $exifResolver->gamma(),
+            gamma: $exifDocument?->gamma(),
             profileId: $iccData['profileId'] ?? null,
-            cameraCalibrationSignature: $exifResolver->cameraCalibrationSignature(),
-            profileCalibrationSignature: $exifResolver->profileCalibrationSignature(),
-            hueSatMap: $exifResolver->profileHueSatMap(),
-            lookTable: $exifResolver->profileLookTable(),
-            toneCurve: $exifResolver->profileToneCurve(),
-            gainMap: $exifResolver->profileGainMap(),
+            cameraCalibrationSignature: $exifDocument?->cameraCalibrationSignature(),
+            profileCalibrationSignature: $exifDocument?->profileCalibrationSignature(),
+            hueSatMap: $hueSatMap,
+            lookTable: $lookTable,
+            toneCurve: $toneCurve,
+            gainMap: $gainMap,
         );
 
         $processing = new ProcessingSettings(
-            sharpness: $exifResolver->sharpness(),
-            contrast: $exifResolver->contrast(),
-            saturation: $exifResolver->saturation(),
+            sharpness: $exifDocument?->sharpness(),
+            contrast: $exifDocument?->contrast(),
+            saturation: $exifDocument?->saturation(),
             pictureStyle: null,
-            noiseReduction: $exifResolver->noiseReduction(),
+            noiseReduction: $exifDocument?->noiseReduction(),
             clarity: null,
-            customRendered: $exifResolver->customRendered()?->value,
-            deviceSettingDescription: $exifResolver->deviceSettingDescription(),
-            processingSoftware: $exifResolver->processingSoftware(),
+            customRendered: $exifDocument?->customRendered()?->value,
+            deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
+            processingSoftware: $exifDocument?->processingSoftware(),
         );
 
         $whiteBalanceKelvin = $apple->colorTemperature;
@@ -366,27 +447,27 @@ final class StructuredMetadataBuilder
         }
 
         $whiteBalanceDetails = new WhiteBalanceDetails(
-            mode: $exifResolver->whiteBalance(),
+            mode: $whiteBalance,
             kelvin: $whiteBalanceKelvin,
             rgGain: null,
             bgGain: null,
         );
 
         $rect      = null;
-        $focusRect = $exifResolver->subjectArea();
+        $focusRect = $exifDocument?->subjectArea();
         if ($focusRect !== null) {
             $rect = ValueConverters::subjectAreaToRect($focusRect);
         }
 
         if ($rect === null) {
-            $location = $exifResolver->subjectLocation();
+            $location = $exifDocument?->subjectLocation();
             $rect     = ($location !== null && count($location) >= 2)
                 ? ['x' => $location[0], 'y' => $location[1], 'w' => null, 'h' => null]
                 : ['x' => null, 'y' => null, 'w' => null, 'h' => null];
         }
 
         $focus = new Focus(
-            subjectDistanceM: $exifResolver->subjectDistance(),
+            subjectDistanceM: $exifDocument?->subjectDistance(),
             subjectAreaX: $rect['x'],
             subjectAreaY: $rect['y'],
             subjectAreaW: $rect['w'],
@@ -394,12 +475,12 @@ final class StructuredMetadataBuilder
             afMode: null,
         );
 
-        $motion = $this->buildMotion($exifResolver, $apple);
+        $motion = $this->buildMotion($exifDocument, $apple);
 
         $regions = $regionsResolver->resolve($xmpDocument);
 
         $scene = $this->buildScene(
-            $exifResolver,
+            $exifDocument,
             $quickTimeResolver,
             $apple,
             $this->countFaceRegions($regions),
@@ -409,7 +490,7 @@ final class StructuredMetadataBuilder
         $hierarchicalKeywords = $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
 
         if ($flatKeywords === []) {
-            $xpKeywords = $exifResolver->xpKeywords();
+            $xpKeywords = $exifDocument?->xpKeywords();
             if ($xpKeywords !== null) {
                 $flatKeywords = $xpKeywords;
             }
@@ -423,29 +504,29 @@ final class StructuredMetadataBuilder
         $rights = new Rights(
             copyright: CompositeResolver::first([
                 fn (): ?string => $xmpResolver->string('http://purl.org/dc/elements/1.1/', 'rights'),
-                $exifResolver->artist(...),
+                fn (): ?string => $exifDocument?->artist(),
             ]),
             usageTerms: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
             licenseUrl: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
             creditLine: $xmpResolver->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
-            securityClassification: $exifResolver->securityClassification(),
+            securityClassification: $exifDocument?->securityClassification(),
         );
 
         $author = new Author(
-            artist: $exifResolver->artist(),
+            artist: $exifDocument?->artist(),
             ownerName: CompositeResolver::first([
-                $exifResolver->ownerName(...),
+                fn (): ?string => $exifDocument?->ownerName(),
                 fn (): ?string => $xmpResolver->string('http://ns.adobe.com/xap/1.0/aux/', 'OwnerName'),
             ]),
             creator: CompositeResolver::first([
                 fn (): ?string => $this->firstListValue($xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'creator')),
             ]),
             creatorEmail: $xmpResolver->string('http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
-            photographer: $exifResolver->photographer(),
-            imageEditor: $exifResolver->imageEditor(),
+            photographer: $exifDocument?->photographer(),
+            imageEditor: $exifDocument?->imageEditor(),
         );
 
-        $temporal = $this->buildTemporal($exifResolver, $quickTimeResolver, $xmpResolver);
+        $temporal = $this->buildTemporal($exifDocument, $quickTimeResolver, $xmpResolver);
 
         $cropFactor          = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
         $circleOfConfusionMm = ValueConverters::calcCircleOfConfusionMm($cropFactor);
@@ -475,30 +556,36 @@ final class StructuredMetadataBuilder
             isPrimaryInBurst: $quickTimeResolver->bool('BurstSelected'),
             panoramaId: $panoramaFlag === true ? 'panorama' : null,
             depthDataId: $quickTimeResolver->string('DepthData'),
-            relatedSoundFile: $exifResolver->relatedSoundFile(),
+            relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
+
+        $focalPlaneUnit = null;
+        $focalPlaneUnitCode = $exifDocument?->focalPlaneResolutionUnit();
+        if ($focalPlaneUnitCode !== null) {
+            $focalPlaneUnit = ResolutionUnit::tryFrom($focalPlaneUnitCode);
+        }
 
         $sensor = new Sensor(
             pixelPitchUm: null,
-            cfaWidth: $exifResolver->cfaRepeatPatternWidth(),
-            cfaHeight: $exifResolver->cfaRepeatPatternHeight(),
+            cfaWidth: $exifDocument?->cfaRepeatPatternWidth(),
+            cfaHeight: $exifDocument?->cfaRepeatPatternHeight(),
             sensorType: null,
             ibis: null,
-            cfaPattern: $exifResolver->cfaPattern(),
-            spectralSensitivity: $exifResolver->spectralSensitivity(),
-            oecf: $exifResolver->oecf(),
-            spatialFrequencyResponse: $exifResolver->spatialFrequencyResponse(),
-            focalPlaneXResolution: $exifResolver->focalPlaneXResolution(),
-            focalPlaneYResolution: $exifResolver->focalPlaneYResolution(),
-            focalPlaneResolutionUnit: $exifResolver->focalPlaneResolutionUnit(),
+            cfaPattern: $exifDocument?->cfaPattern(),
+            spectralSensitivity: $exifDocument?->spectralSensitivity(),
+            oecf: $exifDocument?->oecf(),
+            spatialFrequencyResponse: $exifDocument?->spatialFrequencyResponse(),
+            focalPlaneXResolution: $exifDocument?->focalPlaneXResolution(),
+            focalPlaneYResolution: $exifDocument?->focalPlaneYResolution(),
+            focalPlaneResolutionUnit: $focalPlaneUnit,
         );
 
-        $uav = $this->buildUav($exifResolver, $quickTimeResolver);
+        $uav = $this->buildUav($exifDocument, $quickTimeResolver);
 
         $hasHistory      = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
         $makerNotesSafe  = $metadata->makerNotes?->isSafe();
         if ($makerNotesSafe === null) {
-            $makerNotesSafe = $exifResolver->makerNoteSafety();
+            $makerNotesSafe = $exifDocument?->makerNoteSafety();
         }
 
         $integrity = new Integrity(
@@ -506,7 +593,7 @@ final class StructuredMetadataBuilder
             originalDigest: null,
             edited: $hasHistory ? true : null,
             historyLastSoftware: null,
-            imageHistory: $exifResolver->imageHistory(),
+            imageHistory: $exifDocument?->imageHistory(),
             makerNotesSafe: $makerNotesSafe,
         );
 
@@ -554,26 +641,29 @@ final class StructuredMetadataBuilder
     /**
      * Builds the device metadata aggregate by combining EXIF, QuickTime and XMP sources.
      *
-     * @param ExifTagResolver   $exif              Resolver exposing EXIF tag helpers.
+     * @param ExifDocument   $exif              Resolver exposing EXIF tag helpers.
      * @param QuickTimeResolver $quickTimeResolver Resolver exposing QuickTime metadata fields.
      * @param XmpResolver       $xmpResolver       Resolver exposing XMP metadata fields.
      *
      * @return Device Device value object describing capture hardware and software.
      */
-    private function buildDevice(ExifTagResolver $exif, QuickTimeResolver $quickTimeResolver, XmpResolver $xmpResolver): Device
+    private function buildDevice(?ExifDocument $exif, QuickTimeResolver $quickTimeResolver, XmpResolver $xmpResolver): Device
     {
-        $softwareChain = CompositeResolver::first([
+        $softwareCandidates = [
             fn (): ?string => $quickTimeResolver->string('com.apple.quicktime.software'),
             fn (): ?string => $xmpResolver->string('http://ns.adobe.com/xap/1.0/', 'CreatorTool'),
-            $exif->software(...),
-            $exif->hostComputer(...),
-        ]);
+        ];
+
+        if ($exif instanceof ExifDocument) {
+            $softwareCandidates[] = fn (): ?string => $exif->software();
+            $softwareCandidates[] = fn (): ?string => $exif->hostComputer();
+        }
 
         return new Device(
-            software: $softwareChain,
-            rawDevelopingSoftware: $exif->rawDevelopingSoftware(),
-            imageEditingSoftware: $exif->imageEditingSoftware(),
-            metadataEditingSoftware: $exif->metadataEditingSoftware(),
+            software: CompositeResolver::first($softwareCandidates),
+            rawDevelopingSoftware: $exif?->rawDevelopingSoftware(),
+            imageEditingSoftware: $exif?->imageEditingSoftware(),
+            metadataEditingSoftware: $exif?->metadataEditingSoftware(),
         );
     }
 
@@ -583,16 +673,16 @@ final class StructuredMetadataBuilder
      * Fractional seconds are mirrored into the generic field to keep display values consistent
      * whenever only the original or digitized timestamp carries sub-second precision.
      *
-     * @param ExifTagResolver   $resolver  Resolver exposing EXIF timestamps and offsets.
+     * @param ExifDocument   $resolver  Resolver exposing EXIF timestamps and offsets.
      * @param QuickTimeResolver $quickTime QuickTime metadata resolver used for time fallbacks.
      * @param XmpResolver       $xmp       Resolver providing XMP timestamp fields.
      *
      * @return Temporal Normalised temporal metadata aggregate.
      */
-    private function buildTemporal(ExifTagResolver $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
+    private function buildTemporal(?ExifDocument $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
     {
-        $exifCreate = $resolver->date('DateTimeDigitized');
-        $exifModify = $resolver->date('DateTime');
+        $exifCreate = $resolver?->dateTimeDigitized();
+        $exifModify = $resolver?->dateTime();
 
         $xmpCreate       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $xmpModify       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
@@ -610,19 +700,19 @@ final class StructuredMetadataBuilder
             $originalWithTz = $original->setTimezone($tz);
         }
 
-        $offsetTime          = $resolver->string('OffsetTime');
-        $offsetTimeOriginal  = $resolver->string('OffsetTimeOriginal');
-        $offsetTimeDigitized = $resolver->string('OffsetTimeDigitized');
+        $offsetTime          = $resolver?->offsetTime();
+        $offsetTimeOriginal  = $resolver?->offsetTimeOriginal();
+        $offsetTimeDigitized = $resolver?->offsetTimeDigitized();
 
-        $subSecTime         = $this->sanitizeSubSeconds($resolver->string('SubSecTime'));
-        $subSecTimeDigitized = $this->sanitizeSubSeconds($resolver->string('SubSecTimeDigitized'));
+        $subSecTime         = $this->sanitizeSubSeconds($resolver?->subSecTime());
+        $subSecTimeDigitized = $this->sanitizeSubSeconds($resolver?->subSecTimeDigitized());
         $subSecOriginal     = $this->sanitizeSubSeconds($subOriginalRaw);
 
         if ($subSecTime === null) {
             $subSecTime = $subSecOriginal ?? $subSecTimeDigitized;
         }
 
-        $timeZoneOffsets = $resolver->ints('TimeZoneOffset');
+        $timeZoneOffsets = $resolver?->timeZoneOffsetMinutes();
 
         $tzSource = null;
         if ($tz instanceof DateTimeZone) {
@@ -652,23 +742,35 @@ final class StructuredMetadataBuilder
     /**
      * Builds a camera value object using EXIF metadata.
      *
-     * @param ExifTagResolver $exif Resolver exposing camera related EXIF tags.
+     * @param ExifDocument $exif Resolver exposing camera related EXIF tags.
      *
      * @return Camera Normalised camera metadata aggregate.
      */
-    private function buildCamera(ExifTagResolver $exif): Camera
+    private function buildCamera(?ExifDocument $exif): Camera
     {
+        if (!$exif instanceof ExifDocument) {
+            return new Camera(
+                make: null,
+                model: null,
+                ownerName: null,
+                serialNumber: null,
+                firmware: null,
+                fileSource: null,
+                sensingMethod: null,
+            );
+        }
+
         $profile = (float) $exif->exifProfile();
 
         $firmwareCandidates = [
-            $exif->cameraFirmware(...),
+            fn (): ?string => $exif->cameraFirmware(),
         ];
 
         if ($profile < 3.0) {
-            $firmwareCandidates[] = $exif->cameraFirmwareVersion(...);
+            $firmwareCandidates[] = fn (): ?string => $exif->cameraFirmwareVersion();
         }
 
-        $firmwareCandidates[] = $exif->software(...);
+        $firmwareCandidates[] = fn (): ?string => $exif->software();
 
         return new Camera(
             make: $exif->cameraMake(),
@@ -684,21 +786,33 @@ final class StructuredMetadataBuilder
     /**
      * Builds a lens value object using EXIF metadata.
      *
-     * @param ExifTagResolver $exif Resolver exposing lens specific EXIF tags.
+     * @param ExifDocument $exif Resolver exposing lens specific EXIF tags.
      *
      * @return Lens Normalised lens metadata aggregate.
      */
-    private function buildLens(ExifTagResolver $exif): Lens
+    private function buildLens(?ExifDocument $exif): Lens
     {
-        $maxApex = ValueConverters::rationalToFloat($exif->rational('MaxApertureValue'));
+        if (!$exif instanceof ExifDocument) {
+            return new Lens(
+                lensMake: null,
+                lensModel: null,
+                lensSerialNumber: null,
+                focalLengthMm: null,
+                focalLengthIn35mm: null,
+                maxApertureFNumber: null,
+                lensSpecification: null,
+            );
+        }
+
+        $maxApex = $exif->maxApertureApex();
         $maxF    = $maxApex !== null ? ValueConverters::apexToFNumber($maxApex) : null;
 
         return new Lens(
             lensMake: $exif->lensMake(),
             lensModel: $exif->lensModel(),
             lensSerialNumber: $exif->lensSerialNumber(),
-            focalLengthMm: $exif->focalLength(),
-            focalLengthIn35mm: $exif->focalLength35mm(),
+            focalLengthMm: $exif->focalLengthMm(),
+            focalLengthIn35mm: $exif->focalLength35Mm(),
             maxApertureFNumber: $maxF,
             lensSpecification: $exif->lensSpecification(),
         );
@@ -708,11 +822,11 @@ final class StructuredMetadataBuilder
      * Builds the image value object using EXIF metadata.
      *
      * @param Metadata        $metadata Metadata container supplying JPEG frame fallbacks.
-     * @param ExifTagResolver $exif      Resolver exposing image related EXIF tags.
+     * @param ExifDocument|null $exif Resolver exposing image related EXIF tags.
      *
      * @return Image Normalised image metadata aggregate.
      */
-    private function buildImage(Metadata $metadata, ExifTagResolver $exif): Image
+    private function buildImage(Metadata $metadata, ?ExifDocument $exif): Image
     {
         [$width, $height] = CompositeResolver::dimensions($exif);
 
@@ -724,9 +838,9 @@ final class StructuredMetadataBuilder
             $height = $metadata->jpegFrameHeight;
         }
 
-        $orientation = $exif->orientation();
+        $orientation = Orientation::fromExifValue($exif?->orientation());
 
-        $bitsPerSample = $exif->bitsPerSample();
+        $bitsPerSample = $exif?->bitsPerSample();
         if ($bitsPerSample === null) {
             $bitsPerSample = $metadata->jpegBitsPerSample;
         }
@@ -737,15 +851,15 @@ final class StructuredMetadataBuilder
             orientation: $orientation,
             bitsPerSample: $bitsPerSample,
             colorSpace: $this->normalizedColorSpace($exif),
-            imageUniqueId: $exif->imageUniqueId(),
-            imageNumber: $exif->imageNumber(),
-            documentName: $exif->documentName(),
-            description: $exif->imageDescription(),
-            title: $exif->imageTitle(),
-            componentsConfiguration: $exif->componentsConfiguration(),
-            compressedBitsPerPixel: $exif->compressedBitsPerPixel(),
-            interlace: $exif->interlace(),
-            userComment: $exif->userComment(),
+            imageUniqueId: $exif?->imageUniqueId(),
+            imageNumber: $exif?->imageNumber(),
+            documentName: $exif?->documentName(),
+            description: $exif?->imageDescription(),
+            title: $exif?->imageTitle(),
+            componentsConfiguration: $exif?->componentsConfiguration(),
+            compressedBitsPerPixel: $exif?->compressedBitsPerPixel(),
+            interlace: $exif?->interlace(),
+            userComment: $exif?->userComment(),
         );
     }
 
@@ -772,7 +886,7 @@ final class StructuredMetadataBuilder
     /**
      * Builds the scene metadata aggregate using EXIF, QuickTime and Apple sources.
      *
-     * @param ExifTagResolver   $exif      Resolver exposing EXIF scene metadata.
+     * @param ExifDocument|null   $exif      Resolver exposing EXIF scene metadata.
      * @param QuickTimeResolver $quickTime Resolver providing QuickTime scene hints.
      * @param Apple             $apple     Aggregated Apple maker note metadata.
      * @param int|null          $faceCount Number of detected face regions.
@@ -780,7 +894,7 @@ final class StructuredMetadataBuilder
      * @return Scene Scene metadata value object.
      */
     private function buildScene(
-        ExifTagResolver $exif,
+        ?ExifDocument $exif,
         QuickTimeResolver $quickTime,
         Apple $apple,
         ?int $faceCount,
@@ -818,13 +932,13 @@ final class StructuredMetadataBuilder
         }
 
         return new Scene(
-            type: $exif->sceneCaptureType(),
-            sceneType: $exif->sceneType(),
-            light: $exif->lightSource(),
+            type: $exif?->sceneCaptureType(),
+            sceneType: $exif?->sceneType(),
+            light: $exif?->lightSource(),
             faceCount: $faceCount,
             hdrScene: $hdrScene,
             nightMode: $night,
-            subjectDistanceRange: $exif->subjectDistanceRange(),
+            subjectDistanceRange: $exif?->subjectDistanceRange(),
         );
     }
 
@@ -857,7 +971,7 @@ final class StructuredMetadataBuilder
      * @param AppleMakerNotes|null $makerNotes        Parsed Apple maker note payload.
      * @param QuickTimeResolver    $quickTimeResolver Resolver exposing QuickTime metadata entries.
      * @param QuickTimeMeta|null   $quickTimeMeta     QuickTime metadata container used for content identifiers.
-     * @param ExifTagResolver      $exifResolver      Resolver exposing EXIF fallback values.
+     * @param ExifDocument|null      $exifDocument      Resolver exposing EXIF fallback values.
      *
      * @return Apple Apple metadata value object with normalised fields.
      */
@@ -865,7 +979,7 @@ final class StructuredMetadataBuilder
         ?AppleMakerNotes $makerNotes,
         QuickTimeResolver $quickTimeResolver,
         ?QuickTimeMeta $quickTimeMeta,
-        ExifTagResolver $exifResolver,
+        ?ExifDocument $exifDocument,
     ): Apple {
         $contentIdentifier = $makerNotes?->contentIdentifier;
         if ($contentIdentifier === null) {
@@ -1046,21 +1160,21 @@ final class StructuredMetadataBuilder
     /**
      * Builds the motion metadata aggregate from EXIF and Apple motion sources.
      *
-     * @param ExifTagResolver $exif  Resolver exposing EXIF camera orientation measurements.
+     * @param ExifDocument $exif  Resolver exposing EXIF camera orientation measurements.
      * @param Apple           $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
      */
-    private function buildMotion(ExifTagResolver $exif, Apple $apple): Motion
+    private function buildMotion(?ExifDocument $exif, Apple $apple): Motion
     {
-        $rollDeg  = $exif->cameraRollDeg();
-        $pitchDeg = $exif->cameraPitchDeg();
-        $yawDeg   = $exif->cameraYawDeg();
+        $rollDeg  = $exif?->cameraRollDeg();
+        $pitchDeg = $exif?->cameraPitchDeg();
+        $yawDeg   = $exif?->cameraYawDeg();
 
         $vector = $apple->accelerationVector;
 
         if (!is_array($vector)) {
-            $vector = $exif->accelerationVector();
+            $vector = $exif?->accelerationVector();
         }
 
         $accelX = null;
@@ -1076,44 +1190,44 @@ final class StructuredMetadataBuilder
         return new Motion($rollDeg, $pitchDeg, $yawDeg, $accelX, $accelY, $accelZ, null, null, null);
     }
 
-    private function buildUav(ExifTagResolver $exif, QuickTimeResolver $quickTime): Uav
+    private function buildUav(?ExifDocument $exif, QuickTimeResolver $quickTime): Uav
     {
-        $manufacturer = $exif->aircraftMake();
+        $manufacturer = $exif?->aircraftMake();
         if ($manufacturer === null) {
             $manufacturer = $quickTime->string('com.apple.quicktime.make');
         }
 
-        $model = $exif->aircraftModel();
+        $model = $exif?->aircraftModel();
         if ($model === null) {
             $model = $quickTime->string('com.apple.quicktime.model');
         }
 
-        $flightYaw = $exif->flightYawDeg();
+        $flightYaw = $exif?->flightYawDeg();
         if ($flightYaw === null) {
             $flightYaw = $quickTime->float('com.apple.quicktime.flightYawDegree');
         }
 
-        $flightPitch = $exif->flightPitchDeg();
+        $flightPitch = $exif?->flightPitchDeg();
         if ($flightPitch === null) {
             $flightPitch = $quickTime->float('com.apple.quicktime.flightPitchDegree');
         }
 
-        $flightRoll = $exif->flightRollDeg();
+        $flightRoll = $exif?->flightRollDeg();
         if ($flightRoll === null) {
             $flightRoll = $quickTime->float('com.apple.quicktime.flightRollDegree');
         }
 
-        $gimbalYaw = $exif->gimbalYawDeg();
+        $gimbalYaw = $exif?->gimbalYawDeg();
         if ($gimbalYaw === null) {
             $gimbalYaw = $quickTime->float('com.apple.quicktime.gimbalYawDegree');
         }
 
-        $gimbalPitch = $exif->gimbalPitchDeg();
+        $gimbalPitch = $exif?->gimbalPitchDeg();
         if ($gimbalPitch === null) {
             $gimbalPitch = $quickTime->float('com.apple.quicktime.gimbalPitchDegree');
         }
 
-        $gimbalRoll = $exif->gimbalRollDeg();
+        $gimbalRoll = $exif?->gimbalRollDeg();
         if ($gimbalRoll === null) {
             $gimbalRoll = $quickTime->float('com.apple.quicktime.gimbalRollDegree');
         }
@@ -1471,17 +1585,21 @@ final class StructuredMetadataBuilder
     /**
      * Normalises the colour space based on interoperability metadata hints.
      *
-     * @param ExifTagResolver $resolver Resolver exposing colour space and interoperability tags.
+     * @param ExifDocument $resolver Resolver exposing colour space and interoperability tags.
      *
      * @return ColorSpace|null Normalised colour space enumeration or null when undefined.
      */
-    private function normalizedColorSpace(ExifTagResolver $resolver): ?ColorSpace
+    private function normalizedColorSpace(?ExifDocument $document): ?ColorSpace
     {
-        $colorSpace = $resolver->enum('ColorSpace', ColorSpace::class);
+        if (!$document instanceof ExifDocument) {
+            return null;
+        }
+
+        $colorSpace = ColorSpace::fromExifValue($document->colorSpace());
 
         if ($colorSpace === ColorSpace::UNCALIBRATED) {
-            $interopIndex = $resolver->string('InteropIndex');
-            if ($interopIndex !== null) {
+            $interopIndex = $document->interopIndex();
+            if (is_string($interopIndex)) {
                 $normalizedInteropIndex = strtoupper($interopIndex);
                 if ($normalizedInteropIndex === 'R03') {
                     return ColorSpace::ADOBE_RGB;
@@ -1494,6 +1612,54 @@ final class StructuredMetadataBuilder
         }
 
         return $colorSpace;
+    }
+
+    /**
+     * Converts a flat list of values into XY point pairs.
+     *
+     * @param list<float> $values
+     *
+     * @return list<array{0: float, 1: float}>
+     */
+    private function chunkPairEntries(array $values): array
+    {
+        $count = count($values);
+        if ($count < 2 || $count % 2 !== 0) {
+            return [];
+        }
+
+        $pairs = [];
+        for ($index = 0; $index < $count; $index += 2) {
+            $pairs[] = [(float) $values[$index], (float) $values[$index + 1]];
+        }
+
+        return $pairs;
+    }
+
+    /**
+     * Converts a flat list of values into RGB triplets.
+     *
+     * @param list<float> $values
+     *
+     * @return list<array{0: float, 1: float, 2: float}>
+     */
+    private function chunkTripletEntries(array $values): array
+    {
+        $count = count($values);
+        if ($count < 3 || $count % 3 !== 0) {
+            return [];
+        }
+
+        $triplets = [];
+        for ($index = 0; $index < $count; $index += 3) {
+            $triplets[] = [
+                (float) $values[$index],
+                (float) $values[$index + 1],
+                (float) $values[$index + 2],
+            ];
+        }
+
+        return $triplets;
     }
 
     /**

@@ -15,6 +15,7 @@ use Closure;
 use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 
 use function abs;
 use function intdiv;
@@ -72,14 +73,13 @@ final readonly class CompositeResolver
     /**
      * Resolves the ISO sensitivity using EXIF fallbacks.
      */
-    public static function intISO(ExifTagResolver $resolver): ?int
+    public static function intISO(?ExifDocument $document): ?int
     {
-        return self::firstInt([
-            static fn (): ?int => $resolver->int('ISO'),
-            static fn (): ?int => $resolver->int('ISOSpeed'),
-            static fn (): ?int => $resolver->int('StandardOutputSensitivity'),
-            static fn (): ?int => $resolver->int('RecommendedExposureIndex'),
-        ]);
+        if (!$document instanceof ExifDocument) {
+            return null;
+        }
+
+        return $document->iso();
     }
 
     /**
@@ -87,19 +87,13 @@ final readonly class CompositeResolver
      *
      * @return array{0:?int,1:?int}
      */
-    public static function dimensions(ExifTagResolver $resolver): array
+    public static function dimensions(?ExifDocument $document): array
     {
-        $width = self::firstInt([
-            static fn (): ?int => $resolver->int('ExifImageWidth'),
-            static fn (): ?int => $resolver->int('ImageWidth'),
-        ]);
+        if (!$document instanceof ExifDocument) {
+            return [null, null];
+        }
 
-        $height = self::firstInt([
-            static fn (): ?int => $resolver->int('ExifImageHeight'),
-            static fn (): ?int => $resolver->int('ImageLength'),
-        ]);
-
-        return [$width, $height];
+        return [$document->imageWidth(), $document->imageHeight()];
     }
 
     /**
@@ -109,13 +103,16 @@ final readonly class CompositeResolver
      *
      * @return array{0:?DateTimeImmutable,1:?DateTimeZone,2:?string}
      */
-    public static function dateOriginal(ExifTagResolver $resolver, string $converterClass): array
+    public static function dateOriginal(?ExifDocument $document, string $converterClass): array
     {
-        $dateTime = $resolver->date('DateTimeOriginal');
+        if (!$document instanceof ExifDocument) {
+            return [null, null, null];
+        }
 
-        $offset = $resolver->string('OffsetTimeOriginal');
+        $dateTime = $document->captureDateTime();
+        $offset   = $document->offsetTimeOriginal();
         if ($offset === null) {
-            $zoneOffsets = $resolver->ints('TimeZoneOffset');
+            $zoneOffsets = $document->timeZoneOffsetMinutes();
             $offset      = is_array($zoneOffsets) && isset($zoneOffsets[0]) ? $zoneOffsets[0] : null;
         }
 
@@ -142,7 +139,7 @@ final readonly class CompositeResolver
         return [
             $dateTime,
             $timezone,
-            $resolver->string('SubSecTimeOriginal'),
+            $document->subSecTimeOriginal(),
         ];
     }
 

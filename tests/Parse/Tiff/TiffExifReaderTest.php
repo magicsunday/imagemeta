@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Curate\Resolver\ExifTagResolver;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
@@ -24,10 +23,6 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Value\ColorProfileGainMap;
-use MagicSunday\ImageMeta\Value\ColorProfileHueSatMap;
-use MagicSunday\ImageMeta\Value\ColorProfileLookTable;
-use MagicSunday\ImageMeta\Value\ColorProfileToneCurve;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -202,8 +197,6 @@ final class TiffExifReaderTest extends TestCase
     public function surfacesTable64Accessors(): void
     {
         $document = (new TiffExifReader())->parseFromBlob(self::buildClassicTiffBlob());
-        $resolver = new ExifTagResolver($document);
-
         self::assertSame([512], $document->stripOffsets());
         self::assertSame([1024], $document->stripByteCounts());
         self::assertSame(self::CLASSIC_TILE_WIDTH, $document->tileWidth());
@@ -222,21 +215,6 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame("Project \u{2728}", $document->xpSubject());
         self::assertSame("Project \u{2728}", $document->documentName());
         self::assertSame("Shot on \u{2615}", $document->imageDescription());
-
-        self::assertSame([512], $resolver->stripOffsets());
-        self::assertSame([1024], $resolver->stripByteCounts());
-        self::assertSame([0, 32768, 65535], $resolver->transferFunction());
-        self::assertSame(2048, $resolver->jpegThumbnailOffset());
-        self::assertSame(4096, $resolver->jpegThumbnailLength());
-        self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $resolver->referenceBlackWhite());
-        self::assertSame('Jane Doe', $resolver->copyright());
-        self::assertSame("Sunrise \u{1F305}", $resolver->xpTitle());
-        self::assertSame("Shot on \u{2615}", $resolver->xpComment());
-        self::assertSame("Åsa K.", $resolver->xpAuthor());
-        self::assertSame(['旅', '海'], $resolver->xpKeywords());
-        self::assertSame("Project \u{2728}", $resolver->xpSubject());
-        self::assertSame("Project \u{2728}", $resolver->documentName());
-        self::assertSame("Shot on \u{2615}", $resolver->imageDescription());
     }
 
     /**
@@ -247,7 +225,6 @@ final class TiffExifReaderTest extends TestCase
     {
         $blob      = self::buildClassicColorProfileBlob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
-        $resolver = new ExifTagResolver($document);
 
         self::assertSame('CameraSig v1.0', $document->cameraCalibrationSignature());
         self::assertSame('ProfileSig v2', $document->profileCalibrationSignature());
@@ -271,40 +248,6 @@ final class TiffExifReaderTest extends TestCase
         $gain = $document->profileGainTableMap();
         self::assertNotNull($gain);
         self::assertSame([1.0, 1.25, 1.5, 1.75], $gain);
-
-        self::assertSame('CameraSig v1.0', $resolver->cameraCalibrationSignature());
-        self::assertSame('ProfileSig v2', $resolver->profileCalibrationSignature());
-
-        $resolvedMap = $resolver->profileHueSatMap();
-        self::assertInstanceOf(ColorProfileHueSatMap::class, $resolvedMap);
-        self::assertSame(6, $resolvedMap->hueDivisions);
-        self::assertSame(3, $resolvedMap->saturationDivisions);
-        self::assertSame(2, $resolvedMap->valueDivisions);
-        self::assertSame([0.0, 0.25, 0.5, 0.75], $resolvedMap->mapData1);
-        self::assertSame([1.0, 1.25, 1.5], $resolvedMap->mapData2);
-        self::assertSame([1.75, 2.0, 2.25], $resolvedMap->mapData3);
-
-        $resolvedLook = $resolver->profileLookTable();
-        self::assertInstanceOf(ColorProfileLookTable::class, $resolvedLook);
-        self::assertSame(3, $resolvedLook->hueDivisions);
-        self::assertSame(2, $resolvedLook->saturationDivisions);
-        self::assertSame(2, $resolvedLook->valueDivisions);
-        self::assertSame([
-            [0.0, 0.5, 1.0],
-            [1.25, 1.5, 1.75],
-        ], $resolvedLook->entries);
-
-        $resolvedTone = $resolver->profileToneCurve();
-        self::assertInstanceOf(ColorProfileToneCurve::class, $resolvedTone);
-        self::assertSame([
-            [0.0, 0.0],
-            [0.5, 0.5],
-            [1.0, 1.0],
-        ], $resolvedTone->points);
-
-        $resolvedGain = $resolver->profileGainMap();
-        self::assertInstanceOf(ColorProfileGainMap::class, $resolvedGain);
-        self::assertSame([1.0, 1.25, 1.5, 1.75], $resolvedGain->values);
     }
 
     /**
@@ -314,10 +257,7 @@ final class TiffExifReaderTest extends TestCase
     public function exposesDocumentNameTagWhenAlone(): void
     {
         $document = (new TiffExifReader())->parseFromBlob(self::buildClassicDocumentNameBlob());
-        $resolver = new ExifTagResolver($document);
-
         self::assertSame('Scanned Page', $document->documentName());
-        self::assertSame('Scanned Page', $resolver->documentName());
     }
 
     #[Test]
@@ -358,10 +298,8 @@ final class TiffExifReaderTest extends TestCase
         $flashpixVersion = $exifIfd->get(ExifTag::FLASHPIX_VERSION)?->value;
         self::assertSame('0100', $flashpixVersion);
 
-        $resolver = new ExifTagResolver($document);
-
-        self::assertSame('2.32', $resolver->exifVersion());
-        self::assertSame('1.00', $resolver->flashpixVersion());
+        self::assertSame('2.32', $document->exifVersion());
+        self::assertSame('1.00', $document->flashpixVersion());
     }
 
     /**
@@ -372,10 +310,10 @@ final class TiffExifReaderTest extends TestCase
     {
         $blob     = $this->buildClassicVersionBlobWithoutFlashpix();
         $document = (new TiffExifReader())->parseFromBlob($blob);
-        $resolver = new ExifTagResolver($document);
 
-        self::assertNull($document->flashpixVersion());
-        self::assertSame('1.00', $resolver->flashpixVersion());
+        $entry = $document->exifIfd?->get(ExifTag::FLASHPIX_VERSION);
+        self::assertNull($entry);
+        self::assertSame('1.00', $document->flashpixVersion());
     }
 
     /**
@@ -406,8 +344,6 @@ final class TiffExifReaderTest extends TestCase
 
         self::assertSame($expected, $document->printImageMatching());
 
-        $resolver = new ExifTagResolver($document);
-        self::assertSame($expected, $resolver->printImageMatching());
     }
 
     /**
@@ -421,8 +357,6 @@ final class TiffExifReaderTest extends TestCase
 
         self::assertNull($document->printImageMatching());
 
-        $resolver = new ExifTagResolver($document);
-        self::assertNull($resolver->printImageMatching());
     }
 
     /**
@@ -743,8 +677,7 @@ final class TiffExifReaderTest extends TestCase
         self::assertTrue($document->makerNoteSafety());
         self::assertTrue($makerNotes->isSafe());
 
-        $resolver = new ExifTagResolver($document);
-        self::assertTrue($resolver->makerNoteSafety());
+        self::assertTrue($document->makerNoteSafety());
     }
 
     /**
@@ -762,8 +695,7 @@ final class TiffExifReaderTest extends TestCase
         self::assertFalse($document->makerNoteSafety());
         self::assertFalse($makerNotes->isSafe());
 
-        $resolver = new ExifTagResolver($document);
-        self::assertFalse($resolver->makerNoteSafety());
+        self::assertFalse($document->makerNoteSafety());
     }
 
     /**
