@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Curate;
 
 use DateTimeImmutable;
-use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Value\RunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
@@ -66,10 +66,11 @@ use function pack;
 use function str_repeat;
 
 /**
- * @covers \MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder
+ * @covers \MagicSunday\ImageMeta\Curate\ExifAssembler
  * @covers \MagicSunday\ImageMeta\Curate\StructuredMetadata
+ * @covers \MagicSunday\ImageMeta\Curate\Exif\ValueFactory
  */
-final class StructuredMetadataBuilderTest extends TestCase
+final class ExifAssemblerTest extends TestCase
 {
     /**
      * Ensures DSLR style EXIF data is mapped to the extended value objects.
@@ -250,7 +251,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $metadata = new Metadata(['primary'], $quickTime, $exifDocument, ['<xmp/>'], $xmpDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(
             [
@@ -457,7 +458,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             $xmpDocument,
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->rights->copyright);
         self::assertNull($structured->author->ownerName);
@@ -474,7 +475,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, null, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(Orientation::UNKNOWN, $structured->image->orientation);
     }
@@ -496,7 +497,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('Parrot', $structured->uav->manufacturer);
         self::assertSame('Anafi', $structured->uav->model);
@@ -524,7 +525,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $metadata = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->sensor->cfaWidth);
         self::assertNull($structured->sensor->cfaHeight);
@@ -537,8 +538,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::DOCUMENT_NAME => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 1, 'Legacy Document'),
         ]);
 
-        $structured = (new StructuredMetadataBuilder())
-            ->build(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
+        $structured = (new ExifAssembler())
+            ->assemble(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
 
         self::assertSame('Legacy Document', $structured->image->documentName);
     }
@@ -554,8 +555,8 @@ final class StructuredMetadataBuilderTest extends TestCase
             ExifTag::XP_SUBJECT  => new IfdEntry(ExifTag::XP_SUBJECT, 1, 1, 'XP Subject'),
         ]);
 
-        $structured = (new StructuredMetadataBuilder())
-            ->build(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
+        $structured = (new ExifAssembler())
+            ->assemble(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
 
         self::assertSame('XP Subject', $structured->image->documentName);
         self::assertSame('XP Title', $structured->image->title);
@@ -592,7 +593,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             digestMd5: 'md5-digest',
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('image/jpeg', $structured->file->mimeType);
         self::assertSame(54321, $structured->file->fileSize);
@@ -611,7 +612,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         $metadata   = new Metadata([$blob], null, $document);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
         $standards  = $structured->standards;
 
         self::assertSame('2.32', $standards->exifVersion);
@@ -664,7 +665,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $metadata = new Metadata(['primary'], $quickTime, $exifDocument, ['<xmp/>'], $xmpDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(CompositeImage::GENERAL_COMPOSITE, $structured->composite->type);
         self::assertSame([9, 4], $structured->composite->counts);
@@ -706,7 +707,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             new XmpDocument([]),
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('ImageMeta Studio', $structured->device->software);
     }
@@ -732,7 +733,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             new XmpDocument([]),
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('PowerMac G4', $structured->device->software);
     }
@@ -749,7 +750,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('QuickTime Studio', $structured->device->software);
     }
@@ -820,7 +821,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument, [], null, $makerNotes);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('maker-content', $structured->apple->contentIdentifier);
         self::assertSame('Maker Wide', $structured->apple->cameraType);
@@ -882,7 +883,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata([], $quickTime);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(6, $structured->apple->livePhotoIndex);
         self::assertNull($structured->apple->livePhotoTime);
@@ -914,7 +915,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         );
 
         $metadata   = new Metadata(['primary'], null, null, [], null, $makerNotes);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertTrue($structured->apple->flags['nightMode']);
         self::assertTrue($structured->apple->flags['longExposure']);
@@ -950,7 +951,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->apple->accelerationVector);
         self::assertEqualsWithDelta(-3.0, $structured->motion->accelX, 1e-12);
@@ -970,7 +971,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata(['primary'], $quickTime, null, []);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('qt-content', $structured->apple->contentIdentifier);
         self::assertSame([0.12, -0.34, 0.56], $structured->apple->accelerationVector);
@@ -1004,7 +1005,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
 
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->apple->accelerationVector);
 
@@ -1031,7 +1032,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata(['primary'], $quickTime, null, []);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('1.1', $structured->apple->makerNoteVersion);
         self::assertSame('HDR2', $structured->apple->hdrImageType);
@@ -1060,7 +1061,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata(['primary'], $quickTime, null, []);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('CompositePreset', $structured->apple->semanticStylePreset);
         self::assertEqualsWithDelta(0.4, $structured->apple->semanticStyleWarmth, 1e-12);
@@ -1110,7 +1111,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             $makerNotes,
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame($nightModeFlag, $structured->scene->nightMode);
     }
@@ -1163,7 +1164,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
         $metadata = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->scene->hdrScene);
 
@@ -1198,7 +1199,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $headroomExif = new ExifDocument(new Ifd([]), null, null, null, null, $headroomMakerNotesMeta);
         $headroomMetadata = new Metadata(['primary'], new QuickTimeMeta([]), $headroomExif, [], null, $headroomMakerNotesMeta);
 
-        $structuredHeadroom = (new StructuredMetadataBuilder())->build($headroomMetadata);
+        $structuredHeadroom = (new ExifAssembler())->assemble($headroomMetadata);
 
         self::assertTrue($structuredHeadroom->scene->hdrScene);
 
@@ -1233,7 +1234,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $flagExif = new ExifDocument(new Ifd([]), null, null, null, null, $flagMakerNotesMeta);
         $flagMetadata = new Metadata(['primary'], new QuickTimeMeta([]), $flagExif, [], null, $flagMakerNotesMeta);
 
-        $structuredFlags = (new StructuredMetadataBuilder())->build($flagMetadata);
+        $structuredFlags = (new ExifAssembler())->assemble($flagMetadata);
 
         self::assertTrue($structuredFlags->scene->hdrScene);
     }
@@ -1281,7 +1282,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             $makerNotes,
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertTrue($structured->scene->nightMode);
         self::assertTrue($structured->scene->hdrScene);
@@ -1321,7 +1322,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
         $metadata     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertTrue($structured->scene->hdrScene);
 
@@ -1353,7 +1354,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocumentFlags = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotesFlags);
         $metadataFlags     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocumentFlags, [], null, $makerNotesFlags);
 
-        $structuredFlags = (new StructuredMetadataBuilder())->build($metadataFlags);
+        $structuredFlags = (new ExifAssembler())->assemble($metadataFlags);
 
         self::assertTrue($structuredFlags->scene->hdrScene);
     }
@@ -1372,7 +1373,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('2.20', $structured->standards->exifVersion);
         self::assertSame('2.2', $structured->standards->profile);
@@ -1392,7 +1393,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('2.31', $structured->standards->exifVersion);
         self::assertSame('2.31', $structured->standards->profile);
@@ -1406,7 +1407,7 @@ final class StructuredMetadataBuilderTest extends TestCase
     {
         $metadata = new Metadata([], null, null, []);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(
             [
@@ -1447,7 +1448,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $metadata = new Metadata(['primary'], $quickTime, $exifDocument, ['<xmp/>'], $xmpDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->camera->make);
         self::assertNull($structured->camera->model);
@@ -1477,7 +1478,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             $xmpDocument,
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->exposure->iso);
         self::assertNull($structured->exposure->exposureTimeSec);
@@ -1520,7 +1521,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame($expectedIso, $structured->exposure->iso);
     }
@@ -1543,7 +1544,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
         self::assertSame('-02:00', $structured->temporal->original?->format('P'));
@@ -1571,7 +1572,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
         self::assertSame('+05:30', $structured->temporal->original?->format('P'));
@@ -1595,7 +1596,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal->original);
         self::assertNull($structured->temporal->tz);
@@ -1621,7 +1622,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(200, $structured->exposure->iso);
         self::assertSame(4000, $structured->image->width);
@@ -1644,7 +1645,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(5472, $structured->image->width);
         self::assertSame(3648, $structured->image->height);
@@ -1671,7 +1672,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(160, $structured->exposure->iso);
     }
@@ -1690,7 +1691,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(2048, $structured->image->width);
         self::assertSame(1536, $structured->image->height);
@@ -1712,7 +1713,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(320, $structured->exposure->iso);
         self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
@@ -1745,7 +1746,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
         self::assertSame('+02:30', $structured->temporal->offsetTimeOriginal);
@@ -1775,7 +1776,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('654', $structured->temporal->subSecTime);
         self::assertSame('123', $structured->temporal->subSecTimeOriginal);
@@ -1796,7 +1797,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('957', $structured->temporal->subSecTimeOriginal);
         self::assertSame('957', $structured->temporal->subSecTimeDigitized);
@@ -1816,7 +1817,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNull($structured->temporal->subSecTimeOriginal);
         self::assertSame('957', $structured->temporal->subSecTimeDigitized);
@@ -1845,7 +1846,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(ColorSpace::ADOBE_RGB, $structured->image->colorSpace);
     }
@@ -1872,7 +1873,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(ColorSpace::SRGB, $structured->image->colorSpace);
     }
@@ -1890,7 +1891,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertNotNull($structured->lens->maxApertureFNumber);
         self::assertEqualsWithDelta(4.0, $structured->lens->maxApertureFNumber, 0.0001);
@@ -1905,7 +1906,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $icc = IccFixtures::minimalProfile();
 
         $metadata   = new Metadata([], null, null, [], null, null, $icc, []);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         $profile = $structured->colorProfile;
         self::assertSame('Test Profile', $profile->profileName);
@@ -1971,7 +1972,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata(['primary'], null, $document);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         $profile = $structured->colorProfile;
         self::assertSame('CameraSig v1.0', $profile->cameraCalibrationSignature);
@@ -2012,7 +2013,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('K', $structured->gps->speedRef);
         self::assertEqualsWithDelta(33.3333333, $structured->gps->speedMs, 1e-6);
@@ -2109,7 +2110,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $exifDocument = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('N', $structured->gps->latitudeRef);
         self::assertEqualsWithDelta(51.5, $structured->gps->latitude, 1e-6);
@@ -2157,7 +2158,7 @@ final class StructuredMetadataBuilderTest extends TestCase
     #[Test]
     public function instantiatesValueObjectsWithNullStateWhenMetadataMissing(): void
     {
-        $structured = (new StructuredMetadataBuilder())->build(new Metadata([], null, null, []));
+        $structured = (new ExifAssembler())->assemble(new Metadata([], null, null, []));
 
         foreach (get_object_vars($structured) as $name => $value) {
             self::assertIsObject($value, sprintf('Expected %s to be an object value object', $name));
@@ -2206,7 +2207,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             $flashPix,
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame($flashPix, $structured->flashPix->streams);
     }
@@ -2237,7 +2238,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata([], null, null, [], $xmpDocument);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(2, $structured->scene->faceCount);
         self::assertCount(3, $structured->regions->items);
@@ -2303,7 +2304,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $metadata = new Metadata(['primary'], null, $exifDocument, [], null, $makerNotes);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(WhiteBalance::AUTO, $structured->whiteBalanceDetails->mode);
         self::assertSame(5200, $structured->whiteBalanceDetails->kelvin);
@@ -2332,7 +2333,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $metadata = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('3.00', $structured->standards->exifVersion);
         self::assertSame('3.0', $structured->standards->profile);
@@ -2369,7 +2370,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         ]);
 
         $metadata   = new Metadata([], $quickTime);
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame('qt', $structured->container->format);
         self::assertSame('Apple Encoder', $structured->container->encoder);
@@ -2398,7 +2399,7 @@ final class StructuredMetadataBuilderTest extends TestCase
         $audioStream = new JpegAudioStream('PCM', 2, 44_100, 16, 'DATA', '1.00');
         $metadata    = new Metadata([], null, jpegAudioStreams: [$audioStream]);
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertCount(1, $structured->embeddedAudio->clips);
 
@@ -2437,7 +2438,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             jpegYCbCrSubSampling: [2, 2],
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(8, $structured->tiff->bitsPerSample);
         self::assertSame([2, 2], $structured->tiff->ycbcrSubSampling);
@@ -2479,7 +2480,7 @@ final class StructuredMetadataBuilderTest extends TestCase
             mpfDocument: $mpfDocument,
         );
 
-        $structured = (new StructuredMetadataBuilder())->build($metadata);
+        $structured = (new ExifAssembler())->assemble($metadata);
         $multiPicture = $structured->multiPicture;
 
         self::assertSame('0100', $multiPicture->version);

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Curate;
+namespace MagicSunday\ImageMeta\Curate\Exif;
 
 use DateTimeImmutable;
 use DateTimeZone;
@@ -96,16 +96,54 @@ use function strtoupper;
 /**
  * Builds the structured metadata aggregate by orchestrating specialised resolvers.
  */
-final class StructuredMetadataBuilder
+final class ValueFactory
 {
     /**
-     * Builds the structured metadata aggregate from the supplied metadata container.
+     * Produces normalised value objects derived from the supplied metadata container.
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return StructuredMetadata Structured aggregate composed from specialised resolvers.
+     * @return array{
+     *     interop: Interop,
+     *     tiff: TiffData,
+     *     composite: CompositeImageInfo,
+     *     standards: Standards,
+     *     flashPix: FlashPix,
+     *     multiPicture: MultiPicture,
+     *     camera: Camera,
+     *     lens: Lens,
+     *     image: Image,
+     *     exposure: Exposure,
+     *     capture: Capture,
+     *     gps: Gps,
+     *     device: Device,
+     *     apple: AppleMakerNotes,
+     *     xmp: Xmp,
+     *     file: File,
+     *     container: Container,
+     *     preview: Preview,
+     *     video: Video,
+     *     audio: Audio,
+     *     embeddedAudio: AudioClips,
+     *     colorProfile: ColorProfile,
+     *     processing: ProcessingSettings,
+     *     whiteBalanceDetails: WhiteBalanceDetails,
+     *     focus: Focus,
+     *     motion: Motion,
+     *     scene: Scene,
+     *     regions: Regions,
+     *     keywords: Keywords,
+     *     rights: Rights,
+     *     author: Author,
+     *     temporal: Temporal,
+     *     derived: Derived,
+     *     related: RelatedAssets,
+     *     sensor: Sensor,
+     *     uav: Uav,
+     *     integrity: Integrity,
+     * }
      */
-    public function build(Metadata $metadata): StructuredMetadata
+    public function createComponents(Metadata $metadata): array
     {
         $exifDocument      = $metadata->exifDoc;
         $xmpDocument       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
@@ -540,45 +578,45 @@ final class StructuredMetadataBuilder
             makerNotesSafe: $makerNotesSafe,
         );
 
-        return new StructuredMetadata(
-            interop: $interop,
-            tiff: $tiff,
-            composite: $composite,
-            standards: $standards,
-            flashPix: $flashPix,
-            multiPicture: $multiPicture,
-            camera: $camera,
-            lens: $lens,
-            image: $image,
-            exposure: $exposure,
-            capture: $capture,
-            gps: $gps,
-            device: $device,
-            apple: $apple,
-            xmp: $xmp,
-            file: $file,
-            container: $container,
-            preview: $preview,
-            video: $video,
-            audio: $audio,
-            embeddedAudio: $embeddedAudio,
-            colorProfile: $colorProfile,
-            processing: $processing,
-            whiteBalanceDetails: $whiteBalanceDetails,
-            focus: $focus,
-            motion: $motion,
-            scene: $scene,
-            regions: $regions,
-            keywords: $keywords,
-            rights: $rights,
-            author: $author,
-            temporal: $temporal,
-            derived: $derived,
-            related: $related,
-            sensor: $sensor,
-            uav: $uav,
-            integrity: $integrity,
-        );
+        return [
+            'interop' => $interop,
+            'tiff' => $tiff,
+            'composite' => $composite,
+            'standards' => $standards,
+            'flashPix' => $flashPix,
+            'multiPicture' => $multiPicture,
+            'camera' => $camera,
+            'lens' => $lens,
+            'image' => $image,
+            'exposure' => $exposure,
+            'capture' => $capture,
+            'gps' => $gps,
+            'device' => $device,
+            'apple' => $apple,
+            'xmp' => $xmp,
+            'file' => $file,
+            'container' => $container,
+            'preview' => $preview,
+            'video' => $video,
+            'audio' => $audio,
+            'embeddedAudio' => $embeddedAudio,
+            'colorProfile' => $colorProfile,
+            'processing' => $processing,
+            'whiteBalanceDetails' => $whiteBalanceDetails,
+            'focus' => $focus,
+            'motion' => $motion,
+            'scene' => $scene,
+            'regions' => $regions,
+            'keywords' => $keywords,
+            'rights' => $rights,
+            'author' => $author,
+            'temporal' => $temporal,
+            'derived' => $derived,
+            'related' => $related,
+            'sensor' => $sensor,
+            'uav' => $uav,
+            'integrity' => $integrity,
+        ];
     }
 
     /**

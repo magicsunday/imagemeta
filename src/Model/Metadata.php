@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model;
 
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
-use MagicSunday\ImageMeta\Curate\StructuredMetadataBuilder;
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
@@ -183,8 +183,8 @@ final class Metadata
     public function structured(): StructuredMetadata
     {
         if (!$this->structured instanceof StructuredMetadata) {
-            $builder          = new StructuredMetadataBuilder();
-            $this->structured = $builder->build($this);
+            $assembler       = new ExifAssembler();
+            $this->structured = $assembler->assemble($this);
         }
 
         return $this->structured;

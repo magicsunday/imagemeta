@@ -22,7 +22,7 @@ PHPUNIT
 ### Curate/Resolver/RegionsResolver.php
 - [x] `arrayValues.list`: `array_values()` called on an array that is already a list at lines 127 and 188.
 
-### Curate/StructuredMetadataBuilder.php
+### Curate/Exif/ValueFactory.php
 - [x] `nullsafe.neverNull`: Nullsafe property access before `??` operator is unnecessary at lines 631-643.
 - [x] `function.alreadyNarrowedType`: `array_is_list()` with `list<float>` always true at line 675.
 
