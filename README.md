@@ -13,19 +13,16 @@ use MagicSunday\ImageMeta\MetadataReader;
 $meta = (new MetadataReader())->read('photo.heic');
 $structured = $meta->structured();
 
-$structured->lens->model;
-$structured->temporal->original;
-$structured->keywords->flat;
-$structured->derived->ev100;
-$structured->related->livePhotoPairId;
-$structured->derived->fovDiagonalDeg;     // Diagonal field of view (formerly fovDeg)
-$structured->derived->fovHorizontalDeg;   // Horizontal field of view in degrees
-$structured->derived->fovVerticalDeg;     // Vertical field of view in degrees
-$structured->temporal->tz?->getName();    // Resolved capture time zone source
-$structured->temporal->offsetTimeOriginal;
-$structured->file->fileSize;              // File level metadata (size, digests, extension)
-$structured->apple->flags['livePhotoEnabled'];
-$structured->gps->horizontalPositioningError;
+$structured->file->mimeType;
+$structured->camera->device->software;
+$structured->lens->model();
+$structured->lens->focalLength();
+$structured->lens->equivalent35mm();
+$structured->exposure->program;
+$structured->gps->latitude?->toFloat();
+$structured->makerNotes->apple?->cameraType;
+$structured->processing->whiteBalance->kelvin;
+$structured->sensor->hardware->focalPlaneXResolution;
 ```
 
 ### Mapping overview
@@ -36,7 +33,7 @@ $structured->gps->horizontalPositioningError;
 | `lens.model` | EXIF `LensModel` | – | – |
 | `exposure.flash` | EXIF `Flash` | XMP `exif:Flash` | `ValueConverters::flashFromShort()` |
 | `temporal.original` | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal` | `ValueConverters::parseOffset()` |
-| `derived.ev100` | Calculated from exposure values | – | `ValueConverters::calcEv100()` |
+| `exposure.ev100` | Calculated from exposure values | – | `ValueConverters::calcEv100()` |
 
 ### Temporal fractional seconds harmonisation
 
@@ -81,7 +78,7 @@ $s->standards->exifVersion;         // "3.00"
 
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.
 
-The diagonal field of view exposed via `fovDiagonalDeg` corresponds to the value previously documented as `fovDeg`. The new `fovHorizontalDeg` and `fovVerticalDeg` helpers provide axis-specific angles so clients can present per-dimension compositions without additional trigonometry.
+The diagonal field of view exposed via `lens->fieldOfViewDiagonal()` corresponds to the value previously documented as `fovDeg`. The new horizontal and vertical helpers provide axis-specific angles so clients can present per-dimension compositions without additional trigonometry.
 
 The expanded temporal aggregate surfaces raw EXIF offset tags alongside a resolved `DateTimeZone` instance. This makes it possible to reconstruct original capture times even when the offset varies between creation, digitisation and modification steps. File level metadata now reports size, extension and cryptographic digests to help consumers correlate assets or detect tampering.
 

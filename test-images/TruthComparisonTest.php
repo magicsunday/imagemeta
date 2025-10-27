@@ -95,25 +95,25 @@ final class TruthComparisonTest extends TestCase
         $this->assertSame($exif['IFD0:Software'] ?? null, $meta->camera->firmware ?? null, "$file: Firmware");
 
         // Image dimensions
-        $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->image->width ?? 0, "$file: width");
-        $this->assertSame((int)($exif['File:ImageHeight'] ?? 0), $meta->image->height ?? 0, "$file: height");
+        $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->media->image->width ?? 0, "$file: width");
+        $this->assertSame((int)($exif['File:ImageHeight'] ?? 0), $meta->media->image->height ?? 0, "$file: height");
 
         if ($file === 'Landscape_0.jpg') {
-            $this->assertNotNull($meta->image->width, 'Landscape_0.jpg: width fallback expected non-null value');
-            $this->assertNotNull($meta->image->height, 'Landscape_0.jpg: height fallback expected non-null value');
-            $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->image->width, 'Landscape_0.jpg: width fallback matches ExifTool');
-            $this->assertSame((int)($exif['File:ImageHeight'] ?? 0), $meta->image->height, 'Landscape_0.jpg: height fallback matches ExifTool');
+            $this->assertNotNull($meta->media->image->width, 'Landscape_0.jpg: width fallback expected non-null value');
+            $this->assertNotNull($meta->media->image->height, 'Landscape_0.jpg: height fallback expected non-null value');
+            $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->media->image->width, 'Landscape_0.jpg: width fallback matches ExifTool');
+            $this->assertSame((int)($exif['File:ImageHeight'] ?? 0), $meta->media->image->height, 'Landscape_0.jpg: height fallback matches ExifTool');
         }
 
         // Orientation
         if (isset($exif['IFD0:Orientation'], $this->map['Orientation'])) {
-            $ok = $this->norm->compareEnum('Orientation', (int)$exif['IFD0:Orientation'], $meta->image->orientation ?? null);
+            $ok = $this->norm->compareEnum('Orientation', (int)$exif['IFD0:Orientation'], $meta->media->image->orientation ?? null);
             $this->assertTrue($ok, "$file: Orientation enum mapping");
         }
 
         // ColorSpace
         if (isset($exif['EXIF:ColorSpace'], $this->map['ColorSpace'])) {
-            $ok = $this->norm->compareEnum('ColorSpace', (int)$exif['EXIF:ColorSpace'], $meta->image->colorSpace ?? null);
+            $ok = $this->norm->compareEnum('ColorSpace', (int)$exif['EXIF:ColorSpace'], $meta->media->image->colorSpace ?? null);
             $this->assertTrue($ok, "$file: ColorSpace enum mapping");
         }
 
@@ -132,7 +132,7 @@ final class TruthComparisonTest extends TestCase
             $this->assertTrue($ok, "$file: MeteringMode enum");
         }
         if (isset($exif['EXIF:WhiteBalance'])) {
-            $ok = $this->norm->compareEnum('WhiteBalance', (int)$exif['EXIF:WhiteBalance'], $meta->exposure->whiteBalance ?? $meta->whiteBalanceDetails->mode ?? null);
+            $ok = $this->norm->compareEnum('WhiteBalance', (int)$exif['EXIF:WhiteBalance'], $meta->exposure->whiteBalance ?? $meta->processing->whiteBalance->mode ?? null);
             $this->assertTrue($ok, "$file: WhiteBalance enum");
         }
 
@@ -144,13 +144,13 @@ final class TruthComparisonTest extends TestCase
 
         // Lens information
         if (isset($exif['EXIF:FocalLength'])) {
-            $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens->focalLengthMm ?? $meta->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
+            $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens->focalLength() ?? $meta->media->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
         }
         if (isset($exif['EXIF:FocalLengthIn35mmFormat'])) {
-            $this->assertSame((int)$exif['EXIF:FocalLengthIn35mmFormat'], (int)($meta->lens->focalLengthIn35mm ?? $meta->derived->focalLength35mm ?? 0), "$file: FocalLength35mm");
+            $this->assertSame((int)$exif['EXIF:FocalLengthIn35mmFormat'], (int)($meta->lens->equivalent35mm() ?? 0), "$file: FocalLength35mm");
         }
         if (isset($exif['EXIF:LensModel'])) {
-            $this->assertSame($exif['EXIF:LensModel'], $meta->lens->lensModel ?? null, "$file: LensModel");
+            $this->assertSame($exif['EXIF:LensModel'], $meta->lens->model() ?? null, "$file: LensModel");
         }
 
         // Temporal metadata (ISO-8601)
@@ -159,19 +159,19 @@ final class TruthComparisonTest extends TestCase
         $modifyIso = Normalizer::buildIso8601FromExif($exif, 'IFD0:ModifyDate');
 
         if ($createIso !== null) {
-            $this->assertSame($createIso, safeIso($meta->temporal->create ?? null), "$file: CreateDate");
+            $this->assertSame($createIso, safeIso($meta->capture->temporal->create ?? null), "$file: CreateDate");
         }
         if ($origIso !== null) {
-            $this->assertSame($origIso, safeIso($meta->temporal->original ?? null), "$file: DateTimeOriginal");
+            $this->assertSame($origIso, safeIso($meta->capture->temporal->original ?? null), "$file: DateTimeOriginal");
         }
         if ($modifyIso !== null) {
-            $this->assertSame($modifyIso, safeIso($meta->temporal->modify ?? null), "$file: ModifyDate");
+            $this->assertSame($modifyIso, safeIso($meta->capture->temporal->modify ?? null), "$file: ModifyDate");
         }
 
         // GPS
         if (isset($exif['GPS:GPSLatitude'], $exif['GPS:GPSLongitude'])) {
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLatitude'],  (float)($meta->gps->latitude  ?? 0), Normalizer::DELTA, "$file: GPS lat");
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLongitude'], (float)($meta->gps->longitude ?? 0), Normalizer::DELTA, "$file: GPS lon");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLatitude'],  (float)($meta->gps->latitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lat");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLongitude'], (float)($meta->gps->longitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lon");
         }
         if (isset($exif['GPS:GPSAltitude'])) {
             $this->assertEqualsWithDelta((float)$exif['GPS:GPSAltitude'], (float)($meta->gps->altitude ?? 0), 1e-3, "$file: GPS alt");
@@ -182,16 +182,16 @@ final class TruthComparisonTest extends TestCase
 
         // ICC profile
         if (isset($exif['ICC_Profile:ProfileDescription'])) {
-            $this->assertSame($exif['ICC_Profile:ProfileDescription'], $meta->colorProfile->profileName ?? null, "$file: ICC name");
+            $this->assertSame($exif['ICC_Profile:ProfileDescription'], $meta->media->colorProfile->profileName ?? null, "$file: ICC name");
         }
         if (isset($exif['ICC_Profile:ProfileVersion'])) {
-            $this->assertStringStartsWith((string)$exif['ICC_Profile:ProfileVersion'], (string)($meta->colorProfile->profileVersion ?? ''), "$file: ICC version");
+            $this->assertStringStartsWith((string)$exif['ICC_Profile:ProfileVersion'], (string)($meta->media->colorProfile->profileVersion ?? ''), "$file: ICC version");
         }
         if (isset($exif['ICC_Profile:RenderingIntent'])) {
-            $this->assertSame($exif['ICC_Profile:RenderingIntent'], $meta->colorProfile->renderingIntent ?? null, "$file: ICC intent");
+            $this->assertSame($exif['ICC_Profile:RenderingIntent'], $meta->media->colorProfile->renderingIntent ?? null, "$file: ICC intent");
         }
         if (isset($exif['ICC_Profile:ProfileID'])) {
-            $this->assertSame(strtoupper((string)$exif['ICC_Profile:ProfileID']), strtoupper((string)($meta->colorProfile->profileId ?? '')), "$file: ICC id");
+            $this->assertSame(strtoupper((string)$exif['ICC_Profile:ProfileID']), strtoupper((string)($meta->media->colorProfile->profileId ?? '')), "$file: ICC id");
         }
 
         // Flash bitmask decoded into structured fields
@@ -221,7 +221,7 @@ final class TruthComparisonTest extends TestCase
 
         $facesExif = Normalizer::mwgFaces($exif);
         $facesMeta = [];
-        foreach (($meta->regions->items ?? []) as $r) {
+        foreach (($meta->capture->regions->items ?? []) as $r) {
             if (enumName($r->type ?? null) === 'FACE') {
                 $facesMeta[] = ['x' => (float)$r->x, 'y' => (float)$r->y, 'w' => (float)$r->w, 'h' => (float)$r->h];
             }
