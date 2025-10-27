@@ -12,14 +12,12 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core;
 
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function fopen;
 use function fread;
 use function fseek;
 use function fstat;
 use function is_array;
-use function ord;
 use function strlen;
 
 /**
@@ -33,6 +31,8 @@ final class Stream
     private readonly int $size;
 
     private int $pos = 0;
+
+    private readonly ByteReader $byteReader;
 
     /**
      * Opens the given path for binary reading and wraps it in a stream instance.
@@ -68,6 +68,14 @@ final class Stream
     {
         $this->fh   = $fh;
         $this->size = $size;
+        $this->byteReader = new ByteReader(
+            read: fn (int $length): string => $this->read($length),
+            tell: fn (): int => $this->pos,
+            seek: function (int|UInt64 $offset): void {
+                $this->seekInternal($offset);
+            },
+            context: 'stream',
+        );
     }
 
     /**
@@ -87,7 +95,7 @@ final class Stream
      */
     public function tell(): int
     {
-        return $this->pos;
+        return $this->byteReader->tell();
     }
 
     /**
@@ -97,12 +105,7 @@ final class Stream
      */
     public function seek(int $offset): void
     {
-        if ($offset < 0 || $offset > $this->size) {
-            throw new BoundsError('seek out of range: ' . $offset);
-        }
-
-        fseek($this->fh, $offset);
-        $this->pos = $offset;
+        $this->byteReader->seek($offset);
     }
 
     /**
@@ -139,7 +142,7 @@ final class Stream
      */
     public function readU8(): int
     {
-        return ord($this->read(1));
+        return $this->byteReader->readU8();
     }
 
     /**
@@ -149,7 +152,7 @@ final class Stream
      */
     public function readU16BE(): int
     {
-        return $this->unpackInt('n', 2);
+        return $this->byteReader->readU16BE();
     }
 
     /**
@@ -159,7 +162,7 @@ final class Stream
      */
     public function readU32BE(): int
     {
-        return $this->unpackInt('N', 4);
+        return $this->byteReader->readU32BE();
     }
 
     /**
@@ -169,10 +172,7 @@ final class Stream
      */
     public function readU64BE(): UInt64
     {
-        $hi = $this->readU32BE();
-        $lo = $this->readU32BE();
-
-        return Unpack::combineUint32($hi, $lo);
+        return $this->byteReader->readU64BE();
     }
 
     /**
@@ -190,18 +190,25 @@ final class Stream
         return new StreamWindow($this, $offset, $length);
     }
 
-    /**
-     * Reads the requested number of bytes and unpacks the first value using the provided format.
-     *
-     * @param string $format Format string understood by {@see Unpack::int}.
-     * @param int    $length Number of bytes to consume from the stream.
-     *
-     * @return int
-     */
-    private function unpackInt(string $format, int $length): int
+    private function seekInternal(int|UInt64 $offset): void
     {
-        $bytes = $this->read($length);
+        if ($offset instanceof UInt64) {
+            if ($offset->compareInt($this->size) > 0) {
+                throw new BoundsError('seek out of range: ' . $offset->toHex());
+            }
 
-        return Unpack::int($format, $bytes, 'integer from stream');
+            $offsetValue = $offset->toInt('seek out of range');
+            $messageValue = $offset->toHex();
+        } else {
+            $offsetValue  = $offset;
+            $messageValue = (string) $offset;
+        }
+
+        if ($offsetValue < 0 || $offsetValue > $this->size) {
+            throw new BoundsError('seek out of range: ' . $messageValue);
+        }
+
+        fseek($this->fh, $offsetValue);
+        $this->pos = $offsetValue;
     }
 }
