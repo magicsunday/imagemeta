@@ -58,6 +58,7 @@ use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
+use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
@@ -269,7 +270,7 @@ final class ValueFactory
             $whiteBalance = WhiteBalance::tryFrom($whiteBalanceCode);
         }
 
-        $flashInfo = FlashInfo::fromExifValue($exifDocument?->flash());
+        $flashInfo = ExifFlash::fromExifValue($exifDocument?->flash());
 
         $exposure = new Exposure(
             iso: $exifDocument?->iso(),

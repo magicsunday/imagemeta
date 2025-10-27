@@ -17,6 +17,7 @@ use DateTimeZone;
 use Exception;
 use JsonException;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use Throwable;
 
@@ -1233,11 +1234,11 @@ final readonly class ValueConverters
         }
 
         if (is_float($value) || is_int($value)) {
-            return FlashInfo::fromExifValue((int) $value);
+            return ExifFlash::fromExifValue((int) $value);
         }
 
         if (is_string($value) && is_numeric($value)) {
-            return FlashInfo::fromExifValue((int) $value);
+            return ExifFlash::fromExifValue((int) $value);
         }
 
         return null;

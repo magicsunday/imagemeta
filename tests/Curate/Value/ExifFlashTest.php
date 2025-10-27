@@ -14,14 +14,14 @@ namespace MagicSunday\ImageMeta\Tests\Curate\Value;
 use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
-use MagicSunday\ImageMeta\Value\FlashInfo;
+use MagicSunday\ImageMeta\Value\ExifFlash;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MagicSunday\ImageMeta\Value\FlashInfo
+ * @covers \MagicSunday\ImageMeta\Value\ExifFlash
  */
-final class FlashInfoTest extends TestCase
+final class ExifFlashTest extends TestCase
 {
     /**
      * Ensures flash bit fields are decoded into typed information.
@@ -29,7 +29,7 @@ final class FlashInfoTest extends TestCase
     #[Test]
     public function createsInstanceFromExifBitField(): void
     {
-        $info = FlashInfo::fromExifValue(127);
+        $info = ExifFlash::fromExifValue(127);
 
         self::assertNotNull($info);
         self::assertTrue($info->fired);
@@ -45,6 +45,6 @@ final class FlashInfoTest extends TestCase
     #[Test]
     public function returnsNullWhenNoValueIsProvided(): void
     {
-        self::assertNull(FlashInfo::fromExifValue(null));
+        self::assertNull(ExifFlash::fromExifValue(null));
     }
 }

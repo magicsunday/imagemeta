@@ -22,14 +22,4 @@ enum FlashFunction: int
 
     case PRESENT = 0;
     case ABSENT  = 1;
-
-    /**
-     * Converts the flash bit field into an enum instance.
-     */
-    public static function fromFlashBits(int $value): ?self
-    {
-        $functionBit = ($value >> 5) & 0x01;
-
-        return self::tryFrom($functionBit);
-    }
 }

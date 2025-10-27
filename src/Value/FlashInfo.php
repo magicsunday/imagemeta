@@ -15,8 +15,6 @@ use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 
-use function is_int;
-
 /**
  * Represents flash related capture information as exposed by EXIF and XMP.
  */
@@ -36,25 +34,5 @@ final readonly class FlashInfo
         public ?FlashFunction $functionPresence = null,
         public bool $redEyeReduction = false,
     ) {
-    }
-
-    /**
-     * Creates an instance from the numeric EXIF Flash tag value.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $intValue = is_int($value) ? $value : (int) $value;
-
-        return new self(
-            fired: (bool) ($intValue & 0x01),
-            mode: FlashMode::fromFlashBits($intValue),
-            returnDetection: FlashReturn::fromFlashBits($intValue),
-            functionPresence: FlashFunction::fromFlashBits($intValue),
-            redEyeReduction: (bool) ($intValue & 0x40),
-        );
     }
 }
