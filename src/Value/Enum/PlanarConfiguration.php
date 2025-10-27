@@ -11,27 +11,16 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates TIFF planar configuration options.
  */
 enum PlanarConfiguration: int
 {
+    use EnumFromIntStringNullable;
+
     case CHUNKY = 1;
     case PLANAR = 2;
 
-    /**
-     * Converts a raw planar configuration value into the enum.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

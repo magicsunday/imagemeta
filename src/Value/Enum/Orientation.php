@@ -11,11 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+
 /**
  * Enumerates the known EXIF orientation values.
  */
 enum Orientation: int
 {
+    use EnumFromIntStringNullable;
+
     case UNKNOWN      = 0;
     case TOP_LEFT     = 1;
     case TOP_RIGHT    = 2;
@@ -26,17 +30,4 @@ enum Orientation: int
     case RIGHT_BOTTOM = 7;
     case LEFT_BOTTOM  = 8;
 
-    /**
-     * Converts a raw EXIF orientation value into an enum instance.
-     *
-     * Values outside the EXIF specification are mapped to {@see Orientation::UNKNOWN}.
-     */
-    public static function fromExifValue(?int $value): ?self
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        return self::tryFrom($value) ?? self::UNKNOWN;
-    }
 }

@@ -11,13 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates TIFF/EXIF photometric interpretations defined in EXIF 3.0.
  */
 enum Photometric: int
 {
+    use EnumFromIntStringNullable;
+
     case WHITE_IS_ZERO     = 0;
     case BLACK_IS_ZERO     = 1;
     case RGB               = 2;
@@ -28,17 +30,4 @@ enum Photometric: int
     case CIELAB            = 8;
     case ICCLAB            = 9;
 
-    /**
-     * Converts raw values into the backed enum instance.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

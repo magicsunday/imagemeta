@@ -11,27 +11,16 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates chroma positioning relative to luma samples in YCbCr images.
  */
 enum YCbCrPositioning: int
 {
+    use EnumFromIntStringNullable;
+
     case CENTERED = 1;
     case CO_SITED = 2;
 
-    /**
-     * Converts a raw positioning identifier into the enum value.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

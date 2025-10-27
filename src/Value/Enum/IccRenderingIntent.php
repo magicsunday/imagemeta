@@ -11,11 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+
 /**
  * Enumerates the rendering intents defined by the ICC specification.
  */
 enum IccRenderingIntent: int
 {
+    use EnumFromIntStringNullable;
+
     case PERCEPTUAL                     = 0;
     case MEDIA_RELATIVE_COLORIMETRIC    = 1;
     case SATURATION                     = 2;

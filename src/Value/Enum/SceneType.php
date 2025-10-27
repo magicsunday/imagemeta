@@ -11,27 +11,16 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use function is_string;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates EXIF scene types.
  */
 enum SceneType: int
 {
+    use EnumFromIntStringNullable;
+
     case NOT_DEFINED                 = 0;
     case DIRECTLY_PHOTOGRAPHED_IMAGE = 1;
 
-    /**
-     * Converts raw EXIF values to the corresponding enum instance.
-     */
-    public static function fromExifValue(int|string|null $value): ?self
-    {
-        if ($value === null || $value === '') {
-            return null;
-        }
-
-        $intValue = is_string($value) ? (int) $value : $value;
-
-        return self::tryFrom($intValue);
-    }
 }

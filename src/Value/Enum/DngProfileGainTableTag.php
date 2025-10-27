@@ -11,11 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+
 /**
  * Enumerates the DNG profile gain table related tags.
  */
 enum DngProfileGainTableTag: int
 {
+    use EnumFromIntStringNullable;
+
     case GAIN_TABLE_MAP = 0xC7A4;
 
     /**
