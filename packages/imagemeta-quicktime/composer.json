@@ -1,0 +1,15 @@
+{
+    "name": "magicsunday/imagemeta-quicktime",
+    "description": "ISO BMFF (QuickTime/MP4/MOV/HEIC) extraction support for ImageMeta.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "ext-iconv": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "MagicSunday\\ImageMeta\\": "src/"
+        }
+    }
+}

@@ -43,13 +43,27 @@
     },
     "autoload": {
         "psr-4": {
-            "MagicSunday\\ImageMeta\\": "src/"
+            "MagicSunday\\ImageMeta\\": [
+                "src/",
+                "packages/imagemeta-maker-notes/src/",
+                "packages/imagemeta-quicktime/src/",
+                "packages/imagemeta-xmp/src/",
+                "packages/imagemeta-mpf/src/",
+                "packages/imagemeta-curate-exif/src/"
+            ]
         }
     },
     "autoload-dev": {
         "psr-4": {
             "MagicSunday\\ImageMeta\\Tests\\": "tests/"
         }
+    },
+    "suggest": {
+        "magicsunday/imagemeta-maker-notes": "Install to enable maker note decoding and mapping support.",
+        "magicsunday/imagemeta-quicktime": "Install to parse QuickTime/ISO BMFF metadata payloads.",
+        "magicsunday/imagemeta-xmp": "Install to parse XMP packets and build structured XMP documents.",
+        "magicsunday/imagemeta-mpf": "Install to parse JPEG MPF APP2 segments.",
+        "magicsunday/imagemeta-curate-exif": "Install to expose curated EXIF value objects."
     },
     "scripts": {
         "ci:cgl": [

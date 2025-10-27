@@ -1,0 +1,15 @@
+{
+    "name": "magicsunday/imagemeta-xmp",
+    "description": "XMP packet parsing and models for ImageMeta.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "ext-xmlreader": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "MagicSunday\\ImageMeta\\": "src/"
+        }
+    }
+}

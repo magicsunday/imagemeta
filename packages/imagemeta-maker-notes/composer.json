@@ -1,0 +1,15 @@
+{
+    "name": "magicsunday/imagemeta-maker-notes",
+    "description": "Maker note decoders, mappers and registry factory for ImageMeta.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "magicsunday/imagemeta-quicktime": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "MagicSunday\\ImageMeta\\": "src/"
+        }
+    }
+}

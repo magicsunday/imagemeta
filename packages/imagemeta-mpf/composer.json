@@ -1,0 +1,14 @@
+{
+    "name": "magicsunday/imagemeta-mpf",
+    "description": "Multi-Picture Format (MPF) parser and models for ImageMeta.",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "MagicSunday\\ImageMeta\\": "src/"
+        }
+    }
+}
