@@ -94,3 +94,8 @@ final readonly class AppleMakerNotes
     ) {
     }
 }
+
+/**
+ * @deprecated Use {@see AppleMakerNotes} instead.
+ */
+class_alias(AppleMakerNotes::class, __NAMESPACE__ . '\\Apple');
