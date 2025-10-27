@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Parse\Icc;
 
 use Imagick;
 use ImagickPixel;
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 use Throwable;
@@ -162,11 +163,11 @@ final class IccDecoder
         $minorBugfix   = ord($data[9]);
         $major         = $majorByte;
         $minor         = $minorBugfix >> 4;
-        $bugfixVersion = $minorBugfix & 0x0F;
+        $bugfixVersion = $minorBugfix & BitMask::LOW_NIBBLE;
 
-        if ($majorByte >= 0x10) {
+        if ($majorByte >= BitMask::BIT_4) {
             $major         = $majorByte >> 4;
-            $minor         = $majorByte & 0x0F;
+            $minor         = $majorByte & BitMask::LOW_NIBBLE;
             $bugfixVersion = $minorBugfix >> 4;
         }
 

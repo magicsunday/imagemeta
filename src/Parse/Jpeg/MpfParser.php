@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
@@ -30,7 +32,7 @@ use function substr;
  */
 final class MpfParser
 {
-    private const int TIFF_MAGIC = 0x002A;
+    private const int TIFF_MAGIC = TiffConst::MAGIC_CLASSIC;
 
     private const int TYPE_BYTE = 1;
 
@@ -276,11 +278,11 @@ final class MpfParser
      */
     private function toSigned32(int $value): int
     {
-        if (($value & 0x8000_0000) !== 0) {
-            return -((~$value & 0xFFFF_FFFF) + 1);
+        if (($value & BitMask::SIGN_BIT_32) !== 0) {
+            return -((~$value & BitMask::UINT32_MAX) + 1);
         }
 
-        return $value & 0x7FFF_FFFF;
+        return $value & BitMask::INT31_MAX;
     }
 
     /**

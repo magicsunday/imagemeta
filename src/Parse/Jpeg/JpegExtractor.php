@@ -14,7 +14,9 @@ namespace MagicSunday\ImageMeta\Parse\Jpeg;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
+use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 
 use function array_key_exists;
@@ -41,22 +43,6 @@ final class JpegExtractor
     private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
 
     /**
-     * APP marker codes carrying metadata of interest.
-     *
-     * APP1  (0xE1) exposes EXIF and XMP metadata, APP2 (0xE2) carries ICC
-     * profile fragments, and APP13 (0xED) contains IPTC/Photoshop resources.
-     */
-    private const int MARKER_APP1 = 0xE1;
-
-    private const int MARKER_APP2 = 0xE2;
-
-    private const int MARKER_APP13 = 0xED;
-
-    private const int MARKER_SOF0 = 0xC0;
-
-    private const int MARKER_SOF2 = 0xC2;
-
-    /**
      * Signatures identifying metadata-bearing APP segments.
      */
     private const string EXIF_SIGNATURE = "Exif\0\0";
@@ -80,13 +66,6 @@ final class JpegExtractor
     private const string IPTC_SIGNATURE = "Photoshop 3.0\0";
 
     private const string FPXR_SIGNATURE = 'FPXR';
-
-    /**
-     * Scan and termination markers that end metadata scanning.
-     */
-    private const int MARKER_SOS = 0xDA;
-
-    private const int MARKER_EOI = 0xD9;
 
     private bool $parsed = false;
 
@@ -335,30 +314,30 @@ final class JpegExtractor
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
 
-            if ($marker === self::MARKER_EOI) {
+            if ($marker === Marker::EOI) {
                 break;
             }
 
-            if ($marker === self::MARKER_SOS) {
+            if ($marker === Marker::SOS) {
                 break; // stop scanning metadata when scan data begins
             }
 
-            if ($marker === 0x01 || ($marker >= 0xD0 && $marker <= 0xD7)) {
+            if ($marker === Marker::TEM || ($marker >= Marker::RST_FIRST && $marker <= Marker::RST_LAST)) {
                 continue; // markers without payload
             }
 
-            $isAppSegment  = $marker >= 0xE0 && $marker <= 0xEF;
+            $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
             $segmentLength = $this->readSegmentLength($marker, $offset, $isAppSegment);
             $payloadLength = $segmentLength - 2;
             $payload       = $this->readSegmentPayload($marker, $offset, $payloadLength);
 
-            if ($marker === self::MARKER_APP1) {
+            if ($marker === Marker::APP1) {
                 $this->handleApp1($payload);
-            } elseif ($marker === self::MARKER_APP2) {
+            } elseif ($marker === Marker::APP2) {
                 $this->handleApp2($payload, $offset);
-            } elseif ($marker === self::MARKER_APP13) {
+            } elseif ($marker === Marker::APP13) {
                 $this->handleApp13($payload);
-            } elseif ($marker === self::MARKER_SOF0 || $marker === self::MARKER_SOF2) {
+            } elseif ($marker === Marker::SOF0 || $marker === Marker::SOF2) {
                 $this->handleStartOfFrame($marker, $payload, $offset);
             }
         }
@@ -805,7 +784,7 @@ final class JpegExtractor
             $componentId     = ord($payload[$index]);
             $samplingFactors = ord($payload[$index + 1]);
             $horizontal      = $samplingFactors >> 4;
-            $vertical        = $samplingFactors & 0x0F;
+            $vertical        = $samplingFactors & BitMask::LOW_NIBBLE;
 
             if ($horizontal === 0 || $vertical === 0) {
                 throw new ParseError(

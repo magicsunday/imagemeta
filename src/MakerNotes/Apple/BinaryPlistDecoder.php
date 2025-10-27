@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
 
 use function array_key_exists;
@@ -33,6 +34,34 @@ use function substr;
  */
 final class BinaryPlistDecoder
 {
+    private const int MARKER_TYPE_SIMPLE = 0;
+
+    private const int MARKER_TYPE_INTEGER = 1;
+
+    private const int MARKER_TYPE_REAL = 2;
+
+    private const int MARKER_TYPE_DATA = 4;
+
+    private const int MARKER_TYPE_ASCII = 5;
+
+    private const int MARKER_TYPE_UNICODE = 6;
+
+    private const int MARKER_TYPE_UID = 8;
+
+    private const int MARKER_TYPE_ARRAY = 10;
+
+    private const int MARKER_TYPE_DICTIONARY = 13;
+
+    private const int MARKER_SIMPLE_NULL = 0;
+
+    private const int MARKER_SIMPLE_FALSE = 8;
+
+    private const int MARKER_SIMPLE_TRUE = 9;
+
+    private const int MARKER_INFO_EXTENDED = 0x0F;
+
+    private const int MARKER_INFO_MASK = BitMask::LOW_NIBBLE;
+
     private string $data = '';
 
     /**
@@ -146,18 +175,18 @@ final class BinaryPlistDecoder
 
         $marker = ord($this->data[$offset]);
         $type   = $marker >> 4;
-        $info   = $marker & 0x0F;
+        $info   = $marker & self::MARKER_INFO_MASK;
 
         return match ($type) {
-            0x0     => $this->parseSimple($info),
-            0x1     => $this->parseInteger($offset, $info),
-            0x2     => $this->parseReal($offset, $info),
-            0x4     => $this->parseData($offset, $info),
-            0x5     => $this->parseAscii($offset, $info),
-            0x6     => $this->parseUnicode($offset, $info),
-            0x8     => $this->parseUid($offset, $info),
-            0xA     => $this->parseArray($offset, $info),
-            0xD     => $this->parseDictionary($offset, $info),
+            self::MARKER_TYPE_SIMPLE     => $this->parseSimple($info),
+            self::MARKER_TYPE_INTEGER    => $this->parseInteger($offset, $info),
+            self::MARKER_TYPE_REAL       => $this->parseReal($offset, $info),
+            self::MARKER_TYPE_DATA       => $this->parseData($offset, $info),
+            self::MARKER_TYPE_ASCII      => $this->parseAscii($offset, $info),
+            self::MARKER_TYPE_UNICODE    => $this->parseUnicode($offset, $info),
+            self::MARKER_TYPE_UID        => $this->parseUid($offset, $info),
+            self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
+            self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
             default => throw new ParseError('Unsupported property list object type.'),
         };
     }
@@ -172,9 +201,9 @@ final class BinaryPlistDecoder
     private function parseSimple(int $info): ?bool
     {
         return match ($info) {
-            0x0     => null,
-            0x8     => false,
-            0x9     => true,
+            self::MARKER_SIMPLE_NULL  => null,
+            self::MARKER_SIMPLE_FALSE => false,
+            self::MARKER_SIMPLE_TRUE  => true,
             default => throw new ParseError('Unsupported simple property list object.'),
         };
     }
@@ -321,7 +350,7 @@ final class BinaryPlistDecoder
     {
         [$lengthValue, $header] = $this->readLength($offset, $info);
 
-        if ($info === 0x0F) {
+        if ($info === self::MARKER_INFO_EXTENDED) {
             $size = $lengthValue;
         } else {
             $size   = $lengthValue + 1;
@@ -459,7 +488,7 @@ final class BinaryPlistDecoder
      */
     private function readLength(int $offset, int $info): array
     {
-        if ($info !== 0x0F) {
+        if ($info !== self::MARKER_INFO_EXTENDED) {
             return [$info, 1];
         }
 
@@ -470,8 +499,8 @@ final class BinaryPlistDecoder
 
         $marker = ord($this->data[$sizeMarkerOffset]);
         $type   = $marker >> 4;
-        $info   = $marker & 0x0F;
-        if ($type !== 0x1) {
+        $info   = $marker & self::MARKER_INFO_MASK;
+        if ($type !== self::MARKER_TYPE_INTEGER) {
             throw new ParseError('Size marker does not encode an integer.');
         }
 

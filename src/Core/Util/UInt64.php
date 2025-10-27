@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core\Util;
 
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
 
 use function intdiv;
@@ -109,10 +110,10 @@ final class UInt64
     public function fitsSignedInt(): bool
     {
         if (PHP_INT_SIZE >= 8) {
-            return $this->hi <= 0x7FFFFFFF;
+            return $this->hi <= BitMask::INT31_MAX;
         }
 
-        return $this->hi === 0 && $this->lo <= 0x7FFFFFFF;
+        return $this->hi === 0 && $this->lo <= BitMask::INT31_MAX;
     }
 
     public function toInt(string $context): int
