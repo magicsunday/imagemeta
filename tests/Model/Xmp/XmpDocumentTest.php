@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -152,5 +153,25 @@ XML;
 
         self::assertIsArray($subjects);
         self::assertSame(['Alpha', 'Beta'], $subjects);
+    }
+
+    #[Test]
+    public function stringListSplitsCommaSeparatedValues(): void
+    {
+        $document = new XmpDocument([
+            '{' . self::DC_NAMESPACE . '}subject' => 'Alpha, Beta , ,Gamma',
+        ]);
+
+        self::assertSame(['Alpha', 'Beta', 'Gamma'], $document->stringList(self::DC_NAMESPACE, 'subject'));
+    }
+
+    #[Test]
+    public function stringListTrimsArrayValues(): void
+    {
+        $document = new XmpDocument([
+            '{' . self::DC_NAMESPACE . '}subject' => ['First', ' Second ', ''],
+        ]);
+
+        self::assertSame(['First', 'Second'], $document->stringList(self::DC_NAMESPACE, 'subject'));
     }
 }

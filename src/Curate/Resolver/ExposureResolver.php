@@ -24,7 +24,6 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
  */
 final readonly class ExposureResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
@@ -33,14 +32,14 @@ final readonly class ExposureResolver
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Exposure
     {
-        $iso          = $exifDocument?->iso() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ISOSpeedRatings');
-        $exposureTime = $exifDocument?->exposureTime() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'ExposureTime');
-        $aperture     = $exifDocument?->fNumber() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'FNumber');
+        $iso          = $exifDocument?->iso() ?? $xmpDocument?->int(self::NS_EXIF, 'ISOSpeedRatings');
+        $exposureTime = $exifDocument?->exposureTime() ?? $xmpDocument?->float(self::NS_EXIF, 'ExposureTime');
+        $aperture     = $exifDocument?->fNumber() ?? $xmpDocument?->float(self::NS_EXIF, 'FNumber');
         $exposureBias = $exifDocument?->exposureBias();
-        $program      = ExposureProgram::fromExifValue($exifDocument?->exposureProgram() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ExposureProgram'));
-        $metering     = MeteringMode::fromExifValue($exifDocument?->meteringMode() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'MeteringMode'));
-        $flash        = FlashInfo::fromExifValue($exifDocument?->flash() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'Flash'));
-        $whiteBalance = WhiteBalance::fromExifValue($exifDocument?->whiteBalance() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'WhiteBalance'));
+        $program      = ExposureProgram::fromExifValue($exifDocument?->exposureProgram() ?? $xmpDocument?->int(self::NS_EXIF, 'ExposureProgram'));
+        $metering     = MeteringMode::fromExifValue($exifDocument?->meteringMode() ?? $xmpDocument?->int(self::NS_EXIF, 'MeteringMode'));
+        $flash        = FlashInfo::fromExifValue($exifDocument?->flash() ?? $xmpDocument?->int(self::NS_EXIF, 'Flash'));
+        $whiteBalance = WhiteBalance::fromExifValue($exifDocument?->whiteBalance() ?? $xmpDocument?->int(self::NS_EXIF, 'WhiteBalance'));
         $brightness   = $exifDocument?->brightnessValue();
 
         if (

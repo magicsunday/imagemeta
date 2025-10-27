@@ -22,7 +22,6 @@ use MagicSunday\ImageMeta\Value\Image;
  */
 final readonly class ImageResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
 
@@ -34,9 +33,9 @@ final readonly class ImageResolver
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Image
     {
         $orientation = Orientation::fromExifValue($exifDocument?->orientation())
-            ?? Orientation::fromExifValue($this->xmpInt($xmpDocument, self::NS_TIFF, 'Orientation'));
+            ?? Orientation::fromExifValue($xmpDocument?->int(self::NS_TIFF, 'Orientation'));
 
-        $colorSpaceValue = $exifDocument?->colorSpace() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ColorSpace');
+        $colorSpaceValue = $exifDocument?->colorSpace() ?? $xmpDocument?->int(self::NS_EXIF, 'ColorSpace');
         $colorSpace      = ColorSpace::fromExifValue($colorSpaceValue);
 
         $width         = $exifDocument?->imageWidth();
@@ -44,8 +43,8 @@ final readonly class ImageResolver
         $bitsPerSample = null;
         $uniqueId      = $exifDocument?->imageUniqueId();
         $imageNumber   = $exifDocument?->imageNumber();
-        $documentName  = $this->xmpString($xmpDocument, self::NS_TIFF, 'DocumentName');
-        $description   = $this->xmpString($xmpDocument, self::NS_TIFF, 'ImageDescription');
+        $documentName  = $xmpDocument?->string(self::NS_TIFF, 'DocumentName');
+        $description   = $xmpDocument?->string(self::NS_TIFF, 'ImageDescription');
 
         if (
             !$orientation instanceof Orientation

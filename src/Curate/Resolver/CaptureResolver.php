@@ -24,7 +24,6 @@ use function trim;
  */
 final readonly class CaptureResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
@@ -36,7 +35,7 @@ final readonly class CaptureResolver
         $dateTime = $exifDocument?->captureDateTime();
 
         if (!$dateTime instanceof DateTimeImmutable) {
-            $dateString = $this->xmpString($xmpDocument, self::NS_EXIF, 'DateTimeOriginal');
+            $dateString = $xmpDocument?->string(self::NS_EXIF, 'DateTimeOriginal');
             $dateTime   = $dateString !== null ? $this->parseDateTime($dateString) : null;
         }
 

@@ -22,6 +22,7 @@ use function array_map;
 use function count;
 use function is_float;
 use function is_int;
+use function is_string;
 use function preg_match;
 use function preg_split;
 use function sprintf;
@@ -37,7 +38,6 @@ use const PREG_SPLIT_NO_EMPTY;
  */
 final readonly class GpsResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
@@ -111,34 +111,34 @@ final readonly class GpsResolver
         }
 
         // Fill from XMP when EXIF values are absent.
-        $xmpLatRef = $this->uppercase($this->xmpString($xmpDocument, self::NS_EXIF, 'GPSLatitudeRef'));
+        $xmpLatRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLatitudeRef'));
         if ($latitudeRef === null) {
             $latitudeRef = $xmpLatRef;
         }
 
         if ($latitude === null) {
             $latitude = $this->parseCoordinate(
-                $this->xmpString($xmpDocument, self::NS_EXIF, 'GPSLatitude'),
+                $xmpDocument?->string(self::NS_EXIF, 'GPSLatitude'),
                 $xmpLatRef ?? $latitudeRef,
             );
         }
 
-        $xmpLonRef = $this->uppercase($this->xmpString($xmpDocument, self::NS_EXIF, 'GPSLongitudeRef'));
+        $xmpLonRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLongitudeRef'));
         if ($longitudeRef === null) {
             $longitudeRef = $xmpLonRef;
         }
 
         if ($longitude === null) {
             $longitude = $this->parseCoordinate(
-                $this->xmpString($xmpDocument, self::NS_EXIF, 'GPSLongitude'),
+                $xmpDocument?->string(self::NS_EXIF, 'GPSLongitude'),
                 $xmpLonRef ?? $longitudeRef,
             );
         }
 
         if ($altitude === null) {
-            $altitudeXmp = $this->xmpFloat($xmpDocument, self::NS_EXIF, 'GPSAltitude');
+            $altitudeXmp = $xmpDocument?->float(self::NS_EXIF, 'GPSAltitude');
             if ($altitudeXmp !== null) {
-                $altRefXmp = $this->intValue($this->xmpInt($xmpDocument, self::NS_EXIF, 'GPSAltitudeRef'));
+                $altRefXmp = $this->intValue($xmpDocument?->int(self::NS_EXIF, 'GPSAltitudeRef'));
                 $altRef    = $altitudeRef ?? $altRefXmp;
 
                 if ($altRef === 1) {
@@ -153,7 +153,7 @@ final readonly class GpsResolver
             }
         }
 
-        $xmpSpeedRef = $this->xmpString($xmpDocument, self::NS_EXIF, 'GPSSpeedRef');
+        $xmpSpeedRef = $xmpDocument?->string(self::NS_EXIF, 'GPSSpeedRef');
         if ($speedRef === null) {
             $speedRef = $this->uppercase($xmpSpeedRef);
         }
@@ -161,7 +161,7 @@ final readonly class GpsResolver
             $speedOriginalRef = $this->stringValue($xmpSpeedRef);
         }
 
-        $speedValue = $this->xmpFloat($xmpDocument, self::NS_EXIF, 'GPSSpeed');
+        $speedValue = $xmpDocument?->float(self::NS_EXIF, 'GPSSpeed');
         if ($speedValue !== null) {
             if ($speedMs === null && $speedRef !== null) {
                 $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
@@ -171,7 +171,7 @@ final readonly class GpsResolver
             }
         }
 
-        $xmpDestDistRef = $this->xmpString($xmpDocument, self::NS_EXIF, 'GPSDestDistanceRef');
+        $xmpDestDistRef = $xmpDocument?->string(self::NS_EXIF, 'GPSDestDistanceRef');
         if ($destDistRef === null) {
             $destDistRef = $this->uppercase($xmpDestDistRef);
         }
@@ -179,7 +179,7 @@ final readonly class GpsResolver
             $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
         }
 
-        $destDistValue = $this->xmpFloat($xmpDocument, self::NS_EXIF, 'GPSDestDistance');
+        $destDistValue = $xmpDocument?->float(self::NS_EXIF, 'GPSDestDistance');
         if ($destDistValue !== null) {
             if ($destDistMetre === null && $destDistRef !== null) {
                 $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
@@ -193,11 +193,11 @@ final readonly class GpsResolver
         }
 
         if ($date === null) {
-            $date = $this->normaliseDate($this->xmpString($xmpDocument, self::NS_EXIF, 'GPSDateStamp'));
+            $date = $this->normaliseDate($xmpDocument?->string(self::NS_EXIF, 'GPSDateStamp'));
         }
 
         if ($time === null) {
-            $time = $this->stringValue($this->xmpString($xmpDocument, self::NS_EXIF, 'GPSTimeStamp'));
+            $time = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSTimeStamp'));
         }
 
         if (!$timestamp instanceof DateTimeImmutable) {
@@ -322,9 +322,9 @@ final readonly class GpsResolver
         );
 
         if (count($parts) === 3) {
-            $deg = $this->parseNumericString($parts[0]);
-            $min = $this->parseNumericString($parts[1]);
-            $sec = $this->parseNumericString($parts[2]);
+            $deg = XmpDocument::parseNumericValue($parts[0]);
+            $min = XmpDocument::parseNumericValue($parts[1]);
+            $sec = XmpDocument::parseNumericValue($parts[2]);
 
             if ($deg !== null && $min !== null && $sec !== null) {
                 $sign = $this->coordinateSign($ref);
@@ -333,7 +333,7 @@ final readonly class GpsResolver
             }
         }
 
-        $numeric = $this->parseNumericString($parts[0]);
+        $numeric = XmpDocument::parseNumericValue($parts[0]);
         if ($numeric === null) {
             return null;
         }
@@ -444,7 +444,7 @@ final readonly class GpsResolver
      */
     private function parseXmpTimestamp(?XmpDocument $document): ?DateTimeImmutable
     {
-        $value = $this->xmpString($document, self::NS_EXIF, 'GPSDateTime');
+        $value = $document?->string(self::NS_EXIF, 'GPSDateTime');
         if ($value === null) {
             return null;
         }

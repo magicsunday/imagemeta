@@ -34,7 +34,6 @@ use function trim;
  */
 final readonly class RegionsResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
 
@@ -664,7 +663,7 @@ final readonly class RegionsResolver
      */
     private function stringValues(XmpDocument $document, string $namespace, string $localName): array
     {
-        $raw = $this->xmpValue($document, $namespace, $localName);
+        $raw = $document->get($namespace, $localName);
 
         if (is_string($raw)) {
             $trimmed = trim($raw);
@@ -693,7 +692,7 @@ final readonly class RegionsResolver
      */
     private function floatValues(XmpDocument $document, string $namespace, string $localName): array
     {
-        $raw = $this->xmpValue($document, $namespace, $localName);
+        $raw = $document->get($namespace, $localName);
 
         if (is_string($raw)) {
             $raw = [$raw];
@@ -708,7 +707,7 @@ final readonly class RegionsResolver
                 continue;
             }
 
-            $numeric  = $this->parseNumericString($value);
+            $numeric  = XmpDocument::parseNumericValue($value);
             $values[] = $numeric;
         }
 

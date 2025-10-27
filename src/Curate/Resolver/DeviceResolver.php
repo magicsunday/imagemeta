@@ -25,7 +25,6 @@ use function is_string;
  */
 final readonly class DeviceResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
 
@@ -46,10 +45,10 @@ final readonly class DeviceResolver
         }
 
         if ($software === null) {
-            $software = $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
+            $software = $xmpDocument?->string(self::NS_XMP, 'CreatorTool');
         }
 
-        $hostComputer = $this->xmpString($xmpDocument, self::NS_TIFF, 'HostComputer');
+        $hostComputer = $xmpDocument?->string(self::NS_TIFF, 'HostComputer');
 
         if ($software === null) {
             // Preserve host computer details from XMP as a best-effort fallback for the software chain.
