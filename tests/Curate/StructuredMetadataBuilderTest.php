@@ -117,6 +117,7 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $exifIfd = new Ifd([
             ExifTag::IMAGE_TITLE                 => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 12, 'Sunset Title'),
+            ExifTag::CAMERA_OWNER_NAME           => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 10, 'Jane Owner'),
             ExifTag::PHOTOGRAPHER                => new IfdEntry(ExifTag::PHOTOGRAPHER, 2, 22, 'Jane D. Photographer'),
             ExifTag::IMAGE_EDITOR                => new IfdEntry(ExifTag::IMAGE_EDITOR, 2, 12, 'John Editor'),
             ExifTag::EXIF_VERSION                => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
@@ -232,10 +233,12 @@ final class StructuredMetadataBuilderTest extends TestCase
 
         $xmpDocument = new XmpDocument([
             '{http://purl.org/dc/elements/1.1/}creator'                                                => ['Jane Doe'],
+            '{http://purl.org/dc/elements/1.1/}rights'                                                 => 'XMP Rights Statement',
             '{http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/}CreatorContactInfo/Iptc4xmpCore:CiEmailWork' => 'jane@example.com',
             '{http://ns.adobe.com/tiff/1.0/}Make'                                                      => 'Canon',
             '{http://ns.adobe.com/tiff/1.0/}Model'                                                     => 'EOS R6 II',
             '{http://ns.adobe.com/tiff/1.0/}DocumentName'                                              => 'IMG_5123.CR3',
+            '{http://ns.adobe.com/xap/1.0/aux/}OwnerName'                                              => 'XMP Owner Name',
         ]);
 
         $quickTime = new QuickTimeMeta([
@@ -281,6 +284,8 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('Canon', $structured->camera->make);
         self::assertSame('EOS R6 II', $structured->camera->model);
         self::assertSame('Jane Doe', $structured->author->artist);
+        self::assertSame('Jane Owner', $structured->author->ownerName);
+        self::assertSame('Jane Doe 2024', $structured->rights->copyright);
         self::assertSame('Restricted', $structured->rights->securityClassification);
         self::assertSame('1.2.3', $structured->camera->firmware);
         self::assertSame(FileSource::DIGITAL_CAMERA, $structured->camera->fileSource);
@@ -433,6 +438,30 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame('+01:30', $structured->temporal->offsetTimeDigitized);
         self::assertSame([-120, -60], $structured->temporal->timeZoneOffsetMinutes);
         self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
+    }
+
+    #[Test]
+    public function doesNotFallbackToXmpForRightsOrOwnerName(): void
+    {
+        $xmpDocument = new XmpDocument([
+            '{http://purl.org/dc/elements/1.1/}rights'    => 'XMP Rights Statement',
+            '{http://ns.adobe.com/xap/1.0/aux/}OwnerName' => 'XMP Owner Name',
+            '{http://purl.org/dc/elements/1.1/}creator'   => ['XMP Creator'],
+        ]);
+
+        $metadata = new Metadata(
+            ['primary'],
+            null,
+            new ExifDocument(new Ifd([]), new Ifd([]), null, null, null),
+            ['<xmp/>'],
+            $xmpDocument,
+        );
+
+        $structured = (new StructuredMetadataBuilder())->build($metadata);
+
+        self::assertNull($structured->rights->copyright);
+        self::assertNull($structured->author->ownerName);
+        self::assertSame('XMP Creator', $structured->author->creator);
     }
 
     #[Test]
