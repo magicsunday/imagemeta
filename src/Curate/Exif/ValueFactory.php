@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -55,9 +57,11 @@ use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
+use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\Regions\Region;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -72,7 +76,12 @@ use MagicSunday\ImageMeta\Value\Xmp;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 
 use function abs;
+use function array_any;
 use function array_key_exists;
+use function array_map;
+use function array_shift;
+use function array_values;
+use function ceil;
 use function count;
 use function intdiv;
 use function is_array;
@@ -80,13 +89,24 @@ use function is_bool;
 use function is_float;
 use function is_int;
 use function is_string;
+use function ksort;
+use function log10;
+use function max;
+use function pow;
+use function preg_match;
 use function preg_replace;
+use function preg_split;
+use function round;
 use function sprintf;
+use function str_contains;
 use function str_pad;
+use function str_replace;
 use function substr;
 use function str_starts_with;
 use function trim;
 use function strtoupper;
+
+use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * Builds the structured metadata aggregate by orchestrating specialised resolvers.
@@ -96,10 +116,7 @@ final class ValueFactory
     /**
      * Produces normalised value objects derived from the supplied metadata container.
      *
-     * @param Metadata     $metadata     Metadata container with decoded EXIF, XMP and QuickTime data.
-     * @param Gps          $gps           Pre-resolved GPS aggregate derived from EXIF and XMP sources.
-     * @param Regions      $regions       Annotated region collection supplied by callers.
-     * @param MultiPicture $multiPicture  Multi-picture aggregate resolved from MPF documents.
+     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      * @param XmpDocument|null $xmpDocument Optional pre-parsed XMP document reused by the caller.
      *
      * @return array{
@@ -144,13 +161,14 @@ final class ValueFactory
      */
     public function createComponents(
         Metadata $metadata,
-        Gps $gps,
-        Regions $regions,
-        MultiPicture $multiPicture,
         ?XmpDocument $xmpDocument = null,
     ): array {
-        $exifDocument    = $metadata->exifDoc;
         $xmpDocument   ??= $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+
+        $gps          = $this->createGps($metadata, $xmpDocument);
+        $regions      = $this->createRegions($xmpDocument);
+        $multiPicture = $this->createMultiPicture($metadata);
+        $exifDocument    = $metadata->exifDoc;
         $quickTimeMeta   = $metadata->quickTime;
         $appleMakerNotes = $metadata->makerNotes?->apple();
 
@@ -1325,4 +1343,1234 @@ final class ValueFactory
             return null;
         }
     }
+
+    private function createGps(Metadata $metadata, ?XmpDocument $xmpDocument): Gps
+    {
+        $gps = $this->resolveGps($metadata->exifDoc, $xmpDocument);
+
+        if ($gps === null) {
+            return new Gps();
+        }
+
+        return $gps;
+    }
+
+    private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
+
+    /**
+     * Builds a GPS value object from the available metadata.
+     *
+     * The GPS version defaults to 2.0.0.0 whenever EXIF omits the tag or only exposes padding bytes.
+     */
+    private function resolveGps(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Gps
+    {
+        $gpsData = $exifDocument instanceof ExifDocument ? $exifDocument->gps() : [];
+
+        $latitude     = $this->floatValue($gpsData['lat'] ?? null);
+        $longitude    = $this->floatValue($gpsData['lon'] ?? null);
+        $latitudeRef  = $this->uppercase($gpsData['lat_ref'] ?? null);
+        $longitudeRef = $this->uppercase($gpsData['lon_ref'] ?? null);
+        $altitude     = $this->floatValue($gpsData['alt'] ?? null);
+        $altitudeRef  = $this->intValue($gpsData['alt_ref'] ?? null);
+
+        $version     = $this->stringValue($gpsData['version'] ?? null);
+        $versionRaw  = $gpsData['version_raw'] ?? null;
+        if (!is_string($versionRaw)) {
+            $versionRaw = null;
+        }
+        $satellites  = $this->stringValue($gpsData['satellites'] ?? null);
+        $status      = $this->stringValue($gpsData['status'] ?? null);
+        $measureMode = $this->stringValue($gpsData['measure_mode'] ?? null);
+        $dop         = $this->floatValue($gpsData['dop'] ?? null);
+        $speedRef    = $this->uppercase($gpsData['speed_ref'] ?? null);
+        $speedMs     = $this->floatValue($gpsData['speed_ms'] ?? null);
+        $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref'] ?? null);
+        $speedOriginal    = $this->floatValue($gpsData['speed_original'] ?? null);
+        $trackRef    = $this->uppercase($gpsData['track_ref'] ?? null);
+        $track       = $this->floatValue($gpsData['track'] ?? null);
+        $imgDirRef   = $this->uppercase($gpsData['img_direction_ref'] ?? null);
+        $imgDir      = $this->floatValue($gpsData['img_direction'] ?? null);
+        $mapDatum    = $this->stringValue($gpsData['map_datum'] ?? null);
+
+        $destLatRef    = $this->uppercase($gpsData['dest_lat_ref'] ?? null);
+        $destLat       = $this->floatValue($gpsData['dest_lat'] ?? null);
+        $destLonRef    = $this->uppercase($gpsData['dest_lon_ref'] ?? null);
+        $destLon       = $this->floatValue($gpsData['dest_lon'] ?? null);
+        $destBearRef   = $this->uppercase($gpsData['dest_bearing_ref'] ?? null);
+        $destBear      = $this->floatValue($gpsData['dest_bearing'] ?? null);
+        $destDistRef   = $this->uppercase($gpsData['dest_distance_ref'] ?? null);
+        $destDistMetre = $this->floatValue($gpsData['dest_distance_m'] ?? null);
+        $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref'] ?? null);
+        $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original'] ?? null);
+
+        $processingMethod = $this->stringValue($gpsData['processing_method'] ?? null);
+        $areaInformation  = $this->stringValue($gpsData['area_information'] ?? null);
+
+        $date    = $this->normaliseDate($this->stringValue($gpsData['date'] ?? null));
+        $dateRaw = $gpsData['date_raw'] ?? null;
+        if (!is_string($dateRaw)) {
+            $dateRaw = null;
+        }
+        $time = $this->stringValue($gpsData['time'] ?? null);
+
+        $timestamp = $exifDocument?->gpsTimestamp();
+        if (!$timestamp instanceof DateTimeImmutable) {
+            $timestamp = null;
+        }
+
+        if ($date === null) {
+            $date = $this->normaliseDate($exifDocument?->gpsDateStamp());
+        }
+
+        if ($time === null) {
+            $time = $this->stringValue($exifDocument?->gpsTimeStampString());
+        }
+
+        // Fill from XMP when EXIF values are absent.
+        $xmpLatRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLatitudeRef'));
+        if ($latitudeRef === null) {
+            $latitudeRef = $xmpLatRef;
+        }
+
+        if ($latitude === null) {
+            $latitude = $this->parseCoordinate(
+                $xmpDocument?->string(self::NS_EXIF, 'GPSLatitude'),
+                $xmpLatRef ?? $latitudeRef,
+            );
+        }
+
+        $xmpLonRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLongitudeRef'));
+        if ($longitudeRef === null) {
+            $longitudeRef = $xmpLonRef;
+        }
+
+        if ($longitude === null) {
+            $longitude = $this->parseCoordinate(
+                $xmpDocument?->string(self::NS_EXIF, 'GPSLongitude'),
+                $xmpLonRef ?? $longitudeRef,
+            );
+        }
+
+        if ($altitude === null) {
+            $altitudeXmp = $xmpDocument?->float(self::NS_EXIF, 'GPSAltitude');
+            if ($altitudeXmp !== null) {
+                $altRefXmp = $this->intValue($xmpDocument?->int(self::NS_EXIF, 'GPSAltitudeRef'));
+                $altRef    = $altitudeRef ?? $altRefXmp;
+
+                if ($altRef === 1) {
+                    $altitudeXmp = -$altitudeXmp;
+                }
+
+                $altitude = $altitudeXmp;
+
+                if ($altitudeRef === null) {
+                    $altitudeRef = $altRefXmp;
+                }
+            }
+        }
+
+        $xmpSpeedRef = $xmpDocument?->string(self::NS_EXIF, 'GPSSpeedRef');
+        if ($speedRef === null) {
+            $speedRef = $this->uppercase($xmpSpeedRef);
+        }
+        if ($speedOriginalRef === null) {
+            $speedOriginalRef = $this->stringValue($xmpSpeedRef);
+        }
+
+        $speedValue = $xmpDocument?->float(self::NS_EXIF, 'GPSSpeed');
+        if ($speedValue !== null) {
+            if ($speedMs === null && $speedRef !== null) {
+                $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
+            }
+            if ($speedOriginal === null) {
+                $speedOriginal = $speedValue;
+            }
+        }
+
+        $xmpDestDistRef = $xmpDocument?->string(self::NS_EXIF, 'GPSDestDistanceRef');
+        if ($destDistRef === null) {
+            $destDistRef = $this->uppercase($xmpDestDistRef);
+        }
+        if ($destDistOriginalRef === null) {
+            $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
+        }
+
+        $destDistValue = $xmpDocument?->float(self::NS_EXIF, 'GPSDestDistance');
+        if ($destDistValue !== null) {
+            if ($destDistMetre === null && $destDistRef !== null) {
+                $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
+                if ($convertedDistance !== null) {
+                    $destDistMetre = $convertedDistance;
+                }
+            }
+            if ($destDistOriginal === null) {
+                $destDistOriginal = $destDistValue;
+            }
+        }
+
+        if ($date === null) {
+            $date = $this->normaliseDate($xmpDocument?->string(self::NS_EXIF, 'GPSDateStamp'));
+        }
+
+        if ($time === null) {
+            $time = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSTimeStamp'));
+        }
+
+        if (!$timestamp instanceof DateTimeImmutable) {
+            $timestamp = $this->parseXmpTimestamp($xmpDocument);
+        }
+
+        if (!$timestamp instanceof DateTimeImmutable) {
+            $timestamp = $this->combineDateAndTime($date, $time);
+        }
+
+        $differential = $this->intValue($gpsData['differential'] ?? null);
+        $hError       = $this->floatValue($gpsData['h_positioning_error'] ?? null);
+        $hasData      = array_any([
+            $latitude,
+            $longitude,
+            $altitude,
+            $altitudeRef,
+            $version,
+            $versionRaw,
+            $satellites,
+            $status,
+            $measureMode,
+            $dop,
+            $speedRef,
+            $speedMs,
+            $speedOriginalRef,
+            $speedOriginal,
+            $trackRef,
+            $track,
+            $imgDirRef,
+            $imgDir,
+            $mapDatum,
+            $destLatRef,
+            $destLat,
+            $destLonRef,
+            $destLon,
+            $destBearRef,
+            $destBear,
+            $destDistRef,
+            $destDistMetre,
+            $destDistOriginalRef,
+            $destDistOriginal,
+            $processingMethod,
+            $areaInformation,
+            $date,
+            $dateRaw,
+            $time,
+            $timestamp,
+            $differential,
+            $hError,
+        ], fn ($value): bool => $value !== null);
+
+        if (!$hasData) {
+            return null;
+        }
+
+        return new Gps(
+            latitude: $latitude,
+            longitude: $longitude,
+            latitudeRef: $latitudeRef,
+            longitudeRef: $longitudeRef,
+            altitude: $altitude,
+            altitudeRef: $altitudeRef,
+            version: $version,
+            versionRaw: $versionRaw,
+            satellites: $satellites,
+            status: $status,
+            measureMode: $measureMode,
+            dop: $dop,
+            speedRef: $speedRef,
+            speedMs: $speedMs,
+            speedOriginalRef: $speedOriginalRef,
+            speedOriginal: $speedOriginal,
+            trackRef: $trackRef,
+            track: $track,
+            imageDirectionRef: $imgDirRef,
+            imageDirection: $imgDir,
+            mapDatum: $mapDatum,
+            destinationLatitudeRef: $destLatRef,
+            destinationLatitude: $destLat,
+            destinationLongitudeRef: $destLonRef,
+            destinationLongitude: $destLon,
+            destinationBearingRef: $destBearRef,
+            destinationBearing: $destBear,
+            destinationDistanceRef: $destDistRef,
+            destinationDistanceMetres: $destDistMetre,
+            destinationDistanceOriginalRef: $destDistOriginalRef,
+            destinationDistanceOriginal: $destDistOriginal,
+            processingMethod: $processingMethod,
+            areaInformation: $areaInformation,
+            date: $date,
+            dateRaw: $dateRaw,
+            time: $time,
+            timestamp: $timestamp,
+            differential: $differential,
+            horizontalPositioningError: $hError,
+        );
+    }
+
+    /**
+     * Parses an XMP coordinate representation.
+     */
+    private function parseCoordinate(?string $value, ?string $ref): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return null;
+        }
+
+        $parts = preg_split('/[\\s,]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
+        if ($parts === false) {
+            return null;
+        }
+
+        $parts = array_map(
+            trim(...),
+            $parts,
+        );
+
+        if (count($parts) === 3) {
+            $deg = XmpDocument::parseNumericValue($parts[0]);
+            $min = XmpDocument::parseNumericValue($parts[1]);
+            $sec = XmpDocument::parseNumericValue($parts[2]);
+
+            if ($deg !== null && $min !== null && $sec !== null) {
+                $sign = $this->coordinateSign($ref);
+
+                return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+            }
+        }
+
+        $numeric = XmpDocument::parseNumericValue($parts[0]);
+        if ($numeric === null) {
+            return null;
+        }
+
+        $sign = $this->coordinateSign($ref);
+
+        return $numeric * $sign;
+    }
+
+    /**
+     * Determines the sign for the given coordinate reference.
+     */
+    private function coordinateSign(?string $ref): float
+    {
+        if ($ref === 'S' || $ref === 'W') {
+            return -1.0;
+        }
+
+        return 1.0;
+    }
+
+    /**
+     * Normalises a textual value to uppercase when present.
+     */
+    private function uppercase(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return strtoupper($trimmed);
+    }
+
+    /**
+     * Returns the value as string when not empty.
+     */
+    private function stringValue(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * Returns the value as float when numeric.
+     */
+    private function floatValue(int|float|null $value): ?float
+    {
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the value as integer when numeric.
+     */
+    private function intValue(int|float|null $value): ?int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            return (int) round($value);
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts a textual GPS date into ISO format.
+     */
+    private function normaliseDate(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (preg_match('/^\\d{4}:\\d{2}:\\d{2}$/', $trimmed) === 1) {
+            return str_replace(':', '-', $trimmed);
+        }
+
+        return $trimmed;
+    }
+
+    /**
+     * Parses an XMP GPSDateTime value.
+     */
+    private function parseXmpTimestamp(?XmpDocument $document): ?DateTimeImmutable
+    {
+        $value = $document?->string(self::NS_EXIF, 'GPSDateTime');
+        if ($value === null) {
+            return null;
+        }
+
+        try {
+            $dateTime = new DateTimeImmutable($value);
+        } catch (Exception) {
+            return null;
+        }
+
+        return $dateTime->setTimezone(new DateTimeZone('UTC'));
+    }
+
+    /**
+     * Combines the supplied date and time strings into a UTC timestamp.
+     */
+    private function combineDateAndTime(?string $date, ?string $time): ?DateTimeImmutable
+    {
+        if ($date === null || $time === null) {
+            return null;
+        }
+
+        $time = trim($time);
+        if ($time === '') {
+            return null;
+        }
+
+        $dateTimeString = sprintf('%sT%s', $date, $time);
+        $hasZone        = str_contains($time, 'Z') || str_contains($time, 'z')
+            || str_contains($time, '+') || str_contains($time, '-');
+
+        if (!$hasZone) {
+            $dateTimeString .= 'Z';
+        }
+
+        try {
+            $dateTime = new DateTimeImmutable($dateTimeString);
+        } catch (Exception) {
+            return null;
+        }
+
+        return $dateTime->setTimezone(new DateTimeZone('UTC'));
+    }
+
+    /**
+     * Converts destination distance into metres using GPSDestDistanceRef semantics.
+     */
+    private function convertDistanceToMetres(float $distance, string $distanceRef): ?float
+    {
+        return match ($distanceRef) {
+            'K'     => $distance * 1000.0,
+            'M'     => $distance * 1609.344,
+            'N'     => $distance * 1852.0,
+            default => null,
+        };
+    }
+
+    /**
+     * Converts speed in the provided unit to metres per second using GPSSpeedRef semantics.
+     */
+    private function convertSpeedToMetresPerSecond(float $speed, string $speedRef): float
+    {
+        return match ($speedRef) {
+            'K'     => $speed / 3.6,
+            'M'     => $speed * 0.44704,
+            'N'     => $speed * 0.514444,
+            default => $speed,
+        };
+    }
+
+    private function createRegions(?XmpDocument $document): Regions
+    {
+        return $this->resolveRegions($document);
+    }
+
+    private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
+
+    private const string NS_ST_AREA = 'http://ns.adobe.com/xmp/sType/Area#';
+
+    private const string NS_ST_DIMENSIONS = 'http://ns.adobe.com/xmp/sType/Dimensions#';
+
+    private const string NS_APPLE_FACEINFO = 'http://ns.apple.com/faceinfo/1.0/';
+
+    private const float MATCH_THRESHOLD = 0.12;
+
+    /**
+     * Builds a regions aggregate from the supplied XMP document.
+     */
+    private function resolveRegions(?XmpDocument $document): Regions
+    {
+        if (!$document instanceof XmpDocument) {
+            return new Regions([]);
+        }
+
+        $dimensions = $this->appliedDimensions($document);
+        $mwgRegions = $this->extractMwgRegions($document, $dimensions);
+        $appleData  = $this->extractAppleFaceRegions($document, $dimensions, $mwgRegions);
+        $supplement = $appleData['supplemental'];
+        $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
+        $appleRegions = $appleData['regions'];
+
+        foreach ($appleRegions as $appleRegion) {
+            $matchIndex = $this->findMatchingRegionIndex($mwgRegions, $appleRegion);
+            if ($matchIndex !== null) {
+                $mwgRegions[$matchIndex] = $this->mergeRegion($mwgRegions[$matchIndex], $appleRegion);
+                continue;
+            }
+
+            $mwgRegions[] = $appleRegion;
+        }
+
+        $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
+
+        return new Regions(array_values($mwgRegions));
+    }
+
+    /**
+     * Extracts MWG-RS region entries.
+     *
+     * @param array{w: float, h: float}|null $dimensions
+     *
+     * @return list<Region>
+     */
+    private function extractMwgRegions(XmpDocument $document, ?array $dimensions): array
+    {
+        $types        = $this->stringValues($document, self::NS_MWG_REGIONS, 'Type');
+        $names        = $this->stringValues($document, self::NS_MWG_REGIONS, 'Name');
+        $displayNames = $this->stringValues($document, self::NS_MWG_REGIONS, 'PersonDisplayName');
+        $confidences  = $this->floatValues($document, self::NS_MWG_REGIONS, 'Confidence');
+        $rotations    = $this->floatValues($document, self::NS_MWG_REGIONS, 'Rotation');
+        $centersX     = $this->floatValues($document, self::NS_ST_AREA, 'x');
+        $centersY     = $this->floatValues($document, self::NS_ST_AREA, 'y');
+        $widths       = $this->floatValues($document, self::NS_ST_AREA, 'w');
+        $heights      = $this->floatValues($document, self::NS_ST_AREA, 'h');
+        $regionCount  = max(count($centersX), count($centersY), count($widths), count($heights));
+        $resolved     = [];
+
+        for ($index = 0; $index < $regionCount; ++$index) {
+            $centerX = $centersX[$index] ?? null;
+            $centerY = $centersY[$index] ?? null;
+            $width   = $widths[$index] ?? null;
+            $height  = $heights[$index] ?? null;
+            if ($centerX === null) {
+                continue;
+            }
+
+            if ($centerY === null) {
+                continue;
+            }
+
+            if ($width === null) {
+                continue;
+            }
+
+            if ($height === null) {
+                continue;
+            }
+
+            $normalised = $this->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
+            if ($normalised === null) {
+                continue;
+            }
+
+            $typeLabel = $types[$index] ?? null;
+            $type      = $typeLabel !== null ? RegionType::fromLabel($typeLabel) : null;
+
+            $person = $displayNames[$index] ?? $names[$index] ?? null;
+            if ($person !== null && $person === '') {
+                $person = null;
+            }
+
+            $resolved[] = new Region(
+                $type,
+                $normalised['x'],
+                $normalised['y'],
+                $normalised['w'],
+                $normalised['h'],
+                $person,
+                $confidences[$index] ?? null,
+                $rotations[$index] ?? null,
+                null,
+            );
+        }
+
+        return $resolved;
+    }
+
+    /**
+     * Extracts Apple FaceInfo face entries along with supplemental metadata.
+     *
+     * @param array{w: float, h: float}|null $dimensions
+     * @param list<Region> $mwgRegions
+     *
+     * @return array{regions: list<Region>, supplemental: array<int, Region>}
+     */
+    private function extractAppleFaceRegions(XmpDocument $document, ?array $dimensions, array $mwgRegions): array
+    {
+        $entries = $this->appleFaceEntries($document, $dimensions);
+
+        return [
+            'regions' => $this->regionsFromAppleEntries($entries),
+            'supplemental' => $this->supplementalRegionsFromAppleEntries($entries, $mwgRegions),
+        ];
+    }
+
+    /**
+     * @param array{w: float, h: float}|null $dimensions
+     *
+     * @return list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}>
+     */
+    private function appleFaceEntries(XmpDocument $document, ?array $dimensions): array
+    {
+        $centersX         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterX');
+        $centersY         = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'CenterY');
+        $widths           = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Width');
+        $heights          = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Height');
+        $confidenceLevels = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'ConfidenceLevel');
+        $confidences      = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Confidence');
+        $angleInfoRolls   = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'AngleInfoRoll');
+        $rolls            = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Roll');
+        $yaws             = $this->floatValues($document, self::NS_APPLE_FACEINFO, 'Yaw');
+
+        $confidenceScale = $this->confidenceScale($confidenceLevels, $confidences);
+
+        $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'Name');
+        if ($names === []) {
+            $names = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FullName');
+        }
+
+        $faceIds = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FaceID');
+        if ($faceIds === []) {
+            $faceIds = $this->stringValues($document, self::NS_APPLE_FACEINFO, 'FaceUUID');
+        }
+
+        $count = 0;
+        foreach ([$centersX, $centersY, $widths, $heights, $confidenceLevels, $confidences, $angleInfoRolls, $rolls, $yaws, $names, $faceIds] as $values) {
+            $valueCount = count($values);
+            if ($valueCount > $count) {
+                $count = $valueCount;
+            }
+        }
+
+        if ($count === 0) {
+            return [];
+        }
+
+        $entries = [];
+
+        for ($index = 0; $index < $count; ++$index) {
+            $centerX = $centersX[$index] ?? null;
+            $centerY = $centersY[$index] ?? null;
+            $width   = $widths[$index] ?? null;
+            $height  = $heights[$index] ?? null;
+
+            $geometry = null;
+            if ($centerX !== null && $centerY !== null && $width !== null && $height !== null) {
+                $geometry = $this->normalisedBox($centerX, $centerY, $width, $height, $dimensions);
+            }
+
+            $confidence = $this->normalisedConfidence($confidenceLevels[$index] ?? null, $confidenceScale);
+            if ($confidence === null) {
+                $confidence = $this->normalisedConfidence($confidences[$index] ?? null, $confidenceScale);
+            }
+
+            $rotation = $angleInfoRolls[$index] ?? $rolls[$index] ?? $yaws[$index] ?? null;
+
+            $entries[] = [
+                'geometry'   => $geometry,
+                'person'     => $this->stringAt($names, $index),
+                'confidence' => $confidence,
+                'rotation'   => $rotation,
+                'faceId'     => $this->stringAt($faceIds, $index),
+            ];
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
+     *
+     * @return list<Region>
+     */
+    private function regionsFromAppleEntries(array $entries): array
+    {
+        $regions = [];
+
+        foreach ($entries as $entry) {
+            $geometry = $entry['geometry'];
+            if ($geometry === null) {
+                continue;
+            }
+
+            $regions[] = new Region(
+                RegionType::FACE,
+                $geometry['x'],
+                $geometry['y'],
+                $geometry['w'],
+                $geometry['h'],
+                $entry['person'],
+                $entry['confidence'],
+                $entry['rotation'],
+                $entry['faceId'],
+            );
+        }
+
+        return $regions;
+    }
+
+    /**
+     * @param list<Region> $regions
+     * @param array<int, Region> $supplemental
+     *
+     * @return list<Region>
+     */
+    private function applyAppleSupplementalMetadata(array $regions, array $supplemental): array
+    {
+        if ($supplemental === []) {
+            return $regions;
+        }
+
+        foreach ($supplemental as $index => $supplement) {
+            $baseRegion = $regions[$index] ?? null;
+            if (!$baseRegion instanceof Region) {
+                continue;
+            }
+
+            $regions[$index] = $this->mergeRegion($baseRegion, $supplement);
+        }
+
+        return $regions;
+    }
+
+    /**
+     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
+     * @param list<Region> $mwgRegions
+     *
+     * @return array<int, Region>
+     */
+    private function supplementalRegionsFromAppleEntries(array $entries, array $mwgRegions): array
+    {
+        if ($entries === [] || $mwgRegions === []) {
+            return [];
+        }
+
+        $faceIndices = [];
+        foreach ($mwgRegions as $index => $region) {
+            if ($region->type === RegionType::FACE) {
+                $faceIndices[] = $index;
+            }
+        }
+
+        if ($faceIndices === []) {
+            return [];
+        }
+
+        $unmatchedIndices = $faceIndices;
+        $supplemental     = [];
+
+        foreach ($entries as $entry) {
+            $matchIndex = $this->matchAppleEntryToMwgRegion($mwgRegions, $entry);
+            if ($matchIndex === null) {
+                continue;
+            }
+
+            $unmatchedIndices = $this->removeMatchedIndex($unmatchedIndices, $matchIndex);
+
+            if (!$this->hasSupplementalMetadata($entry)) {
+                continue;
+            }
+
+            $baseRegion            = $mwgRegions[$matchIndex];
+            $supplemental[$matchIndex] = $this->createSupplementalRegion($baseRegion, $entry);
+        }
+
+        foreach ($entries as $entry) {
+            if ($entry['geometry'] !== null) {
+                continue;
+            }
+
+            if (!$this->hasSupplementalMetadata($entry)) {
+                continue;
+            }
+
+            $nextIndex = array_shift($unmatchedIndices);
+            if ($nextIndex === null) {
+                break;
+            }
+
+            $baseRegion             = $mwgRegions[$nextIndex];
+            $supplemental[$nextIndex] = $this->createSupplementalRegion($baseRegion, $entry);
+        }
+
+        if ($supplemental === []) {
+            return [];
+        }
+
+        ksort($supplemental);
+
+        return $supplemental;
+    }
+
+    /**
+     * @param list<Region> $mwgRegions
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     */
+    private function matchAppleEntryToMwgRegion(array $mwgRegions, array $entry): ?int
+    {
+        $geometry = $entry['geometry'];
+        if ($geometry === null) {
+            return null;
+        }
+
+        $candidate = new Region(
+            RegionType::FACE,
+            $geometry['x'],
+            $geometry['y'],
+            $geometry['w'],
+            $geometry['h'],
+            $entry['person'],
+            $entry['confidence'],
+            $entry['rotation'],
+            $entry['faceId'],
+        );
+
+        return $this->findMatchingRegionIndex($mwgRegions, $candidate);
+    }
+
+    /**
+     * @param list<int> $indices
+     *
+     * @return list<int>
+     */
+    private function removeMatchedIndex(array $indices, int $match): array
+    {
+        foreach ($indices as $position => $index) {
+            if ($index === $match) {
+                unset($indices[$position]);
+                break;
+            }
+        }
+
+        return array_values($indices);
+    }
+
+    /**
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     */
+    private function createSupplementalRegion(Region $baseRegion, array $entry): Region
+    {
+        return new Region(
+            $baseRegion->type ?? RegionType::FACE,
+            $baseRegion->x,
+            $baseRegion->y,
+            $baseRegion->w,
+            $baseRegion->h,
+            $entry['person'],
+            $entry['confidence'],
+            $entry['rotation'],
+            $entry['faceId'],
+        );
+    }
+
+    /**
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     */
+    private function hasSupplementalMetadata(array $entry): bool
+    {
+        return $entry['person'] !== null
+            || $entry['confidence'] !== null
+            || $entry['rotation'] !== null
+            || $entry['faceId'] !== null;
+    }
+
+    /**
+     * Attempts to match an Apple face region with an MWG region by spatial overlap.
+     *
+     * @param array<int, Region> $regions
+     */
+    private function findMatchingRegionIndex(array $regions, Region $candidate): ?int
+    {
+        if ($candidate->type !== RegionType::FACE) {
+            return null;
+        }
+
+        $bestIndex             = null;
+        $bestScore             = null;
+        [$targetCx, $targetCy] = $this->regionCenter($candidate);
+
+        foreach ($regions as $index => $region) {
+            if ($region->type !== RegionType::FACE) {
+                continue;
+            }
+
+            [$cx, $cy] = $this->regionCenter($region);
+            $distance  = abs($cx - $targetCx) + abs($cy - $targetCy);
+            if ($distance > self::MATCH_THRESHOLD) {
+                continue;
+            }
+
+            $sizeDiff = abs($region->w - $candidate->w) + abs($region->h - $candidate->h);
+            $score    = $distance + $sizeDiff;
+            if ($bestScore === null || $score < $bestScore) {
+                $bestScore = $score;
+                $bestIndex = $index;
+            }
+        }
+
+        return $bestIndex;
+    }
+
+    /**
+     * Merges overlapping region metadata, preferring existing geometry while enriching attributes.
+     *
+     * @param Region $base       Primary region resolved from MWG metadata.
+     * @param Region $supplement Supplementary region derived from Apple metadata.
+     *
+     * @return Region Combined region carrying the most complete metadata set.
+     */
+    private function mergeRegion(Region $base, Region $supplement): Region
+    {
+        $person     = $base->personName ?? $supplement->personName;
+        $confidence = $base->confidence;
+        if ($confidence === null) {
+            $confidence = $supplement->confidence;
+        } elseif ($supplement->confidence !== null) {
+            $confidence = max($confidence, $supplement->confidence);
+        }
+
+        $rotation = $base->rotationDeg ?? $supplement->rotationDeg;
+        $faceId   = $base->faceId ?? $supplement->faceId;
+        $type     = $base->type ?? $supplement->type;
+
+        return new Region(
+            $type,
+            $base->x,
+            $base->y,
+            $base->w,
+            $base->h,
+            $person,
+            $confidence,
+            $rotation,
+            $faceId,
+        );
+    }
+
+    /**
+     * @return array{0: float, 1: float}
+     */
+    private function regionCenter(Region $region): array
+    {
+        return [
+            $region->x + ($region->w / 2.0),
+            $region->y + ($region->h / 2.0),
+        ];
+    }
+
+    /**
+     * @param list<string> $values
+     */
+    private function stringAt(array $values, int $index): ?string
+    {
+        $value = $values[$index] ?? null;
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * Normalises Apple-specific confidence values to the unit interval.
+     */
+    private function normalisedConfidence(?float $confidence, float $scale): ?float
+    {
+        if ($confidence === null) {
+            return null;
+        }
+
+        if ($scale <= 1.0 || abs($confidence) <= 1.0) {
+            return $confidence;
+        }
+
+        $normalised = $confidence / $scale;
+
+        if ($normalised > 1.0) {
+            return 1.0;
+        }
+
+        if ($normalised < -1.0) {
+            return -1.0;
+        }
+
+        return $normalised;
+    }
+
+    /**
+     * @param list<float|null> $confidenceLevels
+     * @param list<float|null> $confidences
+     */
+    private function confidenceScale(array $confidenceLevels, array $confidences): float
+    {
+        $maxConfidence = 0.0;
+
+        foreach ([$confidenceLevels, $confidences] as $values) {
+            foreach ($values as $value) {
+                if ($value === null) {
+                    continue;
+                }
+
+                $absolute = abs($value);
+                if ($absolute > $maxConfidence) {
+                    $maxConfidence = $absolute;
+                }
+            }
+        }
+
+        if ($maxConfidence <= 1.0) {
+            return 1.0;
+        }
+
+        $scale = pow(10.0, ceil(log10($maxConfidence)));
+
+        if ($scale <= 0.0) {
+            return 1.0;
+        }
+
+        return $scale;
+    }
+
+    /**
+     * @param array{w: float, h: float}|null $dimensions
+     *
+     * @return array{x: float, y: float, w: float, h: float}|null
+     */
+    private function normalisedBox(float $centerX, float $centerY, float $width, float $height, ?array $dimensions): ?array
+    {
+        if ($width <= 0.0 || $height <= 0.0) {
+            return null;
+        }
+
+        $scaledCenterX = $centerX;
+        $scaledCenterY = $centerY;
+        $scaledWidth   = $width;
+        $scaledHeight  = $height;
+
+        if ($dimensions !== null) {
+            if ($scaledCenterX > 1.0 || $scaledWidth > 1.0) {
+                $scaledCenterX /= $dimensions['w'];
+                $scaledWidth /= $dimensions['w'];
+            }
+
+            if ($scaledCenterY > 1.0 || $scaledHeight > 1.0) {
+                $scaledCenterY /= $dimensions['h'];
+                $scaledHeight /= $dimensions['h'];
+            }
+        }
+
+        if (($scaledCenterX > 1.0 || $scaledCenterY > 1.0 || $scaledWidth > 1.0 || $scaledHeight > 1.0) && ($scaledCenterX <= 100.0 && $scaledCenterY <= 100.0 && $scaledWidth <= 100.0 && $scaledHeight <= 100.0)) {
+            $scaledCenterX /= 100.0;
+            $scaledCenterY /= 100.0;
+            $scaledWidth /= 100.0;
+            $scaledHeight /= 100.0;
+        }
+
+        $halfWidth  = $scaledWidth / 2.0;
+        $halfHeight = $scaledHeight / 2.0;
+
+        return [
+            'x' => $this->clamp($scaledCenterX - $halfWidth),
+            'y' => $this->clamp($scaledCenterY - $halfHeight),
+            'w' => $this->clamp($scaledWidth),
+            'h' => $this->clamp($scaledHeight),
+        ];
+    }
+
+    /**
+     * Constrains a normalised coordinate to the unit interval.
+     *
+     * @param float $value Coordinate or dimension value to clamp.
+     *
+     * @return float Value restricted to the range [0.0, 1.0].
+     */
+    private function clamp(float $value): float
+    {
+        if ($value < 0.0) {
+            return 0.0;
+        }
+
+        if ($value > 1.0) {
+            return 1.0;
+        }
+
+        return $value;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function stringValues(XmpDocument $document, string $namespace, string $localName): array
+    {
+        $raw = $document->get($namespace, $localName);
+
+        if (is_string($raw)) {
+            $trimmed = trim($raw);
+
+            return $trimmed === '' ? [] : [$trimmed];
+        }
+
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $values = [];
+        foreach ($raw as $value) {
+            if (!is_string($value)) {
+                continue;
+            }
+
+            $values[] = trim($value);
+        }
+
+        return $values;
+    }
+
+    /**
+     * @return list<float|null>
+     */
+    private function floatValues(XmpDocument $document, string $namespace, string $localName): array
+    {
+        $raw = $document->get($namespace, $localName);
+
+        if (is_string($raw)) {
+            $raw = [$raw];
+        } elseif (!is_array($raw)) {
+            return [];
+        }
+
+        $values = [];
+        foreach ($raw as $value) {
+            if (!is_string($value)) {
+                $values[] = null;
+                continue;
+            }
+
+            $numeric  = XmpDocument::parseNumericValue($value);
+            $values[] = $numeric;
+        }
+
+        return $values;
+    }
+
+    /**
+     * @return array{w: float, h: float}|null
+     */
+    private function appliedDimensions(XmpDocument $document): ?array
+    {
+        $widths  = $this->floatValues($document, self::NS_ST_DIMENSIONS, 'w');
+        $heights = $this->floatValues($document, self::NS_ST_DIMENSIONS, 'h');
+
+        $width  = $widths[0] ?? null;
+        $height = $heights[0] ?? null;
+
+        if ($width === null || $width <= 0.0 || $height === null || $height <= 0.0) {
+            return null;
+        }
+
+        return ['w' => $width, 'h' => $height];
+    }
+
+    private function createMultiPicture(Metadata $metadata): MultiPicture
+    {
+        return $this->resolveMultiPicture($metadata->mpfDocument);
+    }
+
+    private function resolveMultiPicture(?MpfDocument $document): MultiPicture
+    {
+        if (!$document instanceof MpfDocument) {
+            return new MultiPicture(null, 0, [], null, null, null, null, null);
+        }
+
+        $entries = [];
+        foreach ($document->entries as $entry) {
+            if (!$entry instanceof MpfEntry) {
+                continue;
+            }
+
+            $entries[] = new MultiPictureEntry(
+                attributes: $entry->attributes,
+                imageSize: $entry->imageSize,
+                dataOffset: $entry->dataOffset,
+                dependentImage1: $entry->dependentImage1,
+                dependentImage2: $entry->dependentImage2,
+            );
+        }
+
+        $attributes = $document->attributes;
+
+        return new MultiPicture(
+            version: $document->version,
+            imageCount: $document->imageCount,
+            entries: $entries,
+            totalFrames: $attributes?->totalFrames,
+            individualImageNumber: $attributes?->individualImageNumber,
+            imageUidList: $attributes?->imageUidList,
+            panoramaAngle: $attributes?->panoramaAngle,
+            panoramaAxis: $attributes?->panoramaAxis,
+        );
+    }
+
 }
