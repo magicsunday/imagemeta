@@ -453,10 +453,7 @@ final class StructuredMetadataBuilder
         );
 
         $rights = new Rights(
-            copyright: CompositeResolver::first([
-                fn (): ?string => $xmpDocument?->string('http://purl.org/dc/elements/1.1/', 'rights'),
-                fn (): ?string => $exifDocument?->artist(),
-            ]),
+            copyright: $exifDocument?->copyright(),
             usageTerms: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
             licenseUrl: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
             creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
@@ -465,13 +462,8 @@ final class StructuredMetadataBuilder
 
         $author = new Author(
             artist: $exifDocument?->artist(),
-            ownerName: CompositeResolver::first([
-                fn (): ?string => $exifDocument?->ownerName(),
-                fn (): ?string => $xmpDocument?->string('http://ns.adobe.com/xap/1.0/aux/', 'OwnerName'),
-            ]),
-            creator: CompositeResolver::first([
-                fn (): ?string => $this->firstListValue($xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'creator') ?? []),
-            ]),
+            ownerName: $exifDocument?->ownerName(),
+            creator: $this->firstListValue($xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'creator') ?? []),
             creatorEmail: $xmpDocument?->string('http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
             photographer: $exifDocument?->photographer(),
             imageEditor: $exifDocument?->imageEditor(),
