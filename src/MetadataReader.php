@@ -15,6 +15,7 @@ use finfo;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -98,6 +99,8 @@ final class MetadataReader
         $sampling         = $jpeg->getFrameComponentSamplingFactors();
         $subSampling      = $jpeg->getFrameYCbCrSubSampling();
 
+        $appleMapper = new AppleMakerNotesMapper();
+
         $exifDoc    = null;
         $xmpDoc     = null;
         $makerNotes = null;
@@ -106,6 +109,8 @@ final class MetadataReader
             $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
             $makerNotes = $exifDoc->makerNotes();
         }
+
+        $makerNotes = $appleMapper->map($makerNotes, null);
 
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
@@ -158,6 +163,8 @@ final class MetadataReader
     ): Metadata {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
 
+        $appleMapper = new AppleMakerNotesMapper();
+
         $exifDoc    = null;
         $xmpDoc     = null;
         $makerNotes = null;
@@ -166,6 +173,8 @@ final class MetadataReader
             $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
             $makerNotes = $exifDoc->makerNotes();
         }
+
+        $makerNotes = $appleMapper->map($makerNotes, $qt);
 
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
