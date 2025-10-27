@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
 use function is_numeric;
@@ -23,50 +24,6 @@ use function trim;
  */
 final readonly class AppleResolver
 {
-    /**
-     * @var array<int, string>
-     */
-    private const array HDR_IMAGE_TYPE_MAP = [
-        0 => 'Standard',
-        1 => 'HDR',
-        2 => 'HDR2',
-        3 => 'HDR3',
-    ];
-
-    /**
-     * @var array<int, string>
-     */
-    private const array IMAGE_CAPTURE_TYPE_MAP = [
-        0  => 'Unknown',
-        1  => 'ProRAW',
-        2  => 'Portrait',
-        3  => 'Live Photo',
-        4  => 'Live Photo Long Exposure',
-        5  => 'Burst',
-        6  => 'Night Mode',
-        7  => 'Night Mode Portrait',
-        10 => 'Photo',
-        11 => 'Manual Focus',
-        12 => 'Scene',
-    ];
-
-    /**
-     * @var array<string, string>
-     */
-    private const array FLAG_KEYS = [
-        'LivePhotoAuto'         => 'livePhotoAuto',
-        'LivePhotoEnabled'      => 'livePhotoEnabled',
-        'LivePhotoActive'       => 'livePhotoActive',
-        'LivePhotoLongExposure' => 'livePhotoLongExposure',
-        'LivePhoto'             => 'livePhoto',
-        'HdrAuto'               => 'hdrAuto',
-        'HdrEnabled'            => 'hdrEnabled',
-        'NightMode'             => 'nightMode',
-        'LongExposure'          => 'longExposure',
-        'PersonInPhoto'         => 'personInPhoto',
-        'PetInPhoto'            => 'petInPhoto',
-    ];
-
     /**
      * Builds an Apple maker note value object from available metadata.
      */
@@ -94,11 +51,11 @@ final readonly class AppleResolver
         $flags             = $this->flags($resolver);
 
         $makerNoteVersion  = $resolver->string('MakerNoteVersion');
-        $hdrImageType      = $this->enumeratedValue($resolver, self::HDR_IMAGE_TYPE_MAP, 'HDRImageType', 'HdrImageType');
+        $hdrImageType      = $this->enumeratedValue($resolver, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
         $burstUuid         = $resolver->string('BurstUUID');
         $focusDistanceRange = $this->focusDistanceRange($resolver);
         $oisMode           = $this->stringOrNumeric($resolver, 'OISMode');
-        $imageCaptureType  = $this->enumeratedValue($resolver, self::IMAGE_CAPTURE_TYPE_MAP, 'ImageCaptureType');
+        $imageCaptureType  = $this->enumeratedValue($resolver, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
         $imageUniqueId     = $resolver->string('ImageUniqueID');
         $photoIdentifier   = $resolver->string('PhotoIdentifier');
         $afMeasuredDepth   = $resolver->float('AFMeasuredDepth');
@@ -290,7 +247,7 @@ final readonly class AppleResolver
     private function flags(QuickTimeResolver $resolver): array
     {
         $flags = [];
-        foreach (self::FLAG_KEYS as $key => $normalized) {
+        foreach (AppleMetadata::FLAG_MAP as $key => $normalized) {
             $value = $resolver->bool($key);
             if ($value !== null) {
                 $flags[$normalized] = $value;

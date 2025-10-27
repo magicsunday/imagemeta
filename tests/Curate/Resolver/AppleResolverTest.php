@@ -64,7 +64,7 @@ final class AppleResolverTest extends TestCase
         self::assertEqualsWithDelta(-0.2, $apple->semanticStyleTone, 1e-12);
         self::assertTrue($apple->flags['livePhotoAuto']);
         self::assertSame('1.2', $apple->makerNoteVersion);
-        self::assertSame('HDR3', $apple->hdrImageType);
+        self::assertSame('HDR Image', $apple->hdrImageType);
         self::assertSame('resolver-burst', $apple->burstUuid);
         self::assertSame([0.7, 2.4], $apple->focusDistanceRange);
         self::assertSame('5', $apple->oisMode);
