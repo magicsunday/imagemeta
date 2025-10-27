@@ -718,23 +718,26 @@ final class StructuredMetadataBuilderTest extends TestCase
             hdrHeadroom: 3.0,
             hdrGain: [2.1, 2.2, 2.3],
             snr: 18.5,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
+            aeStable: true,
+            aeTarget: 0.92,
+            aeAverage: 0.78,
+            afStable: false,
+            afPerformance: 0.44,
+            signalToNoiseRatioType: 'focus',
+            luminanceNoiseAmplitude: 1.25,
             focusPosition: 0.5,
             livePhotoIndex: 4,
-            livePhotoTime: 0.2,
             colorTemperature: 4300,
             semanticStylePreset: 'MakerPreset',
             semanticStyleWarmth: 0.3,
             semanticStyleTone: -0.2,
-            runTime: new RunTime(epoch: 7, timescale: 20, value: 100, flags: 9),
             flags: ['livePhotoAuto' => false, 'nightMode' => true],
             accelerationVector: [0.05, 0.1, -0.1],
+            imageCaptureRequestId: 'req-42',
+            qualityHint: 'High',
+            colorCorrectionMatrix: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0],
+            livePhotoTime: 0.2,
+            runTime: new RunTime(epoch: 7, timescale: 20, value: 100, flags: 9),
             makerNoteVersion: '2.0',
             hdrImageType: 'HDR',
             burstUuid: 'maker-burst',
@@ -776,6 +779,13 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertSame([2.1, 2.2, 2.3], $structured->apple->hdrGain);
         self::assertEqualsWithDelta(3.0, $structured->apple->hdrHeadroom, 1e-12);
         self::assertEqualsWithDelta(18.5, $structured->apple->snr, 1e-12);
+        self::assertTrue($structured->apple->aeStable);
+        self::assertEqualsWithDelta(0.92, $structured->apple->aeTarget, 1e-12);
+        self::assertEqualsWithDelta(0.78, $structured->apple->aeAverage, 1e-12);
+        self::assertFalse($structured->apple->afStable);
+        self::assertEqualsWithDelta(0.44, $structured->apple->afPerformance, 1e-12);
+        self::assertSame('focus', $structured->apple->signalToNoiseRatioType);
+        self::assertEqualsWithDelta(1.25, $structured->apple->luminanceNoiseAmplitude, 1e-12);
         self::assertEqualsWithDelta(0.5, $structured->apple->focusPosition, 1e-12);
         self::assertSame(4, $structured->apple->livePhotoIndex);
         self::assertEqualsWithDelta(0.2, $structured->apple->livePhotoTime, 1e-12);
@@ -786,6 +796,9 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertFalse($structured->apple->flags['livePhotoAuto']);
         self::assertTrue($structured->apple->flags['nightMode']);
         self::assertSame([0.05, 0.1, -0.1], $structured->apple->accelerationVector);
+        self::assertSame('req-42', $structured->apple->imageCaptureRequestId);
+        self::assertSame('High', $structured->apple->qualityHint);
+        self::assertSame([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], $structured->apple->colorCorrectionMatrix);
         self::assertSame('2.0', $structured->apple->makerNoteVersion);
         self::assertSame('HDR', $structured->apple->hdrImageType);
         self::assertSame('maker-burst', $structured->apple->burstUuid);
