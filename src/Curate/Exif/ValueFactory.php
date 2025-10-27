@@ -14,17 +14,29 @@ namespace MagicSunday\ImageMeta\Curate\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Curate\Structured\CameraMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\CaptureMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\FileMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\GpsMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\LensMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\MakerNotesMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\ProcessingMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\RightsMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\SensorMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\TechnicalMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
-use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
@@ -42,13 +54,13 @@ use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
-use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
-use MagicSunday\ImageMeta\Value\Focus;
-use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
@@ -72,8 +84,8 @@ use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\TiffData;
 use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
-use MagicSunday\ImageMeta\Value\Xmp;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
+use MagicSunday\ImageMeta\Value\Xmp;
 
 use function abs;
 use function array_any;
@@ -101,10 +113,10 @@ use function sprintf;
 use function str_contains;
 use function str_pad;
 use function str_replace;
-use function substr;
 use function str_starts_with;
-use function trim;
 use function strtoupper;
+use function substr;
+use function trim;
 
 use const PREG_SPLIT_NO_EMPTY;
 
@@ -117,7 +129,7 @@ final class ValueFactory
     /**
      * Produces normalised value objects derived from the supplied metadata container.
      *
-     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param Metadata         $metadata    Metadata container with decoded EXIF, XMP and QuickTime data.
      * @param XmpDocument|null $xmpDocument Optional pre-parsed XMP document reused by the caller.
      *
      * @return array{
@@ -164,11 +176,11 @@ final class ValueFactory
         Metadata $metadata,
         ?XmpDocument $xmpDocument = null,
     ): array {
-        $xmpDocument   ??= $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $xmpDocument ??= $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 
-        $gps          = $this->createGps($metadata, $xmpDocument);
-        $regions      = $this->createRegions($xmpDocument);
-        $multiPicture = $this->createMultiPicture($metadata);
+        $gps             = $this->createGps($metadata, $xmpDocument);
+        $regions         = $this->createRegions($xmpDocument);
+        $multiPicture    = $this->createMultiPicture($metadata);
         $exifDocument    = $metadata->exifDoc;
         $quickTimeMeta   = $metadata->quickTime;
         $appleMakerNotes = $metadata->makerNotes?->apple();
@@ -369,11 +381,11 @@ final class ValueFactory
             $iccData = (new IccDecoder())->decode($metadata->iccProfile, $metadata->iccSegments);
         }
 
-        $hueSatMap = null;
+        $hueSatMap     = null;
         $hueSatMapData = $exifDocument?->profileHueSatMap();
         if (is_array($hueSatMapData)) {
             $dimensions = $hueSatMapData['dimensions'] ?? null;
-            $hueSatMap = new ColorProfileHueSatMap(
+            $hueSatMap  = new ColorProfileHueSatMap(
                 $dimensions[0] ?? null,
                 $dimensions[1] ?? null,
                 $dimensions[2] ?? null,
@@ -383,7 +395,7 @@ final class ValueFactory
             );
         }
 
-        $lookTable = null;
+        $lookTable     = null;
         $lookTableData = $exifDocument?->profileLookTable();
         if (is_array($lookTableData)) {
             $dimensions = $lookTableData['dimensions'] ?? null;
@@ -404,7 +416,7 @@ final class ValueFactory
             );
         }
 
-        $toneCurve = null;
+        $toneCurve     = null;
         $toneCurveData = $exifDocument?->profileToneCurve();
         if (is_array($toneCurveData) && $toneCurveData !== []) {
             $points = $this->chunkPairEntries($toneCurveData);
@@ -413,7 +425,7 @@ final class ValueFactory
             }
         }
 
-        $gainMap = null;
+        $gainMap     = null;
         $gainMapData = $exifDocument?->profileGainTableMap();
         if (is_array($gainMapData) && $gainMapData !== []) {
             $gainMap = new ColorProfileGainMap(DngProfileGainTableTag::GAIN_TABLE_MAP, $gainMapData);
@@ -554,7 +566,7 @@ final class ValueFactory
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
 
-        $focalPlaneUnit = null;
+        $focalPlaneUnit     = null;
         $focalPlaneUnitCode = $exifDocument?->focalPlaneResolutionUnit();
         if ($focalPlaneUnitCode !== null) {
             $focalPlaneUnit = ResolutionUnit::tryFrom($focalPlaneUnitCode);
@@ -577,8 +589,8 @@ final class ValueFactory
 
         $uav = $this->buildUav($exifDocument, $quickTimeMeta);
 
-        $hasHistory      = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
-        $makerNotesSafe  = $metadata->makerNotes?->isSafe();
+        $hasHistory     = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
+        $makerNotesSafe = $metadata->makerNotes?->isSafe();
         if ($makerNotesSafe === null) {
             $makerNotesSafe = $exifDocument?->makerNoteSafety();
         }
@@ -593,52 +605,27 @@ final class ValueFactory
         );
 
         return [
-            'interop' => $interop,
-            'tiff' => $tiff,
-            'composite' => $composite,
-            'standards' => $standards,
-            'flashPix' => $flashPix,
-            'multiPicture' => $multiPicture,
-            'camera' => $camera,
-            'lens' => $lens,
-            'image' => $image,
-            'exposure' => $exposure,
-            'capture' => $capture,
-            'gps' => $gps,
-            'device' => $device,
-            'apple' => $apple,
-            'xmp' => $xmp,
-            'file' => $file,
-            'container' => $container,
-            'preview' => $preview,
-            'video' => $video,
-            'audio' => $audio,
-            'embeddedAudio' => $embeddedAudio,
-            'colorProfile' => $colorProfile,
-            'processing' => $processing,
-            'whiteBalanceDetails' => $whiteBalanceDetails,
-            'focus' => $focus,
-            'motion' => $motion,
-            'scene' => $scene,
-            'regions' => $regions,
-            'keywords' => $keywords,
-            'rights' => $rights,
-            'author' => $author,
-            'temporal' => $temporal,
-            'derived' => $derived,
-            'related' => $related,
-            'sensor' => $sensor,
-            'uav' => $uav,
-            'integrity' => $integrity,
+            'file'       => new FileMetadata($file, $container, $integrity),
+            'camera'     => new CameraMetadata($camera, $device),
+            'lens'       => new LensMetadata($lens, $derived),
+            'media'      => new MediaMetadata($image, $preview, $video, $audio, $embeddedAudio, $colorProfile, $composite, $multiPicture),
+            'exposure'   => new ExposureMetadata($exposure, $derived),
+            'capture'    => new CaptureMetadata($capture, $scene, $temporal, $regions, $keywords),
+            'gps'        => new GpsMetadata($gps),
+            'sensor'     => new SensorMetadata($sensor, $focus, $motion, $uav),
+            'processing' => new ProcessingMetadata($processing, $whiteBalanceDetails),
+            'technical'  => new TechnicalMetadata($interop, $tiff, $standards, $flashPix, $xmp),
+            'rights'     => new RightsMetadata($rights, $author, $related),
+            'makerNotes' => new MakerNotesMetadata($apple),
         ];
     }
 
     /**
      * Builds the device metadata aggregate by combining EXIF helpers with QuickTime fallbacks.
      *
-     * @param ExifDocument|null   $exif        Resolver exposing EXIF tag helpers.
-     * @param QuickTimeMeta|null  $quickTime   QuickTime metadata container exposing software fields.
-     * @param XmpDocument|null    $xmpDocument Placeholder for future XMP backed device metadata.
+     * @param ExifDocument|null  $exif        Resolver exposing EXIF tag helpers.
+     * @param QuickTimeMeta|null $quickTime   QuickTime metadata container exposing software fields.
+     * @param XmpDocument|null   $xmpDocument Placeholder for future XMP backed device metadata.
      *
      * @return Device Device value object describing capture hardware and software.
      */
@@ -678,9 +665,9 @@ final class ValueFactory
      * Fractional seconds are mirrored into the generic field to keep display values consistent
      * whenever only the original or digitized timestamp carries sub-second precision.
      *
-     * @param ExifDocument|null $exifDocument EXIF document exposing timestamps and offsets.
-     * @param QuickTimeMeta|null $quickTime   QuickTime metadata used for time fallbacks.
-     * @param XmpDocument|null   $xmpDocument XMP document providing timestamp fields.
+     * @param ExifDocument|null  $exifDocument EXIF document exposing timestamps and offsets.
+     * @param QuickTimeMeta|null $quickTime    QuickTime metadata used for time fallbacks.
+     * @param XmpDocument|null   $xmpDocument  XMP document providing timestamp fields.
      *
      * @return Temporal Normalised temporal metadata aggregate.
      */
@@ -709,9 +696,9 @@ final class ValueFactory
         $offsetTimeOriginal  = $exifDocument?->offsetTimeOriginal();
         $offsetTimeDigitized = $exifDocument?->offsetTimeDigitized();
 
-        $subSecTime         = $this->sanitizeSubSeconds($exifDocument?->subSecTime());
+        $subSecTime          = $this->sanitizeSubSeconds($exifDocument?->subSecTime());
         $subSecTimeDigitized = $this->sanitizeSubSeconds($exifDocument?->subSecTimeDigitized());
-        $subSecOriginal     = $this->sanitizeSubSeconds($subOriginalRaw);
+        $subSecOriginal      = $this->sanitizeSubSeconds($subOriginalRaw);
 
         if ($subSecTime === null) {
             $subSecTime = $subSecOriginal ?? $subSecTimeDigitized;
@@ -872,7 +859,7 @@ final class ValueFactory
     /**
      * Builds the image value object using EXIF metadata.
      *
-     * @param Metadata        $metadata Metadata container supplying JPEG frame fallbacks.
+     * @param Metadata          $metadata     Metadata container supplying JPEG frame fallbacks.
      * @param ExifDocument|null $exifDocument EXIF document exposing image related tags.
      *
      * @return Image Normalised image metadata aggregate.
@@ -930,10 +917,10 @@ final class ValueFactory
     /**
      * Builds the scene metadata aggregate using EXIF, QuickTime and Apple sources.
      *
-     * @param ExifDocument|null   $exif      Resolver exposing EXIF scene metadata.
+     * @param ExifDocument|null  $exif      Resolver exposing EXIF scene metadata.
      * @param QuickTimeMeta|null $quickTime QuickTime metadata providing scene hints.
-     * @param AppleMakerNotes   $apple     Aggregated Apple maker note metadata.
-     * @param int|null          $faceCount Number of detected face regions.
+     * @param AppleMakerNotes    $apple     Aggregated Apple maker note metadata.
+     * @param int|null           $faceCount Number of detected face regions.
      *
      * @return Scene Scene metadata value object.
      */
@@ -948,7 +935,7 @@ final class ValueFactory
             $flags = [];
         }
 
-        $hdr   = $apple->hdrImageType;
+        $hdr = $apple->hdrImageType;
         if ($hdr === null) {
             $hdr = $this->quickTimeString($quickTime, 'HDRImageType');
         }
@@ -1012,7 +999,7 @@ final class ValueFactory
     /**
      * Builds the motion metadata aggregate from EXIF and Apple motion sources.
      *
-     * @param ExifDocument $exif  Resolver exposing EXIF camera orientation measurements.
+     * @param ExifDocument    $exif  Resolver exposing EXIF camera orientation measurements.
      * @param AppleMakerNotes $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
@@ -1126,7 +1113,7 @@ final class ValueFactory
      * Resolves the first non-empty QuickTime string value from the supplied keys.
      *
      * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
-     * @param string            ...$keys  Candidate metadata keys to inspect in order.
+     * @param string             ...$keys   Candidate metadata keys to inspect in order.
      *
      * @return string|null First matching string value or null when no value is present.
      */
@@ -1150,7 +1137,7 @@ final class ValueFactory
      * Resolves the first available QuickTime float value from the provided keys.
      *
      * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
-     * @param string            ...$keys  Candidate metadata keys to inspect in order.
+     * @param string             ...$keys   Candidate metadata keys to inspect in order.
      *
      * @return float|null First matching float value or null when no value is present.
      */
@@ -1190,7 +1177,7 @@ final class ValueFactory
      * Resolves the first available QuickTime integer value from the provided keys.
      *
      * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
-     * @param string            ...$keys  Candidate metadata keys to inspect in order.
+     * @param string             ...$keys   Candidate metadata keys to inspect in order.
      *
      * @return int|null First matching integer value or null when no value is present.
      */
@@ -1374,33 +1361,33 @@ final class ValueFactory
         $altitude     = $this->floatValue($gpsData['alt'] ?? null);
         $altitudeRef  = $this->intValue($gpsData['alt_ref'] ?? null);
 
-        $version     = $this->stringValue($gpsData['version'] ?? null);
-        $versionRaw  = $gpsData['version_raw'] ?? null;
+        $version    = $this->stringValue($gpsData['version'] ?? null);
+        $versionRaw = $gpsData['version_raw'] ?? null;
         if (!is_string($versionRaw)) {
             $versionRaw = null;
         }
-        $satellites  = $this->stringValue($gpsData['satellites'] ?? null);
-        $status      = $this->stringValue($gpsData['status'] ?? null);
-        $measureMode = $this->stringValue($gpsData['measure_mode'] ?? null);
-        $dop         = $this->floatValue($gpsData['dop'] ?? null);
-        $speedRef    = $this->uppercase($gpsData['speed_ref'] ?? null);
-        $speedMs     = $this->floatValue($gpsData['speed_ms'] ?? null);
+        $satellites       = $this->stringValue($gpsData['satellites'] ?? null);
+        $status           = $this->stringValue($gpsData['status'] ?? null);
+        $measureMode      = $this->stringValue($gpsData['measure_mode'] ?? null);
+        $dop              = $this->floatValue($gpsData['dop'] ?? null);
+        $speedRef         = $this->uppercase($gpsData['speed_ref'] ?? null);
+        $speedMs          = $this->floatValue($gpsData['speed_ms'] ?? null);
         $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref'] ?? null);
         $speedOriginal    = $this->floatValue($gpsData['speed_original'] ?? null);
-        $trackRef    = $this->uppercase($gpsData['track_ref'] ?? null);
-        $track       = $this->floatValue($gpsData['track'] ?? null);
-        $imgDirRef   = $this->uppercase($gpsData['img_direction_ref'] ?? null);
-        $imgDir      = $this->floatValue($gpsData['img_direction'] ?? null);
-        $mapDatum    = $this->stringValue($gpsData['map_datum'] ?? null);
+        $trackRef         = $this->uppercase($gpsData['track_ref'] ?? null);
+        $track            = $this->floatValue($gpsData['track'] ?? null);
+        $imgDirRef        = $this->uppercase($gpsData['img_direction_ref'] ?? null);
+        $imgDir           = $this->floatValue($gpsData['img_direction'] ?? null);
+        $mapDatum         = $this->stringValue($gpsData['map_datum'] ?? null);
 
-        $destLatRef    = $this->uppercase($gpsData['dest_lat_ref'] ?? null);
-        $destLat       = $this->floatValue($gpsData['dest_lat'] ?? null);
-        $destLonRef    = $this->uppercase($gpsData['dest_lon_ref'] ?? null);
-        $destLon       = $this->floatValue($gpsData['dest_lon'] ?? null);
-        $destBearRef   = $this->uppercase($gpsData['dest_bearing_ref'] ?? null);
-        $destBear      = $this->floatValue($gpsData['dest_bearing'] ?? null);
-        $destDistRef   = $this->uppercase($gpsData['dest_distance_ref'] ?? null);
-        $destDistMetre = $this->floatValue($gpsData['dest_distance_m'] ?? null);
+        $destLatRef          = $this->uppercase($gpsData['dest_lat_ref'] ?? null);
+        $destLat             = $this->floatValue($gpsData['dest_lat'] ?? null);
+        $destLonRef          = $this->uppercase($gpsData['dest_lon_ref'] ?? null);
+        $destLon             = $this->floatValue($gpsData['dest_lon'] ?? null);
+        $destBearRef         = $this->uppercase($gpsData['dest_bearing_ref'] ?? null);
+        $destBear            = $this->floatValue($gpsData['dest_bearing'] ?? null);
+        $destDistRef         = $this->uppercase($gpsData['dest_distance_ref'] ?? null);
+        $destDistMetre       = $this->floatValue($gpsData['dest_distance_m'] ?? null);
         $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref'] ?? null);
         $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original'] ?? null);
 
@@ -1856,11 +1843,11 @@ final class ValueFactory
             return new Regions([]);
         }
 
-        $dimensions = $this->appliedDimensions($document);
-        $mwgRegions = $this->extractMwgRegions($document, $dimensions);
-        $appleData  = $this->extractAppleFaceRegions($document, $dimensions, $mwgRegions);
-        $supplement = $appleData['supplemental'];
-        $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
+        $dimensions   = $this->appliedDimensions($document);
+        $mwgRegions   = $this->extractMwgRegions($document, $dimensions);
+        $appleData    = $this->extractAppleFaceRegions($document, $dimensions, $mwgRegions);
+        $supplement   = $appleData['supplemental'];
+        $mwgRegions   = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
         $appleRegions = $appleData['regions'];
 
         foreach ($appleRegions as $appleRegion) {
@@ -1953,7 +1940,7 @@ final class ValueFactory
      * Extracts Apple FaceInfo face entries along with supplemental metadata.
      *
      * @param array{w: float, h: float}|null $dimensions
-     * @param list<Region> $mwgRegions
+     * @param list<Region>                   $mwgRegions
      *
      * @return array{regions: list<Region>, supplemental: array<int, Region>}
      */
@@ -1962,7 +1949,7 @@ final class ValueFactory
         $entries = $this->appleFaceEntries($document, $dimensions);
 
         return [
-            'regions' => $this->regionsFromAppleEntries($entries),
+            'regions'      => $this->regionsFromAppleEntries($entries),
             'supplemental' => $this->supplementalRegionsFromAppleEntries($entries, $mwgRegions),
         ];
     }
@@ -2072,7 +2059,7 @@ final class ValueFactory
     }
 
     /**
-     * @param list<Region> $regions
+     * @param list<Region>       $regions
      * @param array<int, Region> $supplemental
      *
      * @return list<Region>
@@ -2097,7 +2084,7 @@ final class ValueFactory
 
     /**
      * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
-     * @param list<Region> $mwgRegions
+     * @param list<Region>                                                                                                                                                      $mwgRegions
      *
      * @return array<int, Region>
      */
@@ -2133,7 +2120,7 @@ final class ValueFactory
                 continue;
             }
 
-            $baseRegion            = $mwgRegions[$matchIndex];
+            $baseRegion                = $mwgRegions[$matchIndex];
             $supplemental[$matchIndex] = $this->createSupplementalRegion($baseRegion, $entry);
         }
 
@@ -2151,7 +2138,7 @@ final class ValueFactory
                 break;
             }
 
-            $baseRegion             = $mwgRegions[$nextIndex];
+            $baseRegion               = $mwgRegions[$nextIndex];
             $supplemental[$nextIndex] = $this->createSupplementalRegion($baseRegion, $entry);
         }
 
@@ -2165,7 +2152,7 @@ final class ValueFactory
     }
 
     /**
-     * @param list<Region> $mwgRegions
+     * @param list<Region>                                                                                                                                                $mwgRegions
      * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
      */
     private function matchAppleEntryToMwgRegion(array $mwgRegions, array $entry): ?int
@@ -2573,5 +2560,4 @@ final class ValueFactory
             panoramaAxis: $attributes?->panoramaAxis,
         );
     }
-
 }

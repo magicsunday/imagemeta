@@ -154,7 +154,7 @@ final class MetadataReaderTest extends TestCase
 
         self::assertSame(8, $metadata->jpegBitsPerSample);
 
-        $image = $metadata->structured()->image;
+        $image = $metadata->structured()->media->image;
 
         self::assertSame(8, $image->bitsPerSample);
         self::assertSame(448, $image->width);
