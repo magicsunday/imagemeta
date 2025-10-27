@@ -54,12 +54,11 @@ use function rad2deg;
 use function round;
 use function rtrim;
 use function sprintf;
-use function strpos;
 use function str_contains;
 use function str_replace;
 use function str_starts_with;
 use function strlen;
-use function strtolower;
+use function strpos;
 use function strtoupper;
 use function substr;
 use function trim;
@@ -80,6 +79,7 @@ use const JSON_THROW_ON_ERROR;
  *     alt_ref:?int,
  *     alt:?float,
  *     version:?string,
+ *     version_raw:?string,
  *     satellites:?string,
  *     status:?string,
  *     measure_mode:?string,
@@ -106,6 +106,7 @@ use const JSON_THROW_ON_ERROR;
  *     processing_method:?string,
  *     area_information:?string,
  *     date:?string,
+ *     date_raw:?string,
  *     time:?string,
  *     timestamp:?DateTimeImmutable,
  *     differential:?int,
@@ -114,18 +115,18 @@ use const JSON_THROW_ON_ERROR;
  */
 final readonly class ValueConverters
 {
-    private const float FULL_FRAME_WIDTH_MM = 36.0;
-    private const float FULL_FRAME_HEIGHT_MM = 24.0;
-    private const float FULL_FRAME_DIAGONAL_MM = 43.2666153056;
+    private const float FULL_FRAME_WIDTH_MM               = 36.0;
+    private const float FULL_FRAME_HEIGHT_MM              = 24.0;
+    private const float FULL_FRAME_DIAGONAL_MM            = 43.2666153056;
     private const float FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.030;
 
-    private const MAX_SRATIONAL_MATRIX_DIMENSION = 64;
-    private const MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
-    private const SRATIONAL_VALUE_SIZE = 8;
+    private const MAX_SRATIONAL_MATRIX_DIMENSION      = 64;
+    private const MAX_SRATIONAL_MATRIX_LABEL_LENGTH   = 255;
+    private const SRATIONAL_VALUE_SIZE                = 8;
     private const MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
-    private const PRINTABLE_ASCII_MIN = 0x20;
-    private const PRINTABLE_ASCII_MAX = 0x7E;
-    private const DEFAULT_GPS_VERSION = '2.0.0.0';
+    private const PRINTABLE_ASCII_MIN                 = 0x20;
+    private const PRINTABLE_ASCII_MAX                 = 0x7E;
+    private const DEFAULT_GPS_VERSION                 = '2.0.0.0';
 
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
@@ -624,8 +625,8 @@ final readonly class ValueConverters
         }
 
         return match ($value) {
-            0 => false,
-            1 => true,
+            0       => false,
+            1       => true,
             default => null,
         };
     }
@@ -953,9 +954,9 @@ final readonly class ValueConverters
             return null;
         }
 
-        $offset = 4;
+        $offset       = 4;
         $columnLabels = [];
-        for ($i = 0; $i < $columns; $i++) {
+        for ($i = 0; $i < $columns; ++$i) {
             $labelData = self::consumeSrationalMatrixLabel($payload, $offset, $length);
             if ($labelData === null) {
                 return null;
@@ -966,7 +967,7 @@ final readonly class ValueConverters
         }
 
         $rowLabels = [];
-        for ($i = 0; $i < $rows; $i++) {
+        for ($i = 0; $i < $rows; ++$i) {
             $labelData = self::consumeSrationalMatrixLabel($payload, $offset, $length);
             if ($labelData === null) {
                 return null;
@@ -987,11 +988,11 @@ final readonly class ValueConverters
         }
 
         $values = [];
-        for ($rowIndex = 0; $rowIndex < $rows; $rowIndex++) {
+        for ($rowIndex = 0; $rowIndex < $rows; ++$rowIndex) {
             $rowValues = [];
 
-            for ($colIndex = 0; $colIndex < $columns; $colIndex++) {
-                $numerator = self::readSrationalInt32($payload, $offset, $length);
+            for ($colIndex = 0; $colIndex < $columns; ++$colIndex) {
+                $numerator   = self::readSrationalInt32($payload, $offset, $length);
                 $denominator = self::readSrationalInt32($payload, $offset + 4, $length);
                 if ($numerator === null || $denominator === null) {
                     return null;
@@ -1012,10 +1013,10 @@ final readonly class ValueConverters
 
         return [
             'columns' => $columns,
-            'rows' => $rows,
-            'labels' => [
+            'rows'    => $rows,
+            'labels'  => [
                 'columns' => $columnLabels,
-                'rows' => $rowLabels,
+                'rows'    => $rowLabels,
             ],
             'values' => $values,
         ];
@@ -1344,43 +1345,43 @@ final readonly class ValueConverters
     public static function emptyGpsResult(): array
     {
         return [
-            'lat_ref'             => null,
-            'lat'                 => null,
-            'lon_ref'             => null,
-            'lon'                 => null,
-            'alt_ref'             => null,
-            'alt'                 => null,
-            'version'             => null,
-            'satellites'          => null,
-            'status'              => null,
-            'measure_mode'        => null,
-            'dop'                 => null,
-            'speed_ref'           => null,
-            'speed_ms'            => null,
-            'speed_original_ref'  => null,
-            'speed_original'      => null,
-            'track_ref'           => null,
-            'track'               => null,
-            'img_direction_ref'   => null,
-            'img_direction'       => null,
-            'map_datum'           => null,
-            'dest_lat_ref'        => null,
-            'dest_lat'            => null,
-            'dest_lon_ref'        => null,
-            'dest_lon'            => null,
-            'dest_bearing_ref'    => null,
-            'dest_bearing'        => null,
-            'dest_distance_ref'   => null,
-            'dest_distance_m'     => null,
+            'lat_ref'                    => null,
+            'lat'                        => null,
+            'lon_ref'                    => null,
+            'lon'                        => null,
+            'alt_ref'                    => null,
+            'alt'                        => null,
+            'version'                    => null,
+            'satellites'                 => null,
+            'status'                     => null,
+            'measure_mode'               => null,
+            'dop'                        => null,
+            'speed_ref'                  => null,
+            'speed_ms'                   => null,
+            'speed_original_ref'         => null,
+            'speed_original'             => null,
+            'track_ref'                  => null,
+            'track'                      => null,
+            'img_direction_ref'          => null,
+            'img_direction'              => null,
+            'map_datum'                  => null,
+            'dest_lat_ref'               => null,
+            'dest_lat'                   => null,
+            'dest_lon_ref'               => null,
+            'dest_lon'                   => null,
+            'dest_bearing_ref'           => null,
+            'dest_bearing'               => null,
+            'dest_distance_ref'          => null,
+            'dest_distance_m'            => null,
             'dest_distance_original_ref' => null,
             'dest_distance_original'     => null,
-            'processing_method'   => null,
-            'area_information'    => null,
-            'date'                => null,
-            'time'                => null,
-            'timestamp'           => null,
-            'differential'        => null,
-            'h_positioning_error' => null,
+            'processing_method'          => null,
+            'area_information'           => null,
+            'date'                       => null,
+            'time'                       => null,
+            'timestamp'                  => null,
+            'differential'               => null,
+            'h_positioning_error'        => null,
         ];
     }
 
@@ -1462,7 +1463,7 @@ final readonly class ValueConverters
         $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
         $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
 
-        $versionParts            = self::formatGpsVersion($versionEntry?->value);
+        $versionParts           = self::formatGpsVersion($versionEntry?->value);
         $result['version']      = $versionParts['normalized'];
         $result['version_raw']  = $versionParts['raw'];
         $result['satellites']   = self::sanitizeString($satellitesEntry?->value);
@@ -1508,18 +1509,18 @@ final readonly class ValueConverters
         $result['dest_bearing']     = self::normalizeBearing($destBearingValue);
 
         $destDistanceRefValue                 = $destDistRefEntry?->value;
-        $result['dest_distance_ref']            = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
-        $result['dest_distance_original_ref']   = self::sanitizeString($destDistanceRefValue);
-        $result['dest_distance_original']       = self::rationalToFloat($destDistEntry?->value);
-        $result['dest_distance_m']              = self::gpsDistanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
+        $result['dest_distance_ref']          = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
+        $result['dest_distance_original_ref'] = self::sanitizeString($destDistanceRefValue);
+        $result['dest_distance_original']     = self::rationalToFloat($destDistEntry?->value);
+        $result['dest_distance_m']            = self::gpsDistanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
 
         $result['processing_method'] = self::decodeUndefinedString($processEntry?->value);
         $result['area_information']  = self::decodeUndefinedString($areaEntry?->value);
 
-        $dateParts       = self::normalizeGpsDate($dateEntry?->value);
-        $result['date'] = $dateParts['normalized'];
+        $dateParts          = self::normalizeGpsDate($dateEntry?->value);
+        $result['date']     = $dateParts['normalized'];
         $result['date_raw'] = $dateParts['raw'];
-        $timeParts      = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
+        $timeParts          = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
             ? self::parseGpsTime($timeEntry->value)
             : null;
         $result['time']      = self::formatGpsTime($timeParts);
@@ -1706,7 +1707,7 @@ final readonly class ValueConverters
     private static function formatGpsVersion(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
     ): array {
-        $raw = is_string($value) ? $value : null;
+        $raw        = is_string($value) ? $value : null;
         $normalized = null;
 
         if ($value instanceof ExifNumericList) {
@@ -1719,7 +1720,7 @@ final readonly class ValueConverters
 
             return [
                 'normalized' => $normalized,
-                'raw' => $raw,
+                'raw'        => $raw,
             ];
         }
 
@@ -1730,13 +1731,13 @@ final readonly class ValueConverters
 
                 return [
                     'normalized' => $normalized,
-                    'raw' => $raw,
+                    'raw'        => $raw,
                 ];
             }
 
             return [
                 'normalized' => self::DEFAULT_GPS_VERSION,
-                'raw' => $raw,
+                'raw'        => $raw,
             ];
         }
 
@@ -1745,7 +1746,7 @@ final readonly class ValueConverters
 
             return [
                 'normalized' => $normalized,
-                'raw' => null,
+                'raw'        => null,
             ];
         }
 
@@ -1754,13 +1755,13 @@ final readonly class ValueConverters
 
             return [
                 'normalized' => $normalized,
-                'raw' => null,
+                'raw'        => null,
             ];
         }
 
         return [
             'normalized' => self::DEFAULT_GPS_VERSION,
-            'raw' => $raw,
+            'raw'        => $raw,
         ];
     }
 
@@ -1797,8 +1798,8 @@ final readonly class ValueConverters
         $encoding = null;
 
         $prefixes = [
-            "ASCII\0\0\0"    => 'ASCII',
-            "UNICODE\0"        => 'UNICODE',
+            "ASCII\0\0\0"   => 'ASCII',
+            "UNICODE\0"     => 'UNICODE',
             "JIS\0\0\0\0\0" => 'JIS',
         ];
 
@@ -1874,7 +1875,7 @@ final readonly class ValueConverters
         if (!is_string($value)) {
             return [
                 'normalized' => null,
-                'raw' => $raw,
+                'raw'        => $raw,
             ];
         }
 
@@ -1882,20 +1883,20 @@ final readonly class ValueConverters
         if ($clean === '') {
             return [
                 'normalized' => null,
-                'raw' => $raw,
+                'raw'        => $raw,
             ];
         }
 
         if (preg_match('/^\d{4}:\d{2}:\d{2}$/', $clean) !== 1) {
             return [
                 'normalized' => null,
-                'raw' => $raw,
+                'raw'        => $raw,
             ];
         }
 
         return [
             'normalized' => str_replace(':', '-', $clean),
-            'raw' => $raw,
+            'raw'        => $raw,
         ];
     }
 
