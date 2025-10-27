@@ -42,6 +42,7 @@ use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
@@ -362,7 +363,7 @@ final class StructuredMetadataBuilder
         $gainMap = null;
         $gainMapData = $exifDocument?->profileGainTableMap();
         if (is_array($gainMapData) && $gainMapData !== []) {
-            $gainMap = new ColorProfileGainMap($gainMapData);
+            $gainMap = new ColorProfileGainMap(DngProfileGainTableTag::GAIN_TABLE_MAP, $gainMapData);
         }
 
         $colorProfile = new ColorProfile(

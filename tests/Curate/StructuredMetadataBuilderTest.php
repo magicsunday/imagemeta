@@ -39,6 +39,7 @@ use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
+use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
@@ -1850,6 +1851,8 @@ final class StructuredMetadataBuilderTest extends TestCase
     #[Test]
     public function populatesColorProfileCalibrationFromExif(): void
     {
+        $gainTableTag = DngProfileGainTableTag::GAIN_TABLE_MAP;
+
         $profileIfd = new Ifd([
             ExifTag::PROFILE_HUE_SAT_MAP_DIMS    => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DIMS, 4, 3, new ExifNumericList([6, 3, 2])),
             ExifTag::PROFILE_HUE_SAT_MAP_DATA_1 => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA_1, 11, 12, new ExifNumericList([
@@ -1878,7 +1881,7 @@ final class StructuredMetadataBuilderTest extends TestCase
                 0.1,
             ])),
             ExifTag::PROFILE_TONE_CURVE          => new IfdEntry(ExifTag::PROFILE_TONE_CURVE, 11, 4, new ExifNumericList([0.0, 0.0, 0.5, 0.6])),
-            ExifTag::PROFILE_GAIN_TABLE_MAP      => new IfdEntry(ExifTag::PROFILE_GAIN_TABLE_MAP, 11, 4, new ExifNumericList([1.0, 1.05, 0.95, 1.1])),
+            $gainTableTag->value                 => new IfdEntry($gainTableTag->value, 11, 4, new ExifNumericList([1.0, 1.05, 0.95, 1.1])),
         ]);
 
         $exifIfd = new Ifd([
@@ -1913,6 +1916,8 @@ final class StructuredMetadataBuilderTest extends TestCase
         self::assertNotNull($profile->toneCurve);
         self::assertSame([[0.0, 0.0], [0.5, 0.6]], $profile->toneCurve->points);
         self::assertNotNull($profile->gainMap);
+        self::assertSame($gainTableTag, $profile->gainMap->tag);
+        self::assertSame('ProfileGainTableMap', $profile->gainMap->label());
         self::assertSame([1.0, 1.05, 0.95, 1.1], $profile->gainMap->values);
     }
 
