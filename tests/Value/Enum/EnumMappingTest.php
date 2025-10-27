@@ -60,6 +60,21 @@ final class EnumMappingTest extends TestCase
     }
 
     #[Test]
+    public function normalizesStringInputs(): void
+    {
+        self::assertSame(Compression::JPEG, Compression::fromExifValue('7'));
+        self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue('3'));
+        self::assertSame(LightSource::UNKNOWN, LightSource::fromExifValue('0'));
+    }
+
+    #[Test]
+    public function returnsNullForEmptyOrNonNumericStrings(): void
+    {
+        self::assertNull(Compression::fromExifValue(''));
+        self::assertNull(Compression::fromExifValue('foo'));
+    }
+
+    #[Test]
     public function ignoresVendorSpecificFileSource(): void
     {
         self::assertNull(FileSource::fromExifValue(0x8000));
