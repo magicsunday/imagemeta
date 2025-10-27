@@ -11,12 +11,21 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
+use function array_filter;
 use function array_find;
+use function array_map;
+use function array_values;
+use function explode;
 use function is_array;
+use function is_numeric;
 use function is_string;
+use function preg_match;
 use function sprintf;
 use function strpos;
+use function str_contains;
+use function strtolower;
 use function substr;
+use function trim;
 
 /**
  * Immutable representation of an extracted XMP document keyed by Clark notation.
@@ -32,6 +41,119 @@ final readonly class XmpDocument
          */
         public array $data,
     ) {
+    }
+
+    /**
+     * Returns a trimmed string value for the given namespace/local name pair.
+     */
+    public function string(string $namespaceUri, string $localName): ?string
+    {
+        $value = $this->get($namespaceUri, $localName);
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        if (!is_array($value)) {
+            return null;
+        }
+
+        foreach ($value as $element) {
+            if (!is_string($element)) {
+                continue;
+            }
+
+            $trimmed = trim($element);
+            if ($trimmed !== '') {
+                return $trimmed;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns all string values while trimming whitespace and omitting empties.
+     *
+     * @return list<string>
+     */
+    public function stringList(string $namespaceUri, string $localName): array
+    {
+        $value = $this->get($namespaceUri, $localName);
+
+        if (is_string($value)) {
+            $parts = array_map(trim(...), explode(',', $value));
+
+            return array_values(array_filter($parts, static fn (string $item): bool => $item !== ''));
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $items = array_map(trim(...), array_values($value));
+
+        return array_values(array_filter($items, static fn (string $item): bool => $item !== ''));
+    }
+
+    /**
+     * Indicates whether the document contains the specified property.
+     */
+    public function has(string $namespaceUri, string $localName): bool
+    {
+        return $this->get($namespaceUri, $localName) !== null;
+    }
+
+    /**
+     * Interprets the property as boolean when possible.
+     */
+    public function bool(string $namespaceUri, string $localName): ?bool
+    {
+        $value = $this->string($namespaceUri, $localName);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $normalized = strtolower($value);
+
+        return match ($normalized) {
+            'true', '1' => true,
+            'false', '0' => false,
+            default => null,
+        };
+    }
+
+    /**
+     * Returns the property value interpreted as integer when numeric.
+     */
+    public function int(string $namespaceUri, string $localName): ?int
+    {
+        $string = $this->string($namespaceUri, $localName);
+
+        if ($string === null) {
+            return null;
+        }
+
+        $numeric = self::parseNumericValue($string);
+
+        return $numeric !== null ? (int) $numeric : null;
+    }
+
+    /**
+     * Returns the property value interpreted as float when numeric.
+     */
+    public function float(string $namespaceUri, string $localName): ?float
+    {
+        $string = $this->string($namespaceUri, $localName);
+
+        if ($string === null) {
+            return null;
+        }
+
+        return self::parseNumericValue($string);
     }
 
     /**
@@ -75,6 +197,41 @@ final readonly class XmpDocument
              */
             fn (array|string $value, string $key): bool => $this->matchesLocalName($key, $localName)
         );
+    }
+
+    /**
+     * Parses textual numeric representations used by XMP properties.
+     */
+    public static function parseNumericValue(string $value): ?float
+    {
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if (is_numeric($trimmed)) {
+            return (float) $trimmed;
+        }
+
+        if (str_contains($trimmed, '/')) {
+            [$numerator, $denominator] = explode('/', $trimmed, 2);
+            $numerator                 = trim($numerator);
+            $denominator               = trim($denominator);
+
+            if ($denominator === '0' || $denominator === '-0') {
+                return null;
+            }
+
+            if (is_numeric($numerator) && is_numeric($denominator)) {
+                return (float) $numerator / (float) $denominator;
+            }
+        }
+
+        if (preg_match('/(-?\d+(?:\.\d+)?)/', $trimmed, $matches) === 1) {
+            return (float) $matches[1];
+        }
+
+        return null;
     }
 
     /**
