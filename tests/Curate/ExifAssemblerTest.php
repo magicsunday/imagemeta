@@ -293,17 +293,17 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $structured->camera->sensingMethod);
         self::assertSame([], $structured->technical->flashPix->streams);
 
-        self::assertSame('EF 85mm f/1.4L', $structured->lens->model());
-        self::assertSame(85.0, $structured->lens->focalLength());
+        self::assertSame('EF 85mm f/1.4L', $structured->lens->model);
+        self::assertSame(85.0, $structured->lens->focalLength);
         self::assertSame(85, $structured->lens->equivalent35mm());
-        self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->specification());
-        self::assertEqualsWithDelta(1.9965, $structured->lens->maximumAperture(), 0.001);
+        self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->specification);
+        self::assertEqualsWithDelta(1.9965, $structured->lens->maximumAperture, 0.001);
 
-        self::assertEqualsWithDelta(43.09095238095239, $structured->lens->hyperfocalDistance(), 1e-6);
-        self::assertEqualsWithDelta(28.558322, $structured->lens->fieldOfViewDiagonal(), 1e-6);
-        self::assertEqualsWithDelta(23.913168, $structured->lens->fieldOfViewHorizontal(), 1e-6);
-        self::assertEqualsWithDelta(16.071421, $structured->lens->fieldOfViewVertical(), 1e-6);
-        self::assertEqualsWithDelta(1.0, $structured->lens->cropFactor(), 1e-6);
+        self::assertEqualsWithDelta(43.09095238095239, $structured->lens->hyperfocalDistance, 1e-6);
+        self::assertEqualsWithDelta(28.558322, $structured->lens->fieldOfViewDiagonal, 1e-6);
+        self::assertEqualsWithDelta(23.913168, $structured->lens->fieldOfViewHorizontal, 1e-6);
+        self::assertEqualsWithDelta(16.071421, $structured->lens->fieldOfViewVertical, 1e-6);
+        self::assertEqualsWithDelta(1.0, $structured->lens->cropFactor, 1e-6);
 
         self::assertSame(6720, $structured->media->image->width);
         self::assertSame(4480, $structured->media->image->height);
@@ -356,7 +356,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame([1, 0, 0, 0], $structured->technical->standards->tiffEpStandardId);
         self::assertSame('1.0.0.0', $structured->technical->standards->tiffEpStandardString);
 
-        self::assertEqualsWithDelta(1.9965, $structured->lens->maximumAperture(), 0.001);
+        self::assertEqualsWithDelta(1.9965, $structured->lens->maximumAperture, 0.001);
 
         self::assertEqualsWithDelta(21.5, $structured->capture->details->temperatureC, 0.001);
         self::assertEqualsWithDelta(82.0, $structured->capture->details->batteryLevelPercent, 0.001);
@@ -1361,7 +1361,7 @@ final class ExifAssemblerTest extends TestCase
 
         self::assertNull($structured->camera->make);
         self::assertNull($structured->camera->model);
-        self::assertNull($structured->lens->model());
+        self::assertNull($structured->lens->model);
         self::assertNull($structured->media->image->documentName);
     }
 
@@ -1802,8 +1802,8 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertNotNull($structured->lens->maximumAperture());
-        self::assertEqualsWithDelta(4.0, $structured->lens->maximumAperture(), 0.0001);
+        self::assertNotNull($structured->lens->maximumAperture);
+        self::assertEqualsWithDelta(4.0, $structured->lens->maximumAperture, 0.0001);
     }
 
     /**

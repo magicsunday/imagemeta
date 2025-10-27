@@ -144,13 +144,13 @@ final class TruthComparisonTest extends TestCase
 
         // Lens information
         if (isset($exif['EXIF:FocalLength'])) {
-            $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens->focalLength() ?? $meta->media->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
+            $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens->focalLength ?? $meta->media->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
         }
         if (isset($exif['EXIF:FocalLengthIn35mmFormat'])) {
             $this->assertSame((int)$exif['EXIF:FocalLengthIn35mmFormat'], (int)($meta->lens->equivalent35mm() ?? 0), "$file: FocalLength35mm");
         }
         if (isset($exif['EXIF:LensModel'])) {
-            $this->assertSame($exif['EXIF:LensModel'], $meta->lens->model() ?? null, "$file: LensModel");
+            $this->assertSame($exif['EXIF:LensModel'], $meta->lens->model ?? null, "$file: LensModel");
         }
 
         // Temporal metadata (ISO-8601)
