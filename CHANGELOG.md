@@ -12,6 +12,8 @@
 - Broadened the Apple aggregate with semantic style parameters, colour temperature in Kelvin and person/pet detection flags
   sourced from maker notes and QuickTime metadata.
 - Expanded GPS coverage to include horizontal positioning error and the full destination navigation set from EXIF 2.32 table 66.
+- Introduced dedicated maker note decoders for Apple (`MakerNotes\AppleDecoder`), Canon, Nikon and Sony plus the
+  `Curate\Resolver\MakerNotesResolver` convenience helper.
 
 ### Changed
 - Renamed the diagonal field-of-view helper from `fovDeg` to `fovDiagonalDeg`; consumers should switch to the new property name.
