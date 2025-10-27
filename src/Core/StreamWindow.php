@@ -12,9 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core;
 
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
-
-use function ord;
 
 /**
  * Represents a bounded view into a parent stream with an independent cursor.
@@ -22,6 +19,8 @@ use function ord;
 final class StreamWindow
 {
     private int $cursor = 0;
+
+    private readonly ByteReader $byteReader;
 
     /**
      * Creates a window that restricts reads to a fixed region of the parent stream.
@@ -35,6 +34,14 @@ final class StreamWindow
         private readonly int $offset,
         private readonly int $length,
     ) {
+        $this->byteReader = new ByteReader(
+            read: fn (int $length): string => $this->read($length),
+            tell: fn (): int => $this->cursor,
+            seek: function (int|UInt64 $offset): void {
+                $this->seekInternal($offset);
+            },
+            context: 'window',
+        );
     }
 
     /**
@@ -54,7 +61,7 @@ final class StreamWindow
      */
     public function tell(): int
     {
-        return $this->cursor;
+        return $this->byteReader->tell();
     }
 
     /**
@@ -64,11 +71,7 @@ final class StreamWindow
      */
     public function seek(int $pos): void
     {
-        if ($pos < 0 || $pos > $this->length) {
-            throw new BoundsError('window seek out of range');
-        }
-
-        $this->cursor = $pos;
+        $this->byteReader->seek($pos);
     }
 
     /**
@@ -102,7 +105,7 @@ final class StreamWindow
      */
     public function readU8(): int
     {
-        return ord($this->read(1));
+        return $this->byteReader->readU8();
     }
 
     /**
@@ -112,7 +115,7 @@ final class StreamWindow
      */
     public function readU16BE(): int
     {
-        return $this->unpackInt('n', 2);
+        return $this->byteReader->readU16BE();
     }
 
     /**
@@ -122,7 +125,7 @@ final class StreamWindow
      */
     public function readU32BE(): int
     {
-        return $this->unpackInt('N', 4);
+        return $this->byteReader->readU32BE();
     }
 
     /**
@@ -132,24 +135,19 @@ final class StreamWindow
      */
     public function readU64BE(): UInt64
     {
-        $hi = $this->readU32BE();
-        $lo = $this->readU32BE();
-
-        return Unpack::combineUint32($hi, $lo);
+        return $this->byteReader->readU64BE();
     }
 
-    /**
-     * Reads a fixed number of bytes from the window and unpacks the first value using the given format.
-     *
-     * @param string $format Format string understood by {@see Unpack::int}.
-     * @param int    $length Number of bytes to read before unpacking.
-     *
-     * @return int
-     */
-    private function unpackInt(string $format, int $length): int
+    private function seekInternal(int|UInt64 $pos): void
     {
-        $bytes = $this->read($length);
+        if ($pos instanceof UInt64) {
+            $pos = $pos->toInt('window seek out of range');
+        }
 
-        return Unpack::int($format, $bytes, 'integer from window');
+        if ($pos < 0 || $pos > $this->length) {
+            throw new BoundsError('window seek out of range');
+        }
+
+        $this->cursor = $pos;
     }
 }

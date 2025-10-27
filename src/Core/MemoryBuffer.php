@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Core;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
-use function ord;
 use function strlen;
 
 /**
@@ -26,6 +25,8 @@ use function strlen;
  */
 final class MemoryBuffer
 {
+    private readonly ByteReader $byteReader;
+
     /**
      * @param string $data raw binary payload to expose as a seekable buffer
      * @param int    $pos  initial read position within the buffer
@@ -34,6 +35,14 @@ final class MemoryBuffer
         private readonly string $data,
         private int $pos = 0,
     ) {
+        $this->byteReader = new ByteReader(
+            read: fn (int $length): string => $this->read($length),
+            tell: fn (): int => $this->pos,
+            seek: function (int|UInt64 $offset): void {
+                $this->seekInternal($offset);
+            },
+            context: 'buffer',
+        );
     }
 
     /**
@@ -53,7 +62,7 @@ final class MemoryBuffer
      */
     public function tell(): int
     {
-        return $this->pos;
+        return $this->byteReader->tell();
     }
 
     /**
@@ -65,8 +74,7 @@ final class MemoryBuffer
      */
     public function seek(int|UInt64 $offset): void
     {
-        $offsetInt   = $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range');
-        $this->pos   = $offsetInt;
+        $this->byteReader->seek($offset);
     }
 
     /**
@@ -111,7 +119,7 @@ final class MemoryBuffer
      */
     public function readU8(): int
     {
-        return ord($this->read(1));
+        return $this->byteReader->readU8();
     }
 
     /**
@@ -121,7 +129,7 @@ final class MemoryBuffer
      */
     public function readU16LE(): int
     {
-        return $this->unpackInt('v', 2);
+        return $this->byteReader->unpackInt('v', 2);
     }
 
     /**
@@ -131,7 +139,7 @@ final class MemoryBuffer
      */
     public function readU16BE(): int
     {
-        return $this->unpackInt('n', 2);
+        return $this->byteReader->readU16BE();
     }
 
     /**
@@ -141,7 +149,7 @@ final class MemoryBuffer
      */
     public function readU32LE(): int
     {
-        return $this->unpackInt('V', 4);
+        return $this->byteReader->unpackInt('V', 4);
     }
 
     /**
@@ -151,7 +159,7 @@ final class MemoryBuffer
      */
     public function readU32BE(): int
     {
-        return $this->unpackInt('N', 4);
+        return $this->byteReader->readU32BE();
     }
 
     /**
@@ -174,25 +182,12 @@ final class MemoryBuffer
      */
     public function readU64BE(): UInt64
     {
-        $hi = $this->readU32BE();
-        $lo = $this->readU32BE();
-
-        return Unpack::combineUint32($hi, $lo);
+        return $this->byteReader->readU64BE();
     }
 
-    /**
-     * Reads bytes from the buffer and unpacks the first value using the provided format.
-     *
-     * @param string $format Format accepted by {@see Unpack::int}.
-     * @param int    $length Number of bytes to consume before unpacking.
-     *
-     * @return int
-     */
-    private function unpackInt(string $format, int $length): int
+    private function seekInternal(int|UInt64 $offset): void
     {
-        $bytes = $this->read($length);
-
-        return Unpack::int($format, $bytes, 'integer from buffer');
+        $this->pos = $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range');
     }
 
     private function normaliseOffset(int|UInt64 $offset, int $length, string $message): int
