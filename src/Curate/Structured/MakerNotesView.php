@@ -14,9 +14,9 @@ namespace MagicSunday\ImageMeta\Curate\Structured;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 
 /**
- * Exposes maker note details grouped by vendor.
+ * Exposes curated maker note details grouped by vendor.
  */
-final readonly class MakerNotesMetadata
+final readonly class MakerNotesView
 {
     public function __construct(
         public ?AppleMakerNotes $apple,

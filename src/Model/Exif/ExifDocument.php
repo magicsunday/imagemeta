@@ -16,7 +16,7 @@ use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
@@ -87,7 +87,7 @@ final readonly class ExifDocument
      * @param Ifd|null                $gpsIfd         Sub IFD containing GPS-related tags.
      * @param Ifd|null                $interopIfd     Sub IFD containing interoperability tags.
      * @param Ifd|null                $ifd1           Optional next IFD, typically thumbnails.
-     * @param MakerNotesMetadata|null $makerNotes     Decoded maker note metadata provided by vendor decoders.
+     * @param MakerNotesRecord|null $makerNotes     Decoded maker note metadata provided by vendor decoders.
      * @param list<Ifd>               $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
      * @param array<int, Ifd>         $subIfds        Parsed SubIFDs indexed by their file offsets.
      */
@@ -97,7 +97,7 @@ final readonly class ExifDocument
         public ?Ifd $gpsIfd,
         public ?Ifd $interopIfd,
         public ?Ifd $ifd1,
-        public ?MakerNotesMetadata $makerNotes = null,
+        public ?MakerNotesRecord $makerNotes = null,
         public array $subsequentIfds = [],
         public array $subIfds = [],
     ) {
@@ -116,7 +116,7 @@ final readonly class ExifDocument
     /**
      * Returns the decoded maker note metadata when a decoder is available.
      */
-    public function makerNotes(): ?MakerNotesMetadata
+    public function makerNotes(): ?MakerNotesRecord
     {
         return $this->makerNotes;
     }

@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\FileMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\GpsMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\LensMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\MakerNotesMetadata;
+use MagicSunday\ImageMeta\Curate\Structured\MakerNotesView;
 use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\ProcessingMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\RightsMetadata;
@@ -41,7 +41,7 @@ final readonly class StructuredMetadata
         public ProcessingMetadata $processing,
         public TechnicalMetadata $technical,
         public RightsMetadata $rights,
-        public MakerNotesMetadata $makerNotes,
+        public MakerNotesView $makerNotes,
     ) {
     }
 }

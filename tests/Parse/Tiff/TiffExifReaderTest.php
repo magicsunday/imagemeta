@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
@@ -604,13 +604,13 @@ final class TiffExifReaderTest extends TestCase
         [$blob, $makerNoteData] = $this->buildClassicMakerNoteBlob();
 
         $decoder = new class implements MakerNotesDecoderInterface {
-            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
             {
                 $offset  = unpack('Voffset', substr($raw, 0, 4));
                 $pointer = $offset['offset'] ?? 0;
                 $vendor  = substr($raw, $pointer, 4);
 
-                return new MakerNotesMetadata($vendor !== '' ? $vendor : 'Unknown', strlen($raw), sha1($raw));
+                return new MakerNotesRecord($vendor !== '' ? $vendor : 'Unknown', strlen($raw), sha1($raw));
             }
         };
 
@@ -620,7 +620,7 @@ final class TiffExifReaderTest extends TestCase
         $document   = (new TiffExifReader())->parseFromBlob($blob, $registry);
         $makerNotes = $document->makerNotes();
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
         self::assertSame('DATA', $makerNotes->vendor());
         self::assertSame(strlen($makerNoteData), $makerNotes->length());
         self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
@@ -637,16 +637,16 @@ final class TiffExifReaderTest extends TestCase
 
         $registry = new Registry();
         $registry->register('Other', new class implements MakerNotesDecoderInterface {
-            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
             {
-                return new MakerNotesMetadata('Other', strlen($raw), sha1($raw));
+                return new MakerNotesRecord('Other', strlen($raw), sha1($raw));
             }
         });
 
         $document   = (new TiffExifReader())->parseFromBlob($blob, $registry);
         $makerNotes = $document->makerNotes();
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
         self::assertSame('Unknown', $makerNotes->vendor());
         self::assertSame(strlen($makerNoteData), $makerNotes->length());
         self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
@@ -662,9 +662,9 @@ final class TiffExifReaderTest extends TestCase
         [$blob] = $this->buildClassicMakerNoteBlob(1);
 
         $decoder = new class implements MakerNotesDecoderInterface {
-            public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+            public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
             {
-                return new MakerNotesMetadata('SafeVendor', strlen($raw), sha1($raw));
+                return new MakerNotesRecord('SafeVendor', strlen($raw), sha1($raw));
             }
         };
 
@@ -674,7 +674,7 @@ final class TiffExifReaderTest extends TestCase
         $document   = (new TiffExifReader())->parseFromBlob($blob, $registry);
         $makerNotes = $document->makerNotes();
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
         self::assertTrue($document->makerNoteSafety());
         self::assertTrue($makerNotes->isSafe());
 
@@ -692,7 +692,7 @@ final class TiffExifReaderTest extends TestCase
         $document   = (new TiffExifReader())->parseFromBlob($blob);
         $makerNotes = $document->makerNotes();
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $makerNotes);
+        self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
         self::assertFalse($document->makerNoteSafety());
         self::assertFalse($makerNotes->isSafe());
 

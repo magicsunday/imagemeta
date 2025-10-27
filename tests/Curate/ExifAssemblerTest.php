@@ -15,7 +15,7 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -798,7 +798,7 @@ final class ExifAssemblerTest extends TestCase
             afConfidence: 0.76,
         );
 
-        $makerNotes = new MakerNotesMetadata('Apple', 64, str_repeat('a', 40), $appleMakerNotes, false);
+        $makerNotes = new MakerNotesRecord('Apple', 64, str_repeat('a', 40), $appleMakerNotes, false);
 
         $ifd0         = new Ifd([]);
         $exifDocument = new ExifDocument($ifd0, null, null, null, null, $makerNotes);
@@ -894,7 +894,7 @@ final class ExifAssemblerTest extends TestCase
 
         self::assertInstanceOf(AppleMakerNotes::class, $appleMakerNotes);
 
-        $makerNotes = new MakerNotesMetadata(
+        $makerNotes = new MakerNotesRecord(
             'Apple',
             64,
             str_repeat('b', 40),
@@ -1009,7 +1009,7 @@ final class ExifAssemblerTest extends TestCase
             accelerationVector: null,
         );
 
-        $makerNotes = new MakerNotesMetadata('Apple', 0, str_repeat('a', 40), $appleMakerNotes);
+        $makerNotes = new MakerNotesRecord('Apple', 0, str_repeat('a', 40), $appleMakerNotes);
 
         $metadata = new Metadata(
             ['primary'],
@@ -1069,7 +1069,7 @@ final class ExifAssemblerTest extends TestCase
             hdrImageType: 'Standard',
         );
 
-        $makerNotes   = new MakerNotesMetadata('Apple', 8, str_repeat('c', 40), $standardMakerNotes);
+        $makerNotes   = new MakerNotesRecord('Apple', 8, str_repeat('c', 40), $standardMakerNotes);
         $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
         $metadata     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
 
@@ -1104,7 +1104,7 @@ final class ExifAssemblerTest extends TestCase
             hdrImageType: 'Standard',
         );
 
-        $headroomMakerNotesMeta = new MakerNotesMetadata('Apple', 9, str_repeat('d', 40), $headroomMakerNotes);
+        $headroomMakerNotesMeta = new MakerNotesRecord('Apple', 9, str_repeat('d', 40), $headroomMakerNotes);
         $headroomExif           = new ExifDocument(new Ifd([]), null, null, null, null, $headroomMakerNotesMeta);
         $headroomMetadata       = new Metadata(['primary'], new QuickTimeMeta([]), $headroomExif, [], null, $headroomMakerNotesMeta);
 
@@ -1139,7 +1139,7 @@ final class ExifAssemblerTest extends TestCase
             hdrImageType: 'Standard',
         );
 
-        $flagMakerNotesMeta = new MakerNotesMetadata('Apple', 10, str_repeat('e', 40), $flagMakerNotes);
+        $flagMakerNotesMeta = new MakerNotesRecord('Apple', 10, str_repeat('e', 40), $flagMakerNotes);
         $flagExif           = new ExifDocument(new Ifd([]), null, null, null, null, $flagMakerNotesMeta);
         $flagMetadata       = new Metadata(['primary'], new QuickTimeMeta([]), $flagExif, [], null, $flagMakerNotesMeta);
 
@@ -1180,7 +1180,7 @@ final class ExifAssemblerTest extends TestCase
             accelerationVector: null,
         );
 
-        $makerNotes = new MakerNotesMetadata('Apple', 0, str_repeat('a', 40), $appleMakerNotes);
+        $makerNotes = new MakerNotesRecord('Apple', 0, str_repeat('a', 40), $appleMakerNotes);
 
         $metadata = new Metadata(
             ['primary'],
@@ -1226,7 +1226,7 @@ final class ExifAssemblerTest extends TestCase
             accelerationVector: null,
         );
 
-        $makerNotes = new MakerNotesMetadata('Apple', 32, str_repeat('a', 40), $makerNotesWithHeadroom);
+        $makerNotes = new MakerNotesRecord('Apple', 32, str_repeat('a', 40), $makerNotesWithHeadroom);
 
         $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
         $metadata     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
@@ -1258,7 +1258,7 @@ final class ExifAssemblerTest extends TestCase
             accelerationVector: null,
         );
 
-        $makerNotesFlags = new MakerNotesMetadata('Apple', 16, str_repeat('b', 40), $makerNotesWithFlags);
+        $makerNotesFlags = new MakerNotesRecord('Apple', 16, str_repeat('b', 40), $makerNotesWithFlags);
 
         $exifDocumentFlags = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotesFlags);
         $metadataFlags     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocumentFlags, [], null, $makerNotesFlags);
@@ -2229,7 +2229,7 @@ final class ExifAssemblerTest extends TestCase
             runTime: null,
         );
 
-        $makerNotes = new MakerNotesMetadata(
+        $makerNotes = new MakerNotesRecord(
             'Apple',
             128,
             '0123456789abcdef0123456789abcdef01234567',

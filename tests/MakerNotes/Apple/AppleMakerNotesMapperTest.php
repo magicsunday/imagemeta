@@ -13,7 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -28,7 +28,7 @@ final class AppleMakerNotesMapperTest extends TestCase
     #[Test]
     public function mapPrefersMakerNotesValues(): void
     {
-        $makerNotes = new MakerNotesMetadata(
+        $makerNotes = new MakerNotesRecord(
             'Apple',
             128,
             str_repeat('1', 40),
@@ -109,7 +109,7 @@ final class AppleMakerNotesMapperTest extends TestCase
     #[Test]
     public function mapFillsMissingValuesFromQuickTime(): void
     {
-        $makerNotes = new MakerNotesMetadata(
+        $makerNotes = new MakerNotesRecord(
             'Apple',
             64,
             str_repeat('2', 40),
@@ -204,7 +204,7 @@ final class AppleMakerNotesMapperTest extends TestCase
         $mapper = new AppleMakerNotesMapper();
         $mapped = $mapper->map(null, $quickTime);
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $mapped);
+        self::assertInstanceOf(MakerNotesRecord::class, $mapped);
         self::assertSame('Apple', $mapped->vendor());
         self::assertSame(0, $mapped->length());
         self::assertSame(str_repeat('0', 40), $mapped->sha1());
@@ -219,7 +219,7 @@ final class AppleMakerNotesMapperTest extends TestCase
     #[Test]
     public function mapMergesQuickTimeFlags(): void
     {
-        $makerNotes = new MakerNotesMetadata(
+        $makerNotes = new MakerNotesRecord(
             'Apple',
             16,
             str_repeat('3', 40),

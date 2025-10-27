@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Value\RunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -57,7 +57,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -96,7 +96,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -133,7 +133,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         self::assertSame('Apple', $metadata->vendor());
         self::assertSame(strlen($raw), $metadata->length());
         self::assertSame(sha1($raw), $metadata->sha1());
@@ -167,7 +167,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -184,7 +184,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -213,7 +213,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -228,7 +228,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -453,7 +453,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('textual', $apple->contentIdentifier);
@@ -630,7 +630,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode('Apple iOS' . str_repeat("\x00", 32), 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         self::assertNull($metadata->apple());
     }
 

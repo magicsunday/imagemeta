@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\NikonDecoder;
 
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\NikonDecoder;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -37,7 +37,7 @@ final class NikonDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Nikon Corporation', 'NIKON Z 8');
 
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         self::assertSame('Nikon', $metadata->vendor());
         self::assertSame(strlen($raw), $metadata->length());
         self::assertSame(sha1($raw), $metadata->sha1());

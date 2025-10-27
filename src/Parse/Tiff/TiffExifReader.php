@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
@@ -1041,7 +1041,7 @@ final class TiffExifReader
     /**
      * Resolves maker note metadata using the provided registry when available.
      */
-    private function resolveMakerNotes(?Registry $registry, Ifd $ifd0, ?Ifd $exifIfd): ?MakerNotesMetadata
+    private function resolveMakerNotes(?Registry $registry, Ifd $ifd0, ?Ifd $exifIfd): ?MakerNotesRecord
     {
         if ($this->makerNoteRaw === null) {
             return null;
@@ -1073,23 +1073,23 @@ final class TiffExifReader
     /**
      * Creates a digest metadata instance for unknown maker notes.
      */
-    private function makerNotesDigest(?bool $isSafe): MakerNotesMetadata
+    private function makerNotesDigest(?bool $isSafe): MakerNotesRecord
     {
         $raw = $this->makerNoteRaw ?? '';
 
-        return new MakerNotesMetadata('Unknown', strlen($raw), sha1($raw), null, $isSafe);
+        return new MakerNotesRecord('Unknown', strlen($raw), sha1($raw), null, $isSafe);
     }
 
     /**
      * Applies the maker note safety flag to the provided metadata instance.
      */
-    private function applyMakerNoteSafety(MakerNotesMetadata $metadata, ?bool $isSafe): MakerNotesMetadata
+    private function applyMakerNoteSafety(MakerNotesRecord $metadata, ?bool $isSafe): MakerNotesRecord
     {
         if ($metadata->isSafe() === $isSafe) {
             return $metadata;
         }
 
-        return new MakerNotesMetadata(
+        return new MakerNotesRecord(
             $metadata->vendor(),
             $metadata->length(),
             $metadata->sha1(),

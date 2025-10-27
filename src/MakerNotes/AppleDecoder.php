@@ -98,10 +98,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param string      $make  Reported camera make string.
      * @param string|null $model Optional camera model identifier.
      */
-    public function decode(string $raw, string $make, ?string $model): MakerNotesMetadata
+    public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
         $appleData = $this->parseAppleData($raw);
-        $metadata  = new MakerNotesMetadata(
+        $metadata  = new MakerNotesRecord(
             'Apple',
             strlen($raw),
             sha1($raw),

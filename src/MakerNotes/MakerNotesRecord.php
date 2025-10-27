@@ -17,9 +17,9 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use function preg_match;
 
 /**
- * Immutable value object that describes normalised maker note metadata.
+ * Immutable value object that describes a normalised maker note payload.
  */
-final readonly class MakerNotesMetadata
+final readonly class MakerNotesRecord
 {
     /**
      * @param string               $vendor Vendor responsible for the maker note payload. Must not be empty.

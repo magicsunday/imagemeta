@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MetadataReader;
 
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
@@ -79,7 +79,7 @@ final class MetadataReaderTest extends TestCase
         self::assertNull($metadata->quickTime);
         self::assertInstanceOf(ExifDocument::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata->makerNotes);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
         self::assertSame('Nikon', $metadata->makerNotes->vendor());
         self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
         self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
@@ -196,7 +196,7 @@ final class MetadataReaderTest extends TestCase
         self::assertSame($identifier, $metadata->quickTime->contentIdentifier());
         self::assertInstanceOf(ExifDocument::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
-        self::assertInstanceOf(MakerNotesMetadata::class, $metadata->makerNotes);
+        self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
         self::assertSame('Sony', $metadata->makerNotes->vendor());
         self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
         self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());

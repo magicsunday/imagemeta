@@ -13,7 +13,7 @@ namespace MagicSunday\ImageMeta\Model;
 
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesMetadata;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
@@ -41,7 +41,7 @@ final class Metadata
 
     public readonly ?XmpDocument $xmpDoc;
 
-    public readonly ?MakerNotesMetadata $makerNotes;
+    public readonly ?MakerNotesRecord $makerNotes;
 
     public readonly ?string $iccProfile;
 
@@ -92,7 +92,7 @@ final class Metadata
      * @param ExifDocument|null                                    $exifDoc                  Parsed representation of the primary EXIF document.
      * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary
      * @param XmpDocument|null                                     $xmpDoc                   Parsed representation of the primary XMP packet.
-     * @param MakerNotesMetadata|null                              $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
+     * @param MakerNotesRecord|null                              $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
      * @param string|null                                          $iccProfile               Binary ICC profile when available.
      * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order.
      * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by identifier.
@@ -116,7 +116,7 @@ final class Metadata
         ?ExifDocument $exifDoc = null,
         array $xmpBlobs = [],
         ?XmpDocument $xmpDoc = null,
-        ?MakerNotesMetadata $makerNotes = null,
+        ?MakerNotesRecord $makerNotes = null,
         ?string $iccProfile = null,
         array $iccSegments = [],
         array $flashPixStreams = [],
