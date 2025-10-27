@@ -16,6 +16,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use JsonException;
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
@@ -652,7 +653,7 @@ final readonly class ValueConverters
                 return null;
             }
 
-            if ($byte < 0 || $byte > 0xFF) {
+            if ($byte < 0 || $byte > BitMask::LOW_BYTE) {
                 return null;
             }
 
@@ -1543,7 +1544,7 @@ final readonly class ValueConverters
     }
 
     /**
-     * Decodes the Epson Print Image Matching parameter block stored in tag 0xC4A5.
+     * Decodes the Epson Print Image Matching parameter block stored in tag ExifTag::PRINT_IMAGE_MATCHING.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
@@ -1661,8 +1662,8 @@ final readonly class ValueConverters
         }
 
         $int = (int) $value[1];
-        if ($int >= 0x80000000) {
-            $int -= 0x100000000;
+        if ($int >= BitMask::SIGN_BIT_32) {
+            $int -= BitMask::UINT32_BASE;
         }
 
         return $int;

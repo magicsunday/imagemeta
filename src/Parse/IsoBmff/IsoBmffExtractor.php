@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
@@ -1019,7 +1020,7 @@ final readonly class IsoBmffExtractor
             ];
         }
 
-        $id = ($flags & 0x0001) !== 0 ? $win->readU32BE() : $win->readU16BE();
+        $id = ($flags & BitMask::BIT_0) !== 0 ? $win->readU32BE() : $win->readU16BE();
         $win->readU16BE(); // protection index
         $itemType    = $win->read(4);
         $remaining   = $infe->contentSize - $win->tell();
@@ -1052,14 +1053,14 @@ final readonly class IsoBmffExtractor
         $flags   = $this->readUInt24($win);
 
         $offsetLengthSizes = $win->readU8();
-        $offsetSize        = $this->validateSizeNibble(($offsetLengthSizes >> 4) & 0x0F);
-        $lengthSize        = $this->validateSizeNibble($offsetLengthSizes & 0x0F);
+        $offsetSize        = $this->validateSizeNibble(($offsetLengthSizes >> 4) & BitMask::LOW_NIBBLE);
+        $lengthSize        = $this->validateSizeNibble($offsetLengthSizes & BitMask::LOW_NIBBLE);
 
         $baseField      = $win->readU8();
-        $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & 0x0F);
+        $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & BitMask::LOW_NIBBLE);
         $indexSize      = 0;
         if ($version === 1 || $version === 2) {
-            $indexSize = $this->validateSizeNibble($win->readU8() & 0x0F);
+            $indexSize = $this->validateSizeNibble($win->readU8() & BitMask::LOW_NIBBLE);
         }
 
         $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
@@ -1068,7 +1069,7 @@ final readonly class IsoBmffExtractor
         for ($i = 0; $i < $itemCount; ++$i) {
             if ($version < 2) {
                 $itemId = $win->readU16BE();
-            } elseif (($flags & 0x0001) !== 0) {
+            } elseif (($flags & BitMask::BIT_0) !== 0) {
                 $itemId = $win->readU32BE();
             } else {
                 $itemId = $win->readU16BE();
@@ -1077,7 +1078,7 @@ final readonly class IsoBmffExtractor
             $constructionMethod = 0;
             if ($version === 1 || $version === 2) {
                 $tmp                = $win->readU16BE();
-                $constructionMethod = ($tmp >> 12) & 0x0F;
+                $constructionMethod = ($tmp >> 12) & BitMask::LOW_NIBBLE;
             }
 
             $dataReferenceIndex = $win->readU16BE();

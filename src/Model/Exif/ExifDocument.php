@@ -122,7 +122,7 @@ final readonly class ExifDocument
     }
 
     /**
-     * Indicates whether the maker note is considered safe to modify according to EXIF tag 0xC635.
+     * Indicates whether the maker note is considered safe to modify according to EXIF tag ExifTag::MAKER_NOTE_SAFETY.
      */
     public function makerNoteSafety(): ?bool
     {

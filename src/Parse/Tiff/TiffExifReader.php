@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
@@ -56,42 +57,6 @@ use function substr;
  */
 final class TiffExifReader
 {
-    private const int TIFF_MAGIC_CLASSIC = 0x002A;
-
-    private const int TIFF_MAGIC_BIG = 0x002B;
-
-    private const int TYPE_BYTE = 1;
-
-    private const int TYPE_ASCII = 2;
-
-    private const int TYPE_SHORT = 3;
-
-    private const int TYPE_LONG = 4;
-
-    private const int TYPE_RATIONAL = 5;
-
-    private const int TYPE_SBYTE = 6;
-
-    private const int TYPE_UNDEFINED = 7;
-
-    private const int TYPE_SSHORT = 8;
-
-    private const int TYPE_SLONG = 9;
-
-    private const int TYPE_SRATIONAL = 10;
-
-    private const int TYPE_FLOAT = 11;
-
-    private const int TYPE_DOUBLE = 12;
-
-    private const int TYPE_IFD = 13;
-
-    private const int TYPE_LONG8 = 16;
-
-    private const int TYPE_SLONG8 = 17;
-
-    private const int TYPE_IFD8 = 18;
-
     /**
      * XP metadata tags stored as UTF-16LE byte sequences.
      *
@@ -129,6 +94,36 @@ final class TiffExifReader
         ExifTag::SUB_IFDS,
         ExifTag::JPEG_INTERCHANGE_FORMAT,
     ];
+
+    private const int UTF16_HIGH_SURROGATE_START = 0xD800;
+
+    private const int UTF16_HIGH_SURROGATE_END = 0xDBFF;
+
+    private const int UTF16_LOW_SURROGATE_START = 0xDC00;
+
+    private const int UTF16_LOW_SURROGATE_END = 0xDFFF;
+
+    private const int UTF16_SUPPLEMENTARY_OFFSET = 0x10000;
+
+    private const int UTF8_SINGLE_BYTE_MAX = 0x7F;
+
+    private const int UTF8_TWO_BYTE_MAX = 0x7FF;
+
+    private const int UTF8_THREE_BYTE_MAX = 0xFFFF;
+
+    private const int UTF8_MAX_CODE_POINT = 0x10FFFF;
+
+    private const int UTF8_TWO_BYTE_PREFIX = 0xC0;
+
+    private const int UTF8_THREE_BYTE_PREFIX = 0xE0;
+
+    private const int UTF8_FOUR_BYTE_PREFIX = 0xF0;
+
+    private const int ASCII_PRINTABLE_MIN = 0x20;
+
+    private const int ASCII_PRINTABLE_MAX = 0x7E;
+
+    private const int UTF8_CONTINUATION_PREFIX = 0x80;
 
     private const string UNICODE_REPLACEMENT = "\u{FFFD}";
 
@@ -182,12 +177,12 @@ final class TiffExifReader
         };
 
         $magic = $this->readU16();
-        if ($magic === self::TIFF_MAGIC_BIG) {
+        if ($magic === TiffConst::MAGIC_BIG) {
             $this->bigTiff = true;
             $this->parseBigTiffHeader();
             $firstIfd = $this->readBigTiffOffsetValue();
             $ifd0     = $this->readIfd($firstIfd);
-        } elseif ($magic === self::TIFF_MAGIC_CLASSIC) {
+        } elseif ($magic === TiffConst::MAGIC_CLASSIC) {
             $this->bigTiff = false;
             $firstIfd      = $this->readU32();
             $ifd0          = $this->readIfd($firstIfd);
@@ -195,8 +190,8 @@ final class TiffExifReader
             throw new ParseError(
                 sprintf(
                     'Unknown TIFF magic (expected 0x%04X or 0x%04X)',
-                    self::TIFF_MAGIC_CLASSIC,
-                    self::TIFF_MAGIC_BIG,
+                    TiffConst::MAGIC_CLASSIC,
+                    TiffConst::MAGIC_BIG,
                 ),
             );
         }
@@ -472,14 +467,14 @@ final class TiffExifReader
             $chunk = substr($rawBytes, $i * $componentSize, $componentSize);
 
             $value = match ($type) {
-                self::TYPE_SHORT => $this->unpackU16($chunk),
-                self::TYPE_SSHORT => $this->unpackS16($chunk),
-                self::TYPE_LONG,
-                self::TYPE_IFD => $this->unpackU32($chunk),
-                self::TYPE_SLONG => $this->unpackS32($chunk),
-                self::TYPE_LONG8,
-                self::TYPE_IFD8 => $this->unpackU64($chunk),
-                self::TYPE_SLONG8 => $this->unpackS64($chunk),
+                TiffConst::TYPE_SHORT => $this->unpackU16($chunk),
+                TiffConst::TYPE_SSHORT => $this->unpackS16($chunk),
+                TiffConst::TYPE_LONG,
+                TiffConst::TYPE_IFD => $this->unpackU32($chunk),
+                TiffConst::TYPE_SLONG => $this->unpackS32($chunk),
+                TiffConst::TYPE_LONG8,
+                TiffConst::TYPE_IFD8 => $this->unpackU64($chunk),
+                TiffConst::TYPE_SLONG8 => $this->unpackS64($chunk),
                 default => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type),
             };
 
@@ -560,9 +555,9 @@ final class TiffExifReader
     private function collectSubIfds(IfdEntry $entry): void
     {
         if (
-            $entry->type !== self::TYPE_IFD
-            && $entry->type !== self::TYPE_IFD8
-            && $entry->type !== self::TYPE_LONG
+            $entry->type !== TiffConst::TYPE_IFD
+            && $entry->type !== TiffConst::TYPE_IFD8
+            && $entry->type !== TiffConst::TYPE_LONG
         ) {
             return;
         }
@@ -647,11 +642,11 @@ final class TiffExifReader
         }
 
         // ASCII
-        if ($type === self::TYPE_ASCII) {
+        if ($type === TiffConst::TYPE_ASCII) {
             return rtrim($bytes, "\0");
         }
 
-        if ($type === self::TYPE_UNDEFINED) {
+        if ($type === TiffConst::TYPE_UNDEFINED) {
             if ($this->isPrintableAsciiOrNull($bytes)) {
                 return rtrim($bytes, "\0");
             }
@@ -660,11 +655,11 @@ final class TiffExifReader
         }
 
         // RATIONAL / SRATIONAL
-        if ($type === self::TYPE_RATIONAL || $type === self::TYPE_SRATIONAL) {
+        if ($type === TiffConst::TYPE_RATIONAL || $type === TiffConst::TYPE_SRATIONAL) {
             $rationalValues = [];
             for ($i = 0; $i < $count; ++$i) {
-                $num              = $this->read32FromBytes($bytes, $i * 8, $type === self::TYPE_SRATIONAL);
-                $den              = $this->read32FromBytes($bytes, $i * 8 + 4, $type === self::TYPE_SRATIONAL);
+                $num              = $this->read32FromBytes($bytes, $i * 8, $type === TiffConst::TYPE_SRATIONAL);
+                $den              = $this->read32FromBytes($bytes, $i * 8 + 4, $type === TiffConst::TYPE_SRATIONAL);
                 $rationalValues[] = new ExifRational($num, $den);
             }
 
@@ -678,27 +673,27 @@ final class TiffExifReader
         for ($i = 0; $i < $count; ++$i) {
             $vals[] = match ($type) {
                 // BYTE
-                self::TYPE_BYTE => ord($bytes[$cursor]),
+                TiffConst::TYPE_BYTE => ord($bytes[$cursor]),
                 // SBYTE
-                self::TYPE_SBYTE => $this->toSigned(ord($bytes[$cursor]), 8),
+                TiffConst::TYPE_SBYTE => $this->toSigned(ord($bytes[$cursor]), 8),
                 // SHORT
-                self::TYPE_SHORT => $this->unpackU16(substr($bytes, $cursor, 2)),
+                TiffConst::TYPE_SHORT => $this->unpackU16(substr($bytes, $cursor, 2)),
                 // SSHORT
-                self::TYPE_SSHORT => $this->unpackS16(substr($bytes, $cursor, 2)),
+                TiffConst::TYPE_SSHORT => $this->unpackS16(substr($bytes, $cursor, 2)),
                 // LONG
-                self::TYPE_LONG,
-                self::TYPE_IFD => $this->unpackU32(substr($bytes, $cursor, 4)),
+                TiffConst::TYPE_LONG,
+                TiffConst::TYPE_IFD => $this->unpackU32(substr($bytes, $cursor, 4)),
                 // SLONG
-                self::TYPE_SLONG => $this->unpackS32(substr($bytes, $cursor, 4)),
+                TiffConst::TYPE_SLONG => $this->unpackS32(substr($bytes, $cursor, 4)),
                 // LONG8 / IFD8
-                self::TYPE_LONG8,
-                self::TYPE_IFD8 => $this->unpackU64(substr($bytes, $cursor, 8)),
+                TiffConst::TYPE_LONG8,
+                TiffConst::TYPE_IFD8 => $this->unpackU64(substr($bytes, $cursor, 8)),
                 // SLONG8
-                self::TYPE_SLONG8 => $this->unpackS64(substr($bytes, $cursor, 8)),
+                TiffConst::TYPE_SLONG8 => $this->unpackS64(substr($bytes, $cursor, 8)),
                 // FLOAT
-                self::TYPE_FLOAT => $this->unpackFloat(substr($bytes, $cursor, 4)),
+                TiffConst::TYPE_FLOAT => $this->unpackFloat(substr($bytes, $cursor, 4)),
                 // DOUBLE
-                self::TYPE_DOUBLE => $this->unpackDouble(substr($bytes, $cursor, 8)),
+                TiffConst::TYPE_DOUBLE => $this->unpackDouble(substr($bytes, $cursor, 8)),
 
                 default => throw new ParseError('Unsupported type in decodeBytes: ' . $type),
             };
@@ -795,7 +790,7 @@ final class TiffExifReader
         for ($i = 0; $i + 1 < $length; $i += 2) {
             $unit = ord($bytes[$i]) | (ord($bytes[$i + 1]) << 8);
 
-            if ($unit >= 0xD800 && $unit <= 0xDBFF) {
+            if ($unit >= self::UTF16_HIGH_SURROGATE_START && $unit <= self::UTF16_HIGH_SURROGATE_END) {
                 if ($i + 3 >= $length) {
                     $result .= self::UNICODE_REPLACEMENT;
                     break;
@@ -803,14 +798,14 @@ final class TiffExifReader
 
                 $low = ord($bytes[$i + 2]) | (ord($bytes[$i + 3]) << 8);
 
-                if ($low < 0xDC00 || $low > 0xDFFF) {
+                if ($low < self::UTF16_LOW_SURROGATE_START || $low > self::UTF16_LOW_SURROGATE_END) {
                     $result .= self::UNICODE_REPLACEMENT;
                     continue;
                 }
 
-                $codePoint = 0x10000 + (($unit - 0xD800) << 10) + ($low - 0xDC00);
+                $codePoint = self::UTF16_SUPPLEMENTARY_OFFSET + (($unit - self::UTF16_HIGH_SURROGATE_START) << 10) + ($low - self::UTF16_LOW_SURROGATE_START);
                 $i += 2;
-            } elseif ($unit >= 0xDC00 && $unit <= 0xDFFF) {
+            } elseif ($unit >= self::UTF16_LOW_SURROGATE_START && $unit <= self::UTF16_LOW_SURROGATE_END) {
                 $result .= self::UNICODE_REPLACEMENT;
                 continue;
             } else {
@@ -828,27 +823,27 @@ final class TiffExifReader
      */
     private function codePointToUtf8(int $codePoint): string
     {
-        if ($codePoint <= 0x7F) {
+        if ($codePoint <= self::UTF8_SINGLE_BYTE_MAX) {
             return chr($codePoint);
         }
 
-        if ($codePoint <= 0x7FF) {
-            return chr(0xC0 | ($codePoint >> 6))
-                . chr(0x80 | ($codePoint & 0x3F));
+        if ($codePoint <= self::UTF8_TWO_BYTE_MAX) {
+            return chr(self::UTF8_TWO_BYTE_PREFIX | ($codePoint >> 6))
+                . chr(self::UTF8_CONTINUATION_PREFIX | ($codePoint & BitMask::SIX_BIT_MASK));
         }
 
-        if ($codePoint <= 0xFFFF) {
-            return chr(0xE0 | ($codePoint >> 12))
-                . chr(0x80 | (($codePoint >> 6) & 0x3F))
-                . chr(0x80 | ($codePoint & 0x3F));
+        if ($codePoint <= self::UTF8_THREE_BYTE_MAX) {
+            return chr(self::UTF8_THREE_BYTE_PREFIX | ($codePoint >> 12))
+                . chr(self::UTF8_CONTINUATION_PREFIX | (($codePoint >> 6) & BitMask::SIX_BIT_MASK))
+                . chr(self::UTF8_CONTINUATION_PREFIX | ($codePoint & BitMask::SIX_BIT_MASK));
         }
 
-        $codePoint = $codePoint > 0x10FFFF ? 0x10FFFF : $codePoint;
+        $codePoint = $codePoint > self::UTF8_MAX_CODE_POINT ? self::UTF8_MAX_CODE_POINT : $codePoint;
 
-        return chr(0xF0 | ($codePoint >> 18))
-            . chr(0x80 | (($codePoint >> 12) & 0x3F))
-            . chr(0x80 | (($codePoint >> 6) & 0x3F))
-            . chr(0x80 | ($codePoint & 0x3F));
+        return chr(self::UTF8_FOUR_BYTE_PREFIX | ($codePoint >> 18))
+            . chr(self::UTF8_CONTINUATION_PREFIX | (($codePoint >> 12) & BitMask::SIX_BIT_MASK))
+            . chr(self::UTF8_CONTINUATION_PREFIX | (($codePoint >> 6) & BitMask::SIX_BIT_MASK))
+            . chr(self::UTF8_CONTINUATION_PREFIX | ($codePoint & BitMask::SIX_BIT_MASK));
     }
 
     /**
@@ -865,7 +860,7 @@ final class TiffExifReader
                 continue;
             }
 
-            if ($value < 0x20 || $value > 0x7E) {
+            if ($value < self::ASCII_PRINTABLE_MIN || $value > self::ASCII_PRINTABLE_MAX) {
                 return false;
             }
         }
@@ -1148,28 +1143,28 @@ final class TiffExifReader
     {
         return match ($type) {
             // BYTE, ASCII, SBYTE, UNDEFINED
-            self::TYPE_BYTE,
-            self::TYPE_ASCII,
-            self::TYPE_SBYTE,
-            self::TYPE_UNDEFINED => 1,
+            TiffConst::TYPE_BYTE,
+            TiffConst::TYPE_ASCII,
+            TiffConst::TYPE_SBYTE,
+            TiffConst::TYPE_UNDEFINED => 1,
 
             // SHORT, SSHORT
-            self::TYPE_SHORT,
-            self::TYPE_SSHORT => 2,
+            TiffConst::TYPE_SHORT,
+            TiffConst::TYPE_SSHORT => 2,
 
             // LONG, SLONG, FLOAT
-            self::TYPE_LONG,
-            self::TYPE_IFD,
-            self::TYPE_SLONG,
-            self::TYPE_FLOAT => 4,
+            TiffConst::TYPE_LONG,
+            TiffConst::TYPE_IFD,
+            TiffConst::TYPE_SLONG,
+            TiffConst::TYPE_FLOAT => 4,
 
             // RATIONAL, SRATIONAL, DOUBLE
-            self::TYPE_RATIONAL,
-            self::TYPE_SRATIONAL,
-            self::TYPE_DOUBLE,
-            self::TYPE_LONG8,
-            self::TYPE_SLONG8,
-            self::TYPE_IFD8 => 8,
+            TiffConst::TYPE_RATIONAL,
+            TiffConst::TYPE_SRATIONAL,
+            TiffConst::TYPE_DOUBLE,
+            TiffConst::TYPE_LONG8,
+            TiffConst::TYPE_SLONG8,
+            TiffConst::TYPE_IFD8 => 8,
 
             default => throw new ParseError('Unsupported TIFF type: ' . $type),
         };
@@ -1227,8 +1222,8 @@ final class TiffExifReader
                 $hi = $v->high();
                 $lo = $v->low();
             } else {
-                $lo = $v & 0xFFFFFFFF;
-                $hi = (int) intdiv($v, 0x100000000);
+                $lo = $v & BitMask::UINT32_MAX;
+                $hi = (int) intdiv($v, BitMask::UINT32_BASE);
             }
 
             return $this->bo === Endian::Little ? pack('V2', $lo, $hi) : pack('N2', $hi, $lo);
@@ -1238,7 +1233,7 @@ final class TiffExifReader
         $bin = '';
         $value = $v instanceof UInt64 ? $v->toInt('Inline value') : $v;
         for ($i = 0; $i < $bytes; ++$i) {
-            $bin = chr(($value >> ($this->bo === Endian::Little ? ($i * 8) : (($bytes - 1 - $i) * 8))) & 0xFF) . $bin;
+            $bin = chr(($value >> ($this->bo === Endian::Little ? ($i * 8) : (($bytes - 1 - $i) * 8))) & BitMask::LOW_BYTE) . $bin;
         }
 
         return $bin;
@@ -1285,7 +1280,7 @@ final class TiffExifReader
     {
         $u = $this->unpackU16($b);
 
-        return $u >= 0x8000 ? $u - 0x10000 : $u;
+        return $u >= BitMask::SIGN_BIT_16 ? $u - BitMask::UINT16_BASE : $u;
     }
 
     /**
@@ -1313,7 +1308,7 @@ final class TiffExifReader
     {
         $u = $this->unpackU32($b);
 
-        return (($u & 0x80000000) !== 0) ? -((~$u & 0xFFFFFFFF) + 1) : $u;
+        return (($u & BitMask::SIGN_BIT_32) !== 0) ? -((~$u & BitMask::UINT32_MAX) + 1) : $u;
     }
 
     /**
@@ -1369,12 +1364,12 @@ final class TiffExifReader
         $hi       = $unsigned->high();
         $lo       = $unsigned->low();
 
-        if (($hi & 0x80000000) === 0) {
+        if (($hi & BitMask::SIGN_BIT_32) === 0) {
             return $unsigned->toInt('Signed 64-bit integer');
         }
 
-        $hiComplement = (~$hi) & 0xFFFFFFFF;
-        $loComplement = (~$lo) & 0xFFFFFFFF;
+        $hiComplement = (~$hi) & BitMask::UINT32_MAX;
+        $loComplement = (~$lo) & BitMask::UINT32_MAX;
         $magnitude    = Unpack::combineUint32($hiComplement, $loComplement)->addSmall(1)->toInt('Signed 64-bit integer magnitude');
 
         return -$magnitude;
