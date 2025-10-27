@@ -27,6 +27,7 @@ use MagicSunday\ImageMeta\Curate\Structured\RightsMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\SensorMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\TechnicalMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -183,6 +184,7 @@ final class ValueFactory
         $multiPicture    = $this->createMultiPicture($metadata);
         $exifDocument    = $metadata->exifDoc;
         $quickTimeMeta   = $metadata->quickTime;
+        $quickTimeLookup = new QuickTimeLookup($quickTimeMeta);
         $appleMakerNotes = $metadata->makerNotes?->apple();
 
         $interop = new Interop(
@@ -321,22 +323,16 @@ final class ValueFactory
         );
 
         $container = new Container(
-            format: $this->quickTimeString($quickTimeMeta, QuickTimeMeta::MAJOR_BRAND_KEY),
-            encoder: $this->quickTimeString(
-                $quickTimeMeta,
-                'com.apple.quicktime.encoder',
+            format: $quickTimeLookup->string(QuickTimeMeta::MAJOR_BRAND_KEY),
+            encoder: $quickTimeLookup->string('com.apple.quicktime.encoder',
                 'Encoder',
             ),
-            bitrate: $this->quickTimeInt($quickTimeMeta, 'AvgBitrate', 'Bitrate'),
-            videoCodec: $this->quickTimeString(
-                $quickTimeMeta,
-                QuickTimeMeta::COMPRESSOR_NAME_KEY,
+            bitrate: $quickTimeLookup->int('AvgBitrate', 'Bitrate'),
+            videoCodec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
                 QuickTimeMeta::VIDEO_CODEC_KEY,
                 QuickTimeMeta::HANDLER_DESCRIPTION_KEY,
             ),
-            audioCodec: $this->quickTimeString(
-                $quickTimeMeta,
-                QuickTimeMeta::AUDIO_FORMAT_KEY,
+            audioCodec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
                 QuickTimeMeta::AUDIO_CODEC_KEY,
             ),
         );
@@ -349,29 +345,25 @@ final class ValueFactory
         );
 
         $video = new Video(
-            durationSec: $this->quickTimeFloat($quickTimeMeta, 'com.apple.quicktime.duration'),
-            frameRate: $this->quickTimeFloat($quickTimeMeta, 'com.apple.quicktime.videoFrameRate'),
-            width: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::VIDEO_WIDTH_KEY),
-            height: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::VIDEO_HEIGHT_KEY),
-            codec: $this->quickTimeString(
-                $quickTimeMeta,
-                QuickTimeMeta::COMPRESSOR_NAME_KEY,
+            durationSec: $quickTimeLookup->float('com.apple.quicktime.duration'),
+            frameRate: $quickTimeLookup->float('com.apple.quicktime.videoFrameRate'),
+            width: $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
+            height: $quickTimeLookup->int(QuickTimeMeta::VIDEO_HEIGHT_KEY),
+            codec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
                 QuickTimeMeta::VIDEO_CODEC_KEY,
             ),
-            hdr: $this->quickTimeBool($quickTimeMeta, 'com.apple.quicktime.hdrFormat'),
-            transferFunction: $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.transferFunction'),
-            colorPrimaries: $this->quickTimeString($quickTimeMeta, 'com.apple.quicktime.colorPrimaries'),
+            hdr: $quickTimeLookup->bool('com.apple.quicktime.hdrFormat'),
+            transferFunction: $quickTimeLookup->string('com.apple.quicktime.transferFunction'),
+            colorPrimaries: $quickTimeLookup->string('com.apple.quicktime.colorPrimaries'),
         );
 
         $audio = new Audio(
-            channels: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_CHANNELS_KEY),
-            sampleRate: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
-            codec: $this->quickTimeString(
-                $quickTimeMeta,
-                QuickTimeMeta::AUDIO_FORMAT_KEY,
+            channels: $quickTimeLookup->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
+            sampleRate: $quickTimeLookup->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
+            codec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
                 QuickTimeMeta::AUDIO_CODEC_KEY,
             ),
-            bitDepth: $this->quickTimeInt($quickTimeMeta, QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
+            bitDepth: $quickTimeLookup->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
         );
 
         $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
@@ -460,7 +452,7 @@ final class ValueFactory
 
         $whiteBalanceKelvin = $apple->colorTemperature;
         if ($whiteBalanceKelvin === null) {
-            $whiteBalanceKelvin = $this->quickTimeInt($quickTimeMeta, 'ColorTemperature');
+            $whiteBalanceKelvin = $quickTimeLookup->int('ColorTemperature');
         }
 
         $whiteBalanceDetails = new WhiteBalanceDetails(
@@ -559,10 +551,10 @@ final class ValueFactory
         $panoramaFlag = $xmpDocument?->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
         $related      = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
-            burstId: $this->quickTimeString($quickTimeMeta, 'BurstUUID'),
-            isPrimaryInBurst: $this->quickTimeBool($quickTimeMeta, 'BurstSelected'),
+            burstId: $quickTimeLookup->string('BurstUUID'),
+            isPrimaryInBurst: $quickTimeLookup->bool('BurstSelected'),
             panoramaId: $panoramaFlag === true ? 'panorama' : null,
-            depthDataId: $this->quickTimeString($quickTimeMeta, 'DepthData'),
+            depthDataId: $quickTimeLookup->string('DepthData'),
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
 
@@ -641,9 +633,10 @@ final class ValueFactory
             }
         }
 
+        $lookup = new QuickTimeLookup($quickTime);
+
         if ($software === null) {
-            $software = $this->quickTimeString(
-                $quickTime,
+            $software = $lookup->string(
                 'com.apple.quicktime.software',
                 'Software',
                 'com.apple.quicktime.softwareversion',
@@ -679,8 +672,9 @@ final class ValueFactory
         $xmpCreate       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $xmpModify       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
         $xmpDateCreated  = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
-        $quickTimeCreate = $this->parseFlexibleDate($this->quickTimeString($quickTime, 'CreationDate'));
-        $quickTimeModify = $this->parseFlexibleDate($this->quickTimeString($quickTime, 'ModifyDate'));
+        $lookup = new QuickTimeLookup($quickTime);
+        $quickTimeCreate = $this->parseFlexibleDate($lookup->string('CreationDate'));
+        $quickTimeModify = $this->parseFlexibleDate($lookup->string('ModifyDate'));
 
         $create = $exifCreate ?? $xmpCreate ?? $quickTimeCreate ?? $xmpDateCreated;
         $modify = $exifModify ?? $xmpModify ?? $quickTimeModify;
@@ -935,11 +929,13 @@ final class ValueFactory
             $flags = [];
         }
 
+        $lookup = new QuickTimeLookup($quickTime);
+
         $hdr = $apple->hdrImageType;
         if ($hdr === null) {
-            $hdr = $this->quickTimeString($quickTime, 'HDRImageType');
+            $hdr = $lookup->string('HDRImageType');
         }
-        $night = $this->quickTimeBool($quickTime, 'NightMode');
+        $night = $lookup->bool('NightMode');
         if ($night === null) {
             $night = $this->appleFlag($flags, 'nightMode');
         }
@@ -1031,44 +1027,46 @@ final class ValueFactory
 
     private function buildUav(?ExifDocument $exif, ?QuickTimeMeta $quickTime): Uav
     {
+        $lookup = new QuickTimeLookup($quickTime);
+
         $manufacturer = $exif?->aircraftMake();
         if ($manufacturer === null) {
-            $manufacturer = $this->quickTimeString($quickTime, 'com.apple.quicktime.make');
+            $manufacturer = $lookup->string('com.apple.quicktime.make');
         }
 
         $model = $exif?->aircraftModel();
         if ($model === null) {
-            $model = $this->quickTimeString($quickTime, 'com.apple.quicktime.model');
+            $model = $lookup->string('com.apple.quicktime.model');
         }
 
         $flightYaw = $exif?->flightYawDeg();
         if ($flightYaw === null) {
-            $flightYaw = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.flightYawDegree');
+            $flightYaw = $lookup->float('com.apple.quicktime.flightYawDegree');
         }
 
         $flightPitch = $exif?->flightPitchDeg();
         if ($flightPitch === null) {
-            $flightPitch = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.flightPitchDegree');
+            $flightPitch = $lookup->float('com.apple.quicktime.flightPitchDegree');
         }
 
         $flightRoll = $exif?->flightRollDeg();
         if ($flightRoll === null) {
-            $flightRoll = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.flightRollDegree');
+            $flightRoll = $lookup->float('com.apple.quicktime.flightRollDegree');
         }
 
         $gimbalYaw = $exif?->gimbalYawDeg();
         if ($gimbalYaw === null) {
-            $gimbalYaw = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.gimbalYawDegree');
+            $gimbalYaw = $lookup->float('com.apple.quicktime.gimbalYawDegree');
         }
 
         $gimbalPitch = $exif?->gimbalPitchDeg();
         if ($gimbalPitch === null) {
-            $gimbalPitch = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.gimbalPitchDegree');
+            $gimbalPitch = $lookup->float('com.apple.quicktime.gimbalPitchDegree');
         }
 
         $gimbalRoll = $exif?->gimbalRollDeg();
         if ($gimbalRoll === null) {
-            $gimbalRoll = $this->quickTimeFloat($quickTime, 'com.apple.quicktime.gimbalRollDegree');
+            $gimbalRoll = $lookup->float('com.apple.quicktime.gimbalRollDegree');
         }
 
         return new Uav(
@@ -1107,94 +1105,6 @@ final class ValueFactory
             flags: [],
             accelerationVector: null,
         );
-    }
-
-    /**
-     * Resolves the first non-empty QuickTime string value from the supplied keys.
-     *
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
-     * @param string             ...$keys   Candidate metadata keys to inspect in order.
-     *
-     * @return string|null First matching string value or null when no value is present.
-     */
-    private function quickTimeString(?QuickTimeMeta $quickTime, string ...$keys): ?string
-    {
-        if ($quickTime === null) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $quickTime->stringValue($key);
-            if ($value !== null && $value !== '') {
-                return $value;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Resolves the first available QuickTime float value from the provided keys.
-     *
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
-     * @param string             ...$keys   Candidate metadata keys to inspect in order.
-     *
-     * @return float|null First matching float value or null when no value is present.
-     */
-    private function quickTimeFloat(?QuickTimeMeta $quickTime, string ...$keys): ?float
-    {
-        if ($quickTime === null) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $quickTime->floatValue($key);
-            if ($value !== null) {
-                return $value;
-            }
-        }
-
-        return null;
-    }
-
-    private function quickTimeBool(?QuickTimeMeta $quickTime, string ...$keys): ?bool
-    {
-        if ($quickTime === null) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $quickTime->boolValue($key);
-            if ($value !== null) {
-                return $value;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Resolves the first available QuickTime integer value from the provided keys.
-     *
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata container used to read QuickTime keys.
-     * @param string             ...$keys   Candidate metadata keys to inspect in order.
-     *
-     * @return int|null First matching integer value or null when no value is present.
-     */
-    private function quickTimeInt(?QuickTimeMeta $quickTime, string ...$keys): ?int
-    {
-        if ($quickTime === null) {
-            return null;
-        }
-
-        foreach ($keys as $key) {
-            $value = $quickTime->intValue($key);
-            if ($value !== null) {
-                return $value;
-            }
-        }
-
-        return null;
     }
 
     /**
