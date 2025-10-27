@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
+use MagicSunday\ImageMeta\Curate\Xmp\XmpReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Camera;
@@ -20,7 +21,6 @@ use MagicSunday\ImageMeta\Value\Camera;
  */
 final readonly class CameraResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
 
@@ -33,11 +33,11 @@ final readonly class CameraResolver
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Camera
     {
-        $make     = $exifDocument?->cameraMake() ?? $this->xmpString($xmpDocument, self::NS_TIFF, 'Make');
-        $model    = $exifDocument?->cameraModel() ?? $this->xmpString($xmpDocument, self::NS_TIFF, 'Model');
-        $owner    = $exifDocument?->ownerName() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'OwnerName');
-        $serial   = $exifDocument?->cameraSerialNumber() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'SerialNumber');
-        $firmware = $this->xmpString($xmpDocument, self::NS_XMP, 'CreatorTool');
+        $make     = $exifDocument?->cameraMake() ?? XmpReader::string($xmpDocument, self::NS_TIFF, 'Make');
+        $model    = $exifDocument?->cameraModel() ?? XmpReader::string($xmpDocument, self::NS_TIFF, 'Model');
+        $owner    = $exifDocument?->ownerName() ?? XmpReader::string($xmpDocument, self::NS_AUX, 'OwnerName');
+        $serial   = $exifDocument?->cameraSerialNumber() ?? XmpReader::string($xmpDocument, self::NS_AUX, 'SerialNumber');
+        $firmware = XmpReader::string($xmpDocument, self::NS_XMP, 'CreatorTool');
 
         if ($make === null && $model === null && $owner === null && $serial === null && $firmware === null) {
             return null;

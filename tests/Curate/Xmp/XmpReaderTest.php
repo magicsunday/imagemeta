@@ -9,17 +9,17 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Curate\Resolver;
+namespace MagicSunday\ImageMeta\Tests\Curate\Xmp;
 
-use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
+use MagicSunday\ImageMeta\Curate\Xmp\XmpReader;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MagicSunday\ImageMeta\Curate\Resolver\XmpResolver
+ * @covers \MagicSunday\ImageMeta\Curate\Xmp\XmpReader
  */
-final class XmpResolverTest extends TestCase
+final class XmpReaderTest extends TestCase
 {
     private const string DC_NAMESPACE = 'http://purl.org/dc/elements/1.1/';
 
@@ -30,9 +30,7 @@ final class XmpResolverTest extends TestCase
             '{' . self::DC_NAMESPACE . '}subject' => 'Alpha, Beta , ,Gamma',
         ]);
 
-        $resolver = new XmpResolver($document);
-
-        self::assertSame(['Alpha', 'Beta', 'Gamma'], $resolver->stringList(self::DC_NAMESPACE, 'subject'));
+        self::assertSame(['Alpha', 'Beta', 'Gamma'], XmpReader::stringList($document, self::DC_NAMESPACE, 'subject'));
     }
 
     #[Test]
@@ -42,8 +40,6 @@ final class XmpResolverTest extends TestCase
             '{' . self::DC_NAMESPACE . '}subject' => ['First', ' Second ', ''],
         ]);
 
-        $resolver = new XmpResolver($document);
-
-        self::assertSame(['First', 'Second'], $resolver->stringList(self::DC_NAMESPACE, 'subject'));
+        self::assertSame(['First', 'Second'], XmpReader::stringList($document, self::DC_NAMESPACE, 'subject'));
     }
 }

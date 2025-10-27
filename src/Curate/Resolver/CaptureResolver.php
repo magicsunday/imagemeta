@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Curate\Xmp\XmpReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Capture;
@@ -24,7 +25,6 @@ use function trim;
  */
 final readonly class CaptureResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 
@@ -36,7 +36,7 @@ final readonly class CaptureResolver
         $dateTime = $exifDocument?->captureDateTime();
 
         if (!$dateTime instanceof DateTimeImmutable) {
-            $dateString = $this->xmpString($xmpDocument, self::NS_EXIF, 'DateTimeOriginal');
+            $dateString = XmpReader::string($xmpDocument, self::NS_EXIF, 'DateTimeOriginal');
             $dateTime   = $dateString !== null ? $this->parseDateTime($dateString) : null;
         }
 

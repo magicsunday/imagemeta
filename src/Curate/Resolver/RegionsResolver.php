@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
+use MagicSunday\ImageMeta\Curate\Xmp\XmpReader;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\Regions\Region;
@@ -34,7 +35,6 @@ use function trim;
  */
 final readonly class RegionsResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
 
@@ -664,7 +664,7 @@ final readonly class RegionsResolver
      */
     private function stringValues(XmpDocument $document, string $namespace, string $localName): array
     {
-        $raw = $this->xmpValue($document, $namespace, $localName);
+        $raw = XmpReader::value($document, $namespace, $localName);
 
         if (is_string($raw)) {
             $trimmed = trim($raw);
@@ -693,7 +693,7 @@ final readonly class RegionsResolver
      */
     private function floatValues(XmpDocument $document, string $namespace, string $localName): array
     {
-        $raw = $this->xmpValue($document, $namespace, $localName);
+        $raw = XmpReader::value($document, $namespace, $localName);
 
         if (is_string($raw)) {
             $raw = [$raw];
@@ -708,7 +708,7 @@ final readonly class RegionsResolver
                 continue;
             }
 
-            $numeric  = $this->parseNumericString($value);
+            $numeric  = XmpReader::parseNumericString($value);
             $values[] = $numeric;
         }
 

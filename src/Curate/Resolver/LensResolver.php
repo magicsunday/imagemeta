@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
+use MagicSunday\ImageMeta\Curate\Xmp\XmpReader;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -21,7 +22,6 @@ use MagicSunday\ImageMeta\Value\Lens;
  */
 final readonly class LensResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_AUX = 'http://ns.adobe.com/exif/1.0/aux/';
 
@@ -32,12 +32,12 @@ final readonly class LensResolver
      */
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Lens
     {
-        $make  = $exifDocument?->lensMake() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensMake');
+        $make  = $exifDocument?->lensMake() ?? XmpReader::string($xmpDocument, self::NS_AUX, 'LensMake');
         $model = $exifDocument?->lensModel()
-            ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensModel')
-            ?? $this->xmpString($xmpDocument, self::NS_AUX, 'Lens');
-        $serial  = $exifDocument?->lensSerialNumber() ?? $this->xmpString($xmpDocument, self::NS_AUX, 'LensSerialNumber');
-        $focal   = $exifDocument?->focalLengthMm() ?? $this->xmpFloat($xmpDocument, self::NS_EXIF, 'FocalLength');
+            ?? XmpReader::string($xmpDocument, self::NS_AUX, 'LensModel')
+            ?? XmpReader::string($xmpDocument, self::NS_AUX, 'Lens');
+        $serial  = $exifDocument?->lensSerialNumber() ?? XmpReader::string($xmpDocument, self::NS_AUX, 'LensSerialNumber');
+        $focal   = $exifDocument?->focalLengthMm() ?? XmpReader::float($xmpDocument, self::NS_EXIF, 'FocalLength');
         $focal35 = $exifDocument?->focalLength35Mm();
 
         $maxApex     = $exifDocument?->maxApertureApex();

@@ -21,10 +21,11 @@ use MagicSunday\ImageMeta\Curate\Resolver\GpsResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\MultiPictureResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\QuickTimeResolver;
 use MagicSunday\ImageMeta\Curate\Resolver\RegionsResolver;
-use MagicSunday\ImageMeta\Curate\Resolver\XmpResolver;
+use MagicSunday\ImageMeta\Curate\Xmp\XmpReader;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\AudioClips;
@@ -75,6 +76,7 @@ use MagicSunday\ImageMeta\Value\TiffData;
 use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
+use MagicSunday\ImageMeta\Value\Xmp;
 
 use function array_is_list;
 use function array_key_exists;
@@ -109,7 +111,6 @@ final class StructuredMetadataBuilder
     {
         $exifDocument      = $metadata->exifDoc;
         $xmpDocument       = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
-        $xmpResolver       = new XmpResolver($xmpDocument);
         $quickTimeResolver = new QuickTimeResolver($metadata->quickTime);
         $appleMakerNotes   = $metadata->makerNotes?->apple();
         $gpsResolver       = new GpsResolver();
@@ -241,10 +242,10 @@ final class StructuredMetadataBuilder
 
         $gps = $gpsResolver->resolve($metadata->exifDoc, $xmpDocument) ?? new Gps();
 
-        $device = $this->buildDevice($exifDocument, $quickTimeResolver, $xmpResolver);
+        $device = $this->buildDevice($exifDocument, $quickTimeResolver, $xmpDocument);
 
         $apple = $this->buildApple($appleMakerNotes, $quickTimeResolver, $metadata->quickTime, $exifDocument);
-        $xmp   = $xmpResolver->value();
+        $xmp   = new Xmp($xmpDocument);
 
         $file = new File(
             $metadata->mimeType,
@@ -438,8 +439,8 @@ final class StructuredMetadataBuilder
             $this->countFaceRegions($regions),
         );
 
-        $flatKeywords         = $xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'subject');
-        $hierarchicalKeywords = $xmpResolver->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
+        $flatKeywords         = XmpReader::stringList($xmpDocument, 'http://purl.org/dc/elements/1.1/', 'subject');
+        $hierarchicalKeywords = XmpReader::stringList($xmpDocument, 'http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject');
 
         if ($flatKeywords === []) {
             $xpKeywords = $exifDocument?->xpKeywords();
@@ -455,12 +456,12 @@ final class StructuredMetadataBuilder
 
         $rights = new Rights(
             copyright: CompositeResolver::first([
-                fn (): ?string => $xmpResolver->string('http://purl.org/dc/elements/1.1/', 'rights'),
+                fn (): ?string => XmpReader::string($xmpDocument, 'http://purl.org/dc/elements/1.1/', 'rights'),
                 fn (): ?string => $exifDocument?->artist(),
             ]),
-            usageTerms: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
-            licenseUrl: $xmpResolver->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
-            creditLine: $xmpResolver->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
+            usageTerms: XmpReader::string($xmpDocument, 'http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
+            licenseUrl: XmpReader::string($xmpDocument, 'http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
+            creditLine: XmpReader::string($xmpDocument, 'http://ns.adobe.com/photoshop/1.0/', 'Credit'),
             securityClassification: $exifDocument?->securityClassification(),
         );
 
@@ -468,17 +469,17 @@ final class StructuredMetadataBuilder
             artist: $exifDocument?->artist(),
             ownerName: CompositeResolver::first([
                 fn (): ?string => $exifDocument?->ownerName(),
-                fn (): ?string => $xmpResolver->string('http://ns.adobe.com/xap/1.0/aux/', 'OwnerName'),
+                fn (): ?string => XmpReader::string($xmpDocument, 'http://ns.adobe.com/xap/1.0/aux/', 'OwnerName'),
             ]),
             creator: CompositeResolver::first([
-                fn (): ?string => $this->firstListValue($xmpResolver->stringList('http://purl.org/dc/elements/1.1/', 'creator')),
+                fn (): ?string => $this->firstListValue(XmpReader::stringList($xmpDocument, 'http://purl.org/dc/elements/1.1/', 'creator')),
             ]),
-            creatorEmail: $xmpResolver->string('http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
+            creatorEmail: XmpReader::string($xmpDocument, 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
             photographer: $exifDocument?->photographer(),
             imageEditor: $exifDocument?->imageEditor(),
         );
 
-        $temporal = $this->buildTemporal($exifDocument, $quickTimeResolver, $xmpResolver);
+        $temporal = $this->buildTemporal($exifDocument, $quickTimeResolver, $xmpDocument);
 
         $cropFactor          = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
         $circleOfConfusionMm = ValueConverters::calcCircleOfConfusionMm($cropFactor);
@@ -501,7 +502,7 @@ final class StructuredMetadataBuilder
             cropFactor: $cropFactor,
         );
 
-        $panoramaFlag = $xmpResolver->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
+        $panoramaFlag = XmpReader::bool($xmpDocument, 'http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
         $related      = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
             burstId: $quickTimeResolver->string('BurstUUID'),
@@ -534,14 +535,14 @@ final class StructuredMetadataBuilder
 
         $uav = $this->buildUav($exifDocument, $quickTimeResolver);
 
-        $hasHistory      = $xmpResolver->has('http://ns.adobe.com/xap/1.0/mm/', 'History');
+        $hasHistory      = XmpReader::has($xmpDocument, 'http://ns.adobe.com/xap/1.0/mm/', 'History');
         $makerNotesSafe  = $metadata->makerNotes?->isSafe();
         if ($makerNotesSafe === null) {
             $makerNotesSafe = $exifDocument?->makerNoteSafety();
         }
 
         $integrity = new Integrity(
-            originalFileName: $xmpResolver->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
+            originalFileName: XmpReader::string($xmpDocument, 'http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
             edited: $hasHistory ? true : null,
             historyLastSoftware: null,
@@ -595,15 +596,15 @@ final class StructuredMetadataBuilder
      *
      * @param ExifDocument   $exif              Resolver exposing EXIF tag helpers.
      * @param QuickTimeResolver $quickTimeResolver Resolver exposing QuickTime metadata fields.
-     * @param XmpResolver       $xmpResolver       Resolver exposing XMP metadata fields.
+     * @param XmpDocument|null  $xmpDocument       Parsed XMP document used for software fallbacks.
      *
      * @return Device Device value object describing capture hardware and software.
      */
-    private function buildDevice(?ExifDocument $exif, QuickTimeResolver $quickTimeResolver, XmpResolver $xmpResolver): Device
+    private function buildDevice(?ExifDocument $exif, QuickTimeResolver $quickTimeResolver, ?XmpDocument $xmpDocument): Device
     {
         $softwareCandidates = [
             fn (): ?string => $quickTimeResolver->string('com.apple.quicktime.software'),
-            fn (): ?string => $xmpResolver->string('http://ns.adobe.com/xap/1.0/', 'CreatorTool'),
+            fn (): ?string => XmpReader::string($xmpDocument, 'http://ns.adobe.com/xap/1.0/', 'CreatorTool'),
         ];
 
         if ($exif instanceof ExifDocument) {
@@ -627,18 +628,18 @@ final class StructuredMetadataBuilder
      *
      * @param ExifDocument   $resolver  Resolver exposing EXIF timestamps and offsets.
      * @param QuickTimeResolver $quickTime QuickTime metadata resolver used for time fallbacks.
-     * @param XmpResolver       $xmp       Resolver providing XMP timestamp fields.
+     * @param XmpDocument|null  $xmpDocument Parsed XMP document providing timestamp fields.
      *
      * @return Temporal Normalised temporal metadata aggregate.
      */
-    private function buildTemporal(?ExifDocument $resolver, QuickTimeResolver $quickTime, XmpResolver $xmp): Temporal
+    private function buildTemporal(?ExifDocument $resolver, QuickTimeResolver $quickTime, ?XmpDocument $xmpDocument): Temporal
     {
         $exifCreate = $resolver?->dateTimeDigitized();
         $exifModify = $resolver?->dateTime();
 
-        $xmpCreate       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
-        $xmpModify       = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
-        $xmpDateCreated  = $this->parseFlexibleDate($xmp->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
+        $xmpCreate       = $this->parseFlexibleDate(XmpReader::string($xmpDocument, 'http://ns.adobe.com/xap/1.0/', 'CreateDate'));
+        $xmpModify       = $this->parseFlexibleDate(XmpReader::string($xmpDocument, 'http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
+        $xmpDateCreated  = $this->parseFlexibleDate(XmpReader::string($xmpDocument, 'http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
         $quickTimeCreate = $this->parseFlexibleDate($quickTime->string('CreationDate'));
         $quickTimeModify = $this->parseFlexibleDate($quickTime->string('ModifyDate'));
 

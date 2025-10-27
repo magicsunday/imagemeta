@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Resolver;
 
+use MagicSunday\ImageMeta\Curate\Xmp\XmpReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
@@ -22,7 +23,6 @@ use MagicSunday\ImageMeta\Value\Image;
  */
 final readonly class ImageResolver
 {
-    use XmpPropertyAccess;
 
     private const string NS_TIFF = 'http://ns.adobe.com/tiff/1.0/';
 
@@ -34,9 +34,9 @@ final readonly class ImageResolver
     public function resolve(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Image
     {
         $orientation = Orientation::fromExifValue($exifDocument?->orientation())
-            ?? Orientation::fromExifValue($this->xmpInt($xmpDocument, self::NS_TIFF, 'Orientation'));
+            ?? Orientation::fromExifValue(XmpReader::int($xmpDocument, self::NS_TIFF, 'Orientation'));
 
-        $colorSpaceValue = $exifDocument?->colorSpace() ?? $this->xmpInt($xmpDocument, self::NS_EXIF, 'ColorSpace');
+        $colorSpaceValue = $exifDocument?->colorSpace() ?? XmpReader::int($xmpDocument, self::NS_EXIF, 'ColorSpace');
         $colorSpace      = ColorSpace::fromExifValue($colorSpaceValue);
 
         $width         = $exifDocument?->imageWidth();
@@ -44,8 +44,8 @@ final readonly class ImageResolver
         $bitsPerSample = null;
         $uniqueId      = $exifDocument?->imageUniqueId();
         $imageNumber   = $exifDocument?->imageNumber();
-        $documentName  = $this->xmpString($xmpDocument, self::NS_TIFF, 'DocumentName');
-        $description   = $this->xmpString($xmpDocument, self::NS_TIFF, 'ImageDescription');
+        $documentName  = XmpReader::string($xmpDocument, self::NS_TIFF, 'DocumentName');
+        $description   = XmpReader::string($xmpDocument, self::NS_TIFF, 'ImageDescription');
 
         if (
             !$orientation instanceof Orientation
