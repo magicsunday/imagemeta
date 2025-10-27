@@ -51,4 +51,39 @@ final class QuickTimeMetaTest extends TestCase
 
         self::assertNull($meta->contentIdentifier());
     }
+    /**
+     * Ensures typed accessors resolve aliases and normalise values.
+     */
+    #[Test]
+    public function typedAccessorsResolveAliases(): void
+    {
+        $meta = new QuickTimeMeta([
+            'Bitrate'                     => '512000',
+            'HDRFormat'                   => 'true',
+            'com.apple.quicktime.duration' => '12.5',
+            'AudioChannels'               => 2,
+            'CompressorName'              => '  H.265  ',
+        ]);
+
+        self::assertSame('H.265', $meta->stringValue(QuickTimeMeta::COMPRESSOR_NAME_KEY));
+        self::assertSame(512000, $meta->intValue('Bitrate'));
+        self::assertEqualsWithDelta(12.5, $meta->floatValue('Duration'), 1e-12);
+        self::assertTrue($meta->boolValue('HDRFormat'));
+        self::assertSame(2, $meta->intValue(QuickTimeMeta::AUDIO_CHANNELS_KEY));
+    }
+
+    /**
+     * Ensures non-matching keys yield null across accessor types.
+     */
+    #[Test]
+    public function typedAccessorsReturnNullForMissingKeys(): void
+    {
+        $meta = new QuickTimeMeta([]);
+
+        self::assertNull($meta->stringValue('UnknownKey'));
+        self::assertNull($meta->intValue('UnknownKey'));
+        self::assertNull($meta->floatValue('UnknownKey'));
+        self::assertNull($meta->boolValue('UnknownKey'));
+    }
+
 }

@@ -34,32 +34,30 @@ final readonly class AppleResolver
         }
 
         $identifier = $quickTimeMeta->contentIdentifier();
-        $resolver   = new QuickTimeResolver($quickTimeMeta);
+        $cameraTypeString  = $this->quickTimeString($quickTimeMeta, 'CameraType');
+        $cameraType        = $cameraTypeString ?? $this->quickTimeInt($quickTimeMeta, 'CameraType');
+        $hdrHeadroom       = $this->quickTimeFloat($quickTimeMeta, 'HdrHeadroom', 'HDRHeadroom');
+        $hdrGain           = $this->floatList($quickTimeMeta, 'HdrGain', 'HDRGain');
+        $snr               = $this->quickTimeFloat($quickTimeMeta, 'SNRSetting', 'SNR');
+        $focusPosition     = $this->quickTimeFloat($quickTimeMeta, 'FocusPosition');
+        $livePhotoIndex    = $this->quickTimeInt($quickTimeMeta, 'LivePhotoVideoIndex');
+        $colorTemperature  = $this->quickTimeInt($quickTimeMeta, 'ColorTemperature');
+        $semanticPreset    = $this->quickTimeString($quickTimeMeta, 'SemanticStylePreset');
+        $semanticWarmth    = $this->quickTimeFloat($quickTimeMeta, 'SemanticStyleWarmth');
+        $semanticTone      = $this->quickTimeFloat($quickTimeMeta, 'SemanticStyleTone');
+        $accelerationVector = $this->floatList($quickTimeMeta, 'AccelerationVector');
+        $flags             = $this->flags($quickTimeMeta);
 
-        $cameraTypeString  = $resolver->string('CameraType');
-        $cameraType        = $cameraTypeString ?? $resolver->int('CameraType');
-        $hdrHeadroom       = $resolver->float('HdrHeadroom') ?? $resolver->float('HDRHeadroom');
-        $hdrGain           = $this->floatList($resolver, 'HdrGain', 'HDRGain');
-        $snr               = $resolver->float('SNRSetting') ?? $resolver->float('SNR');
-        $focusPosition     = $resolver->float('FocusPosition');
-        $livePhotoIndex    = $resolver->int('LivePhotoVideoIndex');
-        $colorTemperature  = $resolver->int('ColorTemperature');
-        $semanticPreset    = $resolver->string('SemanticStylePreset');
-        $semanticWarmth    = $resolver->float('SemanticStyleWarmth');
-        $semanticTone      = $resolver->float('SemanticStyleTone');
-        $accelerationVector = $this->floatList($resolver, 'AccelerationVector');
-        $flags             = $this->flags($resolver);
-
-        $makerNoteVersion  = $resolver->string('MakerNoteVersion');
-        $hdrImageType      = $this->enumeratedValue($resolver, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
-        $burstUuid         = $resolver->string('BurstUUID');
-        $focusDistanceRange = $this->focusDistanceRange($resolver);
-        $oisMode           = $this->stringOrNumeric($resolver, 'OISMode');
-        $imageCaptureType  = $this->enumeratedValue($resolver, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
-        $imageUniqueId     = $resolver->string('ImageUniqueID');
-        $photoIdentifier   = $resolver->string('PhotoIdentifier');
-        $afMeasuredDepth   = $resolver->float('AFMeasuredDepth');
-        $afConfidence      = $resolver->float('AFConfidence');
+        $makerNoteVersion  = $this->quickTimeString($quickTimeMeta, 'MakerNoteVersion');
+        $hdrImageType      = $this->enumeratedValue($quickTimeMeta, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
+        $burstUuid         = $this->quickTimeString($quickTimeMeta, 'BurstUUID');
+        $focusDistanceRange = $this->focusDistanceRange($quickTimeMeta);
+        $oisMode           = $this->stringOrNumeric($quickTimeMeta, 'OISMode');
+        $imageCaptureType  = $this->enumeratedValue($quickTimeMeta, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
+        $imageUniqueId     = $this->quickTimeString($quickTimeMeta, 'ImageUniqueID');
+        $photoIdentifier   = $this->quickTimeString($quickTimeMeta, 'PhotoIdentifier');
+        $afMeasuredDepth   = $this->quickTimeFloat($quickTimeMeta, 'AFMeasuredDepth');
+        $afConfidence      = $this->quickTimeFloat($quickTimeMeta, 'AFConfidence');
 
         if (
             $identifier === null
@@ -131,10 +129,14 @@ final readonly class AppleResolver
     /**
      * @return list<float>|null
      */
-    private function floatList(QuickTimeResolver $resolver, string ...$keys): ?array
+    private function floatList(?QuickTimeMeta $meta, string ...$keys): ?array
     {
+        if ($meta === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $raw = $resolver->string($key);
+            $raw = $this->quickTimeString($meta, $key);
             if ($raw === null) {
                 continue;
             }
@@ -166,15 +168,19 @@ final readonly class AppleResolver
     /**
      * @return list<float>|null
      */
-    private function focusDistanceRange(QuickTimeResolver $resolver): ?array
+    private function focusDistanceRange(?QuickTimeMeta $meta): ?array
     {
-        $range = $this->floatList($resolver, 'FocusDistanceRange');
+        if ($meta === null) {
+            return null;
+        }
+
+        $range = $this->floatList($meta, 'FocusDistanceRange');
         if ($range !== null) {
             return $range;
         }
 
-        $near = $resolver->float('FocusDistanceRangeNear') ?? $resolver->float('FocusDistanceNear');
-        $far  = $resolver->float('FocusDistanceRangeFar') ?? $resolver->float('FocusDistanceFar');
+        $near = $this->quickTimeFloat($meta, 'FocusDistanceRangeNear', 'FocusDistanceNear');
+        $far  = $this->quickTimeFloat($meta, 'FocusDistanceRangeFar', 'FocusDistanceFar');
 
         $values = [];
         if ($near !== null) {
@@ -188,20 +194,24 @@ final readonly class AppleResolver
         return $values !== [] ? $values : null;
     }
 
-    private function stringOrNumeric(QuickTimeResolver $resolver, string ...$keys): ?string
+    private function stringOrNumeric(?QuickTimeMeta $meta, string ...$keys): ?string
     {
+        if ($meta === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $value = $resolver->string($key);
+            $value = $this->quickTimeString($meta, $key);
             if ($value !== null && $value !== '') {
                 return $value;
             }
 
-            $intValue = $resolver->int($key);
+            $intValue = $meta->intValue($key);
             if ($intValue !== null) {
                 return (string) $intValue;
             }
 
-            $floatValue = $resolver->float($key);
+            $floatValue = $meta->floatValue($key);
             if ($floatValue !== null) {
                 return (string) $floatValue;
             }
@@ -213,10 +223,14 @@ final readonly class AppleResolver
     /**
      * @param array<int, string> $map
      */
-    private function enumeratedValue(QuickTimeResolver $resolver, array $map, string ...$keys): ?string
+    private function enumeratedValue(?QuickTimeMeta $meta, array $map, string ...$keys): ?string
     {
+        if ($meta === null) {
+            return null;
+        }
+
         foreach ($keys as $key) {
-            $value = $resolver->string($key);
+            $value = $this->quickTimeString($meta, $key);
             if ($value !== null && $value !== '') {
                 $trimmed = trim($value);
                 if ($trimmed === '') {
@@ -232,7 +246,7 @@ final readonly class AppleResolver
                 return $trimmed;
             }
 
-            $code = $resolver->int($key);
+            $code = $meta->intValue($key);
             if ($code !== null) {
                 return $map[$code] ?? (string) $code;
             }
@@ -244,11 +258,15 @@ final readonly class AppleResolver
     /**
      * @return array<string, bool>
      */
-    private function flags(QuickTimeResolver $resolver): array
+    private function flags(?QuickTimeMeta $meta): array
     {
+        if ($meta === null) {
+            return [];
+        }
+
         $flags = [];
         foreach (AppleMetadata::FLAG_MAP as $key => $normalized) {
-            $value = $resolver->bool($key);
+            $value = $meta->boolValue($key);
             if ($value !== null) {
                 $flags[$normalized] = $value;
             }
@@ -256,4 +274,69 @@ final readonly class AppleResolver
 
         return $flags;
     }
+
+    private function quickTimeString(?QuickTimeMeta $meta, string ...$keys): ?string
+    {
+        if ($meta === null) {
+            return null;
+        }
+
+        foreach ($keys as $key) {
+            $value = $meta->stringValue($key);
+            if ($value !== null && $value !== '') {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function quickTimeFloat(?QuickTimeMeta $meta, string ...$keys): ?float
+    {
+        if ($meta === null) {
+            return null;
+        }
+
+        foreach ($keys as $key) {
+            $value = $meta->floatValue($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function quickTimeInt(?QuickTimeMeta $meta, string ...$keys): ?int
+    {
+        if ($meta === null) {
+            return null;
+        }
+
+        foreach ($keys as $key) {
+            $value = $meta->intValue($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function quickTimeBool(?QuickTimeMeta $meta, string ...$keys): ?bool
+    {
+        if ($meta === null) {
+            return null;
+        }
+
+        foreach ($keys as $key) {
+            $value = $meta->boolValue($key);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
 }
