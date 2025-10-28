@@ -22,10 +22,10 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
-use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -283,21 +283,21 @@ final class ExifDocumentTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::PREVIEW_IMAGE_START         => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 32_768),
-            ExifTag::PREVIEW_IMAGE_LENGTH        => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 16_384),
-            ExifTag::PREVIEW_IMAGE_WIDTH         => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 1_600),
-            ExifTag::PREVIEW_IMAGE_HEIGHT        => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 900),
-            ExifTag::PREVIEW_IMAGE_ENCODING      => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
-            ExifTag::PREVIEW_IMAGE_MIME_TYPE     => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
-            ExifTag::PREVIEW_IMAGE_COLOR_SPACE   => new IfdEntry(
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 32_768),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 16_384),
+            ExifTag::PREVIEW_IMAGE_WIDTH       => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 1_600),
+            ExifTag::PREVIEW_IMAGE_HEIGHT      => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 900),
+            ExifTag::PREVIEW_IMAGE_ENCODING    => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE   => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
+            ExifTag::PREVIEW_IMAGE_COLOR_SPACE => new IfdEntry(
                 ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
                 3,
                 1,
                 ColorSpace::ADOBE_RGB->value,
             ),
             ExifTag::PREVIEW_IMAGE_BIT_DEPTH     => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 8),
-            ExifTag::PREVIEW_IMAGE_COMPRESSION  => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, Compression::JPEG->value),
-            ExifTag::PREVIEW_IMAGE_SCALE        => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION   => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::PREVIEW_IMAGE_SCALE         => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
             ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:10:25 18:45:30'),
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:10:25 18:40:00'),
         ]);
@@ -326,6 +326,87 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('2024-10-25T18:40:00+00:00', $previewDigitized->format(DATE_ATOM));
     }
 
+    #[Test]
+    public function previewImageTreatsZeroOffsetsAndLengthsAsMissing(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $zeroOffsetExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START  => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 0),
+            ExifTag::PREVIEW_IMAGE_LENGTH => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 2048),
+        ]);
+
+        $docWithZeroOffset = new ExifDocument($ifd0, $zeroOffsetExif, null, null, null);
+
+        self::assertNull($docWithZeroOffset->previewImageOffset());
+        self::assertFalse($docWithZeroOffset->hasPreviewImage());
+
+        $zeroLengthExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START  => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 4096),
+            ExifTag::PREVIEW_IMAGE_LENGTH => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 0),
+        ]);
+
+        $docWithZeroLength = new ExifDocument($ifd0, $zeroLengthExif, null, null, null);
+
+        self::assertSame(4096, $docWithZeroLength->previewImageOffset());
+        self::assertNull($docWithZeroLength->previewImageLength());
+        self::assertFalse($docWithZeroLength->hasPreviewImage());
+    }
+
+    #[Test]
+    public function previewImageCompressionTreatsNonPositiveValuesAsMissing(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $zeroCompressionExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, 0),
+        ]);
+
+        $docWithZeroCompression = new ExifDocument($ifd0, $zeroCompressionExif, null, null, null);
+
+        self::assertNull($docWithZeroCompression->previewImageCompression());
+
+        $negativeCompressionExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 4, 1, -5),
+        ]);
+
+        $docWithNegativeCompression = new ExifDocument($ifd0, $negativeCompressionExif, null, null, null);
+
+        self::assertNull($docWithNegativeCompression->previewImageCompression());
+    }
+
+    #[Test]
+    public function previewImageScaleTreatsNonPositiveValuesAsMissing(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $zeroScaleExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_SCALE => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(0, 1),
+            ),
+        ]);
+
+        $docWithZeroScale = new ExifDocument($ifd0, $zeroScaleExif, null, null, null);
+
+        self::assertNull($docWithZeroScale->previewImageScale());
+
+        $negativeScaleExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_SCALE => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(-1, 2),
+            ),
+        ]);
+
+        $docWithNegativeScale = new ExifDocument($ifd0, $negativeScaleExif, null, null, null);
+
+        self::assertNull($docWithNegativeScale->previewImageScale());
+    }
+
     /**
      * Falls back to DateTimeDigitized when DateTimeOriginal is missing.
      */
@@ -345,6 +426,28 @@ final class ExifDocumentTest extends TestCase
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
         self::assertSame('2015-06-07T08:09:10.234-04:00', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    #[Test]
+    public function dateTimeOriginalBestEffortFallsBackToDigitized(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL     => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, 'bad metadata'),
+            ExifTag::DATETIME_DIGITIZED    => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:01:02 03:04:05'),
+            ExifTag::OFFSET_TIME_DIGITIZED => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+00:00'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $digitized = $doc->dateTimeDigitized();
+        self::assertInstanceOf(DateTimeImmutable::class, $digitized);
+        self::assertEquals($digitized, $doc->dateTimeOriginal());
+
+        $best = $doc->dateTimeOriginalBestEffort();
+        self::assertInstanceOf(DateTimeImmutable::class, $best);
+        self::assertEquals($digitized, $best);
     }
 
     #[Test]
@@ -1466,7 +1569,7 @@ final class ExifDocumentTest extends TestCase
     #[DataProvider('provideExifVersionMatrix')]
     public function normalizesExifVersions(string $raw, string $expectedVersion, string $expectedProfile): void
     {
-        $ifd0    = new Ifd([]);
+        $ifd0 = new Ifd([]);
 
         $exifIfd = new Ifd([
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, strlen($raw), $raw),
@@ -1549,6 +1652,21 @@ final class ExifDocumentTest extends TestCase
 
         $docWithoutExif = new ExifDocument($ifd0, null, null, null, null);
         self::assertSame(200, $docWithoutExif->iso());
+    }
+
+    #[Test]
+    public function isoParsesAsciiEncodedValues(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 1, '0200'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(200, $doc->iso());
+        self::assertSame(200, $doc->isoBestEffort());
     }
 
     /**

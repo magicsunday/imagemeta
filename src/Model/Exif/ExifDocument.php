@@ -18,7 +18,11 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
@@ -26,17 +30,13 @@ use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
-use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
-use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
-use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
-use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
-use MagicSunday\ImageMeta\Value\Enum\Contrast;
-use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
-use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
+use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 
 use function abs;
 use function array_key_exists;
@@ -44,12 +44,15 @@ use function array_map;
 use function array_values;
 use function count;
 use function iconv;
+use function intdiv;
 use function is_float;
 use function is_int;
+use function is_numeric;
 use function is_string;
 use function ord;
 use function preg_replace;
 use function preg_split;
+use function round;
 use function rtrim;
 use function sprintf;
 use function sqrt;
@@ -59,7 +62,6 @@ use function strlen;
 use function strtoupper;
 use function substr;
 use function trim;
-use function intdiv;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
@@ -82,14 +84,14 @@ final readonly class ExifDocument
     private ?string $tiffEpStandardIdString;
 
     /**
-     * @param Ifd                     $ifd0           Root IFD of the TIFF structure.
-     * @param Ifd|null                $exifIfd        Sub IFD containing EXIF-specific tags.
-     * @param Ifd|null                $gpsIfd         Sub IFD containing GPS-related tags.
-     * @param Ifd|null                $interopIfd     Sub IFD containing interoperability tags.
-     * @param Ifd|null                $ifd1           Optional next IFD, typically thumbnails.
+     * @param Ifd                   $ifd0           Root IFD of the TIFF structure.
+     * @param Ifd|null              $exifIfd        Sub IFD containing EXIF-specific tags.
+     * @param Ifd|null              $gpsIfd         Sub IFD containing GPS-related tags.
+     * @param Ifd|null              $interopIfd     Sub IFD containing interoperability tags.
+     * @param Ifd|null              $ifd1           Optional next IFD, typically thumbnails.
      * @param MakerNotesRecord|null $makerNotes     Decoded maker note metadata provided by vendor decoders.
-     * @param list<Ifd>               $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
-     * @param array<int, Ifd>         $subIfds        Parsed SubIFDs indexed by their file offsets.
+     * @param list<Ifd>             $subsequentIfds Additional linked IFDs discovered via the next-pointer chain.
+     * @param array<int, Ifd>       $subIfds        Parsed SubIFDs indexed by their file offsets.
      */
     public function __construct(
         public Ifd $ifd0,
@@ -724,7 +726,9 @@ final readonly class ExifDocument
      */
     public function previewImageOffset(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
+        $offset = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
+
+        return $offset !== null && $offset > 0 ? $offset : null;
     }
 
     /**
@@ -732,7 +736,9 @@ final readonly class ExifDocument
      */
     public function previewImageLength(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
+        $length = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
+
+        return $length !== null && $length > 0 ? $length : null;
     }
 
     /**
@@ -799,7 +805,9 @@ final readonly class ExifDocument
      */
     public function previewImageCompression(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_COMPRESSION);
+        $compression = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_COMPRESSION);
+
+        return $compression !== null && $compression > 0 ? $compression : null;
     }
 
     /**
@@ -807,7 +815,13 @@ final readonly class ExifDocument
      */
     public function previewImageScale(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::PREVIEW_IMAGE_SCALE);
+        $scale = $this->rational($this->exifIfd, ExifTag::PREVIEW_IMAGE_SCALE);
+
+        if ($scale === null) {
+            return null;
+        }
+
+        return $scale > 0.0 ? $scale : null;
     }
 
     /**
@@ -988,8 +1002,21 @@ final readonly class ExifDocument
 
         return match ($encoding) {
             'ASCII', 'UTF8', 'UNICODE', 'JIS' => $content === '' ? null : $encoding,
-            default                                   => $content === '' ? null : 'ASCII',
+            default => $content === '' ? null : 'ASCII',
         };
+    }
+
+    /**
+     * Provides the declared user comment encoding falling back to ASCII when undecorated content exists.
+     */
+    public function userCommentEncodingBestEffort(): ?string
+    {
+        $encoding = $this->userCommentEncoding();
+        if ($encoding !== null) {
+            return $encoding;
+        }
+
+        return $this->userComment() !== null ? 'ASCII' : null;
     }
 
     /**
@@ -1114,6 +1141,36 @@ final readonly class ExifDocument
         }
 
         return $this->int($this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
+    }
+
+    /**
+     * Returns the ISO sensitivity using a broader set of fallbacks for non-standard encodings.
+     */
+    public function isoBestEffort(): ?int
+    {
+        $iso = $this->iso();
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        $fallbacks = [
+            [$this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            [$this->exifIfd, ExifTag::ISO_SPEED],
+            [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+            [$this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+            [$this->ifd0, ExifTag::ISO_SPEED],
+            [$this->ifd1, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+        ];
+
+        foreach ($fallbacks as [$ifd, $tag]) {
+            $value = $this->coerceIntValue($this->value($ifd, $tag));
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -1971,6 +2028,24 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the most appropriate capture timestamp prioritising DateTimeOriginal metadata.
+     */
+    public function dateTimeOriginalBestEffort(): ?DateTimeImmutable
+    {
+        $original = $this->dateTimeOriginal();
+        if ($original instanceof DateTimeImmutable) {
+            return $original;
+        }
+
+        $digitized = $this->dateTimeDigitized();
+        if ($digitized instanceof DateTimeImmutable) {
+            return $digitized;
+        }
+
+        return $this->captureDateTime();
+    }
+
+    /**
      * Returns the fractional seconds associated with DateTimeOriginal.
      */
     public function subSecTimeOriginal(): ?string
@@ -2607,6 +2682,7 @@ final readonly class ExifDocument
 
         if ($value instanceof ExifNumericList) {
             $coeffs = array_map(static fn (int|float $component): float => (float) $component, $value->values);
+
             return count($coeffs) === 3 ? $coeffs : null;
         }
 
@@ -2907,28 +2983,7 @@ final readonly class ExifDocument
     {
         $value = $this->value($ifd, $tag);
 
-        if ($value instanceof ExifNumericList) {
-            $first = $value->values[0] ?? null;
-            if (is_int($first)) {
-                return $first;
-            }
-
-            if (is_float($first)) {
-                return (int) $first;
-            }
-
-            return null;
-        }
-
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) $value;
-        }
-
-        return null;
+        return $this->coerceIntValue($value);
     }
 
     /**
@@ -2991,6 +3046,58 @@ final readonly class ExifDocument
         $entry = $ifd->get($tag);
 
         return $entry?->value;
+    }
+
+    /**
+     * Coerces a raw EXIF scalar value into an integer when possible.
+     */
+    private function coerceIntValue(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?int {
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            return $this->coerceIntValue($first);
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            return $first instanceof ExifRational ? $this->coerceIntValue($first) : null;
+        }
+
+        if ($value instanceof ExifRational) {
+            $float = ValueConverters::rationalToFloat($value);
+
+            return $float === null ? null : (int) round($float);
+        }
+
+        if ($value instanceof UInt64) {
+            return $value->toInt('EXIF integer coercion');
+        }
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            return (int) round($value);
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed === '' || !is_numeric($trimmed)) {
+                return null;
+            }
+
+            return (int) round((float) $trimmed);
+        }
+
+        if ($value === null) {
+            return null;
+        }
+
+        return null;
     }
 
     /**
@@ -3200,10 +3307,10 @@ final readonly class ExifDocument
             return null;
         }
 
-        $minutes = $values[$component];
-        $sign    = $minutes < 0 ? '-' : '+';
-        $absolute = abs($minutes);
-        $hours    = intdiv($absolute, 60);
+        $minutes          = $values[$component];
+        $sign             = $minutes < 0 ? '-' : '+';
+        $absolute         = abs($minutes);
+        $hours            = intdiv($absolute, 60);
         $remainingMinutes = $absolute % 60;
 
         return sprintf('%s%02d:%02d', $sign, $hours, $remainingMinutes);

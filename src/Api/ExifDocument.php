@@ -19,13 +19,11 @@ use MagicSunday\ImageMeta\Curate\Exif\Structured\Image as StructuredImage;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Lens as StructuredLens;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument as ModelExifDocument;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Camera as CameraValue;
 use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
@@ -34,12 +32,9 @@ use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure as ExposureValue;
 use MagicSunday\ImageMeta\Value\Gps as GpsValue;
 use MagicSunday\ImageMeta\Value\Image as ImageValue;
-use MagicSunday\ImageMeta\Value\Lens as LensValue;
 use MagicSunday\ImageMeta\Value\Interop as InteropValue;
+use MagicSunday\ImageMeta\Value\Lens as LensValue;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
-
-use function is_float;
-use function is_int;
 
 /**
  * Provides an EXIF-only structured view derived from a parsed document.
@@ -208,7 +203,7 @@ final class ExifDocument
             }
 
             $flashInfo = ExifFlash::fromExifValue($document->flash());
-            $iso       = $this->resolveIso($document);
+            $iso       = $document->isoBestEffort();
 
             return new ExposureValue(
                 iso: $iso,
@@ -409,16 +404,16 @@ final class ExifDocument
             compressedBitsPerPixel: $document?->compressedBitsPerPixel(),
             interlace: $document?->interlace(),
             userComment: $document?->userComment(),
-            userCommentEncoding: $document?->userCommentEncoding(),
+            userCommentEncoding: $document?->userCommentEncodingBestEffort(),
         );
     }
 
     private function createPreviewValue(?ModelExifDocument $document): PreviewValue
     {
-        $previewColorSpace   = null;
+        $previewColorSpace  = null;
         $previewCompression = null;
         if ($document instanceof ModelExifDocument) {
-            $previewColorSpace   = ColorSpace::fromExifValue($document->previewColorSpace());
+            $previewColorSpace  = ColorSpace::fromExifValue($document->previewColorSpace());
             $previewCompression = Compression::fromExifValue($document->previewImageCompression());
         }
 
@@ -436,57 +431,5 @@ final class ExifDocument
             previewOffset: $document?->previewImageOffset(),
             previewLength: $document?->previewImageLength(),
         );
-    }
-
-    private function resolveIso(ModelExifDocument $document): ?int
-    {
-        $iso = $document->iso();
-        if ($iso !== null) {
-            return $iso;
-        }
-
-        $candidates = [
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY,
-            ExifTag::STANDARD_OUTPUT_SENSITIVITY,
-            ExifTag::RECOMMENDED_EXPOSURE_INDEX,
-            ExifTag::ISO_SPEED,
-        ];
-
-        foreach ($candidates as $tag) {
-            $entry    = $document->exifIfd?->get($tag);
-            $resolved = $this->extractInt($entry?->value);
-            if ($resolved !== null) {
-                return $resolved;
-            }
-        }
-
-        $fallback = $document->ifd0->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY);
-
-        return $this->extractInt($fallback?->value);
-    }
-
-    private function extractInt(mixed $value): ?int
-    {
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) round($value);
-        }
-
-        if ($value instanceof ExifNumericList) {
-            $first = $value->values[0] ?? null;
-
-            if (is_int($first)) {
-                return $first;
-            }
-
-            if (is_float($first)) {
-                return (int) round($first);
-            }
-        }
-
-        return null;
     }
 }

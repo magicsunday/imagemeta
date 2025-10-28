@@ -135,9 +135,9 @@ final class ExifAssemblerTest extends TestCase
                 1,
                 ColorSpace::ADOBE_RGB->value,
             ),
-            ExifTag::PREVIEW_IMAGE_BIT_DEPTH   => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 12),
-            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, Compression::JPEG->value),
-            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 1)),
+            ExifTag::PREVIEW_IMAGE_BIT_DEPTH     => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 12),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION   => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::PREVIEW_IMAGE_SCALE         => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 1)),
             ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:05:01 12:40:00'),
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:05:01 12:35:00'),
             ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
@@ -452,6 +452,38 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame('+01:30', $structured->capture->temporal->offsetTimeDigitized);
         self::assertSame([-120, -60], $structured->capture->temporal->timeZoneOffsetMinutes);
         self::assertSame('OffsetTimeOriginal', $structured->capture->temporal->tzSource);
+    }
+
+    #[Test]
+    public function previewMetadataOmitsInvalidCompressionAndScale(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 16_384),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4_096),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, 0),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(0, 1),
+            ),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new ExifAssembler())->assemble($metadata);
+
+        $preview = $structured->media->preview;
+        self::assertTrue($preview->hasThumbnail);
+        self::assertTrue($preview->hasPreview);
+        self::assertNull($preview->previewCompression);
+        self::assertNull($preview->previewScale);
     }
 
     #[Test]
@@ -1552,6 +1584,23 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(3000, $structured->media->image->height);
         self::assertNull($structured->capture->temporal->tz);
         self::assertNull($structured->capture->temporal->tzSource);
+    }
+
+    #[Test]
+    public function populatesIsoFromAsciiEncodedValues(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 1, '012800'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new ExifAssembler())->assemble($metadata);
+
+        self::assertSame(12_800, $structured->exposure->iso);
     }
 
     /**
