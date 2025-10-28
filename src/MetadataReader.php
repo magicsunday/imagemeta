@@ -85,25 +85,27 @@ final class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        $jpeg             = new JpegExtractor($stream);
-        $exifBlobs        = $jpeg->extractExifBlobs();
-        $xmpBlobs         = $jpeg->extractXmpPackets();
-        $iccProfile       = $jpeg->getIccProfile();
-        $iccSegments      = $jpeg->getIccSegments();
-        $flashPixStreams  = $jpeg->getFlashPixStreams();
-        $audioStreams     = $jpeg->getAudioStreams();
-        $mpfDocument      = $jpeg->getMpfDocument();
-        $bitsPerSample    = $jpeg->getFrameSamplePrecision();
-        $frameHeight      = $jpeg->getFrameHeight();
-        $frameWidth       = $jpeg->getFrameWidth();
-        $sampling         = $jpeg->getFrameComponentSamplingFactors();
-        $subSampling      = $jpeg->getFrameYCbCrSubSampling();
+        $jpeg = new JpegExtractor($stream);
+        // Extract the JPEG segments along with frame and auxiliary stream data.
+        $exifBlobs       = $jpeg->extractExifBlobs();
+        $xmpBlobs        = $jpeg->extractXmpPackets();
+        $iccProfile      = $jpeg->getIccProfile();
+        $iccSegments     = $jpeg->getIccSegments();
+        $flashPixStreams = $jpeg->getFlashPixStreams();
+        $audioStreams    = $jpeg->getAudioStreams();
+        $mpfDocument     = $jpeg->getMpfDocument();
+        $bitsPerSample   = $jpeg->getFrameSamplePrecision();
+        $frameHeight     = $jpeg->getFrameHeight();
+        $frameWidth      = $jpeg->getFrameWidth();
+        $sampling        = $jpeg->getFrameComponentSamplingFactors();
+        $subSampling     = $jpeg->getFrameYCbCrSubSampling();
 
         $appleMapper = new AppleMakerNotesMapper();
 
         $exifDoc    = null;
         $xmpDoc     = null;
         $makerNotes = null;
+        // Parse the primary EXIF blob and map vendor-specific maker notes.
         if ($exifBlobs !== []) {
             $registry   = $this->createMakerNotesRegistry();
             $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
@@ -112,10 +114,12 @@ final class MetadataReader
 
         $makerNotes = $appleMapper->map($makerNotes, null);
 
+        // Parse the embedded XMP packet when present.
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
         }
 
+        // Assemble the final metadata aggregate with container context.
         return new Metadata(
             $exifBlobs,
             null,
