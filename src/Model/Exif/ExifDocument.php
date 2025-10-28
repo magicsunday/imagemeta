@@ -1295,7 +1295,7 @@ final readonly class ExifDocument
             ExifTag::EXPOSURE_INDEX,
         ];
 
-        foreach ($this->fallbackIfds() as $ifd) {
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             foreach ($fallbackTags as $tag) {
                 $value = $this->int($ifd, $tag);
                 if ($value !== null) {
@@ -2230,7 +2230,7 @@ final readonly class ExifDocument
             return $value;
         }
 
-        foreach ($this->fallbackIfds() as $ifd) {
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             $candidate = $this->str($ifd, ExifTag::DATETIME_ORIGINAL);
             if ($candidate !== null) {
                 return $candidate;
@@ -2301,7 +2301,7 @@ final readonly class ExifDocument
             return $value;
         }
 
-        foreach ($this->fallbackIfds() as $ifd) {
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             $candidate = $this->str($ifd, ExifTag::DATETIME_DIGITIZED);
             if ($candidate !== null) {
                 return $candidate;
@@ -2421,7 +2421,7 @@ final readonly class ExifDocument
             return $offset;
         }
 
-        foreach ($this->fallbackIfds() as $ifd) {
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME_ORIGINAL);
             if ($candidate !== null) {
                 return $candidate;
@@ -2441,7 +2441,7 @@ final readonly class ExifDocument
             return $offset;
         }
 
-        foreach ($this->fallbackIfds() as $ifd) {
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME_DIGITIZED);
             if ($candidate !== null) {
                 return $candidate;
@@ -2461,7 +2461,7 @@ final readonly class ExifDocument
             return $offset;
         }
 
-        foreach ($this->fallbackIfds() as $ifd) {
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME);
             if ($candidate !== null) {
                 return $candidate;
@@ -3340,9 +3340,12 @@ final readonly class ExifDocument
     /**
      * Provides the fallback IFDs consulted when primary metadata is absent.
      *
+     * @param bool $includePrimaryThumbnail When true the primary thumbnail (IFD1) is considered.
+     * @param bool $includeIfd0             When true the root directory (IFD0) is appended as a last resort.
+     *
      * @return list<Ifd>
      */
-    private function fallbackIfds(bool $includePrimaryThumbnail = true): array
+    private function fallbackIfds(bool $includePrimaryThumbnail = true, bool $includeIfd0 = false): array
     {
         $ifds = [];
         $seen = [];
@@ -3371,6 +3374,10 @@ final readonly class ExifDocument
 
         foreach ($this->subsequentIfds as $ifd) {
             $append($ifd);
+        }
+
+        if ($includeIfd0) {
+            $append($this->ifd0);
         }
 
         return $ifds;
@@ -3460,7 +3467,7 @@ final readonly class ExifDocument
             return $raw;
         }
 
-        foreach ($this->fallbackIfds() as $ifd) {
+        foreach ($this->fallbackIfds(includeIfd0: true) as $ifd) {
             $candidate = $this->rawString($ifd, ExifTag::USER_COMMENT);
             if ($candidate !== null) {
                 return $candidate;
