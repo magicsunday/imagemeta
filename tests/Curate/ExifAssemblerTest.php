@@ -1535,6 +1535,32 @@ final class ExifAssemblerTest extends TestCase
     }
 
     /**
+     * Ensures the original timestamp falls back to DateTimeDigitized metadata when necessary.
+     */
+    #[Test]
+    public function temporalOriginalFallsBackToDigitizedTimestamp(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_DIGITIZED    => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:07:03 10:11:12'),
+            ExifTag::OFFSET_TIME_DIGITIZED => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:30'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '987'),
+        ]);
+
+        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $metadata     = new Metadata(['primary'], null, $exifDocument);
+
+        $structured = (new ExifAssembler())->assemble($metadata);
+
+        self::assertSame('2024-07-03T10:11:12+02:30', $structured->capture->temporal->original?->format('c'));
+        self::assertSame('+02:30', $structured->capture->temporal->tz?->getName());
+        self::assertNull($structured->capture->temporal->subSecTimeOriginal);
+        self::assertSame('987', $structured->capture->temporal->subSecTimeDigitized);
+        self::assertSame('987', $structured->capture->temporal->subSecTime);
+    }
+
+    /**
      * Ensures DateTimeOriginal does not leak the PHP default timezone when offset metadata is missing.
      */
     #[Test]

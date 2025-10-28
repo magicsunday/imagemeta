@@ -130,6 +130,15 @@ final class ExifConvenience
      */
     public static function iso(ExifDocument $doc): ?int
     {
+        try {
+            $iso = $doc->isoBestEffort();
+            if ($iso !== null) {
+                return $iso;
+            }
+        } catch (Throwable) {
+            // ignore and fall back to manual resolution
+        }
+
         $iso = self::isoFromSensitivityType($doc);
         if ($iso !== null) {
             return $iso;
