@@ -29,9 +29,9 @@ final class ExifBackfillMatrixTest extends TestCase
      * @param string|null            $expectedDateTimeOriginal    Expected capture timestamp in ISO-8601 format or null.
      * @param string|null            $expectedUserComment         Expected decoded user comment value or null.
      * @param string|null            $expectedUserCommentEncoding Expected best-effort user comment encoding or null.
-     * @param array<string, int|string|null> $expectedInterop     Expected interoperability metadata components.
-     * @param array<string, int|float|bool|null> $expectedPreview Expected preview metadata components.
-     */
+     * @param array<string, int|string|null> $expectedInterop         Expected interoperability metadata components.
+     * @param array<string, int|float|bool|null> $expectedPreview     Expected preview descriptor components.
+    */
     #[Test]
     #[DataProvider('provideReferenceImages')]
     public function extractsFallbackMetadataFromReferenceImages(
@@ -95,6 +95,9 @@ final class ExifBackfillMatrixTest extends TestCase
         self::assertSame($expectedPreview['hasPreview'], $preview->hasPreview, sprintf('%s: Preview availability', $file));
         self::assertSame($expectedPreview['offset'], $preview->previewOffset, sprintf('%s: Preview offset', $file));
         self::assertSame($expectedPreview['length'], $preview->previewLength, sprintf('%s: Preview length', $file));
+        self::assertSame($expectedPreview['width'], $preview->previewWidth, sprintf('%s: Preview width', $file));
+        self::assertSame($expectedPreview['height'], $preview->previewHeight, sprintf('%s: Preview height', $file));
+        self::assertSame($expectedPreview['bitDepth'], $preview->previewBitDepth, sprintf('%s: Preview bit depth', $file));
         self::assertSame($expectedPreview['compression'], $preview->previewCompression?->value, sprintf('%s: Preview compression', $file));
         if ($expectedPreview['scale'] === null) {
             self::assertNull($preview->previewScale, sprintf('%s: Preview scale', $file));
@@ -117,7 +120,7 @@ final class ExifBackfillMatrixTest extends TestCase
      *     string|null,
      *     string|null,
      *     array{index:?string, version:?string, fileFormat:?string, width:?int, length:?int},
-     *     array{hasPreview:?bool, offset:?int, length:?int, compression:?int, scale:?float|null}
+     *     array{hasPreview:?bool, offset:?int, length:?int, width:?int, height:?int, bitDepth:?int, compression:?int, scale:?float|null}
      * }>
      */
     public static function provideReferenceImages(): iterable
@@ -139,6 +142,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -161,6 +167,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -183,6 +192,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -205,6 +217,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -227,6 +242,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -249,6 +267,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -271,6 +292,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -293,6 +317,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => null,
                 'offset' => null,
                 'length' => null,
+                'width' => null,
+                'height' => null,
+                'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
             ],
@@ -315,6 +342,9 @@ final class ExifBackfillMatrixTest extends TestCase
                 'hasPreview' => true,
                 'offset' => 0x0000_4000,
                 'length' => 0x0000_2000,
+                'width' => 1_600,
+                'height' => 900,
+                'bitDepth' => 8,
                 'compression' => Compression::JPEG_OLD_STYLE->value,
                 'scale' => 0.5,
             ],
