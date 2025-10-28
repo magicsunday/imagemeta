@@ -540,6 +540,30 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('2019-07-08T09:10:11.456+02:00', $original->format(self::ISO_8601_MILLISECONDS));
     }
 
+    #[Test]
+    public function captureDateTimeFallsBackToGpsTimestamp(): void
+    {
+        $gpsIfd = new Ifd([
+            ExifTag::GPS_DATE_STAMP => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 10, '2024:08:09'),
+            ExifTag::GPS_TIME_STAMP => new IfdEntry(
+                ExifTag::GPS_TIME_STAMP,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(10, 1),
+                    new ExifRational(11, 1),
+                    new ExifRational(12, 1),
+                ]),
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+
+        $capture = $doc->captureDateTime();
+        self::assertInstanceOf(DateTimeImmutable::class, $capture);
+        self::assertSame('2024-08-09T10:11:12+00:00', $capture->format(DATE_ATOM));
+    }
+
     /**
      * Uses the legacy TimeZoneOffset tag when explicit offset tags are unavailable.
      */
@@ -1439,6 +1463,44 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('JIS', $doc->userCommentEncoding());
     }
 
+    #[Test]
+    public function decodesUtf16UserCommentsWithoutEncodingPrefix(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $encoded = iconv('UTF-8', 'UTF-16LE', 'Grüße aus Köln');
+        self::assertIsString($encoded);
+        $payload = $encoded . "\0\0";
+
+        $exifIfd = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, strlen($payload), $payload),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('Grüße aus Köln', $doc->userComment());
+        self::assertSame('UNICODE', $doc->userCommentEncoding());
+        self::assertSame('UNICODE', $doc->userCommentEncodingBestEffort());
+    }
+
+    #[Test]
+    public function userCommentEncodingBestEffortDetectsUtf8WithoutPrefix(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $payload = "Café 🌟";
+
+        $exifIfd = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, strlen($payload), $payload),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('Café 🌟', $doc->userComment());
+        self::assertSame('UTF-8', $doc->userCommentEncoding());
+        self::assertSame('UTF-8', $doc->userCommentEncodingBestEffort());
+    }
+
     /**
      * Ensures image dimension getters fall back to values stored within IFD0 when EXIF tags are absent.
      */
@@ -1761,6 +1823,52 @@ final class ExifDocumentTest extends TestCase
 
         self::assertSame(200, $doc->iso());
         self::assertSame(200, $doc->isoBestEffort());
+    }
+
+    #[Test]
+    public function isoBestEffortParsesIsoPrefixedStrings(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 7, 'ISO 800'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(800, $doc->isoBestEffort());
+    }
+
+    #[Test]
+    public function isoBestEffortFallsBackToExposureIndex(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::EXPOSURE_INDEX => new IfdEntry(
+                ExifTag::EXPOSURE_INDEX,
+                5,
+                1,
+                new ExifRational(400, 1),
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(400, $doc->isoBestEffort());
+    }
+
+    #[Test]
+    public function isoBestEffortReadsFromSubIfds(): void
+    {
+        $subIfd = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                3,
+                1,
+                640,
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, null, null, null, null, [], [256 => $subIfd]);
+
+        self::assertSame(640, $doc->isoBestEffort());
     }
 
     /**

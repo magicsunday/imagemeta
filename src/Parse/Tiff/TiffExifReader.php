@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 
 use function array_slice;
+use function array_values;
 use function chr;
 use function function_exists;
 use function iconv;
@@ -93,6 +94,7 @@ final class TiffExifReader
         ExifTag::INTEROPERABILITY_IFD_POINTER,
         ExifTag::SUB_IFDS,
         ExifTag::JPEG_INTERCHANGE_FORMAT,
+        ExifTag::PREVIEW_IMAGE_START,
     ];
 
     private const int UTF16_HIGH_SURROGATE_START = 0xD800;
@@ -205,12 +207,9 @@ final class TiffExifReader
         $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
         if ($exifPointer instanceof IfdEntry) {
             $exifIfd = $this->readIfd($this->pointerOffset($exifPointer));
-
-            $interopPointer = $exifIfd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
-            if ($interopPointer instanceof IfdEntry) {
-                $interopIfd = $this->readIfd($this->pointerOffset($interopPointer));
-            }
         }
+
+        $interopIfd = $this->locateInteropIfd($exifIfd, $ifd0);
 
         $gpsPointer = $ifd0->get(ExifTag::GPS_IFD_POINTER);
         if ($gpsPointer instanceof IfdEntry) {
@@ -236,6 +235,14 @@ final class TiffExifReader
             }
 
             $nextOffset = $nextIfd->nextIfdOffset;
+        }
+
+        if ($interopIfd === null && $additionalIfds !== []) {
+            $interopIfd = $this->locateInteropIfd(...$additionalIfds);
+        }
+
+        if ($interopIfd === null && $this->subIfds !== []) {
+            $interopIfd = $this->locateInteropIfd(...array_values($this->subIfds));
         }
 
         $makerNotes = $this->resolveMakerNotes($makerNotesRegistry, $ifd0, $exifIfd);
@@ -583,6 +590,25 @@ final class TiffExifReader
         }
 
         $this->buf->seek($returnPos);
+    }
+
+    /**
+     * Attempts to resolve an interoperability IFD from the provided directories.
+     */
+    private function locateInteropIfd(?Ifd ...$ifds): ?Ifd
+    {
+        foreach ($ifds as $ifd) {
+            if (!$ifd instanceof Ifd) {
+                continue;
+            }
+
+            $entry = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
+            if ($entry instanceof IfdEntry) {
+                return $this->readIfd($this->pointerOffset($entry));
+            }
+        }
+
+        return null;
     }
 
     /**
