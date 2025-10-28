@@ -64,6 +64,7 @@ use function strtoupper;
 use function substr;
 use function substr_count;
 use function trim;
+use function spl_object_id;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
@@ -1197,6 +1198,24 @@ final readonly class ExifDocument
             }
         }
 
+        $fallbackTags = [
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+            ExifTag::ISO_SPEED,
+            ExifTag::ISO_SPEED_RATINGS_LEGACY,
+            ExifTag::EXPOSURE_INDEX,
+        ];
+
+        foreach ($this->fallbackIfds() as $ifd) {
+            foreach ($fallbackTags as $tag) {
+                $value = $this->int($ifd, $tag);
+                if ($value !== null) {
+                    return $value;
+                }
+            }
+        }
+
         return null;
     }
 
@@ -2309,7 +2328,19 @@ final readonly class ExifDocument
      */
     public function offsetTimeOriginal(): ?string
     {
-        return $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
+        $offset = $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
+        if ($offset !== null) {
+            return $offset;
+        }
+
+        foreach ($this->fallbackIfds() as $ifd) {
+            $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME_ORIGINAL);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -2317,7 +2348,19 @@ final readonly class ExifDocument
      */
     public function offsetTimeDigitized(): ?string
     {
-        return $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
+        $offset = $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
+        if ($offset !== null) {
+            return $offset;
+        }
+
+        foreach ($this->fallbackIfds() as $ifd) {
+            $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME_DIGITIZED);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -2325,7 +2368,19 @@ final readonly class ExifDocument
      */
     public function offsetTime(): ?string
     {
-        return $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME);
+        $offset = $this->normalizedOffset($this->exifIfd, ExifTag::OFFSET_TIME);
+        if ($offset !== null) {
+            return $offset;
+        }
+
+        foreach ($this->fallbackIfds() as $ifd) {
+            $candidate = $this->normalizedOffset($ifd, ExifTag::OFFSET_TIME);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -3199,26 +3254,35 @@ final readonly class ExifDocument
      *
      * @return list<Ifd>
      */
-    private function fallbackIfds(): array
+    private function fallbackIfds(bool $includePrimaryThumbnail = true): array
     {
         $ifds = [];
+        $seen = [];
+
+        $append = static function (?Ifd $candidate) use (&$ifds, &$seen): void {
+            if (!$candidate instanceof Ifd) {
+                return;
+            }
+
+            $id = spl_object_id($candidate);
+            if (isset($seen[$id])) {
+                return;
+            }
+
+            $seen[$id] = true;
+            $ifds[]    = $candidate;
+        };
+
+        if ($includePrimaryThumbnail) {
+            $append($this->ifd1);
+        }
 
         foreach ($this->subIfds as $ifd) {
-            if ($ifd instanceof Ifd) {
-                $ifds[] = $ifd;
-            }
+            $append($ifd);
         }
 
         foreach ($this->subsequentIfds as $ifd) {
-            if (!$ifd instanceof Ifd) {
-                continue;
-            }
-
-            if ($this->ifd1 instanceof Ifd && $ifd === $this->ifd1) {
-                continue;
-            }
-
-            $ifds[] = $ifd;
+            $append($ifd);
         }
 
         return $ifds;
