@@ -58,10 +58,9 @@ use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
-use MagicSunday\ImageMeta\Value\ExifFlash;
-use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
@@ -276,7 +275,7 @@ final class ValueFactory
         $flashInfo = ExifFlash::fromExifValue($exifDocument?->flash());
 
         $exposure = new Exposure(
-            iso: $exifDocument?->iso(),
+            iso: $exifDocument?->isoBestEffort(),
             exposureTimeSec: $exifDocument?->exposureTime(),
             fNumber: $exifDocument?->fNumber(),
             exposureBiasEv: $exifDocument?->exposureBias(),
@@ -682,7 +681,7 @@ final class ValueFactory
         $xmpCreate       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
         $xmpModify       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
         $xmpDateCreated  = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
-        $lookup = new QuickTimeLookup($quickTime);
+        $lookup          = new QuickTimeLookup($quickTime);
         $quickTimeCreate = $this->parseFlexibleDate($lookup->string('CreationDate'));
         $quickTimeModify = $this->parseFlexibleDate($lookup->string('ModifyDate'));
 
@@ -895,7 +894,7 @@ final class ValueFactory
             compressedBitsPerPixel: $exifDocument?->compressedBitsPerPixel(),
             interlace: $exifDocument?->interlace(),
             userComment: $exifDocument?->userComment(),
-            userCommentEncoding: $exifDocument?->userCommentEncoding(),
+            userCommentEncoding: $exifDocument?->userCommentEncodingBestEffort(),
         );
     }
 
