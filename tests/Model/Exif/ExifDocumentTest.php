@@ -1149,6 +1149,25 @@ final class ExifDocumentTest extends TestCase
     }
 
     /**
+     * Preserves ASCII user comments when the encoding prefix is omitted.
+     */
+    #[Test]
+    public function preservesAsciiUserCommentsWithoutEncodingPrefix(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $payload = "Note\0\0";
+
+        $exifIfd = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('Note', $doc->userComment());
+    }
+
+    /**
      * Decodes user comments tagged as Shift-JIS into UTF-8 strings.
      */
     #[Test]

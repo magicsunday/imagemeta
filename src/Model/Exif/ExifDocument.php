@@ -3039,7 +3039,9 @@ final readonly class ExifDocument
     private function decodeUserComment(string $raw): ?string
     {
         if (strlen($raw) <= 8) {
-            return null;
+            $content = trim($raw, "\0");
+
+            return $content === '' ? null : $content;
         }
 
         $prefix   = substr($raw, 0, 8);
