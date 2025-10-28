@@ -726,9 +726,12 @@ final readonly class ExifDocument
      */
     public function previewImageOffset(): ?int
     {
-        $offset = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
+        $descriptor = $this->previewDescriptor();
+        if ($descriptor === null) {
+            return null;
+        }
 
-        return $offset !== null && $offset > 0 ? $offset : null;
+        return $descriptor['offset'];
     }
 
     /**
@@ -736,9 +739,12 @@ final readonly class ExifDocument
      */
     public function previewImageLength(): ?int
     {
-        $length = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
+        $descriptor = $this->previewDescriptor();
+        if ($descriptor === null) {
+            return null;
+        }
 
-        return $length !== null && $length > 0 ? $length : null;
+        return $descriptor['length'];
     }
 
     /**
@@ -746,18 +752,45 @@ final readonly class ExifDocument
      */
     public function hasPreviewImage(): ?bool
     {
-        $offset = $this->previewImageOffset();
-        $length = $this->previewImageLength();
+        $rawOffset = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
+        $rawLength = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
 
-        if ($offset === null && $length === null) {
+        if ($rawOffset === null && $rawLength === null) {
             return null;
         }
 
-        if ($offset === null || $length === null) {
+        if ($rawOffset === null || $rawLength === null) {
             return false;
         }
 
-        return $length > 0;
+        $descriptor = $this->previewDescriptor();
+
+        if ($descriptor === null) {
+            return false;
+        }
+
+        return $descriptor['length'] > 0;
+    }
+
+    /**
+     * Normalises the preview offset/length descriptor when both components are valid.
+     *
+     * @return array{offset:int,length:int}|null
+     */
+    private function previewDescriptor(): ?array
+    {
+        $offset = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
+        $length = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
+
+        if ($offset === null || $length === null) {
+            return null;
+        }
+
+        if ($offset <= 0 || $length <= 0) {
+            return null;
+        }
+
+        return ['offset' => $offset, 'length' => $length];
     }
 
     /**
@@ -805,6 +838,11 @@ final readonly class ExifDocument
      */
     public function previewImageCompression(): ?int
     {
+        $descriptor = $this->previewDescriptor();
+        if ($descriptor === null) {
+            return null;
+        }
+
         $compression = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_COMPRESSION);
 
         return $compression !== null && $compression > 0 ? $compression : null;
@@ -815,6 +853,11 @@ final readonly class ExifDocument
      */
     public function previewImageScale(): ?float
     {
+        $descriptor = $this->previewDescriptor();
+        if ($descriptor === null) {
+            return null;
+        }
+
         $scale = $this->rational($this->exifIfd, ExifTag::PREVIEW_IMAGE_SCALE);
 
         if ($scale === null) {
@@ -994,14 +1037,18 @@ final readonly class ExifDocument
 
         $prefix   = substr($raw, 0, 8);
         $encoding = strtoupper(trim($prefix, "\0 "));
+        $normalized = str_replace(['-', " "], "", $encoding);
         $content  = trim(substr($raw, 8), "\0 ");
 
-        if ($encoding === '') {
+        if ($normalized === '') {
             return $content === '' ? null : 'ASCII';
         }
 
-        return match ($encoding) {
-            'ASCII', 'UTF8', 'UNICODE', 'JIS' => $content === '' ? null : $encoding,
+        return match ($normalized) {
+            'ASCII'   => $content === '' ? null : 'ASCII',
+            'UTF8'    => $content === '' ? null : 'UTF-8',
+            'UNICODE' => $content === '' ? null : 'UNICODE',
+            'JIS'     => $content === '' ? null : 'JIS',
             default => $content === '' ? null : 'ASCII',
         };
     }
@@ -1116,31 +1163,27 @@ final readonly class ExifDocument
                     return $value;
                 }
             }
-
-            return null;
         }
 
-        $iso = $this->int($this->exifIfd, ExifTag::ISO_SPEED);
-        if ($iso !== null) {
-            return $iso;
+        $candidates = [
+            [$this->exifIfd, ExifTag::ISO_SPEED],
+            [$this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+            [$this->exifIfd, ExifTag::ISO_SPEED_RATINGS_LEGACY],
+            [$this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+            [$this->ifd0, ExifTag::ISO_SPEED],
+            [$this->ifd0, ExifTag::ISO_SPEED_RATINGS_LEGACY],
+        ];
+
+        foreach ($candidates as [$ifd, $tag]) {
+            $value = $this->int($ifd, $tag);
+            if ($value !== null) {
+                return $value;
+            }
         }
 
-        $iso = $this->int($this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY);
-        if ($iso !== null) {
-            return $iso;
-        }
-
-        $iso = $this->int($this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX);
-        if ($iso !== null) {
-            return $iso;
-        }
-
-        $iso = $this->int($this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
-        if ($iso !== null) {
-            return $iso;
-        }
-
-        return $this->int($this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
+        return null;
     }
 
     /**
@@ -1158,9 +1201,13 @@ final readonly class ExifDocument
             [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
             [$this->exifIfd, ExifTag::ISO_SPEED],
             [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+            [$this->exifIfd, ExifTag::ISO_SPEED_RATINGS_LEGACY],
             [$this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->ifd0, ExifTag::ISO_SPEED],
+            [$this->ifd0, ExifTag::ISO_SPEED_RATINGS_LEGACY],
             [$this->ifd1, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+            [$this->ifd1, ExifTag::ISO_SPEED],
+            [$this->ifd1, ExifTag::ISO_SPEED_RATINGS_LEGACY],
         ];
 
         foreach ($fallbacks as [$ifd, $tag]) {
@@ -2024,7 +2071,12 @@ final readonly class ExifDocument
             return $dateTime;
         }
 
-        return $this->dateTimeDigitized();
+        $digitized = $this->dateTimeDigitized();
+        if ($digitized instanceof DateTimeImmutable) {
+            return $digitized;
+        }
+
+        return $this->captureDateTime();
     }
 
     /**
@@ -3217,10 +3269,11 @@ final readonly class ExifDocument
 
         $prefix   = substr($raw, 0, 8);
         $encoding = strtoupper(trim($prefix, "\0 "));
+        $normalized = str_replace(['-', " "], "", $encoding);
         $content  = substr($raw, 8);
         $content  = trim($content, "\0");
 
-        return match ($encoding) {
+        return match ($normalized) {
             'ASCII', 'UTF8', '' => $content !== '' ? $content : null,
             'UNICODE' => $this->decodeUnicodeComment($content),
             'JIS'     => $this->decodeJisComment($content),

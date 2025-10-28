@@ -348,7 +348,7 @@ final class ExifDocumentTest extends TestCase
 
         $docWithZeroLength = new ExifDocument($ifd0, $zeroLengthExif, null, null, null);
 
-        self::assertSame(4096, $docWithZeroLength->previewImageOffset());
+        self::assertNull($docWithZeroLength->previewImageOffset());
         self::assertNull($docWithZeroLength->previewImageLength());
         self::assertFalse($docWithZeroLength->hasPreviewImage());
     }
@@ -407,6 +407,39 @@ final class ExifDocumentTest extends TestCase
         self::assertNull($docWithNegativeScale->previewImageScale());
     }
 
+    #[Test]
+    public function previewMetadataRequiresOffsetAndLengthPair(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $missingLengthExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 512),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, 6),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
+        ]);
+
+        $docMissingLength = new ExifDocument($ifd0, $missingLengthExif, null, null, null);
+
+        self::assertNull($docMissingLength->previewImageOffset());
+        self::assertNull($docMissingLength->previewImageLength());
+        self::assertNull($docMissingLength->previewImageCompression());
+        self::assertNull($docMissingLength->previewImageScale());
+
+        $completeExif = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 2048),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4096),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, 6),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
+        ]);
+
+        $docComplete = new ExifDocument($ifd0, $completeExif, null, null, null);
+
+        self::assertSame(2048, $docComplete->previewImageOffset());
+        self::assertSame(4096, $docComplete->previewImageLength());
+        self::assertSame(6, $docComplete->previewImageCompression());
+        self::assertEqualsWithDelta(0.5, $docComplete->previewImageScale(), 1e-6);
+    }
+
     /**
      * Falls back to DateTimeDigitized when DateTimeOriginal is missing.
      */
@@ -448,6 +481,27 @@ final class ExifDocumentTest extends TestCase
         $best = $doc->dateTimeOriginalBestEffort();
         self::assertInstanceOf(DateTimeImmutable::class, $best);
         self::assertEquals($digitized, $best);
+    }
+
+    #[Test]
+    public function dateTimeOriginalFallsBackToModifyDateWhenPrimaryTagsMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME => new IfdEntry(ExifTag::DATETIME, 2, 1, '2010:11:12 13:14:15'),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::TIME_ZONE_OFFSET => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 3, 1, new ExifNumericList([2])),
+            ExifTag::SUB_SEC_TIME      => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '246'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertNull($doc->dateTimeOriginalRaw());
+
+        $fallback = $doc->dateTimeOriginal();
+        self::assertInstanceOf(DateTimeImmutable::class, $fallback);
+        self::assertSame('2010-11-12T13:14:15.246+02:00', $fallback->format(self::ISO_8601_MILLISECONDS));
     }
 
     #[Test]
@@ -1313,6 +1367,24 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('ASCII', $doc->userCommentEncoding());
     }
 
+    #[Test]
+    public function normalisesUtf8UserCommentPrefix(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $payload = "UTF-8\0\0\0Résumé\0";
+
+        $exifIfd = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame('Résumé', $doc->userComment());
+        self::assertSame('UTF-8', $doc->userCommentEncoding());
+        self::assertSame('UTF-8', $doc->userCommentEncodingBestEffort());
+    }
+
     /**
      * Decodes user comments tagged as Shift-JIS into UTF-8 strings.
      */
@@ -1652,6 +1724,28 @@ final class ExifDocumentTest extends TestCase
 
         $docWithoutExif = new ExifDocument($ifd0, null, null, null, null);
         self::assertSame(200, $docWithoutExif->iso());
+    }
+
+    #[Test]
+    public function isoFallsBackToLegacyIsoSpeedRatings(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::ISO_SPEED_RATINGS_LEGACY => new IfdEntry(ExifTag::ISO_SPEED_RATINGS_LEGACY, 3, 1, 400),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED_RATINGS_LEGACY => new IfdEntry(ExifTag::ISO_SPEED_RATINGS_LEGACY, 3, 1, 800),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(800, $doc->iso());
+        self::assertSame(800, $doc->isoBestEffort());
+
+        $docWithoutExif = new ExifDocument($ifd0, null, null, null, null);
+
+        self::assertSame(400, $docWithoutExif->iso());
+        self::assertSame(400, $docWithoutExif->isoBestEffort());
     }
 
     #[Test]
