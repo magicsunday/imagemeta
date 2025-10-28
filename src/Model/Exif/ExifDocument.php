@@ -795,6 +795,22 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the preview image compression identifier when provided.
+     */
+    public function previewImageCompression(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_COMPRESSION);
+    }
+
+    /**
+     * Returns the preview image scale factor when provided.
+     */
+    public function previewImageScale(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::PREVIEW_IMAGE_SCALE);
+    }
+
+    /**
      * Returns the preview image colour space identifier when present.
      */
     public function previewColorSpace(): ?int
@@ -944,6 +960,36 @@ final readonly class ExifDocument
         $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
 
         return $raw !== null ? $this->decodeUserComment($raw) : null;
+    }
+
+    /**
+     * Returns the encoding declared in the EXIF user comment prefix.
+     */
+    public function userCommentEncoding(): ?string
+    {
+        $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+        if ($raw === null) {
+            return null;
+        }
+
+        if (strlen($raw) < 8) {
+            $trimmed = trim($raw, "\0 ");
+
+            return $trimmed === '' ? null : 'ASCII';
+        }
+
+        $prefix   = substr($raw, 0, 8);
+        $encoding = strtoupper(trim($prefix, "\0 "));
+        $content  = trim(substr($raw, 8), "\0 ");
+
+        if ($encoding === '') {
+            return $content === '' ? null : 'ASCII';
+        }
+
+        return match ($encoding) {
+            'ASCII', 'UTF8', 'UNICODE', 'JIS' => $content === '' ? null : $encoding,
+            default                                   => $content === '' ? null : 'ASCII',
+        };
     }
 
     /**
@@ -1904,6 +1950,24 @@ final readonly class ExifDocument
     public function dateTimeOriginalRaw(): ?string
     {
         return $this->str($this->exifIfd, ExifTag::DATETIME_ORIGINAL);
+    }
+
+    /**
+     * Returns the DateTimeOriginal tag combined with fractional seconds and offsets when available.
+     */
+    public function dateTimeOriginal(): ?DateTimeImmutable
+    {
+        $dateTime = $this->parseExifDateTime(
+            $this->dateTimeOriginalRaw(),
+            $this->offsetTimeOriginal(),
+            $this->subSecTimeOriginal(),
+        );
+
+        if ($dateTime instanceof DateTimeImmutable) {
+            return $dateTime;
+        }
+
+        return $this->dateTimeDigitized();
     }
 
     /**

@@ -118,6 +118,10 @@ final class ExifTagTest extends TestCase
             'PREVIEW_IMAGE_BIT_DEPTH'        => 0xC522,
             'PREVIEW_DATE_TIME'              => 0xC523,
             'PREVIEW_DATE_TIME_DIGITIZED'    => 0xC524,
+
+            'PREVIEW_IMAGE_COMPRESSION'      => 0xC525,
+            'PREVIEW_IMAGE_SCALE'            => 0xC526,
+
             'YCBCR_COEFFICIENTS'             => 0x0211,
             'YCBCR_SUB_SAMPLING'             => 0x0212,
             'YCBCR_POSITIONING'              => 0x0213,

@@ -41,11 +41,19 @@ final class ExifReaderTest extends TestCase
 
         $image = $document->image();
         self::assertSame(4000, $image->width);
+        self::assertSame('ASCII', $image->userCommentEncoding);
         self::assertSame(3000, $image->height);
         self::assertSame(Orientation::TOP_LEFT, $image->orientation);
         self::assertSame(ColorSpace::SRGB, $image->colorSpace);
 
         $gps = $document->gps();
+
+        $interop = $document->interop();
+        self::assertSame('R98', $interop->index);
+        self::assertSame('0100', $interop->version);
+        self::assertNull($interop->relatedImageFileFormat);
+        self::assertSame(4000, $interop->relatedImageWidth);
+        self::assertSame(3000, $interop->relatedImageLength);
         self::assertNotNull($gps->latitude);
         self::assertEqualsWithDelta(41.888948, $gps->latitude->toFloat() ?? 0.0, 1e-6);
         self::assertNotNull($gps->longitude);
@@ -58,6 +66,8 @@ final class ExifReaderTest extends TestCase
         self::assertNull($preview->previewMimeType);
         self::assertNull($preview->previewBitDepth);
         self::assertNull($preview->previewColorSpace);
+        self::assertNull($preview->previewCompression);
+        self::assertNull($preview->previewScale);
         self::assertNull($preview->previewOffset);
         self::assertNull($preview->previewLength);
     }

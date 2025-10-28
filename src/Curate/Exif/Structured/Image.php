@@ -51,6 +51,8 @@ final readonly class Image
 
     public ?string $userComment;
 
+    public ?string $userCommentEncoding;
+
     public function __construct(ImageValue $image)
     {
         $this->width                   = $image->width;
@@ -67,5 +69,6 @@ final readonly class Image
         $this->compressedBitsPerPixel  = $image->compressedBitsPerPixel;
         $this->interlace               = $image->interlace;
         $this->userComment             = $image->userComment;
+        $this->userCommentEncoding     = $image->userCommentEncoding;
     }
 }

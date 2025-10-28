@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate\Exif\Structured;
 
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 
 /**
@@ -31,6 +32,10 @@ final readonly class Preview
 
     public ?int $previewBitDepth;
 
+    public ?Compression $previewCompression;
+
+    public ?float $previewScale;
+
     public ?string $previewEncoding;
 
     public ?string $previewMimeType;
@@ -47,6 +52,8 @@ final readonly class Preview
         $this->previewHeight     = $preview->previewHeight;
         $this->previewColorSpace = $preview->previewColorSpace;
         $this->previewBitDepth   = $preview->previewBitDepth;
+        $this->previewCompression = $preview->previewCompression;
+        $this->previewScale       = $preview->previewScale;
         $this->previewEncoding   = $preview->previewEncoding;
         $this->previewMimeType   = $preview->previewMimeType;
         $this->previewOffset     = $preview->previewOffset;

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value;
 
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 
 /**
  * Describes the availability of embedded previews or thumbnails.
@@ -25,6 +26,8 @@ final readonly class Preview
      * @param int|null       $previewHeight     Height of the preview image in pixels.
      * @param ColorSpace|null $previewColorSpace Colour space of the preview image.
      * @param int|null       $previewBitDepth   Bit depth of the preview image.
+     * @param Compression|null $previewCompression Compression applied to the preview payload.
+     * @param float|null     $previewScale      Scale factor applied to the preview relative to the main image.
      * @param string|null    $previewEncoding   Encoding name for the preview image payload.
      * @param string|null    $previewMimeType   MIME type of the preview image.
      * @param int|null       $previewOffset     Byte offset to the preview image inside the file.
@@ -37,6 +40,8 @@ final readonly class Preview
         public ?int $previewHeight,
         public ?ColorSpace $previewColorSpace,
         public ?int $previewBitDepth,
+        public ?Compression $previewCompression,
+        public ?float $previewScale,
         public ?string $previewEncoding,
         public ?string $previewMimeType,
         public ?int $previewOffset,

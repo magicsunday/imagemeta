@@ -35,6 +35,7 @@ final readonly class Image
      * @param float|null       $compressedBitsPerPixel  Average bits per pixel after compression.
      * @param int|null         $interlace               Interlace indicator reported by the camera.
      * @param string|null      $userComment             Arbitrary user comment stored by the device.
+     * @param string|null      $userCommentEncoding     Declared encoding for the user comment payload.
      */
     public function __construct(
         public ?int $width,
@@ -51,6 +52,7 @@ final readonly class Image
         public ?float $compressedBitsPerPixel,
         public ?int $interlace,
         public ?string $userComment,
+        public ?string $userCommentEncoding,
     ) {
     }
 }
