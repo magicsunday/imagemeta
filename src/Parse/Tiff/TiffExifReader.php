@@ -602,13 +602,45 @@ final class TiffExifReader
                 continue;
             }
 
+            if ($this->ifdLooksLikeInterop($ifd)) {
+                return $ifd;
+            }
+
             $entry = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
             if ($entry instanceof IfdEntry) {
-                return $this->readIfd($this->pointerOffset($entry));
+                $candidate = $this->readIfd($this->pointerOffset($entry));
+
+                if ($this->ifdLooksLikeInterop($candidate)) {
+                    return $candidate;
+                }
+
+                return $candidate;
             }
         }
 
         return null;
+    }
+
+    /**
+     * Determines whether the provided directory contains interoperability tags.
+     */
+    private function ifdLooksLikeInterop(Ifd $ifd): bool
+    {
+        $interopTags = [
+            ExifTag::INTEROPERABILITY_INDEX,
+            ExifTag::INTEROPERABILITY_VERSION,
+            ExifTag::RELATED_IMAGE_FILE_FORMAT,
+            ExifTag::RELATED_IMAGE_WIDTH,
+            ExifTag::RELATED_IMAGE_LENGTH,
+        ];
+
+        foreach ($interopTags as $tag) {
+            if ($ifd->get($tag) instanceof IfdEntry) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
