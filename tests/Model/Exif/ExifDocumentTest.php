@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
@@ -533,6 +534,27 @@ final class ExifDocumentTest extends TestCase
         $parsed = $doc->dateTimeOriginal();
         self::assertInstanceOf(DateTimeImmutable::class, $parsed);
         self::assertSame('2020-05-06T07:08:09+00:00', $parsed->format(DATE_ATOM));
+    }
+
+    #[Test]
+    public function dateTimeOriginalRawFallsBackToIfd0WhenExifTagMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(
+                ExifTag::DATETIME_ORIGINAL,
+                TiffConst::TYPE_ASCII,
+                1,
+                '2001:02:03 04:05:06',
+            ),
+        ]);
+
+        $doc = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+
+        self::assertSame('2001:02:03 04:05:06', $doc->dateTimeOriginalRaw());
+
+        $resolved = $doc->dateTimeOriginal();
+        self::assertInstanceOf(DateTimeImmutable::class, $resolved);
+        self::assertSame('2001-02-03T04:05:06+00:00', $resolved->format(DATE_ATOM));
     }
 
     #[Test]
@@ -1421,6 +1443,21 @@ final class ExifDocumentTest extends TestCase
         $magnitude = $doc->accelerationMs2();
         self::assertNotNull($magnitude);
         self::assertEqualsWithDelta(9.8, $magnitude, 0.0001);
+    }
+
+    #[Test]
+    public function userCommentFallsBackToIfd0WhenExifEntryMissing(): void
+    {
+        $payload = "ASCII\0\0\0Legacy fallback\0";
+
+        $ifd0 = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
+        ]);
+
+        $doc = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+
+        self::assertSame('Legacy fallback', $doc->userComment());
+        self::assertSame('ASCII', $doc->userCommentEncodingBestEffort());
     }
 
     /**
