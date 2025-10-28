@@ -745,39 +745,87 @@ final class ValueFactory
             return [null, null, null];
         }
 
-        $offset = $document->offsetTimeOriginal();
-        if ($offset === null) {
-            $zoneOffsets = $document->timeZoneOffsetMinutes();
-            if (is_array($zoneOffsets) && array_key_exists(0, $zoneOffsets)) {
+        $original = $document->dateTimeOriginalBestEffort();
+
+        $zoneOffsets = $document->timeZoneOffsetMinutes();
+        $offset      = $document->offsetTimeOriginal();
+        if ($offset === null && is_array($zoneOffsets) && array_key_exists(0, $zoneOffsets)) {
+            $offset = $zoneOffsets[0];
+        }
+
+        if ($offset === null && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw())) {
+            $offset = $document->offsetTimeDigitized();
+            if ($offset === null && is_array($zoneOffsets) && array_key_exists(1, $zoneOffsets)) {
+                $offset = $zoneOffsets[1];
+            }
+        }
+
+        if (
+            $offset === null
+            && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw())
+            && $this->dateTimeStringEmpty($document->dateTimeDigitizedRaw())
+        ) {
+            $offset = $document->offsetTime();
+            if ($offset === null && is_array($zoneOffsets) && array_key_exists(0, $zoneOffsets)) {
                 $offset = $zoneOffsets[0];
             }
         }
 
-        if (is_int($offset)) {
-            $absOffset = abs($offset);
-            $hours     = $absOffset;
-            $minutes   = 0;
+        $offsetString = $this->normaliseOffsetValue($offset);
+        $timezone     = ValueConverters::parseOffset($offsetString);
 
-            if ($absOffset > 14) {
-                $hours   = intdiv($absOffset, 60);
-                $minutes = $absOffset % 60;
-            }
-
-            if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
-                $offset = null;
-            } else {
-                $sign   = $offset < 0 ? '-' : '+';
-                $offset = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
-            }
+        if ($timezone instanceof DateTimeZone && $original instanceof DateTimeImmutable) {
+            $original = $original->setTimezone($timezone);
         }
 
-        $timezone = ValueConverters::parseOffset(is_string($offset) ? $offset : null);
+        $subSeconds = $document->subSecTimeOriginal();
 
         return [
-            $document->captureDateTime(),
-            $timezone,
-            $document->subSecTimeOriginal(),
+            $original,
+            $timezone instanceof DateTimeZone ? $timezone : null,
+            $subSeconds,
         ];
+    }
+
+    /**
+     * Determines whether an EXIF date/time string is empty after trimming whitespace.
+     */
+    private function dateTimeStringEmpty(?string $value): bool
+    {
+        return $value === null || trim($value) === '';
+    }
+
+    /**
+     * Normalises textual or numeric offsets to a canonical ±HH:MM representation.
+     */
+    private function normaliseOffsetValue(int|string|null $offset): ?string
+    {
+        if ($offset === null) {
+            return null;
+        }
+
+        if (is_string($offset)) {
+            $trimmed = trim($offset);
+
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        $absOffset = abs($offset);
+        $hours     = $absOffset;
+        $minutes   = 0;
+
+        if ($absOffset > 14) {
+            $hours   = intdiv($absOffset, 60);
+            $minutes = $absOffset % 60;
+        }
+
+        if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
+            return null;
+        }
+
+        $sign = $offset < 0 ? '-' : '+';
+
+        return sprintf('%s%02d:%02d', $sign, $hours, $minutes);
     }
 
     /**

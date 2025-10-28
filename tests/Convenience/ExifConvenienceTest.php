@@ -125,6 +125,35 @@ final class ExifConvenienceTest extends TestCase
         self::assertSame(320, ExifConvenience::iso($doc));
     }
 
+    #[Test]
+    public function isoParsesIsoPrefixedAsciiValues(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 7, 'ISO 800'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(800, ExifConvenience::iso($doc));
+    }
+
+    #[Test]
+    public function isoReadsValuesFromSubIfds(): void
+    {
+        $subIfd = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                3,
+                1,
+                640,
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, null, null, null, null, [], [256 => $subIfd]);
+
+        self::assertSame(640, ExifConvenience::iso($doc));
+    }
+
     /**
      * Validates EXIF 3.0 sensitivity metadata honours the documented priority rules and supports
      * files that only populate the newer tags.
