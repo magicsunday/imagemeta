@@ -14,6 +14,8 @@
 - Expanded GPS coverage to include horizontal positioning error and the full destination navigation set from EXIF 2.32 table 66.
 - Introduced dedicated maker note decoders for Apple (`MakerNotes\AppleDecoder`), Canon, Nikon and Sony plus the
   `Curate\Resolver\MakerNotesResolver` convenience helper.
+- Added best-effort EXIF fallbacks that resolve ISO sensitivity, capture timestamps, and user comment encodings from SubIFDs and
+  primary thumbnails, including timezone offsets carried outside the main EXIF directory.
 
 ### Changed
 - Renamed the diagonal field-of-view helper from `fovDeg` to `fovDiagonalDeg`; consumers should switch to the new property name.

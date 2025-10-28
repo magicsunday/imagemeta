@@ -39,6 +39,7 @@ use function iconv;
 use function pack;
 use function strlen;
 use function substr;
+use function str_pad;
 
 /**
  * @covers \MagicSunday\ImageMeta\Model\Exif\ExifDocument
@@ -1967,6 +1968,75 @@ final class ExifDocumentTest extends TestCase
         $doc = new ExifDocument(new Ifd([]), null, null, null, null, null, [], [256 => $subIfd]);
 
         self::assertSame(640, $doc->isoBestEffort());
+    }
+
+    #[Test]
+    public function isoFallsBackToSubIfdsWhenPrimaryTagsAreMissing(): void
+    {
+        $subIfd = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                3,
+                1,
+                512,
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, null, null, null, null, [], [1024 => $subIfd]);
+
+        self::assertSame(512, $doc->iso());
+        self::assertSame(512, $doc->isoBestEffort());
+    }
+
+    #[Test]
+    public function isoFallsBackToThumbnailIfdWhenAvailable(): void
+    {
+        $ifd1 = new Ifd([
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                3,
+                1,
+                1600,
+            ),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
+
+        self::assertSame(1600, $doc->iso());
+        self::assertSame(1600, $doc->isoBestEffort());
+    }
+
+    #[Test]
+    public function dateTimeOriginalFallsBackToThumbnailIfdMetadata(): void
+    {
+        $ifd1 = new Ifd([
+            ExifTag::DATETIME_ORIGINAL    => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:06 07:08:09'),
+            ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
+
+        self::assertSame('2024:05:06 07:08:09', $doc->dateTimeOriginalRaw());
+
+        $dateTime = $doc->dateTimeOriginalBestEffort();
+        self::assertNotNull($dateTime);
+        self::assertSame('2024-05-06T07:08:09+02:00', $dateTime->format(DATE_ATOM));
+    }
+
+    #[Test]
+    public function userCommentEncodingFallsBackToThumbnailIfd(): void
+    {
+        $comment = str_pad('ASCII', 8, "\0") . 'Fallback comment';
+
+        $ifd1 = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $comment),
+        ]);
+
+        $doc = new ExifDocument(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
+
+        self::assertSame('Fallback comment', $doc->userComment());
+        self::assertSame('ASCII', $doc->userCommentEncoding());
+        self::assertSame('ASCII', $doc->userCommentEncodingBestEffort());
     }
 
     /**
