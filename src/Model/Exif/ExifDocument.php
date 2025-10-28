@@ -1016,7 +1016,7 @@ final readonly class ExifDocument
      */
     public function userComment(): ?string
     {
-        $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+        $raw = $this->rawUserComment();
 
         return $raw !== null ? $this->decodeUserComment($raw) : null;
     }
@@ -1026,7 +1026,7 @@ final readonly class ExifDocument
      */
     public function userCommentEncoding(): ?string
     {
-        $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+        $raw = $this->rawUserComment();
         if ($raw === null) {
             return null;
         }
@@ -1066,7 +1066,7 @@ final readonly class ExifDocument
             return $encoding;
         }
 
-        $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+        $raw = $this->rawUserComment();
         if ($raw === null) {
             return null;
         }
@@ -1247,6 +1247,34 @@ final readonly class ExifDocument
             foreach ($this->subIfds as $subIfd) {
                 foreach ($tagPriority as $tag) {
                     $value = $this->coerceIntValue($this->value($subIfd, $tag));
+                    if ($value !== null) {
+                        return $value;
+                    }
+                }
+            }
+        }
+
+        if ($this->subsequentIfds !== []) {
+            $additionalTags = [
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+                ExifTag::ISO_SPEED,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::ISO_SPEED_RATINGS_LEGACY,
+                ExifTag::EXPOSURE_INDEX,
+            ];
+
+            foreach ($this->subsequentIfds as $ifd) {
+                if (!$ifd instanceof Ifd) {
+                    continue;
+                }
+
+                if ($this->ifd1 instanceof Ifd && $ifd === $this->ifd1) {
+                    continue;
+                }
+
+                foreach ($additionalTags as $tag) {
+                    $value = $this->coerceIntValue($this->value($ifd, $tag));
                     if ($value !== null) {
                         return $value;
                     }
@@ -2090,7 +2118,19 @@ final readonly class ExifDocument
      */
     public function dateTimeOriginalRaw(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::DATETIME_ORIGINAL);
+        $value = $this->str($this->exifIfd, ExifTag::DATETIME_ORIGINAL);
+        if ($value !== null) {
+            return $value;
+        }
+
+        foreach ($this->fallbackIfds() as $ifd) {
+            $candidate = $this->str($ifd, ExifTag::DATETIME_ORIGINAL);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -2149,7 +2189,19 @@ final readonly class ExifDocument
      */
     public function dateTimeDigitizedRaw(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::DATETIME_DIGITIZED);
+        $value = $this->str($this->exifIfd, ExifTag::DATETIME_DIGITIZED);
+        if ($value !== null) {
+            return $value;
+        }
+
+        foreach ($this->fallbackIfds() as $ifd) {
+            $candidate = $this->str($ifd, ExifTag::DATETIME_DIGITIZED);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -3143,6 +3195,36 @@ final readonly class ExifDocument
     }
 
     /**
+     * Provides the fallback IFDs consulted when primary metadata is absent.
+     *
+     * @return list<Ifd>
+     */
+    private function fallbackIfds(): array
+    {
+        $ifds = [];
+
+        foreach ($this->subIfds as $ifd) {
+            if ($ifd instanceof Ifd) {
+                $ifds[] = $ifd;
+            }
+        }
+
+        foreach ($this->subsequentIfds as $ifd) {
+            if (!$ifd instanceof Ifd) {
+                continue;
+            }
+
+            if ($this->ifd1 instanceof Ifd && $ifd === $this->ifd1) {
+                continue;
+            }
+
+            $ifds[] = $ifd;
+        }
+
+        return $ifds;
+    }
+
+    /**
      * Coerces a raw EXIF scalar value into an integer when possible.
      */
     private function coerceIntValue(
@@ -3214,6 +3296,26 @@ final readonly class ExifDocument
         $value = $this->value($ifd, $tag);
 
         return is_string($value) ? $value : null;
+    }
+
+    /**
+     * Retrieves the raw user comment value from primary and fallback directories.
+     */
+    private function rawUserComment(): ?string
+    {
+        $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+        if ($raw !== null) {
+            return $raw;
+        }
+
+        foreach ($this->fallbackIfds() as $ifd) {
+            $candidate = $this->rawString($ifd, ExifTag::USER_COMMENT);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     /**
