@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use MagicSunday\ImageMeta\Value\Enum\Compression;
+
 final class ExifDocumentFallbackTest extends TestCase
 {
     #[Test]
@@ -95,5 +97,50 @@ final class ExifDocumentFallbackTest extends TestCase
         $preview = $apiDocument->preview();
         self::assertNull($preview->previewCompression);
         self::assertNull($preview->previewScale);
+    }
+
+    #[Test]
+    public function previewMetadataExposedWhenDescriptorIsComplete(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 65_536),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 32_768),
+            ExifTag::PREVIEW_IMAGE_WIDTH       => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 1_600),
+            ExifTag::PREVIEW_IMAGE_HEIGHT      => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 900),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_COMPRESSION,
+                3,
+                1,
+                Compression::JPEG->value,
+            ),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(1, 2),
+            ),
+            ExifTag::PREVIEW_IMAGE_ENCODING    => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE   => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
+        ]);
+
+        $apiDocument = new ApiExifDocument(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
+
+        $preview = $apiDocument->preview();
+
+        self::assertTrue($preview->hasThumbnail);
+        self::assertTrue($preview->hasPreview);
+        self::assertSame(1_600, $preview->previewWidth);
+        self::assertSame(900, $preview->previewHeight);
+        self::assertSame(65_536, $preview->previewOffset);
+        self::assertSame(32_768, $preview->previewLength);
+        self::assertSame('JPEG', $preview->previewEncoding);
+        self::assertSame('image/jpeg', $preview->previewMimeType);
+        self::assertSame(Compression::JPEG, $preview->previewCompression);
+        self::assertEqualsWithDelta(0.5, $preview->previewScale ?? 0.0, 1e-6);
     }
 }
