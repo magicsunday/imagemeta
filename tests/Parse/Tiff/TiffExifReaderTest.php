@@ -292,6 +292,17 @@ final class TiffExifReaderTest extends TestCase
     }
 
     #[Test]
+    public function resolvesInteropStoredDirectlyInSubIfd(): void
+    {
+        $blob      = self::buildClassicInteropInlineSubIfdBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        self::assertSame('R98', $document->interopIndex());
+        self::assertSame('0100', $document->interopVersion());
+        self::assertSame(2048, $document->relatedImageWidth());
+    }
+
+    #[Test]
     public function parsesLinkedIfdChain(): void
     {
         $blob      = $this->buildClassicLinkedIfdBlob();
@@ -1276,6 +1287,30 @@ final class TiffExifReaderTest extends TestCase
         $interopIfd = pack('v', count($interopEntries)) . implode('', $interopEntries) . pack('V', 0);
 
         return $header . $ifd0 . $subIfd . $interopIfd;
+    }
+
+    private static function buildClassicInteropInlineSubIfdBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0Length   = 2 + 12 + 4;
+        $subIfdOffset = 8 + $ifd0Length;
+
+        $ifd0 = pack('v', 1)
+            . self::packClassicEntry(ExifTag::SUB_IFDS, 4, 1, $subIfdOffset)
+            . pack('V', 0);
+
+        $subIfdEntries = [
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, self::inlineAsciiToInt('R98', 4)),
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_VERSION, 2, 4, self::inlineAsciiToInt('0100', 4)),
+            self::packClassicEntry(ExifTag::RELATED_IMAGE_WIDTH, 4, 1, 2048),
+        ];
+
+        $subIfd = pack('v', count($subIfdEntries))
+            . implode('', $subIfdEntries)
+            . pack('V', 0);
+
+        return $header . $ifd0 . $subIfd;
     }
 
     /**
