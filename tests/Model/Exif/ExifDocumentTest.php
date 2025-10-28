@@ -285,12 +285,15 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_LENGTH        => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 16_384),
             ExifTag::PREVIEW_IMAGE_WIDTH         => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 1_600),
             ExifTag::PREVIEW_IMAGE_HEIGHT        => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 900),
+            ExifTag::PREVIEW_IMAGE_ENCODING      => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE     => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
             ExifTag::PREVIEW_IMAGE_COLOR_SPACE   => new IfdEntry(
                 ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
                 3,
                 1,
                 ColorSpace::ADOBE_RGB->value,
             ),
+            ExifTag::PREVIEW_IMAGE_BIT_DEPTH     => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 8),
             ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:10:25 18:45:30'),
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:10:25 18:40:00'),
         ]);
@@ -303,6 +306,9 @@ final class ExifDocumentTest extends TestCase
         self::assertTrue($document->hasPreviewImage());
         self::assertSame(1_600, $document->previewImageWidth());
         self::assertSame(900, $document->previewImageHeight());
+        self::assertSame('JPEG', $document->previewImageEncoding());
+        self::assertSame('image/jpeg', $document->previewImageMimeType());
+        self::assertSame(8, $document->previewImageBitDepth());
         self::assertSame(ColorSpace::ADOBE_RGB->value, $document->previewColorSpace());
 
         $previewDateTime = $document->previewDateTime();

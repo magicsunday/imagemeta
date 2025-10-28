@@ -54,6 +54,12 @@ final class ExifReaderTest extends TestCase
         $preview = $document->preview();
         self::assertTrue($preview->hasThumbnail);
         self::assertNull($preview->hasPreview);
+        self::assertNull($preview->previewEncoding);
+        self::assertNull($preview->previewMimeType);
+        self::assertNull($preview->previewBitDepth);
+        self::assertNull($preview->previewColorSpace);
+        self::assertNull($preview->previewOffset);
+        self::assertNull($preview->previewLength);
     }
 
     #[Test]

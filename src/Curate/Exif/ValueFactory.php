@@ -343,6 +343,12 @@ final class ValueFactory
             $exifDocument?->hasPreviewImage(),
             $exifDocument?->previewImageWidth(),
             $exifDocument?->previewImageHeight(),
+            ColorSpace::fromExifValue($exifDocument?->previewColorSpace()),
+            $exifDocument?->previewImageBitDepth(),
+            $exifDocument?->previewImageEncoding(),
+            $exifDocument?->previewImageMimeType(),
+            $exifDocument?->previewImageOffset(),
+            $exifDocument?->previewImageLength(),
         );
 
         $video = new Video(

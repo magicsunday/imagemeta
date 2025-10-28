@@ -771,6 +771,30 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the preview image encoding identifier when present.
+     */
+    public function previewImageEncoding(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::PREVIEW_IMAGE_ENCODING);
+    }
+
+    /**
+     * Returns the preview image MIME type.
+     */
+    public function previewImageMimeType(): ?string
+    {
+        return $this->str($this->exifIfd, ExifTag::PREVIEW_IMAGE_MIME_TYPE);
+    }
+
+    /**
+     * Returns the preview image bit depth when provided by the metadata.
+     */
+    public function previewImageBitDepth(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_BIT_DEPTH);
+    }
+
+    /**
      * Returns the preview image colour space identifier when present.
      */
     public function previewColorSpace(): ?int
