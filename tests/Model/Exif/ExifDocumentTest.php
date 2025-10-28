@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -438,6 +439,29 @@ final class ExifDocumentTest extends TestCase
         self::assertSame(4096, $docComplete->previewImageLength());
         self::assertSame(6, $docComplete->previewImageCompression());
         self::assertEqualsWithDelta(0.5, $docComplete->previewImageScale(), 1e-6);
+    }
+
+    #[Test]
+    public function previewMetadataIgnoresOffsetsBeyondSupportedRange(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $offset = UInt64::fromUInt32(0x8000_0000, 0);
+
+        $exifIfd = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 16, 1, $offset),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4096),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, 6),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
+        ]);
+
+        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertFalse($document->hasPreviewImage());
+        self::assertNull($document->previewImageOffset());
+        self::assertNull($document->previewImageLength());
+        self::assertNull($document->previewImageCompression());
+        self::assertNull($document->previewImageScale());
     }
 
     /**

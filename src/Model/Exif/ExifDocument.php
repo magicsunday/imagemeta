@@ -3129,9 +3129,9 @@ final readonly class ExifDocument
     /**
      * Retrieves the raw entry value for the provided tag.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null
      */
-    private function value(?Ifd $ifd, int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+    private function value(?Ifd $ifd, int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null
     {
         if (!$ifd instanceof Ifd) {
             return null;
@@ -3167,6 +3167,10 @@ final readonly class ExifDocument
         }
 
         if ($value instanceof UInt64) {
+            if (!$value->fitsSignedInt()) {
+                return null;
+            }
+
             return $value->toInt('EXIF integer coercion');
         }
 
