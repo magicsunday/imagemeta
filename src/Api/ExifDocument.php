@@ -124,6 +124,26 @@ final class ExifDocument
         return $this->interop;
     }
 
+    public function iso(): ?int
+    {
+        return $this->raw?->isoBestEffort();
+    }
+
+    public function dateTimeOriginal(): ?DateTimeImmutable
+    {
+        return $this->raw?->dateTimeOriginalBestEffort();
+    }
+
+    public function userComment(): ?string
+    {
+        return $this->raw?->userComment();
+    }
+
+    public function userCommentEncoding(): ?string
+    {
+        return $this->raw?->userCommentEncodingBestEffort();
+    }
+
     public function hasData(): bool
     {
         return $this->raw instanceof ModelExifDocument;

@@ -58,11 +58,42 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertNotNull($bestEffortOriginal);
         self::assertSame('2024-05-06T07:08:09+02:00', $bestEffortOriginal->format(DATE_ATOM));
 
+        $apiOriginal = $apiDocument->dateTimeOriginal();
+        self::assertNotNull($apiOriginal);
+        self::assertSame('2024-05-06T07:08:09+02:00', $apiOriginal->format(DATE_ATOM));
+
+        self::assertSame(400, $apiDocument->iso());
+
         $exposure = $apiDocument->exposure();
         self::assertSame(400, $exposure->iso);
 
         $image = $apiDocument->image();
         self::assertSame('Shot with ND filter', $image->userComment);
         self::assertSame('ASCII', $image->userCommentEncoding);
+
+        self::assertSame('Shot with ND filter', $apiDocument->userComment());
+        self::assertSame('ASCII', $apiDocument->userCommentEncoding());
+    }
+
+    #[Test]
+    public function previewMetadataRequiresValidDescriptor(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, 6),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(1, 2),
+            ),
+        ]);
+
+        $apiDocument = new ApiExifDocument(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
+
+        $preview = $apiDocument->preview();
+        self::assertNull($preview->previewCompression);
+        self::assertNull($preview->previewScale);
     }
 }
