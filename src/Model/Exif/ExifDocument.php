@@ -730,12 +730,12 @@ final readonly class ExifDocument
      */
     public function previewImageOffset(): ?int
     {
-        $descriptor = $this->previewDescriptor();
-        if ($descriptor === null) {
+        $context = $this->previewContext();
+        if ($context === null) {
             return null;
         }
 
-        return $descriptor['offset'];
+        return $context['offset'];
     }
 
     /**
@@ -743,12 +743,12 @@ final readonly class ExifDocument
      */
     public function previewImageLength(): ?int
     {
-        $descriptor = $this->previewDescriptor();
-        if ($descriptor === null) {
+        $context = $this->previewContext();
+        if ($context === null) {
             return null;
         }
 
-        return $descriptor['length'];
+        return $context['length'];
     }
 
     /**
@@ -756,45 +756,89 @@ final readonly class ExifDocument
      */
     public function hasPreviewImage(): ?bool
     {
-        $rawOffset = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
-        $rawLength = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
-
-        if ($rawOffset === null && $rawLength === null) {
-            return null;
+        $context = $this->previewContext();
+        if ($context !== null) {
+            return $context['length'] > 0;
         }
 
-        if ($rawOffset === null || $rawLength === null) {
-            return false;
+        foreach ($this->previewCandidateIfds() as $ifd) {
+            if ($ifd->get(ExifTag::PREVIEW_IMAGE_START) instanceof IfdEntry
+                || $ifd->get(ExifTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry) {
+                return false;
+            }
         }
 
-        $descriptor = $this->previewDescriptor();
+        $otherPreviewTags = [
+            ExifTag::PREVIEW_IMAGE_COMPRESSION,
+            ExifTag::PREVIEW_IMAGE_SCALE,
+            ExifTag::PREVIEW_IMAGE_WIDTH,
+            ExifTag::PREVIEW_IMAGE_HEIGHT,
+            ExifTag::PREVIEW_IMAGE_ENCODING,
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE,
+            ExifTag::PREVIEW_IMAGE_BIT_DEPTH,
+            ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
+        ];
 
-        if ($descriptor === null) {
-            return false;
+        foreach ($this->previewCandidateIfds() as $ifd) {
+            foreach ($otherPreviewTags as $tag) {
+                if ($ifd->get($tag) instanceof IfdEntry) {
+                    return false;
+                }
+            }
         }
 
-        return $descriptor['length'] > 0;
+        return null;
     }
 
     /**
      * Normalises the preview offset/length descriptor when both components are valid.
      *
-     * @return array{offset:int,length:int}|null
+     * @return array{ifd:Ifd,offset:int,length:int}|null
      */
-    private function previewDescriptor(): ?array
+    private function previewContext(): ?array
     {
-        $offset = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_START);
-        $length = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_LENGTH);
+        foreach ($this->previewCandidateIfds() as $ifd) {
+            $offset = $this->int($ifd, ExifTag::PREVIEW_IMAGE_START);
+            $length = $this->int($ifd, ExifTag::PREVIEW_IMAGE_LENGTH);
 
-        if ($offset === null || $length === null) {
-            return null;
+            if ($offset === null && $length === null) {
+                continue;
+            }
+
+            if ($offset === null || $length === null) {
+                continue;
+            }
+
+            if ($offset <= 0 || $length <= 0) {
+                continue;
+            }
+
+            return [
+                'ifd'    => $ifd,
+                'offset' => $offset,
+                'length' => $length,
+            ];
         }
 
-        if ($offset <= 0 || $length <= 0) {
-            return null;
+        return null;
+    }
+
+    /**
+     * @return list<Ifd>
+     */
+    private function previewCandidateIfds(): array
+    {
+        $candidates = [];
+
+        if ($this->exifIfd instanceof Ifd) {
+            $candidates[] = $this->exifIfd;
         }
 
-        return ['offset' => $offset, 'length' => $length];
+        foreach ($this->fallbackIfds(includePrimaryThumbnail: false) as $ifd) {
+            $candidates[] = $ifd;
+        }
+
+        return $candidates;
     }
 
     /**
@@ -802,7 +846,12 @@ final readonly class ExifDocument
      */
     public function previewImageWidth(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_WIDTH);
+        $context = $this->previewContext();
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_WIDTH);
     }
 
     /**
@@ -810,7 +859,12 @@ final readonly class ExifDocument
      */
     public function previewImageHeight(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_HEIGHT);
+        $context = $this->previewContext();
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_HEIGHT);
     }
 
     /**
@@ -818,7 +872,12 @@ final readonly class ExifDocument
      */
     public function previewImageEncoding(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::PREVIEW_IMAGE_ENCODING);
+        $context = $this->previewContext();
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->str($context['ifd'], ExifTag::PREVIEW_IMAGE_ENCODING);
     }
 
     /**
@@ -826,7 +885,12 @@ final readonly class ExifDocument
      */
     public function previewImageMimeType(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::PREVIEW_IMAGE_MIME_TYPE);
+        $context = $this->previewContext();
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->str($context['ifd'], ExifTag::PREVIEW_IMAGE_MIME_TYPE);
     }
 
     /**
@@ -834,7 +898,12 @@ final readonly class ExifDocument
      */
     public function previewImageBitDepth(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_BIT_DEPTH);
+        $context = $this->previewContext();
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_BIT_DEPTH);
     }
 
     /**
@@ -842,12 +911,12 @@ final readonly class ExifDocument
      */
     public function previewImageCompression(): ?int
     {
-        $descriptor = $this->previewDescriptor();
-        if ($descriptor === null) {
+        $context = $this->previewContext();
+        if ($context === null) {
             return null;
         }
 
-        $compression = $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_COMPRESSION);
+        $compression = $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_COMPRESSION);
 
         return $compression !== null && $compression > 0 ? $compression : null;
     }
@@ -857,12 +926,12 @@ final readonly class ExifDocument
      */
     public function previewImageScale(): ?float
     {
-        $descriptor = $this->previewDescriptor();
-        if ($descriptor === null) {
+        $context = $this->previewContext();
+        if ($context === null) {
             return null;
         }
 
-        $scale = $this->rational($this->exifIfd, ExifTag::PREVIEW_IMAGE_SCALE);
+        $scale = $this->rational($context['ifd'], ExifTag::PREVIEW_IMAGE_SCALE);
 
         if ($scale === null) {
             return null;
@@ -876,7 +945,12 @@ final readonly class ExifDocument
      */
     public function previewColorSpace(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::PREVIEW_IMAGE_COLOR_SPACE);
+        $context = $this->previewContext();
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_COLOR_SPACE);
     }
 
     /**
