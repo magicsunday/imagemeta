@@ -131,15 +131,15 @@ final readonly class ValueConverters
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
-     * @param int|float|string|array<int, int|float|string>|ExifRational|ExifRationalList|ExifNumericList|null $v The value to convert.
+     * @param int|float|string|array<int, int|float|string>|ExifRational|ExifRationalList|ExifNumericList|null $value The value to convert.
      *
      * @return float|null
      */
     public static function rationalToFloat(
-        int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|null $v,
+        int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|null $value,
     ): ?float {
-        if (is_array($v)) {
-            $components = array_values($v);
+        if (is_array($value)) {
+            $components = array_values($value);
             if (!isset($components[0], $components[1])) {
                 return null;
             }
@@ -154,16 +154,16 @@ final readonly class ValueConverters
             return $numerator / $denominator;
         }
 
-        if ($v instanceof ExifRational) {
-            if ($v->denominator === 0) {
+        if ($value instanceof ExifRational) {
+            if ($value->denominator === 0) {
                 return null;
             }
 
-            return (float) $v->numerator / (float) $v->denominator;
+            return (float) $value->numerator / (float) $value->denominator;
         }
 
-        if ($v instanceof ExifRationalList) {
-            $first = $v->values[0] ?? null;
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
             if ($first instanceof ExifRational) {
                 return self::rationalToFloat($first);
             }
@@ -171,8 +171,8 @@ final readonly class ValueConverters
             return null;
         }
 
-        if ($v instanceof ExifNumericList) {
-            $first = $v->values[0] ?? null;
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
             if (is_int($first) || is_float($first)) {
                 return (float) $first;
             }
@@ -180,8 +180,8 @@ final readonly class ValueConverters
             return null;
         }
 
-        if (is_int($v) || is_float($v)) {
-            return (float) $v;
+        if (is_int($value) || is_float($value)) {
+            return (float) $value;
         }
 
         return null;
