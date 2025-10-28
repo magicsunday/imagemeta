@@ -487,6 +487,58 @@ final class ExifAssemblerTest extends TestCase
     }
 
     #[Test]
+    public function structuredMetadataUsesFallbackExposureTemporalAndUserCommentEncoding(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL        => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, 'corrupted timestamp'),
+            ExifTag::DATETIME_DIGITIZED       => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:05:06 07:08:09'),
+            ExifTag::OFFSET_TIME_DIGITIZED    => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:00'),
+            ExifTag::EXPOSURE_INDEX           => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(400, 1)),
+            ExifTag::USER_COMMENT             => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Travel day'),
+            ExifTag::PREVIEW_IMAGE_START      => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 16_384),
+            ExifTag::PREVIEW_IMAGE_LENGTH     => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4_096),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_COMPRESSION,
+                3,
+                1,
+                Compression::JPEG->value,
+            ),
+            ExifTag::PREVIEW_IMAGE_SCALE      => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(1, 2),
+            ),
+        ]);
+
+        $metadata     = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
+        $structured   = (new ExifAssembler())->assemble($metadata);
+        $temporal     = $structured->capture->temporal;
+        $preview      = $structured->media->preview;
+
+        self::assertSame(400, $structured->exposure->iso);
+
+        $original = $temporal->original;
+        self::assertInstanceOf(DateTimeImmutable::class, $original);
+        self::assertSame('2024-05-06T07:08:09+02:00', $original->format(DATE_ATOM));
+
+        self::assertSame('Travel day', $structured->media->image->userComment);
+        self::assertSame('ASCII', $structured->media->image->userCommentEncoding);
+
+        self::assertTrue($preview->hasThumbnail);
+        self::assertTrue($preview->hasPreview);
+        self::assertSame(16_384, $preview->previewOffset);
+        self::assertSame(4_096, $preview->previewLength);
+        self::assertSame(Compression::JPEG, $preview->previewCompression);
+        self::assertEqualsWithDelta(0.5, $preview->previewScale ?? 0.0, 1e-6);
+    }
+
+    #[Test]
     public function doesNotFallbackToXmpForRightsOrOwnerName(): void
     {
         $xmpDocument = new XmpDocument([
