@@ -1443,8 +1443,11 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('ASCII', $doc->userCommentEncoding());
     }
 
+    /**
+     * Treats non-standard UTF-8 user comment prefixes as undefined per the EXIF specification.
+     */
     #[Test]
-    public function normalisesUtf8UserCommentPrefix(): void
+    public function treatsUtf8UserCommentPrefixAsUndefined(): void
     {
         $ifd0 = new Ifd([]);
 
@@ -1457,8 +1460,8 @@ final class ExifDocumentTest extends TestCase
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Résumé', $doc->userComment());
-        self::assertSame('UTF-8', $doc->userCommentEncoding());
-        self::assertSame('UTF-8', $doc->userCommentEncodingBestEffort());
+        self::assertSame('UNDEFINED', $doc->userCommentEncoding());
+        self::assertSame('UNDEFINED', $doc->userCommentEncodingBestEffort());
     }
 
     #[Test]
@@ -1573,8 +1576,8 @@ final class ExifDocumentTest extends TestCase
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Café 🌟', $doc->userComment());
-        self::assertSame('UTF-8', $doc->userCommentEncoding());
-        self::assertSame('UTF-8', $doc->userCommentEncodingBestEffort());
+        self::assertSame('UNDEFINED', $doc->userCommentEncoding());
+        self::assertSame('UNDEFINED', $doc->userCommentEncodingBestEffort());
     }
 
     /**

@@ -230,7 +230,7 @@ final class ExifBackfillMatrixTest extends TestCase
             221,
             '2024-05-06T07:08:09+09:00',
             'Résumé 2.21',
-            'UTF-8',
+            'UNICODE',
             [
                 'index' => 'R98',
                 'version' => '0100',
@@ -280,7 +280,7 @@ final class ExifBackfillMatrixTest extends TestCase
             231,
             '2026-07-08T09:10:11-03:30',
             'Café 2.31',
-            'UTF-8',
+            'UNICODE',
             [
                 'index' => 'R98',
                 'version' => '0100',

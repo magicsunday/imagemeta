@@ -44,6 +44,7 @@ use function array_map;
 use function array_values;
 use function count;
 use function iconv;
+use function in_array;
 use function intdiv;
 use function is_float;
 use function is_int;
@@ -1036,25 +1037,17 @@ final readonly class ExifDocument
             return $this->inferUserCommentEncoding($raw);
         }
 
-        $prefix         = substr($raw, 0, 8);
-        $encoding       = strtoupper(trim($prefix, "\0 "));
-        $normalized     = str_replace(['-', " "], "", $encoding);
-        $hasKnownPrefix = in_array($normalized, ['ASCII', 'UTF8', 'UNICODE', 'JIS'], true);
-        $content        = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
-        $normalizedForMatch = $hasKnownPrefix ? $normalized : '';
-        $hasContent = trim($content, "\0 ") !== '';
+        $prefix            = substr($raw, 0, 8);
+        $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
+        $hasKnownPrefix    = $canonicalEncoding !== '';
+        $content           = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $hasContent        = trim($content, "\0 ") !== '';
 
-        if ($normalizedForMatch === '') {
+        if (!$hasKnownPrefix) {
             return $this->inferUserCommentEncoding($content);
         }
 
-        return match ($normalizedForMatch) {
-            'ASCII'   => $hasContent ? 'ASCII' : null,
-            'UTF8'    => $hasContent ? 'UTF-8' : null,
-            'UNICODE' => $hasContent ? 'UNICODE' : null,
-            'JIS'     => $hasContent ? 'JIS' : null,
-            default   => $this->inferUserCommentEncoding($content),
-        };
+        return $hasContent ? $canonicalEncoding : null;
     }
 
     /**
@@ -1072,13 +1065,34 @@ final readonly class ExifDocument
             return null;
         }
 
-        $prefix         = substr($raw, 0, 8);
-        $encoding       = strtoupper(trim($prefix, "\0 "));
-        $normalized     = str_replace(['-', " "], "", $encoding);
-        $hasKnownPrefix = in_array($normalized, ['ASCII', 'UTF8', 'UNICODE', 'JIS'], true);
-        $content        = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $prefix            = substr($raw, 0, 8);
+        $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
+        $hasKnownPrefix    = $canonicalEncoding !== '';
+        $content           = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
 
         return $this->inferUserCommentEncoding($content);
+    }
+
+    /**
+     * Normalises known EXIF user comment markers to their canonical identifiers.
+     */
+    private function canonicalUserCommentMarker(string $prefix): string
+    {
+        if ($prefix === "\0\0\0\0\0\0\0\0") {
+            return 'UNDEFINED';
+        }
+
+        $encoding   = strtoupper(trim($prefix, "\0 "));
+        $normalized = str_replace(['-', " "], '', $encoding);
+
+        return match ($normalized) {
+            'ASCII' => 'ASCII',
+            'JIS' => 'JIS',
+            'UNICODE' => 'UNICODE',
+            'UNDEFINED', 'UNDEF' => 'UNDEFINED',
+            'UTF8' => 'UNDEFINED',
+            default => '',
+        };
     }
 
     /**
@@ -3496,22 +3510,15 @@ final readonly class ExifDocument
             return $content;
         }
 
-        $prefix         = substr($raw, 0, 8);
-        $encoding       = strtoupper(trim($prefix, "\0 "));
-        $normalized     = str_replace(['-', " "], "", $encoding);
-        $hasKnownPrefix = in_array($normalized, ['ASCII', 'UTF8', 'UNICODE', 'JIS'], true);
-        $content        = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
-        $normalizedForMatch = $hasKnownPrefix ? $normalized : '';
-        $sanitized      = trim($content, "\0 ");
+        $prefix            = substr($raw, 0, 8);
+        $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
+        $hasKnownPrefix    = $canonicalEncoding !== '';
+        $content           = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $sanitized         = trim($content, "\0 ");
 
-        $resolvedEncoding = match ($normalizedForMatch) {
-            'ASCII'   => $sanitized === '' ? null : 'ASCII',
-            'UTF8'    => $sanitized === '' ? null : 'UTF-8',
-            'UNICODE' => $sanitized === '' ? null : 'UNICODE',
-            'JIS'     => $sanitized === '' ? null : 'JIS',
-            ''        => $this->inferUserCommentEncoding($content),
-            default   => $this->inferUserCommentEncoding($content),
-        };
+        $resolvedEncoding = $hasKnownPrefix
+            ? ($sanitized === '' ? null : $canonicalEncoding)
+            : $this->inferUserCommentEncoding($content);
 
         if ($resolvedEncoding === null) {
             return null;
@@ -3606,11 +3613,35 @@ final readonly class ExifDocument
             return 'UNICODE';
         }
 
-        if ($this->looksLikeUtf8($trimmed)) {
-            return 'UTF-8';
+        if ($this->looksPrintableAscii($trimmed)) {
+            return 'ASCII';
         }
 
-        return 'ASCII';
+        if ($this->looksLikeUtf8($trimmed)) {
+            return 'UNDEFINED';
+        }
+
+        return 'UNDEFINED';
+    }
+
+    /**
+     * Checks whether the payload is limited to printable ASCII characters.
+     */
+    private function looksPrintableAscii(string $content): bool
+    {
+        $length = strlen($content);
+        for ($i = 0; $i < $length; ++$i) {
+            $byte = ord($content[$i]);
+            if ($byte < 0x20 && !in_array($byte, [0x09, 0x0A, 0x0D], true)) {
+                return false;
+            }
+
+            if ($byte > 0x7E) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
