@@ -2062,6 +2062,7 @@ final class ValueFactory
             return [];
         }
 
+        // Collect indices of MWG face regions eligible for supplemental Apple metadata.
         $faceIndices = [];
         foreach ($mwgRegions as $index => $region) {
             if ($region->type === RegionType::FACE) {
@@ -2073,10 +2074,12 @@ final class ValueFactory
             return [];
         }
 
+        // Track face indices still lacking a matched Apple entry.
         $unmatchedIndices = $faceIndices;
         $supplemental     = [];
 
         foreach ($entries as $entry) {
+            // Align geometry-bearing Apple entries with MWG faces based on their shared shape.
             $matchIndex = $this->matchAppleEntryToMwgRegion($mwgRegions, $entry);
             if ($matchIndex === null) {
                 continue;
@@ -2092,6 +2095,7 @@ final class ValueFactory
             $supplemental[$matchIndex] = $this->createSupplementalRegion($baseRegion, $entry);
         }
 
+        // Assign remaining supplemental details to faces even when Apple omitted geometry.
         foreach ($entries as $entry) {
             if ($entry['geometry'] !== null) {
                 continue;
