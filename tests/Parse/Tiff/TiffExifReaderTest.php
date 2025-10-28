@@ -262,6 +262,36 @@ final class TiffExifReaderTest extends TestCase
     }
 
     #[Test]
+    public function resolvesInteropPointerLocatedInIfd0(): void
+    {
+        $blob      = self::buildClassicInteropPointerInIfd0Blob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        self::assertSame('R98', $document->interopIndex());
+        self::assertSame('0100', $document->interopVersion());
+    }
+
+    #[Test]
+    public function resolvesInteropPointerLocatedInIfd1(): void
+    {
+        $blob      = self::buildClassicInteropPointerInIfd1Blob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        self::assertSame('R98', $document->interopIndex());
+        self::assertSame('0100', $document->interopVersion());
+    }
+
+    #[Test]
+    public function resolvesInteropPointerLocatedInSubIfd(): void
+    {
+        $blob      = self::buildClassicInteropPointerInSubIfdBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        self::assertSame('R98', $document->interopIndex());
+        self::assertSame('0100', $document->interopVersion());
+    }
+
+    #[Test]
     public function parsesLinkedIfdChain(): void
     {
         $blob      = $this->buildClassicLinkedIfdBlob();
@@ -1164,6 +1194,90 @@ final class TiffExifReaderTest extends TestCase
 
         return $blob;
     }
+    /**
+     * Builds a Classic TIFF blob with the interoperability pointer stored in IFD0.
+     */
+    private static function buildClassicInteropPointerInIfd0Blob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifdEntryCount = 1;
+        $ifdLength     = 2 + ($ifdEntryCount * 12) + 4;
+        $interopOffset = 8 + $ifdLength;
+
+        $ifd0 = pack('v', $ifdEntryCount)
+            . self::packClassicEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, $interopOffset)
+            . pack('V', 0);
+
+        $interopEntries = [
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, self::inlineAsciiToInt('R98', 4)),
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_VERSION, 2, 4, self::inlineAsciiToInt('0100', 4)),
+        ];
+
+        $interopIfd = pack('v', count($interopEntries)) . implode('', $interopEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $interopIfd;
+    }
+
+    /**
+     * Builds a Classic TIFF blob with the interoperability pointer in the second IFD.
+     */
+    private static function buildClassicInteropPointerInIfd1Blob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0Length  = 2 + 4;
+        $ifd1Offset  = 8 + $ifd0Length;
+        $ifd1Length  = 2 + 12 + 4;
+        $interopOffset = $ifd1Offset + $ifd1Length;
+
+        $ifd0 = pack('v', 0)
+            . pack('V', $ifd1Offset);
+
+        $ifd1 = pack('v', 1)
+            . self::packClassicEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, $interopOffset)
+            . pack('V', 0);
+
+        $interopEntries = [
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, self::inlineAsciiToInt('R98', 4)),
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_VERSION, 2, 4, self::inlineAsciiToInt('0100', 4)),
+        ];
+
+        $interopIfd = pack('v', count($interopEntries)) . implode('', $interopEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $ifd1 . $interopIfd;
+    }
+
+    /**
+     * Builds a Classic TIFF blob with the interoperability pointer referenced from a SubIFD.
+     */
+    private static function buildClassicInteropPointerInSubIfdBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0Length    = 2 + 12 + 4;
+        $subIfdOffset  = 8 + $ifd0Length;
+        $subIfdLength  = 2 + 12 + 4;
+        $interopOffset = $subIfdOffset + $subIfdLength;
+
+        $ifd0 = pack('v', 1)
+            . self::packClassicEntry(ExifTag::SUB_IFDS, 4, 1, $subIfdOffset)
+            . pack('V', 0);
+
+        $subIfd = pack('v', 1)
+            . self::packClassicEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, $interopOffset)
+            . pack('V', 0);
+
+        $interopEntries = [
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, self::inlineAsciiToInt('R98', 4)),
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_VERSION, 2, 4, self::inlineAsciiToInt('0100', 4)),
+        ];
+
+        $interopIfd = pack('v', count($interopEntries)) . implode('', $interopEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $subIfd . $interopIfd;
+    }
+
     /**
      * Builds a Classic TIFF blob that only exposes the legacy DocumentName tag.
      */

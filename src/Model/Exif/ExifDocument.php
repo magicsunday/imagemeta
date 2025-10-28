@@ -50,6 +50,7 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function ord;
+use function preg_match;
 use function preg_replace;
 use function preg_split;
 use function round;
@@ -61,6 +62,7 @@ use function str_replace;
 use function strlen;
 use function strtoupper;
 use function substr;
+use function substr_count;
 use function trim;
 
 /**
@@ -1030,26 +1032,27 @@ final readonly class ExifDocument
         }
 
         if (strlen($raw) < 8) {
-            $trimmed = trim($raw, "\0 ");
-
-            return $trimmed === '' ? null : 'ASCII';
+            return $this->inferUserCommentEncoding($raw);
         }
 
-        $prefix   = substr($raw, 0, 8);
-        $encoding = strtoupper(trim($prefix, "\0 "));
-        $normalized = str_replace(['-', " "], "", $encoding);
-        $content  = trim(substr($raw, 8), "\0 ");
+        $prefix         = substr($raw, 0, 8);
+        $encoding       = strtoupper(trim($prefix, "\0 "));
+        $normalized     = str_replace(['-', " "], "", $encoding);
+        $hasKnownPrefix = in_array($normalized, ['ASCII', 'UTF8', 'UNICODE', 'JIS'], true);
+        $content        = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $normalizedForMatch = $hasKnownPrefix ? $normalized : '';
+        $hasContent = trim($content, "\0 ") !== '';
 
-        if ($normalized === '') {
-            return $content === '' ? null : 'ASCII';
+        if ($normalizedForMatch === '') {
+            return $this->inferUserCommentEncoding($content);
         }
 
-        return match ($normalized) {
-            'ASCII'   => $content === '' ? null : 'ASCII',
-            'UTF8'    => $content === '' ? null : 'UTF-8',
-            'UNICODE' => $content === '' ? null : 'UNICODE',
-            'JIS'     => $content === '' ? null : 'JIS',
-            default => $content === '' ? null : 'ASCII',
+        return match ($normalizedForMatch) {
+            'ASCII'   => $hasContent ? 'ASCII' : null,
+            'UTF8'    => $hasContent ? 'UTF-8' : null,
+            'UNICODE' => $hasContent ? 'UNICODE' : null,
+            'JIS'     => $hasContent ? 'JIS' : null,
+            default   => $this->inferUserCommentEncoding($content),
         };
     }
 
@@ -1063,7 +1066,18 @@ final readonly class ExifDocument
             return $encoding;
         }
 
-        return $this->userComment() !== null ? 'ASCII' : null;
+        $raw = $this->rawString($this->exifIfd, ExifTag::USER_COMMENT);
+        if ($raw === null) {
+            return null;
+        }
+
+        $prefix         = substr($raw, 0, 8);
+        $encoding       = strtoupper(trim($prefix, "\0 "));
+        $normalized     = str_replace(['-', " "], "", $encoding);
+        $hasKnownPrefix = in_array($normalized, ['ASCII', 'UTF8', 'UNICODE', 'JIS'], true);
+        $content        = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+
+        return $this->inferUserCommentEncoding($content);
     }
 
     /**
@@ -1196,6 +1210,15 @@ final readonly class ExifDocument
             return $iso;
         }
 
+        $tagPriority = [
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+            ExifTag::ISO_SPEED,
+            ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+            ExifTag::ISO_SPEED_RATINGS_LEGACY,
+            ExifTag::EXPOSURE_INDEX,
+        ];
+
         $fallbacks = [
             [$this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY],
             [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
@@ -1208,12 +1231,26 @@ final readonly class ExifDocument
             [$this->ifd1, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->ifd1, ExifTag::ISO_SPEED],
             [$this->ifd1, ExifTag::ISO_SPEED_RATINGS_LEGACY],
+            [$this->exifIfd, ExifTag::EXPOSURE_INDEX],
+            [$this->ifd0, ExifTag::EXPOSURE_INDEX],
+            [$this->ifd1, ExifTag::EXPOSURE_INDEX],
         ];
 
         foreach ($fallbacks as [$ifd, $tag]) {
             $value = $this->coerceIntValue($this->value($ifd, $tag));
             if ($value !== null) {
                 return $value;
+            }
+        }
+
+        if ($this->subIfds !== []) {
+            foreach ($this->subIfds as $subIfd) {
+                foreach ($tagPriority as $tag) {
+                    $value = $this->coerceIntValue($this->value($subIfd, $tag));
+                    if ($value !== null) {
+                        return $value;
+                    }
+                }
             }
         }
 
@@ -2516,6 +2553,11 @@ final readonly class ExifDocument
             }
         }
 
+        $gpsTimestamp = $this->gpsTimestamp();
+        if ($gpsTimestamp instanceof DateTimeImmutable) {
+            return $gpsTimestamp;
+        }
+
         return null;
     }
 
@@ -3138,11 +3180,19 @@ final readonly class ExifDocument
 
         if (is_string($value)) {
             $trimmed = trim($value);
-            if ($trimmed === '' || !is_numeric($trimmed)) {
+            if ($trimmed === '') {
                 return null;
             }
 
-            return (int) round((float) $trimmed);
+            if (is_numeric($trimmed)) {
+                return (int) round((float) $trimmed);
+            }
+
+            if (preg_match('/\d+/', $trimmed, $matches) === 1) {
+                return (int) $matches[0];
+            }
+
+            return null;
         }
 
         if ($value === null) {
@@ -3264,20 +3314,43 @@ final readonly class ExifDocument
         if (strlen($raw) <= 8) {
             $content = trim($raw, "\0");
 
-            return $content === '' ? null : $content;
+            if ($content === '') {
+                return null;
+            }
+
+            $encoding = $this->inferUserCommentEncoding($raw);
+            if ($encoding === 'UNICODE') {
+                return $this->decodeUnicodeComment($raw);
+            }
+
+            return $content;
         }
 
-        $prefix   = substr($raw, 0, 8);
-        $encoding = strtoupper(trim($prefix, "\0 "));
-        $normalized = str_replace(['-', " "], "", $encoding);
-        $content  = substr($raw, 8);
-        $content  = trim($content, "\0");
+        $prefix         = substr($raw, 0, 8);
+        $encoding       = strtoupper(trim($prefix, "\0 "));
+        $normalized     = str_replace(['-', " "], "", $encoding);
+        $hasKnownPrefix = in_array($normalized, ['ASCII', 'UTF8', 'UNICODE', 'JIS'], true);
+        $content        = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $normalizedForMatch = $hasKnownPrefix ? $normalized : '';
+        $sanitized      = trim($content, "\0 ");
 
-        return match ($normalized) {
-            'ASCII', 'UTF8', '' => $content !== '' ? $content : null,
+        $resolvedEncoding = match ($normalizedForMatch) {
+            'ASCII'   => $sanitized === '' ? null : 'ASCII',
+            'UTF8'    => $sanitized === '' ? null : 'UTF-8',
+            'UNICODE' => $sanitized === '' ? null : 'UNICODE',
+            'JIS'     => $sanitized === '' ? null : 'JIS',
+            ''        => $this->inferUserCommentEncoding($content),
+            default   => $this->inferUserCommentEncoding($content),
+        };
+
+        if ($resolvedEncoding === null) {
+            return null;
+        }
+
+        return match ($resolvedEncoding) {
             'UNICODE' => $this->decodeUnicodeComment($content),
-            'JIS'     => $this->decodeJisComment($content),
-            default   => $content !== '' ? $content : null,
+            'JIS'     => $this->decodeJisComment($sanitized),
+            default   => $sanitized === '' ? null : $sanitized,
         };
     }
 
@@ -3347,6 +3420,102 @@ final readonly class ExifDocument
         $stripped = trim($stripped, "\0");
 
         return $stripped === '' ? null : $stripped;
+    }
+
+    /**
+     * Infers the most likely user comment encoding based on the raw payload.
+     */
+    private function inferUserCommentEncoding(string $content): ?string
+    {
+        $trimmed = trim($content, "\0 ");
+        if ($trimmed === '') {
+            return null;
+        }
+
+        if ($this->looksLikeUtf16($content)) {
+            return 'UNICODE';
+        }
+
+        if ($this->looksLikeUtf8($trimmed)) {
+            return 'UTF-8';
+        }
+
+        return 'ASCII';
+    }
+
+    /**
+     * Heuristically determines whether the payload resembles UTF-16 text.
+     */
+    private function looksLikeUtf16(string $content): bool
+    {
+        $length = strlen($content);
+        if ($length < 2) {
+            return false;
+        }
+
+        $bom = substr($content, 0, 2);
+        if ($bom === "\xFF\xFE" || $bom === "\xFE\xFF") {
+            return true;
+        }
+
+        $nullCount = substr_count($content, "\x00");
+        if ($nullCount < 2) {
+            return false;
+        }
+
+        $sampleLength = min($length, 32);
+        $sample       = substr($content, 0, $sampleLength);
+
+        $nullsOnEven = 0;
+        $nullsOnOdd  = 0;
+
+        $sampleSize = strlen($sample);
+        for ($i = 0; $i < $sampleSize; ++$i) {
+            if ($sample[$i] === "\x00") {
+                if (($i % 2) === 0) {
+                    ++$nullsOnEven;
+                } else {
+                    ++$nullsOnOdd;
+                }
+            }
+        }
+
+        if ($nullsOnEven === 0 && $nullsOnOdd === 0) {
+            return false;
+        }
+
+        if ($nullsOnEven === 0 || $nullsOnOdd === 0) {
+            return true;
+        }
+
+        if ($nullCount <= 2) {
+            return false;
+        }
+
+        return $nullCount >= (int) ($length / 4);
+    }
+
+    /**
+     * Determines whether the provided string appears to be valid UTF-8 with non-ASCII characters.
+     */
+    private function looksLikeUtf8(string $content): bool
+    {
+        if ($content === '') {
+            return false;
+        }
+
+        if (preg_match('//u', $content) !== 1) {
+            return false;
+        }
+
+        $length = strlen($content);
+        for ($i = 0; $i < $length; ++$i) {
+            if (ord($content[$i]) > 0x7F) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
