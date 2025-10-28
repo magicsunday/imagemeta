@@ -834,7 +834,7 @@ final readonly class ExifDocument
             $candidates[] = $this->exifIfd;
         }
 
-        foreach ($this->fallbackIfds(includePrimaryThumbnail: false) as $ifd) {
+        foreach ($this->fallbackIfds(includePrimaryThumbnail: false, includeIfd0: true) as $ifd) {
             $candidates[] = $ifd;
         }
 

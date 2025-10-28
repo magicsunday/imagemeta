@@ -330,6 +330,35 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function previewMetadataFallsBackToRootIfdWhenExifIfdMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 8192),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4096),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_COMPRESSION,
+                3,
+                1,
+                Compression::JPEG_OLD_STYLE->value,
+            ),
+            ExifTag::PREVIEW_IMAGE_SCALE => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(1, 4),
+            ),
+        ]);
+
+        $document = new ExifDocument($ifd0, null, null, null, null);
+
+        self::assertTrue($document->hasPreviewImage());
+        self::assertSame(8192, $document->previewImageOffset());
+        self::assertSame(4096, $document->previewImageLength());
+        self::assertSame(Compression::JPEG_OLD_STYLE->value, $document->previewImageCompression());
+        self::assertEqualsWithDelta(0.25, $document->previewImageScale(), 1e-6);
+    }
+
+    #[Test]
     public function previewImageTreatsZeroOffsetsAndLengthsAsMissing(): void
     {
         $ifd0 = new Ifd([]);
