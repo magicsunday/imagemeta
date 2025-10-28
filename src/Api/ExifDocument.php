@@ -57,6 +57,19 @@ final class ExifDocument
 
     private readonly InteropValue $interop;
 
+    /**
+     * @param ModelExifDocument|null $document              Parsed EXIF document delivering raw tag access or
+     *                                                      null when no EXIF payload was discovered.
+     * @param int|null               $fallbackWidth         Width provided by the container (for example a JPEG
+     *                                                      frame) that is used when the document omits the
+     *                                                      related EXIF tag.
+     * @param int|null               $fallbackHeight        Height provided by the container (for example a JPEG
+     *                                                      frame) that is used when the document omits the
+     *                                                      related EXIF tag.
+     * @param int|null               $fallbackBitsPerSample Bit depth provided by the container that fills the
+     *                                                      gap when the EXIF image description does not specify
+     *                                                      a sample precision.
+     */
     public function __construct(
         ?ModelExifDocument $document,
         ?int $fallbackWidth = null,
@@ -89,66 +102,121 @@ final class ExifDocument
         $this->interop  = $interopValue;
     }
 
+    /**
+     * @return StructuredCamera Wrapper exposing camera-related values. Each property may resolve to
+     *                          null when the underlying {@see ModelExifDocument} does not contain the
+     *                          respective tag or when no document is available.
+     */
     public function camera(): StructuredCamera
     {
         return $this->camera;
     }
 
+    /**
+     * @return StructuredLens Wrapper providing lens metadata including derived values. Fields are
+     *                        null if the {@see ModelExifDocument} lacks the corresponding information or
+     *                        if no EXIF data was parsed.
+     */
     public function lens(): StructuredLens
     {
         return $this->lens;
     }
 
+    /**
+     * @return StructuredExposure Wrapper describing exposure parameters. Individual attributes fall
+     *                            back to null when the EXIF payload omits the related tags.
+     */
     public function exposure(): StructuredExposure
     {
         return $this->exposure;
     }
 
+    /**
+     * @return StructuredGps Wrapper with GPS coordinates and metadata. Values remain null when the
+     *                       {@see ModelExifDocument} does not define the respective entries.
+     */
     public function gps(): StructuredGps
     {
         return $this->gps;
     }
 
+    /**
+     * @return StructuredImage Wrapper with image information, enriched with container provided fallbacks
+     *                         for width, height, and bit depth when EXIF tags are missing or the document
+     *                         is unavailable.
+     */
     public function image(): StructuredImage
     {
         return $this->image;
     }
 
+    /**
+     * @return StructuredPreview Wrapper describing embedded preview data. Properties resolve to null if
+     *                           the EXIF document omits corresponding preview tags.
+     */
     public function preview(): StructuredPreview
     {
         return $this->preview;
     }
 
+    /**
+     * @return InteropValue Interoperability information derived from the EXIF payload. Fields may be
+     *                      null when the original document does not define the respective tag.
+     */
     public function interop(): InteropValue
     {
         return $this->interop;
     }
 
+    /**
+     * @return int|null ISO speed rating resolved via {@see ModelExifDocument::isoBestEffort()} or null
+     *                  when the document is missing or cannot provide an ISO value.
+     */
     public function iso(): ?int
     {
         return $this->raw?->isoBestEffort();
     }
 
+    /**
+     * @return DateTimeImmutable|null Best-effort capture timestamp retrieved from the underlying
+     *                                {@see ModelExifDocument} or null when unavailable.
+     */
     public function dateTimeOriginal(): ?DateTimeImmutable
     {
         return $this->raw?->dateTimeOriginalBestEffort();
     }
 
+    /**
+     * @return string|null Localised user comment extracted from the EXIF payload or null when no comment
+     *                     tag exists.
+     */
     public function userComment(): ?string
     {
         return $this->raw?->userComment();
     }
 
+    /**
+     * @return string|null Encoding label associated with {@see self::userComment()} or null when the
+     *                     EXIF data does not specify an encoding.
+     */
     public function userCommentEncoding(): ?string
     {
         return $this->raw?->userCommentEncodingBestEffort();
     }
 
+    /**
+     * @return bool True when a {@see ModelExifDocument} was provided, false when no EXIF payload was
+     *              available.
+     */
     public function hasData(): bool
     {
         return $this->raw instanceof ModelExifDocument;
     }
 
+    /**
+     * @return ModelExifDocument|null Underlying parsed EXIF document for callers needing raw access or
+     *                                null when the container did not expose an EXIF segment.
+     */
     public function raw(): ?ModelExifDocument
     {
         return $this->raw;

@@ -25,11 +25,23 @@ final class ExifReader
 {
     private readonly TiffExifReader $tiffReader;
 
+    /**
+     * @param TiffExifReader|null $tiffReader Optional TIFF reader used to parse extracted EXIF blobs.
+     *                                        When omitted a default reader instance is created.
+     */
     public function __construct(?TiffExifReader $tiffReader = null)
     {
         $this->tiffReader = $tiffReader ?? new TiffExifReader();
     }
 
+    /**
+     * @param string $path Absolute or relative file system path that should be inspected for EXIF data.
+     *
+     * @return ExifDocument Structured EXIF wrapper that exposes curated accessors. When JPEG frame
+     *                      dimensions or precision are available they are used as fallbacks when the
+     *                      parsed EXIF payload omits corresponding image width, height, or bit depth
+     *                      values.
+     */
     public function read(string $path): ExifDocument
     {
         $stream = Stream::fromPath($path);
