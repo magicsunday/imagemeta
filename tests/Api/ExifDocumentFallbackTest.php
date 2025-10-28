@@ -97,6 +97,14 @@ final class ExifDocumentFallbackTest extends TestCase
         $preview = $apiDocument->preview();
         self::assertNull($preview->previewCompression);
         self::assertNull($preview->previewScale);
+        self::assertFalse($preview->hasPreview);
+        self::assertNull($preview->previewWidth);
+        self::assertNull($preview->previewHeight);
+        self::assertNull($preview->previewBitDepth);
+        self::assertNull($preview->previewEncoding);
+        self::assertNull($preview->previewMimeType);
+        self::assertNull($preview->previewOffset);
+        self::assertNull($preview->previewLength);
     }
 
     #[Test]
@@ -142,5 +150,60 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertSame('image/jpeg', $preview->previewMimeType);
         self::assertSame(Compression::JPEG, $preview->previewCompression);
         self::assertEqualsWithDelta(0.5, $preview->previewScale ?? 0.0, 1e-6);
+    }
+
+    #[Test]
+    public function previewMetadataResolvesFromFallbackIfd(): void
+    {
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd([]);
+
+        $fallbackPreview = new Ifd([
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 131_072),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 65_536),
+            ExifTag::PREVIEW_IMAGE_WIDTH       => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 1_024),
+            ExifTag::PREVIEW_IMAGE_HEIGHT      => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 768),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_COMPRESSION,
+                3,
+                1,
+                Compression::JPEG_OLD_STYLE->value,
+            ),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(
+                ExifTag::PREVIEW_IMAGE_SCALE,
+                5,
+                1,
+                new ExifRational(3, 4),
+            ),
+            ExifTag::PREVIEW_IMAGE_ENCODING    => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE   => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
+            ExifTag::PREVIEW_IMAGE_BIT_DEPTH   => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 8),
+        ]);
+
+        $document = new ModelExifDocument(
+            $ifd0,
+            $exifIfd,
+            null,
+            null,
+            null,
+            null,
+            [],
+            [
+                0x2000 => $fallbackPreview,
+            ],
+        );
+
+        $preview = (new ApiExifDocument($document))->preview();
+
+        self::assertTrue($preview->hasPreview);
+        self::assertSame(1_024, $preview->previewWidth);
+        self::assertSame(768, $preview->previewHeight);
+        self::assertSame(131_072, $preview->previewOffset);
+        self::assertSame(65_536, $preview->previewLength);
+        self::assertSame('JPEG', $preview->previewEncoding);
+        self::assertSame('image/jpeg', $preview->previewMimeType);
+        self::assertSame(8, $preview->previewBitDepth);
+        self::assertSame(Compression::JPEG_OLD_STYLE, $preview->previewCompression);
+        self::assertEqualsWithDelta(0.75, $preview->previewScale ?? 0.0, 1e-6);
     }
 }
