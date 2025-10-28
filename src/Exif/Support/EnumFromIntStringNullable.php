@@ -19,6 +19,15 @@ use function is_numeric;
  */
 trait EnumFromIntStringNullable
 {
+    /**
+     * Normalises EXIF backed-enum values represented as ints or numeric strings.
+     *
+     * EXIF encoders frequently emit numeric codes as strings; this helper keeps
+     * the callers concise by handling the null/empty cases and by converting
+     * numeric strings to integers before forwarding them to {@see self::tryFrom()}.
+     *
+     * @param int|string|null $value Raw EXIF value as delivered by the decoder.
+     */
     public static function fromExifValue(int|string|null $value): ?self
     {
         if ($value === null || $value === '') {
@@ -26,11 +35,11 @@ trait EnumFromIntStringNullable
         }
 
         // int|string → int
-        $int = is_int($value) ? $value : (is_numeric($value) ? (int) $value : null);
-        if ($int === null) {
+        $intValue = is_int($value) ? $value : (is_numeric($value) ? (int) $value : null);
+        if ($intValue === null) {
             return null;
         }
 
-        return self::tryFrom($int);
+        return self::tryFrom($intValue);
     }
 }

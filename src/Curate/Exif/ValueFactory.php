@@ -982,25 +982,25 @@ final class ValueFactory
         AppleMakerNotes $apple,
         ?int $faceCount,
     ): Scene {
-        $flags = $apple->flags;
-        if (!is_array($flags)) {
-            $flags = [];
+        $appleFlags = $apple->flags;
+        if (!is_array($appleFlags)) {
+            $appleFlags = [];
         }
 
         $lookup = new QuickTimeLookup($quickTime);
 
-        $hdr = $apple->hdrImageType;
-        if ($hdr === null) {
-            $hdr = $lookup->string('HDRImageType');
+        $hdrLabel = $apple->hdrImageType;
+        if ($hdrLabel === null) {
+            $hdrLabel = $lookup->string('HDRImageType');
         }
-        $night = $lookup->bool('NightMode');
-        if ($night === null) {
-            $night = $this->appleFlag($flags, 'nightMode');
+        $nightMode = $lookup->bool('NightMode');
+        if ($nightMode === null) {
+            $nightMode = $this->appleFlag($appleFlags, 'nightMode');
         }
 
         $hdrScene = null;
 
-        if ($hdr !== null && $this->isHdrSceneLabel($hdr)) {
+        if ($hdrLabel !== null && $this->isHdrSceneLabel($hdrLabel)) {
             $hdrScene = true;
         }
 
@@ -1009,8 +1009,8 @@ final class ValueFactory
             if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
                 $hdrScene = true;
             } elseif (
-                $this->appleFlag($flags, 'hdrEnabled') === true
-                || $this->appleFlag($flags, 'hdrAuto') === true
+                $this->appleFlag($appleFlags, 'hdrEnabled') === true
+                || $this->appleFlag($appleFlags, 'hdrAuto') === true
             ) {
                 $hdrScene = true;
             }
@@ -1022,15 +1022,18 @@ final class ValueFactory
             light: $exif?->lightSource(),
             faceCount: $faceCount,
             hdrScene: $hdrScene,
-            nightMode: $night,
+            nightMode: $nightMode,
             subjectDistanceRange: $exif?->subjectDistanceRange(),
         );
     }
 
     /**
-     * Retrieves a boolean flag from the normalised Apple flag map.
+     * Determines whether the supplied label denotes an HDR scene mode.
      *
-     * @param array<string, bool> $flags
+     * Apple devices record the HDR scene state as free-form strings such as
+     * "HDR" or "HDR+". The check therefore normalises the label to uppercase
+     * and considers every value that starts with "HDR" as an affirmative
+     * indicator.
      */
     private function isHdrSceneLabel(string $label): bool
     {
@@ -1039,6 +1042,19 @@ final class ValueFactory
         return str_starts_with($normalized, 'HDR');
     }
 
+    /**
+     * Extracts a boolean flag from the Apple maker note flag map.
+     *
+     * The Apple maker note `Flags` structure is inconsistently typed across
+     * devices and firmware versions: values may be stored as booleans, integers
+     * or even strings. This helper normalises those values to booleans and
+     * ignores keys that are missing or contain unexpected types.
+     *
+     * @param array<string, mixed> $flags Normalised Apple maker note flag map.
+     * @param string               $key   Name of the flag to resolve.
+     *
+     * @return bool|null Resolved boolean flag or null when no boolean value exists.
+     */
     private function appleFlag(array $flags, string $key): ?bool
     {
         if (!array_key_exists($key, $flags)) {
@@ -1046,6 +1062,9 @@ final class ValueFactory
         }
 
         $value = $flags[$key];
+
+        // Some firmware versions encode booleans as integers (0/1) or strings.
+        // Only explicit boolean values are considered reliable scene hints.
 
         return is_bool($value) ? $value : null;
     }
