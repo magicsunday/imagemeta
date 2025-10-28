@@ -508,6 +508,33 @@ final class ExifDocumentTest extends TestCase
     }
 
     #[Test]
+    public function dateTimeOriginalRawFallsBackToSubsequentIfds(): void
+    {
+        $ifd0      = new Ifd([]);
+        $thumbnail = new Ifd([]);
+        $source    = new Ifd([
+            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2020:05:06 07:08:09'),
+        ]);
+
+        $doc = new ExifDocument(
+            $ifd0,
+            new Ifd([]),
+            null,
+            null,
+            $thumbnail,
+            null,
+            [$thumbnail, $source],
+            [],
+        );
+
+        self::assertSame('2020:05:06 07:08:09', $doc->dateTimeOriginalRaw());
+
+        $parsed = $doc->dateTimeOriginal();
+        self::assertInstanceOf(DateTimeImmutable::class, $parsed);
+        self::assertSame('2020-05-06T07:08:09+00:00', $parsed->format(DATE_ATOM));
+    }
+
+    #[Test]
     public function dateTimeOriginalFallsBackToModifyDateWhenPrimaryTagsMissing(): void
     {
         $ifd0 = new Ifd([
@@ -1433,6 +1460,30 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('UTF-8', $doc->userCommentEncodingBestEffort());
     }
 
+    #[Test]
+    public function userCommentFallbacksToSubsequentIfds(): void
+    {
+        $ifd0      = new Ifd([]);
+        $thumbnail = new Ifd([]);
+        $commentIfd = new Ifd([
+            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Fallback note'),
+        ]);
+
+        $doc = new ExifDocument(
+            $ifd0,
+            null,
+            null,
+            null,
+            $thumbnail,
+            null,
+            [$thumbnail, $commentIfd],
+            [],
+        );
+
+        self::assertSame('Fallback note', $doc->userComment());
+        self::assertSame('ASCII', $doc->userCommentEncodingBestEffort());
+    }
+
     /**
      * Decodes user comments tagged as Shift-JIS into UTF-8 strings.
      */
@@ -1876,6 +1927,29 @@ final class ExifDocumentTest extends TestCase
         $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(400, $doc->isoBestEffort());
+    }
+
+    #[Test]
+    public function isoBestEffortFallsBackToSubsequentIfds(): void
+    {
+        $ifd0      = new Ifd([]);
+        $thumbnail = new Ifd([]);
+        $isoIfd    = new Ifd([
+            ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 640),
+        ]);
+
+        $doc = new ExifDocument(
+            $ifd0,
+            null,
+            null,
+            null,
+            $thumbnail,
+            null,
+            [$thumbnail, $isoIfd],
+            [],
+        );
+
+        self::assertSame(640, $doc->isoBestEffort());
     }
 
     #[Test]
