@@ -18,15 +18,19 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
+use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
@@ -37,6 +41,7 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 
 use function abs;
 use function array_key_exists;
@@ -279,13 +284,13 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the EXIF orientation value if present.
-     *
-     * @return int|null
+     * Returns the EXIF orientation enumeration when present.
      */
-    public function orientation(): ?int
+    public function orientation(): ?Orientation
     {
-        return $this->int($this->ifd0, ExifTag::ORIENTATION);
+        $value = $this->value($this->ifd0, ExifTag::ORIENTATION);
+
+        return Orientation::fromExifValue($value);
     }
 
     /**
@@ -313,13 +318,13 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the colour space identifier if present.
-     *
-     * @return int|null
+     * Returns the colour space enumeration if present.
      */
-    public function colorSpace(): ?int
+    public function colorSpace(): ?ColorSpace
     {
-        return $this->int($this->exifIfd, ExifTag::COLOR_SPACE);
+        $value = $this->value($this->exifIfd, ExifTag::COLOR_SPACE);
+
+        return ColorSpace::fromExifValue($value);
     }
 
     /**
@@ -1498,23 +1503,23 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the camera exposure program code if present.
-     *
-     * @return int|null
+     * Returns the camera exposure program enumeration if present.
      */
-    public function exposureProgram(): ?int
+    public function exposureProgram(): ?ExposureProgram
     {
-        return $this->int($this->exifIfd, ExifTag::EXPOSURE_PROGRAM);
+        $value = $this->value($this->exifIfd, ExifTag::EXPOSURE_PROGRAM);
+
+        return ExposureProgram::fromExifValue($value);
     }
 
     /**
-     * Returns the metering mode code if present.
-     *
-     * @return int|null
+     * Returns the metering mode enumeration if present.
      */
-    public function meteringMode(): ?int
+    public function meteringMode(): ?MeteringMode
     {
-        return $this->int($this->exifIfd, ExifTag::METERING_MODE);
+        $value = $this->value($this->exifIfd, ExifTag::METERING_MODE);
+
+        return MeteringMode::fromExifValue($value);
     }
 
     /**
@@ -1528,13 +1533,13 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the white balance mode if present.
-     *
-     * @return int|null
+     * Returns the white balance enumeration if present.
      */
-    public function whiteBalance(): ?int
+    public function whiteBalance(): ?WhiteBalance
     {
-        return $this->int($this->exifIfd, ExifTag::WHITE_BALANCE);
+        $value = $this->value($this->exifIfd, ExifTag::WHITE_BALANCE);
+
+        return WhiteBalance::fromExifValue($value);
     }
 
     /**
