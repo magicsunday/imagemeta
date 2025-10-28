@@ -126,6 +126,35 @@ final class ExifConvenienceTest extends TestCase
     }
 
     /**
+     * Validates EXIF 3.0 sensitivity metadata honours the documented priority rules and supports
+     * files that only populate the newer tags.
+     */
+    #[Test]
+    public function isoRespectsSensitivityTypePriority(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $sosOnly = new Ifd([
+            ExifTag::SENSITIVITY_TYPE           => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 1),
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 250),
+        ]);
+
+        $docWithSosOnly = new ExifDocument($ifd0, $sosOnly, null, null, null);
+
+        self::assertSame(250, ExifConvenience::iso($docWithSosOnly));
+
+        $priorityIfd = new Ifd([
+            ExifTag::SENSITIVITY_TYPE             => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 6),
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX   => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
+            ExifTag::ISO_SPEED                    => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 640),
+        ]);
+
+        $docWithPriority = new ExifDocument($ifd0, $priorityIfd, null, null, null);
+
+        self::assertSame(320, ExifConvenience::iso($docWithPriority));
+    }
+
+    /**
      * Reads capture timestamp tags and verifies the helper delegates to the document parser to
      * return a timezone-aware DateTime.
      */

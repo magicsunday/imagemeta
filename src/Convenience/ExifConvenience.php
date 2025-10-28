@@ -143,9 +143,59 @@ final class ExifConvenience
      */
     public static function iso(ExifDocument $doc): ?int
     {
-        // ISO can be ExifIFD tag ExifTag::PHOTOGRAPHIC_SENSITIVITY or the newer ExifTag::ISO_SPEED
-        $entry = self::find($doc, ExifTag::ISO_SPEED) ?? self::find($doc, ExifTag::PHOTOGRAPHIC_SENSITIVITY);
+        $iso = self::isoFromSensitivityType($doc);
+        if ($iso !== null) {
+            return $iso;
+        }
 
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::ISO_SPEED));
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::STANDARD_OUTPUT_SENSITIVITY));
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::RECOMMENDED_EXPOSURE_INDEX));
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY));
+        if ($iso !== null) {
+            return $iso;
+        }
+
+        return self::isoFromEntry($doc->ifd0->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY));
+    }
+
+    /**
+     * Resolves ISO sensitivity using the EXIF 3.x sensitivity type priority rules.
+     */
+    private static function isoFromSensitivityType(ExifDocument $doc): ?int
+    {
+        $type = self::isoFromEntry($doc->exifIfd?->get(ExifTag::SENSITIVITY_TYPE));
+        if ($type === null) {
+            return null;
+        }
+
+        foreach (self::sensitivityTagPriority($type) as $tag) {
+            $iso = self::isoFromEntry($doc->exifIfd?->get($tag));
+            if ($iso !== null) {
+                return $iso;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts various EXIF value representations into an ISO integer.
+     */
+    private static function isoFromEntry(?IfdEntry $entry): ?int
+    {
         if (!$entry instanceof IfdEntry) {
             return null;
         }
@@ -188,6 +238,25 @@ final class ExifConvenience
         }
 
         return null;
+    }
+
+    /**
+     * Maps sensitivity type enumerations to ISO tag priorities.
+     *
+     * @return list<int>
+     */
+    private static function sensitivityTagPriority(int $type): array
+    {
+        return match ($type) {
+            1       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            2       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            3       => [ExifTag::ISO_SPEED],
+            4       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            5       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
+            6       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            7       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            default => [],
+        };
     }
 
     /**
