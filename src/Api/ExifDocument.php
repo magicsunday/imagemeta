@@ -89,71 +89,147 @@ final class ExifDocument
         $this->interop  = $interopValue;
     }
 
+    /**
+     * Returns the structured camera metadata derived from the raw EXIF document.
+     *
+     * @return StructuredCamera Camera metadata accessor.
+     */
     public function camera(): StructuredCamera
     {
         return $this->camera;
     }
 
+    /**
+     * Returns the structured lens metadata derived from the raw EXIF document.
+     *
+     * @return StructuredLens Lens metadata accessor.
+     */
     public function lens(): StructuredLens
     {
         return $this->lens;
     }
 
+    /**
+     * Returns the structured exposure metadata derived from the raw EXIF document.
+     *
+     * @return StructuredExposure Exposure metadata accessor.
+     */
     public function exposure(): StructuredExposure
     {
         return $this->exposure;
     }
 
+    /**
+     * Returns the structured GPS metadata derived from the raw EXIF document.
+     *
+     * @return StructuredGps GPS metadata accessor.
+     */
     public function gps(): StructuredGps
     {
         return $this->gps;
     }
 
+    /**
+     * Returns the structured image metadata derived from the raw EXIF document.
+     *
+     * @return StructuredImage Image metadata accessor.
+     */
     public function image(): StructuredImage
     {
         return $this->image;
     }
 
+    /**
+     * Returns the structured preview metadata derived from the raw EXIF document.
+     *
+     * @return StructuredPreview Preview metadata accessor.
+     */
     public function preview(): StructuredPreview
     {
         return $this->preview;
     }
 
+    /**
+     * Returns the interoperability metadata extracted from the raw EXIF document.
+     *
+     * @return InteropValue Interoperability metadata accessor.
+     */
     public function interop(): InteropValue
     {
         return $this->interop;
     }
 
+    /**
+     * Returns the best-effort ISO value from the raw EXIF document, if available.
+     *
+     * @return int|null Normalised ISO value or null when unknown.
+     */
     public function iso(): ?int
     {
         return $this->raw?->isoBestEffort();
     }
 
+    /**
+     * Returns the original capture timestamp resolved from the raw EXIF document.
+     *
+     * @return DateTimeImmutable|null Capture timestamp or null when unavailable.
+     */
     public function dateTimeOriginal(): ?DateTimeImmutable
     {
         return $this->raw?->dateTimeOriginalBestEffort();
     }
 
+    /**
+     * Returns the user comment stored in the EXIF document without re-encoding.
+     *
+     * @return string|null Raw user comment or null when absent.
+     */
     public function userComment(): ?string
     {
         return $this->raw?->userComment();
     }
 
+    /**
+     * Returns the best-effort encoding label for the user comment.
+     *
+     * @return string|null Encoding hint or null when unknown.
+     */
     public function userCommentEncoding(): ?string
     {
         return $this->raw?->userCommentEncodingBestEffort();
     }
 
+    /**
+     * Indicates whether the document contains parsed EXIF data.
+     *
+     * @return bool True when a parsed EXIF document is available.
+     */
     public function hasData(): bool
     {
         return $this->raw instanceof ModelExifDocument;
     }
 
+    /**
+     * Returns the underlying raw EXIF document instance.
+     *
+     * @return ModelExifDocument|null Raw model or null when no EXIF data was parsed.
+     */
     public function raw(): ?ModelExifDocument
     {
         return $this->raw;
     }
 
+    /**
+     * Creates a camera value object from the parsed EXIF document.
+     *
+     * Falls back to an empty value object when the document is missing and
+     * resolves firmware information by checking firmware, firmware version and
+     * software tags in that order.
+     *
+     * @param ModelExifDocument|null $document Parsed EXIF document.
+     *
+     * @return CameraValue Normalised camera metadata.
+     */
     private function createCameraValue(?ModelExifDocument $document): CameraValue
     {
         if (!$document instanceof ModelExifDocument) {
@@ -179,6 +255,16 @@ final class ExifDocument
         );
     }
 
+    /**
+     * Creates a lens value object from the parsed EXIF document.
+     *
+     * Falls back to an empty value object when the document is missing and
+     * converts the maximum aperture apex value to an F-number when present.
+     *
+     * @param ModelExifDocument|null $document Parsed EXIF document.
+     *
+     * @return LensValue Normalised lens metadata.
+     */
     private function createLensValue(?ModelExifDocument $document): LensValue
     {
         if (!$document instanceof ModelExifDocument) {
@@ -199,6 +285,16 @@ final class ExifDocument
         );
     }
 
+    /**
+     * Creates an exposure value object from the parsed EXIF document.
+     *
+     * Falls back to an empty value object when the document is missing and
+     * maps numeric codes to their enum representations when available.
+     *
+     * @param ModelExifDocument|null $document Parsed EXIF document.
+     *
+     * @return ExposureValue Normalised exposure metadata.
+     */
     private function createExposureValue(?ModelExifDocument $document): ExposureValue
     {
         $program      = null;
@@ -275,6 +371,14 @@ final class ExifDocument
         );
     }
 
+    /**
+     * Creates derived exposure and lens values calculated from the provided metadata.
+     *
+     * @param LensValue     $lens     Lens metadata used for calculations.
+     * @param ExposureValue $exposure Exposure metadata used for calculations.
+     *
+     * @return Derived Calculated helper metrics such as EV100 and hyperfocal distance.
+     */
     private function createDerivedValues(LensValue $lens, ExposureValue $exposure): Derived
     {
         $cropFactor          = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
@@ -299,6 +403,15 @@ final class ExifDocument
         );
     }
 
+    /**
+     * Creates a GPS value object from the parsed EXIF document.
+     *
+     * Falls back to an empty GPS value when the document is missing.
+     *
+     * @param ModelExifDocument|null $document Parsed EXIF document.
+     *
+     * @return GpsValue Normalised GPS metadata.
+     */
     private function createGpsValue(?ModelExifDocument $document): GpsValue
     {
         if (!$document instanceof ModelExifDocument) {
@@ -391,6 +504,19 @@ final class ExifDocument
         );
     }
 
+    /**
+     * Creates an image value object from the parsed EXIF document.
+     *
+     * Falls back to supplied width, height and bit depth values when the EXIF
+     * tags are missing and resolves the orientation and color space enums.
+     *
+     * @param ModelExifDocument|null $document              Parsed EXIF document.
+     * @param int|null               $fallbackWidth         Width used when the document is missing the tag.
+     * @param int|null               $fallbackHeight        Height used when the document is missing the tag.
+     * @param int|null               $fallbackBitsPerSample Bit depth used when the document is missing the tag.
+     *
+     * @return ImageValue Normalised image metadata.
+     */
     private function createImageValue(
         ?ModelExifDocument $document,
         ?int $fallbackWidth,
@@ -428,6 +554,16 @@ final class ExifDocument
         );
     }
 
+    /**
+     * Creates a preview value object from the parsed EXIF document.
+     *
+     * Falls back to an empty preview value when the document is missing and
+     * resolves color space and compression enums when tags are available.
+     *
+     * @param ModelExifDocument|null $document Parsed EXIF document.
+     *
+     * @return PreviewValue Normalised preview metadata.
+     */
     private function createPreviewValue(?ModelExifDocument $document): PreviewValue
     {
         $previewColorSpace  = null;
