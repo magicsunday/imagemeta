@@ -31,6 +31,7 @@ final class ExifDocumentReferenceMatrixTest extends TestCase
         ?string $expectedDateTimeOriginal,
         ?string $expectedUserComment,
         ?string $expectedUserCommentEncoding,
+        array $expectedStandards,
         array $expectedInterop,
         array $expectedPreview,
     ): void {
@@ -41,6 +42,11 @@ final class ExifDocumentReferenceMatrixTest extends TestCase
         self::assertNotNull($modelDocument, sprintf('Reference EXIF document missing for %s', $file));
 
         $document = new ApiExifDocument($modelDocument);
+
+        self::assertSame($modelDocument, $document->raw(), sprintf('%s: Raw document reference', $file));
+        self::assertSame($expectedStandards['flashpixVersion'], $modelDocument->flashpixVersion(), sprintf('%s: FlashPix version', $file));
+        self::assertSame($expectedStandards['tiffEpStandardId'], $modelDocument->tiffEpStandardId(), sprintf('%s: TIFF/EP standard id', $file));
+        self::assertSame($expectedStandards['tiffEpStandardString'], $modelDocument->tiffEpStandardIdString(), sprintf('%s: TIFF/EP standard string', $file));
 
         self::assertSame($expectedIso, $document->iso(), sprintf('%s: ISO fallback', $file));
 

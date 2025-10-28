@@ -29,6 +29,7 @@ final class ExifBackfillMatrixTest extends TestCase
      * @param string|null            $expectedDateTimeOriginal    Expected capture timestamp in ISO-8601 format or null.
      * @param string|null            $expectedUserComment         Expected decoded user comment value or null.
      * @param string|null            $expectedUserCommentEncoding Expected best-effort user comment encoding or null.
+     * @param array{flashpixVersion:string,tiffEpStandardId:?list<int>,tiffEpStandardString:?string} $expectedStandards Expected standards metadata components.
      * @param array<string, int|string|null> $expectedInterop         Expected interoperability metadata components.
      * @param array<string, int|float|bool|null> $expectedPreview     Expected preview descriptor components.
     */
@@ -40,12 +41,18 @@ final class ExifBackfillMatrixTest extends TestCase
         ?string $expectedDateTimeOriginal,
         ?string $expectedUserComment,
         ?string $expectedUserCommentEncoding,
+        array $expectedStandards,
         array $expectedInterop,
         array $expectedPreview,
     ): void {
         $structured = (new MetadataReader())
             ->read(self::IMAGE_DIR . '/' . $file)
             ->structured();
+
+        $standards = $structured->technical->standards;
+        self::assertSame($expectedStandards['flashpixVersion'], $standards->flashpixVersion, sprintf('%s: FlashPix version', $file));
+        self::assertSame($expectedStandards['tiffEpStandardId'], $standards->tiffEpStandardId, sprintf('%s: TIFF/EP standard id', $file));
+        self::assertSame($expectedStandards['tiffEpStandardString'], $standards->tiffEpStandardString, sprintf('%s: TIFF/EP standard string', $file));
 
         self::assertSame($expectedIso, $structured->exposure->iso, sprintf('%s: ISO fallback', $file));
 
@@ -119,6 +126,7 @@ final class ExifBackfillMatrixTest extends TestCase
      *     string|null,
      *     string|null,
      *     string|null,
+     *     array{flashpixVersion:string,tiffEpStandardId:?list<int>,tiffEpStandardString:?string},
      *     array{index:?string, version:?string, fileFormat:?string, width:?int, length:?int},
      *     array{hasPreview:?bool, offset:?int, length:?int, width:?int, height:?int, bitDepth:?int, compression:?int, scale:?float|null}
      * }>
@@ -131,6 +139,11 @@ final class ExifBackfillMatrixTest extends TestCase
             '2020-01-02T03:04:05+00:00',
             'Legacy 1.0 comment',
             'ASCII',
+            [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => null,
+                'tiffEpStandardString' => null,
+            ],
             [
                 'index' => 'R98',
                 'version' => '0100',
@@ -157,6 +170,11 @@ final class ExifBackfillMatrixTest extends TestCase
             'Legacy 1.1 comment',
             'ASCII',
             [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => null,
+                'tiffEpStandardString' => null,
+            ],
+            [
                 'index' => 'R98',
                 'version' => '0100',
                 'fileFormat' => 'JPEG',
@@ -181,6 +199,11 @@ final class ExifBackfillMatrixTest extends TestCase
             '2022-03-04T05:06:07-05:00',
             'Legacy 2.1 comment',
             'ASCII',
+            [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => null,
+                'tiffEpStandardString' => null,
+            ],
             [
                 'index' => 'R98',
                 'version' => '0100',
@@ -207,6 +230,11 @@ final class ExifBackfillMatrixTest extends TestCase
             'Legacy 2.2 comment',
             'ASCII',
             [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => null,
+                'tiffEpStandardString' => null,
+            ],
+            [
                 'index' => 'R98',
                 'version' => '0100',
                 'fileFormat' => 'JPEG',
@@ -231,6 +259,11 @@ final class ExifBackfillMatrixTest extends TestCase
             '2024-05-06T07:08:09+09:00',
             'Résumé 2.21',
             'UNICODE',
+            [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => null,
+                'tiffEpStandardString' => null,
+            ],
             [
                 'index' => 'R98',
                 'version' => '0100',
@@ -257,6 +290,11 @@ final class ExifBackfillMatrixTest extends TestCase
             'Legacy 2.3 comment',
             'ASCII',
             [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => [2, 0, 0, 0],
+                'tiffEpStandardString' => '2.0.0.0',
+            ],
+            [
                 'index' => 'R98',
                 'version' => '0100',
                 'fileFormat' => 'JPEG',
@@ -281,6 +319,11 @@ final class ExifBackfillMatrixTest extends TestCase
             '2026-07-08T09:10:11-03:30',
             'Café 2.31',
             'UNICODE',
+            [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => [2, 0, 0, 1],
+                'tiffEpStandardString' => '2.0.0.1',
+            ],
             [
                 'index' => 'R98',
                 'version' => '0100',
@@ -307,6 +350,11 @@ final class ExifBackfillMatrixTest extends TestCase
             'ユニコード 2.32',
             'UNICODE',
             [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => [2, 0, 0, 2],
+                'tiffEpStandardString' => '2.0.0.2',
+            ],
+            [
                 'index' => 'R98',
                 'version' => '0100',
                 'fileFormat' => 'JPEG',
@@ -331,6 +379,11 @@ final class ExifBackfillMatrixTest extends TestCase
             '2028-09-10T11:12:13+00:00',
             'Preview 3.0 comment',
             'ASCII',
+            [
+                'flashpixVersion' => '1.00',
+                'tiffEpStandardId' => [48, 49, 48, 48, 0],
+                'tiffEpStandardString' => '0100',
+            ],
             [
                 'index' => 'R98',
                 'version' => '0100',

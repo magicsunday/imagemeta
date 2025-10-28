@@ -22,7 +22,14 @@ final class ExifVersionMatrixTest extends TestCase
 
     #[Test]
     #[DataProvider('provideExifVersions')]
-    public function readsExifVersionMatrix(string $fixture, string $expectedVersion, string $expectedProfile): void
+    public function readsExifVersionMatrix(
+        string $fixture,
+        string $expectedVersion,
+        string $expectedProfile,
+        string $expectedFlashpixVersion,
+        ?array $expectedTiffEpStandardId,
+        ?string $expectedTiffEpStandardString,
+    ): void
     {
         $path = self::FIXTURE_DIR . '/' . $fixture;
 
@@ -30,21 +37,24 @@ final class ExifVersionMatrixTest extends TestCase
 
         self::assertSame($expectedVersion, $structured->technical->standards->exifVersion);
         self::assertSame($expectedProfile, $structured->technical->standards->profile);
+        self::assertSame($expectedFlashpixVersion, $structured->technical->standards->flashpixVersion);
+        self::assertSame($expectedTiffEpStandardId, $structured->technical->standards->tiffEpStandardId);
+        self::assertSame($expectedTiffEpStandardString, $structured->technical->standards->tiffEpStandardString);
     }
 
     /**
-     * @return iterable<string, array{string,string,string}>
+     * @return iterable<string, array{string,string,string,string,?list<int>,?string}>
      */
     public static function provideExifVersions(): iterable
     {
-        yield '1.0' => ['exif-1-0.jpg', '1.00', '1.0'];
-        yield '1.1' => ['exif-1-1.jpg', '1.10', '1.1'];
-        yield '2.1' => ['exif-2-1.jpg', '2.10', '2.1'];
-        yield '2.2' => ['exif-2-2.jpg', '2.20', '2.2'];
-        yield '2.21' => ['exif-2-21.jpg', '2.21', '2.21'];
-        yield '2.3' => ['exif-2-3.jpg', '2.30', '2.3'];
-        yield '2.31' => ['exif-2-31.jpg', '2.31', '2.31'];
-        yield '2.32' => ['exif-2-32.jpg', '2.32', '2.32'];
-        yield '3.0' => ['exif-3-0.jpg', '3.00', '3.0'];
+        yield '1.0' => ['exif-1-0.jpg', '1.00', '1.0', '1.00', null, null];
+        yield '1.1' => ['exif-1-1.jpg', '1.10', '1.1', '1.00', null, null];
+        yield '2.1' => ['exif-2-1.jpg', '2.10', '2.1', '1.00', null, null];
+        yield '2.2' => ['exif-2-2.jpg', '2.20', '2.2', '1.00', null, null];
+        yield '2.21' => ['exif-2-21.jpg', '2.21', '2.21', '1.00', null, null];
+        yield '2.3' => ['exif-2-3.jpg', '2.30', '2.3', '1.00', [2, 0, 0, 0], '2.0.0.0'];
+        yield '2.31' => ['exif-2-31.jpg', '2.31', '2.31', '1.00', [2, 0, 0, 1], '2.0.0.1'];
+        yield '2.32' => ['exif-2-32.jpg', '2.32', '2.32', '1.00', [2, 0, 0, 2], '2.0.0.2'];
+        yield '3.0' => ['exif-3-0.jpg', '3.00', '3.0', '1.00', [48, 49, 48, 48, 0], '0100'];
     }
 }
