@@ -152,6 +152,13 @@ final class TiffExifReader
     private array $ifdCache = [];
 
     /**
+     * Tracks pointer offsets that have already been inspected while resolving interoperability IFDs.
+     *
+     * @var array<int, bool>
+     */
+    private array $interopVisitedOffsets = [];
+
+    /**
      * Parses an EXIF TIFF blob into a structured document model.
      *
      * @param string        $tiffBlob           Raw TIFF data including headers.
@@ -165,10 +172,11 @@ final class TiffExifReader
         $this->buf->seek(0);
         $this->blobSize = UInt64::fromInt($this->buf->size());
 
-        $this->makerNoteRaw      = null;
-        $this->subIfds           = [];
-        $this->ifdCache          = [];
-        $this->bigTiffOffsetSize = 8;
+        $this->makerNoteRaw           = null;
+        $this->subIfds                = [];
+        $this->ifdCache               = [];
+        $this->bigTiffOffsetSize      = 8;
+        $this->interopVisitedOffsets = [];
 
         // byte order
         $boSig    = $this->buf->read(2);
@@ -597,6 +605,8 @@ final class TiffExifReader
      */
     private function locateInteropIfd(?Ifd ...$ifds): ?Ifd
     {
+        $deferred = [];
+
         foreach ($ifds as $ifd) {
             if (!$ifd instanceof Ifd) {
                 continue;
@@ -607,14 +617,31 @@ final class TiffExifReader
             }
 
             $entry = $ifd->get(ExifTag::INTEROPERABILITY_IFD_POINTER);
-            if ($entry instanceof IfdEntry) {
-                $candidate = $this->readIfd($this->pointerOffset($entry));
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
 
-                if ($this->ifdLooksLikeInterop($candidate)) {
-                    return $candidate;
-                }
+            $offset = $this->pointerOffset($entry);
+            if (isset($this->interopVisitedOffsets[$offset])) {
+                continue;
+            }
 
+            $this->interopVisitedOffsets[$offset] = true;
+
+            $candidate = $this->readIfd($offset);
+
+            if ($this->ifdLooksLikeInterop($candidate)) {
                 return $candidate;
+            }
+
+            $deferred[] = $candidate;
+        }
+
+        if ($deferred !== []) {
+            $resolved = $this->locateInteropIfd(...$deferred);
+
+            if ($resolved instanceof Ifd) {
+                return $resolved;
             }
         }
 

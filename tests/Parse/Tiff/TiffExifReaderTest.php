@@ -303,6 +303,16 @@ final class TiffExifReaderTest extends TestCase
     }
 
     #[Test]
+    public function skipsInvalidInteropPointerTargets(): void
+    {
+        $blob      = self::buildClassicInteropPointerWithSubIfdFallbackBlob();
+        $document = (new TiffExifReader())->parseFromBlob($blob);
+
+        self::assertSame('R98', $document->interopIndex());
+        self::assertSame('0100', $document->interopVersion());
+    }
+
+    #[Test]
     public function parsesLinkedIfdChain(): void
     {
         $blob      = $this->buildClassicLinkedIfdBlob();
@@ -1311,6 +1321,43 @@ final class TiffExifReaderTest extends TestCase
             . pack('V', 0);
 
         return $header . $ifd0 . $subIfd;
+    }
+
+    /**
+     * Builds a Classic TIFF blob where the EXIF pointer is stale but the SubIFD provides interoperability tags.
+     */
+    private static function buildClassicInteropPointerWithSubIfdFallbackBlob(): string
+    {
+        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
+
+        $ifd0Length    = 2 + (2 * 12) + 4;
+        $exifOffset    = 8 + $ifd0Length;
+        $exifLength    = 2 + 12 + 4;
+        $invalidOffset = $exifOffset + $exifLength;
+        $invalidLength = 2 + 12 + 4;
+        $subIfdOffset  = $invalidOffset + $invalidLength;
+
+        $ifd0 = pack('v', 2)
+            . self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifOffset)
+            . self::packClassicEntry(ExifTag::SUB_IFDS, 4, 1, $subIfdOffset)
+            . pack('V', 0);
+
+        $exifIfd = pack('v', 1)
+            . self::packClassicEntry(ExifTag::INTEROPERABILITY_IFD_POINTER, 4, 1, $invalidOffset)
+            . pack('V', 0);
+
+        $invalidIfd = pack('v', 1)
+            . self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1)
+            . pack('V', 0);
+
+        $interopEntries = [
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 4, self::inlineAsciiToInt('R98', 4)),
+            self::packClassicEntry(ExifTag::INTEROPERABILITY_VERSION, 2, 4, self::inlineAsciiToInt('0100', 4)),
+        ];
+
+        $subIfd = pack('v', count($interopEntries)) . implode('', $interopEntries) . pack('V', 0);
+
+        return $header . $ifd0 . $exifIfd . $invalidIfd . $subIfd;
     }
 
     /**
