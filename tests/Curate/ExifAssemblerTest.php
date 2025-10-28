@@ -136,6 +136,8 @@ final class ExifAssemblerTest extends TestCase
                 ColorSpace::ADOBE_RGB->value,
             ),
             ExifTag::PREVIEW_IMAGE_BIT_DEPTH   => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 12),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 1)),
             ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:05:01 12:40:00'),
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:05:01 12:35:00'),
             ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
@@ -320,6 +322,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(4.5, $structured->media->image->compressedBitsPerPixel);
         self::assertSame(1, $structured->media->image->interlace);
         self::assertSame('Shot with ND filter', $structured->media->image->userComment);
+        self::assertSame('ASCII', $structured->media->image->userCommentEncoding);
         self::assertSame('Developed in Raw Studio', $structured->file->integrity->imageHistory);
         self::assertTrue($structured->file->integrity->makerNotesSafe);
         self::assertTrue($structured->media->preview->hasThumbnail);
@@ -328,6 +331,8 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(1_152, $structured->media->preview->previewHeight);
         self::assertSame(ColorSpace::ADOBE_RGB, $structured->media->preview->previewColorSpace);
         self::assertSame(12, $structured->media->preview->previewBitDepth);
+        self::assertSame(Compression::JPEG, $structured->media->preview->previewCompression);
+        self::assertSame(1.0, $structured->media->preview->previewScale);
         self::assertSame('JPEG', $structured->media->preview->previewEncoding);
         self::assertSame('image/jpeg', $structured->media->preview->previewMimeType);
         self::assertSame(131_072, $structured->media->preview->previewOffset);

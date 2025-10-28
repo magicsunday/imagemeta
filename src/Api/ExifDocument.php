@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Camera as CameraValue;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
@@ -34,6 +35,7 @@ use MagicSunday\ImageMeta\Value\Exposure as ExposureValue;
 use MagicSunday\ImageMeta\Value\Gps as GpsValue;
 use MagicSunday\ImageMeta\Value\Image as ImageValue;
 use MagicSunday\ImageMeta\Value\Lens as LensValue;
+use MagicSunday\ImageMeta\Value\Interop as InteropValue;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 
 use function is_float;
@@ -58,6 +60,8 @@ final class ExifDocument
 
     private readonly StructuredPreview $preview;
 
+    private readonly InteropValue $interop;
+
     public function __construct(
         ?ModelExifDocument $document,
         ?int $fallbackWidth = null,
@@ -73,6 +77,13 @@ final class ExifDocument
         $gpsValue      = $this->createGpsValue($document);
         $imageValue    = $this->createImageValue($document, $fallbackWidth, $fallbackHeight, $fallbackBitsPerSample);
         $previewValue  = $this->createPreviewValue($document);
+        $interopValue  = new InteropValue(
+            index: $document?->interopIndex(),
+            version: $document?->interopVersion(),
+            relatedImageFileFormat: $document?->relatedImageFileFormat(),
+            relatedImageWidth: $document?->relatedImageWidth(),
+            relatedImageLength: $document?->relatedImageLength(),
+        );
 
         $this->camera   = new StructuredCamera($cameraValue);
         $this->lens     = new StructuredLens($lensValue, $derived);
@@ -80,6 +91,7 @@ final class ExifDocument
         $this->gps      = new StructuredGps($gpsValue);
         $this->image    = new StructuredImage($imageValue);
         $this->preview  = new StructuredPreview($previewValue);
+        $this->interop  = $interopValue;
     }
 
     public function camera(): StructuredCamera
@@ -110,6 +122,11 @@ final class ExifDocument
     public function preview(): StructuredPreview
     {
         return $this->preview;
+    }
+
+    public function interop(): InteropValue
+    {
+        return $this->interop;
     }
 
     public function hasData(): bool
@@ -392,14 +409,17 @@ final class ExifDocument
             compressedBitsPerPixel: $document?->compressedBitsPerPixel(),
             interlace: $document?->interlace(),
             userComment: $document?->userComment(),
+            userCommentEncoding: $document?->userCommentEncoding(),
         );
     }
 
     private function createPreviewValue(?ModelExifDocument $document): PreviewValue
     {
-        $previewColorSpace = null;
+        $previewColorSpace   = null;
+        $previewCompression = null;
         if ($document instanceof ModelExifDocument) {
-            $previewColorSpace = ColorSpace::fromExifValue($document->previewColorSpace());
+            $previewColorSpace   = ColorSpace::fromExifValue($document->previewColorSpace());
+            $previewCompression = Compression::fromExifValue($document->previewImageCompression());
         }
 
         return new PreviewValue(
@@ -409,6 +429,8 @@ final class ExifDocument
             previewHeight: $document?->previewImageHeight(),
             previewColorSpace: $previewColorSpace,
             previewBitDepth: $document?->previewImageBitDepth(),
+            previewCompression: $previewCompression,
+            previewScale: $document?->previewImageScale(),
             previewEncoding: $document?->previewImageEncoding(),
             previewMimeType: $document?->previewImageMimeType(),
             previewOffset: $document?->previewImageOffset(),

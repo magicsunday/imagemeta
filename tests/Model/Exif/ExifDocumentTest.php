@@ -23,11 +23,13 @@ use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -294,6 +296,8 @@ final class ExifDocumentTest extends TestCase
                 ColorSpace::ADOBE_RGB->value,
             ),
             ExifTag::PREVIEW_IMAGE_BIT_DEPTH     => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 8),
+            ExifTag::PREVIEW_IMAGE_COMPRESSION  => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::PREVIEW_IMAGE_SCALE        => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
             ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:10:25 18:45:30'),
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:10:25 18:40:00'),
         ]);
@@ -309,6 +313,8 @@ final class ExifDocumentTest extends TestCase
         self::assertSame('JPEG', $document->previewImageEncoding());
         self::assertSame('image/jpeg', $document->previewImageMimeType());
         self::assertSame(8, $document->previewImageBitDepth());
+        self::assertSame(Compression::JPEG->value, $document->previewImageCompression());
+        self::assertEqualsWithDelta(0.5, $document->previewImageScale(), 1e-6);
         self::assertSame(ColorSpace::ADOBE_RGB->value, $document->previewColorSpace());
 
         $previewDateTime = $document->previewDateTime();
@@ -339,6 +345,42 @@ final class ExifDocumentTest extends TestCase
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
         self::assertSame('2015-06-07T08:09:10.234-04:00', $capture->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    #[Test]
+    public function dateTimeOriginalReturnsParsedTimestamp(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_ORIGINAL     => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2022:03:04 05:06:07'),
+            ExifTag::SUB_SEC_TIME_ORIGINAL => new IfdEntry(ExifTag::SUB_SEC_TIME_ORIGINAL, 2, 1, '123'),
+            ExifTag::OFFSET_TIME_ORIGINAL  => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '-05:30'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $original = $doc->dateTimeOriginal();
+        self::assertInstanceOf(DateTimeImmutable::class, $original);
+        self::assertSame('2022-03-04T05:06:07.123-05:30', $original->format(self::ISO_8601_MILLISECONDS));
+    }
+
+    #[Test]
+    public function dateTimeOriginalFallsBackToDigitizedWhenAbsent(): void
+    {
+        $ifd0 = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::DATETIME_DIGITIZED     => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2019:07:08 09:10:11'),
+            ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '456'),
+            ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:00'),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        $original = $doc->dateTimeOriginal();
+        self::assertInstanceOf(DateTimeImmutable::class, $original);
+        self::assertSame('2019-07-08T09:10:11.456+02:00', $original->format(self::ISO_8601_MILLISECONDS));
     }
 
     /**
@@ -1165,6 +1207,7 @@ final class ExifDocumentTest extends TestCase
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Note', $doc->userComment());
+        self::assertSame('ASCII', $doc->userCommentEncoding());
     }
 
     /**
@@ -1193,6 +1236,7 @@ final class ExifDocumentTest extends TestCase
             $doc->userComment(),
             'Expected Shift-JIS encoded bytes to decode to the documented UTF-8 phrase',
         );
+        self::assertSame('JIS', $doc->userCommentEncoding());
     }
 
     /**
@@ -1217,6 +1261,7 @@ final class ExifDocumentTest extends TestCase
             $doc->userComment(),
             'Fallback should strip non-ASCII bytes and trim the decoded output',
         );
+        self::assertSame('JIS', $doc->userCommentEncoding());
     }
 
     /**
@@ -1415,6 +1460,38 @@ final class ExifDocumentTest extends TestCase
         self::assertNull($doc->imageEditingSoftwareVersion());
         self::assertSame('Metadata Tool Z', $doc->metadataEditingSoftware());
         self::assertNull($doc->metadataEditingSoftwareVersion());
+    }
+
+    #[Test]
+    #[DataProvider('provideExifVersionMatrix')]
+    public function normalizesExifVersions(string $raw, string $expectedVersion, string $expectedProfile): void
+    {
+        $ifd0    = new Ifd([]);
+
+        $exifIfd = new Ifd([
+            ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, strlen($raw), $raw),
+        ]);
+
+        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame($expectedVersion, $doc->exifVersion());
+        self::assertSame($expectedProfile, $doc->exifProfile());
+    }
+
+    /**
+     * @return iterable<string, array{string,string,string}>
+     */
+    public static function provideExifVersionMatrix(): iterable
+    {
+        yield '1.0' => ['0100', '1.00', '1.0'];
+        yield '1.1' => ['0110', '1.10', '1.1'];
+        yield '2.1' => ['0210', '2.10', '2.1'];
+        yield '2.2' => ['0220', '2.20', '2.2'];
+        yield '2.21' => ['0221', '2.21', '2.21'];
+        yield '2.3' => ['0230', '2.30', '2.3'];
+        yield '2.31' => ['0231', '2.31', '2.31'];
+        yield '2.32' => ['0232', '2.32', '2.32'];
+        yield '3.0' => ['0300', '3.00', '3.0'];
     }
 
     /**

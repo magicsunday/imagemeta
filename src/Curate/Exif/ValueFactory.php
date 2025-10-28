@@ -51,6 +51,7 @@ use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
@@ -345,6 +346,8 @@ final class ValueFactory
             $exifDocument?->previewImageHeight(),
             ColorSpace::fromExifValue($exifDocument?->previewColorSpace()),
             $exifDocument?->previewImageBitDepth(),
+            Compression::fromExifValue($exifDocument?->previewImageCompression()),
+            $exifDocument?->previewImageScale(),
             $exifDocument?->previewImageEncoding(),
             $exifDocument?->previewImageMimeType(),
             $exifDocument?->previewImageOffset(),
@@ -892,6 +895,7 @@ final class ValueFactory
             compressedBitsPerPixel: $exifDocument?->compressedBitsPerPixel(),
             interlace: $exifDocument?->interlace(),
             userComment: $exifDocument?->userComment(),
+            userCommentEncoding: $exifDocument?->userCommentEncoding(),
         );
     }
 

@@ -188,6 +188,10 @@ final readonly class ExifTag
 
     public const int PREVIEW_DATE_TIME_DIGITIZED = 0xC524;
 
+    public const int PREVIEW_IMAGE_COMPRESSION = 0xC525;
+
+    public const int PREVIEW_IMAGE_SCALE = 0xC526;
+
     public const int YCBCR_COEFFICIENTS = 0x0211;
 
     public const int YCBCR_SUB_SAMPLING = 0x0212;
