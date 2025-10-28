@@ -13,6 +13,10 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
+use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -25,6 +29,9 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(CaptureDateResolver::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(ExifDocument::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
 #[UsesClass(XmpDocument::class)]
 final class CaptureDateResolverTest extends TestCase
 {
@@ -97,5 +104,47 @@ final class CaptureDateResolverTest extends TestCase
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
+    }
+
+    /**
+     * Ensures EXIF capture timestamps are preferred and that fallback logic covers digitised
+     * timestamps when DateTimeOriginal is not provided.
+     */
+    #[Test]
+    public function prefersExifCaptureDateWhenAvailable(): void
+    {
+        $exifDoc = new ExifDocument(
+            new Ifd([]),
+            new Ifd([
+                ExifTag::DATETIME_DIGITIZED    => new IfdEntry(
+                    ExifTag::DATETIME_DIGITIZED,
+                    2,
+                    19,
+                    '2024:04:05 01:02:03',
+                ),
+                ExifTag::OFFSET_TIME_DIGITIZED => new IfdEntry(
+                    ExifTag::OFFSET_TIME_DIGITIZED,
+                    2,
+                    6,
+                    '+01:00',
+                ),
+            ]),
+            null,
+            null,
+            null,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $exifDoc,
+            xmpBlobs: [],
+            xmpDoc: null,
+        );
+
+        $result = CaptureDateResolver::bestCaptureDateTime($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $result);
+        self::assertSame('2024-04-05T01:02:03+01:00', $result->format(DATE_ATOM));
     }
 }

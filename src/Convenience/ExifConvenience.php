@@ -23,8 +23,6 @@ use Throwable;
 
 use function is_float;
 use function is_int;
-use function is_string;
-use function strlen;
 
 /**
  * Helper routines that extract frequently-used EXIF values in a safe manner.
@@ -56,17 +54,6 @@ final class ExifConvenience
      */
     public static function captureDateTime(ExifDocument $doc): ?DateTimeImmutable
     {
-        $rawDateTime = $doc->dateTimeOriginalRaw(); // "YYYY:MM:DD HH:MM:SS"
-
-        if (!is_string($rawDateTime) || $rawDateTime === '') {
-            return null;
-        }
-
-        // Ensure that the timestamp contains both a date and a time component.
-        if (strlen($rawDateTime) < 19) {
-            return null;
-        }
-
         try {
             return $doc->captureDateTime();
         } catch (Throwable) {

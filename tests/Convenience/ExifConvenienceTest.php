@@ -188,6 +188,52 @@ final class ExifConvenienceTest extends TestCase
     }
 
     /**
+     * Provides digitised and modify date tags to confirm the helper relies on the document's
+     * fallback search order when DateTimeOriginal is absent.
+     */
+    #[Test]
+    public function captureDateTimeFallsBackToDigitizedAndModifyDates(): void
+    {
+        $digitizedIfd = new Ifd([
+            ExifTag::DATETIME_DIGITIZED      => new IfdEntry(
+                ExifTag::DATETIME_DIGITIZED,
+                2,
+                19,
+                '2023:12:24 06:30:45',
+            ),
+            ExifTag::OFFSET_TIME_DIGITIZED   => new IfdEntry(
+                ExifTag::OFFSET_TIME_DIGITIZED,
+                2,
+                6,
+                '-05:30',
+            ),
+        ]);
+
+        $docWithDigitized = new ExifDocument(new Ifd([]), $digitizedIfd, null, null, null);
+
+        $digitized = ExifConvenience::captureDateTime($docWithDigitized);
+
+        self::assertNotNull($digitized);
+        self::assertSame('2023-12-24T06:30:45-05:30', $digitized->format(DATE_ATOM));
+
+        $modifyDateIfd0 = new Ifd([
+            ExifTag::DATETIME => new IfdEntry(
+                ExifTag::DATETIME,
+                2,
+                19,
+                '2023:11:10 09:08:07',
+            ),
+        ]);
+
+        $docWithModifyDate = new ExifDocument($modifyDateIfd0, new Ifd([]), null, null, null);
+
+        $modify = ExifConvenience::captureDateTime($docWithModifyDate);
+
+        self::assertNotNull($modify);
+        self::assertSame('2023-11-10T09:08:07+00:00', $modify->format(DATE_ATOM));
+    }
+
+    /**
      * Supplies an incomplete timestamp string to ensure the helper refuses values lacking time
      * components.
      */
