@@ -284,7 +284,8 @@ final class ExifConvenience
             'make'        => $doc->cameraMake(),
             'model'       => $doc->cameraModel(),
             'lens'        => $doc->lensModel(),
-            'orientation' => $doc->orientation(),
+            // Expose the numeric orientation code to preserve the legacy convenience contract.
+            'orientation' => $doc->orientation()?->value,
             'captured_at' => $dt?->format(DATE_ATOM),
             'exposure_s'  => self::exposureTime($doc),
             'fnumber'     => self::fNumber($doc),

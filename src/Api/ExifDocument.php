@@ -24,10 +24,6 @@ use MagicSunday\ImageMeta\Value\Camera as CameraValue;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
-use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
-use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
-use MagicSunday\ImageMeta\Value\Enum\Orientation;
-use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure as ExposureValue;
 use MagicSunday\ImageMeta\Value\Gps as GpsValue;
@@ -297,77 +293,56 @@ final class ExifDocument
      */
     private function createExposureValue(?ModelExifDocument $document): ExposureValue
     {
-        $program      = null;
-        $metering     = null;
-        $whiteBalance = null;
-        $iso          = null;
-
-        if ($document instanceof ModelExifDocument) {
-            $programCode = $document->exposureProgram();
-            if ($programCode !== null) {
-                $program = ExposureProgram::tryFrom($programCode);
-            }
-
-            $meteringCode = $document->meteringMode();
-            if ($meteringCode !== null) {
-                $metering = MeteringMode::tryFrom($meteringCode);
-            }
-
-            $whiteBalanceCode = $document->whiteBalance();
-            if ($whiteBalanceCode !== null) {
-                $whiteBalance = WhiteBalance::tryFrom($whiteBalanceCode);
-            }
-
-            $flashInfo = ExifFlash::fromExifValue($document->flash());
-            $iso       = $document->isoBestEffort();
-
+        if (!$document instanceof ModelExifDocument) {
             return new ExposureValue(
-                iso: $iso,
-                exposureTimeSec: $document->exposureTime(),
-                fNumber: $document->fNumber(),
-                exposureBiasEv: $document->exposureBias(),
-                program: $program,
-                meteringMode: $metering,
-                flash: $flashInfo,
-                whiteBalance: $whiteBalance,
-                brightnessEv: $document->brightnessValue(),
-                exposureMode: $document->exposureMode(),
-                gainControl: $document->gainControl(),
-                contrast: $document->contrast(),
-                saturation: $document->saturation(),
-                sharpness: $document->sharpness(),
-                digitalZoomRatio: $document->digitalZoomRatio(),
-                shutterSpeedEv: $document->shutterSpeedEv(),
-                apertureEv: $document->apertureEv(),
-                isoLatitudeYyy: $document->isoLatitudeYyy(),
-                isoLatitudeZzz: $document->isoLatitudeZzz(),
-                exposureIndex: $document->exposureIndex(),
-                flashEnergy: $document->flashEnergy(),
+                iso: null,
+                exposureTimeSec: null,
+                fNumber: null,
+                exposureBiasEv: null,
+                program: null,
+                meteringMode: null,
+                flash: null,
+                whiteBalance: null,
+                brightnessEv: null,
+                exposureMode: null,
+                gainControl: null,
+                contrast: null,
+                saturation: null,
+                sharpness: null,
+                digitalZoomRatio: null,
+                shutterSpeedEv: null,
+                apertureEv: null,
+                isoLatitudeYyy: null,
+                isoLatitudeZzz: null,
+                exposureIndex: null,
+                flashEnergy: null,
             );
         }
 
+        $flashInfo = ExifFlash::fromExifValue($document->flash());
+
         return new ExposureValue(
-            iso: null,
-            exposureTimeSec: null,
-            fNumber: null,
-            exposureBiasEv: null,
-            program: null,
-            meteringMode: null,
-            flash: null,
-            whiteBalance: null,
-            brightnessEv: null,
-            exposureMode: null,
-            gainControl: null,
-            contrast: null,
-            saturation: null,
-            sharpness: null,
-            digitalZoomRatio: null,
-            shutterSpeedEv: null,
-            apertureEv: null,
-            isoLatitudeYyy: null,
-            isoLatitudeZzz: null,
-            exposureIndex: null,
-            flashEnergy: null,
+            iso: $document->isoBestEffort(),
+            exposureTimeSec: $document->exposureTime(),
+            fNumber: $document->fNumber(),
+            exposureBiasEv: $document->exposureBias(),
+            program: $document->exposureProgram(),
+            meteringMode: $document->meteringMode(),
+            flash: $flashInfo,
+            whiteBalance: $document->whiteBalance(),
+            brightnessEv: $document->brightnessValue(),
+            exposureMode: $document->exposureMode(),
+            gainControl: $document->gainControl(),
+            contrast: $document->contrast(),
+            saturation: $document->saturation(),
+            sharpness: $document->sharpness(),
+            digitalZoomRatio: $document->digitalZoomRatio(),
+            shutterSpeedEv: $document->shutterSpeedEv(),
+            apertureEv: $document->apertureEv(),
+            isoLatitudeYyy: $document->isoLatitudeYyy(),
+            isoLatitudeZzz: $document->isoLatitudeZzz(),
+            exposureIndex: $document->exposureIndex(),
+            flashEnergy: $document->flashEnergy(),
         );
     }
 
@@ -524,12 +499,9 @@ final class ExifDocument
         ?int $fallbackHeight,
         ?int $fallbackBitsPerSample,
     ): ImageValue {
-        $orientation = Orientation::fromExifValue($document?->orientation());
+        $orientation = $document?->orientation();
 
-        $colorSpace = null;
-        if ($document instanceof ModelExifDocument) {
-            $colorSpace = ColorSpace::fromExifValue($document->colorSpace());
-        }
+        $colorSpace = $document?->colorSpace();
 
         $bitsPerSample = $document?->bitsPerSample();
         if ($bitsPerSample === null) {

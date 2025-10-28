@@ -53,11 +53,7 @@ use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
-use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
-use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
-use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
-use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
@@ -253,24 +249,9 @@ final class ValueFactory
         $lens   = $this->buildLens($exifDocument);
         $image  = $this->buildImage($metadata, $exifDocument);
 
-        $exposureProgram = null;
-        $meteringMode    = null;
-        $whiteBalance    = null;
-
-        $programCode = $exifDocument?->exposureProgram();
-        if ($programCode !== null) {
-            $exposureProgram = ExposureProgram::tryFrom($programCode);
-        }
-
-        $meteringCode = $exifDocument?->meteringMode();
-        if ($meteringCode !== null) {
-            $meteringMode = MeteringMode::tryFrom($meteringCode);
-        }
-
-        $whiteBalanceCode = $exifDocument?->whiteBalance();
-        if ($whiteBalanceCode !== null) {
-            $whiteBalance = WhiteBalance::tryFrom($whiteBalanceCode);
-        }
+        $exposureProgram = $exifDocument?->exposureProgram();
+        $meteringMode    = $exifDocument?->meteringMode();
+        $whiteBalance    = $exifDocument?->whiteBalance();
 
         $flashInfo = ExifFlash::fromExifValue($exifDocument?->flash());
 
@@ -920,7 +901,7 @@ final class ValueFactory
         $width  = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
         $height = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
 
-        $orientation = Orientation::fromExifValue($exifDocument?->orientation());
+        $orientation = $exifDocument?->orientation();
 
         $bitsPerSample = $exifDocument?->bitsPerSample();
         if ($bitsPerSample === null) {
@@ -1197,7 +1178,7 @@ final class ValueFactory
             return null;
         }
 
-        $colorSpace = ColorSpace::fromExifValue($exifDocument->colorSpace());
+        $colorSpace = $exifDocument->colorSpace();
 
         if ($colorSpace === ColorSpace::UNCALIBRATED) {
             $interopIndex = $exifDocument->interopIndex();

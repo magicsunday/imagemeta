@@ -36,6 +36,10 @@ final class ExifFlash
 
     /**
      * Creates a FlashInfo instance from the numeric EXIF Flash tag value.
+     *
+     * @param int|string|null $value Raw EXIF Flash tag encoding the capture state.
+     *
+     * @return FlashInfo|null Structured flash details or null when no information is provided.
      */
     public static function fromExifValue(int|string|null $value): ?FlashInfo
     {
@@ -43,18 +47,19 @@ final class ExifFlash
             return null;
         }
 
-        $intValue = is_int($value) ? $value : (int) $value;
+        $flashBits = is_int($value) ? $value : (int) $value;
 
-        $returnBits = ($intValue >> self::RETURN_SHIFT) & self::TWO_BIT_MASK;
-        $modeBits = ($intValue >> self::MODE_SHIFT) & self::TWO_BIT_MASK;
-        $functionBit = ($intValue >> self::FUNCTION_SHIFT) & self::ONE_BIT_MASK;
+        // Extract the grouped bit fields encoded within the EXIF Flash tag.
+        $returnBits   = ($flashBits >> self::RETURN_SHIFT) & self::TWO_BIT_MASK;
+        $modeBits     = ($flashBits >> self::MODE_SHIFT) & self::TWO_BIT_MASK;
+        $functionBit  = ($flashBits >> self::FUNCTION_SHIFT) & self::ONE_BIT_MASK;
 
         return new FlashInfo(
-            fired: ($intValue & self::FIRED_MASK) !== 0,
+            fired: ($flashBits & self::FIRED_MASK) !== 0,
             mode: FlashMode::tryFrom($modeBits),
             returnDetection: FlashReturn::tryFrom($returnBits),
             functionPresence: FlashFunction::tryFrom($functionBit),
-            redEyeReduction: ($intValue & self::RED_EYE_MASK) !== 0,
+            redEyeReduction: ($flashBits & self::RED_EYE_MASK) !== 0,
         );
     }
 }
