@@ -23,6 +23,17 @@ final class QuickTimeLookup
     {
     }
 
+    /**
+     * Returns the first non-empty QuickTime string for the given keys.
+     *
+     * The lookup iterates over the provided keys in order and returns the first non-empty
+     * string that exists in the QuickTime metadata. When the QuickTime metadata is not
+     * available or none of the keys hold a value, null is returned.
+     *
+     * @param string ...$keys Ordered list of QuickTime metadata keys to resolve.
+     *
+     * @return string|null Resolved string value or null when no matching metadata exists.
+     */
     public function string(string ...$keys): ?string
     {
         if (!$this->quickTime instanceof QuickTimeMeta) {
@@ -39,6 +50,17 @@ final class QuickTimeLookup
         return null;
     }
 
+    /**
+     * Returns the first QuickTime float value for the given keys.
+     *
+     * The lookup iterates over the provided keys in order and returns the first float that
+     * exists in the QuickTime metadata. When the QuickTime metadata is not available or none
+     * of the keys hold a value, null is returned.
+     *
+     * @param string ...$keys Ordered list of QuickTime metadata keys to resolve.
+     *
+     * @return float|null Resolved float value or null when no matching metadata exists.
+     */
     public function float(string ...$keys): ?float
     {
         if (!$this->quickTime instanceof QuickTimeMeta) {
@@ -55,6 +77,17 @@ final class QuickTimeLookup
         return null;
     }
 
+    /**
+     * Returns the first QuickTime integer value for the given keys.
+     *
+     * The lookup iterates over the provided keys in order and returns the first integer that
+     * exists in the QuickTime metadata. When the QuickTime metadata is not available or none
+     * of the keys hold a value, null is returned.
+     *
+     * @param string ...$keys Ordered list of QuickTime metadata keys to resolve.
+     *
+     * @return int|null Resolved integer value or null when no matching metadata exists.
+     */
     public function int(string ...$keys): ?int
     {
         if (!$this->quickTime instanceof QuickTimeMeta) {
@@ -71,6 +104,17 @@ final class QuickTimeLookup
         return null;
     }
 
+    /**
+     * Returns the first QuickTime boolean value for the given keys.
+     *
+     * The lookup iterates over the provided keys in order and returns the first boolean that
+     * exists in the QuickTime metadata. When the QuickTime metadata is not available or none
+     * of the keys hold a value, null is returned.
+     *
+     * @param string ...$keys Ordered list of QuickTime metadata keys to resolve.
+     *
+     * @return bool|null Resolved boolean value or null when no matching metadata exists.
+     */
     public function bool(string ...$keys): ?bool
     {
         if (!$this->quickTime instanceof QuickTimeMeta) {
