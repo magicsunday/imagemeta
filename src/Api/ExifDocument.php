@@ -397,11 +397,22 @@ final class ExifDocument
 
     private function createPreviewValue(?ModelExifDocument $document): PreviewValue
     {
+        $previewColorSpace = null;
+        if ($document instanceof ModelExifDocument) {
+            $previewColorSpace = ColorSpace::fromExifValue($document->previewColorSpace());
+        }
+
         return new PreviewValue(
             hasThumbnail: $document?->hasThumbnail(),
             hasPreview: $document?->hasPreviewImage(),
             previewWidth: $document?->previewImageWidth(),
             previewHeight: $document?->previewImageHeight(),
+            previewColorSpace: $previewColorSpace,
+            previewBitDepth: $document?->previewImageBitDepth(),
+            previewEncoding: $document?->previewImageEncoding(),
+            previewMimeType: $document?->previewImageMimeType(),
+            previewOffset: $document?->previewImageOffset(),
+            previewLength: $document?->previewImageLength(),
         );
     }
 

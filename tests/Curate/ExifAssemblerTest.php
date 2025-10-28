@@ -127,12 +127,15 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 65_536),
             ExifTag::PREVIEW_IMAGE_WIDTH       => new IfdEntry(ExifTag::PREVIEW_IMAGE_WIDTH, 4, 1, 2_048),
             ExifTag::PREVIEW_IMAGE_HEIGHT      => new IfdEntry(ExifTag::PREVIEW_IMAGE_HEIGHT, 4, 1, 1_152),
+            ExifTag::PREVIEW_IMAGE_ENCODING    => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE   => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
             ExifTag::PREVIEW_IMAGE_COLOR_SPACE => new IfdEntry(
                 ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
                 3,
                 1,
                 ColorSpace::ADOBE_RGB->value,
             ),
+            ExifTag::PREVIEW_IMAGE_BIT_DEPTH   => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 12),
             ExifTag::PREVIEW_DATE_TIME           => new IfdEntry(ExifTag::PREVIEW_DATE_TIME, 2, 19, '2024:05:01 12:40:00'),
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:05:01 12:35:00'),
             ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 400),
@@ -323,6 +326,12 @@ final class ExifAssemblerTest extends TestCase
         self::assertTrue($structured->media->preview->hasPreview);
         self::assertSame(2_048, $structured->media->preview->previewWidth);
         self::assertSame(1_152, $structured->media->preview->previewHeight);
+        self::assertSame(ColorSpace::ADOBE_RGB, $structured->media->preview->previewColorSpace);
+        self::assertSame(12, $structured->media->preview->previewBitDepth);
+        self::assertSame('JPEG', $structured->media->preview->previewEncoding);
+        self::assertSame('image/jpeg', $structured->media->preview->previewMimeType);
+        self::assertSame(131_072, $structured->media->preview->previewOffset);
+        self::assertSame(65_536, $structured->media->preview->previewLength);
 
         self::assertSame(400, $structured->exposure->iso);
         self::assertSame(0.008, $structured->exposure->exposureTimeSec);
