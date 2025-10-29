@@ -32,15 +32,16 @@ use ReflectionClass;
 use RuntimeException;
 
 use function array_map;
-use function call_user_func;
 use function count;
 use function implode;
 use function ord;
+use function is_int;
 use function pack;
+use function rtrim;
 use function sha1;
+use function strlen;
 use function str_pad;
 use function str_repeat;
-use function strlen;
 use function substr;
 use function trim;
 use function unpack;
@@ -155,40 +156,46 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Provides representative Classic TIFF and BigTIFF payloads.
      *
-     * @return iterable<string, array{0:string,1:string}>
+     * @return iterable<string, array{0:string,1:callable(ExifDocument):void}>
      */
     public static function provideValidTiffPayloads(): iterable
     {
         yield 'classic' => [
             self::buildClassicTiffBlob(),
-            'assertClassicDocument',
+            static function (ExifDocument $doc): void {
+                self::assertClassicDocument($doc);
+            },
         ];
 
         yield 'big_tiff' => [
             self::buildBigTiffBlob(),
-            'assertBigTiffDocument',
+            static function (ExifDocument $doc): void {
+                self::assertBigTiffDocument($doc);
+            },
         ];
 
         yield 'big_tiff_offset16' => [
             self::buildBigTiffOffset16Blob(),
-            'assertBigTiffOffset16Document',
+            static function (ExifDocument $doc): void {
+                self::assertBigTiffOffset16Document($doc);
+            },
         ];
     }
 
     /**
      * Verifies that valid TIFF payloads are parsed into the expected IFD hierarchy.
      *
-     * @param string $blob      Binary TIFF/EXIF payload.
-     * @param string $assertion Assertion method name to execute for the parsed document.
+     * @param string                       $blob      Binary TIFF/EXIF payload.
+     * @param callable(ExifDocument): void $assertion Assertion executed for the parsed document.
      */
     #[Test]
     #[DataProvider('provideValidTiffPayloads')]
-    public function parsesValidPayloads(string $blob, string $assertion): void
+    public function parsesValidPayloads(string $blob, callable $assertion): void
     {
         $reader = new TiffExifReader();
         $doc    = $reader->parseFromBlob($blob);
 
-        call_user_func([self::class, $assertion], $doc);
+        $assertion($doc);
     }
 
     /**
@@ -497,7 +504,6 @@ final class TiffExifReaderTest extends TestCase
         self::assertArrayHasKey($subIfdOffset, $subIfds);
 
         $nestedIfd = $subIfds[$subIfdOffset];
-        self::assertInstanceOf(Ifd::class, $nestedIfd);
 
         $orientation = $nestedIfd->get(ExifTag::ORIENTATION);
         self::assertNotNull($orientation);
@@ -551,7 +557,6 @@ final class TiffExifReaderTest extends TestCase
 
         $subIfds = $document->subIfds();
         self::assertArrayHasKey($subIfdOffset, $subIfds);
-        self::assertInstanceOf(Ifd::class, $subIfds[$subIfdOffset]);
     }
 
     /**
@@ -598,32 +603,54 @@ final class TiffExifReaderTest extends TestCase
 
         self::assertNotNull($exifIfd);
 
-        $sceneType = $exifIfd->get(ExifTag::SCENE_TYPE)?->value;
-        self::assertNotNull($sceneType);
+        $sceneTypeEntry = $exifIfd->get(ExifTag::SCENE_TYPE);
+        self::assertNotNull($sceneTypeEntry);
+        $sceneType = $sceneTypeEntry->value;
         if (is_string($sceneType)) {
             self::assertTrue(
                 in_array($sceneType, ["\x01\0\0\0", "\x01"], true),
                 'SceneType byte should preserve the original UNDEFINED payload',
             );
         } else {
-            self::assertSame(1, (int) $sceneType);
+            self::assertIsInt($sceneType);
+            self::assertSame(1, $sceneType);
         }
 
-        self::assertSame(1, $exifIfd->get(ExifTag::CUSTOM_RENDERED)?->value);
-        $cfaPattern = $exifIfd->get(ExifTag::CFA_PATTERN)?->value;
+        $customRenderedEntry = $exifIfd->get(ExifTag::CUSTOM_RENDERED);
+        self::assertNotNull($customRenderedEntry);
+        self::assertIsInt($customRenderedEntry->value);
+        self::assertSame(1, $customRenderedEntry->value);
+
+        $cfaPatternEntry = $exifIfd->get(ExifTag::CFA_PATTERN);
+        self::assertNotNull($cfaPatternEntry);
+        $cfaPattern = $cfaPatternEntry->value;
         if ($cfaPattern instanceof ExifNumericList) {
             self::assertSame([0, 1, 2, 3], $cfaPattern->values);
         } else {
+            self::assertIsString($cfaPattern);
             self::assertSame("\x00\x01\x02\x03", $cfaPattern);
         }
 
-        self::assertSame('Cliffside Dusk', rtrim($exifIfd->get(ExifTag::IMAGE_TITLE)?->value ?? ''));
-        self::assertSame('Alex Light', rtrim($exifIfd->get(ExifTag::PHOTOGRAPHER)?->value ?? ''));
-        self::assertSame('Chris Edit', rtrim($exifIfd->get(ExifTag::IMAGE_EDITOR)?->value ?? ''));
-        self::assertSame('Firmware 2.0', rtrim($exifIfd->get(ExifTag::CAMERA_FIRMWARE)?->value ?? ''));
-        self::assertSame('RawLab Studio', rtrim($exifIfd->get(ExifTag::RAW_DEVELOPING_SOFTWARE)?->value ?? ''));
-        self::assertSame('EditLab Pro', rtrim($exifIfd->get(ExifTag::IMAGE_EDITING_SOFTWARE)?->value ?? ''));
-        self::assertSame('MetaLab Suite', rtrim($exifIfd->get(ExifTag::METADATA_EDITING_SOFTWARE)?->value ?? ''));
+        self::assertSame('Cliffside Dusk', self::trimmedStringValue($exifIfd, ExifTag::IMAGE_TITLE));
+        self::assertSame('Alex Light', self::trimmedStringValue($exifIfd, ExifTag::PHOTOGRAPHER));
+        self::assertSame('Chris Edit', self::trimmedStringValue($exifIfd, ExifTag::IMAGE_EDITOR));
+        self::assertSame('Firmware 2.0', self::trimmedStringValue($exifIfd, ExifTag::CAMERA_FIRMWARE));
+        self::assertSame('RawLab Studio', self::trimmedStringValue($exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE));
+        self::assertSame('EditLab Pro', self::trimmedStringValue($exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE));
+        self::assertSame('MetaLab Suite', self::trimmedStringValue($exifIfd, ExifTag::METADATA_EDITING_SOFTWARE));
+        self::assertSame('Ann', self::trimmedStringValue($exifIfd, ExifTag::CAMERA_OWNER_NAME));
+    }
+
+    /**
+     * Returns a trimmed ASCII value from the provided directory entry.
+     */
+    private static function trimmedStringValue(Ifd $ifd, int $tag): string
+    {
+        $entry = $ifd->get($tag);
+        self::assertNotNull($entry);
+        self::assertIsString($entry->value);
+
+        return rtrim($entry->value);
     }
 
     /**
@@ -657,9 +684,13 @@ final class TiffExifReaderTest extends TestCase
         $decoder = new class implements MakerNotesDecoderInterface {
             public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
             {
-                $offset  = unpack('Voffset', substr($raw, 0, 4));
-                $pointer = $offset['offset'] ?? 0;
-                $vendor  = substr($raw, $pointer, 4);
+                $offset = unpack('Voffset', substr($raw, 0, 4));
+                $pointer = 0;
+                if ($offset !== false && isset($offset['offset']) && is_int($offset['offset'])) {
+                    $pointer = $offset['offset'];
+                }
+
+                $vendor = substr($raw, $pointer, 4);
 
                 return new MakerNotesRecord($vendor !== '' ? $vendor : 'Unknown', strlen($raw), sha1($raw));
             }
@@ -2052,6 +2083,7 @@ final class TiffExifReaderTest extends TestCase
             ExifTag::RAW_DEVELOPING_SOFTWARE   => 'RawLab Studio',
             ExifTag::IMAGE_EDITING_SOFTWARE    => 'EditLab Pro',
             ExifTag::METADATA_EDITING_SOFTWARE => 'MetaLab Suite',
+            ExifTag::CAMERA_OWNER_NAME         => 'Ann',
         ];
 
         $entryCount       = count($entries) + count($asciiTags);
@@ -2169,8 +2201,10 @@ final class TiffExifReaderTest extends TestCase
      * @param int                 $tag           TIFF tag identifier.
      * @param int                 $type          TIFF field type code.
      * @param int                 $count         Number of values represented.
-     * @param int|array|string    $valueOrOffset Inline value or data offset.
+     * @param int|list<int>|string $valueOrOffset Inline value or data offset.
      * @param int                 $fieldWidth    Size of the value/offset field.
+     *
+     * @phpstan-param int|list<int>|string $valueOrOffset
      */
     private static function packBigTiffEntry(
         int $tag,
@@ -2205,7 +2239,9 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Encodes a value for storage in the BigTIFF value/offset field.
      *
-     * @param int|array<int>|string $valueOrOffset
+     * @param int|list<int>|string $valueOrOffset
+     *
+     * @phpstan-param int|list<int>|string $valueOrOffset
      */
     private static function encodeBigTiffValueField(int|array|string $valueOrOffset, int $fieldWidth): string
     {
@@ -2225,6 +2261,7 @@ final class TiffExifReaderTest extends TestCase
         $words     = [];
 
         if (is_array($valueOrOffset)) {
+            /** @var list<int> $valueOrOffset */
             foreach ($valueOrOffset as $word) {
                 $words[] = $word & 0xFFFFFFFF;
             }
@@ -2275,9 +2312,11 @@ final class TiffExifReaderTest extends TestCase
             throw new RuntimeException('Unable to split inline DOUBLE components.');
         }
 
+        /** @var array{1:int,2:int} $parts */
+
         return [
-            (int) ($parts[1] & 0xFFFFFFFF),
-            (int) ($parts[2] & 0xFFFFFFFF),
+            $parts[1] & 0xFFFFFFFF,
+            $parts[2] & 0xFFFFFFFF,
         ];
     }
 
@@ -2412,7 +2451,9 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Packs a 64-bit integer into little-endian byte order.
      *
-     * @param int $value 64-bit integer value to encode.
+     * @param int|array{0:int,1:int} $value 64-bit integer or low/high components.
+     *
+     * @phpstan-param int|array{0:int,1:int} $value
      */
     private static function packUInt64LE(int|array $value): string
     {
@@ -2431,7 +2472,11 @@ final class TiffExifReaderTest extends TestCase
     private static function splitUInt64Components(int|array $value): array
     {
         if (is_array($value)) {
-            return [$value[0] & 0xFFFFFFFF, $value[1] & 0xFFFFFFFF];
+            /** @var array{0:int,1:int} $value */
+            $components = $value;
+            [$lo, $hi]   = $components;
+
+            return [$lo & 0xFFFFFFFF, $hi & 0xFFFFFFFF];
         }
 
         return self::splitUInt64($value);

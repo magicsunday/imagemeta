@@ -71,6 +71,7 @@ final class JpegExtractorTest extends TestCase
     #[DataProvider('provideApp1Variants')]
     public function extractsExifAndXmpInAnyOrder(array $segments, array $expectedExif, array $expectedXmp): void
     {
+        /** @var list<string> $segments */
         $jpeg      = $this->jpeg(...$segments);
         $extractor = $this->createExtractor($jpeg);
 
@@ -479,7 +480,7 @@ final class JpegExtractorTest extends TestCase
     /**
      * Builds a JPEG binary by wrapping payload segments with SOI/EOI markers.
      *
-     * @param list<string> $segments
+     * @param string ...$segments
      *
      * @return string
      */
@@ -612,6 +613,10 @@ final class JpegExtractorTest extends TestCase
     private function createExtractor(string $jpeg): JpegExtractor
     {
         $fh = fopen('php://temp', 'wb+');
+        if ($fh === false) {
+            self::fail('Unable to open temporary stream for JPEG test data.');
+        }
+
         fwrite($fh, $jpeg);
         rewind($fh);
 
