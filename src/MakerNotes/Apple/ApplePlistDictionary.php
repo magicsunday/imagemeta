@@ -52,7 +52,7 @@ final class ApplePlistDictionary implements ApplePlistValue
 
     public function with(string $key, ApplePlistValue $value): self
     {
-        $clone = clone $this;
+        $clone               = clone $this;
         $clone->values[$key] = $value;
 
         return $clone;

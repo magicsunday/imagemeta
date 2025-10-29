@@ -195,7 +195,7 @@ final class KeyedArchiveUnarchiver
                 continue;
             }
 
-            $value = $this->resolveValue($values[$index]);
+            $value                    = $this->resolveValue($values[$index]);
             $result[(string) $scalar] = $value;
         }
 

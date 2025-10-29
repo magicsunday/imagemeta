@@ -59,7 +59,7 @@ final class TiffConstTest extends TestCase
         self::assertSame(
             $expectedValue,
             $actualValue,
-            "TiffConst::{$constantName} must remain {$expectedValue}."
+            sprintf('TiffConst::%s must remain %d.', $constantName, $expectedValue)
         );
     }
 }

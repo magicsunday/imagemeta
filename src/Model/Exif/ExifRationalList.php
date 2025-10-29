@@ -44,9 +44,7 @@ final readonly class ExifRationalList
 
         try {
             $values = array_map(
-                static function (ExifRational $value): ExifRational {
-                    return $value;
-                },
+                static fn (ExifRational $value): ExifRational => $value,
                 $values
             );
         } catch (TypeError $exception) {

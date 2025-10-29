@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use LogicException;
+
 /**
  * Represents scalar property list values.
  */
@@ -53,7 +55,7 @@ final readonly class ApplePlistScalar implements ApplePlistValue
     public function asString(): string
     {
         if (!is_string($this->value)) {
-            throw new \LogicException('The property list value is not a string.');
+            throw new LogicException('The property list value is not a string.');
         }
 
         return $this->value;
@@ -62,7 +64,7 @@ final readonly class ApplePlistScalar implements ApplePlistValue
     public function asInt(): int
     {
         if (!is_int($this->value)) {
-            throw new \LogicException('The property list value is not an integer.');
+            throw new LogicException('The property list value is not an integer.');
         }
 
         return $this->value;
@@ -78,13 +80,13 @@ final readonly class ApplePlistScalar implements ApplePlistValue
             return (float) $this->value;
         }
 
-        throw new \LogicException('The property list value is not a floating point number.');
+        throw new LogicException('The property list value is not a floating point number.');
     }
 
     public function asBool(): bool
     {
         if (!is_bool($this->value)) {
-            throw new \LogicException('The property list value is not a boolean.');
+            throw new LogicException('The property list value is not a boolean.');
         }
 
         return $this->value;
