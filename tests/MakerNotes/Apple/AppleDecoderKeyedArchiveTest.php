@@ -29,8 +29,8 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function pack;
-use function strlen;
 use function str_repeat;
+use function strlen;
 
 /**
  * @covers \MagicSunday\ImageMeta\MakerNotes\AppleDecoder
@@ -117,7 +117,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
                 'RunTime'             => $this->plistDict(['CF$UID' => $this->plistInt(17)]),
             ]),
             $this->plistDict([
-                '$classes'   => $this->plistArray([
+                '$classes' => $this->plistArray([
                     $this->plistString('AppleMakerNotesRoot'),
                     $this->plistString('NSObject'),
                 ]),
@@ -159,7 +159,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
             'top'      => $this->plistDict([
                 'root' => $this->plistDict(['CF$UID' => $this->plistInt(1)]),
             ]),
-            'version'  => $this->plistInt(100000),
+            'version' => $this->plistInt(100000),
         ]);
 
         return (new BinaryPlistEncoder())->encode($archive);
@@ -183,8 +183,8 @@ final class BinaryPlistEncoder
         $rootIndex = $this->collectValue($value);
 
         /** @var non-empty-list<BinaryPlistNode> $nodes */
-        $nodes = $this->nodes;
-        $objectCount = count($nodes);
+        $nodes         = $this->nodes;
+        $objectCount   = count($nodes);
         $objectRefSize = 1;
         while ($objectCount > (1 << (8 * $objectRefSize))) {
             ++$objectRefSize;
@@ -195,7 +195,7 @@ final class BinaryPlistEncoder
         $offsets = [];
         foreach ($nodes as $index => $node) {
             $offsets[$index] = strlen($header) + strlen($objects);
-            $objects        .= $this->encodeNode($node, $objectRefSize);
+            $objects .= $this->encodeNode($node, $objectRefSize);
         }
 
         $maxOffset = 0;
@@ -299,7 +299,7 @@ final class BinaryPlistEncoder
 
     private function encodeString(string $value): string
     {
-        $length = strlen($value);
+        $length                 = strlen($value);
         [$marker, $lengthBytes] = $this->encodeLength($length, 0x50);
 
         return $marker . $lengthBytes . $value;
@@ -310,7 +310,7 @@ final class BinaryPlistEncoder
      */
     private function encodeArray(array $children, int $objectRefSize): string
     {
-        $count = count($children);
+        $count                  = count($children);
         [$marker, $lengthBytes] = $this->encodeLength($count, 0xA0);
 
         $references = '';
@@ -326,7 +326,7 @@ final class BinaryPlistEncoder
      */
     private function encodeDictionary(array $dictionary, int $objectRefSize): string
     {
-        $count = count($dictionary['keys']);
+        $count                  = count($dictionary['keys']);
         [$marker, $lengthBytes] = $this->encodeLength($count, 0xD0);
 
         $references = '';
@@ -428,7 +428,7 @@ final class BinaryPlistEncoder
         }
 
         return [
-            'keys' => $this->extractReferenceList(new BinaryPlistNode('array', $value['keys'])),
+            'keys'   => $this->extractReferenceList(new BinaryPlistNode('array', $value['keys'])),
             'values' => $this->extractReferenceList(new BinaryPlistNode('array', $value['values'])),
         ];
     }
@@ -550,11 +550,11 @@ final class BinaryPlistDictionaryValue implements BinaryPlistValue
 
     public function collect(BinaryPlistEncoder $encoder): int
     {
-        $keys = [];
+        $keys   = [];
         $values = [];
 
         foreach ($this->entries as $key => $value) {
-            $keys[] = $encoder->collectValue(new BinaryPlistStringValue($key));
+            $keys[]   = $encoder->collectValue(new BinaryPlistStringValue($key));
             $values[] = $encoder->collectValue($value);
         }
 

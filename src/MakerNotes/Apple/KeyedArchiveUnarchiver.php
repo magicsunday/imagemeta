@@ -202,7 +202,6 @@ final class KeyedArchiveUnarchiver
 
         /** @var list<KeyedArchiveValue> $keys */
         /** @var list<KeyedArchiveValue> $values */
-
         $result = [];
         foreach ($keys as $index => $keyReference) {
             /** @var KeyedArchiveValue $keyReference */
@@ -237,7 +236,6 @@ final class KeyedArchiveUnarchiver
         }
 
         /** @var list<KeyedArchiveValue> $objects */
-
         $result = [];
         foreach ($objects as $entry) {
             /** @var KeyedArchiveValue $entry */

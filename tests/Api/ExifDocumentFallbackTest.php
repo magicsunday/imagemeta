@@ -17,10 +17,9 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 
 final class ExifDocumentFallbackTest extends TestCase
 {
@@ -30,15 +29,15 @@ final class ExifDocumentFallbackTest extends TestCase
         $ifd0 = new Ifd([]);
 
         $exifIfd = new Ifd([
-            ExifTag::SENSITIVITY_TYPE => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 2),
+            ExifTag::SENSITIVITY_TYPE           => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 2),
             ExifTag::RECOMMENDED_EXPOSURE_INDEX => new IfdEntry(
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 5,
                 1,
                 new ExifRational(400, 1),
             ),
-            ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Shot with ND filter'),
-            ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, 'invalid'),
+            ExifTag::USER_COMMENT       => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Shot with ND filter'),
+            ExifTag::DATETIME_ORIGINAL  => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, 'invalid'),
             ExifTag::DATETIME_DIGITIZED => new IfdEntry(
                 ExifTag::DATETIME_DIGITIZED,
                 2,
@@ -126,14 +125,14 @@ final class ExifDocumentFallbackTest extends TestCase
                 1,
                 Compression::JPEG->value,
             ),
-            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(
+            ExifTag::PREVIEW_IMAGE_SCALE => new IfdEntry(
                 ExifTag::PREVIEW_IMAGE_SCALE,
                 5,
                 1,
                 new ExifRational(1, 2),
             ),
-            ExifTag::PREVIEW_IMAGE_ENCODING    => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
-            ExifTag::PREVIEW_IMAGE_MIME_TYPE   => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
+            ExifTag::PREVIEW_IMAGE_ENCODING  => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
         ]);
 
         $apiDocument = new ApiExifDocument(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
@@ -169,15 +168,15 @@ final class ExifDocumentFallbackTest extends TestCase
                 1,
                 Compression::JPEG_OLD_STYLE->value,
             ),
-            ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(
+            ExifTag::PREVIEW_IMAGE_SCALE => new IfdEntry(
                 ExifTag::PREVIEW_IMAGE_SCALE,
                 5,
                 1,
                 new ExifRational(3, 4),
             ),
-            ExifTag::PREVIEW_IMAGE_ENCODING    => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
-            ExifTag::PREVIEW_IMAGE_MIME_TYPE   => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
-            ExifTag::PREVIEW_IMAGE_BIT_DEPTH   => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 8),
+            ExifTag::PREVIEW_IMAGE_ENCODING  => new IfdEntry(ExifTag::PREVIEW_IMAGE_ENCODING, 2, 4, 'JPEG'),
+            ExifTag::PREVIEW_IMAGE_MIME_TYPE => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
+            ExifTag::PREVIEW_IMAGE_BIT_DEPTH => new IfdEntry(ExifTag::PREVIEW_IMAGE_BIT_DEPTH, 3, 1, 8),
         ]);
 
         $document = new ModelExifDocument(

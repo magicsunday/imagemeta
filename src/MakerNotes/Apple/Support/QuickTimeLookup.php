@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
-
 /**
  * Helper that resolves QuickTime metadata values with fallback support.
  */

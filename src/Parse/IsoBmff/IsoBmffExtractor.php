@@ -24,8 +24,8 @@ use function array_unshift;
 use function array_values;
 use function bin2hex;
 use function explode;
-use function implode;
 use function iconv;
+use function implode;
 use function is_string;
 use function preg_match;
 use function round;
@@ -265,11 +265,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the `moov` box, collecting nested metadata boxes of interest.
      *
-     * @param BoxDescriptor         $moov      Box descriptor for the movie box.
-     * @param list<string>          $exifBlobs
-     * @param list<string>          $xmpBlobs
-     * @param array<string, bool>   $xmpHashes
-     * @param QuickTimeKeyMap $qtKeys
+     * @param BoxDescriptor       $moov      Box descriptor for the movie box.
+     * @param list<string>        $exifBlobs
+     * @param list<string>        $xmpBlobs
+     * @param array<string, bool> $xmpHashes
+     * @param QuickTimeKeyMap     $qtKeys
      */
     private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
@@ -309,20 +309,20 @@ final readonly class IsoBmffExtractor
         }
 
         return [
-            QuickTimeMeta::MAJOR_BRAND_KEY        => $majorBrand,
-            QuickTimeMeta::MINOR_VERSION_KEY      => $minor,
-            QuickTimeMeta::COMPATIBLE_BRANDS_KEY  => $brands === [] ? '' : implode(' ', $brands),
+            QuickTimeMeta::MAJOR_BRAND_KEY       => $majorBrand,
+            QuickTimeMeta::MINOR_VERSION_KEY     => $minor,
+            QuickTimeMeta::COMPATIBLE_BRANDS_KEY => $brands === [] ? '' : implode(' ', $brands),
         ];
     }
 
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param BoxDescriptor         $udta      Box descriptor for the user data box.
-     * @param list<string>          $exifBlobs
-     * @param list<string>          $xmpBlobs
-     * @param array<string, bool>   $xmpHashes
-     * @param QuickTimeKeyMap $qtKeys
+     * @param BoxDescriptor       $udta      Box descriptor for the user data box.
+     * @param list<string>        $exifBlobs
+     * @param list<string>        $xmpBlobs
+     * @param array<string, bool> $xmpHashes
+     * @param QuickTimeKeyMap     $qtKeys
      */
     private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
@@ -342,11 +342,11 @@ final readonly class IsoBmffExtractor
      */
     private function parseTrak(BoxDescriptor $trak): array
     {
-        $tkhdWidth  = null;
-        $tkhdHeight = null;
-        $handler    = null;
+        $tkhdWidth   = null;
+        $tkhdHeight  = null;
+        $handler     = null;
         $handlerName = null;
-        $sampleInfo = [];
+        $sampleInfo  = [];
 
         foreach ($this->walkChildren($trak) as $child) {
             if ($child->type === self::BOX_TKHD) {
@@ -461,9 +461,9 @@ final readonly class IsoBmffExtractor
      */
     private function parseMdia(BoxDescriptor $mdia): array
     {
-        $handler    = null;
+        $handler     = null;
         $handlerName = null;
-        $sampleInfo = [];
+        $sampleInfo  = [];
 
         foreach ($this->walkChildren($mdia) as $child) {
             if ($child->type === self::BOX_HDLR) {
@@ -624,7 +624,7 @@ final readonly class IsoBmffExtractor
                 }
 
                 $win->read(8); // reserved
-                $channels = $win->readU16BE();
+                $channels   = $win->readU16BE();
                 $sampleSize = $win->readU16BE();
                 $win->readU16BE(); // pre-defined
                 $win->readU16BE(); // reserved
@@ -665,11 +665,11 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param BoxDescriptor         $meta      Box descriptor for the metadata box.
-     * @param list<string>          $exifBlobs
-     * @param list<string>          $xmpBlobs
-     * @param array<string, bool>   $xmpHashes
-     * @param QuickTimeKeyMap $qtKeys
+     * @param BoxDescriptor       $meta      Box descriptor for the metadata box.
+     * @param list<string>        $exifBlobs
+     * @param list<string>        $xmpBlobs
+     * @param array<string, bool> $xmpHashes
+     * @param QuickTimeKeyMap     $qtKeys
      */
     private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {

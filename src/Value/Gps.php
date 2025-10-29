@@ -19,45 +19,45 @@ use DateTimeImmutable;
 final readonly class Gps
 {
     /**
-     * @param float|null             $latitude                   Latitude in decimal degrees.
-     * @param float|null             $longitude                  Longitude in decimal degrees.
-     * @param string|null            $latitudeRef                Latitude hemisphere reference (N/S).
-     * @param string|null            $longitudeRef               Longitude hemisphere reference (E/W).
-     * @param float|null             $altitude                   Altitude in metres relative to sea level.
-     * @param int|null               $altitudeRef                Altitude reference (0 = above, 1 = below sea level).
-     * @param string|null            $version                    GPS metadata version string (defaults to 2.0.0.0 when omitted).
-     * @param string|null            $versionRaw                 Raw GPS version payload without normalisation.
-     * @param string|null            $satellites                 Satellites used for measurement.
-     * @param string|null            $status                     Receiver status at capture time.
-     * @param string|null            $measureMode                Measurement mode (2 = 2D, 3 = 3D).
-     * @param float|null             $dop                        Dilution of precision.
-     * @param string|null            $speedRef                   Speed reference unit (K/M/N).
-     * @param float|null             $speedMs                    Ground speed in metres per second.
-     * @param string|null            $speedOriginalRef           Original speed reference unit.
-     * @param float|null             $speedOriginal              Raw ground speed in the original unit.
-     * @param string|null            $trackRef                   Course over ground reference (T/M).
-     * @param float|null             $track                      Course over ground in degrees.
-     * @param string|null            $imageDirectionRef          Image direction reference (T/M).
-     * @param float|null             $imageDirection             Image direction in degrees.
-     * @param string|null            $mapDatum                   Geodetic survey data used.
-     * @param string|null            $destinationLatitudeRef     Destination latitude reference.
-     * @param float|null             $destinationLatitude        Destination latitude in decimal degrees.
-     * @param string|null            $destinationLongitudeRef    Destination longitude reference.
-     * @param float|null             $destinationLongitude       Destination longitude in decimal degrees.
-     * @param string|null            $destinationBearingRef      Destination bearing reference (T/M).
-     * @param float|null             $destinationBearing         Destination bearing in degrees.
-     * @param string|null            $destinationDistanceRef     Destination distance reference (K/M/N).
-     * @param float|null             $destinationDistanceMetres  Destination distance in metres.
+     * @param float|null             $latitude                       Latitude in decimal degrees.
+     * @param float|null             $longitude                      Longitude in decimal degrees.
+     * @param string|null            $latitudeRef                    Latitude hemisphere reference (N/S).
+     * @param string|null            $longitudeRef                   Longitude hemisphere reference (E/W).
+     * @param float|null             $altitude                       Altitude in metres relative to sea level.
+     * @param int|null               $altitudeRef                    Altitude reference (0 = above, 1 = below sea level).
+     * @param string|null            $version                        GPS metadata version string (defaults to 2.0.0.0 when omitted).
+     * @param string|null            $versionRaw                     Raw GPS version payload without normalisation.
+     * @param string|null            $satellites                     Satellites used for measurement.
+     * @param string|null            $status                         Receiver status at capture time.
+     * @param string|null            $measureMode                    Measurement mode (2 = 2D, 3 = 3D).
+     * @param float|null             $dop                            Dilution of precision.
+     * @param string|null            $speedRef                       Speed reference unit (K/M/N).
+     * @param float|null             $speedMs                        Ground speed in metres per second.
+     * @param string|null            $speedOriginalRef               Original speed reference unit.
+     * @param float|null             $speedOriginal                  Raw ground speed in the original unit.
+     * @param string|null            $trackRef                       Course over ground reference (T/M).
+     * @param float|null             $track                          Course over ground in degrees.
+     * @param string|null            $imageDirectionRef              Image direction reference (T/M).
+     * @param float|null             $imageDirection                 Image direction in degrees.
+     * @param string|null            $mapDatum                       Geodetic survey data used.
+     * @param string|null            $destinationLatitudeRef         Destination latitude reference.
+     * @param float|null             $destinationLatitude            Destination latitude in decimal degrees.
+     * @param string|null            $destinationLongitudeRef        Destination longitude reference.
+     * @param float|null             $destinationLongitude           Destination longitude in decimal degrees.
+     * @param string|null            $destinationBearingRef          Destination bearing reference (T/M).
+     * @param float|null             $destinationBearing             Destination bearing in degrees.
+     * @param string|null            $destinationDistanceRef         Destination distance reference (K/M/N).
+     * @param float|null             $destinationDistanceMetres      Destination distance in metres.
      * @param string|null            $destinationDistanceOriginalRef Destination distance reference in original unit.
-     * @param float|null             $destinationDistanceOriginal Raw destination distance in the original unit.
-     * @param string|null            $processingMethod           GPS processing method description.
-     * @param string|null            $areaInformation            GPS area information description.
-     * @param string|null            $date                       GPS date stamp in ISO 8601 calendar format.
-     * @param string|null            $dateRaw                    Raw GPS date payload without normalisation.
-     * @param string|null            $time                       GPS time stamp in HH:MM:SS(.sss) format.
-     * @param DateTimeImmutable|null $timestamp                  Combined UTC timestamp when available.
-     * @param int|null               $differential               Differential GPS indicator.
-     * @param float|null             $horizontalPositioningError Horizontal positioning error in metres.
+     * @param float|null             $destinationDistanceOriginal    Raw destination distance in the original unit.
+     * @param string|null            $processingMethod               GPS processing method description.
+     * @param string|null            $areaInformation                GPS area information description.
+     * @param string|null            $date                           GPS date stamp in ISO 8601 calendar format.
+     * @param string|null            $dateRaw                        Raw GPS date payload without normalisation.
+     * @param string|null            $time                           GPS time stamp in HH:MM:SS(.sss) format.
+     * @param DateTimeImmutable|null $timestamp                      Combined UTC timestamp when available.
+     * @param int|null               $differential                   Differential GPS indicator.
+     * @param float|null             $horizontalPositioningError     Horizontal positioning error in metres.
      */
     public function __construct(
         public ?float $latitude = null,

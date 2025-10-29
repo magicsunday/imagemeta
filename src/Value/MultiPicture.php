@@ -17,7 +17,7 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class MultiPicture
 {
     /**
-     * @param list<MultiPictureEntry> $entries
+     * @param list<MultiPictureEntry>                          $entries
      * @param list<array{numerator:int, denominator:int}>|null $panoramaAngle
      * @param list<array{numerator:int, denominator:int}>|null $panoramaAxis
      */

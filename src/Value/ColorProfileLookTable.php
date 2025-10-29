@@ -17,10 +17,10 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ColorProfileLookTable
 {
     /**
-     * @param int|null   $hueDivisions        Number of hue divisions encoded in the table.
-     * @param int|null   $saturationDivisions Number of saturation divisions encoded in the table.
-     * @param int|null   $valueDivisions      Number of value divisions encoded in the table.
-     * @param list<array{0: float, 1: float, 2: float}>|null $entries Per-entry RGB adjustments in floating point.
+     * @param int|null                                       $hueDivisions        Number of hue divisions encoded in the table.
+     * @param int|null                                       $saturationDivisions Number of saturation divisions encoded in the table.
+     * @param int|null                                       $valueDivisions      Number of value divisions encoded in the table.
+     * @param list<array{0: float, 1: float, 2: float}>|null $entries             Per-entry RGB adjustments in floating point.
      */
     public function __construct(
         public ?int $hueDivisions,

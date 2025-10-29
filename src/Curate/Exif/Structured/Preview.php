@@ -49,17 +49,17 @@ final readonly class Preview
      */
     public function __construct(PreviewValue $preview)
     {
-        $this->hasThumbnail      = $preview->hasThumbnail;
-        $this->hasPreview        = $preview->hasPreview;
-        $this->previewWidth      = $preview->previewWidth;
-        $this->previewHeight     = $preview->previewHeight;
-        $this->previewColorSpace = $preview->previewColorSpace;
-        $this->previewBitDepth   = $preview->previewBitDepth;
+        $this->hasThumbnail       = $preview->hasThumbnail;
+        $this->hasPreview         = $preview->hasPreview;
+        $this->previewWidth       = $preview->previewWidth;
+        $this->previewHeight      = $preview->previewHeight;
+        $this->previewColorSpace  = $preview->previewColorSpace;
+        $this->previewBitDepth    = $preview->previewBitDepth;
         $this->previewCompression = $preview->previewCompression;
         $this->previewScale       = $preview->previewScale;
-        $this->previewEncoding   = $preview->previewEncoding;
-        $this->previewMimeType   = $preview->previewMimeType;
-        $this->previewOffset     = $preview->previewOffset;
-        $this->previewLength     = $preview->previewLength;
+        $this->previewEncoding    = $preview->previewEncoding;
+        $this->previewMimeType    = $preview->previewMimeType;
+        $this->previewOffset      = $preview->previewOffset;
+        $this->previewLength      = $preview->previewLength;
     }
 }

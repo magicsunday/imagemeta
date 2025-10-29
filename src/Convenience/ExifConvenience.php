@@ -297,9 +297,9 @@ final class ExifConvenience
         $gps = $doc->gps();
 
         return [
-            'make'        => $doc->cameraMake(),  // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Make)
-            'model'       => $doc->cameraModel(), // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Model)
-            'lens'        => $doc->lensModel(),   // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (LensModel)
+            'make'  => $doc->cameraMake(),  // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Make)
+            'model' => $doc->cameraModel(), // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Model)
+            'lens'  => $doc->lensModel(),   // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (LensModel)
             // Expose the numeric orientation code to preserve the legacy convenience contract.
             'orientation' => $doc->orientation()?->value,
             'captured_at' => $dt?->format(DATE_ATOM),

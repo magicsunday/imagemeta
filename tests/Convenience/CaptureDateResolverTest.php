@@ -116,7 +116,7 @@ final class CaptureDateResolverTest extends TestCase
         $exifDoc = new ExifDocument(
             new Ifd([]),
             new Ifd([
-                ExifTag::DATETIME_DIGITIZED    => new IfdEntry(
+                ExifTag::DATETIME_DIGITIZED => new IfdEntry(
                     ExifTag::DATETIME_DIGITIZED,
                     2,
                     19,

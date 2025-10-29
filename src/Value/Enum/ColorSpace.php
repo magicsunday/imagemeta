@@ -25,5 +25,4 @@ enum ColorSpace: int
     case SRGB         = 1;
     case ADOBE_RGB    = 2;
     case UNCALIBRATED = 65535;
-
 }

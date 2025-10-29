@@ -23,5 +23,4 @@ enum SceneType: int
 
     case NOT_DEFINED                 = 0;
     case DIRECTLY_PHOTOGRAPHED_IMAGE = 1;
-
 }

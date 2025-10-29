@@ -42,9 +42,9 @@ use PHPUnit\Framework\TestCase;
 
 use function iconv;
 use function pack;
+use function str_pad;
 use function strlen;
 use function substr;
-use function str_pad;
 
 /**
  * @covers \MagicSunday\ImageMeta\Model\Exif\ExifDocument
@@ -641,7 +641,7 @@ final class ExifDocumentTest extends TestCase
 
         $exifIfd = new Ifd([
             ExifTag::TIME_ZONE_OFFSET => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 3, 1, new ExifNumericList([2])),
-            ExifTag::SUB_SEC_TIME      => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '246'),
+            ExifTag::SUB_SEC_TIME     => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '246'),
         ]);
 
         $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
@@ -1578,8 +1578,8 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function userCommentFallbacksToSubsequentIfds(): void
     {
-        $ifd0      = new Ifd([]);
-        $thumbnail = new Ifd([]);
+        $ifd0       = new Ifd([]);
+        $thumbnail  = new Ifd([]);
         $commentIfd = new Ifd([
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Fallback note'),
         ]);
@@ -1678,7 +1678,7 @@ final class ExifDocumentTest extends TestCase
     {
         $ifd0 = new Ifd([]);
 
-        $payload = "Café 🌟";
+        $payload = 'Café 🌟';
 
         $exifIfd = new Ifd([
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, strlen($payload), $payload),

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core;
 
 use PHPUnit\Framework\Assert;
+
 use function fopen;
 use function fwrite;
 use function rewind;

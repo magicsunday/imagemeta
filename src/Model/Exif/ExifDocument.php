@@ -24,8 +24,8 @@ use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
-use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
@@ -40,8 +40,8 @@ use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
-use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 
 use function abs;
 use function array_key_exists;
@@ -60,6 +60,7 @@ use function preg_replace;
 use function preg_split;
 use function round;
 use function rtrim;
+use function spl_object_id;
 use function sprintf;
 use function sqrt;
 use function str_pad;
@@ -69,7 +70,6 @@ use function strtoupper;
 use function substr;
 use function substr_count;
 use function trim;
-use function spl_object_id;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
@@ -1236,14 +1236,14 @@ final readonly class ExifDocument
         }
 
         $encoding   = strtoupper(trim($prefix, "\0 "));
-        $normalized = str_replace(['-', " "], '', $encoding);
+        $normalized = str_replace(['-', ' '], '', $encoding);
 
         return match ($normalized) {
-            'ASCII' => 'ASCII',
-            'JIS' => 'JIS',
+            'ASCII'   => 'ASCII',
+            'JIS'     => 'JIS',
             'UNICODE' => 'UNICODE',
             'UNDEFINED', 'UNDEF' => 'UNDEFINED',
-            'UTF8' => 'UNDEFINED',
+            'UTF8'  => 'UNDEFINED',
             default => '',
         };
     }

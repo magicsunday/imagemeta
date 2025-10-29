@@ -25,5 +25,4 @@ enum ExposureMode: int
     case AUTO         = 0;
     case MANUAL       = 1;
     case AUTO_BRACKET = 2;
-
 }

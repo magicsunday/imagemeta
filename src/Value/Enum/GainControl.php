@@ -26,5 +26,4 @@ enum GainControl: int
     case HIGH_GAIN_UP   = 2;
     case LOW_GAIN_DOWN  = 3;
     case HIGH_GAIN_DOWN = 4;
-
 }

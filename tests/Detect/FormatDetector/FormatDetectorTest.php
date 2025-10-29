@@ -109,7 +109,7 @@ final class FormatDetectorTest extends TestCase
             self::fail('Unable to create temporary stream resource.');
         }
 
-        $length = strlen($bytes);
+        $length  = strlen($bytes);
         $written = fwrite($handle, $bytes);
 
         if ($written === false || $written !== $length) {

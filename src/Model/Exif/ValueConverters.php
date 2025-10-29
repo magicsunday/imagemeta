@@ -130,15 +130,15 @@ final readonly class ValueConverters
     /**
      * EXIF 3.0 Annex C.3 keeps the legacy 64×64 SRATIONAL matrix cap from EXIF 2.32 Annex C.3.
      */
-    private const MAX_SRATIONAL_MATRIX_DIMENSION      = 64;
+    private const MAX_SRATIONAL_MATRIX_DIMENSION = 64;
     /**
      * EXIF 3.0 Annex C.3 and EXIF 2.32 Annex C.3 limit SRATIONAL matrix labels to 255 bytes.
      */
-    private const MAX_SRATIONAL_MATRIX_LABEL_LENGTH   = 255;
+    private const MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
     /**
      * SRATIONAL entries use two signed 32-bit integers per EXIF 3.0 Annex C.3 / EXIF 2.32 Annex C.3.
      */
-    private const SRATIONAL_VALUE_SIZE                = 8;
+    private const SRATIONAL_VALUE_SIZE = 8;
     /**
      * Epson’s Print Image Matching block allows up to 512 parameters per EXIF 3.0 §4.6.4, unchanged from EXIF 2.32 §4.6.4.
      */
@@ -148,7 +148,7 @@ final readonly class ValueConverters
     /**
      * EXIF 3.0 §4.6.8 (GPSVersionID) preserves the EXIF 2.32 default value of 2.0.0.0 when the field is blank.
      */
-    private const DEFAULT_GPS_VERSION                 = '2.0.0.0';
+    private const DEFAULT_GPS_VERSION = '2.0.0.0';
 
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
@@ -313,6 +313,7 @@ final readonly class ValueConverters
      * as two-component rational pairs.
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
+     *
      * @phpstan-param RationalLike|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float}|null
@@ -368,6 +369,7 @@ final readonly class ValueConverters
      * requiring three rational pairs ordered as (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
+     *
      * @phpstan-param RationalLike|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
@@ -427,6 +429,7 @@ final readonly class ValueConverters
      * DNG ColorMatrix/ForwardMatrix encodings.
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $matrix
+     *
      * @phpstan-param RationalLike|ExifRationalList|ExifNumericList|null $matrix
      */
     public static function dngMatrixToString(ExifRationalList|ExifNumericList|array|null $matrix): ?string

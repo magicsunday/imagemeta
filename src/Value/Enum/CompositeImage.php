@@ -26,5 +26,4 @@ enum CompositeImage: int
     case NOT_COMPOSITE           = 1;
     case GENERAL_COMPOSITE       = 2;
     case CAPTURED_WHILE_SHOOTING = 3;
-
 }

@@ -36,11 +36,11 @@ use function chr;
 use function function_exists;
 use function iconv;
 use function in_array;
+use function intdiv;
 use function is_finite;
 use function is_float;
 use function is_int;
 use function is_string;
-use function intdiv;
 use function ltrim;
 use function mb_convert_encoding;
 use function ord;
@@ -49,8 +49,8 @@ use function rtrim;
 use function sha1;
 use function sprintf;
 use function strlen;
-use function strspn;
 use function strncmp;
+use function strspn;
 use function substr;
 
 /**
@@ -187,10 +187,10 @@ final class TiffExifReader
         $this->buf->seek(0);
         $this->blobSize = UInt64::fromInt($this->buf->size());
 
-        $this->makerNoteRaw           = null;
-        $this->subIfds                = [];
-        $this->ifdCache               = [];
-        $this->bigTiffOffsetSize      = 8;
+        $this->makerNoteRaw          = null;
+        $this->subIfds               = [];
+        $this->ifdCache              = [];
+        $this->bigTiffOffsetSize     = 8;
         $this->interopVisitedOffsets = [];
 
         // byte order
@@ -216,8 +216,8 @@ final class TiffExifReader
             // Classic TIFF header layout per EXIF 3.0 §4.5.1 and TIFF 6.0 §8
             // stores the first IFD offset as a 32-bit pointer immediately
             // after the byte-order and magic fields.
-            $firstIfd      = $this->readU32();
-            $ifd0          = $this->readIfd($firstIfd);
+            $firstIfd = $this->readU32();
+            $ifd0     = $this->readIfd($firstIfd);
         } else {
             throw new ParseError(
                 sprintf(
@@ -247,7 +247,7 @@ final class TiffExifReader
         }
 
         $additionalIfds = [];
-        $visitedOffsets  = [];
+        $visitedOffsets = [];
 
         $nextOffset = $ifd0->nextIfdOffset;
         while ($nextOffset !== null && $nextOffset > 0) {
@@ -257,7 +257,7 @@ final class TiffExifReader
 
             $visitedOffsets[$nextOffset] = true;
 
-            $nextIfd       = $this->readIfd($nextOffset);
+            $nextIfd          = $this->readIfd($nextOffset);
             $additionalIfds[] = $nextIfd;
 
             if ($ifd1 === null) {
@@ -361,7 +361,7 @@ final class TiffExifReader
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
         // (BigTIFF) directory entries and the unsigned entry count preceding them.
-        $entries    = [];
+        $entries = [];
         for ($i = 0; $i < $entryCount; ++$i) {
             $entries += $this->readDirEntry();
         }
@@ -376,7 +376,7 @@ final class TiffExifReader
             // notes the value is zero when the chain terminates.
             $next = $this->readU32();
         }
-        $ifd  = new Ifd($entries, $next > 0 ? $next : null);
+        $ifd = new Ifd($entries, $next > 0 ? $next : null);
 
         $this->ifdCache[$offsetInt] = $ifd;
 
@@ -394,9 +394,9 @@ final class TiffExifReader
      */
     private function readDirEntry(): array
     {
-        $tag      = $this->readU16();
-        $type     = $this->readU16();
-        $cnt      = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
+        $tag  = $this->readU16();
+        $type = $this->readU16();
+        $cnt  = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
         if ($this->bigTiff) {
             // BigTIFF stores the inline value/offset field as an 8- or 16-byte
             // quantity (EXIF 3.0 §4.5.2 BigTIFF note) with inline payloads padded
@@ -439,9 +439,9 @@ final class TiffExifReader
      * tags whose component counts are normalised here (see EXIF 2.32 §4.6.2/§4.6.4
      * for the legacy wording).
      *
-     * @param int    $type     TIFF field type code.
-     * @param int    $count    Number of values represented.
-     * @param string $rawBytes Raw value bytes read for the entry.
+     * @param int                                                            $type     TIFF field type code.
+     * @param int                                                            $count    Number of values represented.
+     * @param string                                                         $rawBytes Raw value bytes read for the entry.
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList $value
      *
      * @return int|ExifNumericList
@@ -537,15 +537,15 @@ final class TiffExifReader
             $chunk = substr($rawBytes, $i * $componentSize, $componentSize);
 
             $value = match ($type) {
-                TiffConst::TYPE_SHORT => $this->unpackU16($chunk),
+                TiffConst::TYPE_SHORT  => $this->unpackU16($chunk),
                 TiffConst::TYPE_SSHORT => $this->unpackS16($chunk),
                 TiffConst::TYPE_LONG,
-                TiffConst::TYPE_IFD => $this->unpackU32($chunk),
+                TiffConst::TYPE_IFD   => $this->unpackU32($chunk),
                 TiffConst::TYPE_SLONG => $this->unpackS32($chunk),
                 TiffConst::TYPE_LONG8,
-                TiffConst::TYPE_IFD8 => $this->unpackU64($chunk),
+                TiffConst::TYPE_IFD8   => $this->unpackU64($chunk),
                 TiffConst::TYPE_SLONG8 => $this->unpackS64($chunk),
-                default => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type),
+                default                => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type),
             };
 
             if ($value instanceof UInt64) {
@@ -581,7 +581,7 @@ final class TiffExifReader
             $needsConversion = false;
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
-                    $converted[] = $this->normaliseScalarUInt64($tag, $component);
+                    $converted[]     = $this->normaliseScalarUInt64($tag, $component);
                     $needsConversion = true;
 
                     continue;
@@ -1138,8 +1138,8 @@ final class TiffExifReader
     /**
      * Extracts the raw bytes addressed by a directory entry.
      *
-     * @param int        $type          TIFF field type code.
-     * @param int        $count         Number of values represented.
+     * @param int               $type          TIFF field type code.
+     * @param int               $count         Number of values represented.
      * @param int|UInt64|string $valueOrOffset Inline value bytes or an offset into the blob.
      * @param string|null       $inlineBytes   Raw bytes captured from the value/offset field.
      *
@@ -1396,7 +1396,7 @@ final class TiffExifReader
      * Converts an integer into a byte string respecting the configured endianness.
      *
      * @param int|UInt64 $v     Integer value to convert.
-     * @param int $bytes Number of bytes to output.
+     * @param int        $bytes Number of bytes to output.
      *
      * @return string
      */
@@ -1422,7 +1422,7 @@ final class TiffExifReader
         }
 
         // fallback (shouldn't happen here)
-        $bin = '';
+        $bin   = '';
         $value = $v instanceof UInt64 ? $v->toInt('Inline value') : $v;
         for ($i = 0; $i < $bytes; ++$i) {
             $bin = chr(($value >> ($this->bo === Endian::Little ? ($i * 8) : (($bytes - 1 - $i) * 8))) & BitMask::LOW_BYTE) . $bin;
@@ -1739,8 +1739,8 @@ final class TiffExifReader
 
         while ($words !== []) {
             [$words, $remainder] = $this->divModWordsBy10($words);
-            $digits             = (string) $remainder . $digits;
-            $words              = $this->trimLeadingZeroWords($words);
+            $digits              = (string) $remainder . $digits;
+            $words               = $this->trimLeadingZeroWords($words);
         }
 
         return $digits;

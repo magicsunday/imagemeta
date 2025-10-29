@@ -30,5 +30,4 @@ enum CfaPatternColor: int
     case YELLOW   = 5;
     case WHITE    = 6;
     case INFRARED = 7;
-
 }

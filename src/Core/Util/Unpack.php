@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core\Util;
 
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use function is_float;
 use function is_int;

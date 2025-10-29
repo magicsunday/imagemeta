@@ -46,7 +46,7 @@ final class ExifReader
      *                      height, and sample precision sourced from the container when the tags
      *                      are absent inside the metadata.
      *
-     * @throws \MagicSunday\ImageMeta\Core\ParseError When container detection or downstream parsers encounter malformed data.
+     * @throws \MagicSunday\ImageMeta\Core\ParseError  When container detection or downstream parsers encounter malformed data.
      * @throws \MagicSunday\ImageMeta\Core\BoundsError When the stream ends before the required structures can be read.
      */
     public function read(string $path): ExifDocument
@@ -60,8 +60,8 @@ final class ExifReader
         $fallbackBitsPerSample = null;
 
         if ($type === ContainerType::JPEG) {
-            $jpeg                  = new JpegExtractor($stream);
-            $exifBlobs             = $jpeg->extractExifBlobs();
+            $jpeg      = new JpegExtractor($stream);
+            $exifBlobs = $jpeg->extractExifBlobs();
             // JPEG frames expose dimensions and bit depth, so we capture them as fallbacks
             // when EXIF data omits these values.
             $fallbackWidth         = $jpeg->getFrameWidth();

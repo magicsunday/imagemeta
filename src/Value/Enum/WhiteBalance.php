@@ -23,5 +23,4 @@ enum WhiteBalance: int
 
     case AUTO   = 0;
     case MANUAL = 1;
-
 }

@@ -51,6 +51,7 @@ final class QuickTimeMetaTest extends TestCase
 
         self::assertNull($meta->contentIdentifier());
     }
+
     /**
      * Ensures typed accessors resolve aliases and normalise values.
      */
@@ -58,11 +59,11 @@ final class QuickTimeMetaTest extends TestCase
     public function typedAccessorsResolveAliases(): void
     {
         $meta = new QuickTimeMeta([
-            'Bitrate'                     => '512000',
-            'HDRFormat'                   => 'true',
+            'Bitrate'                      => '512000',
+            'HDRFormat'                    => 'true',
             'com.apple.quicktime.duration' => '12.5',
-            'AudioChannels'               => 2,
-            'CompressorName'              => '  H.265  ',
+            'AudioChannels'                => 2,
+            'CompressorName'               => '  H.265  ',
         ]);
 
         self::assertSame('H.265', $meta->stringValue(QuickTimeMeta::COMPRESSOR_NAME_KEY));
@@ -85,5 +86,4 @@ final class QuickTimeMetaTest extends TestCase
         self::assertNull($meta->floatValue('UnknownKey'));
         self::assertNull($meta->boolValue('UnknownKey'));
     }
-
 }

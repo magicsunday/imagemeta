@@ -48,5 +48,4 @@ enum LightSource: int
     case D50                    = 23;
     case ISO_STUDIO_TUNGSTEN    = 24;
     case OTHER                  = 255;
-
 }

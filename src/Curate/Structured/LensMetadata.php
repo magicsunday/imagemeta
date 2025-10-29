@@ -50,18 +50,18 @@ final readonly class LensMetadata
         LensValue $lens,
         Derived $derived,
     ) {
-        $this->make = $lens->lensMake;
-        $this->model = $lens->lensModel;
-        $this->serialNumber = $lens->lensSerialNumber;
-        $this->focalLength = $lens->focalLengthMm;
-        $this->maximumAperture = $lens->maxApertureFNumber;
-        $this->specification = $lens->lensSpecification;
-        $this->equivalent35mm = $lens->focalLengthIn35mm ?? $derived->focalLength35mm;
-        $this->cropFactor = $derived->cropFactor;
-        $this->hyperfocalDistance = $derived->hyperfocalM;
+        $this->make                  = $lens->lensMake;
+        $this->model                 = $lens->lensModel;
+        $this->serialNumber          = $lens->lensSerialNumber;
+        $this->focalLength           = $lens->focalLengthMm;
+        $this->maximumAperture       = $lens->maxApertureFNumber;
+        $this->specification         = $lens->lensSpecification;
+        $this->equivalent35mm        = $lens->focalLengthIn35mm ?? $derived->focalLength35mm;
+        $this->cropFactor            = $derived->cropFactor;
+        $this->hyperfocalDistance    = $derived->hyperfocalM;
         $this->fieldOfViewHorizontal = $derived->fovHorizontalDeg;
-        $this->fieldOfViewVertical = $derived->fovVerticalDeg;
-        $this->fieldOfViewDiagonal = $derived->fovDiagonalDeg;
+        $this->fieldOfViewVertical   = $derived->fovVerticalDeg;
+        $this->fieldOfViewDiagonal   = $derived->fovDiagonalDeg;
     }
 
     public function equivalent35mm(): ?int

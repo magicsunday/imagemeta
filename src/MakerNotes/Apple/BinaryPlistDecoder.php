@@ -187,7 +187,7 @@ final class BinaryPlistDecoder
             self::MARKER_TYPE_UID        => $this->parseUid($offset, $info),
             self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
             self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
-            default => throw new ParseError('Unsupported property list object type.'),
+            default                      => throw new ParseError('Unsupported property list object type.'),
         };
     }
 
@@ -204,7 +204,7 @@ final class BinaryPlistDecoder
             self::MARKER_SIMPLE_NULL  => null,
             self::MARKER_SIMPLE_FALSE => false,
             self::MARKER_SIMPLE_TRUE  => true,
-            default => throw new ParseError('Unsupported simple property list object.'),
+            default                   => throw new ParseError('Unsupported simple property list object.'),
         };
     }
 

@@ -23,7 +23,7 @@ final readonly class Capture
      * @param float|null             $temperatureC            Recorded temperature in Celsius.
      * @param float|null             $humidityPercent         Relative humidity percentage.
      * @param float|null             $pressureHPa             Ambient pressure in hPa.
-     * @param float|null             $batteryLevelPercent      Battery level percentage.
+     * @param float|null             $batteryLevelPercent     Battery level percentage.
      * @param float|null             $waterDepthM             Water depth in metres.
      * @param float|null             $accelerationMs2         Camera acceleration in metres per second squared.
      * @param float|null             $cameraElevationAngleDeg Camera elevation angle in degrees.

@@ -15,10 +15,10 @@ use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 
 use function array_is_list;
 use function array_key_exists;
@@ -87,7 +87,7 @@ final class MpfParser
         $byteOrder = $buffer->read(2);
         // EXIF 3.0 §4.6.1 (and EXIF 2.32 §4.6.1) restrict MPF to the standard
         // TIFF byte-order signatures "II" or "MM".
-        $endian    = match ($byteOrder) {
+        $endian = match ($byteOrder) {
             Endian::Little->value => Endian::Little,
             Endian::Big->value    => Endian::Big,
             default               => throw new ParseError('MPF payload contains invalid byte order'),
@@ -152,6 +152,7 @@ final class MpfParser
      * layout (EXIF 3.0 §4.6.2/§4.6.4; EXIF 2.32 §4.6.2/§4.6.4).
      *
      * @return array{0: array<int, int|string|array>, 1: int}
+     *
      * @phpstan-return array{0: array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>>, 1: int}
      */
     private function readIfd(MemoryBuffer $buffer, Endian $endian, int $offset): array
@@ -355,6 +356,7 @@ final class MpfParser
      */
     /**
      * @param array<int, int|string|array> $entries
+     *
      * @phpstan-param array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>> $entries
      */
     private function buildAttributes(array $entries): MpfAttributes
@@ -390,6 +392,7 @@ final class MpfParser
      * Converts arbitrary decoded value into an integer when possible.
      *
      * @param int|string|array|null $value
+     *
      * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
      */
     private function intValue(int|string|array|null $value): ?int
@@ -405,6 +408,7 @@ final class MpfParser
      * Converts the decoded value into a trimmed string when appropriate.
      *
      * @param int|string|array|null $value
+     *
      * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
      */
     private function stringValue(int|string|array|null $value): ?string
@@ -418,9 +422,11 @@ final class MpfParser
 
     /**
      * @param array<int, int|string|array> $entries
-     * @param array<int, true> $known
+     * @param array<int, true>             $known
+     *
      * @phpstan-param array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>> $entries
      * @phpstan-param array<int, true> $known
+     *
      * @phpstan-return array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>>
      */
     private function filterAdditionalTags(array $entries, array $known): array
@@ -437,7 +443,9 @@ final class MpfParser
 
     /**
      * @param int|string|array|null $value
+     *
      * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
+     *
      * @phpstan-return list<array{numerator:int, denominator:int}>|null
      */
     private function rationalListValue(int|string|array|null $value): ?array
@@ -459,6 +467,7 @@ final class MpfParser
 
     /**
      * @param mixed $value
+     *
      * @phpstan-assert-if-true array{numerator:int, denominator:int} $value
      */
     private function isRational(mixed $value): bool
@@ -476,6 +485,7 @@ final class MpfParser
 
     /**
      * @param mixed $value
+     *
      * @phpstan-assert-if-true list<array{numerator:int, denominator:int}> $value
      */
     private function isRationalList(mixed $value): bool
@@ -507,10 +517,10 @@ final class MpfParser
     {
         return match ($type) {
             self::TYPE_BYTE, self::TYPE_ASCII, self::TYPE_UNDEFINED => 1,
-            self::TYPE_SHORT                                         => 2,
-            self::TYPE_LONG, self::TYPE_SLONG                       => 4,
-            self::TYPE_RATIONAL, self::TYPE_SRATIONAL               => 8,
-            default                                                  => null,
+            self::TYPE_SHORT => 2,
+            self::TYPE_LONG, self::TYPE_SLONG => 4,
+            self::TYPE_RATIONAL, self::TYPE_SRATIONAL => 8,
+            default => null,
         };
     }
 

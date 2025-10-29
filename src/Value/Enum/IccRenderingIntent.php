@@ -22,10 +22,10 @@ enum IccRenderingIntent: int
 {
     use EnumFromIntStringNullable;
 
-    case PERCEPTUAL                     = 0;
-    case MEDIA_RELATIVE_COLORIMETRIC    = 1;
-    case SATURATION                     = 2;
-    case ICC_ABSOLUTE_COLORIMETRIC      = 3;
+    case PERCEPTUAL                  = 0;
+    case MEDIA_RELATIVE_COLORIMETRIC = 1;
+    case SATURATION                  = 2;
+    case ICC_ABSOLUTE_COLORIMETRIC   = 3;
 
     /**
      * Creates an enum instance from the raw ICC header field.

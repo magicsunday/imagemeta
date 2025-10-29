@@ -32,5 +32,4 @@ enum ExposureProgram: int
     case PORTRAIT_MODE     = 7;
     case LANDSCAPE_MODE    = 8;
     case BULB              = 9;
-
 }

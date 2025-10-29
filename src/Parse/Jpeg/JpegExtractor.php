@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
+use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Jpeg\Marker;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
@@ -116,7 +116,7 @@ final class JpegExtractor
 
     private ?MpfDocument $mpfDocument = null;
 
-    /** @var list<\MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream> */
+    /** @var list<JpegAudioStream> */
     private array $audioStreams = [];
 
     /** @var list<string> */
@@ -315,20 +315,20 @@ final class JpegExtractor
         $this->iccSequence            = [];
         $this->iccExpectedCount       = null;
         $this->iccProfile             = null;
-        $this->flashPixSequences       = [];
-        $this->flashPixExpectedCounts  = [];
-        $this->flashPixStreams         = [];
-        $this->mpfSegments             = [];
-        $this->mpfFirstOffset          = null;
-        $this->mpfDocument             = null;
-        $this->audioStreams            = [];
-        $this->iptcPayloads            = [];
-        $this->xmpPacketHashes         = [];
-        $this->frameBitsPerSample      = null;
-        $this->frameComponentSampling  = null;
-        $this->frameYCbCrSubSampling   = null;
-        $this->frameLines              = null;
-        $this->frameSamplesPerLine     = null;
+        $this->flashPixSequences      = [];
+        $this->flashPixExpectedCounts = [];
+        $this->flashPixStreams        = [];
+        $this->mpfSegments            = [];
+        $this->mpfFirstOffset         = null;
+        $this->mpfDocument            = null;
+        $this->audioStreams           = [];
+        $this->iptcPayloads           = [];
+        $this->xmpPacketHashes        = [];
+        $this->frameBitsPerSample     = null;
+        $this->frameComponentSampling = null;
+        $this->frameYCbCrSubSampling  = null;
+        $this->frameLines             = null;
+        $this->frameSamplesPerLine    = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -627,7 +627,7 @@ final class JpegExtractor
         $format          = ord($payload[$signatureLength + 2]);
         $channels        = ord($payload[$signatureLength + 3]);
 
-        $sampleRateData = substr($payload, $signatureLength + 4, 4);
+        $sampleRateData   = substr($payload, $signatureLength + 4, 4);
         $sampleRateUnpack = unpack('Nrate', $sampleRateData);
         if ($sampleRateUnpack === false) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset));
@@ -637,7 +637,7 @@ final class JpegExtractor
         $sampleRate = $sampleRateUnpack['rate'];
         $bitDepth   = ord($payload[$signatureLength + 8]);
 
-        $sampleCountData = substr($payload, $signatureLength + 9, 4);
+        $sampleCountData   = substr($payload, $signatureLength + 9, 4);
         $sampleCountUnpack = unpack('Ncount', $sampleCountData);
         if ($sampleCountUnpack === false) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset));
@@ -664,7 +664,7 @@ final class JpegExtractor
             self::AUDIO_FORMAT_PCM       => 'PCM',
             self::AUDIO_FORMAT_MU_LAW    => 'MU_LAW_PCM',
             self::AUDIO_FORMAT_IMA_ADPCM => 'IMA_ADPCM',
-            default => null,
+            default                      => null,
         };
 
         if ($formatName === null) {
@@ -738,17 +738,17 @@ final class JpegExtractor
             throw new ParseError(sprintf('FlashPix segment at offset %d is too short', $offset));
         }
 
-        $header = substr($payload, $signatureLength, 4);
+        $header   = substr($payload, $signatureLength, 4);
         $unpacked = unpack('nstream/Csequence/Ccount', $header);
         if ($unpacked === false) {
             throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset));
         }
 
         /** @var array{stream:int, sequence:int, count:int} $unpacked */
-        $streamId = $unpacked['stream'];
+        $streamId       = $unpacked['stream'];
         $sequenceNumber = $unpacked['sequence'];
-        $sequenceCount = $unpacked['count'];
-        $data = substr($payload, $signatureLength + 4);
+        $sequenceCount  = $unpacked['count'];
+        $data           = substr($payload, $signatureLength + 4);
 
         if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
             $this->flashPixExpectedCounts[$streamId] = 0;

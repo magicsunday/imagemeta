@@ -25,5 +25,4 @@ enum Contrast: int
     case NORMAL = 0;
     case SOFT   = 1;
     case HARD   = 2;
-
 }

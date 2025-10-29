@@ -28,5 +28,4 @@ enum SensingMethod: int
     case COLOR_SEQUENTIAL_AREA   = 5;
     case TRILINEAR               = 7;
     case COLOR_SEQUENTIAL_LINEAR = 8;
-
 }

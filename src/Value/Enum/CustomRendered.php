@@ -23,5 +23,4 @@ enum CustomRendered: int
 
     case NORMAL_PROCESS = 0;
     case CUSTOM_PROCESS = 1;
-
 }

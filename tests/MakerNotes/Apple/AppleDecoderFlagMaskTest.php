@@ -40,12 +40,12 @@ final class AppleDecoderFlagMaskTest extends TestCase
         ksort($result);
 
         $expected = [
-            'hdrAuto'               => true,
-            'hdrEnabled'            => true,
-            'longExposure'          => true,
-            'nightMode'             => true,
-            'personInPhoto'         => true,
-            'petInPhoto'            => true,
+            'hdrAuto'       => true,
+            'hdrEnabled'    => true,
+            'longExposure'  => true,
+            'nightMode'     => true,
+            'personInPhoto' => true,
+            'petInPhoto'    => true,
         ];
         ksort($expected);
 
@@ -63,7 +63,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
             'PhotosAppFeatureFlags' => [
                 'values' => [9, 15],
             ],
-            'ImageProcessingFlags'  => 0,
+            'ImageProcessingFlags' => 0,
         ];
 
         $result = $method->invoke($decoder, $dictionary);

@@ -29,6 +29,7 @@ final class ExifCapabilities
      * encodings still yield the canonical profile.
      *
      * @param ?string $exifVersion Raw EXIF version string as read from metadata, possibly null or padded.
+     *
      * @return string Canonical capability profile identifier or "unknown" when normalisation fails.
      */
     public static function fromVersion(?string $exifVersion): string
@@ -82,15 +83,15 @@ final class ExifCapabilities
             // Numeric encoders frequently drop the dots while keeping the
             // zero-padded digits listed in EXIF 3.0 §4.6.8 / EXIF 2.32 §4.6.8.
             $profile = match ($digits) {
-                '0100' => '1.0',
-                '0110' => '1.1',
-                '0200' => '2.0',
-                '0210' => '2.1',
-                '0220' => '2.2',
-                '0221' => '2.21',
-                '0230' => '2.3',
-                '0231' => '2.31',
-                '0232' => '2.32',
+                '0100'  => '1.0',
+                '0110'  => '1.1',
+                '0200'  => '2.0',
+                '0210'  => '2.1',
+                '0220'  => '2.2',
+                '0221'  => '2.21',
+                '0230'  => '2.3',
+                '0231'  => '2.31',
+                '0232'  => '2.32',
                 '0300'  => '3.0',
                 default => null,
             };

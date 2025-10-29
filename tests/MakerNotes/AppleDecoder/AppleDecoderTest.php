@@ -12,9 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\AppleDecoder;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\Value\RunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
+use MagicSunday\ImageMeta\Value\RunTime;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -52,7 +51,7 @@ final class AppleDecoderTest extends TestCase
             . '004c005200590060006800730076007d007f008200850087008a008c008f0092'
             . '009400970099009e00a700b200b500c200cb00df00ea010001030108010b010d'
             . '0000000000000201000000000000002700000000000000000000000000000112';
-        $raw = (string) hex2bin($hex);
+        $raw     = (string) hex2bin($hex);
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
@@ -89,7 +88,7 @@ final class AppleDecoderTest extends TestCase
             . 'b502b702ba02bc02cb02ce02d002d302d502d802da02dd02df02e202e402e702ea02ec02ef02f102f402f602f902fb02fe0300030303050308030a03'
             . '0d030f03120317031a031c0000000000000201000000000000007300000000000000000000000000000321'
         ;
-        $raw = (string) hex2bin($hex);
+        $raw     = (string) hex2bin($hex);
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
@@ -118,7 +117,6 @@ final class AppleDecoderTest extends TestCase
         self::assertTrue($apple->flags['longExposure']);
         self::assertTrue($apple->flags['personInPhoto']);
         self::assertFalse($apple->flags['petInPhoto']);
-
     }
 
     #[Test]
@@ -441,7 +439,7 @@ final class AppleDecoderTest extends TestCase
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-        $apple = $metadata->apple();
+        $apple    = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('textual', $apple->contentIdentifier);
         self::assertSame('1.4', $apple->makerNoteVersion);
@@ -511,7 +509,7 @@ final class AppleDecoderTest extends TestCase
         $method->setAccessible(true);
 
         $dictionary = [
-            'RunTime'             => [
+            'RunTime' => [
                 'epoch'     => '2',
                 'timescale' => 600,
                 'value'     => 1500,
@@ -640,8 +638,8 @@ final class AppleDecoderTest extends TestCase
             'LongExposure'          => true,
             'PersonInPhoto'         => true,
             'PetInPhoto'            => false,
-            'AEStable'             => 1,
-            'AFStable'             => '0',
+            'AEStable'              => 1,
+            'AFStable'              => '0',
         ]);
 
         $maskNotes = $method->invoke($decoder, [
@@ -738,12 +736,12 @@ final class AppleDecoderTest extends TestCase
 
         self::assertSame(
             [
-                'hdrAuto'               => true,
-                'hdrEnabled'            => true,
-                'longExposure'          => true,
-                'nightMode'             => true,
-                'personInPhoto'         => true,
-                'petInPhoto'            => false,
+                'hdrAuto'       => true,
+                'hdrEnabled'    => true,
+                'longExposure'  => true,
+                'nightMode'     => true,
+                'personInPhoto' => true,
+                'petInPhoto'    => false,
             ],
             $flags,
         );

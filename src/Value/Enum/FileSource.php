@@ -26,5 +26,4 @@ enum FileSource: int
     case TRANSPARENCY_SCANNER = 1;
     case REFLECTION_SCANNER   = 2;
     case DIGITAL_CAMERA       = 3;
-
 }

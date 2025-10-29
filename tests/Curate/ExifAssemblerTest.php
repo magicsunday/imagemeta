@@ -496,20 +496,20 @@ final class ExifAssemblerTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::DATETIME_ORIGINAL        => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, 'corrupted timestamp'),
-            ExifTag::DATETIME_DIGITIZED       => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:05:06 07:08:09'),
-            ExifTag::OFFSET_TIME_DIGITIZED    => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:00'),
-            ExifTag::EXPOSURE_INDEX           => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(400, 1)),
-            ExifTag::USER_COMMENT             => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Travel day'),
-            ExifTag::PREVIEW_IMAGE_START      => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 16_384),
-            ExifTag::PREVIEW_IMAGE_LENGTH     => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4_096),
+            ExifTag::DATETIME_ORIGINAL         => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, 'corrupted timestamp'),
+            ExifTag::DATETIME_DIGITIZED        => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:05:06 07:08:09'),
+            ExifTag::OFFSET_TIME_DIGITIZED     => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:00'),
+            ExifTag::EXPOSURE_INDEX            => new IfdEntry(ExifTag::EXPOSURE_INDEX, 5, 1, new ExifRational(400, 1)),
+            ExifTag::USER_COMMENT              => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Travel day'),
+            ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 16_384),
+            ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4_096),
             ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(
                 ExifTag::PREVIEW_IMAGE_COMPRESSION,
                 3,
                 1,
                 Compression::JPEG->value,
             ),
-            ExifTag::PREVIEW_IMAGE_SCALE      => new IfdEntry(
+            ExifTag::PREVIEW_IMAGE_SCALE => new IfdEntry(
                 ExifTag::PREVIEW_IMAGE_SCALE,
                 5,
                 1,
@@ -517,10 +517,10 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $metadata     = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
-        $structured   = (new ExifAssembler())->assemble($metadata);
-        $temporal     = $structured->capture->temporal;
-        $preview      = $structured->media->preview;
+        $metadata   = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
+        $structured = (new ExifAssembler())->assemble($metadata);
+        $temporal   = $structured->capture->temporal;
+        $preview    = $structured->media->preview;
 
         self::assertSame(400, $structured->exposure->iso);
 
@@ -1622,8 +1622,8 @@ final class ExifAssemblerTest extends TestCase
         $ifd0 = new Ifd([]);
 
         $exifIfd = new Ifd([
-            ExifTag::DATETIME_DIGITIZED    => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:07:03 10:11:12'),
-            ExifTag::OFFSET_TIME_DIGITIZED => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:30'),
+            ExifTag::DATETIME_DIGITIZED     => new IfdEntry(ExifTag::DATETIME_DIGITIZED, 2, 1, '2024:07:03 10:11:12'),
+            ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:30'),
             ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '987'),
         ]);
 

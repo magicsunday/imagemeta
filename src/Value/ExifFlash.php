@@ -22,13 +22,13 @@ use function is_int;
  */
 final class ExifFlash
 {
-    private const FIRED_MASK = 0x01;
-    private const RETURN_SHIFT = 1;
-    private const MODE_SHIFT = 3;
+    private const FIRED_MASK     = 0x01;
+    private const RETURN_SHIFT   = 1;
+    private const MODE_SHIFT     = 3;
     private const FUNCTION_SHIFT = 5;
-    private const TWO_BIT_MASK = 0x03;
-    private const ONE_BIT_MASK = 0x01;
-    private const RED_EYE_MASK = 0x40;
+    private const TWO_BIT_MASK   = 0x03;
+    private const ONE_BIT_MASK   = 0x01;
+    private const RED_EYE_MASK   = 0x40;
 
     private function __construct()
     {
@@ -51,9 +51,9 @@ final class ExifFlash
 
         // EXIF 2.32 §4.6.4 and EXIF 3.0 §4.6.4 define the Flash tag bit layout decoded below.
         // Extract the grouped bit fields encoded within the EXIF Flash tag.
-        $returnBits   = ($flashBits >> self::RETURN_SHIFT) & self::TWO_BIT_MASK;
-        $modeBits     = ($flashBits >> self::MODE_SHIFT) & self::TWO_BIT_MASK;
-        $functionBit  = ($flashBits >> self::FUNCTION_SHIFT) & self::ONE_BIT_MASK;
+        $returnBits  = ($flashBits >> self::RETURN_SHIFT) & self::TWO_BIT_MASK;
+        $modeBits    = ($flashBits >> self::MODE_SHIFT) & self::TWO_BIT_MASK;
+        $functionBit = ($flashBits >> self::FUNCTION_SHIFT) & self::ONE_BIT_MASK;
 
         return new FlashInfo(
             fired: ($flashBits & self::FIRED_MASK) !== 0,

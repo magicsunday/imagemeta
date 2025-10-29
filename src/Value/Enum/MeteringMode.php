@@ -29,5 +29,4 @@ enum MeteringMode: int
     case PATTERN                 = 5;
     case PARTIAL                 = 6;
     case OTHER                   = 255;
-
 }

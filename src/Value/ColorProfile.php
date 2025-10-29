@@ -17,18 +17,18 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ColorProfile
 {
     /**
-     * @param string|null               $profileName                 Human readable profile description.
-     * @param string|null               $profileVersion              Profile version string.
-     * @param string|null               $pcs                         Profile connection space.
-     * @param string|null               $renderingIntent             Rendering intent description.
-     * @param float|null                $gamma                       Scene gamma value when provided by EXIF.
-     * @param string|null               $profileId                   Optional profile identifier (MD5) when available.
-     * @param string|null               $cameraCalibrationSignature  Optional DNG camera calibration signature.
-     * @param string|null               $profileCalibrationSignature Optional DNG profile calibration signature.
-     * @param ColorProfileHueSatMap|null $hueSatMap                  Optional hue/saturation/value correction map.
-     * @param ColorProfileLookTable|null $lookTable                  Optional profile look table data.
-     * @param ColorProfileToneCurve|null $toneCurve                  Optional profile tone curve definition.
-     * @param ColorProfileGainMap|null   $gainMap                    Optional profile gain map payload.
+     * @param string|null                $profileName                 Human readable profile description.
+     * @param string|null                $profileVersion              Profile version string.
+     * @param string|null                $pcs                         Profile connection space.
+     * @param string|null                $renderingIntent             Rendering intent description.
+     * @param float|null                 $gamma                       Scene gamma value when provided by EXIF.
+     * @param string|null                $profileId                   Optional profile identifier (MD5) when available.
+     * @param string|null                $cameraCalibrationSignature  Optional DNG camera calibration signature.
+     * @param string|null                $profileCalibrationSignature Optional DNG profile calibration signature.
+     * @param ColorProfileHueSatMap|null $hueSatMap                   Optional hue/saturation/value correction map.
+     * @param ColorProfileLookTable|null $lookTable                   Optional profile look table data.
+     * @param ColorProfileToneCurve|null $toneCurve                   Optional profile tone curve definition.
+     * @param ColorProfileGainMap|null   $gainMap                     Optional profile gain map payload.
      */
     public function __construct(
         public ?string $profileName,

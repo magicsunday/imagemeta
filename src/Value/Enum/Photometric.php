@@ -31,5 +31,4 @@ enum Photometric: int
     case YCBCR             = 6;
     case CIELAB            = 8;
     case ICCLAB            = 9;
-
 }

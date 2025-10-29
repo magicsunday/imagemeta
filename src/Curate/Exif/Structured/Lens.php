@@ -52,12 +52,12 @@ final readonly class Lens
      */
     public function __construct(LensValue $lens, Derived $derived)
     {
-        $this->make                  = $lens->lensMake;
-        $this->model                 = $lens->lensModel;
-        $this->serialNumber          = $lens->lensSerialNumber;
-        $this->focalLength           = $lens->focalLengthMm;
-        $this->maximumAperture       = $lens->maxApertureFNumber;
-        $this->specification         = $lens->lensSpecification;
+        $this->make            = $lens->lensMake;
+        $this->model           = $lens->lensModel;
+        $this->serialNumber    = $lens->lensSerialNumber;
+        $this->focalLength     = $lens->focalLengthMm;
+        $this->maximumAperture = $lens->maxApertureFNumber;
+        $this->specification   = $lens->lensSpecification;
         // Fill missing EXIF equivalent focal length with the derived 35mm calculation for downstream consumers.
         $this->equivalent35mm        = $lens->focalLengthIn35mm ?? $derived->focalLength35mm;
         $this->cropFactor            = $derived->cropFactor;

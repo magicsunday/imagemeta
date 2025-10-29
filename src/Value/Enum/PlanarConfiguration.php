@@ -24,5 +24,4 @@ enum PlanarConfiguration: int
 
     case CHUNKY = 1;
     case PLANAR = 2;
-
 }

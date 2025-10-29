@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
@@ -13,7 +20,7 @@ final class QuickTimeLookupTest extends TestCase
     public function testStringReturnsFirstNonEmptyCandidate(): void
     {
         $meta = new QuickTimeMeta([
-            'Primary' => '',
+            'Primary'   => '',
             'Secondary' => '  value  ',
         ]);
 
@@ -25,7 +32,7 @@ final class QuickTimeLookupTest extends TestCase
     public function testFloatFallsBackToNumericString(): void
     {
         $meta = new QuickTimeMeta([
-            'First' => 'not-a-number',
+            'First'  => 'not-a-number',
             'Second' => '42.5',
         ]);
 
@@ -44,7 +51,7 @@ final class QuickTimeLookupTest extends TestCase
     public function testBoolReturnsFirstResolvableValue(): void
     {
         $meta = new QuickTimeMeta([
-            'Primary' => 'false',
+            'Primary'   => 'false',
             'Secondary' => true,
         ]);
 

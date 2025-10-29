@@ -32,7 +32,6 @@ use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
-use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
@@ -2466,7 +2465,7 @@ final class ValueFactory
                 return [];
             }
 
-            return array_values(array_map(static fn(string $value): string => trim($value), $raw));
+            return array_values(array_map(static fn (string $value): string => trim($value), $raw));
         }
 
         if (!is_string($raw)) {
@@ -2495,7 +2494,7 @@ final class ValueFactory
             return [];
         }
 
-        return array_values(array_map(static fn(string $value): ?float => XmpDocument::parseNumericValue($value), $raw));
+        return array_values(array_map(static fn (string $value): ?float => XmpDocument::parseNumericValue($value), $raw));
     }
 
     /**

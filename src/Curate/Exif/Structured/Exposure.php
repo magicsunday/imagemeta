@@ -100,6 +100,6 @@ final readonly class Exposure
         $this->exposureIndex    = $exposure->exposureIndex;
         $this->flashEnergy      = $exposure->flashEnergy;
         // EV100 stems from the derived helper and expresses exposure at ISO 100 regardless of the recorded ISO.
-        $this->ev100            = $derived->ev100;
+        $this->ev100 = $derived->ev100;
     }
 }

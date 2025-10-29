@@ -30,5 +30,4 @@ enum Orientation: int
     case RIGHT_TOP    = 6;
     case RIGHT_BOTTOM = 7;
     case LEFT_BOTTOM  = 8;
-
 }

@@ -71,10 +71,10 @@ final class GpsTiffBuilder
             /** @var GpsDefinition $definition */
             $definition = $definition;
 
-            $tag = $definition['tag'];
-            $type = $definition['type'];
-            $count = $definition['count'];
-            $mode = $definition['mode'];
+            $tag     = $definition['tag'];
+            $type    = $definition['type'];
+            $count   = $definition['count'];
+            $mode    = $definition['mode'];
             $payload = $definition['payload'];
 
             switch ($mode) {
@@ -189,8 +189,9 @@ final class GpsTiffBuilder
     }
 
     /**
-     * @phpstan-param positive-int $count
      * @param list<array{numerator: int, denominator: int}> $payload
+     *
+     * @phpstan-param positive-int $count
      *
      * @phpstan-return GpsRationalDefinition
      */
@@ -206,8 +207,9 @@ final class GpsTiffBuilder
     }
 
     /**
-     * @phpstan-param positive-int $count
      * @param string $payload
+     *
+     * @phpstan-param positive-int $count
      *
      * @phpstan-return GpsStringDefinition
      */
@@ -223,8 +225,9 @@ final class GpsTiffBuilder
     }
 
     /**
-     * @phpstan-param positive-int $count
      * @param int $payload
+     *
+     * @phpstan-param positive-int $count
      *
      * @phpstan-return GpsInlineDefinition
      */

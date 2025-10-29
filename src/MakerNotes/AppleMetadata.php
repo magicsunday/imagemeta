@@ -22,19 +22,19 @@ final class AppleMetadata
      * @var array<string, string>
      */
     public const array FLAG_MAP = [
-        'AEStable'             => 'aeStable',
-        'AFStable'             => 'afStable',
-        'LivePhotoAuto'        => 'livePhotoAuto',
-        'LivePhotoEnabled'     => 'livePhotoEnabled',
-        'LivePhotoActive'      => 'livePhotoActive',
+        'AEStable'              => 'aeStable',
+        'AFStable'              => 'afStable',
+        'LivePhotoAuto'         => 'livePhotoAuto',
+        'LivePhotoEnabled'      => 'livePhotoEnabled',
+        'LivePhotoActive'       => 'livePhotoActive',
         'LivePhotoLongExposure' => 'livePhotoLongExposure',
-        'LivePhoto'            => 'livePhoto',
-        'PersonInPhoto'        => 'personInPhoto',
-        'PetInPhoto'           => 'petInPhoto',
-        'HdrAuto'              => 'hdrAuto',
-        'HdrEnabled'           => 'hdrEnabled',
-        'NightMode'            => 'nightMode',
-        'LongExposure'         => 'longExposure',
+        'LivePhoto'             => 'livePhoto',
+        'PersonInPhoto'         => 'personInPhoto',
+        'PetInPhoto'            => 'petInPhoto',
+        'HdrAuto'               => 'hdrAuto',
+        'HdrEnabled'            => 'hdrEnabled',
+        'NightMode'             => 'nightMode',
+        'LongExposure'          => 'longExposure',
     ];
 
     /**

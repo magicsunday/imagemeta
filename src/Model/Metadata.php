@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
-use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
@@ -92,7 +92,7 @@ final class Metadata
      * @param ExifDocument|null                                    $exifDoc                  Parsed representation of the primary EXIF document.
      * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary
      * @param XmpDocument|null                                     $xmpDoc                   Parsed representation of the primary XMP packet.
-     * @param MakerNotesRecord|null                              $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
+     * @param MakerNotesRecord|null                                $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
      * @param string|null                                          $iccProfile               Binary ICC profile when available.
      * @param list<string>                                         $iccSegments              Raw ICC APP2 segments in encounter order.
      * @param array<int, string>                                   $flashPixStreams          Concatenated FlashPix extension streams keyed by identifier.
@@ -183,7 +183,7 @@ final class Metadata
     public function structured(): StructuredMetadata
     {
         if (!$this->structured instanceof StructuredMetadata) {
-            $assembler       = new ExifAssembler();
+            $assembler        = new ExifAssembler();
             $this->structured = $assembler->assemble($this);
         }
 

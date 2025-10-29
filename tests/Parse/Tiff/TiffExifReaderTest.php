@@ -34,14 +34,14 @@ use RuntimeException;
 use function array_map;
 use function count;
 use function implode;
-use function ord;
 use function is_int;
+use function ord;
 use function pack;
 use function rtrim;
 use function sha1;
-use function strlen;
 use function str_pad;
 use function str_repeat;
+use function strlen;
 use function substr;
 use function trim;
 use function unpack;
@@ -218,7 +218,7 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame('Jane Doe', $document->copyright());
         self::assertSame("Sunrise \u{1F305}", $document->xpTitle());
         self::assertSame("Shot on \u{2615}", $document->xpComment());
-        self::assertSame("Åsa K.", $document->xpAuthor());
+        self::assertSame('Åsa K.', $document->xpAuthor());
         self::assertSame(['旅', '海'], $document->xpKeywords());
         self::assertSame("Project \u{2728}", $document->xpSubject());
         self::assertSame("Project \u{2728}", $document->documentName());
@@ -231,7 +231,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function surfacesColorProfileTags(): void
     {
-        $blob      = self::buildClassicColorProfileBlob();
+        $blob     = self::buildClassicColorProfileBlob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         self::assertSame('CameraSig v1.0', $document->cameraCalibrationSignature());
@@ -271,7 +271,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function resolvesInteropPointerLocatedInIfd0(): void
     {
-        $blob      = self::buildClassicInteropPointerInIfd0Blob();
+        $blob     = self::buildClassicInteropPointerInIfd0Blob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         self::assertSame('R98', $document->interopIndex());
@@ -281,7 +281,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function resolvesInteropPointerLocatedInIfd1(): void
     {
-        $blob      = self::buildClassicInteropPointerInIfd1Blob();
+        $blob     = self::buildClassicInteropPointerInIfd1Blob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         self::assertSame('R98', $document->interopIndex());
@@ -291,7 +291,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function resolvesInteropPointerLocatedInSubIfd(): void
     {
-        $blob      = self::buildClassicInteropPointerInSubIfdBlob();
+        $blob     = self::buildClassicInteropPointerInSubIfdBlob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         self::assertSame('R98', $document->interopIndex());
@@ -301,7 +301,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function resolvesInteropStoredDirectlyInSubIfd(): void
     {
-        $blob      = self::buildClassicInteropInlineSubIfdBlob();
+        $blob     = self::buildClassicInteropInlineSubIfdBlob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         self::assertSame('R98', $document->interopIndex());
@@ -312,7 +312,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function skipsInvalidInteropPointerTargets(): void
     {
-        $blob      = self::buildClassicInteropPointerWithSubIfdFallbackBlob();
+        $blob     = self::buildClassicInteropPointerWithSubIfdFallbackBlob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         self::assertSame('R98', $document->interopIndex());
@@ -322,7 +322,7 @@ final class TiffExifReaderTest extends TestCase
     #[Test]
     public function parsesLinkedIfdChain(): void
     {
-        $blob      = $this->buildClassicLinkedIfdBlob();
+        $blob     = $this->buildClassicLinkedIfdBlob();
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         $subsequentIfds = $document->subsequentIfds();
@@ -402,7 +402,6 @@ final class TiffExifReaderTest extends TestCase
         ];
 
         self::assertSame($expected, $document->printImageMatching());
-
     }
 
     /**
@@ -415,7 +414,6 @@ final class TiffExifReaderTest extends TestCase
         $document = (new TiffExifReader())->parseFromBlob($blob);
 
         self::assertNull($document->printImageMatching());
-
     }
 
     /**
@@ -491,7 +489,7 @@ final class TiffExifReaderTest extends TestCase
     {
         [$blob, $subIfdOffset] = $this->buildClassicSubIfdBlob();
 
-        $document   = (new TiffExifReader())->parseFromBlob($blob);
+        $document     = (new TiffExifReader())->parseFromBlob($blob);
         $subIfdsEntry = $document->ifd0->get(ExifTag::SUB_IFDS);
 
         self::assertNotNull($subIfdsEntry);
@@ -540,7 +538,6 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame(16, $secondSubIfdEntry->value);
     }
 
-
     /**
      * Ensures SubIFD pointers stored inline using the IFD field type remain offsets.
      */
@@ -549,7 +546,7 @@ final class TiffExifReaderTest extends TestCase
     {
         [$blob, $subIfdOffset] = $this->buildClassicInlineSubIfdBlob();
 
-        $document  = (new TiffExifReader())->parseFromBlob($blob);
+        $document    = (new TiffExifReader())->parseFromBlob($blob);
         $subIfdEntry = $document->ifd0->get(ExifTag::SUB_IFDS);
 
         self::assertNotNull($subIfdEntry);
@@ -684,7 +681,7 @@ final class TiffExifReaderTest extends TestCase
         $decoder = new class implements MakerNotesDecoderInterface {
             public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
             {
-                $offset = unpack('Voffset', substr($raw, 0, 4));
+                $offset  = unpack('Voffset', substr($raw, 0, 4));
                 $pointer = 0;
                 if ($offset !== false && isset($offset['offset']) && is_int($offset['offset'])) {
                     $pointer = $offset['offset'];
@@ -1246,6 +1243,7 @@ final class TiffExifReaderTest extends TestCase
 
         return $blob;
     }
+
     /**
      * Builds a Classic TIFF blob with the interoperability pointer stored in IFD0.
      */
@@ -1278,9 +1276,9 @@ final class TiffExifReaderTest extends TestCase
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
-        $ifd0Length  = 2 + 4;
-        $ifd1Offset  = 8 + $ifd0Length;
-        $ifd1Length  = 2 + 12 + 4;
+        $ifd0Length    = 2 + 4;
+        $ifd1Offset    = 8 + $ifd0Length;
+        $ifd1Length    = 2 + 12 + 4;
         $interopOffset = $ifd1Offset + $ifd1Length;
 
         $ifd0 = pack('v', 0)
@@ -1516,11 +1514,11 @@ final class TiffExifReaderTest extends TestCase
 
         $ifd0EntryCount = 1;
         $ifd0Size       = 2 + $ifd0EntryCount * 12 + 4;
-        $exifIfdOffset = 8 + $ifd0Size;
+        $exifIfdOffset  = 8 + $ifd0Size;
 
         $exifEntryCount = 1;
         $exifIfdSize    = 2 + $exifEntryCount * 12 + 4;
-        $printImOffset = $exifIfdOffset + $exifIfdSize;
+        $printImOffset  = $exifIfdOffset + $exifIfdSize;
 
         $ifd0Entries = [
             self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
@@ -1564,11 +1562,11 @@ final class TiffExifReaderTest extends TestCase
     {
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
-        $ifd0EntryCount         = 1;
-        $pointerCount          = 2;
-        $ifd0Size               = 2 + ($ifd0EntryCount * 12) + 4;
-        $pointerArrayOffset     = 8 + $ifd0Size;
-        $subIfdOffset           = 64;
+        $ifd0EntryCount     = 1;
+        $pointerCount       = 2;
+        $ifd0Size           = 2 + ($ifd0EntryCount * 12) + 4;
+        $pointerArrayOffset = 8 + $ifd0Size;
+        $subIfdOffset       = 64;
 
         $ifd0Entries = [
             self::packClassicEntry(ExifTag::SUB_IFDS, 13, $pointerCount, $pointerArrayOffset),
@@ -1588,7 +1586,6 @@ final class TiffExifReaderTest extends TestCase
 
         return [$blob, $subIfdOffset];
     }
-
 
     /**
      * Builds a Classic TIFF blob whose SubIFDs tag stores offsets using the LONG type.
@@ -1649,7 +1646,7 @@ final class TiffExifReaderTest extends TestCase
 
         $blob = $header;
         $blob .= pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
-        $blob  = str_pad($blob, $subIfdOffset, "\0", STR_PAD_RIGHT);
+        $blob = str_pad($blob, $subIfdOffset, "\0", STR_PAD_RIGHT);
 
         $subIfdEntries = [
             self::packClassicEntry(ExifTag::ORIENTATION, 3, 1, 1),
@@ -1945,19 +1942,19 @@ final class TiffExifReaderTest extends TestCase
 
         $cursor             = self::alignOffset($cursor, 16);
         $stripOffsetsOffset = $cursor;
-        $cursor            += strlen($stripOffsetsData);
+        $cursor += strlen($stripOffsetsData);
 
-        $cursor                 = self::alignOffset($cursor, 16);
-        $stripByteCountsOffset  = $cursor;
-        $cursor                += strlen($stripByteCountsData);
+        $cursor                = self::alignOffset($cursor, 16);
+        $stripByteCountsOffset = $cursor;
+        $cursor += strlen($stripByteCountsData);
 
         $cursor            = self::alignOffset($cursor, 16);
         $tileOffsetsOffset = $cursor;
-        $cursor           += strlen($tileOffsetsData);
+        $cursor += strlen($tileOffsetsData);
 
-        $cursor                = self::alignOffset($cursor, 16);
-        $tileByteCountsOffset  = $cursor;
-        $cursor               += strlen($tileByteCountsData);
+        $cursor               = self::alignOffset($cursor, 16);
+        $tileByteCountsOffset = $cursor;
+        $cursor += strlen($tileByteCountsData);
 
         $entries = [
             self::packBigTiffEntry(
@@ -2198,11 +2195,11 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Packs a BigTIFF directory entry in little-endian order.
      *
-     * @param int                 $tag           TIFF tag identifier.
-     * @param int                 $type          TIFF field type code.
-     * @param int                 $count         Number of values represented.
+     * @param int                  $tag           TIFF tag identifier.
+     * @param int                  $type          TIFF field type code.
+     * @param int                  $count         Number of values represented.
      * @param int|list<int>|string $valueOrOffset Inline value or data offset.
-     * @param int                 $fieldWidth    Size of the value/offset field.
+     * @param int                  $fieldWidth    Size of the value/offset field.
      *
      * @phpstan-param int|list<int>|string $valueOrOffset
      */
@@ -2212,8 +2209,7 @@ final class TiffExifReaderTest extends TestCase
         int $count,
         int|array|string $valueOrOffset,
         int $fieldWidth = 8,
-    ): string
-    {
+    ): string {
         [$countLo, $countHi] = self::splitUInt64($count);
 
         return pack('v', $tag)
@@ -2474,7 +2470,7 @@ final class TiffExifReaderTest extends TestCase
         if (is_array($value)) {
             /** @var array{0:int,1:int} $value */
             $components = $value;
-            [$lo, $hi]   = $components;
+            [$lo, $hi]  = $components;
 
             return [$lo & 0xFFFFFFFF, $hi & 0xFFFFFFFF];
         }

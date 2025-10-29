@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Support;
@@ -76,8 +83,8 @@ trait ExifExpectationAssertions
      */
     private static function assertStructuredMatches(string $fixture, Metadata $metadata, array $expected): void
     {
-        $structured = $metadata->structured();
-        $standards = $structured->technical->standards;
+        $structured        = $metadata->structured();
+        $standards         = $structured->technical->standards;
         $expectedStandards = $expected['standards'];
 
         Assert::assertSame($expectedStandards['exifVersion'], $standards->exifVersion, sprintf('%s: EXIF version', $fixture));
@@ -88,9 +95,9 @@ trait ExifExpectationAssertions
 
         Assert::assertSame($expected['exposure']['iso'], $structured->exposure->iso, sprintf('%s: ISO fallback', $fixture));
 
-        $temporal = $structured->capture->temporal;
+        $temporal        = $structured->capture->temporal;
         $expectedCapture = $expected['capture']['dateTimeOriginal'];
-        $actualOriginal = $temporal->original;
+        $actualOriginal  = $temporal->original;
         if ($expectedCapture === null) {
             Assert::assertNull($actualOriginal, sprintf('%s: DateTimeOriginal fallback', $fixture));
         } else {
@@ -114,7 +121,7 @@ trait ExifExpectationAssertions
         Assert::assertSame($expected['image']['userComment'], $image->userComment, sprintf('%s: UserComment fallback', $fixture));
         Assert::assertSame($expected['image']['userCommentEncoding'], $image->userCommentEncoding, sprintf('%s: UserComment encoding', $fixture));
 
-        $interop = $structured->technical->interop;
+        $interop         = $structured->technical->interop;
         $expectedInterop = $expected['interop'];
         Assert::assertSame($expectedInterop['index'], $interop->index, sprintf('%s: Interop index', $fixture));
         Assert::assertSame($expectedInterop['version'], $interop->version, sprintf('%s: Interop version', $fixture));
@@ -125,7 +132,7 @@ trait ExifExpectationAssertions
         self::assertPreviewMatches($fixture, $expected['preview'], $structured->media->preview);
 
         $expectedMaker = $expected['makerNotes'];
-        $actualMaker = $metadata->makerNotes;
+        $actualMaker   = $metadata->makerNotes;
         if ($expectedMaker === null) {
             Assert::assertNull($actualMaker, sprintf('%s: Maker notes digest', $fixture));
         } else {
@@ -137,7 +144,7 @@ trait ExifExpectationAssertions
         }
 
         $expectedEnv = $expected['environment'];
-        $raw = $metadata->exifDoc;
+        $raw         = $metadata->exifDoc;
         /** @var array<string, callable(ModelExifDocument): ?float> $environmentMatchers */
         $environmentMatchers = [
             'temperatureC'    => static fn (ModelExifDocument $document): ?float => $document->temperatureCelsius(),
@@ -207,7 +214,7 @@ trait ExifExpectationAssertions
         Assert::assertSame($expected['iso'], $document->iso(), sprintf('%s: ISO value', $fixture));
 
         $expectedOriginal = $expected['dateTimeOriginal'];
-        $actualOriginal = $document->dateTimeOriginal();
+        $actualOriginal   = $document->dateTimeOriginal();
         if ($expectedOriginal === null) {
             Assert::assertNull($actualOriginal, sprintf('%s: API DateTimeOriginal', $fixture));
         } else {
@@ -218,7 +225,7 @@ trait ExifExpectationAssertions
         Assert::assertSame($expected['userComment'], $document->userComment(), sprintf('%s: API UserComment', $fixture));
         Assert::assertSame($expected['userCommentEncoding'], $document->userCommentEncoding(), sprintf('%s: API UserComment encoding', $fixture));
 
-        $interop = $document->interop();
+        $interop         = $document->interop();
         $expectedInterop = $expected['interop'];
         Assert::assertSame($expectedInterop['index'], $interop->index, sprintf('%s: API Interop index', $fixture));
         Assert::assertSame($expectedInterop['version'], $interop->version, sprintf('%s: API Interop version', $fixture));

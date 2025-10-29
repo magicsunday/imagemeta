@@ -25,5 +25,4 @@ enum Saturation: int
     case NORMAL = 0;
     case LOW    = 1;
     case HIGH   = 2;
-
 }

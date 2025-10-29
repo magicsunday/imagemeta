@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Support;
@@ -51,11 +58,11 @@ final class ExifVersionExpectations
 
     /**
      * @return iterable<string, array{string, array<string, mixed>, array<string, mixed>, array<string, mixed>}> Data provider
-     *                                                                                                          payload for
-     *                                                                                                          structured,
-     *                                                                                                          API and raw
-     *                                                                                                          model
-     *                                                                                                          expectations.
+     *                                                                                                           payload for
+     *                                                                                                           structured,
+     *                                                                                                           API and raw
+     *                                                                                                           model
+     *                                                                                                           expectations.
      */
     public static function provideAll(): iterable
     {

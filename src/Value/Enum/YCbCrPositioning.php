@@ -24,5 +24,4 @@ enum YCbCrPositioning: int
 
     case CENTERED = 1;
     case CO_SITED = 2;
-
 }

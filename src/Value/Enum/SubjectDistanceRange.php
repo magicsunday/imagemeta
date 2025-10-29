@@ -26,5 +26,4 @@ enum SubjectDistanceRange: int
     case MACRO   = 1;
     case CLOSE   = 2;
     case DISTANT = 3;
-
 }

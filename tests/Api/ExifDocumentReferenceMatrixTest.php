@@ -98,6 +98,7 @@ use PHPUnit\Framework\TestCase;
  *     tiffEpStandardId: array<int|string, mixed>|null,
  *     tiffEpStandardString: ?string,
  * }
+ *
  * @method static void assertStructuredMatches(string $fixture, \MagicSunday\ImageMeta\Model\Metadata $metadata, StructuredExpectation $expected)
  * @method static void assertApiMatches(string $fixture, \MagicSunday\ImageMeta\Api\ExifDocument $document, ApiExpectation $expected)
  * @method static void assertModelMatches(string $fixture, ?\MagicSunday\ImageMeta\Model\Exif\ExifDocument $document, ModelExpectation $expected)

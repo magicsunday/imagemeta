@@ -25,9 +25,9 @@ use function implode;
 use function pack;
 use function rewind;
 use function str_pad;
-use function substr;
 use function str_repeat;
 use function strlen;
+use function substr;
 
 /**
  * Exercises the JPEG extractor using synthetic marker segments.
@@ -207,7 +207,7 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testFlashPixMultipleStreamsAreHandled(): void
     {
-        $streamOne = self::segment(self::MARKER_APP2, self::fpxrPayload(1, 1, 1, 'stream-one'));
+        $streamOne  = self::segment(self::MARKER_APP2, self::fpxrPayload(1, 1, 1, 'stream-one'));
         $streamTwoA = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 1, 3, 'alpha-'));
         $streamTwoB = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 2, 3, 'beta-'));
         $streamTwoC = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 3, 3, 'gamma'));
@@ -228,8 +228,8 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testAudioSegmentsAreCollected(): void
     {
-        $muLawData   = str_repeat("\x01\x02", 4);
-        $pcmData     = pack('n*', 0x0102, 0x0304, 0x0506, 0x0708);
+        $muLawData    = str_repeat("\x01\x02", 4);
+        $pcmData      = pack('n*', 0x0102, 0x0304, 0x0506, 0x0708);
         $muLawSegment = self::segment(self::MARKER_APP2, self::audioPayload(1, 1, 8_000, 8, $muLawData));
         $pcmSegment   = self::segment(self::MARKER_APP2, self::audioPayload(0, 2, 44_100, 16, $pcmData));
 

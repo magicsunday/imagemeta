@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
-use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
+use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
@@ -21,7 +21,6 @@ use function array_key_exists;
 use function get_object_vars;
 use function is_array;
 use function is_numeric;
-use function is_string;
 use function preg_split;
 use function str_repeat;
 use function trim;

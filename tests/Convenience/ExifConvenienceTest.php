@@ -164,7 +164,7 @@ final class ExifConvenienceTest extends TestCase
         $ifd0 = new Ifd([]);
 
         $sosOnly = new Ifd([
-            ExifTag::SENSITIVITY_TYPE           => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 1),
+            ExifTag::SENSITIVITY_TYPE            => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 1),
             ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 250),
         ]);
 
@@ -173,9 +173,9 @@ final class ExifConvenienceTest extends TestCase
         self::assertSame(250, ExifConvenience::iso($docWithSosOnly));
 
         $priorityIfd = new Ifd([
-            ExifTag::SENSITIVITY_TYPE             => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 6),
-            ExifTag::RECOMMENDED_EXPOSURE_INDEX   => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
-            ExifTag::ISO_SPEED                    => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 640),
+            ExifTag::SENSITIVITY_TYPE           => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, 6),
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 3, 1, 320),
+            ExifTag::ISO_SPEED                  => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 640),
         ]);
 
         $docWithPriority = new ExifDocument($ifd0, $priorityIfd, null, null, null);
@@ -224,13 +224,13 @@ final class ExifConvenienceTest extends TestCase
     public function captureDateTimeFallsBackToDigitizedAndModifyDates(): void
     {
         $digitizedIfd = new Ifd([
-            ExifTag::DATETIME_DIGITIZED      => new IfdEntry(
+            ExifTag::DATETIME_DIGITIZED => new IfdEntry(
                 ExifTag::DATETIME_DIGITIZED,
                 2,
                 19,
                 '2023:12:24 06:30:45',
             ),
-            ExifTag::OFFSET_TIME_DIGITIZED   => new IfdEntry(
+            ExifTag::OFFSET_TIME_DIGITIZED => new IfdEntry(
                 ExifTag::OFFSET_TIME_DIGITIZED,
                 2,
                 6,

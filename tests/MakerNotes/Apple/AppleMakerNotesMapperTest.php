@@ -87,8 +87,8 @@ final class AppleMakerNotesMapperTest extends TestCase
             'ImageCaptureType'                    => 6,
         ]);
 
-        $mapper   = new AppleMakerNotesMapper();
-        $mapped   = $mapper->map($makerNotes, $quickTime);
+        $mapper = new AppleMakerNotesMapper();
+        $mapped = $mapper->map($makerNotes, $quickTime);
 
         self::assertNotNull($mapped);
 

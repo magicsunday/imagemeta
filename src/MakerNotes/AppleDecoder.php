@@ -14,15 +14,14 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
-use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
-use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\Value\RunTime;
 
+use function array_flip;
 use function array_is_list;
 use function array_key_exists;
-use function array_flip;
 use function array_unique;
 use function array_values;
 use function ctype_space;
@@ -35,13 +34,13 @@ use function is_float;
 use function is_int;
 use function is_numeric;
 use function is_string;
-use function sha1;
-use function str_contains;
-use function strtolower;
-use function sort;
 use function preg_match;
+use function sha1;
+use function sort;
+use function str_contains;
 use function str_starts_with;
 use function strlen;
+use function strtolower;
 use function substr;
 use function trim;
 
@@ -233,7 +232,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
             ++$offset;
 
-            $value = $this->parseValue($raw, $offset, $length);
+            $value            = $this->parseValue($raw, $offset, $length);
             $dictionary[$key] = $value;
 
             $this->skipWhitespace($raw, $offset, $length);
@@ -312,6 +311,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
     /**
      * @return array<int, array<int|string, mixed>|bool|float|int|string|null>
+     *
      * @phpstan-return array<int, array<int|string, mixed>|bool|float|int|string|null>
      */
     private function parseArray(string $raw, int &$offset, int $length): array
@@ -551,7 +551,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        $normalised            = $dictionary;
+        $normalised             = $dictionary;
         $normalised['$objects'] = $objects;
         $normalised['$top']     = $top;
 
@@ -594,7 +594,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
         /** @var array<int|string, mixed> $dictionary */
-
         $semanticStyleCompact = null;
         if (
             !array_key_exists('SemanticStylePreset', $dictionary)
@@ -619,37 +618,37 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
         }
 
-        $contentIdentifier    = $this->stringValue($dictionary, 'ContentIdentifier');
-        $cameraTypeCode       = $this->intValue($dictionary, 'CameraType');
+        $contentIdentifier = $this->stringValue($dictionary, 'ContentIdentifier');
+        $cameraTypeCode    = $this->intValue($dictionary, 'CameraType');
         if ($cameraTypeCode !== null) {
             $cameraType = self::CAMERA_TYPE_MAP[$cameraTypeCode] ?? $cameraTypeCode;
         } else {
             $cameraType = $this->stringValue($dictionary, 'CameraType');
         }
-        $hdrHeadroom          = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
-        $hdrGain              = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
-        $snr                  = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
-        $aeStable             = $this->boolDictionaryValue($dictionary, 'AEStable');
-        $aeTarget             = $this->rationalFloatValue($dictionary, 'AETarget');
-        $aeAverage            = $this->rationalFloatValue($dictionary, 'AEAverage');
-        $afStable             = $this->boolDictionaryValue($dictionary, 'AFStable');
-        $afPerformance        = $this->rationalFloatValue($dictionary, 'AFPerformance');
-        $signalToNoiseRatioType = $this->stringOrIntValue($dictionary, 'SignalToNoiseRatioType');
+        $hdrHeadroom             = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
+        $hdrGain                 = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
+        $snr                     = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
+        $aeStable                = $this->boolDictionaryValue($dictionary, 'AEStable');
+        $aeTarget                = $this->rationalFloatValue($dictionary, 'AETarget');
+        $aeAverage               = $this->rationalFloatValue($dictionary, 'AEAverage');
+        $afStable                = $this->boolDictionaryValue($dictionary, 'AFStable');
+        $afPerformance           = $this->rationalFloatValue($dictionary, 'AFPerformance');
+        $signalToNoiseRatioType  = $this->stringOrIntValue($dictionary, 'SignalToNoiseRatioType');
         $luminanceNoiseAmplitude = $this->rationalFloatValue($dictionary, 'LuminanceNoiseAmplitude');
-        $focusPosition        = $this->floatValue($dictionary, 'FocusPosition');
-        $runTime              = $this->runTimeValue($dictionary, 'RunTime');
-        $livePhotoIndex       = $this->intValue($dictionary, ...self::LIVE_PHOTO_INDEX_KEYS);
-        $livePhotoTime        = null;
+        $focusPosition           = $this->floatValue($dictionary, 'FocusPosition');
+        $runTime                 = $this->runTimeValue($dictionary, 'RunTime');
+        $livePhotoIndex          = $this->intValue($dictionary, ...self::LIVE_PHOTO_INDEX_KEYS);
+        $livePhotoTime           = null;
         if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
             $timescale = $runTime->timescale;
             if ($timescale !== null && $timescale > 0) {
                 $livePhotoTime = $livePhotoIndex / $timescale;
             }
         }
-        $colorTemperature     = $this->intValue($dictionary, 'ColorTemperature');
-        $semanticStylePreset  = $this->stringValue($dictionary, 'SemanticStylePreset');
-        $semanticStyleWarmth  = $this->floatValue($dictionary, 'SemanticStyleWarmth');
-        $semanticStyleTone    = $this->floatValue($dictionary, 'SemanticStyleTone');
+        $colorTemperature    = $this->intValue($dictionary, 'ColorTemperature');
+        $semanticStylePreset = $this->stringValue($dictionary, 'SemanticStylePreset');
+        $semanticStyleWarmth = $this->floatValue($dictionary, 'SemanticStyleWarmth');
+        $semanticStyleTone   = $this->floatValue($dictionary, 'SemanticStyleTone');
         $semanticStyleCompact ??= SemanticStyle::fromDictionary($dictionary);
         if ($semanticStyleCompact !== null) {
             [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
@@ -666,11 +665,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 $semanticStyleTone = $compactTone;
             }
         }
-        $accelerationVector = $this->floatList($dictionary, 'AccelerationVector');
-        $flags                   = $this->extractFlags($dictionary);
-        $imageCaptureRequestId   = $this->identifierValue($dictionary, 'ImageCaptureRequestID');
-        $qualityHint             = $this->stringOrNumericValue($dictionary, 'QualityHint');
-        $colorCorrectionMatrix   = $this->floatList($dictionary, 'ColorCorrectionMatrix');
+        $accelerationVector    = $this->floatList($dictionary, 'AccelerationVector');
+        $flags                 = $this->extractFlags($dictionary);
+        $imageCaptureRequestId = $this->identifierValue($dictionary, 'ImageCaptureRequestID');
+        $qualityHint           = $this->stringOrNumericValue($dictionary, 'QualityHint');
+        $colorCorrectionMatrix = $this->floatList($dictionary, 'ColorCorrectionMatrix');
 
         $makerNoteVersion   = $this->makerNoteVersionValue($dictionary, 'MakerNoteVersion');
         $hdrImageType       = $this->enumeratedStringValue($dictionary, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
@@ -858,8 +857,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
             if (str_contains($normalized, '/')) {
                 [$numeratorRaw, $denominatorRaw] = explode('/', $normalized, 2);
-                $numerator   = trim($numeratorRaw);
-                $denominator = trim($denominatorRaw);
+                $numerator                       = trim($numeratorRaw);
+                $denominator                     = trim($denominatorRaw);
 
                 if ($numerator === '' || $denominator === '' || !is_numeric($numerator) || !is_numeric($denominator)) {
                     return null;
@@ -1376,7 +1375,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
     /**
      * @param array<int|string, mixed> $dictionary
-     * @param array<int, string>                                                     $map
+     * @param array<int, string>       $map
      */
     private function enumeratedStringValue(array $dictionary, array $map, string ...$keys): ?string
     {
@@ -1616,7 +1615,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
 
             $mask >>= 1;
-            $bitIndex++;
+            ++$bitIndex;
         }
 
         return $positions;
@@ -1658,5 +1657,4 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         return null;
     }
-
 }

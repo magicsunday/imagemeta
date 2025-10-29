@@ -27,5 +27,4 @@ enum SceneCaptureType: int
     case PORTRAIT    = 2;
     case NIGHT_SCENE = 3;
     case OTHER       = 4;
-
 }

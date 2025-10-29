@@ -29,6 +29,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
+
 use function pack;
 use function substr;
 
@@ -119,7 +120,7 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * @param ExifRational|string $value    The APEX encoded value.
-     * @param float|null $expected The expected f-number.
+     * @param float|null          $expected The expected f-number.
      */
     #[Test]
     #[DataProvider('provideApexValues')]
@@ -201,7 +202,7 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * @param ExifRational|string|null $value    Raw battery level value.
-     * @param float|null $expected Normalised percentage value.
+     * @param float|null               $expected Normalised percentage value.
      */
     #[Test]
     #[DataProvider('provideBatteryLevelValues')]
@@ -227,9 +228,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param string|null $ref      The speed reference.
+     * @param string|null         $ref      The speed reference.
      * @param ExifRational|string $value    The raw speed value.
-     * @param float|null  $expected The expected metres per second.
+     * @param float|null          $expected The expected metres per second.
      */
     #[Test]
     #[DataProvider('provideGpsSpeedValues')]
@@ -289,7 +290,7 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset representation.
-     * @param string|null $expected The expected canonical offset string.
+     * @param string|null                                         $expected The expected canonical offset string.
      */
     #[Test]
     #[DataProvider('provideOffsetStrings')]
@@ -315,7 +316,7 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset value.
-     * @param int|null $expected Expected minutes from UTC.
+     * @param int|null                                            $expected Expected minutes from UTC.
      */
     #[Test]
     #[DataProvider('provideOffsetMinutes')]
@@ -976,5 +977,4 @@ final class ValueConvertersTest extends TestCase
     {
         return pack('N', $numerator) . pack('N', $denominator);
     }
-
 }
