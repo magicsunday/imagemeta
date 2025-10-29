@@ -22,28 +22,32 @@ use function is_string;
 
 /**
  * Minimal keyed archive unarchiver converting `CF$UID` based dictionaries into associative arrays.
+ *
+ * @phpstan-type KeyedArchiveValue array<int|string, mixed>|bool|float|int|string|null
+ * @phpstan-type KeyedArchiveList list<KeyedArchiveValue>
+ * @phpstan-type KeyedArchiveDictionary array<int|string, KeyedArchiveValue>
  */
 final class KeyedArchiveUnarchiver
 {
     /**
-     * @var list<array<int|string, mixed>|bool|float|int|string|null>
+     * @var KeyedArchiveList
      */
     private array $objects = [];
 
     /**
-     * @var array<int, array<int|string, mixed>|bool|float|int|string|null>
+     * @var array<int, KeyedArchiveValue>
      */
     private array $resolved = [];
 
     /**
-     * @var array<int, bool>
+     * @var array<int, true>
      */
     private array $inProgress = [];
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $archive
+     * @param array<int|string, mixed> $archive
      *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>
+     * @return KeyedArchiveDictionary
      */
     public function unarchive(array $archive): array
     {
@@ -65,6 +69,7 @@ final class KeyedArchiveUnarchiver
             throw new ParseError('The keyed archive does not define a root object.');
         }
 
+        /** @var KeyedArchiveList $objects */
         $this->objects    = $objects;
         $this->resolved   = [];
         $this->inProgress = [];
@@ -74,13 +79,14 @@ final class KeyedArchiveUnarchiver
             throw new ParseError('The keyed archive root object must be a dictionary.');
         }
 
+        /** @var KeyedArchiveDictionary $root */
         return $root;
     }
 
     /**
-     * @param array<int|string, mixed>|bool|float|int|string|null $value
+     * @param KeyedArchiveValue $value
      *
-     * @return array<int|string, mixed>|bool|float|int|string|null
+     * @return KeyedArchiveValue
      */
     private function resolveValue(array|bool|float|int|string|null $value): array|bool|float|int|string|null
     {
@@ -98,16 +104,19 @@ final class KeyedArchiveUnarchiver
         }
 
         if (array_key_exists('NS.keys', $value) && array_key_exists('NS.objects', $value)) {
+            /** @var array<int|string, mixed> $value */
             return $this->resolveDictionary($value);
         }
 
         if (array_key_exists('NS.objects', $value) && !array_key_exists('NS.keys', $value)) {
+            /** @var array<int|string, mixed> $value */
             return $this->resolveArray($value);
         }
 
         if (array_is_list($value)) {
             $result = [];
             foreach ($value as $entry) {
+                /** @var KeyedArchiveValue $entry */
                 $result[] = $this->resolveValue($entry);
             }
 
@@ -120,6 +129,7 @@ final class KeyedArchiveUnarchiver
                 continue;
             }
 
+            /** @var KeyedArchiveValue $entry */
             $result[$key] = $this->resolveValue($entry);
         }
 
@@ -135,7 +145,7 @@ final class KeyedArchiveUnarchiver
     }
 
     /**
-     * @return array<int|string, mixed>|list<mixed>|bool|float|int|string|null
+     * @return KeyedArchiveValue
      */
     private function resolveUid(int $uid): array|bool|float|int|string|null
     {
@@ -153,6 +163,7 @@ final class KeyedArchiveUnarchiver
 
         $this->inProgress[$uid] = true;
 
+        /** @var KeyedArchiveValue $object */
         $object = $this->objects[$uid];
         $value  = $this->resolveValue($object);
 
@@ -166,7 +177,7 @@ final class KeyedArchiveUnarchiver
     /**
      * @param array<int|string, mixed> $dictionary
      *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>
+     * @return KeyedArchiveDictionary
      */
     private function resolveDictionary(array $dictionary): array
     {
@@ -189,14 +200,21 @@ final class KeyedArchiveUnarchiver
             throw new ParseError('The keyed archive dictionary contains mismatched entries.');
         }
 
+        /** @var list<KeyedArchiveValue> $keys */
+        /** @var list<KeyedArchiveValue> $values */
+
         $result = [];
         foreach ($keys as $index => $keyReference) {
+            /** @var KeyedArchiveValue $keyReference */
             $key = $this->resolveValue($keyReference);
             if (!is_string($key) && !is_int($key)) {
                 continue;
             }
 
-            $result[(string) $key] = $this->resolveValue($values[$index]);
+            /** @var KeyedArchiveValue $value */
+            $value = $this->resolveValue($values[$index]);
+
+            $result[(string) $key] = $value;
         }
 
         return $result;
@@ -205,7 +223,7 @@ final class KeyedArchiveUnarchiver
     /**
      * @param array<int|string, mixed> $array
      *
-     * @return list<array<int|string, mixed>|bool|float|int|string|null>
+     * @return KeyedArchiveList
      */
     private function resolveArray(array $array): array
     {
@@ -218,8 +236,11 @@ final class KeyedArchiveUnarchiver
             throw new ParseError('The keyed archive array contents are invalid.');
         }
 
+        /** @var list<KeyedArchiveValue> $objects */
+
         $result = [];
         foreach ($objects as $entry) {
+            /** @var KeyedArchiveValue $entry */
             $result[] = $this->resolveValue($entry);
         }
 

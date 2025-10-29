@@ -129,8 +129,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        $decoded = $this->resolveKeyedArchiveDictionary($decoded);
-        if ($decoded === null || !is_array($decoded) || array_is_list($decoded)) {
+        /** @var array<int|string, mixed> $dictionary */
+        $dictionary = $decoded;
+
+        $decoded = $this->resolveKeyedArchiveDictionary($dictionary);
+        if ($decoded === null || array_is_list($decoded)) {
             return null;
         }
 
@@ -142,7 +145,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param string $raw Raw maker note data stream.
      *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|bool|float|int|string|null|null
+     * @return array<int|string, mixed>|bool|float|int|string|null|null
      */
     private function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
@@ -163,7 +166,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param string $raw Raw maker note data stream.
      *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|null
+     * @return array<int|string, mixed>|null
      */
     private function parseRawDictionaryPayload(string $raw): ?array
     {
@@ -192,7 +195,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Parses a dictionary section from the textual representation.
      *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>
+     * @return array<int|string, mixed>
      */
     private function parseDictionary(string $raw, int &$offset, int $length): array
     {
@@ -253,6 +256,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return $dictionary;
     }
 
+    /**
+     * Parses a single value from the textual dictionary representation.
+     *
+     * @return array<int|string, mixed>|bool|float|int|string|null
+     */
     private function parseValue(string $raw, int &$offset, int $length): array|bool|float|int|string|null
     {
         $this->skipWhitespace($raw, $offset, $length);
@@ -303,7 +311,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @return list<array|bool|float|int|string|null>
+     * @return array<int, array<int|string, mixed>|bool|float|int|string|null>
+     * @phpstan-return array<int, array<int|string, mixed>|bool|float|int|string|null>
      */
     private function parseArray(string $raw, int &$offset, int $length): array
     {
@@ -312,6 +321,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         ++$offset;
+        /** @var array<int, array<int|string, mixed>|bool|float|int|string|null> $values */
         $values = [];
 
         while (true) {
@@ -343,6 +353,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
         }
 
+        /** @var array<int, array<int|string, mixed>|bool|float|int|string|null> $values */
         return $values;
     }
 
@@ -446,7 +457,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      */
     private function isKeyedArchive(array $dictionary): bool
     {
@@ -464,15 +475,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $top = $dictionary['$top'];
 
-        if (!is_array($top)) {
-            return false;
-        }
-
         return $this->containsUidReference($top);
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $value
+     * @param array<int|string, mixed> $value
      */
     private function containsUidReference(array $value): bool
     {
@@ -490,9 +497,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|null
+     * @return array<int|string, mixed>|null
      */
     private function resolveKeyedArchiveDictionary(array $dictionary): ?array
     {
@@ -517,9 +524,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|null
+     * @return array<int|string, mixed>|null
      */
     private function normaliseKeyedArchive(array $dictionary): ?array
     {
@@ -566,7 +573,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      */
     private function firstExistingKey(array $dictionary, string ...$keys): ?string
     {
@@ -580,12 +587,14 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
+        /** @var array<int|string, mixed> $dictionary */
+
         $semanticStyleCompact = null;
         if (
             !array_key_exists('SemanticStylePreset', $dictionary)
@@ -754,9 +763,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function runTimeValue(array $dictionary, string $key): ?RunTime
     {
@@ -769,6 +778,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
+        /** @var array<int|string, mixed> $value */
         $epoch     = $this->intValue($value, 'epoch', 'Epoch');
         $timescale = $this->intValue($value, 'timescale', 'Timescale');
         $rawValue  = $this->intValue($value, 'value', 'Value');
@@ -782,9 +792,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function boolDictionaryValue(array $dictionary, string ...$keys): ?bool
     {
@@ -793,7 +803,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $value = $this->boolValue($dictionary[$key]);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate = $dictionary[$key];
+            $value     = $this->boolValue($candidate);
             if ($value !== null) {
                 return $value;
             }
@@ -803,9 +815,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function rationalFloatValue(array $dictionary, string ...$keys): ?float
     {
@@ -814,7 +826,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $float = $this->normaliseRationalFloat($dictionary[$key]);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate = $dictionary[$key];
+            $float     = $this->normaliseRationalFloat($candidate);
             if ($float !== null) {
                 return $float;
             }
@@ -824,9 +838,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param string|int|float|array<int|string, mixed>|null $value
+     * @param string|int|float|bool|array<int|string, mixed>|null $value
      */
-    private function normaliseRationalFloat(string|int|float|array|null $value): ?float
+    private function normaliseRationalFloat(string|int|float|bool|array|null $value): ?float
     {
         if (is_float($value)) {
             return $value;
@@ -872,7 +886,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         foreach (['value', 'Value', 'data', 'Data', 'ratio', 'Ratio'] as $key) {
             if (array_key_exists($key, $value)) {
-                $nested = $this->normaliseRationalFloat($value[$key]);
+                /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+                $candidate = $value[$key];
+                $nested    = $this->normaliseRationalFloat($candidate);
                 if ($nested !== null) {
                     return $nested;
                 }
@@ -880,7 +896,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         if (array_key_exists('values', $value) && is_array($value['values'])) {
-            $nested = $this->normaliseRationalFloat($value['values']);
+            /** @var array<int|string, mixed> $candidate */
+            $candidate = $value['values'];
+            $nested    = $this->normaliseRationalFloat($candidate);
             if ($nested !== null) {
                 return $nested;
             }
@@ -902,15 +920,22 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $count = count($value);
         if ($count >= 2) {
-            $num = $this->numericScalarValue($value[0]);
-            $den = $this->numericScalarValue($value[1]);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $component */
+            $component = $value[0];
+            $num       = $this->numericScalarValue($component);
+
+            /** @var array<int|string, mixed>|bool|float|int|string|null $component */
+            $component = $value[1];
+            $den       = $this->numericScalarValue($component);
             if ($num !== null && $den !== null && $den !== 0.0) {
                 return $num / $den;
             }
         }
 
         foreach ($value as $entry) {
-            $float = $this->normaliseRationalFloat($entry);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $entryValue */
+            $entryValue = $entry;
+            $float      = $this->normaliseRationalFloat($entryValue);
             if ($float !== null) {
                 return $float;
             }
@@ -931,7 +956,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $numeric = $this->numericScalarValue($value[$key]);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate = $value[$key];
+            $numeric   = $this->numericScalarValue($candidate);
             if ($numeric !== null) {
                 return $numeric;
             }
@@ -941,9 +968,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param string|int|float|array<int|string, mixed>|null $value
+     * @param string|int|float|bool|array<int|string, mixed>|null $value
      */
-    private function numericScalarValue(string|int|float|array|null $value): ?float
+    private function numericScalarValue(string|int|float|bool|array|null $value): ?float
     {
         if (is_float($value)) {
             return $value;
@@ -970,9 +997,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function stringOrIntValue(array $dictionary, string ...$keys): string|int|null
     {
@@ -1018,9 +1045,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function identifierValue(array $dictionary, string ...$keys): string|int|null
     {
@@ -1094,9 +1121,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function stringValue(array $dictionary, string $key): ?string
     {
@@ -1115,9 +1142,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function floatValue(array $dictionary, string ...$keys): ?float
     {
@@ -1140,9 +1167,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function intValue(array $dictionary, string ...$keys): ?int
     {
@@ -1165,9 +1192,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      *
      * @return list<float>|null
      */
@@ -1221,9 +1248,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      *
      * @return list<float>|null
      */
@@ -1260,9 +1287,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function makerNoteVersionValue(array $dictionary, string $key): ?string
     {
@@ -1290,6 +1317,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $components = [];
         foreach ($value as $entry) {
+            /** @var array<int|string, mixed>|bool|float|int|string|null $entry */
             if (is_int($entry)) {
                 $components[] = (string) $entry;
                 continue;
@@ -1305,7 +1333,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            if (is_float($entry) || is_numeric($entry)) {
+            if (is_float($entry)) {
                 $components[] = (string) (int) $entry;
             }
         }
@@ -1318,9 +1346,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      */
     private function stringOrNumericValue(array $dictionary, string ...$keys): ?string
     {
@@ -1329,16 +1357,17 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $value = $dictionary[$key];
-            if (is_string($value)) {
-                $trimmed = trim($value);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate = $dictionary[$key];
+            if (is_string($candidate)) {
+                $trimmed = trim($candidate);
                 if ($trimmed !== '') {
                     return $trimmed;
                 }
             }
 
-            if (is_int($value) || is_float($value) || is_numeric($value)) {
-                return (string) $value;
+            if (is_int($candidate) || is_float($candidate)) {
+                return (string) $candidate;
             }
         }
 
@@ -1346,7 +1375,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      * @param array<int, string>                                                     $map
      */
     private function enumeratedStringValue(array $dictionary, array $map, string ...$keys): ?string
@@ -1356,9 +1385,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $value = $dictionary[$key];
-            if (is_string($value)) {
-                $trimmed = trim($value);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate = $dictionary[$key];
+            if (is_string($candidate)) {
+                $trimmed = trim($candidate);
                 if ($trimmed === '') {
                     continue;
                 }
@@ -1372,14 +1402,14 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 return $trimmed;
             }
 
-            if (is_int($value)) {
-                return $map[$value] ?? (string) $value;
+            if (is_int($candidate)) {
+                return $map[$candidate] ?? (string) $candidate;
             }
 
-            if (is_float($value) || is_numeric($value)) {
-                $code = (int) $value;
+            if (is_float($candidate)) {
+                $code = (int) $candidate;
 
-                return $map[$code] ?? (string) $value;
+                return $map[$code] ?? (string) $candidate;
             }
         }
 
@@ -1394,16 +1424,16 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * and tone at index 2 / `_2`. Modern payloads use index 2 / `_2` for warmth and index 3 / `_3`
      * for tone.
      *
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      *
      * @return array{0:?string,1:?float,2:?float}|null
      */
     /**
-     * @param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @param array<int|string, mixed> $dictionary
      *
-     * @phpstan-param array<int|string, array<int|string, mixed>|bool|float|int|string|null> $dictionary
+     * @phpstan-param array<int|string, mixed> $dictionary
      *
      * @return array<string, bool>
      */
@@ -1415,8 +1445,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $value = $dictionary[$makerKey];
-            $bool  = $this->boolValue($value);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate = $dictionary[$makerKey];
+            $bool      = $this->boolValue($candidate);
             if ($bool === null) {
                 continue;
             }
@@ -1429,7 +1460,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            $enabledBits   = $this->bitPositions($dictionary[$makerKey]);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate     = $dictionary[$makerKey];
+            $enabledBits   = $this->bitPositions($candidate);
             $enabledLookup = $enabledBits === null ? null : array_flip($enabledBits);
 
             foreach ($bitMap as $bitPosition => $normalized) {
@@ -1498,10 +1531,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        if (!is_array($value)) {
-            return null;
-        }
-
         if ($value === []) {
             return [];
         }
@@ -1509,7 +1538,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         if (!array_is_list($value)) {
             foreach (['flags', 'Flags', 'value', 'Value', 'mask', 'Mask', 'bitPositions', 'BitPositions'] as $key) {
                 if (array_key_exists($key, $value)) {
-                    return $this->bitPositions($value[$key]);
+                    /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+                    $candidate = $value[$key];
+
+                    return $this->bitPositions($candidate);
                 }
             }
 
@@ -1517,12 +1549,16 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 return null;
             }
 
-            return $this->bitPositions($value['values']);
+            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            $candidate = $value['values'];
+
+            return $this->bitPositions($candidate);
         }
 
         $positions = [];
         $hasEntry  = false;
         foreach ($value as $entry) {
+            /** @var array<int|string, mixed>|bool|float|int|string|null $entry */
             if (is_int($entry) || is_float($entry) || (is_string($entry) && is_numeric($entry))) {
                 $position = (int) $entry;
                 if ($position >= 0) {
