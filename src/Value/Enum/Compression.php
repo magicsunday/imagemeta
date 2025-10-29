@@ -14,7 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates TIFF/EXIF compression schemes.
+ * Enumerates TIFF/EXIF compression schemes catalogued in
+ * EXIF 2.32 §4.6.2 and EXIF 3.0 §4.6.2 (image data structure),
+ * which reference TIFF 6.0 §8 for baseline definitions.
  */
 enum Compression: int
 {
