@@ -31,7 +31,7 @@ final class ExifBackfillMatrixTest extends TestCase
      * @param string|null            $expectedUserCommentEncoding Expected best-effort user comment encoding or null.
      * @param array{flashpixVersion:string,tiffEpStandardId:?list<int>,tiffEpStandardString:?string} $expectedStandards Expected standards metadata components.
      * @param array<string, int|string|null> $expectedInterop         Expected interoperability metadata components.
-     * @param array<string, int|float|bool|null> $expectedPreview     Expected preview descriptor components.
+     * @param array<string, int|float|bool|string|null> $expectedPreview Expected preview descriptor components.
     */
     #[Test]
     #[DataProvider('provideReferenceImages')]
@@ -105,7 +105,13 @@ final class ExifBackfillMatrixTest extends TestCase
         self::assertSame($expectedPreview['width'], $preview->previewWidth, sprintf('%s: Preview width', $file));
         self::assertSame($expectedPreview['height'], $preview->previewHeight, sprintf('%s: Preview height', $file));
         self::assertSame($expectedPreview['bitDepth'], $preview->previewBitDepth, sprintf('%s: Preview bit depth', $file));
-        self::assertSame($expectedPreview['compression'], $preview->previewCompression?->value, sprintf('%s: Preview compression', $file));
+        self::assertSame(
+            $expectedPreview['compression'],
+            $preview->previewCompression?->value,
+            sprintf('%s: Preview compression', $file),
+        );
+        self::assertSame($expectedPreview['encoding'], $preview->previewEncoding, sprintf('%s: Preview encoding', $file));
+        self::assertSame($expectedPreview['mimeType'], $preview->previewMimeType, sprintf('%s: Preview mime type', $file));
         if ($expectedPreview['scale'] === null) {
             self::assertNull($preview->previewScale, sprintf('%s: Preview scale', $file));
         } else {
@@ -160,6 +166,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -190,6 +198,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -220,6 +230,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -250,6 +262,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -280,6 +294,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -310,6 +326,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -340,6 +358,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -370,6 +390,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => null,
                 'compression' => null,
                 'scale' => null,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
 
@@ -400,6 +422,8 @@ final class ExifBackfillMatrixTest extends TestCase
                 'bitDepth' => 8,
                 'compression' => Compression::JPEG_OLD_STYLE->value,
                 'scale' => 0.5,
+                'encoding' => null,
+                'mimeType' => null,
             ],
         ];
     }

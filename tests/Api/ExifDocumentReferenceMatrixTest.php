@@ -97,7 +97,18 @@ final class ExifDocumentReferenceMatrixTest extends TestCase
     }
 
     /**
-     * @param array{hasPreview:?bool,offset:?int,length:?int,width:?int,height:?int,bitDepth:?int,compression:?int,scale:?float|null} $expected
+     * @param array{
+     *     hasPreview:?bool,
+     *     offset:?int,
+     *     length:?int,
+     *     width:?int,
+     *     height:?int,
+     *     bitDepth:?int,
+     *     compression:?int,
+     *     scale:?float|null,
+     *     encoding:?string,
+     *     mimeType:?string,
+     * } $expected
      */
     private function assertPreviewDescriptor(string $file, array $expected, StructuredPreview $preview): void
     {
@@ -107,6 +118,8 @@ final class ExifDocumentReferenceMatrixTest extends TestCase
         self::assertSame($expected['width'], $preview->previewWidth, sprintf('%s: Preview width', $file));
         self::assertSame($expected['height'], $preview->previewHeight, sprintf('%s: Preview height', $file));
         self::assertSame($expected['bitDepth'], $preview->previewBitDepth, sprintf('%s: Preview bit depth', $file));
+        self::assertSame($expected['encoding'], $preview->previewEncoding, sprintf('%s: Preview encoding', $file));
+        self::assertSame($expected['mimeType'], $preview->previewMimeType, sprintf('%s: Preview mime type', $file));
 
         if ($expected['compression'] === null) {
             self::assertNull($preview->previewCompression, sprintf('%s: Preview compression', $file));
