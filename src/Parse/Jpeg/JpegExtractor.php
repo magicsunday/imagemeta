@@ -524,11 +524,7 @@ final class JpegExtractor
             // EXIF 3.0 §4.5.2 and EXIF 2.21 §4.5.2 require APP1 EXIF data to start with
             // "Exif\0\0" before the TIFF stream, so we drop the identifying preamble here.
             $this->exifBlobs[] = substr($payload, strlen(self::EXIF_SIGNATURE));
-
-            return;
-        }
-
-        if (str_starts_with($payload, self::XMP_SIGNATURE)) {
+        } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
             $packet = substr($payload, strlen(self::XMP_SIGNATURE));
             $hash   = sha1($packet);
 
@@ -549,23 +545,11 @@ final class JpegExtractor
     {
         if (str_starts_with($payload, self::ICC_SIGNATURE)) {
             $this->handleIccSegment($payload, $offset);
-
-            return;
-        }
-
-        if (str_starts_with($payload, self::MPF_SIGNATURE)) {
+        } elseif (str_starts_with($payload, self::MPF_SIGNATURE)) {
             $this->handleMpfSegment($payload, $offset);
-
-            return;
-        }
-
-        if (str_starts_with($payload, self::FPXR_SIGNATURE)) {
+        } elseif (str_starts_with($payload, self::FPXR_SIGNATURE)) {
             $this->handleFlashPixSegment($payload, $offset);
-
-            return;
-        }
-
-        if (str_starts_with($payload, self::AUDIO_SIGNATURE)) {
+        } elseif (str_starts_with($payload, self::AUDIO_SIGNATURE)) {
             $this->handleAudioSegment($payload, $offset);
         }
     }
@@ -589,21 +573,19 @@ final class JpegExtractor
 
         $this->iccSegments[] = $payload;
 
+        $shouldStoreSequence = true;
+
         if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
             $this->iccExpectedCount = 0;
-
-            return;
-        }
-
-        if ($this->iccExpectedCount === null) {
+            $shouldStoreSequence    = false;
+        } elseif ($this->iccExpectedCount === null) {
             $this->iccExpectedCount = $sequenceCount;
         } elseif ($this->iccExpectedCount !== $sequenceCount) {
             $this->iccExpectedCount = 0;
-
-            return;
+            $shouldStoreSequence    = false;
         }
 
-        if (!array_key_exists($sequenceNumber, $this->iccSequence)) {
+        if ($shouldStoreSequence && !array_key_exists($sequenceNumber, $this->iccSequence)) {
             $this->iccSequence[$sequenceNumber] = $iccData;
         }
     }
@@ -754,28 +736,28 @@ final class JpegExtractor
         $sequenceCount  = $unpacked['count'];
         $data           = substr($payload, $signatureLength + 4);
 
+        $shouldStoreStream = true;
+
         if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
             $this->flashPixExpectedCounts[$streamId] = 0;
             unset($this->flashPixSequences[$streamId]);
+            $shouldStoreStream = false;
+        } else {
+            if (!array_key_exists($streamId, $this->flashPixExpectedCounts)) {
+                $this->flashPixExpectedCounts[$streamId] = $sequenceCount;
+            } elseif ($this->flashPixExpectedCounts[$streamId] !== $sequenceCount) {
+                $this->flashPixExpectedCounts[$streamId] = 0;
+                unset($this->flashPixSequences[$streamId]);
+                $shouldStoreStream = false;
+            }
 
-            return;
-        }
+            if ($shouldStoreStream && !array_key_exists($streamId, $this->flashPixSequences)) {
+                $this->flashPixSequences[$streamId] = [];
+            }
 
-        if (!array_key_exists($streamId, $this->flashPixExpectedCounts)) {
-            $this->flashPixExpectedCounts[$streamId] = $sequenceCount;
-        } elseif ($this->flashPixExpectedCounts[$streamId] !== $sequenceCount) {
-            $this->flashPixExpectedCounts[$streamId] = 0;
-            unset($this->flashPixSequences[$streamId]);
-
-            return;
-        }
-
-        if (!array_key_exists($streamId, $this->flashPixSequences)) {
-            $this->flashPixSequences[$streamId] = [];
-        }
-
-        if (!array_key_exists($sequenceNumber, $this->flashPixSequences[$streamId])) {
-            $this->flashPixSequences[$streamId][$sequenceNumber] = $data;
+            if ($shouldStoreStream && !array_key_exists($sequenceNumber, $this->flashPixSequences[$streamId])) {
+                $this->flashPixSequences[$streamId][$sequenceNumber] = $data;
+            }
         }
     }
 
@@ -874,11 +856,9 @@ final class JpegExtractor
 
         $chromas = [];
         foreach ($components as $id => $component) {
-            if ($id === 1) {
-                continue;
+            if ($id !== 1) {
+                $chromas[] = $component;
             }
-
-            $chromas[] = $component;
         }
 
         if ($chromas === []) {

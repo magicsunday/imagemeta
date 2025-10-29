@@ -1859,10 +1859,9 @@ final class ValueFactory
             $matchIndex = $this->findMatchingRegionIndex($mwgRegions, $appleRegion);
             if ($matchIndex !== null) {
                 $mwgRegions[$matchIndex] = $this->mergeRegion($mwgRegions[$matchIndex], $appleRegion);
-                continue;
+            } else {
+                $mwgRegions[] = $appleRegion;
             }
-
-            $mwgRegions[] = $appleRegion;
         }
 
         $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
@@ -2046,21 +2045,19 @@ final class ValueFactory
 
         foreach ($entries as $entry) {
             $geometry = $entry['geometry'];
-            if ($geometry === null) {
-                continue;
+            if ($geometry !== null) {
+                $regions[] = new Region(
+                    RegionType::FACE,
+                    $geometry['x'],
+                    $geometry['y'],
+                    $geometry['w'],
+                    $geometry['h'],
+                    $entry['person'],
+                    $entry['confidence'],
+                    $entry['rotation'],
+                    $entry['faceId'],
+                );
             }
-
-            $regions[] = new Region(
-                RegionType::FACE,
-                $geometry['x'],
-                $geometry['y'],
-                $geometry['w'],
-                $geometry['h'],
-                $entry['person'],
-                $entry['confidence'],
-                $entry['rotation'],
-                $entry['faceId'],
-            );
         }
 
         return $regions;
