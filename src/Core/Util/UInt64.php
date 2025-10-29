@@ -26,6 +26,14 @@ final class UInt64
 
     private const int UINT32_BASE = 4_294_967_296;
 
+    /**
+     * Builds an unsigned 64-bit value from two unsigned 32-bit halves.
+     *
+     * @param int $hi Most significant 32-bit component.
+     * @param int $lo Least significant 32-bit component.
+     *
+     * @throws ParseError When either component falls outside the unsigned 32-bit range.
+     */
     public function __construct(
         private readonly int $hi,
         private readonly int $lo,
@@ -125,6 +133,8 @@ final class UInt64
      * @param int $value The value to add; must be zero or positive.
      *
      * @return self New instance representing the sum.
+     *
+     * @throws ParseError When attempting to add a negative integer.
      */
     public function addSmall(int $value): self
     {
@@ -163,6 +173,8 @@ final class UInt64
      * @param string $context Description used for the exception message when out of range.
      *
      * @return int Signed integer representation of the value.
+     *
+     * @throws ParseError When the value cannot be represented as a signed integer on this platform.
      */
     public function toInt(string $context): int
     {
