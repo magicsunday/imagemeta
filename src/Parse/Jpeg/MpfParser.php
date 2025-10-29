@@ -20,17 +20,13 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 
-use function array_diff_key;
-use function array_values;
+use function array_is_list;
+use function array_key_exists;
 use function count;
 use function pack;
 use function strlen;
 use function substr;
 
-/**
- * @phpstan-type MpfRational array{numerator:int, denominator:int}
- * @phpstan-type MpfDecodedValue int|string|list<int>|MpfRational|list<MpfRational>
- */
 /**
  * Parses MPF payloads carried in JPEG APP2 segments.
  *
@@ -156,7 +152,7 @@ final class MpfParser
      * layout (EXIF 3.0 §4.6.2/§4.6.4; EXIF 2.32 §4.6.2/§4.6.4).
      *
      * @return array{0: array<int, int|string|array>, 1: int}
-     * @phpstan-return array{0: array<int, MpfDecodedValue>, 1: int}
+     * @phpstan-return array{0: array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>>, 1: int}
      */
     private function readIfd(MemoryBuffer $buffer, Endian $endian, int $offset): array
     {
@@ -233,16 +229,16 @@ final class MpfParser
     /**
      * Decodes the raw value bytes using the specified TIFF field type.
      *
-     * @phpstan-return MpfDecodedValue
+     * @phpstan-return int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>
      */
     private function decodeValue(int $type, int $componentCount, string $data, Endian $endian): int|string|array
     {
+        if ($componentCount === 0) {
+            return [];
+        }
+
         $values = [];
         $buf    = new MemoryBuffer($data);
-
-        $readerU16 = $endian === Endian::Little ? 'readU16LE' : 'readU16BE';
-        $readerU32 = $endian === Endian::Little ? 'readU32LE' : 'readU32BE';
-        $readerS32 = $endian === Endian::Little ? 'readU32LE' : 'readU32BE';
 
         switch ($type) {
             case self::TYPE_BYTE:
@@ -257,19 +253,19 @@ final class MpfParser
 
             case self::TYPE_SHORT:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $values[] = $buf->$readerU16();
+                    $values[] = $endian === Endian::Little ? $buf->readU16LE() : $buf->readU16BE();
                 }
                 break;
 
             case self::TYPE_LONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $values[] = $buf->$readerU32();
+                    $values[] = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
                 }
                 break;
 
             case self::TYPE_SLONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $unsigned = $buf->$readerS32();
+                    $unsigned = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
                     $values[] = $this->toSigned32($unsigned);
                 }
                 break;
@@ -277,8 +273,8 @@ final class MpfParser
             case self::TYPE_RATIONAL:
             case self::TYPE_SRATIONAL:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $numerator   = $buf->$readerU32();
-                    $denominator = $buf->$readerU32();
+                    $numerator   = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
+                    $denominator = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
                     if ($type === self::TYPE_SRATIONAL) {
                         $numerator   = $this->toSigned32($numerator);
                         $denominator = $this->toSigned32($denominator);
@@ -331,18 +327,16 @@ final class MpfParser
             throw new ParseError('MPEntry data length is not a multiple of 16 bytes');
         }
 
-        $buffer    = new MemoryBuffer($data);
-        $readerU16 = $endian === Endian::Little ? 'readU16LE' : 'readU16BE';
-        $readerU32 = $endian === Endian::Little ? 'readU32LE' : 'readU32BE';
+        $buffer = new MemoryBuffer($data);
 
         $entries = [];
         $count   = (int) ($length / $entrySize);
         for ($i = 0; $i < $count; ++$i) {
-            $attributes = $buffer->$readerU32();
-            $size       = $buffer->$readerU32();
-            $offset     = $buffer->$readerU32();
-            $dep1       = $buffer->$readerU16();
-            $dep2       = $buffer->$readerU16();
+            $attributes = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+            $size       = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+            $offset     = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+            $dep1       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
+            $dep2       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
 
             // The MP Entry tuple mirrors the Attribute, Size, Offset, and
             // Dependent image fields mandated by EXIF 3.0 §4.6.3 / EXIF 2.32
@@ -359,21 +353,18 @@ final class MpfParser
      * EXIF 3.0 §4.6.4 defines the optional MP Attribute IFD, retaining the
      * same tag semantics documented in EXIF 2.32 §4.6.4.
      */
+    /**
+     * @param array<int, int|string|array> $entries
+     * @phpstan-param array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>> $entries
+     */
     private function buildAttributes(array $entries): MpfAttributes
     {
         $imageUidList          = $this->stringValue($entries[self::TAG_IMAGE_UID_LIST] ?? null);
         $totalFrames           = $this->intValue($entries[self::TAG_TOTAL_FRAMES] ?? null);
         $individualImageNumber = $this->intValue($entries[self::TAG_INDIVIDUAL_IMAGE_NUMBER] ?? null);
 
-        $panoramaAngle = $entries[self::TAG_PANORAMA_ANGLE] ?? null;
-        if ($panoramaAngle !== null && !is_array($panoramaAngle)) {
-            $panoramaAngle = null;
-        }
-
-        $panoramaAxis = $entries[self::TAG_PANORAMA_AXIS] ?? null;
-        if ($panoramaAxis !== null && !is_array($panoramaAxis)) {
-            $panoramaAxis = null;
-        }
+        $panoramaAngle = $this->rationalListValue($entries[self::TAG_PANORAMA_ANGLE] ?? null);
+        $panoramaAxis  = $this->rationalListValue($entries[self::TAG_PANORAMA_AXIS] ?? null);
 
         $known = [
             self::TAG_IMAGE_UID_LIST          => true,
@@ -383,14 +374,14 @@ final class MpfParser
             self::TAG_PANORAMA_AXIS           => true,
         ];
 
-        $additional = array_diff_key($entries, $known);
+        $additional = $this->filterAdditionalTags($entries, $known);
 
         return new MpfAttributes(
             imageUidList: $imageUidList,
             totalFrames: $totalFrames,
             individualImageNumber: $individualImageNumber,
-            panoramaAngle: is_array($panoramaAngle) ? array_values($panoramaAngle) : null,
-            panoramaAxis: is_array($panoramaAxis) ? array_values($panoramaAxis) : null,
+            panoramaAngle: $panoramaAngle,
+            panoramaAxis: $panoramaAxis,
             additionalTags: $additional,
         );
     }
@@ -399,7 +390,7 @@ final class MpfParser
      * Converts arbitrary decoded value into an integer when possible.
      *
      * @param int|string|array|null $value
-     * @phpstan-param MpfDecodedValue|null $value
+     * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
      */
     private function intValue(int|string|array|null $value): ?int
     {
@@ -414,7 +405,7 @@ final class MpfParser
      * Converts the decoded value into a trimmed string when appropriate.
      *
      * @param int|string|array|null $value
-     * @phpstan-param MpfDecodedValue|null $value
+     * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
      */
     private function stringValue(int|string|array|null $value): ?string
     {
@@ -423,6 +414,83 @@ final class MpfParser
         }
 
         return rtrim($value, "\0");
+    }
+
+    /**
+     * @param array<int, int|string|array> $entries
+     * @param array<int, true> $known
+     * @phpstan-param array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>> $entries
+     * @phpstan-param array<int, true> $known
+     * @phpstan-return array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>>
+     */
+    private function filterAdditionalTags(array $entries, array $known): array
+    {
+        $additional = [];
+        foreach ($entries as $tag => $value) {
+            if (!isset($known[$tag])) {
+                $additional[$tag] = $value;
+            }
+        }
+
+        return $additional;
+    }
+
+    /**
+     * @param int|string|array|null $value
+     * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
+     * @phpstan-return list<array{numerator:int, denominator:int}>|null
+     */
+    private function rationalListValue(int|string|array|null $value): ?array
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($this->isRational($value)) {
+            return [$value];
+        }
+
+        if ($this->isRationalList($value)) {
+            return $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param mixed $value
+     * @phpstan-assert-if-true array{numerator:int, denominator:int} $value
+     */
+    private function isRational(mixed $value): bool
+    {
+        if (!is_array($value)) {
+            return false;
+        }
+
+        if (!array_key_exists('numerator', $value) || !array_key_exists('denominator', $value)) {
+            return false;
+        }
+
+        return is_int($value['numerator']) && is_int($value['denominator']);
+    }
+
+    /**
+     * @param mixed $value
+     * @phpstan-assert-if-true list<array{numerator:int, denominator:int}> $value
+     */
+    private function isRationalList(mixed $value): bool
+    {
+        if (!is_array($value) || !array_is_list($value)) {
+            return false;
+        }
+
+        foreach ($value as $component) {
+            if (!$this->isRational($component)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function readU16(MemoryBuffer $buffer, Endian $endian): int
