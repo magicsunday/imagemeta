@@ -909,7 +909,8 @@ final readonly class ValueConverters
 
     /**
      * Decodes the spatial frequency response payload as defined by
-     * EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 figure 14.
+     * EXIF 3.0 §4.6.3 (figure 14) and the legacy layout retained in
+     * EXIF 2.32 §4.6.3.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
@@ -922,7 +923,7 @@ final readonly class ValueConverters
 
     /**
      * Decodes the opto-electronic conversion function payload as defined by
-     * EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 table 15.
+     * EXIF 3.0 §4.6.3 (table 15) and the earlier EXIF 2.32 §4.6.3 layout.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
