@@ -19,6 +19,11 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
  */
 final readonly class QuickTimeLookup
 {
+    /**
+     * Creates a lookup helper that depends on QuickTime metadata for value resolution.
+     *
+     * @param QuickTimeMeta|null $quickTime Optional QuickTime metadata source used for lookups.
+     */
     public function __construct(private ?QuickTimeMeta $quickTime)
     {
     }

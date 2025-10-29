@@ -132,7 +132,10 @@ final class BinaryPlistEncoder
      */
     private array $nodes = [];
 
-    public function encode(mixed $value): string
+    /**
+     * @param array<array-key, array|bool|float|int|string|null>|bool|float|int|string|null $value
+     */
+    public function encode(array|bool|float|int|string|null $value): string
     {
         $this->nodes = [];
 
@@ -184,7 +187,10 @@ final class BinaryPlistEncoder
         return $header . $objects . $offsetTable . $trailer;
     }
 
-    private function collect(mixed $value): int
+    /**
+     * @param array<array-key, array|bool|float|int|string|null>|bool|float|int|string|null $value
+     */
+    private function collect(array|bool|float|int|string|null $value): int
     {
         if ($value === null) {
             return $this->addNode(new BinaryPlistNode('null', null));
