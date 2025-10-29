@@ -25,17 +25,14 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
  */
 final readonly class ExifReader
 {
-    private TiffExifReader $tiffReader;
-
     /**
-     * @param TiffExifReader|null $tiffReader Optional TIFF EXIF reader reused across calls.
+     * @param TiffExifReader $tiffReader Optional TIFF EXIF reader reused across calls.
      *
      * Providing a custom reader allows sharing caches or maker-notes registries in higher-level
      * code while defaulting to a new reader instance when no dependency is supplied.
      */
-    public function __construct(?TiffExifReader $tiffReader = null)
+    public function __construct(private TiffExifReader $tiffReader = new TiffExifReader())
     {
-        $this->tiffReader = $tiffReader ?? new TiffExifReader();
     }
 
     /**

@@ -19,11 +19,8 @@ use MagicSunday\ImageMeta\Model\Metadata;
  */
 final readonly class ExifAssembler
 {
-    private ValueFactory $valueFactory;
-
-    public function __construct(?ValueFactory $valueFactory = null)
+    public function __construct(private ValueFactory $valueFactory = new ValueFactory())
     {
-        $this->valueFactory = $valueFactory ?? new ValueFactory();
     }
 
     /**

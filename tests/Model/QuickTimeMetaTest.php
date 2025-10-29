@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Model\QuickTimeMeta;
+namespace MagicSunday\imagemeta\tests\Model;
 
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\Test;

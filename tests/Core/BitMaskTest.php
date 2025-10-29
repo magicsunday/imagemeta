@@ -1,8 +1,15 @@
 <?php
 
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Core\BitMask;
+namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\BitMask;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -44,8 +51,8 @@ final class BitMaskTest extends TestCase
     public function testBitMaskConstantsMatchExpectedHexValues(string $constant, string $hex): void
     {
         self::assertSame(
-            self::fromHex($hex),
-            constant(BitMask::class . '::' . $constant)
+            $this->fromHex($hex),
+            BitMask::{$constant}
         );
     }
 
@@ -123,7 +130,7 @@ final class BitMaskTest extends TestCase
         self::assertSame(BitMask::SIGN_BIT_32 - 1, BitMask::INT31_MAX);
     }
 
-    private static function fromHex(string $hex): int
+    private function fromHex(string $hex): int
     {
         return (int) hexdec(str_replace(['_', '0x', '0X'], '', $hex));
     }

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\MakerNotes\AppleDecoder;
+namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;

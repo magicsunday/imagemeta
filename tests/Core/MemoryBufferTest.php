@@ -10,7 +10,7 @@
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core {
-    use MagicSunday\ImageMeta\Tests\Core\MemoryBuffer\MemoryBufferTest;
+    use MagicSunday\ImageMeta\Tests\Core\MemoryBufferTest;
 
     if (!function_exists(__NAMESPACE__ . '\\substr')) {
         /**
@@ -23,7 +23,7 @@ namespace MagicSunday\ImageMeta\Core {
     }
 }
 
-namespace MagicSunday\ImageMeta\Tests\Core\MemoryBuffer {
+namespace MagicSunday\ImageMeta\Tests\Core {
     use MagicSunday\ImageMeta\Core\BoundsError;
     use MagicSunday\ImageMeta\Core\MemoryBuffer;
     use MagicSunday\ImageMeta\Core\ParseError;

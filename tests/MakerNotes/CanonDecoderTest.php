@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\MakerNotes\CanonDecoder;
+namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
 use PHPUnit\Framework\Attributes\Test;

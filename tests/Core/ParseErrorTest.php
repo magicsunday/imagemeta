@@ -9,11 +9,10 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Core\ParseError;
+namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

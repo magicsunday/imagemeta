@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\MakerNotes\SonyDecoder;
+namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use PHPUnit\Framework\Attributes\Test;

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\Model\Exif\IfdEntry;
+namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;

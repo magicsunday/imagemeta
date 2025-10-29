@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Tests\MakerNotes\MakerNotesRecord;
+namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use InvalidArgumentException;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
