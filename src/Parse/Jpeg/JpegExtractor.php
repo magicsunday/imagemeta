@@ -125,9 +125,9 @@ final class JpegExtractor
     /**
      * Initialises the extractor with a seekable stream.
      *
-     * @param Stream $s Stream representing the JPEG binary.
+     * @param Stream $stream Stream representing the JPEG binary.
      */
-    public function __construct(private readonly Stream $s)
+    public function __construct(private readonly Stream $stream)
     {
     }
 
@@ -285,8 +285,8 @@ final class JpegExtractor
             return;
         }
 
-        $this->s->seek(0);
-        if ($this->s->read(2) !== "\xFF\xD8") {
+        $this->stream->seek(0);
+        if ($this->stream->read(2) !== "\xFF\xD8") {
             throw new ParseError('Not a JPEG (missing SOI marker)');
         }
 
@@ -402,15 +402,15 @@ final class JpegExtractor
     private function nextMarkerWithOffset(): array
     {
         while (true) {
-            $byte = $this->s->read(1);
+            $byte = $this->stream->read(1);
             while ($byte !== "\xFF") {
-                $byte = $this->s->read(1);
+                $byte = $this->stream->read(1);
             }
 
-            $markerOffset = $this->s->tell() - 1;
+            $markerOffset = $this->stream->tell() - 1;
 
             do {
-                $code = $this->s->read(1);
+                $code = $this->stream->read(1);
             } while ($code === "\xFF");
 
             if ($code === "\x00") {
@@ -432,7 +432,7 @@ final class JpegExtractor
      */
     private function readSegmentLength(int $marker, int $offset, bool $enforceMax): int
     {
-        $length = $this->s->readU16BE();
+        $length = $this->stream->readU16BE();
 
         if ($length < 2) {
             throw new ParseError(
@@ -473,7 +473,7 @@ final class JpegExtractor
         }
 
         try {
-            return $this->s->read($length);
+            return $this->stream->read($length);
         } catch (BoundsError $exception) {
             throw new ParseError(
                 sprintf('Truncated segment for marker 0x%02X at offset %d', $marker, $offset),
