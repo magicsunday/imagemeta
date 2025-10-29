@@ -27,7 +27,7 @@ Beispiel: M1: Unify binary readers — Core/Stream
 - [ ] PHPUnit 12 **green** (inkl. negativer Pfade) — `composer ci:test:php:unit`
 - [ ] Coverage **≥ 90 %** — `composer ci:test:php:unit:coverage`
 - [ ] PHPStan (max) **green** — `composer ci:test:php:phpstan`
-- [ ] PHPCS / PHP-CS-Fixer **green** (dry-run clean) — `composer ci:cgl`
+- [ ] PHPCS / PHP-CS-Fixer **green** — `composer ci:cgl`
 - [ ] Rector **dry-run clean**
 - [ ] **Keine** `mixed`-Signaturen • **keine** `empty()` • **keine** verschachtelten Ternaries
 - [ ] Fully-qualified native functions verwendet (`\strlen`, `\count`, …)
