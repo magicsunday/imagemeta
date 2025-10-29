@@ -12,14 +12,17 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Api;
 
 use MagicSunday\ImageMeta\Api\ExifReader;
+use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
+use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class ExifReaderTest extends TestCase
 {
+    use ExifExpectationAssertions;
+
     #[Test]
     public function readsExifMetadataFromJpeg(): void
     {
@@ -77,36 +80,14 @@ final class ExifReaderTest extends TestCase
     public function readsPreviewAndInteropMetadataFromExif30Image(): void
     {
         $reader = new ExifReader();
-        $path   = __DIR__ . '/../Fixtures/Images/ExifVersions/exif-3-0.jpg';
+        $fixture = 'exif-3-0.jpg';
+        $path    = ExifVersionExpectations::path($fixture);
 
         $document = $reader->read($path);
 
-        self::assertTrue($document->hasData());
-        self::assertSame(300, $document->iso());
-        self::assertSame('2028-09-10T11:12:13+00:00', $document->dateTimeOriginal()?->format(DATE_ATOM));
-        self::assertSame('Preview 3.0 comment', $document->userComment());
-        self::assertSame('ASCII', $document->userCommentEncoding());
+        $expectation = ExifVersionExpectations::get($fixture);
 
-        $interop = $document->interop();
-        self::assertSame('R98', $interop->index);
-        self::assertSame('0100', $interop->version);
-        self::assertSame('JPEG', $interop->relatedImageFileFormat);
-        self::assertSame(4000, $interop->relatedImageWidth);
-        self::assertSame(3000, $interop->relatedImageLength);
-
-        $preview = $document->preview();
-        self::assertTrue($preview->hasPreview);
-        self::assertSame(16384, $preview->previewOffset);
-        self::assertSame(8192, $preview->previewLength);
-        self::assertSame(1600, $preview->previewWidth);
-        self::assertSame(900, $preview->previewHeight);
-        self::assertSame(8, $preview->previewBitDepth);
-        self::assertNull($preview->previewEncoding);
-        self::assertNull($preview->previewMimeType);
-        self::assertInstanceOf(Compression::class, $preview->previewCompression);
-        self::assertSame(Compression::JPEG_OLD_STYLE, $preview->previewCompression);
-        self::assertNotNull($preview->previewScale);
-        self::assertEqualsWithDelta(0.5, $preview->previewScale, 1e-6);
+        self::assertApiMatches($fixture, $document, $expectation['api']);
     }
 
     #[Test]
