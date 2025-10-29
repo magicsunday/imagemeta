@@ -337,7 +337,7 @@ final readonly class ValueConverters
             $values = $rational->values;
         } else {
             $values = [];
-            foreach (array_values($rational) as $component) {
+            foreach ($rational as $component) {
                 if (is_array($component)) {
                     /** @var array<int, int|float|string> $pair */
                     $pair     = array_values($component);
@@ -393,7 +393,7 @@ final readonly class ValueConverters
             $values = $rational->values;
         } else {
             $values = [];
-            foreach (array_values($rational) as $component) {
+            foreach ($rational as $component) {
                 if (is_array($component)) {
                     /** @var array<int, int|float|string> $pair */
                     $pair     = array_values($component);
