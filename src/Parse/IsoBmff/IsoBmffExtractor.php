@@ -839,11 +839,9 @@ final readonly class IsoBmffExtractor
         // Pull data for each referenced item and optionally transform the payload.
         foreach ($itemIds as $itemId) {
             $data = $this->resolveItemData($itemId, $locations);
-            if ($data === null) {
-                continue;
+            if ($data !== null) {
+                $resolved[] = $transform !== null ? $transform($data) : $data;
             }
-
-            $resolved[] = $transform !== null ? $transform($data) : $data;
         }
 
         return $resolved;
