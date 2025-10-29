@@ -443,7 +443,8 @@ final class ExifDocument
          *     differential:?int,
          *     h_positioning_error:?float
          * } $gpsValues */
-        // ModelExifDocument::gps() returns a normalized array of EXIF GPSInfo tags (EXIF 2.31 §4.6.6).
+        // ModelExifDocument::gps() returns a normalized array of EXIF GPSInfo tags
+        // (EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 retains the same tag catalogue).
         $gpsValues = $document->gps();
 
         return new GpsValue(
