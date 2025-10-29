@@ -285,12 +285,15 @@ final readonly class ExifDocument
 
     /**
      * Returns the EXIF orientation enumeration when present.
+     *
+     * @return Orientation|null
      */
     public function orientation(): ?Orientation
     {
-        $value = $this->value($this->ifd0, ExifTag::ORIENTATION);
+        $rawOrientation = $this->value($this->ifd0, ExifTag::ORIENTATION);
 
-        return Orientation::fromExifValue($value);
+        // Normalises numeric-string encodings emitted by some cameras.
+        return Orientation::fromExifValue($rawOrientation);
     }
 
     /**
@@ -1514,12 +1517,14 @@ final readonly class ExifDocument
 
     /**
      * Returns the metering mode enumeration if present.
+     *
+     * @return MeteringMode|null
      */
     public function meteringMode(): ?MeteringMode
     {
-        $value = $this->value($this->exifIfd, ExifTag::METERING_MODE);
+        $rawMeteringMode = $this->value($this->exifIfd, ExifTag::METERING_MODE);
 
-        return MeteringMode::fromExifValue($value);
+        return MeteringMode::fromExifValue($rawMeteringMode);
     }
 
     /**
@@ -3125,36 +3130,27 @@ final readonly class ExifDocument
 
     /**
      * Returns the light source enum describing the scene illumination.
+     *
+     * @return LightSource|null
      */
     public function lightSource(): ?LightSource
     {
-        $value = $this->value($this->exifIfd, ExifTag::LIGHT_SOURCE);
-        if (is_int($value)) {
-            return LightSource::tryFrom($value);
-        }
+        $rawLightSource = $this->value($this->exifIfd, ExifTag::LIGHT_SOURCE);
 
-        if (is_string($value) && $value !== '') {
-            return LightSource::tryFrom((int) $value);
-        }
-
-        return null;
+        // The enum helper accepts integers as well as numeric strings.
+        return LightSource::fromExifValue($rawLightSource);
     }
 
     /**
      * Returns the scene capture type enum when recorded.
+     *
+     * @return SceneCaptureType|null
      */
     public function sceneCaptureType(): ?SceneCaptureType
     {
-        $value = $this->value($this->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
-        if (is_int($value)) {
-            return SceneCaptureType::tryFrom($value);
-        }
+        $rawSceneCaptureType = $this->value($this->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
 
-        if (is_string($value) && $value !== '') {
-            return SceneCaptureType::tryFrom((int) $value);
-        }
-
-        return null;
+        return SceneCaptureType::fromExifValue($rawSceneCaptureType);
     }
 
     /**
