@@ -13,6 +13,9 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 /**
  * Represents an image file directory (IFD) containing EXIF entries.
+ *
+ * EXIF 3.0 §4.5.2 defines the structure of IFDs embedded within EXIF payloads
+ * and their linkage via the optional next-IFD pointer.
  */
 final readonly class Ifd
 {

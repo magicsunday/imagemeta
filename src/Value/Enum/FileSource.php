@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates EXIF 3.0 image acquisition sources.
+ * Enumerates EXIF image acquisition sources listed in
+ * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (shooting conditions).
  */
 enum FileSource: int
 {

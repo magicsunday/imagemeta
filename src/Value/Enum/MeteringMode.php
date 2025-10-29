@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Defines the metering mode used to determine exposure.
+ * Defines the metering mode used to determine exposure as listed in
+ * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (shooting conditions).
  */
 enum MeteringMode: int
 {

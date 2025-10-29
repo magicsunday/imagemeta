@@ -13,10 +13,13 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 /**
  * Centralised list of EXIF tag identifiers used throughout the library.
+ *
+ * EXIF 3.0 §4.6 catalogues the tag registry for the primary, Exif, GPS and
+ * interoperability IFDs referenced by this enumeration.
  */
 final readonly class ExifTag
 {
-    // Image file directory (IFD0)
+    // Image file directory (IFD0 — EXIF 2.32 §4.6.2 / EXIF 3.0 §4.6.2)
     /**
      * TIFF 6.0 subfile type bitfield describing the purpose of the image data.
      */
@@ -167,7 +170,7 @@ final readonly class ExifTag
 
     public const int JPEG_INTERCHANGE_FORMAT_LENGTH = 0x0202;
 
-    // EXIF 3.0 preview tags
+    // EXIF 3.0 preview tags (EXIF 3.0 §4.6.12 preview image data)
     public const int PREVIEW_IMAGE_START = 0xC51B;
 
     public const int PREVIEW_IMAGE_LENGTH = 0xC51C;
@@ -202,14 +205,14 @@ final readonly class ExifTag
 
     public const int COPYRIGHT = 0x8298;
 
-    // Pointer tags
+    // Pointer tags (EXIF 2.32 §4.6.2 / EXIF 3.0 §4.6.2 directory structure)
     public const int EXIF_IFD_POINTER = 0x8769;
 
     public const int GPS_IFD_POINTER = 0x8825;
 
     public const int INTEROPERABILITY_IFD_POINTER = 0xA005;
 
-    // EXIF sub IFD
+    // EXIF sub IFD (EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 shooting conditions)
     public const int CFA_REPEAT_PATTERN_DIM = 0x828D;
 
     public const int BATTERY_LEVEL = 0x828F;
@@ -239,7 +242,7 @@ final readonly class ExifTag
 
     public const int PHOTOGRAPHIC_SENSITIVITY = 0x8827;
 
-    // Opto-Electric Conversion Function
+    // Opto-Electric Conversion Function (EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3)
     public const int OECF = 0x8828;
 
     public const int INTERLACE = 0x8829;
@@ -435,7 +438,7 @@ final readonly class ExifTag
 
     public const int DEVICE_SETTING_DESCRIPTION = 0xA40B;
 
-    // DNG colour profile tags (EXIF 2.3/3.0)
+    // DNG colour profile tags (EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3, DNG extensions)
     /**
      * DNG camera calibration signature string recorded alongside the profile data.
      */
@@ -481,7 +484,7 @@ final readonly class ExifTag
      */
     public const int PROFILE_TONE_CURVE = 0xC6FC;
 
-    // GPS sub IFD (Table 66 – EXIF 3.0)
+    // GPS sub IFD (Table 66 – EXIF 3.0 §4.6.6 / EXIF 2.32 §4.6.6)
     public const int GPS_VERSION_ID = 0x0000;
 
     public const int GPS_LATITUDE_REF = 0x0001;
@@ -606,7 +609,7 @@ final readonly class ExifTag
      */
     public const int METADATA_EDITING_SOFTWARE_LEGACY = 0xE932;
 
-    // Interoperability IFD
+    // Interoperability IFD (EXIF 2.32 §4.6.7 / EXIF 3.0 §4.6.7)
     public const int INTEROPERABILITY_INDEX = 0x0001;
 
     public const int INTEROPERABILITY_VERSION = 0x0002;
