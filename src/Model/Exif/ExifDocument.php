@@ -46,7 +46,6 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use function abs;
 use function array_key_exists;
 use function array_map;
-use function array_values;
 use function count;
 use function iconv;
 use function in_array;
@@ -151,7 +150,11 @@ final readonly class ExifDocument
      */
     public function makerNoteSafety(): ?bool
     {
-        $value = $this->value($this->exifIfd, ExifTag::MAKER_NOTE_SAFETY);
+        $value = $this->enumValue($this->exifIfd, ExifTag::MAKER_NOTE_SAFETY);
+
+        if ($value === null) {
+            return null;
+        }
 
         return ValueConverters::makerNoteSafety($value);
     }
@@ -304,7 +307,7 @@ final readonly class ExifDocument
      */
     public function orientation(): ?Orientation
     {
-        $rawOrientation = $this->value($this->ifd0, ExifTag::ORIENTATION);
+        $rawOrientation = $this->enumValue($this->ifd0, ExifTag::ORIENTATION);
 
         // Normalises numeric-string encodings emitted by some cameras.
         return Orientation::fromExifValue($rawOrientation);
@@ -339,7 +342,7 @@ final readonly class ExifDocument
      */
     public function colorSpace(): ?ColorSpace
     {
-        $value = $this->value($this->exifIfd, ExifTag::COLOR_SPACE);
+        $value = $this->enumValue($this->exifIfd, ExifTag::COLOR_SPACE);
 
         return ColorSpace::fromExifValue($value);
     }
@@ -373,7 +376,7 @@ final readonly class ExifDocument
     /**
      * Returns the normalised FlashPix version string when present.
      */
-    public function flashpixVersion(): ?string
+    public function flashpixVersion(): string
     {
         $value = $this->rawString($this->exifIfd, ExifTag::FLASHPIX_VERSION);
 
@@ -627,7 +630,7 @@ final readonly class ExifDocument
             }
         }
 
-        return $keywords === [] ? null : array_values($keywords);
+        return $keywords === [] ? null : $keywords;
     }
 
     /**
@@ -1110,7 +1113,7 @@ final readonly class ExifDocument
      */
     public function componentsConfiguration(): ?array
     {
-        $value = $this->value($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
+        $value = $this->componentsInput($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
         return ValueConverters::componentsConfiguration($value);
     }
@@ -1122,7 +1125,7 @@ final readonly class ExifDocument
      */
     public function componentsConfigurationLabels(): ?array
     {
-        $value = $this->value($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
+        $value = $this->componentsInput($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
         return ValueConverters::componentsConfigurationLabels($value);
     }
@@ -1132,7 +1135,7 @@ final readonly class ExifDocument
      */
     public function componentsConfigurationDescription(): ?string
     {
-        $value = $this->value($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
+        $value = $this->componentsInput($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
         return ValueConverters::componentsConfigurationDescription($value);
     }
@@ -1190,7 +1193,7 @@ final readonly class ExifDocument
         $prefix            = substr($raw, 0, 8);
         $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
         $hasKnownPrefix    = $canonicalEncoding !== '';
-        $content           = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $content           = $hasKnownPrefix ? substr($raw, 8) : $raw;
         $hasContent        = trim($content, "\0 ") !== '';
 
         if (!$hasKnownPrefix) {
@@ -1218,7 +1221,7 @@ final readonly class ExifDocument
         $prefix            = substr($raw, 0, 8);
         $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
         $hasKnownPrefix    = $canonicalEncoding !== '';
-        $content           = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $content           = $hasKnownPrefix ? substr($raw, 8) : $raw;
 
         return $this->inferUserCommentEncoding($content);
     }
@@ -1448,10 +1451,6 @@ final readonly class ExifDocument
             ];
 
             foreach ($this->subsequentIfds as $ifd) {
-                if (!$ifd instanceof Ifd) {
-                    continue;
-                }
-
                 if ($this->ifd1 instanceof Ifd && $ifd === $this->ifd1) {
                     continue;
                 }
@@ -1526,7 +1525,7 @@ final readonly class ExifDocument
      */
     public function shutterSpeedSeconds(): ?float
     {
-        $raw = $this->value($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
+        $raw = $this->normalisedValue($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
 
         if ($raw === null) {
             return null;
@@ -1578,7 +1577,7 @@ final readonly class ExifDocument
      */
     public function exposureProgram(): ?ExposureProgram
     {
-        $value = $this->value($this->exifIfd, ExifTag::EXPOSURE_PROGRAM);
+        $value = $this->enumValue($this->exifIfd, ExifTag::EXPOSURE_PROGRAM);
 
         return ExposureProgram::fromExifValue($value);
     }
@@ -1590,7 +1589,7 @@ final readonly class ExifDocument
      */
     public function meteringMode(): ?MeteringMode
     {
-        $rawMeteringMode = $this->value($this->exifIfd, ExifTag::METERING_MODE);
+        $rawMeteringMode = $this->enumValue($this->exifIfd, ExifTag::METERING_MODE);
 
         return MeteringMode::fromExifValue($rawMeteringMode);
     }
@@ -1610,7 +1609,7 @@ final readonly class ExifDocument
      */
     public function whiteBalance(): ?WhiteBalance
     {
-        $value = $this->value($this->exifIfd, ExifTag::WHITE_BALANCE);
+        $value = $this->enumValue($this->exifIfd, ExifTag::WHITE_BALANCE);
 
         return WhiteBalance::fromExifValue($value);
     }
@@ -1874,7 +1873,7 @@ final readonly class ExifDocument
             return null;
         }
 
-        return [(int) $values[0], (int) $values[1]];
+        return [$values[0], $values[1]];
     }
 
     /**
@@ -1908,7 +1907,7 @@ final readonly class ExifDocument
 
         [$width, $height] = $values;
 
-        if (!is_int($width) || !is_int($height) || $width <= 0 || $height <= 0) {
+        if ($width <= 0 || $height <= 0) {
             return null;
         }
 
@@ -2025,7 +2024,7 @@ final readonly class ExifDocument
      */
     public function batteryLevelPercent(): ?float
     {
-        $value = $this->value($this->exifIfd, ExifTag::BATTERY_LEVEL);
+        $value = $this->normalisedValue($this->exifIfd, ExifTag::BATTERY_LEVEL);
 
         return ValueConverters::batteryLevelToPercent($value);
     }
@@ -2456,11 +2455,11 @@ final readonly class ExifDocument
 
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
-                    $component = $component->toInt('EXIF numeric list component');
-                }
+                    if (!$component->fitsSignedInt()) {
+                        return null;
+                    }
 
-                if (!is_int($component) && !is_float($component)) {
-                    return null;
+                    $component = $component->toInt('EXIF numeric list component');
                 }
 
                 $converted = ValueConverters::offsetToMinutes($component);
@@ -2876,15 +2875,11 @@ final readonly class ExifDocument
         }
 
         foreach ($this->subsequentIfds as $ifd) {
-            if ($ifd instanceof Ifd) {
-                $sources[] = $ifd;
-            }
+            $sources[] = $ifd;
         }
 
         foreach ($this->subIfds as $ifd) {
-            if ($ifd instanceof Ifd) {
-                $sources[] = $ifd;
-            }
+            $sources[] = $ifd;
         }
 
         return $sources;
@@ -2954,7 +2949,7 @@ final readonly class ExifDocument
      */
     public function compression(): ?Compression
     {
-        $value = $this->value($this->ifd0, ExifTag::COMPRESSION);
+        $value = $this->enumValue($this->ifd0, ExifTag::COMPRESSION);
 
         return Compression::fromExifValue($value);
     }
@@ -2964,7 +2959,7 @@ final readonly class ExifDocument
      */
     public function photometric(): ?Photometric
     {
-        $value = $this->value($this->ifd0, ExifTag::PHOTOMETRIC_INTERPRETATION);
+        $value = $this->enumValue($this->ifd0, ExifTag::PHOTOMETRIC_INTERPRETATION);
 
         return Photometric::fromExifValue($value);
     }
@@ -2974,7 +2969,7 @@ final readonly class ExifDocument
      */
     public function planarConfiguration(): ?PlanarConfiguration
     {
-        $value = $this->value($this->ifd0, ExifTag::PLANAR_CONFIGURATION);
+        $value = $this->enumValue($this->ifd0, ExifTag::PLANAR_CONFIGURATION);
 
         return PlanarConfiguration::fromExifValue($value);
     }
@@ -2984,7 +2979,7 @@ final readonly class ExifDocument
      */
     public function resolutionUnit(): ?ResolutionUnit
     {
-        $value = $this->value($this->ifd0, ExifTag::RESOLUTION_UNIT);
+        $value = $this->enumValue($this->ifd0, ExifTag::RESOLUTION_UNIT);
 
         return ResolutionUnit::fromExifValue($value);
     }
@@ -3010,7 +3005,7 @@ final readonly class ExifDocument
      */
     public function ycbcrPositioning(): ?YCbCrPositioning
     {
-        $value = $this->value($this->ifd0, ExifTag::YCBCR_POSITIONING);
+        $value = $this->enumValue($this->ifd0, ExifTag::YCBCR_POSITIONING);
 
         return YCbCrPositioning::fromExifValue($value);
     }
@@ -3025,9 +3020,8 @@ final readonly class ExifDocument
         $values = $this->numericList($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
 
         if ($values !== null) {
-            $normalized = array_values($values);
-            if (count($normalized) === 2) {
-                return [(int) $normalized[0], (int) $normalized[1]];
+            if (count($values) === 2) {
+                return [$values[0], $values[1]];
             }
 
             return null;
@@ -3045,10 +3039,24 @@ final readonly class ExifDocument
      */
     public function ycbcrCoefficients(): ?array
     {
-        $value = $this->value($this->ifd0, ExifTag::YCBCR_COEFFICIENTS);
+        $value = $this->normalisedValue($this->ifd0, ExifTag::YCBCR_COEFFICIENTS);
 
         if ($value instanceof ExifNumericList) {
-            $coeffs = array_map(static fn (int|float $component): float => (float) $component, $value->values);
+            $coeffs = [];
+
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    if (!$component->fitsSignedInt()) {
+                        return null;
+                    }
+
+                    $coeffs[] = (float) $component->toInt('YCbCr coefficient component');
+
+                    continue;
+                }
+
+                $coeffs[] = (float) $component;
+            }
 
             return count($coeffs) === 3 ? $coeffs : null;
         }
@@ -3143,7 +3151,7 @@ final readonly class ExifDocument
      */
     public function exposureMode(): ?ExposureMode
     {
-        $value = $this->value($this->exifIfd, ExifTag::EXPOSURE_MODE);
+        $value = $this->enumValue($this->exifIfd, ExifTag::EXPOSURE_MODE);
 
         return ExposureMode::fromExifValue($value);
     }
@@ -3153,7 +3161,7 @@ final readonly class ExifDocument
      */
     public function gainControl(): ?GainControl
     {
-        $value = $this->value($this->exifIfd, ExifTag::GAIN_CONTROL);
+        $value = $this->enumValue($this->exifIfd, ExifTag::GAIN_CONTROL);
 
         return GainControl::fromExifValue($value);
     }
@@ -3191,7 +3199,7 @@ final readonly class ExifDocument
      */
     public function sensingMethod(): ?SensingMethod
     {
-        $value = $this->value($this->exifIfd, ExifTag::SENSING_METHOD);
+        $value = $this->enumValue($this->exifIfd, ExifTag::SENSING_METHOD);
 
         return SensingMethod::fromExifValue($value);
     }
@@ -3203,7 +3211,7 @@ final readonly class ExifDocument
      */
     public function lightSource(): ?LightSource
     {
-        $rawLightSource = $this->value($this->exifIfd, ExifTag::LIGHT_SOURCE);
+        $rawLightSource = $this->enumValue($this->exifIfd, ExifTag::LIGHT_SOURCE);
 
         // The enum helper accepts integers as well as numeric strings.
         return LightSource::fromExifValue($rawLightSource);
@@ -3216,7 +3224,7 @@ final readonly class ExifDocument
      */
     public function sceneCaptureType(): ?SceneCaptureType
     {
-        $rawSceneCaptureType = $this->value($this->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
+        $rawSceneCaptureType = $this->enumValue($this->exifIfd, ExifTag::SCENE_CAPTURE_TYPE);
 
         return SceneCaptureType::fromExifValue($rawSceneCaptureType);
     }
@@ -3226,7 +3234,7 @@ final readonly class ExifDocument
      */
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
-        $value = $this->value($this->exifIfd, ExifTag::SUBJECT_DISTANCE_RANGE);
+        $value = $this->enumValue($this->exifIfd, ExifTag::SUBJECT_DISTANCE_RANGE);
 
         return SubjectDistanceRange::fromExifValue($value);
     }
@@ -3278,10 +3286,26 @@ final readonly class ExifDocument
      */
     public function subjectArea(): ?array
     {
-        $value = $this->value($this->exifIfd, ExifTag::SUBJECT_AREA);
+        $value = $this->normalisedValue($this->exifIfd, ExifTag::SUBJECT_AREA);
 
         if ($value instanceof ExifNumericList) {
-            return array_map(static fn (int|float $component): int => (int) $component, $value->values);
+            $components = [];
+
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    if (!$component->fitsSignedInt()) {
+                        return null;
+                    }
+
+                    $components[] = $component->toInt('EXIF subject area component');
+
+                    continue;
+                }
+
+                $components[] = (int) $component;
+            }
+
+            return $components;
         }
 
         if (is_int($value) || is_float($value)) {
@@ -3321,7 +3345,7 @@ final readonly class ExifDocument
 
     private function str(?Ifd $ifd, int $tag): ?string
     {
-        $value = $this->value($ifd, $tag);
+        $value = $this->normalisedValue($ifd, $tag);
 
         if (!is_string($value)) {
             return null;
@@ -3339,7 +3363,7 @@ final readonly class ExifDocument
      */
     private function int(?Ifd $ifd, int $tag): ?int
     {
-        $value = $this->value($ifd, $tag);
+        $value = $this->normalisedValue($ifd, $tag);
 
         return $this->coerceIntValue($value);
     }
@@ -3351,7 +3375,7 @@ final readonly class ExifDocument
      */
     private function rational(?Ifd $ifd, int $tag): ?float
     {
-        $value = $this->value($ifd, $tag);
+        $value = $this->normalisedValue($ifd, $tag);
 
         if ($value === null) {
             return null;
@@ -3381,13 +3405,13 @@ final readonly class ExifDocument
      */
     private function valueFromGpsOrExif(int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
     {
-        $value = $this->value($this->gpsIfd, $tag);
+        $value = $this->normalisedValue($this->gpsIfd, $tag);
 
         if ($value !== null) {
             return $value;
         }
 
-        return $this->value($this->exifIfd, $tag);
+        return $this->normalisedValue($this->exifIfd, $tag);
     }
 
     /**
@@ -3404,6 +3428,193 @@ final readonly class ExifDocument
         $entry = $ifd->get($tag);
 
         return $entry?->value;
+    }
+
+    private function normalisedValue(
+        ?Ifd $ifd,
+        int $tag,
+    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null {
+        $value = $this->value($ifd, $tag);
+
+        return $this->normaliseScalarValue($value);
+    }
+
+    private function normaliseScalarValue(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null {
+        if ($value instanceof UInt64) {
+            if (!$value->fitsSignedInt()) {
+                return null;
+            }
+
+            return $value->toInt('EXIF scalar normalisation');
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $normalised = [];
+            $changed    = false;
+
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    if (!$component->fitsSignedInt()) {
+                        return null;
+                    }
+
+                    $normalised[] = $component->toInt('EXIF numeric list normalisation');
+                    $changed      = true;
+
+                    continue;
+                }
+
+                $normalised[] = $component;
+            }
+
+            if ($changed) {
+                return new ExifNumericList($normalised);
+            }
+
+            return $value;
+        }
+
+        return $value;
+    }
+
+    private function enumValue(?Ifd $ifd, int $tag): int|string|null
+    {
+        $value = $this->value($ifd, $tag);
+
+        return $this->normaliseEnumScalar($value);
+    }
+
+    private function normaliseEnumScalar(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): int|string|null {
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            return $this->normaliseEnumScalar($first);
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            return $this->normaliseEnumScalar($first);
+        }
+
+        if ($value instanceof ExifRational) {
+            $float = ValueConverters::rationalToFloat($value);
+
+            return $float === null ? null : $this->normaliseEnumScalar($float);
+        }
+
+        if ($value instanceof UInt64) {
+            if (!$value->fitsSignedInt()) {
+                return null;
+            }
+
+            return $value->toInt('EXIF enum value normalisation');
+        }
+
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            return (int) round($value);
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed === '') {
+                return null;
+            }
+
+            if (is_numeric($trimmed)) {
+                return (int) round((float) $trimmed);
+            }
+
+            return $trimmed;
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array<int, int|float|string>|int|string|null
+     */
+    private function componentsInput(?Ifd $ifd, int $tag): array|int|string|null
+    {
+        $value = $this->value($ifd, $tag);
+
+        if ($value instanceof ExifNumericList) {
+            $components = [];
+
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    if (!$component->fitsSignedInt()) {
+                        return null;
+                    }
+
+                    $components[] = $component->toInt('EXIF components configuration');
+
+                    continue;
+                }
+
+                $components[] = $component;
+            }
+
+            return $components;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            if (!$first instanceof ExifRational) {
+                return null;
+            }
+
+            $float = ValueConverters::rationalToFloat($first);
+
+            return $float === null ? null : $this->componentsInputFromScalar($float);
+        }
+
+        if ($value instanceof ExifRational) {
+            $float = ValueConverters::rationalToFloat($value);
+
+            return $float === null ? null : $this->componentsInputFromScalar($float);
+        }
+
+        if ($value instanceof UInt64) {
+            if (!$value->fitsSignedInt()) {
+                return null;
+            }
+
+            return $value->toInt('EXIF components configuration');
+        }
+
+        return $this->componentsInputFromScalar($value);
+    }
+
+    /**
+     * @return int|string|null
+     */
+    private function componentsInputFromScalar(int|float|string|null $value): int|string|null
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_float($value)) {
+            return (int) round($value);
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        return null;
     }
 
     /**
@@ -3509,10 +3720,6 @@ final readonly class ExifDocument
             return null;
         }
 
-        if ($value === null) {
-            return null;
-        }
-
         return null;
     }
 
@@ -3615,7 +3822,23 @@ final readonly class ExifDocument
         }
 
         if ($value instanceof ExifNumericList) {
-            return array_map(static fn (int|float $v): float => (float) $v, $value->values);
+            $floats = [];
+
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    if (!$component->fitsSignedInt()) {
+                        return null;
+                    }
+
+                    $floats[] = (float) $component->toInt('EXIF rational list component');
+
+                    continue;
+                }
+
+                $floats[] = (float) $component;
+            }
+
+            return $floats;
         }
 
         if (is_int($value) || is_float($value)) {
@@ -3663,7 +3886,7 @@ final readonly class ExifDocument
         $prefix            = substr($raw, 0, 8);
         $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
         $hasKnownPrefix    = $canonicalEncoding !== '';
-        $content           = $hasKnownPrefix && strlen($raw) > 8 ? substr($raw, 8) : $raw;
+        $content           = $hasKnownPrefix ? substr($raw, 8) : $raw;
         $sanitized         = trim($content, "\0 ");
 
         $resolvedEncoding = $hasKnownPrefix
@@ -3898,6 +4121,14 @@ final readonly class ExifDocument
 
         if ($value instanceof ExifNumericList) {
             $value = $value->values[0] ?? null;
+
+            if ($value instanceof UInt64) {
+                if (!$value->fitsSignedInt()) {
+                    return null;
+                }
+
+                $value = $value->toInt('EXIF offset normalisation');
+            }
         } elseif ($value instanceof ExifRationalList || $value instanceof ExifRational) {
             $value = ValueConverters::rationalToFloat($value);
         }
@@ -3934,7 +4165,19 @@ final readonly class ExifDocument
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
 
-            return $first !== null ? (string) (int) $first : null;
+            if ($first instanceof UInt64) {
+                if (!$first->fitsSignedInt()) {
+                    return null;
+                }
+
+                $first = $first->toInt('EXIF sub-second component');
+            }
+
+            if ($first === null) {
+                return null;
+            }
+
+            return (string) (int) $first;
         }
 
         if (is_int($value)) {
