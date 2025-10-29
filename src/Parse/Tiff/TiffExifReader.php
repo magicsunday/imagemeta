@@ -58,7 +58,8 @@ use function substr;
  *
  * EXIF 3.0 §4.5 outlines the TIFF header layout, data type handling and IFD
  * traversal rules honoured by this reader; EXIF 2.32 §4.5 documents the legacy
- * behaviour retained for older images.
+ * behaviour retained for older images, while TIFF 6.0 §8 provides the baseline
+ * directory semantics shared by both formats.
  */
 final class TiffExifReader
 {
@@ -193,7 +194,8 @@ final class TiffExifReader
         $this->interopVisitedOffsets = [];
 
         // byte order
-        // EXIF 3.0 §4.5.1 follows TIFF 6.0 §8 in defining the "II"/"MM" byte-order markers.
+        // EXIF 3.0 §4.5.1 follows TIFF 6.0 §8 (Image File Directory) in defining the
+        // "II"/"MM" byte-order signatures used for byte-order detection.
         $boSig    = $this->buf->read(2);
         $this->bo = match ($boSig) {
             'II'    => Endian::Little,
@@ -202,7 +204,8 @@ final class TiffExifReader
         };
 
         $magic = $this->readU16();
-        // EXIF 3.0 §4.5.1 recognises 0x002A (classic TIFF) and 0x002B (BigTIFF) magic identifiers.
+        // EXIF 3.0 §4.5.1 recognises 0x002A (classic TIFF) and 0x002B (BigTIFF)
+        // magic identifiers, retaining the classic 32-bit header from EXIF 2.32 §4.5.1.
         if ($magic === TiffConst::MAGIC_BIG) {
             $this->bigTiff = true;
             $this->parseBigTiffHeader();
@@ -210,6 +213,9 @@ final class TiffExifReader
             $ifd0     = $this->readIfd($firstIfd);
         } elseif ($magic === TiffConst::MAGIC_CLASSIC) {
             $this->bigTiff = false;
+            // Classic TIFF header layout per EXIF 3.0 §4.5.1 and TIFF 6.0 §8
+            // stores the first IFD offset as a 32-bit pointer immediately
+            // after the byte-order and magic fields.
             $firstIfd      = $this->readU32();
             $ifd0          = $this->readIfd($firstIfd);
         } else {
@@ -286,8 +292,9 @@ final class TiffExifReader
     /**
      * Validates the BigTIFF header following the magic identifier.
      *
-     * EXIF 3.0 §4.5.1 adopts the BigTIFF header layout described in TIFF EP 2.0,
-     * constraining the offset-size and reserved fields before the first IFD pointer.
+     * EXIF 3.0 §4.5.1 adopts the BigTIFF header layout and retains the reserved
+     * word semantics from EXIF 2.32 §4.5.1/TIFF 6.0 §8, constraining the
+     * offset-size and reserved fields before the first IFD pointer.
      */
     private function parseBigTiffHeader(): void
     {
@@ -295,10 +302,12 @@ final class TiffExifReader
         $offSize  = $this->readU16();
         $reserved = $this->readU16();
 
+        // EXIF 3.0 §4.5.1 restricts BigTIFF offset sizes to 8 or 16 bytes.
         if ($offSize !== 8 && $offSize !== 16) {
             throw new ParseError('Unsupported BigTIFF offset size (expected 8 or 16)');
         }
 
+        // The reserved field must remain zero (EXIF 3.0 §4.5.1; TIFF 6.0 §8 legacy rule).
         if ($reserved !== 0) {
             throw new ParseError('Bad BigTIFF header (reserved != 0)');
         }
@@ -319,18 +328,24 @@ final class TiffExifReader
     private function readIfd(int|UInt64|string $offset): Ifd
     {
         if ($offset instanceof UInt64) {
+            // A zero pointer denotes an absent directory (EXIF 3.0 §4.5.2 Note 1
+            // and EXIF 2.32 §4.5.2), so return an empty IFD structure.
             if ($offset->isZero()) {
                 return new Ifd([]);
             }
 
             $offsetInt = $this->ensureOffset($offset, 'IFD offset');
         } elseif (is_int($offset)) {
+            // Section 4.5.2 of EXIF 3.0 clarifies that null or non-positive offsets
+            // mean the referenced directory is omitted.
             if ($offset <= 0) {
                 return new Ifd([]);
             }
 
             $offsetInt = $this->ensureOffset($offset, 'IFD offset');
         } else {
+            // BigTIFF offsets may arrive as decimal strings (§4.5.2, BigTIFF note),
+            // with zero indicating that the referenced directory is absent.
             if ($this->decimalStringIsZero($offset)) {
                 return new Ifd([]);
             }
@@ -344,7 +359,8 @@ final class TiffExifReader
 
         $this->buf->seek($offsetInt);
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
-        // EXIF 3.0 §4.5.2 standardises the 12-byte (classic) and 20-byte (BigTIFF) directory entries parsed below.
+        // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
+        // (BigTIFF) directory entries and the unsigned entry count preceding them.
         $entries    = [];
         for ($i = 0; $i < $entryCount; ++$i) {
             $entries += $this->readDirEntry();
@@ -356,6 +372,8 @@ final class TiffExifReader
                 'IFD next offset',
             );
         } else {
+            // TIFF 6.0 §8 retains a 32-bit pointer to the next IFD; EXIF 3.0 §4.5.2
+            // notes the value is zero when the chain terminates.
             $next = $this->readU32();
         }
         $ifd  = new Ifd($entries, $next > 0 ? $next : null);
@@ -369,7 +387,8 @@ final class TiffExifReader
      * Reads a single directory entry and returns it keyed by tag identifier.
      *
      * EXIF 3.0 §4.5.2 (and EXIF 2.32 §4.5.2 for legacy files) define the tag,
-     * type, count and value/offset fields mirrored by this reader.
+     * type, count and value/offset fields mirrored by this reader, aligning with
+     * the TIFF 6.0 §8 directory entry layout.
      *
      * @return array<int, IfdEntry> tagId => entry
      */
@@ -379,6 +398,9 @@ final class TiffExifReader
         $type     = $this->readU16();
         $cnt      = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
         if ($this->bigTiff) {
+            // BigTIFF stores the inline value/offset field as an 8- or 16-byte
+            // quantity (EXIF 3.0 §4.5.2 BigTIFF note) with inline payloads padded
+            // to the negotiated offset width.
             [$valOrOff, $inlineBytes] = $this->readValueOrOffset($type, $cnt);
         } else {
             $valOrOff    = $this->readU32();
@@ -412,6 +434,10 @@ final class TiffExifReader
 
     /**
      * Normalises numeric list fields that describe strip or tile data.
+     *
+     * EXIF 3.0 §4.6.2 and §4.6.4 enumerate the strip/tile offset and byte-count
+     * tags whose component counts are normalised here (see EXIF 2.32 §4.6.2/§4.6.4
+     * for the legacy wording).
      *
      * @param int    $type     TIFF field type code.
      * @param int    $count    Number of values represented.
@@ -597,7 +623,8 @@ final class TiffExifReader
      * Collects nested image file directories referenced by a SubIFDs entry.
      *
      * EXIF 3.0 §4.5.5 reserves the SubIFDs pointer for reduced-resolution and
-     * auxiliary images that must be parsed as additional IFD chains.
+     * auxiliary images that must be parsed as additional IFD chains, matching the
+     * TIFF 6.0 §8 definition of tag 0x014A.
      */
     private function collectSubIfds(IfdEntry $entry): void
     {
@@ -626,6 +653,8 @@ final class TiffExifReader
                 continue;
             }
 
+            // SubIFDs provide auxiliary/reduced-resolution images (EXIF 3.0 §4.5.5
+            // and EXIF 2.32 §4.5.5) and correspond to the TIFF 6.0 §8 SubIFD tag.
             $this->subIfds[$offset] = $this->readIfd($offset);
         }
 
