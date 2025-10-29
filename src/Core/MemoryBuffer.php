@@ -11,17 +11,16 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
+use function strlen;
+
 use const SEEK_CUR;
 use const SEEK_END;
 use const SEEK_SET;
-
-use function strlen;
 
 /**
  * Provides a simple, bounds-checked in-memory buffer abstraction.
@@ -172,7 +171,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
             SEEK_SET => $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range'),
             SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'MemoryBuffer seek out of range'),
             SEEK_END => $this->normaliseRelativeOffset($offset, $this->size(), 'MemoryBuffer seek out of range'),
-            default   => throw new ParseError('MemoryBuffer invalid seek whence: ' . $whence),
+            default  => throw new ParseError('MemoryBuffer invalid seek whence: ' . $whence),
         };
 
         $this->pos = $target;
@@ -237,7 +236,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
 
     private function normaliseRelativeOffset(int|UInt64 $offset, int $base, string $message): int
     {
-        $delta = $this->resolveOffsetValue($offset, $message);
+        $delta  = $this->resolveOffsetValue($offset, $message);
         $target = $base + $delta;
 
         if ($target < 0 || $target > $this->size()) {

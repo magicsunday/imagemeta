@@ -15,16 +15,16 @@ use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
-use const SEEK_CUR;
-use const SEEK_END;
-use const SEEK_SET;
-
 use function fopen;
 use function fread;
 use function fseek;
 use function fstat;
 use function is_array;
 use function strlen;
+
+use const SEEK_CUR;
+use const SEEK_END;
+use const SEEK_SET;
 
 /**
  * Provides a bounds-checked streaming reader over a binary resource handle.
@@ -163,7 +163,7 @@ final class Stream implements BinaryReadAccessInterface
             SEEK_SET => $this->normaliseAbsoluteOffset($offset, 'seek out of range'),
             SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'seek out of range'),
             SEEK_END => $this->normaliseRelativeOffset($offset, $this->size, 'seek out of range'),
-            default   => throw new ParseError('invalid seek whence: ' . $whence),
+            default  => throw new ParseError('invalid seek whence: ' . $whence),
         };
 
         fseek($this->fh, $target);

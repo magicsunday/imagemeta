@@ -18,13 +18,13 @@ use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
@@ -53,9 +53,9 @@ use function strlen;
 use function substr;
 
 /**
- * @covers \MagicSunday\ImageMeta\Model\Exif\ExifDocument
+ * @covers \MagicSunday\ImageMeta\Model\Exif\ParsedExif
  */
-#[CoversClass(ExifDocument::class)]
+#[CoversClass(ParsedExif::class)]
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifRationalList::class)]
 #[UsesClass(Ifd::class)]
@@ -69,7 +69,7 @@ use function substr;
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(Unpack::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
-final class ExifDocumentTest extends TestCase
+final class ParsedExifTest extends TestCase
 {
     private const string ISO_8601_MILLISECONDS = 'Y-m-d\TH:i:s.vP';
 
@@ -150,7 +150,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, $gpsIfd, null, null);
 
         self::assertSame('Canon', $doc->cameraMake());
         self::assertSame('EOS R5', $doc->cameraModel());
@@ -233,7 +233,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('3.00', $doc->flashpixVersion());
     }
@@ -264,7 +264,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(CompositeImage::GENERAL_COMPOSITE, $doc->compositeImage());
         self::assertSame([5, 2], $doc->sourceImageNumberOfCompositeImage());
@@ -291,7 +291,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(
             ['width' => 4, 'height' => 2],
@@ -302,7 +302,7 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function returnsNullWhenCfaRepeatPatternDimensionsMissing(): void
     {
-        $doc = new ExifDocument(new Ifd([]), new Ifd([]), null, null, null);
+        $doc = new ParsedExif(new Ifd([]), new Ifd([]), null, null, null);
 
         self::assertNull($doc->cfaRepeatPatternDim());
     }
@@ -321,7 +321,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        self::assertNull((new ExifDocument($ifd0, $invalidZero, null, null, null))->cfaRepeatPatternDim());
+        self::assertNull((new ParsedExif($ifd0, $invalidZero, null, null, null))->cfaRepeatPatternDim());
 
         $invalidCount = new Ifd([
             ExifTag::CFA_REPEAT_PATTERN_DIM => new IfdEntry(
@@ -332,7 +332,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        self::assertNull((new ExifDocument($ifd0, $invalidCount, null, null, null))->cfaRepeatPatternDim());
+        self::assertNull((new ParsedExif($ifd0, $invalidCount, null, null, null))->cfaRepeatPatternDim());
     }
 
     #[Test]
@@ -363,7 +363,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:10:25 18:40:00'),
         ]);
 
-        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertTrue($document->hasThumbnail());
         self::assertSame(32_768, $document->previewImageOffset());
@@ -407,7 +407,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $document = new ExifDocument($ifd0, null, null, null, null);
+        $document = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertTrue($document->hasPreviewImage());
         self::assertSame(8192, $document->previewImageOffset());
@@ -426,7 +426,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_LENGTH => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 2048),
         ]);
 
-        $docWithZeroOffset = new ExifDocument($ifd0, $zeroOffsetExif, null, null, null);
+        $docWithZeroOffset = new ParsedExif($ifd0, $zeroOffsetExif, null, null, null);
 
         self::assertNull($docWithZeroOffset->previewImageOffset());
         self::assertFalse($docWithZeroOffset->hasPreviewImage());
@@ -436,7 +436,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_LENGTH => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 0),
         ]);
 
-        $docWithZeroLength = new ExifDocument($ifd0, $zeroLengthExif, null, null, null);
+        $docWithZeroLength = new ParsedExif($ifd0, $zeroLengthExif, null, null, null);
 
         self::assertNull($docWithZeroLength->previewImageOffset());
         self::assertNull($docWithZeroLength->previewImageLength());
@@ -452,7 +452,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 3, 1, 0),
         ]);
 
-        $docWithZeroCompression = new ExifDocument($ifd0, $zeroCompressionExif, null, null, null);
+        $docWithZeroCompression = new ParsedExif($ifd0, $zeroCompressionExif, null, null, null);
 
         self::assertNull($docWithZeroCompression->previewImageCompression());
 
@@ -460,7 +460,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_COMPRESSION => new IfdEntry(ExifTag::PREVIEW_IMAGE_COMPRESSION, 4, 1, -5),
         ]);
 
-        $docWithNegativeCompression = new ExifDocument($ifd0, $negativeCompressionExif, null, null, null);
+        $docWithNegativeCompression = new ParsedExif($ifd0, $negativeCompressionExif, null, null, null);
 
         self::assertNull($docWithNegativeCompression->previewImageCompression());
     }
@@ -479,7 +479,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $docWithZeroScale = new ExifDocument($ifd0, $zeroScaleExif, null, null, null);
+        $docWithZeroScale = new ParsedExif($ifd0, $zeroScaleExif, null, null, null);
 
         self::assertNull($docWithZeroScale->previewImageScale());
 
@@ -492,7 +492,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $docWithNegativeScale = new ExifDocument($ifd0, $negativeScaleExif, null, null, null);
+        $docWithNegativeScale = new ParsedExif($ifd0, $negativeScaleExif, null, null, null);
 
         self::assertNull($docWithNegativeScale->previewImageScale());
     }
@@ -508,7 +508,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
         ]);
 
-        $docMissingLength = new ExifDocument($ifd0, $missingLengthExif, null, null, null);
+        $docMissingLength = new ParsedExif($ifd0, $missingLengthExif, null, null, null);
 
         self::assertNull($docMissingLength->previewImageOffset());
         self::assertNull($docMissingLength->previewImageLength());
@@ -522,7 +522,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
         ]);
 
-        $docComplete = new ExifDocument($ifd0, $completeExif, null, null, null);
+        $docComplete = new ParsedExif($ifd0, $completeExif, null, null, null);
 
         self::assertSame(2048, $docComplete->previewImageOffset());
         self::assertSame(4096, $docComplete->previewImageLength());
@@ -544,7 +544,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PREVIEW_IMAGE_SCALE       => new IfdEntry(ExifTag::PREVIEW_IMAGE_SCALE, 5, 1, new ExifRational(1, 2)),
         ]);
 
-        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertFalse($document->hasPreviewImage());
         self::assertNull($document->previewImageOffset());
@@ -567,7 +567,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '-04:00'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
@@ -585,7 +585,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME_DIGITIZED => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+00:00'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $digitized = $doc->dateTimeDigitized();
         self::assertInstanceOf(DateTimeImmutable::class, $digitized);
@@ -605,7 +605,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2020:05:06 07:08:09'),
         ]);
 
-        $doc = new ExifDocument(
+        $doc = new ParsedExif(
             $ifd0,
             new Ifd([]),
             null,
@@ -635,7 +635,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $doc = new ParsedExif($ifd0, new Ifd([]), null, null, null);
 
         self::assertSame('2001:02:03 04:05:06', $doc->dateTimeOriginalRaw());
 
@@ -656,7 +656,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::SUB_SEC_TIME     => new IfdEntry(ExifTag::SUB_SEC_TIME, 2, 1, '246'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertNull($doc->dateTimeOriginalRaw());
 
@@ -676,7 +676,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME_ORIGINAL  => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '-05:30'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $original = $doc->dateTimeOriginal();
         self::assertInstanceOf(DateTimeImmutable::class, $original);
@@ -694,7 +694,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME_DIGITIZED  => new IfdEntry(ExifTag::OFFSET_TIME_DIGITIZED, 2, 1, '+02:00'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $original = $doc->dateTimeOriginal();
         self::assertInstanceOf(DateTimeImmutable::class, $original);
@@ -718,7 +718,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $doc = new ParsedExif(new Ifd([]), null, $gpsIfd, null, null);
 
         $capture = $doc->captureDateTime();
         self::assertInstanceOf(DateTimeImmutable::class, $capture);
@@ -744,7 +744,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
@@ -771,7 +771,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame([330, -345], $document->timeZoneOffsetMinutes());
 
@@ -795,7 +795,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $expected = [
             'header'     => 'PrintIM',
@@ -825,7 +825,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertNull($document->printImageMatching());
     }
@@ -865,7 +865,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
@@ -882,7 +882,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::RELATED_IMAGE_LENGTH      => new IfdEntry(ExifTag::RELATED_IMAGE_LENGTH, 4, 1, 3000),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, $interopIfd, null);
+        $doc = new ParsedExif($ifd0, null, null, $interopIfd, null);
 
         self::assertSame('JPEG', $doc->relatedImageFileFormat());
         self::assertSame(4000, $doc->relatedImageWidth());
@@ -904,7 +904,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME  => new IfdEntry(ExifTag::OFFSET_TIME, 2, 1, '-05:00'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $capture = $doc->captureDateTime();
         self::assertNotNull($capture);
@@ -964,7 +964,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, $thumbnailIfd);
+        $doc = new ParsedExif($ifd0, null, null, null, $thumbnailIfd);
 
         self::assertSame([64, 128], $doc->stripOffsets());
         self::assertSame([256, 512], $doc->stripByteCounts());
@@ -1065,7 +1065,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(5, 10)),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $doc = new ParsedExif(new Ifd([]), null, $gpsIfd, null, null);
 
         $gps = $doc->gps();
 
@@ -1138,7 +1138,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, new ExifRational(5000, 100)),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $doc = new ParsedExif(new Ifd([]), null, $gpsIfd, null, null);
 
         self::assertNull($doc->gpsSpeedMetresPerSecond());
     }
@@ -1154,7 +1154,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::GPS_DEST_DISTANCE     => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, new ExifRational(250, 1)),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $doc = new ParsedExif(new Ifd([]), null, $gpsIfd, null, null);
 
         self::assertNull($doc->gpsDestinationDistanceMetres());
     }
@@ -1207,7 +1207,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::SELF_TIMER_MODE           => new IfdEntry(ExifTag::SELF_TIMER_MODE, 3, 1, 10),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Jane Doe', $doc->ownerName());
         self::assertSame('123456789', $doc->bodySerialNumber());
@@ -1259,7 +1259,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::BODY_SERIAL_NUMBER   => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'BODY-LEGACY'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame('CAMERA-0001', $doc->cameraSerialNumber());
         self::assertSame('BODY-LEGACY', $doc->bodySerialNumber());
@@ -1272,7 +1272,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, 'BODY-ONLY'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame('BODY-ONLY', $doc->cameraSerialNumber());
     }
@@ -1288,9 +1288,9 @@ final class ExifDocumentTest extends TestCase
             ExifTag::MAKER_NOTE_SAFETY => new IfdEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, 0),
         ]);
 
-        $safeDoc    = new ExifDocument(new Ifd([]), $safeExifIfd, null, null, null);
-        $unsafeDoc  = new ExifDocument(new Ifd([]), $unsafeExifIfd, null, null, null);
-        $missingDoc = new ExifDocument(new Ifd([]), null, null, null, null);
+        $safeDoc    = new ParsedExif(new Ifd([]), $safeExifIfd, null, null, null);
+        $unsafeDoc  = new ParsedExif(new Ifd([]), $unsafeExifIfd, null, null, null);
+        $missingDoc = new ParsedExif(new Ifd([]), null, null, null, null);
 
         self::assertTrue($safeDoc->makerNoteSafety());
         self::assertFalse($unsafeDoc->makerNoteSafety());
@@ -1304,7 +1304,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::DOCUMENT_NAME => new IfdEntry(ExifTag::DOCUMENT_NAME, 2, 1, 'Archive Page'),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, null);
+        $doc = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame('Archive Page', $doc->documentName());
     }
@@ -1317,7 +1317,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::XP_SUBJECT    => new IfdEntry(ExifTag::XP_SUBJECT, 1, 1, 'XP Subject'),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, null);
+        $doc = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame('Scan 001', $doc->documentName());
     }
@@ -1381,7 +1381,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::CAMERA_FIRMWARE_LEGACY           => new IfdEntry(ExifTag::CAMERA_FIRMWARE_LEGACY, 2, 1, 'FW 2.0'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, $gpsIfd, null, null);
 
         self::assertSame([1, 2, 3, 0], $doc->componentsConfiguration());
         self::assertSame(['Y', 'Cb', 'Cr', '-'], $doc->componentsConfigurationLabels());
@@ -1469,7 +1469,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame([48, 49, 48, 48, 0], $doc->tiffEpStandardId());
         self::assertSame('0100', $doc->tiffEpStandardIdString());
@@ -1491,7 +1491,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $doc = new ParsedExif(new Ifd([]), null, $gpsIfd, null, null);
 
         $vector = $doc->accelerationVector();
         self::assertNotNull($vector);
@@ -1518,7 +1518,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         $vector = $doc->accelerationVector();
         self::assertNotNull($vector);
@@ -1540,7 +1540,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
         ]);
 
-        $doc = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $doc = new ParsedExif($ifd0, new Ifd([]), null, null, null);
 
         self::assertSame('Legacy fallback', $doc->userComment());
         self::assertSame('ASCII', $doc->userCommentEncodingBestEffort());
@@ -1560,7 +1560,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Note', $doc->userComment());
         self::assertSame('ASCII', $doc->userCommentEncoding());
@@ -1580,7 +1580,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Résumé', $doc->userComment());
         self::assertSame('UNDEFINED', $doc->userCommentEncoding());
@@ -1596,7 +1596,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, 'Fallback note'),
         ]);
 
-        $doc = new ExifDocument(
+        $doc = new ParsedExif(
             $ifd0,
             null,
             null,
@@ -1630,7 +1630,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(
             $commentUtf8,
@@ -1655,7 +1655,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $payload),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(
             'Invalid metadata',
@@ -1678,7 +1678,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, strlen($payload), $payload),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Grüße aus Köln', $doc->userComment());
         self::assertSame('UNICODE', $doc->userCommentEncoding());
@@ -1696,7 +1696,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, strlen($payload), $payload),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Café 🌟', $doc->userComment());
         self::assertSame('UNDEFINED', $doc->userCommentEncoding());
@@ -1714,7 +1714,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 768),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, null);
+        $doc = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(1024, $doc->imageWidth());
         self::assertSame(768, $doc->imageHeight());
@@ -1731,7 +1731,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('PixelLab', $doc->processingSoftware());
     }
@@ -1747,7 +1747,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Legacy Editor', $doc->processingSoftware());
     }
@@ -1770,7 +1770,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Meta'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('Legacy Title', $doc->imageTitle());
         self::assertSame('Legacy Photographer', $doc->photographer());
@@ -1794,7 +1794,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::METADATA_EDITING_SOFTWARE_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_LEGACY, 2, 1, 'Legacy Metadata Name'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame('Legacy Firmware Name', $doc->cameraFirmware());
         self::assertSame('Legacy Editor Name', $doc->imageEditingSoftware());
@@ -1811,7 +1811,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY, 2, 1, 'MetaLab 1.0.0'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame('FW 3.1.0', $doc->cameraFirmwareVersion());
         self::assertSame('RawLab 5.2.1', $doc->rawDevelopingSoftwareVersion());
@@ -1830,7 +1830,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('PowerMac G4', $doc->hostComputer());
     }
@@ -1846,7 +1846,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertNull($doc->hostComputer());
     }
@@ -1854,7 +1854,7 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function exifVersionDefaultsToTwoPointTwoWhenTagMissing(): void
     {
-        $doc = new ExifDocument(new Ifd([]), null, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), null, null, null, null);
 
         self::assertSame('2.2', $doc->exifVersion());
     }
@@ -1866,7 +1866,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, "\x00\x00\x00\x00"),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $emptyExifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $emptyExifIfd, null, null, null);
 
         self::assertSame('2.2', $doc->exifVersion());
     }
@@ -1886,7 +1886,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Metadata Tool Z'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('3.00', $doc->exifVersion());
         self::assertSame('3.0', $doc->exifProfile());
@@ -1911,7 +1911,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, strlen($raw), $raw),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame($expectedVersion, $doc->exifVersion());
         self::assertSame($expectedProfile, $doc->exifProfile());
@@ -1949,7 +1949,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
         self::assertSame(160, $doc->iso());
 
         $recommendedExifIfd = new Ifd([
@@ -1957,14 +1957,14 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PHOTOGRAPHIC_SENSITIVITY   => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
         ]);
 
-        $docWithRecommended = new ExifDocument($ifd0, $recommendedExifIfd, null, null, null);
+        $docWithRecommended = new ParsedExif($ifd0, $recommendedExifIfd, null, null, null);
         self::assertSame(320, $docWithRecommended->iso());
 
         $photographicExifIfd = new Ifd([
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 640),
         ]);
 
-        $docWithPhotographic = new ExifDocument($ifd0, $photographicExifIfd, null, null, null);
+        $docWithPhotographic = new ParsedExif($ifd0, $photographicExifIfd, null, null, null);
         self::assertSame(640, $docWithPhotographic->iso());
     }
 
@@ -1982,11 +1982,11 @@ final class ExifDocumentTest extends TestCase
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 320),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(320, $doc->iso());
 
-        $docWithoutExif = new ExifDocument($ifd0, null, null, null, null);
+        $docWithoutExif = new ParsedExif($ifd0, null, null, null, null);
         self::assertSame(200, $docWithoutExif->iso());
     }
 
@@ -2001,12 +2001,12 @@ final class ExifDocumentTest extends TestCase
             ExifTag::ISO_SPEED_RATINGS_LEGACY => new IfdEntry(ExifTag::ISO_SPEED_RATINGS_LEGACY, 3, 1, 800),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(800, $doc->iso());
         self::assertSame(800, $doc->isoBestEffort());
 
-        $docWithoutExif = new ExifDocument($ifd0, null, null, null, null);
+        $docWithoutExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(400, $docWithoutExif->iso());
         self::assertSame(400, $docWithoutExif->isoBestEffort());
@@ -2021,7 +2021,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 1, '0200'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(200, $doc->iso());
         self::assertSame(200, $doc->isoBestEffort());
@@ -2034,7 +2034,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 7, 'ISO 800'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(800, $doc->isoBestEffort());
     }
@@ -2051,7 +2051,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(400, $doc->isoBestEffort());
     }
@@ -2065,7 +2065,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 640),
         ]);
 
-        $doc = new ExifDocument(
+        $doc = new ParsedExif(
             $ifd0,
             null,
             null,
@@ -2091,7 +2091,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, null, null, null, null, [], [256 => $subIfd]);
+        $doc = new ParsedExif(new Ifd([]), null, null, null, null, null, [], [256 => $subIfd]);
 
         self::assertSame(640, $doc->isoBestEffort());
     }
@@ -2108,7 +2108,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, null, null, null, null, [], [1024 => $subIfd]);
+        $doc = new ParsedExif(new Ifd([]), null, null, null, null, null, [], [1024 => $subIfd]);
 
         self::assertSame(512, $doc->iso());
         self::assertSame(512, $doc->isoBestEffort());
@@ -2126,7 +2126,7 @@ final class ExifDocumentTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
+        $doc = new ParsedExif(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
 
         self::assertSame(1600, $doc->iso());
         self::assertSame(1600, $doc->isoBestEffort());
@@ -2140,7 +2140,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
+        $doc = new ParsedExif(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
 
         self::assertSame('2024:05:06 07:08:09', $doc->dateTimeOriginalRaw());
 
@@ -2158,7 +2158,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::USER_COMMENT => new IfdEntry(ExifTag::USER_COMMENT, 7, 1, $comment),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
+        $doc = new ParsedExif(new Ifd([]), null, null, null, $ifd1, null, [$ifd1], []);
 
         self::assertSame('Fallback comment', $doc->userComment());
         self::assertSame('ASCII', $doc->userCommentEncoding());
@@ -2225,7 +2225,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::GIMBAL_ROLL_DEGREE  => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(-5, 10)),
         ]);
 
-        $document = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, $gpsIfd, null, null);
 
         self::assertSame('DJI', $document->aircraftMake());
         self::assertSame('Mavic 3', $document->aircraftModel());
@@ -2255,7 +2255,7 @@ final class ExifDocumentTest extends TestCase
             ExifTag::GIMBAL_ROLL_DEGREE  => new IfdEntry(ExifTag::GIMBAL_ROLL_DEGREE, 10, 1, new ExifRational(-5, 10)),
         ]);
 
-        $document = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame('DJI', $document->aircraftMake());
         self::assertSame('Mavic 3', $document->aircraftModel());

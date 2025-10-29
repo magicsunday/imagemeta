@@ -12,10 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\imagemeta\tests\Model;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \MagicSunday\ImageMeta\Model\Metadata
  */
 #[CoversClass(Metadata::class)]
-#[UsesClass(ExifDocument::class)]
+#[UsesClass(ParsedExif::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
@@ -62,7 +62,7 @@ final class MetadataTest extends TestCase
             ExifTag::MAKE  => new IfdEntry(ExifTag::MAKE, 2, 1, 'Canon'),
             ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 2, 1, 'EOS R5'),
         ]);
-        $exifDoc  = new ExifDocument($ifd0, null, null, null, null);
+        $exifDoc  = new ParsedExif($ifd0, null, null, null, null);
         $xmpBlobs = [
             '<x:xmpmeta>\n  <!-- primary -->\n</x:xmpmeta>',
             '<x:xmpmeta>\n  <!-- secondary -->\n</x:xmpmeta>',
@@ -165,7 +165,7 @@ final class MetadataTest extends TestCase
             ExifTag::MODEL => new IfdEntry(ExifTag::MODEL, 2, 1, 'X-T5'),
         ]);
 
-        $exifDoc = new ExifDocument($ifd0, null, null, null, null);
+        $exifDoc = new ParsedExif($ifd0, null, null, null, null);
 
         $xmpBlobs = [
             '<x:xmpmeta>\n  <photoshop:DateCreated>2024-06-01</photoshop:DateCreated>\n</x:xmpmeta>',

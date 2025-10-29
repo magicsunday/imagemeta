@@ -28,7 +28,7 @@ use MagicSunday\ImageMeta\Curate\Structured\SensorMetadata;
 use MagicSunday\ImageMeta\Curate\Structured\TechnicalMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
@@ -117,7 +117,7 @@ use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * Builds the structured metadata aggregate by orchestrating value-object creation from
- * ExifDocument, QuickTimeMeta and MakerNotes sources.
+ * ParsedExif, QuickTimeMeta and MakerNotes sources.
  */
 final class ValueFactory
 {
@@ -594,17 +594,17 @@ final class ValueFactory
     /**
      * Builds the device metadata aggregate by combining EXIF helpers with QuickTime fallbacks.
      *
-     * @param ExifDocument|null  $exif        Resolver exposing EXIF tag helpers.
+     * @param ParsedExif|null    $exif        Resolver exposing EXIF tag helpers.
      * @param QuickTimeMeta|null $quickTime   QuickTime metadata container exposing software fields.
      * @param XmpDocument|null   $xmpDocument Placeholder for future XMP backed device metadata.
      *
      * @return Device Device value object describing capture hardware and software.
      */
-    private function buildDevice(?ExifDocument $exif, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Device
+    private function buildDevice(?ParsedExif $exif, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Device
     {
         $software = null;
 
-        if ($exif instanceof ExifDocument) {
+        if ($exif instanceof ParsedExif) {
             $software = $exif->software();
 
             if ($software === null) {
@@ -637,13 +637,13 @@ final class ValueFactory
      * Fractional seconds are mirrored into the generic field to keep display values consistent
      * whenever only the original or digitized timestamp carries sub-second precision.
      *
-     * @param ExifDocument|null  $exifDocument EXIF document exposing timestamps and offsets.
+     * @param ParsedExif|null    $exifDocument EXIF document exposing timestamps and offsets.
      * @param QuickTimeMeta|null $quickTime    QuickTime metadata used for time fallbacks.
      * @param XmpDocument|null   $xmpDocument  XMP document providing timestamp fields.
      *
      * @return Temporal Normalised temporal metadata aggregate.
      */
-    private function buildTemporal(?ExifDocument $exifDocument, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Temporal
+    private function buildTemporal(?ParsedExif $exifDocument, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Temporal
     {
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
@@ -709,9 +709,9 @@ final class ValueFactory
      *
      * @return array{0:?DateTimeImmutable,1:?DateTimeZone,2:?string}
      */
-    private function originalTimestampComponents(?ExifDocument $document): array
+    private function originalTimestampComponents(?ParsedExif $document): array
     {
-        if (!$document instanceof ExifDocument) {
+        if (!$document instanceof ParsedExif) {
             return [null, null, null];
         }
 
@@ -801,13 +801,13 @@ final class ValueFactory
     /**
      * Builds a camera value object using EXIF metadata.
      *
-     * @param ExifDocument|null $exifDocument EXIF document exposing camera related tags.
+     * @param ParsedExif|null $exifDocument EXIF document exposing camera related tags.
      *
      * @return Camera Normalised camera metadata aggregate.
      */
-    private function buildCamera(?ExifDocument $exifDocument): Camera
+    private function buildCamera(?ParsedExif $exifDocument): Camera
     {
-        if (!$exifDocument instanceof ExifDocument) {
+        if (!$exifDocument instanceof ParsedExif) {
             return new Camera(
                 make: null,
                 model: null,
@@ -845,13 +845,13 @@ final class ValueFactory
     /**
      * Builds a lens value object using EXIF metadata.
      *
-     * @param ExifDocument|null $exifDocument EXIF document exposing lens specific tags.
+     * @param ParsedExif|null $exifDocument EXIF document exposing lens specific tags.
      *
      * @return Lens Normalised lens metadata aggregate.
      */
-    private function buildLens(?ExifDocument $exifDocument): Lens
+    private function buildLens(?ParsedExif $exifDocument): Lens
     {
-        if (!$exifDocument instanceof ExifDocument) {
+        if (!$exifDocument instanceof ParsedExif) {
             return new Lens(
                 lensMake: null,
                 lensModel: null,
@@ -880,12 +880,12 @@ final class ValueFactory
     /**
      * Builds the image value object using EXIF metadata.
      *
-     * @param Metadata          $metadata     Metadata container supplying JPEG frame fallbacks.
-     * @param ExifDocument|null $exifDocument EXIF document exposing image related tags.
+     * @param Metadata        $metadata     Metadata container supplying JPEG frame fallbacks.
+     * @param ParsedExif|null $exifDocument EXIF document exposing image related tags.
      *
      * @return Image Normalised image metadata aggregate.
      */
-    private function buildImage(Metadata $metadata, ?ExifDocument $exifDocument): Image
+    private function buildImage(Metadata $metadata, ?ParsedExif $exifDocument): Image
     {
         $width  = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
         $height = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
@@ -939,7 +939,7 @@ final class ValueFactory
     /**
      * Builds the scene metadata aggregate using EXIF, QuickTime and Apple sources.
      *
-     * @param ExifDocument|null  $exif      Resolver exposing EXIF scene metadata.
+     * @param ParsedExif|null    $exif      Resolver exposing EXIF scene metadata.
      * @param QuickTimeMeta|null $quickTime QuickTime metadata providing scene hints.
      * @param AppleMakerNotes    $apple     Aggregated Apple maker note metadata.
      * @param int|null           $faceCount Number of detected face regions.
@@ -947,7 +947,7 @@ final class ValueFactory
      * @return Scene Scene metadata value object.
      */
     private function buildScene(
-        ?ExifDocument $exif,
+        ?ParsedExif $exif,
         ?QuickTimeMeta $quickTime,
         AppleMakerNotes $apple,
         ?int $faceCount,
@@ -1026,12 +1026,12 @@ final class ValueFactory
     /**
      * Builds the motion metadata aggregate from EXIF and Apple motion sources.
      *
-     * @param ExifDocument    $exif  Resolver exposing EXIF camera orientation measurements.
+     * @param ParsedExif      $exif  Resolver exposing EXIF camera orientation measurements.
      * @param AppleMakerNotes $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
      *
      * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
      */
-    private function buildMotion(?ExifDocument $exif, AppleMakerNotes $apple): Motion
+    private function buildMotion(?ParsedExif $exif, AppleMakerNotes $apple): Motion
     {
         $rollDeg  = $exif?->cameraRollDeg();
         $pitchDeg = $exif?->cameraPitchDeg();
@@ -1056,7 +1056,7 @@ final class ValueFactory
         return new Motion($rollDeg, $pitchDeg, $yawDeg, $accelX, $accelY, $accelZ, null, null, null);
     }
 
-    private function buildUav(?ExifDocument $exif, ?QuickTimeMeta $quickTime): Uav
+    private function buildUav(?ParsedExif $exif, ?QuickTimeMeta $quickTime): Uav
     {
         $lookup = new QuickTimeLookup($quickTime);
 
@@ -1141,13 +1141,13 @@ final class ValueFactory
     /**
      * Normalises the colour space based on interoperability metadata hints.
      *
-     * @param ExifDocument|null $exifDocument EXIF document exposing colour space and interoperability tags.
+     * @param ParsedExif|null $exifDocument EXIF document exposing colour space and interoperability tags.
      *
      * @return ColorSpace|null Normalised colour space enumeration or null when undefined.
      */
-    private function normalizedColorSpace(?ExifDocument $exifDocument): ?ColorSpace
+    private function normalizedColorSpace(?ParsedExif $exifDocument): ?ColorSpace
     {
-        if (!$exifDocument instanceof ExifDocument) {
+        if (!$exifDocument instanceof ParsedExif) {
             return null;
         }
 
@@ -1291,7 +1291,7 @@ final class ValueFactory
      *
      * The GPS version defaults to 2.0.0.0 whenever EXIF omits the tag or only exposes padding bytes.
      */
-    private function resolveGps(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Gps
+    private function resolveGps(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): ?Gps
     {
         /**
          * @var array{
@@ -1336,7 +1336,7 @@ final class ValueFactory
          *     h_positioning_error: float|null,
          * } $gpsData
          */
-        $gpsData = $exifDocument instanceof ExifDocument
+        $gpsData = $exifDocument instanceof ParsedExif
             ? $exifDocument->gps()
             : ValueConverters::emptyGpsResult();
 

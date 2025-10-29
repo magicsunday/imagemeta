@@ -17,12 +17,12 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -156,27 +156,27 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Provides representative Classic TIFF and BigTIFF payloads.
      *
-     * @return iterable<string, array{0:string,1:callable(ExifDocument):void}>
+     * @return iterable<string, array{0:string,1:callable(ParsedExif):void}>
      */
     public static function provideValidTiffPayloads(): iterable
     {
         yield 'classic' => [
             self::buildClassicTiffBlob(),
-            static function (ExifDocument $doc): void {
+            static function (ParsedExif $doc): void {
                 self::assertClassicDocument($doc);
             },
         ];
 
         yield 'big_tiff' => [
             self::buildBigTiffBlob(),
-            static function (ExifDocument $doc): void {
+            static function (ParsedExif $doc): void {
                 self::assertBigTiffDocument($doc);
             },
         ];
 
         yield 'big_tiff_offset16' => [
             self::buildBigTiffOffset16Blob(),
-            static function (ExifDocument $doc): void {
+            static function (ParsedExif $doc): void {
                 self::assertBigTiffOffset16Document($doc);
             },
         ];
@@ -185,8 +185,8 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Verifies that valid TIFF payloads are parsed into the expected IFD hierarchy.
      *
-     * @param string                       $blob      Binary TIFF/EXIF payload.
-     * @param callable(ExifDocument): void $assertion Assertion executed for the parsed document.
+     * @param string                     $blob      Binary TIFF/EXIF payload.
+     * @param callable(ParsedExif): void $assertion Assertion executed for the parsed document.
      */
     #[Test]
     #[DataProvider('provideValidTiffPayloads')]
@@ -781,9 +781,9 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Asserts the decoded values of the synthetic Classic TIFF payload.
      *
-     * @param ExifDocument $doc Parsed document returned by the TIFF reader.
+     * @param ParsedExif $doc Parsed document returned by the TIFF reader.
      */
-    private static function assertClassicDocument(ExifDocument $doc): void
+    private static function assertClassicDocument(ParsedExif $doc): void
     {
         self::assertSame('Canon', $doc->ifd0->get(ExifTag::MAKE)?->value);
         self::assertSame(1, $doc->ifd0->get(ExifTag::ORIENTATION)?->value);
@@ -859,9 +859,9 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Asserts the decoded values of the synthetic BigTIFF payload.
      *
-     * @param ExifDocument $doc Parsed document returned by the TIFF reader.
+     * @param ParsedExif $doc Parsed document returned by the TIFF reader.
      */
-    private static function assertBigTiffDocument(ExifDocument $doc): void
+    private static function assertBigTiffDocument(ParsedExif $doc): void
     {
         self::assertSame('BigCamXL', $doc->ifd0->get(ExifTag::MAKE)?->value);
         self::assertSame(3, $doc->ifd0->get(ExifTag::ORIENTATION)?->value);
@@ -928,7 +928,7 @@ final class TiffExifReaderTest extends TestCase
     /**
      * Asserts the decoded values of the synthetic 16-byte BigTIFF payload.
      */
-    private static function assertBigTiffOffset16Document(ExifDocument $doc): void
+    private static function assertBigTiffOffset16Document(ParsedExif $doc): void
     {
         $stripOffsetsEntry = $doc->ifd0->get(ExifTag::STRIP_OFFSETS);
         self::assertNotNull($stripOffsetsEntry);

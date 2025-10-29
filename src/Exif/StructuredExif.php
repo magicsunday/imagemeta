@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Api;
+namespace MagicSunday\ImageMeta\Exif;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Camera as StructuredCamera;
@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Curate\Exif\Structured\Gps as StructuredGps;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Image as StructuredImage;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Lens as StructuredLens;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument as ModelExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Camera as CameraValue;
 use MagicSunday\ImageMeta\Value\Derived;
@@ -31,13 +31,14 @@ use MagicSunday\ImageMeta\Value\Image as ImageValue;
 use MagicSunday\ImageMeta\Value\Interop as InteropValue;
 use MagicSunday\ImageMeta\Value\Lens as LensValue;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
+use MagicSunday\ImageMeta\Value\Standards;
 
 /**
  * Provides an EXIF-only structured view derived from a parsed document.
  */
-final readonly class ExifDocument
+final readonly class StructuredExif
 {
-    private ?ModelExifDocument $raw;
+    private ?ParsedExif $raw;
 
     private StructuredCamera $camera;
 
@@ -53,16 +54,18 @@ final readonly class ExifDocument
 
     private InteropValue $interop;
 
+    private Standards $standards;
+
     /**
      * Creates the structured EXIF view by aggregating the curated value objects extracted from the parser.
      *
-     * @param ModelExifDocument|null $document              Parsed EXIF document that provides the raw value objects.
-     * @param int|null               $fallbackWidth         Pixel width used when the EXIF image width tag is not available.
-     * @param int|null               $fallbackHeight        Pixel height used when the EXIF image height tag is not available.
-     * @param int|null               $fallbackBitsPerSample Bit depth to fall back to when the EXIF component depth is missing.
+     * @param ParsedExif|null $document              Parsed EXIF document that provides the raw value objects.
+     * @param int|null        $fallbackWidth         Pixel width used when the EXIF image width tag is not available.
+     * @param int|null        $fallbackHeight        Pixel height used when the EXIF image height tag is not available.
+     * @param int|null        $fallbackBitsPerSample Bit depth to fall back to when the EXIF component depth is missing.
      */
     public function __construct(
-        ?ModelExifDocument $document,
+        ?ParsedExif $document,
         ?int $fallbackWidth = null,
         ?int $fallbackHeight = null,
         ?int $fallbackBitsPerSample = null,
@@ -85,13 +88,14 @@ final readonly class ExifDocument
         );
 
         // Build structured view models that expose the curated EXIF metadata slices.
-        $this->camera   = new StructuredCamera($cameraValue);
-        $this->lens     = new StructuredLens($lensValue, $derived);
-        $this->exposure = new StructuredExposure($exposureValue, $derived);
-        $this->gps      = new StructuredGps($gpsValue);
-        $this->image    = new StructuredImage($imageValue);
-        $this->preview  = new StructuredPreview($previewValue);
-        $this->interop  = $interopValue;
+        $this->camera    = new StructuredCamera($cameraValue);
+        $this->lens      = new StructuredLens($lensValue, $derived);
+        $this->exposure  = new StructuredExposure($exposureValue, $derived);
+        $this->gps       = new StructuredGps($gpsValue);
+        $this->image     = new StructuredImage($imageValue);
+        $this->preview   = new StructuredPreview($previewValue);
+        $this->interop   = $interopValue;
+        $this->standards = $this->createStandardsValue($document);
     }
 
     /**
@@ -155,6 +159,16 @@ final readonly class ExifDocument
     }
 
     /**
+     * Returns the metadata standard identifiers derived from the EXIF document.
+     *
+     * @return Standards Standards value object with EXIF, FlashPix and TIFF/EP identifiers.
+     */
+    public function standards(): Standards
+    {
+        return $this->standards;
+    }
+
+    /**
      * Returns the interoperability metadata extracted from the raw EXIF document.
      *
      * @return InteropValue Interoperability metadata accessor.
@@ -211,15 +225,15 @@ final readonly class ExifDocument
      */
     public function hasData(): bool
     {
-        return $this->raw instanceof ModelExifDocument;
+        return $this->raw instanceof ParsedExif;
     }
 
     /**
      * Returns the underlying raw EXIF document instance.
      *
-     * @return ModelExifDocument|null Raw model or null when no EXIF data was parsed.
+     * @return ParsedExif|null Raw model or null when no EXIF data was parsed.
      */
-    public function raw(): ?ModelExifDocument
+    public function raw(): ?ParsedExif
     {
         return $this->raw;
     }
@@ -231,13 +245,13 @@ final readonly class ExifDocument
      * resolves firmware information by checking firmware, firmware version and
      * software tags in that order.
      *
-     * @param ModelExifDocument|null $document Parsed EXIF document.
+     * @param ParsedExif|null $document Parsed EXIF document.
      *
      * @return CameraValue Normalised camera metadata.
      */
-    private function createCameraValue(?ModelExifDocument $document): CameraValue
+    private function createCameraValue(?ParsedExif $document): CameraValue
     {
-        if (!$document instanceof ModelExifDocument) {
+        if (!$document instanceof ParsedExif) {
             return new CameraValue(null, null, null, null, null, null, null);
         }
 
@@ -267,13 +281,13 @@ final readonly class ExifDocument
      * Falls back to an empty value object when the document is missing and
      * converts the maximum aperture apex value to an F-number when present.
      *
-     * @param ModelExifDocument|null $document Parsed EXIF document.
+     * @param ParsedExif|null $document Parsed EXIF document.
      *
      * @return LensValue Normalised lens metadata.
      */
-    private function createLensValue(?ModelExifDocument $document): LensValue
+    private function createLensValue(?ParsedExif $document): LensValue
     {
-        if (!$document instanceof ModelExifDocument) {
+        if (!$document instanceof ParsedExif) {
             return new LensValue(null, null, null, null, null, null, null);
         }
 
@@ -297,13 +311,13 @@ final readonly class ExifDocument
      * Falls back to an empty value object when the document is missing and
      * maps numeric codes to their enum representations when available.
      *
-     * @param ModelExifDocument|null $document Parsed EXIF document.
+     * @param ParsedExif|null $document Parsed EXIF document.
      *
      * @return ExposureValue Normalised exposure metadata.
      */
-    private function createExposureValue(?ModelExifDocument $document): ExposureValue
+    private function createExposureValue(?ParsedExif $document): ExposureValue
     {
-        if (!$document instanceof ModelExifDocument) {
+        if (!$document instanceof ParsedExif) {
             return new ExposureValue(
                 iso: null,
                 exposureTimeSec: null,
@@ -393,13 +407,13 @@ final readonly class ExifDocument
      *
      * Falls back to an empty GPS value when the document is missing.
      *
-     * @param ModelExifDocument|null $document Parsed EXIF document.
+     * @param ParsedExif|null $document Parsed EXIF document.
      *
      * @return GpsValue Normalised GPS metadata.
      */
-    private function createGpsValue(?ModelExifDocument $document): GpsValue
+    private function createGpsValue(?ParsedExif $document): GpsValue
     {
-        if (!$document instanceof ModelExifDocument) {
+        if (!$document instanceof ParsedExif) {
             return new GpsValue();
         }
 
@@ -444,7 +458,7 @@ final readonly class ExifDocument
          *     differential:?int,
          *     h_positioning_error:?float
          * } $gpsValues */
-        // ModelExifDocument::gps() returns a normalized array of EXIF GPSInfo tags
+        // ParsedExif::gps() returns a normalized array of EXIF GPSInfo tags
         // (EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 retains the same tag catalogue).
         $gpsValues = $document->gps();
 
@@ -497,15 +511,15 @@ final readonly class ExifDocument
      * Falls back to supplied width, height and bit depth values when the EXIF
      * tags are missing and resolves the orientation and color space enums.
      *
-     * @param ModelExifDocument|null $document              Parsed EXIF document.
-     * @param int|null               $fallbackWidth         Width used when the document is missing the tag.
-     * @param int|null               $fallbackHeight        Height used when the document is missing the tag.
-     * @param int|null               $fallbackBitsPerSample Bit depth used when the document is missing the tag.
+     * @param ParsedExif|null $document              Parsed EXIF document.
+     * @param int|null        $fallbackWidth         Width used when the document is missing the tag.
+     * @param int|null        $fallbackHeight        Height used when the document is missing the tag.
+     * @param int|null        $fallbackBitsPerSample Bit depth used when the document is missing the tag.
      *
      * @return ImageValue Normalised image metadata.
      */
     private function createImageValue(
-        ?ModelExifDocument $document,
+        ?ParsedExif $document,
         ?int $fallbackWidth,
         ?int $fallbackHeight,
         ?int $fallbackBitsPerSample,
@@ -539,20 +553,42 @@ final readonly class ExifDocument
     }
 
     /**
+     * Creates a standards value object summarising the metadata specification identifiers.
+     *
+     * @param ParsedExif|null $document Parsed EXIF document.
+     *
+     * @return Standards Normalised specification identifiers.
+     */
+    private function createStandardsValue(?ParsedExif $document): Standards
+    {
+        if (!$document instanceof ParsedExif) {
+            return new Standards(null, null, null, null, null);
+        }
+
+        return new Standards(
+            exifVersion: $document->exifVersion(),
+            profile: $document->exifProfile(),
+            flashpixVersion: $document->flashpixVersion(),
+            tiffEpStandardId: $document->tiffEpStandardId(),
+            tiffEpStandardString: $document->tiffEpStandardIdString(),
+        );
+    }
+
+    /**
      * Creates a preview value object from the parsed EXIF document.
      *
      * Falls back to an empty preview value when the document is missing and
      * resolves color space and compression enums when tags are available.
      *
-     * @param ModelExifDocument|null $document Parsed EXIF document.
+     * @param ParsedExif|null $document Parsed EXIF document.
      *
      * @return PreviewValue Normalised preview metadata.
      */
-    private function createPreviewValue(?ModelExifDocument $document): PreviewValue
+    private function createPreviewValue(?ParsedExif $document): PreviewValue
     {
         $previewColorSpace  = null;
         $previewCompression = null;
-        if ($document instanceof ModelExifDocument) {
+        if ($document instanceof ParsedExif) {
             $previewColorSpace  = ColorSpace::fromExifValue($document->previewColorSpace());
             $previewCompression = Compression::fromExifValue($document->previewImageCompression());
         }

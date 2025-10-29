@@ -17,13 +17,13 @@ use MagicSunday\ImageMeta\Curate\Structured\GpsCoordinate;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
@@ -236,7 +236,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::RELATED_IMAGE_LENGTH      => new IfdEntry(ExifTag::RELATED_IMAGE_LENGTH, 4, 1, 3000),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, $interopIfd, null);
 
         $xmpDocument = new XmpDocument([
             '{http://purl.org/dc/elements/1.1/}creator'                                                => ['Jane Doe'],
@@ -475,7 +475,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -517,7 +517,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $metadata   = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
+        $metadata   = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, null, null, null));
         $structured = (new ExifAssembler())->assemble($metadata);
         $temporal   = $structured->capture->temporal;
         $preview    = $structured->media->preview;
@@ -551,7 +551,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata = new Metadata(
             ['primary'],
             null,
-            new ExifDocument(new Ifd([]), new Ifd([]), null, null, null),
+            new ParsedExif(new Ifd([]), new Ifd([]), null, null, null),
             ['<xmp/>'],
             $xmpDocument,
         );
@@ -570,7 +570,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::ORIENTATION => new IfdEntry(ExifTag::ORIENTATION, 3, 1, 0),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, null, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, null, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -581,7 +581,7 @@ final class ExifAssemblerTest extends TestCase
     #[Test]
     public function buildsUavFromQuickTimeFallbackWhenExifFieldsMissing(): void
     {
-        $exifDocument = new ExifDocument(new Ifd([]), new Ifd([]), null, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), new Ifd([]), null, null, null);
 
         $quickTime = new QuickTimeMeta([
             'com.apple.quicktime.make'              => 'Parrot',
@@ -621,7 +621,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $metadata = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
+        $metadata = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, null, null, null));
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
@@ -637,7 +637,7 @@ final class ExifAssemblerTest extends TestCase
         ]);
 
         $structured = (new ExifAssembler())
-            ->assemble(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
+            ->assemble(new Metadata(['primary'], null, new ParsedExif($ifd0, null, null, null, null)));
 
         self::assertSame('Legacy Document', $structured->media->image->documentName);
     }
@@ -654,7 +654,7 @@ final class ExifAssemblerTest extends TestCase
         ]);
 
         $structured = (new ExifAssembler())
-            ->assemble(new Metadata(['primary'], null, new ExifDocument($ifd0, null, null, null, null)));
+            ->assemble(new Metadata(['primary'], null, new ParsedExif($ifd0, null, null, null, null)));
 
         self::assertSame('XP Subject', $structured->media->image->documentName);
         self::assertSame('XP Title', $structured->media->image->title);
@@ -746,7 +746,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::OFFSET_TIME                              => new IfdEntry(ExifTag::OFFSET_TIME, 2, 6, '+01:30'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $xmpDocument = new XmpDocument([
             '{http://ns.adobe.com/xap/1.0/}CreateDate' => '2024-02-01T20:45:00+01:00',
@@ -811,7 +811,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0300'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $metadata = new Metadata(
             ['primary'],
@@ -837,7 +837,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0221'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $metadata = new Metadata(
             ['primary'],
@@ -857,7 +857,7 @@ final class ExifAssemblerTest extends TestCase
     {
         $ifd0 = new Ifd([]);
 
-        $exifDocument = new ExifDocument($ifd0, null, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, null, null, null, null);
 
         $quickTime = new QuickTimeMeta([
             'com.apple.quicktime.software' => 'QuickTime Studio',
@@ -916,7 +916,7 @@ final class ExifAssemblerTest extends TestCase
         $makerNotes = new MakerNotesRecord('Apple', 64, str_repeat('a', 40), $appleMakerNotes, false);
 
         $ifd0         = new Ifd([]);
-        $exifDocument = new ExifDocument($ifd0, null, null, null, null, $makerNotes);
+        $exifDocument = new ParsedExif($ifd0, null, null, null, null, $makerNotes);
 
         $quickTime = new QuickTimeMeta([
             QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
@@ -1053,7 +1053,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1084,7 +1084,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1134,7 +1134,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata = new Metadata(
             ['primary'],
             null,
-            new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes),
+            new ParsedExif(new Ifd([]), null, null, null, null, $makerNotes),
             [],
             null,
             $makerNotes,
@@ -1190,7 +1190,7 @@ final class ExifAssemblerTest extends TestCase
         );
 
         $makerNotes   = new MakerNotesRecord('Apple', 8, str_repeat('c', 40), $standardMakerNotes);
-        $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
+        $exifDocument = new ParsedExif(new Ifd([]), null, null, null, null, $makerNotes);
         $metadata     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1225,7 +1225,7 @@ final class ExifAssemblerTest extends TestCase
         );
 
         $headroomMakerNotesMeta = new MakerNotesRecord('Apple', 9, str_repeat('d', 40), $headroomMakerNotes);
-        $headroomExif           = new ExifDocument(new Ifd([]), null, null, null, null, $headroomMakerNotesMeta);
+        $headroomExif           = new ParsedExif(new Ifd([]), null, null, null, null, $headroomMakerNotesMeta);
         $headroomMetadata       = new Metadata(['primary'], new QuickTimeMeta([]), $headroomExif, [], null, $headroomMakerNotesMeta);
 
         $structuredHeadroom = (new ExifAssembler())->assemble($headroomMetadata);
@@ -1260,7 +1260,7 @@ final class ExifAssemblerTest extends TestCase
         );
 
         $flagMakerNotesMeta = new MakerNotesRecord('Apple', 10, str_repeat('e', 40), $flagMakerNotes);
-        $flagExif           = new ExifDocument(new Ifd([]), null, null, null, null, $flagMakerNotesMeta);
+        $flagExif           = new ParsedExif(new Ifd([]), null, null, null, null, $flagMakerNotesMeta);
         $flagMetadata       = new Metadata(['primary'], new QuickTimeMeta([]), $flagExif, [], null, $flagMakerNotesMeta);
 
         $structuredFlags = (new ExifAssembler())->assemble($flagMetadata);
@@ -1305,7 +1305,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata = new Metadata(
             ['primary'],
             null,
-            new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes),
+            new ParsedExif(new Ifd([]), null, null, null, null, $makerNotes),
             [],
             null,
             $makerNotes,
@@ -1348,7 +1348,7 @@ final class ExifAssemblerTest extends TestCase
 
         $makerNotes = new MakerNotesRecord('Apple', 32, str_repeat('a', 40), $makerNotesWithHeadroom);
 
-        $exifDocument = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotes);
+        $exifDocument = new ParsedExif(new Ifd([]), null, null, null, null, $makerNotes);
         $metadata     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocument, [], null, $makerNotes);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1380,7 +1380,7 @@ final class ExifAssemblerTest extends TestCase
 
         $makerNotesFlags = new MakerNotesRecord('Apple', 16, str_repeat('b', 40), $makerNotesWithFlags);
 
-        $exifDocumentFlags = new ExifDocument(new Ifd([]), null, null, null, null, $makerNotesFlags);
+        $exifDocumentFlags = new ParsedExif(new Ifd([]), null, null, null, null, $makerNotesFlags);
         $metadataFlags     = new Metadata(['primary'], new QuickTimeMeta([]), $exifDocumentFlags, [], null, $makerNotesFlags);
 
         $structuredFlags = (new ExifAssembler())->assemble($metadataFlags);
@@ -1399,7 +1399,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0220'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1419,7 +1419,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::EXIF_VERSION => new IfdEntry(ExifTag::EXIF_VERSION, 7, 4, '0231'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1462,7 +1462,7 @@ final class ExifAssemblerTest extends TestCase
         $ifd0    = new Ifd([]);
         $exifIfd = new Ifd([]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $xmpDocument = new XmpDocument([
             '{http://ns.adobe.com/tiff/1.0/}Make'          => 'XMP Make',
@@ -1490,7 +1490,7 @@ final class ExifAssemblerTest extends TestCase
     {
         $ifd0         = new Ifd([]);
         $exifIfd      = new Ifd([]);
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $xmpDocument = new XmpDocument([
             '{http://ns.adobe.com/exif/1.0/}ISOSpeedRatings'  => '640',
@@ -1547,7 +1547,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::PHOTOGRAPHIC_SENSITIVITY    => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 1280),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1570,7 +1570,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-2])),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1600,7 +1600,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1626,7 +1626,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 1, '987'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1656,7 +1656,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:02 12:34:56'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1682,7 +1682,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 200),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1703,7 +1703,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 1, '012800'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1722,7 +1722,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 3648),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $exifDocument = new ParsedExif($ifd0, new Ifd([]), null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1749,7 +1749,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::PHOTOGRAPHIC_SENSITIVITY => new IfdEntry(ExifTag::PHOTOGRAPHIC_SENSITIVITY, 3, 1, 160),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $exifDocument = new ParsedExif($ifd0, new Ifd([]), null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1768,7 +1768,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::IMAGE_HEIGHT => new IfdEntry(ExifTag::IMAGE_HEIGHT, 4, 1, 1536),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, new Ifd([]), null, null, null);
+        $exifDocument = new ParsedExif($ifd0, new Ifd([]), null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1790,7 +1790,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::TIME_ZONE_OFFSET  => new IfdEntry(ExifTag::TIME_ZONE_OFFSET, 8, 1, new ExifNumericList([-130])),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1825,7 +1825,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE, 5, 3, [[1, 30], [1, 15], [1, 8]]),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1860,7 +1860,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 7, '98a7654'),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1881,7 +1881,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '957'),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1901,7 +1901,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::SUB_SEC_TIME_DIGITIZED => new IfdEntry(ExifTag::SUB_SEC_TIME_DIGITIZED, 2, 3, '957'),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1930,7 +1930,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 3, 'R03'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, $interopIfd, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1957,7 +1957,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::INTEROPERABILITY_INDEX => new IfdEntry(ExifTag::INTEROPERABILITY_INDEX, 2, 3, 'R98'),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, $interopIfd, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, $interopIfd, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -1975,7 +1975,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::MAX_APERTURE_VALUE => new IfdEntry(ExifTag::MAX_APERTURE_VALUE, 5, 1, [[4, 1]]),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -2054,7 +2054,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::PROFILE_CALIBRATION_SIGNATURE => new IfdEntry(ExifTag::PROFILE_CALIBRATION_SIGNATURE, 2, 15, 'ProfileSig v2'),
         ]);
 
-        $document = new ExifDocument(new Ifd([]), $exifIfd, null, null, null, null, [], [
+        $document = new ParsedExif(new Ifd([]), $exifIfd, null, null, null, null, [], [
             0 => $profileIfd,
         ]);
 
@@ -2096,7 +2096,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::GPS_SPEED     => new IfdEntry(ExifTag::GPS_SPEED, 5, 1, [[120, 1]]),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), null, $gpsIfd, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -2193,7 +2193,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(15, 10)),
         ]);
 
-        $exifDocument = new ExifDocument(new Ifd([]), null, $gpsIfd, null, null);
+        $exifDocument = new ParsedExif(new Ifd([]), null, $gpsIfd, null, null);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -2386,7 +2386,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::WHITE_BALANCE => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, WhiteBalance::AUTO->value),
         ]);
 
-        $exifDocument = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         $apple = new AppleMakerNotes(
             contentIdentifier: 'uuid-123',
@@ -2451,7 +2451,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Metadata Tool Z'),
         ]);
 
-        $metadata = new Metadata(['primary'], null, new ExifDocument($ifd0, $exifIfd, null, null, null));
+        $metadata = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, null, null, null));
 
         $structured = (new ExifAssembler())->assemble($metadata);
 

@@ -136,4 +136,189 @@ final readonly class Gps
         $this->differential                         = $gps->differential;
         $this->horizontalPositioningError           = $gps->horizontalPositioningError;
     }
+
+    public function latitude(): ?GpsCoordinate
+    {
+        return $this->latitude;
+    }
+
+    public function lat(): ?GpsCoordinate
+    {
+        return $this->latitude();
+    }
+
+    public function longitude(): ?GpsCoordinate
+    {
+        return $this->longitude;
+    }
+
+    public function lon(): ?GpsCoordinate
+    {
+        return $this->longitude();
+    }
+
+    public function altitude(): ?float
+    {
+        return $this->altitude;
+    }
+
+    public function altitudeReference(): ?int
+    {
+        return $this->altitudeReference;
+    }
+
+    public function version(): ?string
+    {
+        return $this->version;
+    }
+
+    public function versionRaw(): ?string
+    {
+        return $this->versionRaw;
+    }
+
+    public function satellites(): ?string
+    {
+        return $this->satellites;
+    }
+
+    public function status(): ?string
+    {
+        return $this->status;
+    }
+
+    public function measureMode(): ?string
+    {
+        return $this->measureMode;
+    }
+
+    public function dilutionOfPrecision(): ?float
+    {
+        return $this->dilutionOfPrecision;
+    }
+
+    public function speedReference(): ?string
+    {
+        return $this->speedReference;
+    }
+
+    public function speedMs(): ?float
+    {
+        return $this->speedMs;
+    }
+
+    public function speedOriginalReference(): ?string
+    {
+        return $this->speedOriginalReference;
+    }
+
+    public function speedOriginal(): ?float
+    {
+        return $this->speedOriginal;
+    }
+
+    public function trackReference(): ?string
+    {
+        return $this->trackReference;
+    }
+
+    public function track(): ?float
+    {
+        return $this->track;
+    }
+
+    public function imageDirectionReference(): ?string
+    {
+        return $this->imageDirectionReference;
+    }
+
+    public function imageDirection(): ?float
+    {
+        return $this->imageDirection;
+    }
+
+    public function mapDatum(): ?string
+    {
+        return $this->mapDatum;
+    }
+
+    public function destinationLatitude(): ?GpsCoordinate
+    {
+        return $this->destinationLatitude;
+    }
+
+    public function destinationLongitude(): ?GpsCoordinate
+    {
+        return $this->destinationLongitude;
+    }
+
+    public function destinationBearingReference(): ?string
+    {
+        return $this->destinationBearingReference;
+    }
+
+    public function destinationBearing(): ?float
+    {
+        return $this->destinationBearing;
+    }
+
+    public function destinationDistanceReference(): ?string
+    {
+        return $this->destinationDistanceReference;
+    }
+
+    public function destinationDistanceMetres(): ?float
+    {
+        return $this->destinationDistanceMetres;
+    }
+
+    public function destinationDistanceOriginalReference(): ?string
+    {
+        return $this->destinationDistanceOriginalReference;
+    }
+
+    public function destinationDistanceOriginal(): ?float
+    {
+        return $this->destinationDistanceOriginal;
+    }
+
+    public function processingMethod(): ?string
+    {
+        return $this->processingMethod;
+    }
+
+    public function areaInformation(): ?string
+    {
+        return $this->areaInformation;
+    }
+
+    public function date(): ?string
+    {
+        return $this->date;
+    }
+
+    public function dateRaw(): ?string
+    {
+        return $this->dateRaw;
+    }
+
+    public function time(): ?string
+    {
+        return $this->time;
+    }
+
+    public function timestamp(): ?DateTimeImmutable
+    {
+        return $this->timestamp;
+    }
+
+    public function differential(): ?int
+    {
+        return $this->differential;
+    }
+
+    public function horizontalPositioningError(): ?float
+    {
+        return $this->horizontalPositioningError;
+    }
 }

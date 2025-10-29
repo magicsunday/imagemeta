@@ -14,13 +14,13 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 use MagicSunday\ImageMeta\Convenience\ExifConvenience;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \MagicSunday\ImageMeta\Convenience\ExifConvenience
  */
 #[CoversClass(ExifConvenience::class)]
-#[UsesClass(ExifDocument::class)]
+#[UsesClass(ParsedExif::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifRationalList::class)]
@@ -58,11 +58,11 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 320),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertSame(320, ExifConvenience::iso($doc));
 
-        $docWithLegacy = new ExifDocument($ifd0, null, null, null, null);
+        $docWithLegacy = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(200, ExifConvenience::iso($docWithLegacy));
     }
@@ -84,7 +84,7 @@ final class ExifConvenienceTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, null);
+        $doc = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(100, ExifConvenience::iso($doc));
     }
@@ -105,7 +105,7 @@ final class ExifConvenienceTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, null);
+        $doc = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(200, ExifConvenience::iso($doc));
     }
@@ -125,7 +125,7 @@ final class ExifConvenienceTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument($ifd0, null, null, null, null);
+        $doc = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(320, ExifConvenience::iso($doc));
     }
@@ -137,7 +137,7 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 2, 7, 'ISO 800'),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), $exifIfd, null, null, null);
+        $doc = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertSame(800, ExifConvenience::iso($doc));
     }
@@ -154,7 +154,7 @@ final class ExifConvenienceTest extends TestCase
             ),
         ]);
 
-        $doc = new ExifDocument(new Ifd([]), null, null, null, null, null, [], [256 => $subIfd]);
+        $doc = new ParsedExif(new Ifd([]), null, null, null, null, null, [], [256 => $subIfd]);
 
         self::assertSame(640, ExifConvenience::iso($doc));
     }
@@ -173,7 +173,7 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 3, 1, 250),
         ]);
 
-        $docWithSosOnly = new ExifDocument($ifd0, $sosOnly, null, null, null);
+        $docWithSosOnly = new ParsedExif($ifd0, $sosOnly, null, null, null);
 
         self::assertSame(250, ExifConvenience::iso($docWithSosOnly));
 
@@ -183,7 +183,7 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::ISO_SPEED                  => new IfdEntry(ExifTag::ISO_SPEED, 3, 1, 640),
         ]);
 
-        $docWithPriority = new ExifDocument($ifd0, $priorityIfd, null, null, null);
+        $docWithPriority = new ParsedExif($ifd0, $priorityIfd, null, null, null);
 
         self::assertSame(320, ExifConvenience::iso($docWithPriority));
     }
@@ -202,7 +202,7 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::OFFSET_TIME_ORIGINAL => new IfdEntry(ExifTag::OFFSET_TIME_ORIGINAL, 2, 1, '+02:00'),
         ]);
 
-        $doc      = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc      = new ParsedExif($ifd0, $exifIfd, null, null, null);
         $captured = ExifConvenience::captureDateTime($doc);
 
         self::assertNotNull($captured);
@@ -216,7 +216,7 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function captureDateTimeReturnsNullWhenMissing(): void
     {
-        $doc = new ExifDocument(new Ifd([]), new Ifd([]), null, null, null);
+        $doc = new ParsedExif(new Ifd([]), new Ifd([]), null, null, null);
 
         self::assertNull(ExifConvenience::captureDateTime($doc));
     }
@@ -243,7 +243,7 @@ final class ExifConvenienceTest extends TestCase
             ),
         ]);
 
-        $docWithDigitized = new ExifDocument(new Ifd([]), $digitizedIfd, null, null, null);
+        $docWithDigitized = new ParsedExif(new Ifd([]), $digitizedIfd, null, null, null);
 
         $digitized = ExifConvenience::captureDateTime($docWithDigitized);
 
@@ -259,7 +259,7 @@ final class ExifConvenienceTest extends TestCase
             ),
         ]);
 
-        $docWithModifyDate = new ExifDocument($modifyDateIfd0, new Ifd([]), null, null, null);
+        $docWithModifyDate = new ParsedExif($modifyDateIfd0, new Ifd([]), null, null, null);
 
         $modify = ExifConvenience::captureDateTime($docWithModifyDate);
 
@@ -280,7 +280,7 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::DATETIME_ORIGINAL => new IfdEntry(ExifTag::DATETIME_ORIGINAL, 2, 1, '2024:05:01'),
         ]);
 
-        $doc = new ExifDocument($ifd0, $exifIfd, null, null, null);
+        $doc = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertNull(ExifConvenience::captureDateTime($doc));
     }
@@ -316,7 +316,7 @@ final class ExifConvenienceTest extends TestCase
             ExifTag::GPS_ALTITUDE      => new IfdEntry(ExifTag::GPS_ALTITUDE, 5, 1, [450, 10]),
         ]);
 
-        $doc    = new ExifDocument($ifd0, $exifIfd, $gpsIfd, null, null);
+        $doc    = new ParsedExif($ifd0, $exifIfd, $gpsIfd, null, null);
         $result = ExifConvenience::toArray($doc);
 
         $expected = [

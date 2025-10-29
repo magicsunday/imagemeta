@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Api;
+namespace MagicSunday\ImageMeta\Exif;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\ParseError;
@@ -41,14 +41,14 @@ final readonly class ExifReader
      *
      * @param string $path Absolute or relative path to the media file that should be parsed.
      *
-     * @return ExifDocument Value object providing the parsed EXIF data alongside fallback width,
-     *                      height, and sample precision sourced from the container when the tags
-     *                      are absent inside the metadata.
+     * @return StructuredExif Value object providing the parsed EXIF data alongside fallback width,
+     *                        height, and sample precision sourced from the container when the tags
+     *                        are absent inside the metadata.
      *
      * @throws ParseError  When container detection or downstream parsers encounter malformed data.
      * @throws BoundsError When the stream ends before the required structures can be read.
      */
-    public function read(string $path): ExifDocument
+    public function read(string $path): StructuredExif
     {
         $stream = Stream::fromPath($path);
         $type   = FormatDetector::detect($stream);
@@ -78,6 +78,6 @@ final readonly class ExifReader
             $document = $this->tiffReader->parseFromBlob($exifBlobs[0]);
         }
 
-        return new ExifDocument($document, $fallbackWidth, $fallbackHeight, $fallbackBitsPerSample);
+        return new StructuredExif($document, $fallbackWidth, $fallbackHeight, $fallbackBitsPerSample);
     }
 }

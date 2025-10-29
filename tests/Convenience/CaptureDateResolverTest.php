@@ -15,10 +15,10 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
 use MagicSunday\ImageMeta\Convenience\ExifConvenience;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(CaptureDateResolver::class)]
 #[UsesClass(Metadata::class)]
-#[UsesClass(ExifDocument::class)]
+#[UsesClass(ParsedExif::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(XmpDocument::class)]
@@ -119,7 +119,7 @@ final class CaptureDateResolverTest extends TestCase
     #[Test]
     public function prefersExifCaptureDateWhenAvailable(): void
     {
-        $exifDoc = new ExifDocument(
+        $exifDoc = new ParsedExif(
             new Ifd([]),
             new Ifd([
                 ExifTag::DATETIME_DIGITIZED => new IfdEntry(

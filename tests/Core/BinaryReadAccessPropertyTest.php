@@ -23,6 +23,10 @@ use function random_bytes;
 use function random_int;
 use function substr;
 
+use const SEEK_CUR;
+use const SEEK_END;
+use const SEEK_SET;
+
 /**
  * Property-based regression tests that ensure the binary access implementations stay aligned.
  */
@@ -83,9 +87,9 @@ final class BinaryReadAccessPropertyTest extends TestCase
      */
     private function consumeReader(BinaryReadAccessInterface $reader): array
     {
-        $reader->seek(UInt64::fromInt(0), \SEEK_SET);
+        $reader->seek(UInt64::fromInt(0), SEEK_SET);
 
-        $results = [];
+        $results   = [];
         $results[] = $reader->read(UInt64::fromInt(3));
         $results[] = $reader->read(2);
         $results[] = $reader->readU8();
@@ -93,16 +97,16 @@ final class BinaryReadAccessPropertyTest extends TestCase
         $results[] = $reader->readU32BE();
         $results[] = $reader->readU64BE()->toHex();
 
-        $reader->seek(-4, \SEEK_CUR);
+        $reader->seek(-4, SEEK_CUR);
         $results[] = $reader->read(4);
 
-        $reader->seek(-8, \SEEK_END);
+        $reader->seek(-8, SEEK_END);
         $results[] = $reader->read(4);
 
-        $reader->seek(UInt64::fromInt(0), \SEEK_SET);
+        $reader->seek(UInt64::fromInt(0), SEEK_SET);
         $results[] = $reader->tell();
 
-        $reader->seek(0, \SEEK_END);
+        $reader->seek(0, SEEK_END);
         $results[] = $reader->tell();
 
         return $results;

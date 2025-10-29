@@ -62,4 +62,64 @@ final readonly class Preview
         $this->previewOffset      = $preview->previewOffset;
         $this->previewLength      = $preview->previewLength;
     }
+
+    public function hasThumbnail(): ?bool
+    {
+        return $this->hasThumbnail;
+    }
+
+    public function hasPreview(): ?bool
+    {
+        return $this->hasPreview;
+    }
+
+    public function previewWidth(): ?int
+    {
+        return $this->previewWidth;
+    }
+
+    public function previewHeight(): ?int
+    {
+        return $this->previewHeight;
+    }
+
+    public function previewColorSpace(): ?ColorSpace
+    {
+        return $this->previewColorSpace;
+    }
+
+    public function previewBitDepth(): ?int
+    {
+        return $this->previewBitDepth;
+    }
+
+    public function previewCompression(): ?Compression
+    {
+        return $this->previewCompression;
+    }
+
+    public function previewScale(): ?float
+    {
+        return $this->previewScale;
+    }
+
+    public function previewEncoding(): ?string
+    {
+        return $this->previewEncoding;
+    }
+
+    public function previewMimeType(): ?string
+    {
+        return $this->previewMimeType;
+    }
+
+    public function previewOffset(): ?int
+    {
+        return $this->previewOffset;
+    }
+
+    public function previewLength(): ?int
+    {
+        return $this->previewLength;
+    }
 }

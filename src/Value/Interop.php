@@ -31,4 +31,29 @@ final readonly class Interop
         public ?int $relatedImageLength = null,
     ) {
     }
+
+    public function index(): ?string
+    {
+        return $this->index;
+    }
+
+    public function version(): ?string
+    {
+        return $this->version;
+    }
+
+    public function relatedImageFileFormat(): ?string
+    {
+        return $this->relatedImageFileFormat;
+    }
+
+    public function relatedImageWidth(): ?int
+    {
+        return $this->relatedImageWidth;
+    }
+
+    public function relatedImageLength(): ?int
+    {
+        return $this->relatedImageLength;
+    }
 }
