@@ -66,8 +66,8 @@ final class Stream
      */
     public function __construct($fh, int $size)
     {
-        $this->fh   = $fh;
-        $this->size = $size;
+        $this->fh         = $fh;
+        $this->size       = $size;
         $this->byteReader = new ByteReader(
             read: fn (int $length): string => $this->read($length),
             tell: fn (): int => $this->pos,
@@ -190,6 +190,14 @@ final class Stream
         return new StreamWindow($this, $offset, $length);
     }
 
+    /**
+     * Validates and seeks the underlying resource to an absolute offset.
+     *
+     * @param int|UInt64 $offset Absolute byte offset relative to the start of the stream.
+     *
+     * @throws BoundsError If the offset is negative or exceeds the stream size.
+     * @throws ParseError  If the offset cannot be converted to a supported integer range.
+     */
     private function seekInternal(int|UInt64 $offset): void
     {
         if ($offset instanceof UInt64) {
@@ -197,7 +205,7 @@ final class Stream
                 throw new BoundsError('seek out of range: ' . $offset->toHex());
             }
 
-            $offsetValue = $offset->toInt('seek out of range');
+            $offsetValue  = $offset->toInt('seek out of range');
             $messageValue = $offset->toHex();
         } else {
             $offsetValue  = $offset;
