@@ -2869,7 +2869,9 @@ final readonly class ExifDocument
             }
         }
 
-        $sources = $this->subsequentIfds;
+        foreach ($this->subsequentIfds as $ifd) {
+            $sources[] = $ifd;
+        }
 
         foreach ($this->subIfds as $ifd) {
             $sources[] = $ifd;
