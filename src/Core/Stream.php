@@ -11,7 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+
+use const SEEK_CUR;
+use const SEEK_END;
+use const SEEK_SET;
 
 use function fopen;
 use function fread;
@@ -23,8 +29,10 @@ use function strlen;
 /**
  * Provides a bounds-checked streaming reader over a binary resource handle.
  */
-final class Stream
+final class Stream implements BinaryReadAccessInterface
 {
+    use ReadsBinaryPrimitives;
+
     /** @var resource */
     private $fh;
 
@@ -38,8 +46,6 @@ final class Stream
      * Opens the given path for binary reading and wraps it in a stream instance.
      *
      * @param string $path Absolute or relative file system path to open.
-     *
-     * @return self
      */
     public static function fromPath(string $path): self
     {
@@ -71,8 +77,8 @@ final class Stream
         $this->byteReader = new ByteReader(
             read: $this->read(...),
             tell: fn (): int => $this->pos,
-            seek: function (int|UInt64 $offset): void {
-                $this->seekInternal($offset);
+            seek: function (int|UInt64 $offset, int $whence): void {
+                $this->seekInternal($offset, $whence);
             },
             context: 'stream',
         );
@@ -80,8 +86,6 @@ final class Stream
 
     /**
      * Returns the total size of the underlying data source in bytes.
-     *
-     * @return int
      */
     public function size(): int
     {
@@ -90,8 +94,6 @@ final class Stream
 
     /**
      * Returns the current cursor position relative to the start of the stream.
-     *
-     * @return int
      */
     public function tell(): int
     {
@@ -100,86 +102,43 @@ final class Stream
 
     /**
      * Moves the read cursor to an absolute offset within the stream.
-     *
-     * @param int $offset Absolute zero-based byte offset to seek to.
      */
-    public function seek(int $offset): void
+    public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
     {
-        $this->byteReader->setPosition($offset);
+        $this->seekInternal($offset, $whence);
     }
 
     /**
      * Reads a fixed number of bytes from the stream, advancing the cursor.
-     *
-     * @param int $length Number of bytes to read.
-     *
-     * @return string
      */
-    public function read(int $length): string
+    public function read(int|UInt64 $length): string
     {
-        if ($length === 0) {
+        if ($length instanceof UInt64) {
+            if ($length->isZero()) {
+                return '';
+            }
+        } elseif ($length === 0) {
             return '';
         }
 
-        if ($length < 0 || $this->pos + $length > $this->size) {
-            throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $length . ' > ' . $this->size);
+        $len = $this->normaliseLength($length);
+
+        if ($this->pos + $len > $this->size) {
+            throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size);
         }
 
-        $data = fread($this->fh, $length);
-        if ($data === false || strlen($data) !== $length) {
+        $data = fread($this->fh, $len);
+        if ($data === false || strlen($data) !== $len) {
             throw new ParseError('short read');
         }
 
-        $this->pos += $length;
+        $this->pos += $len;
 
         return $data;
     }
 
     /**
-     * Reads a single unsigned byte from the stream.
-     *
-     * @return int
-     */
-    public function readU8(): int
-    {
-        return $this->byteReader->readU8();
-    }
-
-    /**
-     * Reads an unsigned 16-bit big-endian integer from the stream.
-     *
-     * @return int
-     */
-    public function readU16BE(): int
-    {
-        return $this->byteReader->readU16BE();
-    }
-
-    /**
-     * Reads an unsigned 32-bit big-endian integer from the stream.
-     *
-     * @return int
-     */
-    public function readU32BE(): int
-    {
-        return $this->byteReader->readU32BE();
-    }
-
-    /**
-     * Reads an unsigned 64-bit big-endian integer from the stream.
-     *
-     * @return UInt64
-     */
-    public function readU64BE(): UInt64
-    {
-        return $this->byteReader->readU64BE();
-    }
-
-    /**
      * Creates a bounded view into this stream without copying bytes.
-     *
-     * @param int $offset Starting byte offset for the window.
-     * @param int $length Maximum number of bytes readable from the window.
      */
     public function window(int $offset, int $length): StreamWindow
     {
@@ -191,32 +150,86 @@ final class Stream
     }
 
     /**
-     * Validates and seeks the underlying resource to an absolute offset.
-     *
-     * @param int|UInt64 $offset Absolute byte offset relative to the start of the stream.
-     *
-     * @throws BoundsError If the offset is negative or exceeds the stream size.
-     * @throws ParseError  If the offset cannot be converted to a supported integer range.
+     * Exposes the ByteReader instance for the shared primitive read trait.
      */
-    private function seekInternal(int|UInt64 $offset): void
+    protected function byteReader(): ByteReader
+    {
+        return $this->byteReader;
+    }
+
+    private function seekInternal(int|UInt64 $offset, int $whence): void
+    {
+        $target = match ($whence) {
+            SEEK_SET => $this->normaliseAbsoluteOffset($offset, 'seek out of range'),
+            SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'seek out of range'),
+            SEEK_END => $this->normaliseRelativeOffset($offset, $this->size, 'seek out of range'),
+            default   => throw new ParseError('invalid seek whence: ' . $whence),
+        };
+
+        fseek($this->fh, $target);
+        $this->pos = $target;
+    }
+
+    /**
+     * @return positive-int
+     */
+    private function normaliseLength(int|UInt64 $length): int
+    {
+        if ($length instanceof UInt64) {
+            if ($length->isZero()) {
+                throw new BoundsError('stream read length out of range: ' . $length->toHex());
+            }
+
+            $length = $length->toInt('stream read length out of range');
+        }
+
+        if ($length <= 0) {
+            throw new BoundsError('stream read length out of range: ' . $length);
+        }
+
+        return $length;
+    }
+
+    private function normaliseAbsoluteOffset(int|UInt64 $offset, string $message): int
     {
         if ($offset instanceof UInt64) {
             if ($offset->compareInt($this->size) > 0) {
-                throw new BoundsError('seek out of range: ' . $offset->toHex());
+                throw new BoundsError($message . ': ' . $offset->toHex());
             }
 
-            $offsetValue  = $offset->toInt('seek out of range');
-            $messageValue = $offset->toHex();
-        } else {
-            $offsetValue  = $offset;
-            $messageValue = (string) $offset;
+            $offset = $offset->toInt($message);
         }
 
-        if ($offsetValue < 0 || $offsetValue > $this->size) {
-            throw new BoundsError('seek out of range: ' . $messageValue);
+        if ($offset < 0 || $offset > $this->size) {
+            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
         }
 
-        fseek($this->fh, $offsetValue);
-        $this->pos = $offsetValue;
+        return $offset;
+    }
+
+    private function normaliseRelativeOffset(int|UInt64 $offset, int $base, string $message): int
+    {
+        $delta  = $this->resolveOffsetValue($offset, $message);
+        $target = $base + $delta;
+
+        if ($target < 0 || $target > $this->size) {
+            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
+        }
+
+        return $target;
+    }
+
+    private function resolveOffsetValue(int|UInt64 $offset, string $message): int
+    {
+        if ($offset instanceof UInt64) {
+            return $offset->toInt($message);
+        }
+
+        return $offset;
+    }
+
+    private function formatOffset(int|UInt64 $offset): string
+    {
+        return $offset instanceof UInt64 ? $offset->toHex() : (string) $offset;
     }
 }

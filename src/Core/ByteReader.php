@@ -17,6 +17,8 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function ord;
 
+use const SEEK_SET;
+
 /**
  * Provides shared unsigned integer read helpers for byte-oriented data sources.
  */
@@ -33,7 +35,7 @@ final readonly class ByteReader
      *
      * @param Closure(int):string      $read    Callback that returns the requested number of bytes.
      * @param Closure():int            $tell    Callback that reports the current cursor position.
-     * @param Closure(int|UInt64):void $seek    Callback that repositions the cursor of the data source.
+     * @param Closure(int|UInt64, int):void $seek    Callback that repositions the cursor of the data source.
      * @param string                   $context Short description used in error messages.
      */
     public function __construct(
@@ -105,8 +107,8 @@ final readonly class ByteReader
     /**
      * Moves the cursor of the underlying data source.
      */
-    public function setPosition(int|UInt64 $offset): void
+    public function setPosition(int|UInt64 $offset, int $whence = SEEK_SET): void
     {
-        ($this->seek)($offset);
+        ($this->seek)($offset, $whence);
     }
 }

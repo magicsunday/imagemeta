@@ -11,23 +11,27 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+
+use const SEEK_CUR;
+use const SEEK_END;
+use const SEEK_SET;
 
 /**
  * Represents a bounded view into a parent stream with an independent cursor.
  */
-final class StreamWindow
+final class StreamWindow implements BinaryReadAccessInterface
 {
+    use ReadsBinaryPrimitives;
+
     private int $cursor = 0;
 
     private readonly ByteReader $byteReader;
 
     /**
      * Creates a window that restricts reads to a fixed region of the parent stream.
-     *
-     * @param Stream $base   Underlying stream providing the bytes.
-     * @param int    $offset Start offset within the base stream.
-     * @param int    $length Maximum number of bytes accessible through the window.
      */
     public function __construct(
         private readonly Stream $base,
@@ -37,8 +41,8 @@ final class StreamWindow
         $this->byteReader = new ByteReader(
             read: $this->read(...),
             tell: fn (): int => $this->cursor,
-            seek: function (int|UInt64 $offset): void {
-                $this->seekInternal($offset);
+            seek: function (int|UInt64 $offset, int $whence): void {
+                $this->seekInternal($offset, $whence);
             },
             context: 'window',
         );
@@ -46,8 +50,6 @@ final class StreamWindow
 
     /**
      * Returns the number of bytes exposed through this window.
-     *
-     * @return int
      */
     public function size(): int
     {
@@ -56,8 +58,6 @@ final class StreamWindow
 
     /**
      * Returns the cursor position relative to the start of the window.
-     *
-     * @return int
      */
     public function tell(): int
     {
@@ -66,96 +66,118 @@ final class StreamWindow
 
     /**
      * Repositions the window cursor to an absolute offset inside the window.
-     *
-     * @param int $pos Byte offset relative to the window start.
      */
-    public function seek(int $pos): void
+    public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
     {
-        $this->byteReader->setPosition($pos);
+        $this->seekInternal($offset, $whence);
     }
 
     /**
      * Reads bytes from the bounded region and advances the cursor.
-     *
-     * @param int $length Number of bytes to read.
-     *
-     * @return string
      */
-    public function read(int $length): string
+    public function read(int|UInt64 $length): string
     {
-        if ($length === 0) {
+        if ($length instanceof UInt64) {
+            if ($length->isZero()) {
+                return '';
+            }
+        } elseif ($length === 0) {
             return '';
         }
 
-        if ($length < 0 || $this->cursor + $length > $this->length) {
+        $len = $this->normaliseLength($length);
+
+        if ($this->cursor + $len > $this->length) {
             throw new BoundsError('window read out of range');
         }
 
-        $this->base->seek($this->offset + $this->cursor);
-        $data = $this->base->read($length);
-        $this->cursor += $length;
+        $this->base->seek($this->offset + $this->cursor, SEEK_SET);
+        $data = $this->base->read($len);
+        $this->cursor += $len;
 
         return $data;
     }
 
     /**
-     * Reads an unsigned byte from the window.
-     *
-     * @return int
+     * Exposes the ByteReader instance for the shared primitive read trait.
      */
-    public function readU8(): int
+    protected function byteReader(): ByteReader
     {
-        return $this->byteReader->readU8();
+        return $this->byteReader;
+    }
+
+    private function seekInternal(int|UInt64 $offset, int $whence): void
+    {
+        $target = match ($whence) {
+            SEEK_SET => $this->normaliseAbsoluteOffset($offset, 'window seek out of range'),
+            SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->cursor, 'window seek out of range'),
+            SEEK_END => $this->normaliseRelativeOffset($offset, $this->length, 'window seek out of range'),
+            default   => throw new ParseError('window invalid seek whence: ' . $whence),
+        };
+
+        $this->cursor = $target;
     }
 
     /**
-     * Reads an unsigned 16-bit big-endian integer from the window.
-     *
-     * @return int
+     * @return positive-int
      */
-    public function readU16BE(): int
+    private function normaliseLength(int|UInt64 $length): int
     {
-        return $this->byteReader->readU16BE();
-    }
+        if ($length instanceof UInt64) {
+            if ($length->isZero()) {
+                throw new BoundsError('window read length out of range: ' . $length->toHex());
+            }
 
-    /**
-     * Reads an unsigned 32-bit big-endian integer from the window.
-     *
-     * @return int
-     */
-    public function readU32BE(): int
-    {
-        return $this->byteReader->readU32BE();
-    }
-
-    /**
-     * Reads an unsigned 64-bit big-endian integer from the window.
-     *
-     * @return UInt64
-     */
-    public function readU64BE(): UInt64
-    {
-        return $this->byteReader->readU64BE();
-    }
-
-    /**
-     * Ensures the window cursor moves to a valid absolute position.
-     *
-     * @param int|UInt64 $pos Absolute byte offset relative to the window start.
-     *
-     * @throws BoundsError If the position is negative or beyond the window length.
-     * @throws ParseError  If the position cannot be converted to a supported integer range.
-     */
-    private function seekInternal(int|UInt64 $pos): void
-    {
-        if ($pos instanceof UInt64) {
-            $pos = $pos->toInt('window seek out of range');
+            $length = $length->toInt('window read length out of range');
         }
 
-        if ($pos < 0 || $pos > $this->length) {
-            throw new BoundsError('window seek out of range');
+        if ($length <= 0) {
+            throw new BoundsError('window read length out of range: ' . $length);
         }
 
-        $this->cursor = $pos;
+        return $length;
+    }
+
+    private function normaliseAbsoluteOffset(int|UInt64 $offset, string $message): int
+    {
+        if ($offset instanceof UInt64) {
+            if ($offset->compareInt($this->length) > 0) {
+                throw new BoundsError($message . ': ' . $offset->toHex());
+            }
+
+            $offset = $offset->toInt($message);
+        }
+
+        if ($offset < 0 || $offset > $this->length) {
+            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
+        }
+
+        return $offset;
+    }
+
+    private function normaliseRelativeOffset(int|UInt64 $offset, int $base, string $message): int
+    {
+        $delta  = $this->resolveOffsetValue($offset, $message);
+        $target = $base + $delta;
+
+        if ($target < 0 || $target > $this->length) {
+            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
+        }
+
+        return $target;
+    }
+
+    private function resolveOffsetValue(int|UInt64 $offset, string $message): int
+    {
+        if ($offset instanceof UInt64) {
+            return $offset->toInt($message);
+        }
+
+        return $offset;
+    }
+
+    private function formatOffset(int|UInt64 $offset): string
+    {
+        return $offset instanceof UInt64 ? $offset->toHex() : (string) $offset;
     }
 }

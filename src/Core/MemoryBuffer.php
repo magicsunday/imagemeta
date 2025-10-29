@@ -11,8 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+
+use const SEEK_CUR;
+use const SEEK_END;
+use const SEEK_SET;
 
 use function strlen;
 
@@ -23,8 +30,10 @@ use function strlen;
  * used throughout the project, ensuring that parser code can rely on
  * consistent guard rails even when the input data originates from a string.
  */
-final class MemoryBuffer
+final class MemoryBuffer implements BinaryReadAccessInterface
 {
+    use ReadsBinaryPrimitives;
+
     private readonly ByteReader $byteReader;
 
     /**
@@ -38,8 +47,8 @@ final class MemoryBuffer
         $this->byteReader = new ByteReader(
             read: $this->read(...),
             tell: fn (): int => $this->pos,
-            seek: function (int|UInt64 $offset): void {
-                $this->seekInternal($offset);
+            seek: function (int|UInt64 $offset, int $whence): void {
+                $this->seekInternal($offset, $whence);
             },
             context: 'buffer',
         );
@@ -72,9 +81,9 @@ final class MemoryBuffer
      *
      * @throws BoundsError when the requested offset is outside the buffer
      */
-    public function seek(int|UInt64 $offset): void
+    public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
     {
-        $this->byteReader->setPosition($offset);
+        $this->seekInternal($offset, $whence);
     }
 
     /**
@@ -91,11 +100,15 @@ final class MemoryBuffer
      */
     public function read(int|UInt64 $length): string
     {
-        $len = $this->normaliseLength($length);
-
-        if ($len === 0) {
+        if ($length instanceof UInt64) {
+            if ($length->isZero()) {
+                return '';
+            }
+        } elseif ($length === 0) {
             return '';
         }
+
+        $len = $this->normaliseLength($length);
 
         $end = $this->pos + $len;
         if ($end > $this->size()) {
@@ -113,16 +126,6 @@ final class MemoryBuffer
     }
 
     /**
-     * Reads an unsigned 8-bit integer from the buffer.
-     *
-     * @return int unsigned 8-bit integer
-     */
-    public function readU8(): int
-    {
-        return $this->byteReader->readU8();
-    }
-
-    /**
      * Reads an unsigned 16-bit integer using little-endian byte order.
      *
      * @return int unsigned 16-bit integer
@@ -133,16 +136,6 @@ final class MemoryBuffer
     }
 
     /**
-     * Reads an unsigned 16-bit integer using big-endian byte order.
-     *
-     * @return int unsigned 16-bit integer
-     */
-    public function readU16BE(): int
-    {
-        return $this->byteReader->readU16BE();
-    }
-
-    /**
      * Reads an unsigned 32-bit integer using little-endian byte order.
      *
      * @return int unsigned 32-bit integer
@@ -150,16 +143,6 @@ final class MemoryBuffer
     public function readU32LE(): int
     {
         return $this->byteReader->unpackInt('V', 4);
-    }
-
-    /**
-     * Reads an unsigned 32-bit integer using big-endian byte order.
-     *
-     * @return int unsigned 32-bit integer
-     */
-    public function readU32BE(): int
-    {
-        return $this->byteReader->readU32BE();
     }
 
     /**
@@ -176,18 +159,23 @@ final class MemoryBuffer
     }
 
     /**
-     * Reads an unsigned 64-bit integer using big-endian byte order.
-     *
-     * @return UInt64 unsigned 64-bit integer
+     * Exposes the ByteReader instance for the shared primitive read trait.
      */
-    public function readU64BE(): UInt64
+    protected function byteReader(): ByteReader
     {
-        return $this->byteReader->readU64BE();
+        return $this->byteReader;
     }
 
-    private function seekInternal(int|UInt64 $offset): void
+    private function seekInternal(int|UInt64 $offset, int $whence): void
     {
-        $this->pos = $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range');
+        $target = match ($whence) {
+            SEEK_SET => $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range'),
+            SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'MemoryBuffer seek out of range'),
+            SEEK_END => $this->normaliseRelativeOffset($offset, $this->size(), 'MemoryBuffer seek out of range'),
+            default   => throw new ParseError('MemoryBuffer invalid seek whence: ' . $whence),
+        };
+
+        $this->pos = $target;
     }
 
     private function normaliseOffset(int|UInt64 $offset, int $length, string $message): int
@@ -207,13 +195,25 @@ final class MemoryBuffer
         return $offset;
     }
 
+    /**
+     * @return positive-int
+     */
     private function normaliseLength(int|UInt64 $length): int
     {
         if ($length instanceof UInt64) {
-            return $this->normaliseUInt64($length, 0, 'MemoryBuffer read length out of range');
+            if ($length->isZero()) {
+                throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex());
+            }
+
+            $intValue = $this->normaliseUInt64($length, 0, 'MemoryBuffer read length out of range');
+            if ($intValue <= 0) {
+                throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex());
+            }
+
+            return $intValue;
         }
 
-        if ($length < 0) {
+        if ($length <= 0) {
             throw new BoundsError('MemoryBuffer read length out of range: ' . $length);
         }
 
@@ -233,5 +233,31 @@ final class MemoryBuffer
         }
 
         return $intValue;
+    }
+
+    private function normaliseRelativeOffset(int|UInt64 $offset, int $base, string $message): int
+    {
+        $delta = $this->resolveOffsetValue($offset, $message);
+        $target = $base + $delta;
+
+        if ($target < 0 || $target > $this->size()) {
+            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
+        }
+
+        return $target;
+    }
+
+    private function resolveOffsetValue(int|UInt64 $offset, string $message): int
+    {
+        if ($offset instanceof UInt64) {
+            return $offset->toInt($message);
+        }
+
+        return $offset;
+    }
+
+    private function formatOffset(int|UInt64 $offset): string
+    {
+        return $offset instanceof UInt64 ? $offset->toHex() : (string) $offset;
     }
 }
