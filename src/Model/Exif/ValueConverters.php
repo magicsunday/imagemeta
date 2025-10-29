@@ -21,6 +21,7 @@ use DateTimeZone;
 use Exception;
 use JsonException;
 use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
@@ -78,7 +79,7 @@ use const JSON_THROW_ON_ERROR;
  * payloads normalised by these converters; EXIF 2.32 §4.6 remains relevant for
  * legacy captures that pre-date the 3.0 additions.
  *
- * @phpstan-type ExifScalar int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+ * @phpstan-type ExifScalar int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null
  * @phpstan-type GpsFieldMap array{
  *     lat_ref:?string,
  *     lat:?float,
@@ -158,13 +159,22 @@ final readonly class ValueConverters
      * values are stored as numerator/denominator pairs; this implementation keeps the legacy
      * EXIF 2.32 §4.6 interpretation for earlier encoders.
      *
-     * @param int|float|string|array<int, int|float|string>|ExifRational|ExifRationalList|ExifNumericList|null $value The value to convert.
+     * @param int|float|string|array<int, int|float|string|UInt64>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
      *
      * @return float|null
      */
     public static function rationalToFloat(
-        int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        int|float|string|array|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
+        if ($value instanceof UInt64) {
+            $intValue = self::uint64ToInt($value, 'EXIF rational value');
+            if ($intValue === null) {
+                return null;
+            }
+
+            return (float) $intValue;
+        }
+
         if (is_array($value)) {
             $components = array_values($value);
             if (!isset($components[0], $components[1])) {
@@ -592,10 +602,20 @@ final readonly class ValueConverters
      * Normalises EXIF battery level readings to a percentage following
      * EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 (BatteryLevel tag semantics).
      *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw battery level value.
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw battery level value.
      */
-    public static function batteryLevelToPercent(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): ?float
-    {
+    public static function batteryLevelToPercent(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?float {
+        if ($value instanceof UInt64) {
+            $intValue = self::uint64ToInt($value, 'BatteryLevel');
+            if ($intValue === null) {
+                return null;
+            }
+
+            $value = $intValue;
+        }
+
         if ($value === null) {
             return null;
         }
@@ -649,12 +669,30 @@ final readonly class ValueConverters
      * Converts the maker note safety flag into a boolean representation per
      * EXIF 2.32 §4.6.8 / EXIF 3.0 §4.6.8 (MakerNoteSafety).
      *
-     * @param ExifNumericList|int|float|string|null $value Raw maker note safety value.
+     * @param ExifNumericList|ExifRationalList|ExifRational|UInt64|int|float|string|null $value Raw maker note safety value.
      */
-    public static function makerNoteSafety(ExifNumericList|int|float|string|null $value): ?bool
-    {
+    public static function makerNoteSafety(
+        ExifNumericList|ExifRationalList|ExifRational|UInt64|int|float|string|null $value,
+    ): ?bool {
         if ($value instanceof ExifNumericList) {
             $value = $value->values[0] ?? null;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $value = $value->values[0] ?? null;
+        }
+
+        if ($value instanceof ExifRational) {
+            $value = self::rationalToFloat($value);
+        }
+
+        if ($value instanceof UInt64) {
+            $intValue = self::uint64ToInt($value, 'MakerNoteSafety');
+            if ($intValue === null) {
+                return null;
+            }
+
+            $value = $intValue;
         }
 
         if ($value === null) {
@@ -662,6 +700,10 @@ final readonly class ValueConverters
         }
 
         if (is_float($value)) {
+            if (fmod($value, 1.0) !== 0.0) {
+                return null;
+            }
+
             $value = (int) $value;
         }
 
@@ -773,8 +815,9 @@ final readonly class ValueConverters
      *
      * @param ExifScalar $value The APEX value to convert.
      */
-    public static function apexToFNumber(int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value): ?float
-    {
+    public static function apexToFNumber(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?float {
         $apex = self::rationalToFloat($value);
 
         if ($apex === null && is_string($value) && is_numeric($value)) {
@@ -794,7 +837,7 @@ final readonly class ValueConverters
      * @param ExifScalar $value The APEX value to convert.
      */
     public static function apexShutterSpeedToSeconds(
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
         $apex = self::rationalToFloat($value);
 
@@ -1077,24 +1120,26 @@ final readonly class ValueConverters
     /**
      * Normalises the components configuration tag into a list of component identifiers.
      *
-     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value representation.
+     * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value representation.
      *
      * @return list<int>|null
      */
-    public static function componentsConfiguration(array|ExifNumericList|string|int|null $value): ?array
-    {
+    public static function componentsConfiguration(
+        array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
+    ): ?array {
         return self::toIntList($value);
     }
 
     /**
      * Formats a components configuration payload into human readable channel labels.
      *
-     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value.
+     * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      *
      * @return list<string>|null
      */
-    public static function componentsConfigurationLabels(array|ExifNumericList|string|int|null $value): ?array
-    {
+    public static function componentsConfigurationLabels(
+        array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
+    ): ?array {
         $components = self::toIntList($value);
         if ($components === null || $components === []) {
             return null;
@@ -1127,10 +1172,10 @@ final readonly class ValueConverters
     /**
      * Returns a human readable description for the components configuration.
      *
-     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value.
+     * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      */
     public static function componentsConfigurationDescription(
-        array|ExifNumericList|string|int|null $value,
+        array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
     ): ?string {
         $labels = self::componentsConfigurationLabels($value);
 
@@ -1140,12 +1185,13 @@ final readonly class ValueConverters
     /**
      * Converts a CFA pattern definition into typed colour enums.
      *
-     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF representation.
+     * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF representation.
      *
      * @return list<CfaPatternColor>|null
      */
-    public static function cfaPatternToColors(array|ExifNumericList|string|int|null $value): ?array
-    {
+    public static function cfaPatternToColors(
+        array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
+    ): ?array {
         $components = self::toIntList($value);
         if ($components === null || $components === []) {
             return null;
@@ -1175,7 +1221,7 @@ final readonly class ValueConverters
      */
     public static function gpsSpeedToMs(
         ?string $ref,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
         if (!is_string($ref)) {
             return null;
@@ -1211,7 +1257,7 @@ final readonly class ValueConverters
      */
     public static function gpsDistanceToMetres(
         ?string $ref,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
         if (!is_string($ref)) {
             return null;
@@ -1269,7 +1315,7 @@ final readonly class ValueConverters
      * @param ExifScalar $value Flash tag value representation.
      */
     public static function flashFromShort(
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?FlashInfo {
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
@@ -1786,7 +1832,7 @@ final readonly class ValueConverters
      * @return array{normalized: ?string, raw: ?string}
      */
     private static function formatGpsVersion(
-        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): array {
         $raw        = is_string($value) ? $value : null;
         $normalized = null;
@@ -1852,7 +1898,7 @@ final readonly class ValueConverters
      * @param ExifScalar $value Raw value extracted from the IFD entry.
      */
     private static function sanitizeString(
-        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
         if (!is_string($value)) {
             return null;
@@ -1872,7 +1918,7 @@ final readonly class ValueConverters
      * @param ExifScalar $value Raw value extracted from the IFD entry.
      */
     private static function decodeUndefinedString(
-        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
         if (!is_string($value)) {
             return null;
@@ -1962,7 +2008,7 @@ final readonly class ValueConverters
      * @return array{normalized: ?string, raw: ?string}
      */
     private static function normalizeGpsDate(
-        string|int|float|ExifRational|ExifRationalList|ExifNumericList|null $value,
+        string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): array {
         $raw = is_string($value) ? $value : null;
         if (!is_string($value)) {
@@ -2246,18 +2292,70 @@ final readonly class ValueConverters
     /**
      * Normalises numeric EXIF representations into a list of integers.
      *
-     * @param array<int, int|float|string>|ExifNumericList|string|int|null $value Raw EXIF value representation.
+     * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value representation.
      *
      * @return list<int>|null
      */
-    private static function toIntList(array|ExifNumericList|string|int|null $value): ?array
-    {
+    private static function toIntList(
+        array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
+    ): ?array {
         if ($value instanceof ExifNumericList) {
             if ($value->values === []) {
                 return null;
             }
 
-            return array_map(static fn (int|float $component): int => (int) $component, $value->values);
+            $ints = [];
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    $intComponent = self::uint64ToInt($component, 'EXIF numeric component');
+                    if ($intComponent === null) {
+                        return null;
+                    }
+
+                    $ints[] = $intComponent;
+                    continue;
+                }
+
+                $ints[] = (int) $component;
+            }
+
+            return $ints;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            if ($value->values === []) {
+                return null;
+            }
+
+            $ints = [];
+            foreach ($value->values as $component) {
+                $numeric = self::rationalToFloat($component);
+                if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
+                    return null;
+                }
+
+                $ints[] = (int) $numeric;
+            }
+
+            return $ints;
+        }
+
+        if ($value instanceof ExifRational) {
+            $numeric = self::rationalToFloat($value);
+            if ($numeric === null || fmod($numeric, 1.0) !== 0.0) {
+                return null;
+            }
+
+            return [(int) $numeric];
+        }
+
+        if ($value instanceof UInt64) {
+            $intValue = self::uint64ToInt($value, 'EXIF numeric value');
+            if ($intValue === null) {
+                return null;
+            }
+
+            return [$intValue];
         }
 
         if (is_array($value)) {
@@ -2267,6 +2365,16 @@ final readonly class ValueConverters
 
             $ints = [];
             foreach ($value as $component) {
+                if ($component instanceof UInt64) {
+                    $intComponent = self::uint64ToInt($component, 'EXIF numeric array component');
+                    if ($intComponent === null) {
+                        return null;
+                    }
+
+                    $ints[] = $intComponent;
+                    continue;
+                }
+
                 if (!is_numeric($component)) {
                     return null;
                 }
@@ -2275,6 +2383,14 @@ final readonly class ValueConverters
             }
 
             return $ints;
+        }
+
+        if (is_float($value)) {
+            if (fmod($value, 1.0) !== 0.0) {
+                return null;
+            }
+
+            return [(int) $value];
         }
 
         if (is_int($value)) {
@@ -2297,10 +2413,19 @@ final readonly class ValueConverters
     /**
      * Normalises a numeric component from a rational pair.
      *
-     * @param int|float|string $component
+     * @param int|float|string|UInt64 $component
      */
-    private static function normaliseNumericComponent(int|float|string $component): ?float
+    private static function normaliseNumericComponent(int|float|string|UInt64 $component): ?float
     {
+        if ($component instanceof UInt64) {
+            $intValue = self::uint64ToInt($component, 'EXIF rational component');
+            if ($intValue === null) {
+                return null;
+            }
+
+            return (float) $intValue;
+        }
+
         if (is_int($component) || is_float($component)) {
             return (float) $component;
         }
@@ -2310,5 +2435,20 @@ final readonly class ValueConverters
         }
 
         return (float) $component;
+    }
+
+    /**
+     * Converts an unsigned 64-bit value into a signed integer when possible.
+     *
+     * EXIF 3.0 §4.6 mandates that fields mapped to signed integer semantics must fit the
+     * platform range; values outside that range are treated as invalid for the conversion.
+     */
+    private static function uint64ToInt(UInt64 $value, string $context): ?int
+    {
+        if (!$value->fitsSignedInt()) {
+            return null;
+        }
+
+        return $value->toInt($context);
     }
 }
