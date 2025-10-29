@@ -74,6 +74,9 @@ use function spl_object_id;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
+ *
+ * EXIF 3.0 §4 and Annex A summarise the logical grouping of tags mirrored by
+ * the accessors provided in this value object.
  */
 final readonly class ExifDocument
 {

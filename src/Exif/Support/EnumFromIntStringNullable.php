@@ -16,6 +16,10 @@ use function is_numeric;
 
 /**
  * Reusable helper for backed-enums: normalizes int|string|null to ?self.
+ *
+ * EXIF 3.0 §4.6 encodes many enumerations as numeric values; earlier EXIF 2.x
+ * revisions frequently serialise them as numeric strings, which this helper
+ * normalises for enum-backed value objects.
  */
 trait EnumFromIntStringNullable
 {
