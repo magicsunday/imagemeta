@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Describes whether the flash function is present on the camera (EXIF 2.32 §4.6.4 / EXIF 3.0 §4.6.4).
+ * Describes whether the flash function is present on the camera as specified in
+ * EXIF 3.0 §4.6.4 (flash information), consistent with EXIF 2.32 §4.6.4.
  */
 enum FlashFunction: int
 {

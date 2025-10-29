@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Indicates the strobe return detection status encoded in the EXIF Flash tag (EXIF 2.32 §4.6.4 / EXIF 3.0 §4.6.4).
+ * Indicates the strobe return detection status encoded in the Flash tag per
+ * EXIF 3.0 §4.6.4 (flash information), unchanged from EXIF 2.32 §4.6.4.
  */
 enum FlashReturn: int
 {

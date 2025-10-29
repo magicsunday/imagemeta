@@ -14,8 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates in-camera saturation processing levels specified in
- * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (shooting conditions).
+ * Enumerates the saturation processing levels associated with the Saturation
+ * tag in EXIF 3.0 §4.6.3 (shooting conditions), identical to EXIF 2.32
+ * §4.6.3.
  */
 enum Saturation: int
 {
