@@ -74,6 +74,9 @@ final class TiffExifReader
     /**
      * Tag identifiers that store counted image data such as strips or tiles.
      *
+     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 describe these TIFF attributes for
+     * thumbnail and primary image payloads, including the JPEG interchange fields.
+     *
      * @var list<int>
      */
     private const array COUNTED_IMAGE_DATA_TAGS = [
@@ -85,6 +88,10 @@ final class TiffExifReader
 
     /**
      * Tags whose values encode offsets within the TIFF blob.
+     *
+     * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 list the Exif, GPS and Interoperability IFD
+     * pointer fields that chain the directory hierarchy. The SubIFDs and preview offsets
+     * are tracked here as well because EXIF 3.0 §4.6.12 keeps them in the same structure.
      *
      * @var list<int>
      */
@@ -602,6 +609,9 @@ final class TiffExifReader
 
     /**
      * Attempts to resolve an interoperability IFD from the provided directories.
+     *
+     * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 specify that the Interoperability IFD is
+     * located via the pointer tag 0xA005 stored within the Exif IFD.
      */
     private function locateInteropIfd(?Ifd ...$ifds): ?Ifd
     {
@@ -1120,6 +1130,9 @@ final class TiffExifReader
 
     /**
      * Resolves maker note metadata using the provided registry when available.
+     *
+     * EXIF 3.0 §4.6.5 (Table 4) and EXIF 2.32 §4.6.5 define the MakerNote tag semantics
+     * and the MakerNoteSafety flag used to indicate whether in-place modification is safe.
      */
     private function resolveMakerNotes(?Registry $registry, Ifd $ifd0, ?Ifd $exifIfd): ?MakerNotesRecord
     {
@@ -1180,6 +1193,9 @@ final class TiffExifReader
 
     /**
      * Converts the maker note safety numeric flag into a boolean representation.
+     *
+     * EXIF 3.0 §4.6.5 and EXIF 2.32 §4.6.5 describe MakerNoteSafety as the indicator for
+     * whether the maker note contents can be altered without breaking compatibility.
      */
     private function makerNoteSafety(?Ifd $exifIfd): ?bool
     {
@@ -1477,6 +1493,10 @@ final class TiffExifReader
 
     /**
      * Ensures that an IFD entry encodes a valid offset and returns it as an integer.
+     *
+     * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 require pointer tags to reference additional
+     * directories by absolute offsets. The helper normalises the supported numeric
+     * representations into validated offsets within the EXIF payload.
      *
      * @param IfdEntry $entry Entry that should contain a pointer/offset value.
      *

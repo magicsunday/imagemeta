@@ -141,6 +141,10 @@ final readonly class ExifDocument
 
     /**
      * Indicates whether the maker note is considered safe to modify according to EXIF tag ExifTag::MAKER_NOTE_SAFETY.
+     *
+     * EXIF 3.0 §4.6.5 (Table 4) and EXIF 2.32 §4.6.5 define MakerNoteSafety as the
+     * vendor-supplied flag denoting whether downstream applications may rewrite the
+     * maker note block without violating interoperability.
      */
     public function makerNoteSafety(): ?bool
     {
@@ -703,6 +707,9 @@ final readonly class ExifDocument
 
     /**
      * Returns the JPEG thumbnail offset, preferring the dedicated thumbnail IFD when present.
+     *
+     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 document JPEGInterchangeFormat as
+     * the byte offset to embedded JPEG thumbnails stored in the first IFD.
      */
     public function jpegThumbnailOffset(): ?int
     {
@@ -713,6 +720,9 @@ final readonly class ExifDocument
 
     /**
      * Returns the JPEG thumbnail byte length, preferring the dedicated thumbnail IFD when present.
+     *
+     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
+     * as the size in bytes of the JPEG thumbnail stream.
      */
     public function jpegThumbnailLength(): ?int
     {
@@ -723,6 +733,9 @@ final readonly class ExifDocument
 
     /**
      * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
+     *
+     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
+     * both offset and length to be populated for a valid embedded thumbnail.
      */
     public function hasThumbnail(): ?bool
     {
@@ -742,6 +755,9 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image offset stored in the EXIF 3.0 preview tags.
+     *
+     * EXIF 3.0 §4.6.12 introduces PreviewImageStart as the byte offset to the optional
+     * high-quality preview, extending the thumbnail handling defined in EXIF 2.32.
      */
     public function previewImageOffset(): ?int
     {
@@ -755,6 +771,9 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image byte length stored in the EXIF 3.0 preview tags.
+     *
+     * EXIF 3.0 §4.6.12 defines PreviewImageLength as the byte size of the preview payload
+     * adjacent to PreviewImageStart.
      */
     public function previewImageLength(): ?int
     {
@@ -768,6 +787,9 @@ final readonly class ExifDocument
 
     /**
      * Indicates whether an EXIF 3.0 preview image is referenced.
+     *
+     * EXIF 3.0 §4.6.12 requires both PreviewImageStart and PreviewImageLength to be
+     * populated for a valid preview entry.
      */
     public function hasPreviewImage(): ?bool
     {
@@ -817,6 +839,9 @@ final readonly class ExifDocument
 
     /**
      * @return list<Ifd>
+     *
+     * EXIF 3.0 §4.6.12 permits preview tags inside the Exif IFD or auxiliary SubIFDs, so
+     * the lookup inspects those directories in the order recommended by the spec.
      */
     private function previewCandidateIfds(): array
     {
@@ -835,6 +860,9 @@ final readonly class ExifDocument
 
     /**
      * Resolves the EXIF 3.0 preview descriptor from the candidate directories.
+     *
+     * EXIF 3.0 §4.6.12 stores preview metadata within the Exif or auxiliary IFDs, so the
+     * routine walks those directories until it finds a consistent offset/length pair.
      *
      * @return array{ifd:Ifd, offset:int, length:int}|null
      */
@@ -868,6 +896,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image width in pixels.
+     *
+     * EXIF 3.0 §4.6.12 lists PreviewImageWidth among the supplemental preview tags.
      */
     public function previewImageWidth(): ?int
     {
@@ -881,6 +911,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image height in pixels.
+     *
+     * EXIF 3.0 §4.6.12 lists PreviewImageHeight alongside the preview geometry tags.
      */
     public function previewImageHeight(): ?int
     {
@@ -894,6 +926,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image encoding identifier when present.
+     *
+     * EXIF 3.0 §4.6.12 exposes PreviewImageEncoding for vendor-defined encoding hints.
      */
     public function previewImageEncoding(): ?string
     {
@@ -907,6 +941,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image MIME type.
+     *
+     * EXIF 3.0 §4.6.12 defines PreviewImageMimeType as the IANA media type identifier.
      */
     public function previewImageMimeType(): ?string
     {
@@ -920,6 +956,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image bit depth when provided by the metadata.
+     *
+     * EXIF 3.0 §4.6.12 introduces PreviewImageBitDepth for the preview container.
      */
     public function previewImageBitDepth(): ?int
     {
@@ -933,6 +971,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image compression identifier when provided.
+     *
+     * EXIF 3.0 §4.6.12 documents PreviewImageCompression for codec identification.
      */
     public function previewImageCompression(): ?int
     {
@@ -948,6 +988,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image scale factor when provided.
+     *
+     * EXIF 3.0 §4.6.12 defines PreviewImageScale as the ratio between preview and primary image.
      */
     public function previewImageScale(): ?float
     {
@@ -967,6 +1009,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the preview image colour space identifier when present.
+     *
+     * EXIF 3.0 §4.6.12 introduces PreviewImageColorSpace to describe the preview gamut.
      */
     public function previewColorSpace(): ?int
     {
@@ -980,6 +1024,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the raw preview modification datetime string.
+     *
+     * EXIF 3.0 §4.6.12 specifies PreviewDateTime for auditing preview updates.
      */
     public function previewDateTimeRaw(): ?string
     {
@@ -988,6 +1034,8 @@ final readonly class ExifDocument
 
     /**
      * Returns the raw preview digitised datetime string.
+     *
+     * EXIF 3.0 §4.6.12 defines PreviewDateTimeDigitized alongside the modification time.
      */
     public function previewDateTimeDigitizedRaw(): ?string
     {
