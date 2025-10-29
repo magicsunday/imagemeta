@@ -49,6 +49,8 @@ final class ExifCapabilities
             return '2.2';
         }
 
+        // EXIF 3.0 §4.6.8 and EXIF 2.32 §4.6.8 define the canonical ASCII
+        // version identifiers recorded in the ExifVersion tag (0x9000).
         $profile = match ($trimmed) {
             '1.00', '1.0' => '1.0',
             '1.10', '1.1' => '1.1',
@@ -77,6 +79,8 @@ final class ExifCapabilities
                 $digits = '0' . $digits;
             }
 
+            // Numeric encoders frequently drop the dots while keeping the
+            // zero-padded digits listed in EXIF 3.0 §4.6.8 / EXIF 2.32 §4.6.8.
             $profile = match ($digits) {
                 '0100' => '1.0',
                 '0110' => '1.1',

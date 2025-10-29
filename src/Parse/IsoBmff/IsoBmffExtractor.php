@@ -43,6 +43,10 @@ use function trim;
 /**
  * Streaming ISOBMFF reader for HEIC/AVIF/MP4/MOV.
  * Extracts EXIF/XMP payloads and QuickTime metadata.
+ *
+ * EXIF 3.0 §4.8 outlines embedding Exif items in ISO BMFF containers through
+ * the `Exif` box and item metadata; EXIF 2.32 §4.8 describes the legacy rules
+ * retained for backwards compatibility.
  */
 final readonly class IsoBmffExtractor
 {
@@ -72,7 +76,7 @@ final readonly class IsoBmffExtractor
     private const string BOX_UUID = 'uuid';
 
     /**
-     * FourCC for embedded EXIF box.
+     * FourCC for embedded Exif box (EXIF 3.0 §4.8 / EXIF 2.32 §4.8).
      */
     private const string BOX_EXIF = 'Exif';
 
@@ -682,6 +686,8 @@ final readonly class IsoBmffExtractor
         [$exifItemIds, $xmpItemIds] = $this->gatherItemIds($payloads['itemInfos'], $payloads['primaryItemId']);
 
         // Resolve EXIF item payloads and normalize leading headers.
+        // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
+        // encoders still include it, so we normalise per the EXIF 2.32 guidance.
         foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...)) as $blob) {
             $exifBlobs[] = $blob;
         }
@@ -732,9 +738,7 @@ final readonly class IsoBmffExtractor
         foreach ($this->walkChildren($meta, 4) as $child) {
             switch ($child->type) {
                 case self::BOX_EXIF:
-                    // EXIF 3.0 Annex A.2.1 and EXIF 2.32 Annex A.2.1 formalise the dedicated
-                    // `Exif` box wrapper inside ISO BMFF containers, including the redundant
-                    // APP1 signature that we trim via `normalizeExifBlob()` below.
+                    // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalise deviations.
                     $blob         = $this->readAll($child->window);
                     $directExif[] = $this->normalizeExifBlob($blob);
                     break;
@@ -887,7 +891,12 @@ final readonly class IsoBmffExtractor
     }
 
     /**
-     * Strips redundant EXIF signatures so downstream parsers accept the blob.
+     * Strips redundant Exif signatures so downstream parsers accept the blob.
+     *
+     * EXIF 3.0 §4.8 requires that ISO BMFF Exif items expose the TIFF header
+     * without the JPEG APP1 "Exif\0\0" signature; EXIF 2.32 §4.8 highlights
+     * this interoperability rule for earlier encoders. Some writers still
+     * prefix the signature, therefore the normaliser trims it.
      *
      * @param string $blob Raw EXIF payload that may still include the "Exif\0\0" signature prefix.
      *

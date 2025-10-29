@@ -37,13 +37,18 @@ use function unpack;
 
 /**
  * Parses JPEG streams to extract metadata-bearing APP segments.
+ *
+ * EXIF 3.0 §4.7.2 documents the APP1 encapsulation for Exif payloads and keeps
+ * the legacy EXIF 2.32 §4.7.2 marker structure intact; the audio APP2 layout is
+ * preserved from EXIF 2.32 §4.7.3 and reiterated by EXIF 3.0 §4.7.3.
  */
 final class JpegExtractor
 {
     private const int MAX_APP_SEGMENT_SIZE = 4_194_304; // 4 MiB payload limit
 
     /**
-     * Signatures identifying metadata-bearing APP segments.
+     * Signatures identifying metadata-bearing APP segments as defined by the
+     * Exif JPEG recording rules (EXIF 3.0 §4.7.2 / EXIF 2.32 §4.7.2).
      */
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
@@ -53,6 +58,9 @@ final class JpegExtractor
 
     private const string MPF_SIGNATURE = "MPF\0";
 
+    /**
+     * Header prefix for Exif audio APP2 payloads (EXIF 3.0 §4.7.3 / EXIF 2.32 §4.7.3).
+     */
     private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
 
     private const int AUDIO_HEADER_LENGTH = 24;
@@ -494,7 +502,11 @@ final class JpegExtractor
     }
 
     /**
-     * Processes APP1 payloads for EXIF and XMP signatures.
+     * Processes APP1 payloads for Exif and XMP signatures.
+     *
+     * EXIF 3.0 §4.7.2 mandates that Exif data inside APP1 begins with "Exif\0\0"
+     * followed by the TIFF header defined in §4.5; earlier EXIF 2.32 releases
+     * follow the same structure.
      *
      * @param string $payload Raw APP1 payload including leading signature.
      */
@@ -589,7 +601,11 @@ final class JpegExtractor
     }
 
     /**
-     * Processes EXIF audio APP2 segments and validates their headers.
+     * Processes Exif audio APP2 segments and validates their headers.
+     *
+     * EXIF 3.0 §4.7.3 retains the APP2 audio stream format introduced by
+     * EXIF 2.32 §4.7.3, including the four-byte sample rate and two-byte
+     * version fields honoured here.
      *
      * @param string $payload Raw segment payload including signature.
      * @param int    $offset  Offset in the stream where the marker begins.
