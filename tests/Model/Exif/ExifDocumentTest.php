@@ -62,7 +62,6 @@ use function substr;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(TiffExifReader::class)]
-#[UsesClass(GpsTiffBuilder::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(UInt64::class)]
