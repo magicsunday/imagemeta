@@ -95,7 +95,7 @@ final class Stream
      */
     public function tell(): int
     {
-        return $this->byteReader->tell();
+        return $this->byteReader->getPosition();
     }
 
     /**
@@ -105,7 +105,7 @@ final class Stream
      */
     public function seek(int $offset): void
     {
-        $this->byteReader->seek($offset);
+        $this->byteReader->setPosition($offset);
     }
 
     /**

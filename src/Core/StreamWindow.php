@@ -61,7 +61,7 @@ final class StreamWindow
      */
     public function tell(): int
     {
-        return $this->byteReader->tell();
+        return $this->byteReader->getPosition();
     }
 
     /**
@@ -71,7 +71,7 @@ final class StreamWindow
      */
     public function seek(int $pos): void
     {
-        $this->byteReader->seek($pos);
+        $this->byteReader->setPosition($pos);
     }
 
     /**

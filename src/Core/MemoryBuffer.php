@@ -62,7 +62,7 @@ final class MemoryBuffer
      */
     public function tell(): int
     {
-        return $this->byteReader->tell();
+        return $this->byteReader->getPosition();
     }
 
     /**
@@ -74,7 +74,7 @@ final class MemoryBuffer
      */
     public function seek(int|UInt64 $offset): void
     {
-        $this->byteReader->seek($offset);
+        $this->byteReader->setPosition($offset);
     }
 
     /**

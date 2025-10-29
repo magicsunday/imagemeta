@@ -97,7 +97,7 @@ final readonly class ByteReader
     /**
      * Returns the current cursor position of the underlying data source.
      */
-    public function tell(): int
+    public function getPosition(): int
     {
         return ($this->tell)();
     }
@@ -105,7 +105,7 @@ final readonly class ByteReader
     /**
      * Moves the cursor of the underlying data source.
      */
-    public function seek(int|UInt64 $offset): void
+    public function setPosition(int|UInt64 $offset): void
     {
         ($this->seek)($offset);
     }
