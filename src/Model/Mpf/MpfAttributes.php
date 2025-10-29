@@ -12,11 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Mpf;
 
 /**
- * @phpstan-type MpfRational array{numerator:int, denominator:int}
- * @phpstan-type MpfAttributeValue int|string|list<int>|MpfRational|list<MpfRational>
- */
-/**
  * Represents optional MP Attribute IFD fields describing the image set.
+ *
+ * @phpstan-type MpfRational = array{numerator:int, denominator:int}
+ * @phpstan-type MpfAttributeValue = int|string|list<int>|MpfRational|list<MpfRational>
  */
 final readonly class MpfAttributes
 {

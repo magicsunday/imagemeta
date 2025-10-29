@@ -633,7 +633,8 @@ final class JpegExtractor
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset));
         }
 
-        $sampleRate = (int) $sampleRateUnpack['rate'];
+        /** @var array{rate:int} $sampleRateUnpack */
+        $sampleRate = $sampleRateUnpack['rate'];
         $bitDepth   = ord($payload[$signatureLength + 8]);
 
         $sampleCountData = substr($payload, $signatureLength + 9, 4);
@@ -642,7 +643,8 @@ final class JpegExtractor
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset));
         }
 
-        $sampleCount = (int) $sampleCountUnpack['count'];
+        /** @var array{count:int} $sampleCountUnpack */
+        $sampleCount = $sampleCountUnpack['count'];
         $data        = substr($payload, self::AUDIO_HEADER_LENGTH);
 
         if ($channels === 0 || $channels > 2) {
@@ -684,7 +686,7 @@ final class JpegExtractor
         if ($sampleCount > 0 && $format !== self::AUDIO_FORMAT_IMA_ADPCM) {
             $bytesPerSample = (int) (($bitDepth / 8) * $channels);
             if ($bytesPerSample > 0) {
-                $expectedLength = (int) ($sampleCount * $bytesPerSample);
+                $expectedLength = $sampleCount * $bytesPerSample;
                 if ($expectedLength !== strlen($data)) {
                     throw new ParseError(sprintf('Audio segment at offset %d has inconsistent data length', $offset));
                 }
@@ -742,9 +744,10 @@ final class JpegExtractor
             throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset));
         }
 
-        $streamId = (int) $unpacked['stream'];
-        $sequenceNumber = (int) $unpacked['sequence'];
-        $sequenceCount = (int) $unpacked['count'];
+        /** @var array{stream:int, sequence:int, count:int} $unpacked */
+        $streamId = $unpacked['stream'];
+        $sequenceNumber = $unpacked['sequence'];
+        $sequenceCount = $unpacked['count'];
         $data = substr($payload, $signatureLength + 4);
 
         if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
