@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\CanonDecoder;
 
 use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +36,6 @@ final class CanonDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Canon', 'Canon EOS R5');
 
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         self::assertSame('Canon', $metadata->vendor());
         self::assertSame(strlen($raw), $metadata->length());
         self::assertSame(sha1($raw), $metadata->sha1());
