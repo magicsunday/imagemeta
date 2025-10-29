@@ -455,7 +455,7 @@ final class MpfParser
      */
     private function rationalListValue(int|string|array|null $value): ?array
     {
-        if ($value === null) {
+        if (!is_array($value)) {
             return null;
         }
 
@@ -471,16 +471,12 @@ final class MpfParser
     }
 
     /**
-     * @param mixed $value
+     * @param array<int|string, mixed> $value
      *
      * @phpstan-assert-if-true array{numerator:int, denominator:int} $value
      */
-    private function isRational(mixed $value): bool
+    private function isRational(array $value): bool
     {
-        if (!is_array($value)) {
-            return false;
-        }
-
         if (!array_key_exists('numerator', $value) || !array_key_exists('denominator', $value)) {
             return false;
         }
@@ -489,17 +485,20 @@ final class MpfParser
     }
 
     /**
-     * @param mixed $value
+     * @param array<int|string, mixed> $value
      *
      * @phpstan-assert-if-true list<array{numerator:int, denominator:int}> $value
      */
-    private function isRationalList(mixed $value): bool
+    private function isRationalList(array $value): bool
     {
-        if (!is_array($value) || !array_is_list($value)) {
+        if (!array_is_list($value)) {
             return false;
         }
 
-        return array_all($value, $this->isRational(...));
+        return array_all(
+            $value,
+            fn (mixed $item): bool => is_array($item) && $this->isRational($item),
+        );
     }
 
     private function readU16(MemoryBuffer $buffer, Endian $endian): int
