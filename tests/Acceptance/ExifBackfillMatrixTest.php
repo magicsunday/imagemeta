@@ -33,7 +33,7 @@ final class ExifBackfillMatrixTest extends TestCase
     ): void {
         $metadata = (new MetadataReader())->read(ExifVersionExpectations::path($fixture));
 
-        self::assertStructuredMatches($fixture, $metadata->structured(), $expectedStructured);
+        self::assertStructuredMatches($fixture, $metadata, $expectedStructured);
 
         $document = new ApiExifDocument($metadata->exifDoc);
         self::assertApiMatches($fixture, $document, $expectedApi);

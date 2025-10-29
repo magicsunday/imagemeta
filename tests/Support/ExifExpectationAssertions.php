@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Support;
 
 use MagicSunday\ImageMeta\Api\ExifDocument as ApiExifDocument;
-use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument as ModelExifDocument;
+use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 use PHPUnit\Framework\Assert;
@@ -17,10 +17,11 @@ use PHPUnit\Framework\Assert;
 trait ExifExpectationAssertions
 {
     /**
+     * @param Metadata $metadata
      * @param array{
      *     standards: array{exifVersion:?string, profile:?string, flashpixVersion:?string, tiffEpStandardId:?array, tiffEpStandardString:?string},
      *     exposure: array{iso:?int},
-     *     capture: array{dateTimeOriginal:?string},
+     *     capture: array{dateTimeOriginal:?string, offsetTimeOriginal:?string, subSecTimeOriginal:?string},
      *     image: array{userComment:?string, userCommentEncoding:?string},
      *     interop: array{index:?string, version:?string, fileFormat:?string, width:?int, length:?int},
      *     preview: array{
@@ -39,10 +40,14 @@ trait ExifExpectationAssertions
      *         previewMimeType:?string,
      *         previewScale:?float,
      *     },
+     *     makerNotes:?array{vendor:string,length:int,sha1:string,isSafe:?bool},
+     *     environment: array{temperatureC:?float, humidityPercent:?float, pressureHpa:?float},
+     *     sensor: array{spatialFrequencyResponse:?array},
      * } $expected
      */
-    private static function assertStructuredMatches(string $fixture, StructuredMetadata $structured, array $expected): void
+    private static function assertStructuredMatches(string $fixture, Metadata $metadata, array $expected): void
     {
+        $structured = $metadata->structured();
         $standards = $structured->technical->standards;
         $expectedStandards = $expected['standards'];
 
@@ -54,14 +59,27 @@ trait ExifExpectationAssertions
 
         Assert::assertSame($expected['exposure']['iso'], $structured->exposure->iso, sprintf('%s: ISO fallback', $fixture));
 
+        $temporal = $structured->capture->temporal;
         $expectedCapture = $expected['capture']['dateTimeOriginal'];
-        $actualOriginal = $structured->capture->temporal->original;
+        $actualOriginal = $temporal->original;
         if ($expectedCapture === null) {
             Assert::assertNull($actualOriginal, sprintf('%s: DateTimeOriginal fallback', $fixture));
         } else {
             Assert::assertNotNull($actualOriginal, sprintf('%s: DateTimeOriginal fallback', $fixture));
             Assert::assertSame($expectedCapture, $actualOriginal->format(DATE_ATOM), sprintf('%s: DateTimeOriginal value', $fixture));
         }
+
+        Assert::assertSame(
+            $expected['capture']['offsetTimeOriginal'],
+            $temporal->offsetTimeOriginal,
+            sprintf('%s: OffsetTimeOriginal', $fixture),
+        );
+
+        Assert::assertSame(
+            $expected['capture']['subSecTimeOriginal'],
+            $temporal->subSecTimeOriginal,
+            sprintf('%s: SubSecTimeOriginal', $fixture),
+        );
 
         $image = $structured->media->image;
         Assert::assertSame($expected['image']['userComment'], $image->userComment, sprintf('%s: UserComment fallback', $fixture));
@@ -76,6 +94,50 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength, sprintf('%s: Interop length', $fixture));
 
         self::assertPreviewMatches($fixture, $expected['preview'], $structured->media->preview);
+
+        $expectedMaker = $expected['makerNotes'];
+        $actualMaker = $metadata->makerNotes;
+        if ($expectedMaker === null) {
+            Assert::assertNull($actualMaker, sprintf('%s: Maker notes digest', $fixture));
+        } else {
+            Assert::assertNotNull($actualMaker, sprintf('%s: Maker notes digest', $fixture));
+            Assert::assertSame($expectedMaker['vendor'], $actualMaker->vendor(), sprintf('%s: Maker note vendor', $fixture));
+            Assert::assertSame($expectedMaker['length'], $actualMaker->length(), sprintf('%s: Maker note length', $fixture));
+            Assert::assertSame($expectedMaker['sha1'], $actualMaker->sha1(), sprintf('%s: Maker note SHA-1', $fixture));
+            Assert::assertSame($expectedMaker['isSafe'], $actualMaker->isSafe(), sprintf('%s: Maker note safety', $fixture));
+        }
+
+        $expectedEnv = $expected['environment'];
+        $raw = $metadata->exifDoc;
+        $environmentMatchers = [
+            'temperatureC'    => 'temperatureCelsius',
+            'humidityPercent' => 'humidityPercent',
+            'pressureHpa'     => 'pressureHPa',
+        ];
+
+        foreach ($environmentMatchers as $key => $method) {
+            $expectedValue = $expectedEnv[$key];
+            $actualValue   = $raw?->$method();
+
+            if ($expectedValue === null) {
+                Assert::assertNull($actualValue, sprintf('%s: %s', $fixture, ucfirst($key)));
+                continue;
+            }
+
+            Assert::assertNotNull($actualValue, sprintf('%s: %s presence', $fixture, ucfirst($key)));
+            Assert::assertEqualsWithDelta(
+                $expectedValue,
+                $actualValue,
+                1e-6,
+                sprintf('%s: %s value', $fixture, ucfirst($key)),
+            );
+        }
+
+        Assert::assertSame(
+            $expected['sensor']['spatialFrequencyResponse'],
+            $structured->sensor->hardware->spatialFrequencyResponse,
+            sprintf('%s: Spatial frequency response', $fixture),
+        );
     }
 
     /**

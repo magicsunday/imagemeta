@@ -26,10 +26,9 @@ final class ExifVersionMatrixTest extends TestCase
     #[DataProviderExternal(ExifVersionExpectations::class, 'provideStructured')]
     public function matchesStructuredExpectations(string $fixture, array $expectedStructured): void
     {
-        $structured = (new MetadataReader())
-            ->read(ExifVersionExpectations::path($fixture))
-            ->structured();
+        $metadata = (new MetadataReader())
+            ->read(ExifVersionExpectations::path($fixture));
 
-        self::assertStructuredMatches($fixture, $structured, $expectedStructured);
+        self::assertStructuredMatches($fixture, $metadata, $expectedStructured);
     }
 }
