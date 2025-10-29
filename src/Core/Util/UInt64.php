@@ -59,7 +59,7 @@ final class UInt64
             throw new ParseError('Cannot create UInt64 from a negative integer.');
         }
 
-        $hi = (int) intdiv($value, self::UINT32_BASE);
+        $hi = intdiv($value, self::UINT32_BASE);
         $lo = $value & self::UINT32_MASK;
 
         return new self($hi, $lo);
@@ -182,7 +182,7 @@ final class UInt64
             throw new ParseError(sprintf('%s exceeds supported integer range.', $context));
         }
 
-        return (int) (($this->hi * self::UINT32_BASE) + $this->lo);
+        return ($this->hi * self::UINT32_BASE) + $this->lo;
     }
 
     /**
