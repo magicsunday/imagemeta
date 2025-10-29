@@ -14,9 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates TIFF/EXIF photometric interpretations defined in
- * EXIF 2.32 §4.6.2 and EXIF 3.0 §4.6.2 (image data structure),
- * which in turn reference TIFF 6.0 §8 for the numeric assignments.
+ * Enumerates the photometric interpretations listed for the
+ * PhotometricInterpretation tag in EXIF 3.0 §4.6.2 (image data structure),
+ * aligning with EXIF 2.32 §4.6.2 and the TIFF 6.0 §8 definitions.
  */
 enum Photometric: int
 {

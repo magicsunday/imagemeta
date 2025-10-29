@@ -14,8 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates light source identifiers as defined in
- * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (shooting conditions).
+ * Enumerates the light source identifiers assigned to the LightSource tag in
+ * EXIF 3.0 §4.6.3 (shooting conditions), retaining the catalogue from EXIF
+ * 2.32 §4.6.3.
  */
 enum LightSource: int
 {

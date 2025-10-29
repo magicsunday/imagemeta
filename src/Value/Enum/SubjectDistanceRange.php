@@ -14,8 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates subject distance range classifications documented in
- * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (shooting conditions).
+ * Enumerates the subject distance range classifications assigned to the
+ * SubjectDistanceRange tag in EXIF 3.0 §4.6.3 (shooting conditions), retained
+ * from EXIF 2.32 §4.6.3.
  */
 enum SubjectDistanceRange: int
 {
