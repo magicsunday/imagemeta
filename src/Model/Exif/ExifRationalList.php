@@ -12,8 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Exif;
 
 use InvalidArgumentException;
+use TypeError;
 
 use function array_is_list;
+use function array_map;
 
 /**
  * Represents a list of rational EXIF values.
@@ -26,7 +28,11 @@ final readonly class ExifRationalList
     public array $values;
 
     /**
-     * @param array<int, mixed> $values Ordered list of rational components.
+     * @param list<ExifRational> $values Ordered list of rational components.
+     *
+     * @phpstan-param array<int, ExifRational> $values Ordered list of rational components.
+     *
+     * @psalm-param list<ExifRational> $values
      *
      * @throws InvalidArgumentException If the provided values are not a sequential list of ExifRational objects.
      */
@@ -36,10 +42,15 @@ final readonly class ExifRationalList
             throw new InvalidArgumentException('Rational EXIF values must form a list.');
         }
 
-        foreach ($values as $value) {
-            if (!$value instanceof ExifRational) {
-                throw new InvalidArgumentException('Rational EXIF lists may only contain ExifRational instances.');
-            }
+        try {
+            $values = array_map(
+                static function (ExifRational $value): ExifRational {
+                    return $value;
+                },
+                $values
+            );
+        } catch (TypeError $exception) {
+            throw new InvalidArgumentException('Rational EXIF lists may only contain ExifRational instances.', 0, $exception);
         }
 
         /** @var list<ExifRational> $values */

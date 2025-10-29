@@ -13,10 +13,9 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 use InvalidArgumentException;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use TypeError;
 
 use function array_is_list;
-use function is_float;
-use function is_int;
 
 /**
  * Represents a list of numeric EXIF values.
@@ -29,14 +28,22 @@ final readonly class ExifNumericList
     public array $values;
 
     /**
-     * @param array<int, int|float|UInt64> $values Ordered list of numeric components.
+     * @param list<int|float|UInt64> $values Ordered list of numeric components.
+     *
+     * @phpstan-param array<int, int|float|UInt64> $values Ordered list of numeric components.
+     *
+     * @psalm-param list<int|float|UInt64> $values
      */
     public function __construct(array $values)
     {
         $this->assertList($values);
 
         foreach ($values as $value) {
-            $this->assertNumericComponent($value);
+            try {
+                $this->assertNumericComponent($value);
+            } catch (TypeError $exception) {
+                throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.', 0, $exception);
+            }
         }
 
         /** @var list<int|float|UInt64> $values */
@@ -54,7 +61,9 @@ final readonly class ExifNumericList
     }
 
     /**
-     * @param array<int, int|float|UInt64> $values
+     * @param list<int|float|UInt64> $values
+     *
+     * @phpstan-param array<int, int|float|UInt64> $values
      *
      * @phpstan-assert list<int|float|UInt64> $values
      */
@@ -67,12 +76,8 @@ final readonly class ExifNumericList
         throw new InvalidArgumentException('Numeric EXIF values must form a list.');
     }
 
-    private function assertNumericComponent(mixed $value): void
+    private function assertNumericComponent(int|float|UInt64 $value): void
     {
-        if (is_int($value) || is_float($value) || $value instanceof UInt64) {
-            return;
-        }
-
-        throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
+        // The union type enforces numeric values at the call site. The method body remains intentionally empty.
     }
 }
