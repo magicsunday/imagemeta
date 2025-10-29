@@ -36,6 +36,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
         ];
 
         $result = $method->invoke($decoder, $dictionary);
+        self::assertIsArray($result);
         ksort($result);
 
         $expected = [
@@ -66,6 +67,7 @@ final class AppleDecoderFlagMaskTest extends TestCase
         ];
 
         $result = $method->invoke($decoder, $dictionary);
+        self::assertIsArray($result);
         ksort($result);
 
         $expected = [
