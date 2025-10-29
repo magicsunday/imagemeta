@@ -39,9 +39,9 @@ final class ExifConvenience
     public static function camera(ExifDocument $doc): array
     {
         return [
-            'make'  => $doc->cameraMake(),
-            'model' => $doc->cameraModel(),
-            'lens'  => $doc->lensModel(),
+            'make'  => $doc->cameraMake(),  // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Make)
+            'model' => $doc->cameraModel(), // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Model)
+            'lens'  => $doc->lensModel(),   // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (LensModel)
         ];
     }
 
@@ -55,6 +55,7 @@ final class ExifConvenience
     public static function captureDateTime(ExifDocument $doc): ?DateTimeImmutable
     {
         try {
+            // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 harmonise DateTimeOriginal with OffsetTime*.
             return $doc->captureDateTime();
         } catch (Throwable) {
             return null;
@@ -70,6 +71,7 @@ final class ExifConvenience
      */
     public static function gps(ExifDocument $doc): array
     {
+        // GPSLatitude/GPSLongitude/GPSAltitude (EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8).
         return $doc->gps(); // ['lat'=>?float,'lon'=>?float,'alt'=>?float]
     }
 
@@ -82,7 +84,7 @@ final class ExifConvenience
      */
     public static function exposureTime(ExifDocument $doc): ?float
     {
-        $entry = self::find($doc, ExifTag::EXPOSURE_TIME); // ExposureTime (rational)
+        $entry = self::find($doc, ExifTag::EXPOSURE_TIME); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ExposureTime)
 
         return $entry instanceof IfdEntry
             ? ValueConverters::rationalToFloat($entry->value)
@@ -98,7 +100,7 @@ final class ExifConvenience
      */
     public static function fNumber(ExifDocument $doc): ?float
     {
-        $entry = self::find($doc, ExifTag::F_NUMBER); // FNumber (rational)
+        $entry = self::find($doc, ExifTag::F_NUMBER); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FNumber)
 
         return $entry instanceof IfdEntry
             ? ValueConverters::rationalToFloat($entry->value)
@@ -114,7 +116,7 @@ final class ExifConvenience
      */
     public static function focalLength(ExifDocument $doc): ?float
     {
-        $entry = self::find($doc, ExifTag::FOCAL_LENGTH); // FocalLength (rational)
+        $entry = self::find($doc, ExifTag::FOCAL_LENGTH); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FocalLength)
 
         return $entry instanceof IfdEntry
             ? ValueConverters::rationalToFloat($entry->value)
@@ -139,32 +141,32 @@ final class ExifConvenience
             // ignore and fall back to manual resolution
         }
 
-        $iso = self::isoFromSensitivityType($doc);
+        $iso = self::isoFromSensitivityType($doc); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (SensitivityType)
         if ($iso !== null) {
             return $iso;
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::ISO_SPEED));
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::ISO_SPEED)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ISOSpeedRatings)
         if ($iso !== null) {
             return $iso;
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::STANDARD_OUTPUT_SENSITIVITY));
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::STANDARD_OUTPUT_SENSITIVITY)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (StandardOutputSensitivity)
         if ($iso !== null) {
             return $iso;
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::RECOMMENDED_EXPOSURE_INDEX));
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::RECOMMENDED_EXPOSURE_INDEX)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (RecommendedExposureIndex)
         if ($iso !== null) {
             return $iso;
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY));
+        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (PhotographicSensitivity)
         if ($iso !== null) {
             return $iso;
         }
 
-        return self::isoFromEntry($doc->ifd0->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY));
+        return self::isoFromEntry($doc->ifd0->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY)); // Legacy fallback retained for EXIF 2.32 §4.6.3 compatibility
     }
 
     /**
@@ -174,7 +176,7 @@ final class ExifConvenience
      */
     private static function isoFromSensitivityType(ExifDocument $doc): ?int
     {
-        $type = self::isoFromEntry($doc->exifIfd?->get(ExifTag::SENSITIVITY_TYPE));
+        $type = self::isoFromEntry($doc->exifIfd?->get(ExifTag::SENSITIVITY_TYPE)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (SensitivityType)
         if ($type === null) {
             return null;
         }
@@ -245,7 +247,7 @@ final class ExifConvenience
      */
     private static function sensitivityTagPriority(int $type): array
     {
-        // Mapping derived from the EXIF SensitivityType table (EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3).
+        // Mapping derived from the EXIF SensitivityType table (EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3).
         return match ($type) {
             1       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
             2       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
@@ -284,19 +286,19 @@ final class ExifConvenience
         $gps = $doc->gps();
 
         return [
-            'make'        => $doc->cameraMake(),
-            'model'       => $doc->cameraModel(),
-            'lens'        => $doc->lensModel(),
+            'make'        => $doc->cameraMake(),  // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Make)
+            'model'       => $doc->cameraModel(), // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Model)
+            'lens'        => $doc->lensModel(),   // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (LensModel)
             // Expose the numeric orientation code to preserve the legacy convenience contract.
             'orientation' => $doc->orientation()?->value,
             'captured_at' => $dt?->format(DATE_ATOM),
-            'exposure_s'  => self::exposureTime($doc),
-            'fnumber'     => self::fNumber($doc),
-            'focal_mm'    => self::focalLength($doc),
-            'iso'         => self::iso($doc),
-            'gps_lat'     => $gps['lat'],
-            'gps_lon'     => $gps['lon'],
-            'gps_alt'     => $gps['alt'],
+            'exposure_s'  => self::exposureTime($doc), // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ExposureTime)
+            'fnumber'     => self::fNumber($doc),      // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FNumber)
+            'focal_mm'    => self::focalLength($doc),  // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FocalLength)
+            'iso'         => self::iso($doc),          // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ISO values)
+            'gps_lat'     => $gps['lat'],              // EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 (GPSLatitude)
+            'gps_lon'     => $gps['lon'],              // EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 (GPSLongitude)
+            'gps_alt'     => $gps['alt'],              // EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 (GPSAltitude)
         ];
     }
 
