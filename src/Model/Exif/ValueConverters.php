@@ -442,7 +442,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Converts a textual YCbCr subsampling representation into integer pairs.
+     * Converts a textual YCbCr subsampling representation into integer pairs as
+     * described in EXIF 2.32 §4.6.2 / EXIF 3.0 §4.6.2 (image data structure).
      *
      * @return array{0:int,1:int}|null
      */
@@ -468,7 +469,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises a raw EXIF version byte string into a dotted decimal representation.
+     * Normalises a raw EXIF version byte string into a dotted decimal representation
+     * per EXIF 2.32 §4.6.8 / EXIF 3.0 §4.6.8 (other tags).
      */
     public static function toExifVersion(?string $bytes): ?string
     {
@@ -549,7 +551,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises EXIF battery level readings to a percentage.
+     * Normalises EXIF battery level readings to a percentage following
+     * EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 (BatteryLevel tag semantics).
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw battery level value.
      */
@@ -605,7 +608,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Converts the maker note safety flag into a boolean representation.
+     * Converts the maker note safety flag into a boolean representation per
+     * EXIF 2.32 §4.6.8 / EXIF 3.0 §4.6.8 (MakerNoteSafety).
      *
      * @param ExifNumericList|int|float|string|null $value Raw maker note safety value.
      */
@@ -900,7 +904,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Decodes the spatial frequency response payload as defined by EXIF figure 14.
+     * Decodes the spatial frequency response payload as defined by
+     * EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 figure 14.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
@@ -912,7 +917,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Decodes the opto-electronic conversion function payload as defined by EXIF table 15.
+     * Decodes the opto-electronic conversion function payload as defined by
+     * EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 table 15.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
@@ -1212,7 +1218,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Converts the EXIF flash bit field into a typed value object.
+     * Converts the EXIF flash bit field into a typed value object per
+     * EXIF 2.32 §4.6.4 / EXIF 3.0 §4.6.4 (Flash tag bit layout).
      *
      * @param ExifScalar $value Flash tag value representation.
      */
@@ -1254,7 +1261,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises EXIF offset time values to a canonical "+HH:MM" representation.
+     * Normalises EXIF offset time values to a canonical "+HH:MM" representation
+     * per EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 (OffsetTime tags).
      *
      * @param int|float|string|ExifRational|ExifRationalList|null $value The raw offset value.
      */

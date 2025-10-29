@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates the rendering intents defined by the ICC specification.
+ * Enumerates the rendering intents defined by the ICC specification and
+ * referenced by EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 for embedded ICC profiles.
  */
 enum IccRenderingIntent: int
 {

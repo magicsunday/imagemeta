@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates chroma positioning relative to luma samples in YCbCr images.
+ * Enumerates chroma positioning relative to luma samples in YCbCr images
+ * as defined by EXIF 2.32 §4.6.2 and EXIF 3.0 §4.6.2 (image data structure).
  */
 enum YCbCrPositioning: int
 {

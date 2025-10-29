@@ -18,7 +18,8 @@ use function strlen;
 use function trim;
 
 /**
- * Derives EXIF capability profiles from version identifiers.
+ * Derives EXIF capability profiles from version identifiers defined in
+ * EXIF 2.32 §4.6.8 and EXIF 3.0 §4.6.8 (other tags).
  */
 final class ExifCapabilities
 {

@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates EXIF scene types.
+ * Enumerates EXIF scene types defined in
+ * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (shooting conditions).
  */
 enum SceneType: int
 {

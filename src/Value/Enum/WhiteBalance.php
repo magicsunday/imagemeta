@@ -14,7 +14,8 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates the white balance modes recorded by EXIF.
+ * Enumerates the white balance modes recorded by EXIF per
+ * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (shooting conditions).
  */
 enum WhiteBalance: int
 {
