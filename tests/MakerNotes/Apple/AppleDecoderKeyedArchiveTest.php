@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
+use LogicException;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\Value\RunTime;
@@ -20,6 +21,7 @@ use PHPUnit\Framework\TestCase;
 use function array_is_list;
 use function chr;
 use function count;
+use function get_debug_type;
 use function intdiv;
 use function is_array;
 use function is_bool;
@@ -54,69 +56,111 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         self::assertEqualsWithDelta(0.5, $apple->livePhotoTime, 1e-12);
         self::assertSame(6500, $apple->colorTemperature);
         self::assertSame([0.1, 0.2, 0.3], $apple->accelerationVector);
-        self::assertInstanceOf(RunTime::class, $apple->runTime);
-        self::assertSame(1, $apple->runTime?->epoch);
-        self::assertSame(10, $apple->runTime?->timescale);
-        self::assertSame(50, $apple->runTime?->value);
-        self::assertSame(3, $apple->runTime?->flags);
+        $runTime = $apple->runTime;
+        self::assertInstanceOf(RunTime::class, $runTime);
+        self::assertSame(1, $runTime->epoch);
+        self::assertSame(10, $runTime->timescale);
+        self::assertSame(50, $runTime->value);
+        self::assertSame(3, $runTime->flags);
+    }
+
+    private function plistNull(): BinaryPlistNullValue
+    {
+        return new BinaryPlistNullValue();
+    }
+
+    private function plistInt(int $value): BinaryPlistIntValue
+    {
+        return new BinaryPlistIntValue($value);
+    }
+
+    private function plistFloat(float $value): BinaryPlistFloatValue
+    {
+        return new BinaryPlistFloatValue($value);
+    }
+
+    private function plistString(string $value): BinaryPlistStringValue
+    {
+        return new BinaryPlistStringValue($value);
+    }
+
+    /**
+     * @param list<BinaryPlistValue> $values
+     */
+    private function plistArray(array $values): BinaryPlistArrayValue
+    {
+        return new BinaryPlistArrayValue($values);
+    }
+
+    /**
+     * @param array<string, BinaryPlistValue> $entries
+     */
+    private function plistDict(array $entries): BinaryPlistDictionaryValue
+    {
+        return new BinaryPlistDictionaryValue($entries);
     }
 
     private function createKeyedArchiveBlob(): string
     {
-        $objects = [
-            null,
-            [
-                '$class'              => ['CF$UID' => 2],
-                'AccelerationVector'  => ['CF$UID' => 10],
-                'ColorTemperature'    => ['CF$UID' => 9],
-                'ContentIdentifier'   => ['CF$UID' => 3],
-                'FocusPosition'       => ['CF$UID' => 7],
-                'HdrGain'             => ['CF$UID' => 5],
-                'HdrHeadroom'         => ['CF$UID' => 4],
-                'LivePhotoVideoIndex' => ['CF$UID' => 8],
-                'SNRSetting'          => ['CF$UID' => 6],
-                'RunTime'             => ['CF$UID' => 17],
-            ],
-            [
-                '$classes'   => ['AppleMakerNotesRoot', 'NSObject'],
-                '$classname' => 'AppleMakerNotesRoot',
-            ],
-            'content-identifier-xyz',
-            6.25,
-            [
-                ['CF$UID' => 11],
-                ['CF$UID' => 12],
-                ['CF$UID' => 13],
-            ],
-            10.5,
-            0.75,
-            5,
-            6500,
-            [
-                ['CF$UID' => 14],
-                ['CF$UID' => 15],
-                ['CF$UID' => 16],
-            ],
-            1.1,
-            1.2,
-            1.3,
-            0.1,
-            0.2,
-            0.3,
-            [
-                'epoch'     => 1,
-                'timescale' => 10,
-                'value'     => 50,
-                'flags'     => 3,
-            ],
-        ];
+        $objects = $this->plistArray([
+            $this->plistNull(),
+            $this->plistDict([
+                '$class'              => $this->plistDict(['CF$UID' => $this->plistInt(2)]),
+                'AccelerationVector'  => $this->plistDict(['CF$UID' => $this->plistInt(10)]),
+                'ColorTemperature'    => $this->plistDict(['CF$UID' => $this->plistInt(9)]),
+                'ContentIdentifier'   => $this->plistDict(['CF$UID' => $this->plistInt(3)]),
+                'FocusPosition'       => $this->plistDict(['CF$UID' => $this->plistInt(7)]),
+                'HdrGain'             => $this->plistDict(['CF$UID' => $this->plistInt(5)]),
+                'HdrHeadroom'         => $this->plistDict(['CF$UID' => $this->plistInt(4)]),
+                'LivePhotoVideoIndex' => $this->plistDict(['CF$UID' => $this->plistInt(8)]),
+                'SNRSetting'          => $this->plistDict(['CF$UID' => $this->plistInt(6)]),
+                'RunTime'             => $this->plistDict(['CF$UID' => $this->plistInt(17)]),
+            ]),
+            $this->plistDict([
+                '$classes'   => $this->plistArray([
+                    $this->plistString('AppleMakerNotesRoot'),
+                    $this->plistString('NSObject'),
+                ]),
+                '$classname' => $this->plistString('AppleMakerNotesRoot'),
+            ]),
+            $this->plistString('content-identifier-xyz'),
+            $this->plistFloat(6.25),
+            $this->plistArray([
+                $this->plistDict(['CF$UID' => $this->plistInt(11)]),
+                $this->plistDict(['CF$UID' => $this->plistInt(12)]),
+                $this->plistDict(['CF$UID' => $this->plistInt(13)]),
+            ]),
+            $this->plistFloat(10.5),
+            $this->plistFloat(0.75),
+            $this->plistInt(5),
+            $this->plistInt(6500),
+            $this->plistArray([
+                $this->plistDict(['CF$UID' => $this->plistInt(14)]),
+                $this->plistDict(['CF$UID' => $this->plistInt(15)]),
+                $this->plistDict(['CF$UID' => $this->plistInt(16)]),
+            ]),
+            $this->plistFloat(1.1),
+            $this->plistFloat(1.2),
+            $this->plistFloat(1.3),
+            $this->plistFloat(0.1),
+            $this->plistFloat(0.2),
+            $this->plistFloat(0.3),
+            $this->plistDict([
+                'epoch'     => $this->plistInt(1),
+                'timescale' => $this->plistInt(10),
+                'value'     => $this->plistInt(50),
+                'flags'     => $this->plistInt(3),
+            ]),
+        ]);
 
-        $archive = [
-            'archiver' => 'NSKeyedArchiver',
+        $archive = $this->plistDict([
+            'archiver' => $this->plistString('NSKeyedArchiver'),
             'objects'  => $objects,
-            'top'      => ['root' => ['CF$UID' => 1]],
-            'version'  => 100000,
-        ];
+            'top'      => $this->plistDict([
+                'root' => $this->plistDict(['CF$UID' => $this->plistInt(1)]),
+            ]),
+            'version'  => $this->plistInt(100000),
+        ]);
 
         return (new BinaryPlistEncoder())->encode($archive);
     }
@@ -132,19 +176,15 @@ final class BinaryPlistEncoder
      */
     private array $nodes = [];
 
-    /**
-     * @param array<array-key, array|bool|float|int|string|null>|bool|float|int|string|null $value
-     */
-    public function encode(array|bool|float|int|string|null $value): string
+    public function encode(BinaryPlistValue $value): string
     {
         $this->nodes = [];
 
-        $rootIndex = $this->collect($value);
-        $objectCount = count($this->nodes);
-        if ($objectCount === 0) {
-            return 'bplist00';
-        }
+        $rootIndex = $this->collectValue($value);
 
+        /** @var non-empty-list<BinaryPlistNode> $nodes */
+        $nodes = $this->nodes;
+        $objectCount = count($nodes);
         $objectRefSize = 1;
         while ($objectCount > (1 << (8 * $objectRefSize))) {
             ++$objectRefSize;
@@ -153,7 +193,7 @@ final class BinaryPlistEncoder
         $header  = 'bplist00';
         $objects = '';
         $offsets = [];
-        foreach ($this->nodes as $index => $node) {
+        foreach ($nodes as $index => $node) {
             $offsets[$index] = strlen($header) + strlen($objects);
             $objects        .= $this->encodeNode($node, $objectRefSize);
         }
@@ -188,54 +228,14 @@ final class BinaryPlistEncoder
     }
 
     /**
-     * @param array<array-key, array|bool|float|int|string|null>|bool|float|int|string|null $value
+     * @internal
      */
-    private function collect(array|bool|float|int|string|null $value): int
+    public function collectValue(BinaryPlistValue $value): int
     {
-        if ($value === null) {
-            return $this->addNode(new BinaryPlistNode('null', null));
-        }
-
-        if (is_bool($value)) {
-            return $this->addNode(new BinaryPlistNode('bool', $value));
-        }
-
-        if (is_int($value)) {
-            return $this->addNode(new BinaryPlistNode('int', $value));
-        }
-
-        if (is_float($value)) {
-            return $this->addNode(new BinaryPlistNode('float', $value));
-        }
-
-        if (is_string($value)) {
-            return $this->addNode(new BinaryPlistNode('string', $value));
-        }
-
-        if (!is_array($value)) {
-            return $this->addNode(new BinaryPlistNode('null', null));
-        }
-
-        if (array_is_list($value)) {
-            $children = [];
-            foreach ($value as $entry) {
-                $children[] = $this->collect($entry);
-            }
-
-            return $this->addNode(new BinaryPlistNode('array', $children));
-        }
-
-        $keys   = [];
-        $values = [];
-        foreach ($value as $key => $entry) {
-            $keys[]   = $this->collect((string) $key);
-            $values[] = $this->collect($entry);
-        }
-
-        return $this->addNode(new BinaryPlistNode('dict', ['keys' => $keys, 'values' => $values]));
+        return $value->collect($this);
     }
 
-    private function addNode(BinaryPlistNode $node): int
+    public function addNode(BinaryPlistNode $node): int
     {
         $this->nodes[] = $node;
 
@@ -246,14 +246,18 @@ final class BinaryPlistEncoder
     {
         return match ($node->type) {
             'null'   => "\x00",
-            'bool'   => $node->value ? "\x09" : "\x08",
-            'int'    => $this->encodeInteger((int) $node->value),
-            'float'  => "\x23" . pack('E', (float) $node->value),
-            'string' => $this->encodeString((string) $node->value),
-            'array'  => $this->encodeArray($node->value, $objectRefSize),
-            'dict'   => $this->encodeDictionary($node->value, $objectRefSize),
-            default  => "\x00",
+            'bool'   => $this->encodeBoolean($this->extractBool($node)),
+            'int'    => $this->encodeInteger($this->extractInt($node)),
+            'float'  => "\x23" . pack('E', $this->extractFloat($node)),
+            'string' => $this->encodeString($this->extractString($node)),
+            'array'  => $this->encodeArray($this->extractReferenceList($node), $objectRefSize),
+            'dict'   => $this->encodeDictionary($this->extractDictionary($node), $objectRefSize),
         };
+    }
+
+    private function encodeBoolean(bool $value): string
+    {
+        return $value ? "\x09" : "\x08";
     }
 
     private function encodeInteger(int $value): string
@@ -279,6 +283,9 @@ final class BinaryPlistEncoder
         return chr($marker) . $this->packInt($value, $size);
     }
 
+    /**
+     * @return array{0: string, 1: string}
+     */
     private function encodeLength(int $length, int $markerBase): array
     {
         if ($length < 0x0F) {
@@ -349,6 +356,210 @@ final class BinaryPlistEncoder
     {
         return pack('N2', intdiv($value, 0x100000000), $value % 0x100000000);
     }
+
+    private function extractBool(BinaryPlistNode $node): bool
+    {
+        $value = $node->value;
+        if (!is_bool($value)) {
+            throw new LogicException('Expected boolean plist node value, got ' . get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    private function extractInt(BinaryPlistNode $node): int
+    {
+        $value = $node->value;
+        if (!is_int($value)) {
+            throw new LogicException('Expected integer plist node value, got ' . get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    private function extractFloat(BinaryPlistNode $node): float
+    {
+        $value = $node->value;
+        if (!is_float($value)) {
+            throw new LogicException('Expected float plist node value, got ' . get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    private function extractString(BinaryPlistNode $node): string
+    {
+        $value = $node->value;
+        if (!is_string($value)) {
+            throw new LogicException('Expected string plist node value, got ' . get_debug_type($value));
+        }
+
+        return $value;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function extractReferenceList(BinaryPlistNode $node): array
+    {
+        $value = $node->value;
+        if (!is_array($value) || !array_is_list($value)) {
+            throw new LogicException('Expected reference list plist node value, got ' . get_debug_type($value));
+        }
+
+        foreach ($value as $reference) {
+            if (!is_int($reference)) {
+                throw new LogicException('Expected integer reference index, got ' . get_debug_type($reference));
+            }
+        }
+
+        /** @var list<int> $value */
+        return $value;
+    }
+
+    /**
+     * @return array{keys: list<int>, values: list<int>}
+     */
+    private function extractDictionary(BinaryPlistNode $node): array
+    {
+        $value = $node->value;
+        if (!is_array($value) || !isset($value['keys'], $value['values'])) {
+            throw new LogicException('Expected dictionary plist node value, got ' . get_debug_type($value));
+        }
+
+        return [
+            'keys' => $this->extractReferenceList(new BinaryPlistNode('array', $value['keys'])),
+            'values' => $this->extractReferenceList(new BinaryPlistNode('array', $value['values'])),
+        ];
+    }
+}
+
+/**
+ * @internal
+ */
+interface BinaryPlistValue
+{
+    public function collect(BinaryPlistEncoder $encoder): int;
+}
+
+/**
+ * @internal
+ */
+final class BinaryPlistNullValue implements BinaryPlistValue
+{
+    public function collect(BinaryPlistEncoder $encoder): int
+    {
+        return $encoder->addNode(new BinaryPlistNode('null', null));
+    }
+}
+
+/**
+ * @internal
+ */
+final class BinaryPlistBoolValue implements BinaryPlistValue
+{
+    public function __construct(private readonly bool $value)
+    {
+    }
+
+    public function collect(BinaryPlistEncoder $encoder): int
+    {
+        return $encoder->addNode(new BinaryPlistNode('bool', $this->value));
+    }
+}
+
+/**
+ * @internal
+ */
+final class BinaryPlistIntValue implements BinaryPlistValue
+{
+    public function __construct(private readonly int $value)
+    {
+    }
+
+    public function collect(BinaryPlistEncoder $encoder): int
+    {
+        return $encoder->addNode(new BinaryPlistNode('int', $this->value));
+    }
+}
+
+/**
+ * @internal
+ */
+final class BinaryPlistFloatValue implements BinaryPlistValue
+{
+    public function __construct(private readonly float $value)
+    {
+    }
+
+    public function collect(BinaryPlistEncoder $encoder): int
+    {
+        return $encoder->addNode(new BinaryPlistNode('float', $this->value));
+    }
+}
+
+/**
+ * @internal
+ */
+final class BinaryPlistStringValue implements BinaryPlistValue
+{
+    public function __construct(private readonly string $value)
+    {
+    }
+
+    public function collect(BinaryPlistEncoder $encoder): int
+    {
+        return $encoder->addNode(new BinaryPlistNode('string', $this->value));
+    }
+}
+
+/**
+ * @internal
+ */
+final class BinaryPlistArrayValue implements BinaryPlistValue
+{
+    /**
+     * @param list<BinaryPlistValue> $values
+     */
+    public function __construct(private readonly array $values)
+    {
+    }
+
+    public function collect(BinaryPlistEncoder $encoder): int
+    {
+        $references = [];
+        foreach ($this->values as $value) {
+            $references[] = $encoder->collectValue($value);
+        }
+
+        return $encoder->addNode(new BinaryPlistNode('array', $references));
+    }
+}
+
+/**
+ * @internal
+ */
+final class BinaryPlistDictionaryValue implements BinaryPlistValue
+{
+    /**
+     * @param array<string, BinaryPlistValue> $entries
+     */
+    public function __construct(private readonly array $entries)
+    {
+    }
+
+    public function collect(BinaryPlistEncoder $encoder): int
+    {
+        $keys = [];
+        $values = [];
+
+        foreach ($this->entries as $key => $value) {
+            $keys[] = $encoder->collectValue(new BinaryPlistStringValue($key));
+            $values[] = $encoder->collectValue($value);
+        }
+
+        return $encoder->addNode(new BinaryPlistNode('dict', ['keys' => $keys, 'values' => $values]));
+    }
 }
 
 /**
@@ -358,11 +569,14 @@ final class BinaryPlistNode
 {
     /**
      * @param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type
-     * @param mixed                                               $value
+     * @param array|bool|float|int|string|null                    $value
+     *
+     * @phpstan-param 'null'|'bool'|'int'|'float'|'string'|'array'|'dict' $type
+     * @phpstan-param bool|float|int|string|null|list<int>|array{keys: list<int>, values: list<int>} $value
      */
     public function __construct(
         public string $type,
-        public mixed $value,
+        public array|bool|float|int|string|null $value,
     ) {
     }
 }
