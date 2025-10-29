@@ -22,6 +22,9 @@ use function is_int;
 /**
  * Represents a single entry within an image file directory (IFD).
  *
+ * EXIF 3.0 §4.5.2 formalises the tag identifier, field type, count and value
+ * representation stored in each IFD entry, aligning with TIFF 6.0 §2.2.
+ *
  * @phpstan-type ExifScalarValue int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
  * @phpstan-type ExifInputValue ExifScalarValue|array<int|string, int|float|array<int|string, int|float>>
  */

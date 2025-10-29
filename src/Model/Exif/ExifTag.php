@@ -13,6 +13,9 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 /**
  * Centralised list of EXIF tag identifiers used throughout the library.
+ *
+ * EXIF 3.0 §4.6 catalogues the tag registry for the primary, Exif, GPS and
+ * interoperability IFDs referenced by this enumeration.
  */
 final readonly class ExifTag
 {

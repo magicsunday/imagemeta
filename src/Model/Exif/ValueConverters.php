@@ -74,6 +74,10 @@ use const JSON_THROW_ON_ERROR;
 /**
  * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
  *
+ * EXIF 3.0 §4.6 and Annex C define the semantic interpretation of the tag
+ * payloads normalised by these converters; EXIF 2.32 §4.6 remains relevant for
+ * legacy captures that pre-date the 3.0 additions.
+ *
  * @phpstan-type ExifScalar int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
  * @phpstan-type GpsFieldMap array{
  *     lat_ref:?string,

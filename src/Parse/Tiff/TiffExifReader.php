@@ -55,6 +55,10 @@ use function substr;
 
 /**
  * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
+ *
+ * EXIF 3.0 §4.5 outlines the TIFF header layout, data type handling and IFD
+ * traversal rules honoured by this reader; EXIF 2.32 §4.5 documents the legacy
+ * behaviour retained for older images.
  */
 final class TiffExifReader
 {
@@ -161,6 +165,9 @@ final class TiffExifReader
     /**
      * Parses an EXIF TIFF blob into a structured document model.
      *
+     * EXIF 3.0 §4.5 describes the TIFF header, byte-order markers and IFD
+     * chaining strategy applied while decoding embedded EXIF payloads.
+     *
      * @param string        $tiffBlob           Raw TIFF data including headers.
      * @param Registry|null $makerNotesRegistry Optional registry used to decode manufacturer-specific maker notes.
      *
@@ -179,6 +186,7 @@ final class TiffExifReader
         $this->interopVisitedOffsets = [];
 
         // byte order
+        // EXIF 3.0 §4.5.1 follows TIFF 6.0 §8 in defining the "II"/"MM" byte-order markers.
         $boSig    = $this->buf->read(2);
         $this->bo = match ($boSig) {
             'II'    => Endian::Little,
@@ -187,6 +195,7 @@ final class TiffExifReader
         };
 
         $magic = $this->readU16();
+        // EXIF 3.0 §4.5.1 recognises 0x002A (classic TIFF) and 0x002B (BigTIFF) magic identifiers.
         if ($magic === TiffConst::MAGIC_BIG) {
             $this->bigTiff = true;
             $this->parseBigTiffHeader();
@@ -269,6 +278,9 @@ final class TiffExifReader
 
     /**
      * Validates the BigTIFF header following the magic identifier.
+     *
+     * EXIF 3.0 §4.5.1 adopts the BigTIFF header layout described in TIFF EP 2.0,
+     * constraining the offset-size and reserved fields before the first IFD pointer.
      */
     private function parseBigTiffHeader(): void
     {
@@ -289,6 +301,9 @@ final class TiffExifReader
 
     /**
      * Parses an image file directory starting at the given byte offset.
+     *
+     * EXIF 3.0 §4.5.2 details the layout of classic and BigTIFF IFD structures,
+     * including entry counts, entry sizes and next-pointer chaining.
      *
      * @param int|UInt64|string $offset Zero-based byte offset to the IFD structure.
      *
@@ -322,6 +337,7 @@ final class TiffExifReader
 
         $this->buf->seek($offsetInt);
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
+        // EXIF 3.0 §4.5.2 standardises the 12-byte (classic) and 20-byte (BigTIFF) directory entries parsed below.
         $entries    = [];
         for ($i = 0; $i < $entryCount; ++$i) {
             $entries += $this->readDirEntry();
@@ -344,6 +360,9 @@ final class TiffExifReader
 
     /**
      * Reads a single directory entry and returns it keyed by tag identifier.
+     *
+     * EXIF 3.0 §4.5.2 (and EXIF 2.32 §4.5.2 for legacy files) define the tag,
+     * type, count and value/offset fields mirrored by this reader.
      *
      * @return array<int, IfdEntry> tagId => entry
      */
@@ -459,6 +478,9 @@ final class TiffExifReader
     /**
      * Decodes numeric components for counted strip/tile entries into integers.
      *
+     * EXIF 3.0 §4.6.2 and EXIF 2.32 §4.6.2 document the strip/tile tags whose
+     * value counts and component types are interpreted here.
+     *
      * @param int    $tag      TIFF tag identifier used to determine bounds checks.
      * @param int    $type     TIFF field type code.
      * @param string $rawBytes Raw bytes representing the values.
@@ -566,6 +588,9 @@ final class TiffExifReader
 
     /**
      * Collects nested image file directories referenced by a SubIFDs entry.
+     *
+     * EXIF 3.0 §4.5.5 reserves the SubIFDs pointer for reduced-resolution and
+     * auxiliary images that must be parsed as additional IFD chains.
      */
     private function collectSubIfds(IfdEntry $entry): void
     {
@@ -602,6 +627,9 @@ final class TiffExifReader
 
     /**
      * Attempts to resolve an interoperability IFD from the provided directories.
+     *
+     * EXIF 3.0 §4.6.4 documents the interoperability IFD pointer chain that
+     * links ExifIFD entries to the interoperability tag set.
      */
     private function locateInteropIfd(?Ifd ...$ifds): ?Ifd
     {
@@ -650,6 +678,9 @@ final class TiffExifReader
 
     /**
      * Determines whether the provided directory contains interoperability tags.
+     *
+     * EXIF 3.0 §4.6.4 enumerates the interoperability tag set checked by this
+     * helper to recognise interoperability directories.
      */
     private function ifdLooksLikeInterop(Ifd $ifd): bool
     {
@@ -702,6 +733,9 @@ final class TiffExifReader
 
     /**
      * Converts raw bytes into PHP scalar values based on the TIFF type.
+     *
+     * EXIF 3.0 §4.5.2 Table 3 (mirroring TIFF 6.0 §2.2) defines the numeric
+     * representations mapped to PHP scalars in this helper.
      *
      * @param int    $type  TIFF field type code.
      * @param int    $count Number of values represented.
@@ -790,6 +824,9 @@ final class TiffExifReader
 
     /**
      * Decodes a UTF-16LE encoded XP string into UTF-8.
+     *
+     * EXIF 3.0 §4.6.3 enumerates the XP metadata tags transported as UTF-16LE
+     * character data inside the primary IFD.
      */
     private function decodeUtf16LeString(string $bytes): string
     {
