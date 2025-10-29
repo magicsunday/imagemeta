@@ -17,9 +17,9 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 /**
  * Helper that resolves QuickTime metadata values with fallback support.
  */
-final class QuickTimeLookup
+final readonly class QuickTimeLookup
 {
-    public function __construct(private readonly ?QuickTimeMeta $quickTime)
+    public function __construct(private ?QuickTimeMeta $quickTime)
     {
     }
 
