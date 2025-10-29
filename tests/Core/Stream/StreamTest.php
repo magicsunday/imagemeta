@@ -13,13 +13,11 @@ namespace MagicSunday\ImageMeta\Tests\Core\Stream;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function strlen;
 
 /**
@@ -27,6 +25,8 @@ use function strlen;
  */
 final class StreamTest extends TestCase
 {
+    use CreatesTempStream;
+
     /**
      * Ensures sequential big-endian integer reads advance the cursor as expected.
      */
@@ -37,11 +37,7 @@ final class StreamTest extends TestCase
             . pack('N', 0x10203040)
             . pack('N2', 0x01234567, 0x89ABCDEF);
 
-        $fh = fopen('php://temp', 'r+b');
-        fwrite($fh, $payload);
-        rewind($fh);
-
-        $stream = new Stream($fh, strlen($payload));
+        $stream = new Stream($this->createTempStream($payload), strlen($payload));
 
         self::assertSame(0, $stream->tell());
         self::assertSame(0xBEEF, $stream->readU16BE());
@@ -60,11 +56,7 @@ final class StreamTest extends TestCase
     {
         $payload = 'MagicSunday';
 
-        $fh = fopen('php://temp', 'r+b');
-        fwrite($fh, $payload);
-        rewind($fh);
-
-        $stream = new Stream($fh, strlen($payload));
+        $stream = new Stream($this->createTempStream($payload), strlen($payload));
 
         $chunk = $stream->read(5);
 
@@ -84,11 +76,7 @@ final class StreamTest extends TestCase
     {
         $payload = 'Image';
 
-        $fh = fopen('php://temp', 'r+b');
-        fwrite($fh, $payload);
-        rewind($fh);
-
-        $stream = new Stream($fh, strlen($payload));
+        $stream = new Stream($this->createTempStream($payload), strlen($payload));
 
         $stream->read(5);
 
@@ -104,11 +92,7 @@ final class StreamTest extends TestCase
     {
         $payload = 'Meta';
 
-        $fh = fopen('php://temp', 'r+b');
-        fwrite($fh, $payload);
-        rewind($fh);
-
-        $stream = new Stream($fh, strlen($payload));
+        $stream = new Stream($this->createTempStream($payload), strlen($payload));
 
         $this->expectException(BoundsError::class);
         $stream->seek(8);

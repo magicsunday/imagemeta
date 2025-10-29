@@ -13,13 +13,11 @@ namespace MagicSunday\ImageMeta\Tests\Core\ParseError;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
 use function restore_error_handler;
-use function rewind;
 use function set_error_handler;
 use function str_contains;
 use function sys_get_temp_dir;
@@ -30,17 +28,15 @@ use function uniqid;
  */
 final class ParseErrorTest extends TestCase
 {
+    use CreatesTempStream;
+
     /**
      * Declares a stream size larger than the written payload to force a short read ParseError.
      */
     #[Test]
     public function testStreamReadThrowsParseErrorOnShortRead(): void
     {
-        $fh = fopen('php://temp', 'r+b');
-        fwrite($fh, 'A');
-        rewind($fh);
-
-        $stream = new Stream($fh, 2);
+        $stream = new Stream($this->createTempStream('A'), 2);
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('short read');

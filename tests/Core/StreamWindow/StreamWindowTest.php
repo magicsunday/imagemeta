@@ -14,13 +14,11 @@ namespace MagicSunday\ImageMeta\Tests\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
+use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
 use function pack;
-use function rewind;
 use function strlen;
 
 /**
@@ -28,6 +26,8 @@ use function strlen;
  */
 final class StreamWindowTest extends TestCase
 {
+    use CreatesTempStream;
+
     /**
      * Verifies that the window reports its configured length and initial cursor position.
      */
@@ -137,10 +137,6 @@ final class StreamWindowTest extends TestCase
      */
     private function createStream(string $payload): Stream
     {
-        $handle = fopen('php://temp', 'r+b');
-        fwrite($handle, $payload);
-        rewind($handle);
-
-        return new Stream($handle, strlen($payload));
+        return new Stream($this->createTempStream($payload), strlen($payload));
     }
 }

@@ -14,12 +14,10 @@ namespace MagicSunday\ImageMeta\Tests\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Tests\Core\CreatesTempStream;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-use function fopen;
-use function fwrite;
-use function rewind;
 use function strlen;
 
 /**
@@ -27,6 +25,8 @@ use function strlen;
  */
 final class BoundsErrorTest extends TestCase
 {
+    use CreatesTempStream;
+
     /**
      * Attempts to read beyond the declared stream length to ensure the guard throws a descriptive BoundsError.
      */
@@ -35,11 +35,7 @@ final class BoundsErrorTest extends TestCase
     {
         $payload = 'meta';
 
-        $fh = fopen('php://temp', 'r+b');
-        fwrite($fh, $payload);
-        rewind($fh);
-
-        $stream = new Stream($fh, strlen($payload));
+        $stream = new Stream($this->createTempStream($payload), strlen($payload));
 
         $stream->read(4);
 
