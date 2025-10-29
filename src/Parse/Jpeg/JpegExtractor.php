@@ -450,6 +450,9 @@ final class JpegExtractor
         if ($enforceMax) {
             $payloadLength = $length - 2;
             if ($payloadLength > self::MAX_APP_SEGMENT_SIZE) {
+                // EXIF 3.0 §4.5.2 and EXIF 2.32 §4.5.2 keep APP1/APP2 payloads within the JPEG
+                // 64 KiB segment budget; this wider ceiling rejects obviously pathological blobs
+                // before the TIFF parser is invoked.
                 throw new ParseError(
                     sprintf(
                         'APP segment 0x%02X at offset %d exceeds maximum payload of %d bytes',
@@ -498,6 +501,8 @@ final class JpegExtractor
     private function handleApp1(string $payload): void
     {
         if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
+            // EXIF 3.0 §4.5.2 and EXIF 2.21 §4.5.2 require APP1 EXIF data to start with
+            // "Exif\0\0" before the TIFF stream, so we drop the identifying preamble here.
             $this->exifBlobs[] = substr($payload, strlen(self::EXIF_SIGNATURE));
 
             return;
