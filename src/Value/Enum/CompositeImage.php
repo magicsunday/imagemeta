@@ -14,8 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates EXIF composite image classifications introduced in
- * EXIF 2.32 §4.6.3 and maintained in EXIF 3.0 §4.6.3 (shooting conditions).
+ * Enumerates the composite image classifications defined for the CompositeImage
+ * tag in EXIF 3.0 §4.6.3 (shooting conditions), continuing the set introduced
+ * in EXIF 2.32 §4.6.3.
  */
 enum CompositeImage: int
 {

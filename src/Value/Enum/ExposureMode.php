@@ -14,9 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates camera exposure mode settings defined in
- * EXIF 2.32 §4.6.3 and EXIF 3.0 §4.6.3 (tags relating to
- * shooting conditions).
+ * Enumerates the camera exposure mode settings listed for the ExposureMode tag
+ * in EXIF 3.0 §4.6.3 (tags relating to shooting conditions), unchanged from
+ * the EXIF 2.32 §4.6.3 definitions.
  */
 enum ExposureMode: int
 {
