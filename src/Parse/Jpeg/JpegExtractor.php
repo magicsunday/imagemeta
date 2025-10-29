@@ -56,6 +56,10 @@ final class JpegExtractor
 
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
+    /**
+     * Signature identifying MP Index payloads inside APP2 markers
+     * (EXIF 3.0 §4.6.4 / EXIF 2.32 §4.6.4).
+     */
     private const string MPF_SIGNATURE = "MPF\0";
 
     /**
@@ -701,6 +705,9 @@ final class JpegExtractor
 
     /**
      * Collects MPF APP2 segments to be parsed after the marker scan completes.
+     *
+     * EXIF 3.0 §4.6.4 specifies that Multi-Picture Format data resides in APP2
+     * markers, retaining the layout published in EXIF 2.32 §4.6.4.
      */
     private function handleMpfSegment(string $payload, int $offset): void
     {
