@@ -39,8 +39,10 @@ use function unpack;
  * Parses JPEG streams to extract metadata-bearing APP segments.
  *
  * EXIF 3.0 §4.7.2 documents the APP1 encapsulation for Exif payloads and keeps
- * the legacy EXIF 2.32 §4.7.2 marker structure intact; the audio APP2 layout is
- * preserved from EXIF 2.32 §4.7.3 and reiterated by EXIF 3.0 §4.7.3.
+ * the legacy EXIF 2.32 §4.7.2 marker structure intact; EXIF 2.1 §2.7.2 establishes
+ * the original APP1 interoperability framing. The audio APP2 layout is preserved
+ * from EXIF 2.32 §4.7.3 and reiterated by EXIF 3.0 §4.7.3, building on the Exif audio
+ * encapsulation defined in EXIF 2.1 §3.5.
  */
 final class JpegExtractor
 {
@@ -48,7 +50,7 @@ final class JpegExtractor
 
     /**
      * Signatures identifying metadata-bearing APP segments as defined by the
-     * Exif JPEG recording rules (EXIF 3.0 §4.7.2 / EXIF 2.32 §4.7.2).
+     * Exif JPEG recording rules (EXIF 3.0 §4.7.2 / EXIF 2.32 §4.7.2 / EXIF 2.1 §2.7.2).
      */
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
@@ -63,7 +65,8 @@ final class JpegExtractor
     private const string MPF_SIGNATURE = "MPF\0";
 
     /**
-     * Header prefix for Exif audio APP2 payloads (EXIF 3.0 §4.7.3 / EXIF 2.32 §4.7.3).
+     * Header prefix for Exif audio APP2 payloads (EXIF 3.0 §4.7.3 / EXIF 2.32 §4.7.3 /
+     * EXIF 2.1 §3.5).
      */
     private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
 
@@ -517,7 +520,7 @@ final class JpegExtractor
      *
      * EXIF 3.0 §4.7.2 mandates that Exif data inside APP1 begins with "Exif\0\0"
      * followed by the TIFF header defined in §4.5; earlier EXIF 2.32 releases
-     * follow the same structure.
+     * follow the same structure, as did EXIF 2.1 §2.7.2.
      *
      * @param string $payload Raw APP1 payload including leading signature.
      */
@@ -598,7 +601,7 @@ final class JpegExtractor
      *
      * EXIF 3.0 §4.7.3 retains the APP2 audio stream format introduced by
      * EXIF 2.32 §4.7.3, including the four-byte sample rate and two-byte
-     * version fields honoured here.
+     * version fields honoured here, matching the structure described in EXIF 2.1 §3.5.
      *
      * @param string $payload Raw segment payload including signature.
      * @param int    $offset  Offset in the stream where the marker begins.

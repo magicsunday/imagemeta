@@ -46,7 +46,8 @@ use function trim;
  *
  * EXIF 3.0 §4.8 outlines embedding Exif items in ISO BMFF containers through
  * the `Exif` box and item metadata; EXIF 2.32 §4.8 describes the legacy rules
- * retained for backwards compatibility.
+ * retained for backwards compatibility, while EXIF 2.1 §2.7.3 set the groundwork
+ * by defining the FlashPix APP2 interoperability streams used by early containers.
  *
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>

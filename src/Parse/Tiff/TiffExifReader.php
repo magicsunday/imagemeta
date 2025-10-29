@@ -57,8 +57,9 @@ use function substr;
  *
  * EXIF 3.0 §4.5 outlines the TIFF header layout, data type handling and IFD
  * traversal rules honoured by this reader; EXIF 2.32 §4.5 documents the legacy
- * behaviour retained for older images, while TIFF 6.0 §8 provides the baseline
- * directory semantics shared by both formats.
+ * behaviour retained for older images, EXIF 2.1 §2.5.1 and §2.6.2 describe the
+ * original TIFF header and directory traversal rules, while TIFF 6.0 §8 provides
+ * the baseline directory semantics shared by both formats.
  */
 final class TiffExifReader
 {
@@ -79,7 +80,8 @@ final class TiffExifReader
      * Tag identifiers that store counted image data such as strips or tiles.
      *
      * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 describe these TIFF attributes for
-     * thumbnail and primary image payloads, including the JPEG interchange fields.
+     * thumbnail and primary image payloads, including the JPEG interchange fields;
+     * EXIF 2.1 §2.6.4 catalogues the same strip and tile bookkeeping tags.
      *
      * @var list<int>
      */
@@ -94,8 +96,9 @@ final class TiffExifReader
      * Tags whose values encode offsets within the TIFF blob.
      *
      * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 list the Exif, GPS and Interoperability IFD
-     * pointer fields that chain the directory hierarchy. The SubIFDs and preview offsets
-     * are tracked here as well because EXIF 3.0 §4.6.12 keeps them in the same structure.
+     * pointer fields that chain the directory hierarchy, with EXIF 2.1 §2.6.3 establishing
+     * the original Exif and GPS pointer layout. The SubIFDs and preview offsets are tracked
+     * here as well because EXIF 3.0 §4.6.12 keeps them in the same structure.
      *
      * @var list<int>
      */
@@ -173,7 +176,8 @@ final class TiffExifReader
      * Parses an EXIF TIFF blob into a structured document model.
      *
      * EXIF 3.0 §4.5 describes the TIFF header, byte-order markers and IFD
-     * chaining strategy applied while decoding embedded EXIF payloads.
+     * chaining strategy applied while decoding embedded EXIF payloads; EXIF 2.32 §4.5
+     * and EXIF 2.1 §2.5.1/§2.6.2 outline the same traversal rules for legacy files.
      *
      * @param string        $tiffBlob           Raw TIFF data including headers.
      * @param Registry|null $makerNotesRegistry Optional registry used to decode manufacturer-specific maker notes.
@@ -319,7 +323,8 @@ final class TiffExifReader
      * Parses an image file directory starting at the given byte offset.
      *
      * EXIF 3.0 §4.5.2 details the layout of classic and BigTIFF IFD structures,
-     * including entry counts, entry sizes and next-pointer chaining.
+     * including entry counts, entry sizes and next-pointer chaining; EXIF 2.32 §4.5.2
+     * and EXIF 2.1 §2.6.2 describe the same classic TIFF directory form.
      *
      * @param int|UInt64|string $offset Zero-based byte offset to the IFD structure.
      *
@@ -389,7 +394,7 @@ final class TiffExifReader
      *
      * EXIF 3.0 §4.5.2 (and EXIF 2.32 §4.5.2 for legacy files) define the tag,
      * type, count and value/offset fields mirrored by this reader, aligning with
-     * the TIFF 6.0 §8 directory entry layout.
+     * the TIFF 6.0 §8 directory entry layout and the EXIF 2.1 §2.6.2 field schema.
      *
      * @return array<int, IfdEntry> tagId => entry
      */
@@ -438,7 +443,7 @@ final class TiffExifReader
      *
      * EXIF 3.0 §4.6.2 and §4.6.4 enumerate the strip/tile offset and byte-count
      * tags whose component counts are normalised here (see EXIF 2.32 §4.6.2/§4.6.4
-     * for the legacy wording).
+     * for the legacy wording, and EXIF 2.1 §2.6.4 for the original tag listings).
      *
      * @param int                                                            $type     TIFF field type code.
      * @param int                                                            $count    Number of values represented.
@@ -510,7 +515,8 @@ final class TiffExifReader
      * Decodes numeric components for counted strip/tile entries into integers.
      *
      * EXIF 3.0 §4.6.2 and EXIF 2.32 §4.6.2 document the strip/tile tags whose
-     * value counts and component types are interpreted here.
+     * value counts and component types are interpreted here, matching the EXIF 2.1
+     * §2.6.4 guidance for the original dataset.
      *
      * @param int    $tag      TIFF tag identifier used to determine bounds checks.
      * @param int    $type     TIFF field type code.
@@ -663,7 +669,8 @@ final class TiffExifReader
      * Attempts to resolve an interoperability IFD from the provided directories.
      *
      * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 specify that the Interoperability IFD is
-     * located via the pointer tag 0xA005 stored within the Exif IFD.
+     * located via the pointer tag 0xA005 stored within the Exif IFD, matching the
+     * pointer semantics first published in EXIF 2.1 §2.6.3.
      */
     private function locateInteropIfd(?Ifd ...$ifds): ?Ifd
     {
@@ -714,7 +721,8 @@ final class TiffExifReader
      * Determines whether the provided directory contains interoperability tags.
      *
      * EXIF 3.0 §4.6.4 enumerates the interoperability tag set checked by this
-     * helper to recognise interoperability directories.
+     * helper to recognise interoperability directories, mirroring EXIF 2.32 §4.6.4
+     * and the EXIF 2.1 §2.6.7 interoperability tag roster.
      */
     private function ifdLooksLikeInterop(Ifd $ifd): bool
     {
@@ -766,7 +774,8 @@ final class TiffExifReader
      * Converts raw bytes into PHP scalar values based on the TIFF type.
      *
      * EXIF 3.0 §4.5.2 Table 3 (mirroring TIFF 6.0 §2.2) defines the numeric
-     * representations mapped to PHP scalars in this helper.
+     * representations mapped to PHP scalars in this helper, consistent with EXIF 2.32 §4.5.2
+     * and the EXIF 2.1 §2.6.2 type definitions.
      *
      * @param int    $type  TIFF field type code.
      * @param int    $count Number of values represented.
@@ -1193,7 +1202,8 @@ final class TiffExifReader
      * Resolves maker note metadata using the provided registry when available.
      *
      * EXIF 3.0 §4.6.5 (Table 4) and EXIF 2.32 §4.6.5 define the MakerNote tag semantics
-     * and the MakerNoteSafety flag used to indicate whether in-place modification is safe.
+     * and the MakerNoteSafety flag used to indicate whether in-place modification is safe,
+     * continuing the EXIF 2.1 §2.6.5 guidance on manufacturer-specific tags.
      */
     private function resolveMakerNotes(?Registry $registry, Ifd $ifd0, ?Ifd $exifIfd): ?MakerNotesRecord
     {
@@ -1580,7 +1590,8 @@ final class TiffExifReader
      *
      * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 require pointer tags to reference additional
      * directories by absolute offsets. The helper normalises the supported numeric
-     * representations into validated offsets within the EXIF payload.
+     * representations into validated offsets within the EXIF payload, respecting the
+     * EXIF 2.1 §2.6.3 pointer semantics.
      *
      * @param IfdEntry $entry Entry that should contain a pointer/offset value.
      *
