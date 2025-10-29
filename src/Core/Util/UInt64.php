@@ -57,21 +57,43 @@ final class UInt64
         return new self($hi, $lo);
     }
 
+    /**
+     * Returns the most significant 32-bit component.
+     *
+     * @return int Unsigned 32-bit value representing the high part.
+     */
     public function high(): int
     {
         return $this->hi;
     }
 
+    /**
+     * Returns the least significant 32-bit component.
+     *
+     * @return int Unsigned 32-bit value representing the low part.
+     */
     public function low(): int
     {
         return $this->lo;
     }
 
+    /**
+     * Indicates whether both 32-bit components are zero.
+     *
+     * @return bool True when the value equals zero.
+     */
     public function isZero(): bool
     {
         return $this->hi === 0 && $this->lo === 0;
     }
 
+    /**
+     * Compares this value with another 64-bit unsigned integer.
+     *
+     * @param self $other The value to compare against.
+     *
+     * @return int Negative, zero, or positive when this value is less than, equal to, or greater than $other.
+     */
     public function compare(self $other): int
     {
         if ($this->hi !== $other->hi) {
@@ -81,6 +103,13 @@ final class UInt64
         return $this->lo <=> $other->lo;
     }
 
+    /**
+     * Compares this value with a non-negative integer.
+     *
+     * @param int $value The integer to compare against.
+     *
+     * @return int Negative, zero, or positive when this value is less than, equal to, or greater than $value.
+     */
     public function compareInt(int $value): int
     {
         if ($value < 0) {
@@ -90,6 +119,13 @@ final class UInt64
         return $this->compare(self::fromInt($value));
     }
 
+    /**
+     * Adds a non-negative integer that fits into 32 bits and returns the result.
+     *
+     * @param int $value The value to add; must be zero or positive.
+     *
+     * @return self New instance representing the sum.
+     */
     public function addSmall(int $value): self
     {
         if ($value < 0) {
@@ -107,6 +143,11 @@ final class UInt64
         return self::fromUInt32($hi, $lo);
     }
 
+    /**
+     * Determines whether the value fits into the current platform signed integer range.
+     *
+     * @return bool True when the value can be represented as a signed int.
+     */
     public function fitsSignedInt(): bool
     {
         if (PHP_INT_SIZE >= 8) {
@@ -116,6 +157,13 @@ final class UInt64
         return $this->hi === 0 && $this->lo <= BitMask::INT31_MAX;
     }
 
+    /**
+     * Converts the value to a signed integer after checking the platform range.
+     *
+     * @param string $context Description used for the exception message when out of range.
+     *
+     * @return int Signed integer representation of the value.
+     */
     public function toInt(string $context): int
     {
         if (!$this->fitsSignedInt()) {
@@ -125,11 +173,23 @@ final class UInt64
         return (int) (($this->hi * self::UINT32_BASE) + $this->lo);
     }
 
+    /**
+     * Converts the value to an uppercase hexadecimal string without separators.
+     *
+     * @return string 16-character hexadecimal representation.
+     */
     public function toHex(): string
     {
         return sprintf('%08X%08X', $this->hi, $this->lo);
     }
 
+    /**
+     * Ensures that the given value is within the unsigned 32-bit range.
+     *
+     * @param int $value Value to validate.
+     *
+     * @return void
+     */
     private function assertUint32(int $value): void
     {
         if ($value < 0 || $value > self::UINT32_MASK) {
