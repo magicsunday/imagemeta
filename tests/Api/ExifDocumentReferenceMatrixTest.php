@@ -35,6 +35,9 @@ final class ExifDocumentReferenceMatrixTest extends TestCase
         $modelDocument = $metadata->exifDoc;
         self::assertNotNull($modelDocument, sprintf('Reference EXIF document missing for %s', $fixture));
 
+        $expectation = ExifVersionExpectations::get($fixture);
+        self::assertModelMatches($fixture, $modelDocument, $expectation['model']);
+
         $document = new ApiExifDocument($modelDocument);
 
         self::assertSame($modelDocument, $document->raw(), sprintf('%s: Raw document reference', $fixture));

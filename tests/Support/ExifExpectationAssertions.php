@@ -6,6 +6,7 @@ namespace MagicSunday\ImageMeta\Tests\Support;
 
 use MagicSunday\ImageMeta\Api\ExifDocument as ApiExifDocument;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Model\Exif\ExifDocument as ModelExifDocument;
 use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 use PHPUnit\Framework\Assert;
@@ -128,6 +129,26 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength, sprintf('%s: API Interop length', $fixture));
 
         self::assertPreviewMatches($fixture, $expected['preview'], $document->preview());
+    }
+
+    /**
+     * @param array{
+     *     exifVersion:?string,
+     *     exifProfile:string,
+     *     flashpixVersion:?string,
+     *     tiffEpStandardId:?array,
+     *     tiffEpStandardString:?string,
+     * } $expected
+     */
+    private static function assertModelMatches(string $fixture, ?ModelExifDocument $document, array $expected): void
+    {
+        Assert::assertNotNull($document, sprintf('%s: Raw EXIF document', $fixture));
+
+        Assert::assertSame($expected['exifVersion'], $document->exifVersion(), sprintf('%s: Raw EXIF version', $fixture));
+        Assert::assertSame($expected['exifProfile'], $document->exifProfile(), sprintf('%s: Raw EXIF profile', $fixture));
+        Assert::assertSame($expected['flashpixVersion'], $document->flashpixVersion(), sprintf('%s: Raw FlashPix version', $fixture));
+        Assert::assertSame($expected['tiffEpStandardId'], $document->tiffEpStandardId(), sprintf('%s: Raw TIFF/EP standard id', $fixture));
+        Assert::assertSame($expected['tiffEpStandardString'], $document->tiffEpStandardIdString(), sprintf('%s: Raw TIFF/EP standard string', $fixture));
     }
 
     /**
