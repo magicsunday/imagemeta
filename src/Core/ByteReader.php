@@ -28,6 +28,14 @@ final class ByteReader
 
     private readonly Closure $seek;
 
+    /**
+     * Creates a reader backed by callbacks that operate on an external data source.
+     *
+     * @param callable(int):string      $read    Callback that returns the requested number of bytes.
+     * @param callable():int            $tell    Callback that reports the current cursor position.
+     * @param callable(int|UInt64):void $seek    Callback that repositions the cursor of the data source.
+     * @param string                    $context Short description used in error messages.
+     */
     public function __construct(
         callable $read,
         callable $tell,
