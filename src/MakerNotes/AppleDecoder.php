@@ -13,7 +13,7 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMaps;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
@@ -55,47 +55,6 @@ use function trim;
 final class AppleDecoder implements MakerNotesDecoderInterface
 {
     /**
-     * Maps known camera type codes to descriptive labels.
-     *
-     * @var array<int, string>
-     */
-    private const array CAMERA_TYPE_MAP = [
-        0 => 'Back Wide Angle',
-        1 => 'Back Normal',
-        6 => 'Front',
-    ];
-
-    /**
-     * Maps Apple bitfield sources (indexed by zero-based bit position) to normalised flags.
-     *
-     * @var array<string, array<int, string>>
-     */
-    private const array FLAG_MASK_MAP = [
-        'SceneFlags' => [
-            0 => 'nightMode',          // Bit 0 – night mode capture.
-            1 => 'longExposure',       // Bit 1 – long exposure tripod/night capture.
-        ],
-        'ImageProcessingFlags' => [
-            0 => 'hdrEnabled',         // Bit 0 – HDR rendering enabled.
-            1 => 'hdrAuto',            // Bit 1 – HDR auto detection engaged.
-        ],
-        'PhotosAppFeatureFlags' => [
-            0 => 'personInPhoto',      // Bit 0 – Person detected in the asset.
-            1 => 'petInPhoto',         // Bit 1 – Pet detected in the asset.
-        ],
-    ];
-
-    /**
-     * Maker note keys that encode the Live Photo still frame index.
-     *
-     * @var array<int, string>
-     */
-    private const array LIVE_PHOTO_INDEX_KEYS = [
-        'LivePhotoVideoIndex',
-        'LivePhotoMovieIndex',
-    ];
-
-    /**
      * Creates a metadata value object describing the Apple maker note payload.
      *
      * @param string      $raw   Raw maker note data stream.
@@ -112,7 +71,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $appleData
         );
 
-        return (new AppleMakerNotesMapper())->map($metadata, null) ?? $metadata;
+        return $metadata;
     }
 
     /**
@@ -699,7 +658,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $cameraTypeCode    = $this->intValue($dictionary, 'CameraType');
 
         if ($cameraTypeCode !== null) {
-            $cameraType = self::CAMERA_TYPE_MAP[$cameraTypeCode] ?? $cameraTypeCode;
+            $cameraType = AppleMaps::CAMERA_TYPE_MAP[$cameraTypeCode] ?? $cameraTypeCode;
         } else {
             $cameraType = $this->stringValue($dictionary, 'CameraType');
         }
@@ -716,7 +675,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $luminanceNoiseAmplitude = $this->rationalFloatValue($dictionary, 'LuminanceNoiseAmplitude');
         $focusPosition           = $this->floatValue($dictionary, 'FocusPosition');
         $runTime                 = $this->runTimeValue($dictionary, 'RunTime');
-        $livePhotoIndex          = $this->intValue($dictionary, ...self::LIVE_PHOTO_INDEX_KEYS);
+        $livePhotoIndex          = $this->intValue($dictionary, ...AppleMaps::LIVE_PHOTO_INDEX_KEYS);
         $livePhotoTime           = null;
         if ($livePhotoIndex !== null && $runTime instanceof RunTime) {
             $timescale = $runTime->timescale;
@@ -753,11 +712,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $colorCorrectionMatrix = $this->floatList($dictionary, 'ColorCorrectionMatrix');
 
         $makerNoteVersion   = $this->makerNoteVersionValue($dictionary, 'MakerNoteVersion');
-        $hdrImageType       = $this->enumeratedStringValue($dictionary, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
+        $hdrImageType       = $this->enumeratedStringValue($dictionary, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
         $burstUuid          = $this->stringValue($dictionary, 'BurstUUID');
         $focusDistanceRange = $this->focusDistanceRangeValue($dictionary);
         $oisMode            = $this->stringOrNumericValue($dictionary, 'OISMode');
-        $imageCaptureType   = $this->enumeratedStringValue($dictionary, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
+        $imageCaptureType   = $this->enumeratedStringValue($dictionary, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
         $imageUniqueId      = $this->stringValue($dictionary, 'ImageUniqueID');
         $photoIdentifier    = $this->stringValue($dictionary, 'PhotoIdentifier');
         $afMeasuredDepth    = $this->floatValue($dictionary, 'AFMeasuredDepth');
@@ -1520,7 +1479,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function extractFlags(array $dictionary): array
     {
         $flags = [];
-        foreach (AppleMetadata::FLAG_MAP as $makerKey => $normalized) {
+        foreach (AppleMaps::FLAG_MAP as $makerKey => $normalized) {
             if (!array_key_exists($makerKey, $dictionary)) {
                 continue;
             }
@@ -1535,7 +1494,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $flags[$normalized] = $bool;
         }
 
-        foreach (self::FLAG_MASK_MAP as $makerKey => $bitMap) {
+        foreach (AppleMaps::FLAG_MASK_MAP as $makerKey => $bitMap) {
             if (!array_key_exists($makerKey, $dictionary)) {
                 continue;
             }

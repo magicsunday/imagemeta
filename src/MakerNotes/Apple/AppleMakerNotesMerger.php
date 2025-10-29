@@ -13,7 +13,6 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
-use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
@@ -29,12 +28,12 @@ use function trim;
 /**
  * Normalises Apple maker notes by enriching them with QuickTime metadata fallbacks.
  */
-final class AppleMakerNotesMapper
+final class AppleMakerNotesMerger
 {
     /**
      * Merges decoded Apple maker notes with QuickTime metadata fallbacks.
      */
-    public function map(
+    public function merge(
         ?MakerNotesRecord $makerNotes,
         ?QuickTimeMeta $quickTime,
     ): ?MakerNotesRecord {
@@ -185,9 +184,9 @@ final class AppleMakerNotesMapper
             $makerNoteVersion = $lookup->string('MakerNoteVersion');
         }
 
-        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, AppleMetadata::HDR_IMAGE_TYPES);
+        $hdrImageType = $this->normalizeEnumerated($makerNotes?->hdrImageType, AppleMaps::HDR_IMAGE_TYPES);
         if ($hdrImageType === null) {
-            $hdrImageType = $this->quickTimeEnumerated($lookup, AppleMetadata::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
+            $hdrImageType = $this->quickTimeEnumerated($lookup, AppleMaps::HDR_IMAGE_TYPES, 'HDRImageType', 'HdrImageType');
         }
 
         $burstUuid = $makerNotes?->burstUuid;
@@ -205,9 +204,9 @@ final class AppleMakerNotesMapper
             $oisMode = $this->quickTimeStringOrNumeric($lookup, 'OISMode');
         }
 
-        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, AppleMetadata::IMAGE_CAPTURE_TYPES);
+        $imageCaptureType = $this->normalizeEnumerated($makerNotes?->imageCaptureType, AppleMaps::IMAGE_CAPTURE_TYPES);
         if ($imageCaptureType === null) {
-            $imageCaptureType = $this->quickTimeEnumerated($lookup, AppleMetadata::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
+            $imageCaptureType = $this->quickTimeEnumerated($lookup, AppleMaps::IMAGE_CAPTURE_TYPES, 'ImageCaptureType');
         }
 
         $imageUniqueId = $makerNotes?->imageUniqueId;
@@ -426,9 +425,6 @@ final class AppleMakerNotesMapper
     }
 
     /**
-     * @return array{0:?string,1:?float,2:?float}|null
-     */
-    /**
      * @return array<string, bool>
      */
     private function quickTimeFlags(?QuickTimeMeta $quickTime): array
@@ -438,7 +434,7 @@ final class AppleMakerNotesMapper
         }
 
         $flags = [];
-        foreach (AppleMetadata::FLAG_MAP as $key => $normalized) {
+        foreach (AppleMaps::FLAG_MAP as $key => $normalized) {
             $value = $quickTime->boolValue($key);
             if ($value !== null) {
                 $flags[$normalized] = $value;
