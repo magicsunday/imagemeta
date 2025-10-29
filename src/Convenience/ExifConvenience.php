@@ -169,6 +169,8 @@ final class ExifConvenience
 
     /**
      * Resolves ISO sensitivity using the EXIF 3.x sensitivity type priority rules.
+     *
+     * EXIF 3.0 §4.6.3 formalises the SensitivityType-driven priority order retained from EXIF 2.32 §4.6.3.
      */
     private static function isoFromSensitivityType(ExifDocument $doc): ?int
     {
@@ -243,6 +245,7 @@ final class ExifConvenience
      */
     private static function sensitivityTagPriority(int $type): array
     {
+        // Mapping derived from the EXIF SensitivityType table (EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3).
         return match ($type) {
             1       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
             2       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],

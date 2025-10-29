@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates the flash mode encoded inside the EXIF Flash tag.
+ * Enumerates the flash mode encoded inside the EXIF Flash tag (EXIF 2.32 §4.6.4 / EXIF 3.0 §4.6.4).
  */
 enum FlashMode: int
 {
