@@ -125,7 +125,7 @@ final class JpegExtractor
     /**
      * Initialises the extractor with a seekable stream.
      *
-     * @param Stream $stream Stream representing the JPEG binary.
+     * @param Stream $stream Stream representing the JPEG binary stream.
      */
     public function __construct(private readonly Stream $stream)
     {
