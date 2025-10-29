@@ -53,6 +53,14 @@ final class ExifDocument
 
     private readonly InteropValue $interop;
 
+    /**
+     * Creates the structured EXIF view by aggregating the curated value objects extracted from the parser.
+     *
+     * @param ModelExifDocument|null $document              Parsed EXIF document that provides the raw value objects.
+     * @param int|null               $fallbackWidth         Pixel width used when the EXIF image width tag is not available.
+     * @param int|null               $fallbackHeight        Pixel height used when the EXIF image height tag is not available.
+     * @param int|null               $fallbackBitsPerSample Bit depth to fall back to when the EXIF component depth is missing.
+     */
     public function __construct(
         ?ModelExifDocument $document,
         ?int $fallbackWidth = null,
@@ -76,6 +84,7 @@ final class ExifDocument
             relatedImageLength: $document?->relatedImageLength(),
         );
 
+        // Build structured view models that expose the curated EXIF metadata slices.
         $this->camera   = new StructuredCamera($cameraValue);
         $this->lens     = new StructuredLens($lensValue, $derived);
         $this->exposure = new StructuredExposure($exposureValue, $derived);

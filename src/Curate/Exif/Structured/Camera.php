@@ -34,6 +34,11 @@ final readonly class Camera
 
     public ?SensingMethod $sensingMethod;
 
+    /**
+     * @param CameraValue $camera Raw camera value object produced by the parser with unmodified EXIF fields. The mapped
+     *                            properties expose the textual identifiers as-is while keeping enum wrappers for file
+     *                            source and sensing method.
+     */
     public function __construct(CameraValue $camera)
     {
         $this->make          = $camera->make;

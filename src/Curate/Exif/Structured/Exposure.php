@@ -72,6 +72,10 @@ final readonly class Exposure
 
     public ?float $ev100;
 
+    /**
+     * @param ExposureValue $exposure Raw exposure value object with EXIF shutter, aperture and metering metadata.
+     * @param Derived       $derived  Derived optics helper providing calculated EV100 and related exposure math.
+     */
     public function __construct(ExposureValue $exposure, Derived $derived)
     {
         $this->iso              = $exposure->iso;
@@ -95,6 +99,7 @@ final readonly class Exposure
         $this->isoLatitudeZzz   = $exposure->isoLatitudeZzz;
         $this->exposureIndex    = $exposure->exposureIndex;
         $this->flashEnergy      = $exposure->flashEnergy;
+        // EV100 stems from the derived helper and expresses exposure at ISO 100 regardless of the recorded ISO.
         $this->ev100            = $derived->ev100;
     }
 }

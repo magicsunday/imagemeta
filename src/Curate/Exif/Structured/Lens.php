@@ -46,6 +46,10 @@ final readonly class Lens
 
     public ?float $fieldOfViewDiagonal;
 
+    /**
+     * @param LensValue $lens    Raw lens value object with EXIF optical information such as make, model and focal lengths.
+     * @param Derived   $derived Derived helper supplying computed crop factor, hyperfocal distance and FOV values.
+     */
     public function __construct(LensValue $lens, Derived $derived)
     {
         $this->make                  = $lens->lensMake;
@@ -54,6 +58,7 @@ final readonly class Lens
         $this->focalLength           = $lens->focalLengthMm;
         $this->maximumAperture       = $lens->maxApertureFNumber;
         $this->specification         = $lens->lensSpecification;
+        // Fill missing EXIF equivalent focal length with the derived 35mm calculation for downstream consumers.
         $this->equivalent35mm        = $lens->focalLengthIn35mm ?? $derived->focalLength35mm;
         $this->cropFactor            = $derived->cropFactor;
         $this->hyperfocalDistance    = $derived->hyperfocalM;
