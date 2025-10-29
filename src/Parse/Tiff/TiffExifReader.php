@@ -451,7 +451,7 @@ final class TiffExifReader
         int $type,
         int $count,
         string $rawBytes,
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList $value,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value,
     ): int|ExifNumericList {
         if ($count <= 0) {
             return new ExifNumericList([]);
@@ -583,9 +583,11 @@ final class TiffExifReader
                 if ($component instanceof UInt64) {
                     $converted[] = $this->normaliseScalarUInt64($tag, $component);
                     $needsConversion = true;
-                } elseif (is_int($component) || is_float($component)) {
-                    $converted[] = $component;
+
+                    continue;
                 }
+
+                $converted[] = $component;
             }
 
             if ($needsConversion) {
@@ -749,7 +751,10 @@ final class TiffExifReader
         if ($value instanceof ExifNumericList) {
             $offsets = [];
             foreach ($value->values as $component) {
-                if (!is_int($component) && !is_float($component) && !$component instanceof UInt64) {
+                if ($component instanceof UInt64) {
+                    $offsetEntry = new IfdEntry($entry->tag, $entry->type, 1, $component);
+                    $offsets[]   = $this->pointerOffset($offsetEntry);
+
                     continue;
                 }
 
@@ -1271,7 +1276,30 @@ final class TiffExifReader
             return null;
         }
 
-        return ValueConverters::makerNoteSafety($entry->value);
+        $value = $entry->value;
+
+        if ($value instanceof UInt64) {
+            $value = $this->normaliseScalarUInt64(ExifTag::MAKER_NOTE_SAFETY, $value);
+        } elseif ($value instanceof ExifNumericList) {
+            $normalised = [];
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    $normalised[] = $this->normaliseScalarUInt64(ExifTag::MAKER_NOTE_SAFETY, $component);
+
+                    continue;
+                }
+
+                $normalised[] = $component;
+            }
+
+            $value = new ExifNumericList($normalised);
+        }
+
+        if (!is_int($value) && !is_float($value) && !$value instanceof ExifNumericList && !is_string($value)) {
+            return null;
+        }
+
+        return ValueConverters::makerNoteSafety($value);
     }
 
     /**
@@ -1387,7 +1415,7 @@ final class TiffExifReader
                 $lo = $v->low();
             } else {
                 $lo = $v & BitMask::UINT32_MAX;
-                $hi = (int) intdiv($v, BitMask::UINT32_BASE);
+                $hi = intdiv($v, BitMask::UINT32_BASE);
             }
 
             return $this->bo === Endian::Little ? pack('V2', $lo, $hi) : pack('N2', $hi, $lo);
@@ -1591,10 +1619,6 @@ final class TiffExifReader
                 return $this->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
             }
 
-            if (is_string($first)) {
-                return $this->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
-            }
-
             if (is_float($first)) {
                 return $this->pointerOffsetFromFloat($first, $entry->tag);
             }
@@ -1737,7 +1761,7 @@ final class TiffExifReader
         foreach ($words as $word) {
             $value = ($carry << 32) + $word;
             $q     = intdiv($value, 10);
-            $r     = (int) ($value - ($q * 10));
+            $r     = $value - ($q * 10);
 
             if ($quotient !== [] || $q !== 0) {
                 $quotient[] = $q;
