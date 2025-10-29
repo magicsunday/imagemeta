@@ -296,7 +296,11 @@ final class JpegExtractor
     }
 
     /**
-     * Lazily scans the JPEG structure the first time metadata is requested.
+     * Lazily scans the JPEG structure on first access to collect metadata APP markers.
+     *
+     * EXIF 3.0 §4.7.1-§4.7.3 require APP1/APP2 metadata segments to reside between the
+     * SOI and the first SOS marker while excluding restart and TEM markers from carrying
+     * payloads; EXIF 2.32 §4.7.1-§4.7.3 preserve the same ordering and marker constraints.
      */
     private function parseIfNeeded(): void
     {
@@ -338,11 +342,11 @@ final class JpegExtractor
             }
 
             if ($marker === Marker::SOS) {
-                break; // stop scanning metadata when scan data begins
+                break; // EXIF 3.0 §4.7.1 and EXIF 2.32 §4.7.1 restrict metadata APP markers to precede the first SOS.
             }
 
             if ($marker === Marker::TEM || ($marker >= Marker::RST_FIRST && $marker <= Marker::RST_LAST)) {
-                continue; // markers without payload
+                continue; // EXIF 3.0 §4.7.1 and EXIF 2.32 §4.7.1 treat restart and TEM markers as non-payload markers.
             }
 
             $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
