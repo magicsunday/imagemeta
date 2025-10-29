@@ -22,3 +22,8 @@ PHPUNIT
 - [x] Resolve `argument.type` diagnostics at `tests/Support/GpsTiffBuilder.php:89-94` by introducing typed payload definitions and validating mode-specific payloads.
 - [x] Resolve `foreach.nonIterable` at `tests/Support/GpsTiffBuilder.php:103` through explicit rational payload validation.
 - [x] Resolve `offsetAccess.nonOffsetAccessible` and `return.type` at `tests/Support/GpsTiffBuilder.php:157` by asserting unpack results and throwing a `LogicException` when packing fails.
+
+### tests/MakerNotes/Apple/AppleDecoderKeyedArchiveTest.php
+- [x] Resolve `nullsafe.neverNull` at `tests/MakerNotes/Apple/AppleDecoderKeyedArchiveTest.php:58-61` by asserting the runtime instance and using direct property access.
+- [x] Resolve the `missingType.iterableValue`, `argument.type`, `foreach.emptyArray`, and `method.private` errors reported for `BinaryPlistEncoder` (`tests/MakerNotes/Apple/AppleDecoderKeyedArchiveTest.php:145-420`) by introducing typed plist value objects, explicit extraction helpers, and non-empty node assertions.
+- [x] Replace the generic plist factory that triggered `typeAlias.circular`, `parameter.phpDocType`, and `argument.type` diagnostics (`tests/MakerNotes/Apple/AppleDecoderKeyedArchiveTest.php:530-578`) with dedicated helper builders that construct the test archive using the strongly typed value objects.
