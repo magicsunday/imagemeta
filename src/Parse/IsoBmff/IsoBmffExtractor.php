@@ -47,6 +47,9 @@ use function trim;
  * EXIF 3.0 §4.8 outlines embedding Exif items in ISO BMFF containers through
  * the `Exif` box and item metadata; EXIF 2.32 §4.8 describes the legacy rules
  * retained for backwards compatibility.
+ *
+ * @phpstan-type QuickTimeValue = string|int|float|bool
+ * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
  */
 final readonly class IsoBmffExtractor
 {
@@ -266,7 +269,7 @@ final readonly class IsoBmffExtractor
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, bool>   $xmpHashes
-     * @param array<string, string> $qtKeys
+     * @param QuickTimeKeyMap $qtKeys
      */
     private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
@@ -286,7 +289,7 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor $ftyp Box descriptor representing the file type declaration.
      *
-     * @return array<string, string|int>
+     * @return QuickTimeKeyMap
      */
     private function parseFtyp(BoxDescriptor $ftyp): array
     {
@@ -319,7 +322,7 @@ final readonly class IsoBmffExtractor
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, bool>   $xmpHashes
-     * @param array<string, string> $qtKeys
+     * @param QuickTimeKeyMap $qtKeys
      */
     private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
@@ -335,7 +338,7 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor $trak Box descriptor for the track container.
      *
-     * @return array<string, string|int>
+     * @return QuickTimeKeyMap
      */
     private function parseTrak(BoxDescriptor $trak): array
     {
@@ -666,7 +669,7 @@ final readonly class IsoBmffExtractor
      * @param list<string>          $exifBlobs
      * @param list<string>          $xmpBlobs
      * @param array<string, bool>   $xmpHashes
-     * @param array<string, string> $qtKeys
+     * @param QuickTimeKeyMap $qtKeys
      */
     private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
     {
@@ -865,11 +868,11 @@ final readonly class IsoBmffExtractor
     }
 
     /**
-     * @param array<string, string>    $existing
+     * @param QuickTimeKeyMap          $existing
      * @param list<array<int, string>> $keysMaps
      * @param list<BoxDescriptor>      $ilstBoxes
      *
-     * @return array<string, string>
+     * @return QuickTimeKeyMap
      */
     private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes): array
     {
@@ -1213,7 +1216,7 @@ final readonly class IsoBmffExtractor
      * @param BoxDescriptor      $ilst     Box descriptor for the `ilst` container.
      * @param array<int, string> $keyIndex
      *
-     * @return array<string, string>
+     * @return QuickTimeKeyMap
      */
     private function parseIlst(BoxDescriptor $ilst, array $keyIndex): array
     {
@@ -1328,10 +1331,10 @@ final readonly class IsoBmffExtractor
     /**
      * Merges two associative arrays while keeping values from the right-hand side.
      *
-     * @param array<string, string> $left
-     * @param array<string, string> $right
+     * @param QuickTimeKeyMap $left
+     * @param QuickTimeKeyMap $right
      *
-     * @return array<string, string>
+     * @return QuickTimeKeyMap
      */
     private function mergeAssociative(array $left, array $right): array
     {

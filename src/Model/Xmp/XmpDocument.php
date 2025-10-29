@@ -61,10 +61,6 @@ final readonly class XmpDocument
         }
 
         foreach ($value as $element) {
-            if (!is_string($element)) {
-                continue;
-            }
-
             $trimmed = trim($element);
             if ($trimmed !== '') {
                 return $trimmed;
