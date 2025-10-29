@@ -13,6 +13,11 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
+/**
+ * @phpstan-type SemanticStyleScalar string|int|float|bool|null
+ * @phpstan-type SemanticStyleNode array<int|string, SemanticStyleScalar|SemanticStyleNode>
+ * @phpstan-type SemanticStyleCollection SemanticStyleScalar|SemanticStyleNode
+ */
 use function array_is_list;
 use function array_key_exists;
 use function is_array;
@@ -47,7 +52,7 @@ final class SemanticStyle
     /**
      * Extracts semantic style values from a dictionary containing a `SemanticStyle` entry.
      *
-     * @param array<int|string, mixed> $dictionary
+     * @param array<int|string, SemanticStyleCollection> $dictionary
      *
      * @return array{0:?string,1:?float,2:?float}|null
      */
@@ -63,17 +68,17 @@ final class SemanticStyle
     /**
      * Normalises the supplied semantic style collection when possible.
      *
-     * @param mixed $value
+     * @param SemanticStyleCollection $value
      *
      * @return array{0:?string,1:?float,2:?float}|null
      */
-    public static function fromValue(mixed $value): ?array
+    public static function fromValue(array|string|int|float|bool|null $value): ?array
     {
         if (!is_array($value)) {
             return null;
         }
 
-        /** @var array<int|string, mixed> $semantic */
+        /** @var SemanticStyleNode $semantic */
         $semantic = $value;
 
         $entries = self::normaliseEntries($semantic);
@@ -101,16 +106,16 @@ final class SemanticStyle
     }
 
     /**
-     * @param array<int|string, mixed> $semantic
+     * @param SemanticStyleNode $semantic
      *
-     * @return array<int|string, string|int|float|bool|null>|null
+     * @return SemanticStyleNode|null
      */
     private static function normaliseEntries(array $semantic): ?array
     {
         if (!array_is_list($semantic)) {
             foreach (['values', 'Values'] as $key) {
                 if (array_key_exists($key, $semantic) && is_array($semantic[$key])) {
-                    /** @var array<int|string, mixed> $values */
+                    /** @var SemanticStyleNode $values */
                     $values = $semantic[$key];
 
                     return self::normaliseEntries($values);
@@ -122,7 +127,9 @@ final class SemanticStyle
     }
 
     /**
-     * @param array<int|string, string|int|float|bool|null> $entries
+     * @param SemanticStyleNode $entries
+     *
+     * @return SemanticStyleScalar|null
      */
     private static function entry(array $entries, int ...$indexes): string|int|float|bool|null
     {
