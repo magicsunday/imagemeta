@@ -72,4 +72,109 @@ final readonly class Exposure
         public ?float $flashEnergy,
     ) {
     }
+
+    public function iso(): ?int
+    {
+        return $this->iso;
+    }
+
+    public function exposureTimeSec(): ?float
+    {
+        return $this->exposureTimeSec;
+    }
+
+    public function fNumber(): ?float
+    {
+        return $this->fNumber;
+    }
+
+    public function exposureBiasEv(): ?float
+    {
+        return $this->exposureBiasEv;
+    }
+
+    public function program(): ?ExposureProgram
+    {
+        return $this->program;
+    }
+
+    public function meteringMode(): ?MeteringMode
+    {
+        return $this->meteringMode;
+    }
+
+    public function flash(): ?FlashInfo
+    {
+        return $this->flash;
+    }
+
+    public function whiteBalance(): ?WhiteBalance
+    {
+        return $this->whiteBalance;
+    }
+
+    public function brightnessEv(): ?float
+    {
+        return $this->brightnessEv;
+    }
+
+    public function exposureMode(): ?ExposureMode
+    {
+        return $this->exposureMode;
+    }
+
+    public function gainControl(): ?GainControl
+    {
+        return $this->gainControl;
+    }
+
+    public function contrast(): ?Contrast
+    {
+        return $this->contrast;
+    }
+
+    public function saturation(): ?Saturation
+    {
+        return $this->saturation;
+    }
+
+    public function sharpness(): ?Sharpness
+    {
+        return $this->sharpness;
+    }
+
+    public function digitalZoomRatio(): ?float
+    {
+        return $this->digitalZoomRatio;
+    }
+
+    public function shutterSpeedEv(): ?float
+    {
+        return $this->shutterSpeedEv;
+    }
+
+    public function apertureEv(): ?float
+    {
+        return $this->apertureEv;
+    }
+
+    public function isoLatitudeYyy(): ?int
+    {
+        return $this->isoLatitudeYyy;
+    }
+
+    public function isoLatitudeZzz(): ?int
+    {
+        return $this->isoLatitudeZzz;
+    }
+
+    public function exposureIndex(): ?float
+    {
+        return $this->exposureIndex;
+    }
+
+    public function flashEnergy(): ?float
+    {
+        return $this->flashEnergy;
+    }
 }

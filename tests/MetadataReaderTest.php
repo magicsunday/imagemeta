@@ -13,8 +13,8 @@ namespace MagicSunday\imagemeta\tests;
 
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MetadataReader;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\Test;
@@ -75,7 +75,7 @@ final class MetadataReaderTest extends TestCase
         self::assertSame([$tiff], $metadata->exifBlobs);
         self::assertSame([$xmp], $metadata->xmpBlobs);
         self::assertNull($metadata->quickTime);
-        self::assertInstanceOf(ExifDocument::class, $metadata->exifDoc);
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
         self::assertSame('Nikon', $metadata->makerNotes->vendor());
@@ -191,7 +191,7 @@ final class MetadataReaderTest extends TestCase
         self::assertSame([$xmp], $metadata->xmpBlobs);
         self::assertInstanceOf(QuickTimeMeta::class, $metadata->quickTime);
         self::assertSame($identifier, $metadata->quickTime->contentIdentifier());
-        self::assertInstanceOf(ExifDocument::class, $metadata->exifDoc);
+        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
         self::assertSame('Sony', $metadata->makerNotes->vendor());

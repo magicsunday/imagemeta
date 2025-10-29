@@ -101,4 +101,199 @@ final readonly class Gps
         public ?float $horizontalPositioningError = null,
     ) {
     }
+
+    public function latitude(): ?float
+    {
+        return $this->latitude;
+    }
+
+    public function longitude(): ?float
+    {
+        return $this->longitude;
+    }
+
+    public function latitudeRef(): ?string
+    {
+        return $this->latitudeRef;
+    }
+
+    public function longitudeRef(): ?string
+    {
+        return $this->longitudeRef;
+    }
+
+    public function altitude(): ?float
+    {
+        return $this->altitude;
+    }
+
+    public function altitudeRef(): ?int
+    {
+        return $this->altitudeRef;
+    }
+
+    public function version(): ?string
+    {
+        return $this->version;
+    }
+
+    public function versionRaw(): ?string
+    {
+        return $this->versionRaw;
+    }
+
+    public function satellites(): ?string
+    {
+        return $this->satellites;
+    }
+
+    public function status(): ?string
+    {
+        return $this->status;
+    }
+
+    public function measureMode(): ?string
+    {
+        return $this->measureMode;
+    }
+
+    public function dop(): ?float
+    {
+        return $this->dop;
+    }
+
+    public function speedRef(): ?string
+    {
+        return $this->speedRef;
+    }
+
+    public function speedMs(): ?float
+    {
+        return $this->speedMs;
+    }
+
+    public function speedOriginalRef(): ?string
+    {
+        return $this->speedOriginalRef;
+    }
+
+    public function speedOriginal(): ?float
+    {
+        return $this->speedOriginal;
+    }
+
+    public function trackRef(): ?string
+    {
+        return $this->trackRef;
+    }
+
+    public function track(): ?float
+    {
+        return $this->track;
+    }
+
+    public function imageDirectionRef(): ?string
+    {
+        return $this->imageDirectionRef;
+    }
+
+    public function imageDirection(): ?float
+    {
+        return $this->imageDirection;
+    }
+
+    public function mapDatum(): ?string
+    {
+        return $this->mapDatum;
+    }
+
+    public function destinationLatitudeRef(): ?string
+    {
+        return $this->destinationLatitudeRef;
+    }
+
+    public function destinationLatitude(): ?float
+    {
+        return $this->destinationLatitude;
+    }
+
+    public function destinationLongitudeRef(): ?string
+    {
+        return $this->destinationLongitudeRef;
+    }
+
+    public function destinationLongitude(): ?float
+    {
+        return $this->destinationLongitude;
+    }
+
+    public function destinationBearingRef(): ?string
+    {
+        return $this->destinationBearingRef;
+    }
+
+    public function destinationBearing(): ?float
+    {
+        return $this->destinationBearing;
+    }
+
+    public function destinationDistanceRef(): ?string
+    {
+        return $this->destinationDistanceRef;
+    }
+
+    public function destinationDistanceMetres(): ?float
+    {
+        return $this->destinationDistanceMetres;
+    }
+
+    public function destinationDistanceOriginalRef(): ?string
+    {
+        return $this->destinationDistanceOriginalRef;
+    }
+
+    public function destinationDistanceOriginal(): ?float
+    {
+        return $this->destinationDistanceOriginal;
+    }
+
+    public function processingMethod(): ?string
+    {
+        return $this->processingMethod;
+    }
+
+    public function areaInformation(): ?string
+    {
+        return $this->areaInformation;
+    }
+
+    public function date(): ?string
+    {
+        return $this->date;
+    }
+
+    public function dateRaw(): ?string
+    {
+        return $this->dateRaw;
+    }
+
+    public function time(): ?string
+    {
+        return $this->time;
+    }
+
+    public function timestamp(): ?DateTimeImmutable
+    {
+        return $this->timestamp;
+    }
+
+    public function differential(): ?int
+    {
+        return $this->differential;
+    }
+
+    public function horizontalPositioningError(): ?float
+    {
+        return $this->horizontalPositioningError;
+    }
 }

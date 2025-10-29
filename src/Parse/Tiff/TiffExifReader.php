@@ -21,13 +21,13 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 
 use function array_any;
@@ -183,9 +183,9 @@ final class TiffExifReader
      * @param string        $tiffBlob           Raw TIFF data including headers.
      * @param Registry|null $makerNotesRegistry Optional registry used to decode manufacturer-specific maker notes.
      *
-     * @return ExifDocument
+     * @return ParsedExif
      */
-    public function parseFromBlob(string $tiffBlob, ?Registry $makerNotesRegistry = null): ExifDocument
+    public function parseFromBlob(string $tiffBlob, ?Registry $makerNotesRegistry = null): ParsedExif
     {
         $this->buf = new MemoryBuffer($tiffBlob);
         $this->buf->seek(0);
@@ -282,7 +282,7 @@ final class TiffExifReader
 
         $makerNotes = $this->resolveMakerNotes($makerNotesRegistry, $ifd0, $exifIfd);
 
-        return new ExifDocument(
+        return new ParsedExif(
             $ifd0,
             $exifIfd,
             $gpsIfd,

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Acceptance;
 
-use MagicSunday\ImageMeta\Api\ExifDocument as ApiExifDocument;
+use MagicSunday\ImageMeta\Exif\StructuredExif as ApiStructuredExif;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
 use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
@@ -134,7 +134,7 @@ final class ExifBackfillMatrixTest extends TestCase
 
         self::assertStructuredMatches($fixture, $metadata, $expectedStructured);
 
-        $document = new ApiExifDocument($metadata->exifDoc);
+        $document = new ApiStructuredExif($metadata->exifDoc);
         self::assertApiMatches($fixture, $document, $expectedApi);
 
         self::assertModelMatches($fixture, $metadata->exifDoc, $expectedModel);

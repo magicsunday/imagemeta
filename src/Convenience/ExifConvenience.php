@@ -13,12 +13,12 @@ namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use Throwable;
 
@@ -33,11 +33,11 @@ final class ExifConvenience
     /**
      * Extracts camera identification details from the EXIF document.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return array{make: ?string, model: ?string, lens: ?string} camera details ready for display
      */
-    public static function camera(ExifDocument $doc): array
+    public static function camera(ParsedExif $doc): array
     {
         return [
             'make'  => $doc->cameraMake(),  // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Make)
@@ -49,11 +49,11 @@ final class ExifConvenience
     /**
      * Normalises the capture timestamp by combining the EXIF datetime and offset.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return DateTimeImmutable|null the capture timestamp or null when unavailable
      */
-    public static function captureDateTime(ExifDocument $doc): ?DateTimeImmutable
+    public static function captureDateTime(ParsedExif $doc): ?DateTimeImmutable
     {
         try {
             // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 harmonise DateTimeOriginal with OffsetTime*.
@@ -66,11 +66,11 @@ final class ExifConvenience
     /**
      * Returns the GPS coordinates extracted from the EXIF document.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return array{lat: ?float, lon: ?float, alt: ?float} geographic coordinates
      */
-    public static function gps(ExifDocument $doc): array
+    public static function gps(ParsedExif $doc): array
     {
         // GPSLatitude/GPSLongitude/GPSAltitude (EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8).
         return $doc->gps(); // ['lat'=>?float,'lon'=>?float,'alt'=>?float]
@@ -79,11 +79,11 @@ final class ExifConvenience
     /**
      * Converts the exposure time rational to seconds.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return float|null exposure duration in seconds
      */
-    public static function exposureTime(ExifDocument $doc): ?float
+    public static function exposureTime(ParsedExif $doc): ?float
     {
         $entry = self::find($doc, ExifTag::EXPOSURE_TIME); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ExposureTime)
 
@@ -95,11 +95,11 @@ final class ExifConvenience
     /**
      * Retrieves the aperture (f-number) from the EXIF data.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return float|null aperture value
      */
-    public static function fNumber(ExifDocument $doc): ?float
+    public static function fNumber(ParsedExif $doc): ?float
     {
         $entry = self::find($doc, ExifTag::F_NUMBER); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FNumber)
 
@@ -111,11 +111,11 @@ final class ExifConvenience
     /**
      * Retrieves the focal length from the EXIF data in millimetres.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return float|null focal length in millimetres
      */
-    public static function focalLength(ExifDocument $doc): ?float
+    public static function focalLength(ParsedExif $doc): ?float
     {
         $entry = self::find($doc, ExifTag::FOCAL_LENGTH); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FocalLength)
 
@@ -127,11 +127,11 @@ final class ExifConvenience
     /**
      * Determines the ISO sensitivity from either the modern or legacy tag.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return int|null ISO value when available
      */
-    public static function iso(ExifDocument $doc): ?int
+    public static function iso(ParsedExif $doc): ?int
     {
         try {
             $iso = $doc->isoBestEffort();
@@ -173,7 +173,7 @@ final class ExifConvenience
      *
      * EXIF 3.0 §4.6.3 formalises the SensitivityType-driven priority order retained from EXIF 2.32 §4.6.3.
      */
-    private static function isoFromSensitivityType(ExifDocument $doc): ?int
+    private static function isoFromSensitivityType(ParsedExif $doc): ?int
     {
         $type = self::isoFromEntry($doc->exifIfd?->get(ExifTag::SENSITIVITY_TYPE)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (SensitivityType)
         if ($type === null) {
@@ -266,7 +266,7 @@ final class ExifConvenience
     /**
      * Provides a flattened associative representation of common EXIF values.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
+     * @param ParsedExif $doc parsed EXIF metadata
      *
      * @return array{
      *     make:?string,
@@ -283,7 +283,7 @@ final class ExifConvenience
      *     gps_alt:?float
      * } normalised metadata values
      */
-    public static function toArray(ExifDocument $doc): array
+    public static function toArray(ParsedExif $doc): array
     {
         $dt  = self::captureDateTime($doc);
         $gps = $doc->gps();
@@ -308,12 +308,12 @@ final class ExifConvenience
     /**
      * Finds a tag either within the EXIF IFD or as a fallback in IFD0.
      *
-     * @param ExifDocument $doc parsed EXIF metadata
-     * @param int          $tag tag identifier to search for
+     * @param ParsedExif $doc parsed EXIF metadata
+     * @param int        $tag tag identifier to search for
      *
      * @return IfdEntry|null matching tag entry when present
      */
-    private static function find(ExifDocument $doc, int $tag): ?IfdEntry
+    private static function find(ParsedExif $doc, int $tag): ?IfdEntry
     {
         $exifEntry = $doc->exifIfd?->get($tag);
         if ($exifEntry instanceof IfdEntry) {

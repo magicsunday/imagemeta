@@ -78,7 +78,7 @@ use function trim;
  * EXIF 3.0 §4 and Annex A summarise the logical grouping of tags mirrored by
  * the accessors provided in this value object.
  */
-final readonly class ExifDocument
+final readonly class ParsedExif
 {
     private ?string $exifVersion;
 

@@ -11,12 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Api;
 
-use MagicSunday\ImageMeta\Api\ExifDocument as ApiExifDocument;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument as ModelExifDocument;
+use MagicSunday\ImageMeta\Exif\StructuredExif as ApiStructuredExif;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif as ModelExifDocument;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -53,7 +53,7 @@ final class ExifDocumentFallbackTest extends TestCase
         ]);
 
         $modelDocument = new ModelExifDocument($ifd0, $exifIfd, null, null, null);
-        $apiDocument   = new ApiExifDocument($modelDocument);
+        $apiDocument   = new ApiStructuredExif($modelDocument);
 
         $bestEffortOriginal = $modelDocument->dateTimeOriginalBestEffort();
         self::assertNotNull($bestEffortOriginal);
@@ -66,11 +66,11 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertSame(400, $apiDocument->iso());
 
         $exposure = $apiDocument->exposure();
-        self::assertSame(400, $exposure->iso);
+        self::assertSame(400, $exposure->iso());
 
         $image = $apiDocument->image();
-        self::assertSame('Shot with ND filter', $image->userComment);
-        self::assertSame('ASCII', $image->userCommentEncoding);
+        self::assertSame('Shot with ND filter', $image->userComment());
+        self::assertSame('ASCII', $image->userCommentEncoding());
 
         self::assertSame('Shot with ND filter', $apiDocument->userComment());
         self::assertSame('ASCII', $apiDocument->userCommentEncoding());
@@ -91,19 +91,19 @@ final class ExifDocumentFallbackTest extends TestCase
             ),
         ]);
 
-        $apiDocument = new ApiExifDocument(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
+        $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
 
         $preview = $apiDocument->preview();
-        self::assertNull($preview->previewCompression);
-        self::assertNull($preview->previewScale);
-        self::assertFalse($preview->hasPreview);
-        self::assertNull($preview->previewWidth);
-        self::assertNull($preview->previewHeight);
-        self::assertNull($preview->previewBitDepth);
-        self::assertNull($preview->previewEncoding);
-        self::assertNull($preview->previewMimeType);
-        self::assertNull($preview->previewOffset);
-        self::assertNull($preview->previewLength);
+        self::assertNull($preview->previewCompression());
+        self::assertNull($preview->previewScale());
+        self::assertFalse($preview->hasPreview());
+        self::assertNull($preview->previewWidth());
+        self::assertNull($preview->previewHeight());
+        self::assertNull($preview->previewBitDepth());
+        self::assertNull($preview->previewEncoding());
+        self::assertNull($preview->previewMimeType());
+        self::assertNull($preview->previewOffset());
+        self::assertNull($preview->previewLength());
     }
 
     #[Test]
@@ -135,20 +135,20 @@ final class ExifDocumentFallbackTest extends TestCase
             ExifTag::PREVIEW_IMAGE_MIME_TYPE => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
         ]);
 
-        $apiDocument = new ApiExifDocument(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
+        $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
 
         $preview = $apiDocument->preview();
 
-        self::assertTrue($preview->hasThumbnail);
-        self::assertTrue($preview->hasPreview);
-        self::assertSame(1_600, $preview->previewWidth);
-        self::assertSame(900, $preview->previewHeight);
-        self::assertSame(65_536, $preview->previewOffset);
-        self::assertSame(32_768, $preview->previewLength);
-        self::assertSame('JPEG', $preview->previewEncoding);
-        self::assertSame('image/jpeg', $preview->previewMimeType);
-        self::assertSame(Compression::JPEG, $preview->previewCompression);
-        self::assertEqualsWithDelta(0.5, $preview->previewScale ?? 0.0, 1e-6);
+        self::assertTrue($preview->hasThumbnail());
+        self::assertTrue($preview->hasPreview());
+        self::assertSame(1_600, $preview->previewWidth());
+        self::assertSame(900, $preview->previewHeight());
+        self::assertSame(65_536, $preview->previewOffset());
+        self::assertSame(32_768, $preview->previewLength());
+        self::assertSame('JPEG', $preview->previewEncoding());
+        self::assertSame('image/jpeg', $preview->previewMimeType());
+        self::assertSame(Compression::JPEG, $preview->previewCompression());
+        self::assertEqualsWithDelta(0.5, $preview->previewScale() ?? 0.0, 1e-6);
     }
 
     #[Test]
@@ -192,17 +192,17 @@ final class ExifDocumentFallbackTest extends TestCase
             ],
         );
 
-        $preview = (new ApiExifDocument($document))->preview();
+        $preview = (new ApiStructuredExif($document))->preview();
 
-        self::assertTrue($preview->hasPreview);
-        self::assertSame(1_024, $preview->previewWidth);
-        self::assertSame(768, $preview->previewHeight);
-        self::assertSame(131_072, $preview->previewOffset);
-        self::assertSame(65_536, $preview->previewLength);
-        self::assertSame('JPEG', $preview->previewEncoding);
-        self::assertSame('image/jpeg', $preview->previewMimeType);
-        self::assertSame(8, $preview->previewBitDepth);
-        self::assertSame(Compression::JPEG_OLD_STYLE, $preview->previewCompression);
-        self::assertEqualsWithDelta(0.75, $preview->previewScale ?? 0.0, 1e-6);
+        self::assertTrue($preview->hasPreview());
+        self::assertSame(1_024, $preview->previewWidth());
+        self::assertSame(768, $preview->previewHeight());
+        self::assertSame(131_072, $preview->previewOffset());
+        self::assertSame(65_536, $preview->previewLength());
+        self::assertSame('JPEG', $preview->previewEncoding());
+        self::assertSame('image/jpeg', $preview->previewMimeType());
+        self::assertSame(8, $preview->previewBitDepth());
+        self::assertSame(Compression::JPEG_OLD_STYLE, $preview->previewCompression());
+        self::assertEqualsWithDelta(0.75, $preview->previewScale() ?? 0.0, 1e-6);
     }
 }

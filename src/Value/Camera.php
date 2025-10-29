@@ -38,4 +38,39 @@ final readonly class Camera
         public ?SensingMethod $sensingMethod,
     ) {
     }
+
+    public function make(): ?string
+    {
+        return $this->make;
+    }
+
+    public function model(): ?string
+    {
+        return $this->model;
+    }
+
+    public function ownerName(): ?string
+    {
+        return $this->ownerName;
+    }
+
+    public function serialNumber(): ?string
+    {
+        return $this->serialNumber;
+    }
+
+    public function firmware(): ?string
+    {
+        return $this->firmware;
+    }
+
+    public function fileSource(): ?FileSource
+    {
+        return $this->fileSource;
+    }
+
+    public function sensingMethod(): ?SensingMethod
+    {
+        return $this->sensingMethod;
+    }
 }

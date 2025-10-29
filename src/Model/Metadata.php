@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Model;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
-use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -32,7 +32,7 @@ final class Metadata
 
     public readonly ?QuickTimeMeta $quickTime;
 
-    public readonly ?ExifDocument $exifDoc;
+    public readonly ?ParsedExif $exifDoc;
 
     /**
      * @var list<string>
@@ -89,7 +89,7 @@ final class Metadata
     /**
      * @param list<string>                                         $exifBlobs                TIFF‑EXIF blobs (first is primary)
      * @param QuickTimeMeta|null                                   $quickTime                QuickTime metadata extracted from ISO BMFF containers.
-     * @param ExifDocument|null                                    $exifDoc                  Parsed representation of the primary EXIF document.
+     * @param ParsedExif|null                                      $exifDoc                  Parsed representation of the primary EXIF document.
      * @param list<string>                                         $xmpBlobs                 XMP packets (RDF/XML), first is primary
      * @param XmpDocument|null                                     $xmpDoc                   Parsed representation of the primary XMP packet.
      * @param MakerNotesRecord|null                                $makerNotes               Decoded maker notes metadata for the primary EXIF blob.
@@ -113,7 +113,7 @@ final class Metadata
     public function __construct(
         array $exifBlobs,
         ?QuickTimeMeta $quickTime,
-        ?ExifDocument $exifDoc = null,
+        ?ParsedExif $exifDoc = null,
         array $xmpBlobs = [],
         ?XmpDocument $xmpDoc = null,
         ?MakerNotesRecord $makerNotes = null,

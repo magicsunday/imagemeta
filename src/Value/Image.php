@@ -55,4 +55,82 @@ final readonly class Image
         public ?string $userCommentEncoding,
     ) {
     }
+
+    public function width(): ?int
+    {
+        return $this->width;
+    }
+
+    public function height(): ?int
+    {
+        return $this->height;
+    }
+
+    public function orientation(): ?Orientation
+    {
+        return $this->orientation;
+    }
+
+    public function bitsPerSample(): ?int
+    {
+        return $this->bitsPerSample;
+    }
+
+    public function colorSpace(): ?ColorSpace
+    {
+        return $this->colorSpace;
+    }
+
+    public function imageUniqueId(): ?string
+    {
+        return $this->imageUniqueId;
+    }
+
+    public function imageNumber(): ?int
+    {
+        return $this->imageNumber;
+    }
+
+    public function documentName(): ?string
+    {
+        return $this->documentName;
+    }
+
+    public function description(): ?string
+    {
+        return $this->description;
+    }
+
+    public function title(): ?string
+    {
+        return $this->title;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function componentsConfiguration(): ?array
+    {
+        return $this->componentsConfiguration;
+    }
+
+    public function compressedBitsPerPixel(): ?float
+    {
+        return $this->compressedBitsPerPixel;
+    }
+
+    public function interlace(): ?int
+    {
+        return $this->interlace;
+    }
+
+    public function userComment(): ?string
+    {
+        return $this->userComment;
+    }
+
+    public function userCommentEncoding(): ?string
+    {
+        return $this->userCommentEncoding;
+    }
 }

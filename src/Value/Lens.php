@@ -41,4 +41,42 @@ final readonly class Lens
     ) {
         $this->lensSpecification = $lensSpecification;
     }
+
+    /**
+     * @return array{0:float,1:float,2:float,3:float}|null
+     */
+    public function lensSpecification(): ?array
+    {
+        return $this->lensSpecification;
+    }
+
+    public function lensMake(): ?string
+    {
+        return $this->lensMake;
+    }
+
+    public function lensModel(): ?string
+    {
+        return $this->lensModel;
+    }
+
+    public function lensSerialNumber(): ?string
+    {
+        return $this->lensSerialNumber;
+    }
+
+    public function focalLengthMm(): ?float
+    {
+        return $this->focalLengthMm;
+    }
+
+    public function focalLengthIn35mm(): ?int
+    {
+        return $this->focalLengthIn35mm;
+    }
+
+    public function maxApertureFNumber(): ?float
+    {
+        return $this->maxApertureFNumber;
+    }
 }

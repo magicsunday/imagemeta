@@ -66,4 +66,67 @@ final readonly class Lens
         $this->fieldOfViewVertical   = $derived->fovVerticalDeg;
         $this->fieldOfViewDiagonal   = $derived->fovDiagonalDeg;
     }
+
+    public function make(): ?string
+    {
+        return $this->make;
+    }
+
+    public function model(): ?string
+    {
+        return $this->model;
+    }
+
+    public function serialNumber(): ?string
+    {
+        return $this->serialNumber;
+    }
+
+    public function focalLength(): ?float
+    {
+        return $this->focalLength;
+    }
+
+    public function maximumAperture(): ?float
+    {
+        return $this->maximumAperture;
+    }
+
+    /**
+     * @return array{0:float,1:float,2:float,3:float}|null
+     */
+    public function specification(): ?array
+    {
+        return $this->specification;
+    }
+
+    public function equivalent35mm(): ?int
+    {
+        return $this->equivalent35mm;
+    }
+
+    public function cropFactor(): ?float
+    {
+        return $this->cropFactor;
+    }
+
+    public function hyperfocalDistance(): ?float
+    {
+        return $this->hyperfocalDistance;
+    }
+
+    public function fieldOfViewHorizontal(): ?float
+    {
+        return $this->fieldOfViewHorizontal;
+    }
+
+    public function fieldOfViewVertical(): ?float
+    {
+        return $this->fieldOfViewVertical;
+    }
+
+    public function fieldOfViewDiagonal(): ?float
+    {
+        return $this->fieldOfViewDiagonal;
+    }
 }
