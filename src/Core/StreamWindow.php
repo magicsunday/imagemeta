@@ -77,23 +77,23 @@ final class StreamWindow
     /**
      * Reads bytes from the bounded region and advances the cursor.
      *
-     * @param int $len Number of bytes to read.
+     * @param int $length Number of bytes to read.
      *
      * @return string
      */
-    public function read(int $len): string
+    public function read(int $length): string
     {
-        if ($len === 0) {
+        if ($length === 0) {
             return '';
         }
 
-        if ($len < 0 || $this->cursor + $len > $this->length) {
+        if ($length < 0 || $this->cursor + $length > $this->length) {
             throw new BoundsError('window read out of range');
         }
 
         $this->base->seek($this->offset + $this->cursor);
-        $data = $this->base->read($len);
-        $this->cursor += $len;
+        $data = $this->base->read($length);
+        $this->cursor += $length;
 
         return $data;
     }

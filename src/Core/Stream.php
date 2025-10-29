@@ -111,26 +111,26 @@ final class Stream
     /**
      * Reads a fixed number of bytes from the stream, advancing the cursor.
      *
-     * @param int $len Number of bytes to read.
+     * @param int $length Number of bytes to read.
      *
      * @return string
      */
-    public function read(int $len): string
+    public function read(int $length): string
     {
-        if ($len === 0) {
+        if ($length === 0) {
             return '';
         }
 
-        if ($len < 0 || $this->pos + $len > $this->size) {
-            throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size);
+        if ($length < 0 || $this->pos + $length > $this->size) {
+            throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $length . ' > ' . $this->size);
         }
 
-        $data = fread($this->fh, $len);
-        if ($data === false || strlen($data) !== $len) {
+        $data = fread($this->fh, $length);
+        if ($data === false || strlen($data) !== $length) {
             throw new ParseError('short read');
         }
 
-        $this->pos += $len;
+        $this->pos += $length;
 
         return $data;
     }
