@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\Test;
@@ -73,7 +72,6 @@ final class MetadataReaderTest extends TestCase
             @unlink($path);
         }
 
-        self::assertInstanceOf(Metadata::class, $metadata);
         self::assertSame([$tiff], $metadata->exifBlobs);
         self::assertSame([$xmp], $metadata->xmpBlobs);
         self::assertNull($metadata->quickTime);
@@ -189,7 +187,6 @@ final class MetadataReaderTest extends TestCase
             @unlink($path);
         }
 
-        self::assertInstanceOf(Metadata::class, $metadata);
         self::assertSame([$tiff], $metadata->exifBlobs);
         self::assertSame([$xmp], $metadata->xmpBlobs);
         self::assertInstanceOf(QuickTimeMeta::class, $metadata->quickTime);
