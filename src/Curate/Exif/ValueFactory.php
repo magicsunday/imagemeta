@@ -131,43 +131,18 @@ final class ValueFactory
      * @param XmpDocument|null $xmpDocument Optional pre-parsed XMP document reused by the caller.
      *
      * @return array{
-     *     interop: Interop,
-     *     tiff: TiffData,
-     *     composite: CompositeImageInfo,
-     *     standards: Standards,
-     *     flashPix: FlashPix,
-     *     multiPicture: MultiPicture,
-     *     camera: Camera,
-     *     lens: Lens,
-     *     image: Image,
-     *     exposure: Exposure,
-     *     capture: Capture,
-     *     gps: Gps,
-     *     device: Device,
-     *     apple: AppleMakerNotes,
-     *     xmp: Xmp,
-     *     file: File,
-     *     container: Container,
-     *     preview: Preview,
-     *     video: Video,
-     *     audio: Audio,
-     *     embeddedAudio: AudioClips,
-     *     colorProfile: ColorProfile,
-     *     processing: ProcessingSettings,
-     *     whiteBalanceDetails: WhiteBalanceDetails,
-     *     focus: Focus,
-     *     motion: Motion,
-     *     scene: Scene,
-     *     regions: Regions,
-     *     keywords: Keywords,
-     *     rights: Rights,
-     *     author: Author,
-     *     temporal: Temporal,
-     *     derived: Derived,
-     *     related: RelatedAssets,
-     *     sensor: Sensor,
-     *     uav: Uav,
-     *     integrity: Integrity,
+     *     file: FileMetadata,
+     *     camera: CameraMetadata,
+     *     lens: LensMetadata,
+     *     media: MediaMetadata,
+     *     exposure: ExposureMetadata,
+     *     capture: CaptureMetadata,
+     *     gps: GpsMetadata,
+     *     sensor: SensorMetadata,
+     *     processing: ProcessingMetadata,
+     *     technical: TechnicalMetadata,
+     *     rights: RightsMetadata,
+     *     makerNotes: MakerNotesView,
      * }
      */
     public function createComponents(
@@ -198,6 +173,23 @@ final class ValueFactory
             $ycbcrSubSampling = $metadata->jpegYCbCrSubSampling;
         }
 
+        $referenceBlackWhite = $exifDocument?->referenceBlackWhite();
+        if ($referenceBlackWhite !== null) {
+            if (count($referenceBlackWhite) === 6) {
+                /** @var array{0: float, 1: float, 2: float, 3: float, 4: float, 5: float} $referenceBlackWhite */
+                $referenceBlackWhite = [
+                    0 => $referenceBlackWhite[0],
+                    1 => $referenceBlackWhite[1],
+                    2 => $referenceBlackWhite[2],
+                    3 => $referenceBlackWhite[3],
+                    4 => $referenceBlackWhite[4],
+                    5 => $referenceBlackWhite[5],
+                ];
+            } else {
+                $referenceBlackWhite = null;
+            }
+        }
+
         $tiff = new TiffData(
             samplesPerPixel: $exifDocument?->samplesPerPixel(),
             bitsPerSample: $bitsPerSample,
@@ -222,7 +214,7 @@ final class ValueFactory
             transferFunction: $exifDocument?->transferFunction(),
             jpegInterchangeFormat: $exifDocument?->jpegInterchangeFormat(),
             jpegInterchangeFormatLength: $exifDocument?->jpegInterchangeFormatLength(),
-            referenceBlackWhite: $exifDocument?->referenceBlackWhite(),
+            referenceBlackWhite: $referenceBlackWhite,
             copyright: $exifDocument?->copyright(),
         );
 
@@ -964,9 +956,6 @@ final class ValueFactory
         ?int $faceCount,
     ): Scene {
         $appleFlags = $apple->flags;
-        if (!is_array($appleFlags)) {
-            $appleFlags = [];
-        }
 
         $lookup = new QuickTimeLookup($quickTime);
 
@@ -1213,7 +1202,7 @@ final class ValueFactory
 
         $pairs = [];
         for ($index = 0; $index < $count; $index += 2) {
-            $pairs[] = [(float) $values[$index], (float) $values[$index + 1]];
+            $pairs[] = [$values[$index], $values[$index + 1]];
         }
 
         return $pairs;
@@ -1236,9 +1225,9 @@ final class ValueFactory
         $triplets = [];
         for ($index = 0; $index < $count; $index += 3) {
             $triplets[] = [
-                (float) $values[$index],
-                (float) $values[$index + 1],
-                (float) $values[$index + 2],
+                $values[$index],
+                $values[$index + 1],
+                $values[$index + 2],
             ];
         }
 
@@ -1271,7 +1260,7 @@ final class ValueFactory
         }
 
         $digits = preg_replace('/\\D+/', '', $value);
-        if ($digits === '') {
+        if ($digits === null || $digits === '') {
             return null;
         }
 
@@ -1320,54 +1309,99 @@ final class ValueFactory
      */
     private function resolveGps(?ExifDocument $exifDocument, ?XmpDocument $xmpDocument): ?Gps
     {
-        $gpsData = $exifDocument instanceof ExifDocument ? $exifDocument->gps() : [];
+        /**
+         * @var array{
+         *     lat_ref: string|null,
+         *     lat: float|null,
+         *     lon_ref: string|null,
+         *     lon: float|null,
+         *     alt_ref: int|null,
+         *     alt: float|null,
+         *     version: string|null,
+         *     version_raw: string|null,
+         *     satellites: string|null,
+         *     status: string|null,
+         *     measure_mode: string|null,
+         *     dop: float|null,
+         *     speed_ref: string|null,
+         *     speed_ms: float|null,
+         *     speed_original_ref: string|null,
+         *     speed_original: float|null,
+         *     track_ref: string|null,
+         *     track: float|null,
+         *     img_direction_ref: string|null,
+         *     img_direction: float|null,
+         *     map_datum: string|null,
+         *     dest_lat_ref: string|null,
+         *     dest_lat: float|null,
+         *     dest_lon_ref: string|null,
+         *     dest_lon: float|null,
+         *     dest_bearing_ref: string|null,
+         *     dest_bearing: float|null,
+         *     dest_distance_ref: string|null,
+         *     dest_distance_m: float|null,
+         *     dest_distance_original_ref: string|null,
+         *     dest_distance_original: float|null,
+         *     processing_method: string|null,
+         *     area_information: string|null,
+         *     date: string|null,
+         *     date_raw: string|null,
+         *     time: string|null,
+         *     timestamp: DateTimeImmutable|null,
+         *     differential: int|null,
+         *     h_positioning_error: float|null,
+         * } $gpsData
+         */
+        $gpsData = $exifDocument instanceof ExifDocument
+            ? $exifDocument->gps()
+            : ValueConverters::emptyGpsResult();
 
-        $latitude     = $this->floatValue($gpsData['lat'] ?? null);
-        $longitude    = $this->floatValue($gpsData['lon'] ?? null);
-        $latitudeRef  = $this->uppercase($gpsData['lat_ref'] ?? null);
-        $longitudeRef = $this->uppercase($gpsData['lon_ref'] ?? null);
-        $altitude     = $this->floatValue($gpsData['alt'] ?? null);
-        $altitudeRef  = $this->intValue($gpsData['alt_ref'] ?? null);
+        $latitude     = $this->floatValue($gpsData['lat']);
+        $longitude    = $this->floatValue($gpsData['lon']);
+        $latitudeRef  = $this->uppercase($gpsData['lat_ref']);
+        $longitudeRef = $this->uppercase($gpsData['lon_ref']);
+        $altitude     = $this->floatValue($gpsData['alt']);
+        $altitudeRef  = $this->intValue($gpsData['alt_ref']);
 
-        $version    = $this->stringValue($gpsData['version'] ?? null);
-        $versionRaw = $gpsData['version_raw'] ?? null;
+        $version    = $this->stringValue($gpsData['version']);
+        $versionRaw = $gpsData['version_raw'];
         if (!is_string($versionRaw)) {
             $versionRaw = null;
         }
-        $satellites       = $this->stringValue($gpsData['satellites'] ?? null);
-        $status           = $this->stringValue($gpsData['status'] ?? null);
-        $measureMode      = $this->stringValue($gpsData['measure_mode'] ?? null);
-        $dop              = $this->floatValue($gpsData['dop'] ?? null);
-        $speedRef         = $this->uppercase($gpsData['speed_ref'] ?? null);
-        $speedMs          = $this->floatValue($gpsData['speed_ms'] ?? null);
-        $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref'] ?? null);
-        $speedOriginal    = $this->floatValue($gpsData['speed_original'] ?? null);
-        $trackRef         = $this->uppercase($gpsData['track_ref'] ?? null);
-        $track            = $this->floatValue($gpsData['track'] ?? null);
-        $imgDirRef        = $this->uppercase($gpsData['img_direction_ref'] ?? null);
-        $imgDir           = $this->floatValue($gpsData['img_direction'] ?? null);
-        $mapDatum         = $this->stringValue($gpsData['map_datum'] ?? null);
+        $satellites       = $this->stringValue($gpsData['satellites']);
+        $status           = $this->stringValue($gpsData['status']);
+        $measureMode      = $this->stringValue($gpsData['measure_mode']);
+        $dop              = $this->floatValue($gpsData['dop']);
+        $speedRef         = $this->uppercase($gpsData['speed_ref']);
+        $speedMs          = $this->floatValue($gpsData['speed_ms']);
+        $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref']);
+        $speedOriginal    = $this->floatValue($gpsData['speed_original']);
+        $trackRef         = $this->uppercase($gpsData['track_ref']);
+        $track            = $this->floatValue($gpsData['track']);
+        $imgDirRef        = $this->uppercase($gpsData['img_direction_ref']);
+        $imgDir           = $this->floatValue($gpsData['img_direction']);
+        $mapDatum         = $this->stringValue($gpsData['map_datum']);
 
-        $destLatRef          = $this->uppercase($gpsData['dest_lat_ref'] ?? null);
-        $destLat             = $this->floatValue($gpsData['dest_lat'] ?? null);
-        $destLonRef          = $this->uppercase($gpsData['dest_lon_ref'] ?? null);
-        $destLon             = $this->floatValue($gpsData['dest_lon'] ?? null);
-        $destBearRef         = $this->uppercase($gpsData['dest_bearing_ref'] ?? null);
-        $destBear            = $this->floatValue($gpsData['dest_bearing'] ?? null);
-        $destDistRef         = $this->uppercase($gpsData['dest_distance_ref'] ?? null);
-        $destDistMetre       = $this->floatValue($gpsData['dest_distance_m'] ?? null);
-        $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref'] ?? null);
-        $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original'] ?? null);
+        $destLatRef          = $this->uppercase($gpsData['dest_lat_ref']);
+        $destLat             = $this->floatValue($gpsData['dest_lat']);
+        $destLonRef          = $this->uppercase($gpsData['dest_lon_ref']);
+        $destLon             = $this->floatValue($gpsData['dest_lon']);
+        $destBearRef         = $this->uppercase($gpsData['dest_bearing_ref']);
+        $destBear            = $this->floatValue($gpsData['dest_bearing']);
+        $destDistRef         = $this->uppercase($gpsData['dest_distance_ref']);
+        $destDistMetre       = $this->floatValue($gpsData['dest_distance_m']);
+        $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref']);
+        $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original']);
 
-        $processingMethod = $this->stringValue($gpsData['processing_method'] ?? null);
-        $areaInformation  = $this->stringValue($gpsData['area_information'] ?? null);
+        $processingMethod = $this->stringValue($gpsData['processing_method']);
+        $areaInformation  = $this->stringValue($gpsData['area_information']);
 
-        $date    = $this->normaliseDate($this->stringValue($gpsData['date'] ?? null));
-        $dateRaw = $gpsData['date_raw'] ?? null;
+        $date    = $this->normaliseDate($this->stringValue($gpsData['date']));
+        $dateRaw = $gpsData['date_raw'];
         if (!is_string($dateRaw)) {
             $dateRaw = null;
         }
-        $time = $this->stringValue($gpsData['time'] ?? null);
+        $time = $this->stringValue($gpsData['time']);
 
         $timestamp = $exifDocument?->gpsTimestamp();
         if (!$timestamp instanceof DateTimeImmutable) {
@@ -1407,10 +1441,10 @@ final class ValueFactory
             );
         }
 
-        if ($altitude === null) {
-            $altitudeXmp = $xmpDocument?->float(self::NS_EXIF, 'GPSAltitude');
+        if ($altitude === null && $xmpDocument instanceof XmpDocument) {
+            $altitudeXmp = $xmpDocument->float(self::NS_EXIF, 'GPSAltitude');
             if ($altitudeXmp !== null) {
-                $altRefXmp = $this->intValue($xmpDocument?->int(self::NS_EXIF, 'GPSAltitudeRef'));
+                $altRefXmp = $this->intValue($xmpDocument->int(self::NS_EXIF, 'GPSAltitudeRef'));
                 $altRef    = $altitudeRef ?? $altRefXmp;
 
                 if ($altRef === 1) {
@@ -1419,9 +1453,7 @@ final class ValueFactory
 
                 $altitude = $altitudeXmp;
 
-                if ($altitudeRef === null) {
-                    $altitudeRef = $altRefXmp;
-                }
+                $altitudeRef ??= $altRefXmp;
             }
         }
 
@@ -1830,7 +1862,10 @@ final class ValueFactory
 
         $mwgRegions = $this->applyAppleSupplementalMetadata($mwgRegions, $supplement);
 
-        return new Regions(array_values($mwgRegions));
+        /** @var list<Region> $normalisedRegions */
+        $normalisedRegions = array_values($mwgRegions);
+
+        return new Regions($normalisedRegions);
     }
 
     /**
@@ -2027,10 +2062,10 @@ final class ValueFactory
     }
 
     /**
-     * @param list<Region>       $regions
+     * @param array<int, Region> $regions
      * @param array<int, Region> $supplemental
      *
-     * @return list<Region>
+     * @return array<int, Region>
      */
     private function applyAppleSupplementalMetadata(array $regions, array $supplemental): array
     {
@@ -2426,26 +2461,21 @@ final class ValueFactory
     {
         $raw = $document->get($namespace, $localName);
 
-        if (is_string($raw)) {
-            $trimmed = trim($raw);
+        if (is_array($raw)) {
+            if ($raw === []) {
+                return [];
+            }
 
-            return $trimmed === '' ? [] : [$trimmed];
+            return array_values(array_map(static fn(string $value): string => trim($value), $raw));
         }
 
-        if (!is_array($raw)) {
+        if (!is_string($raw)) {
             return [];
         }
 
-        $values = [];
-        foreach ($raw as $value) {
-            if (!is_string($value)) {
-                continue;
-            }
+        $trimmed = trim($raw);
 
-            $values[] = trim($value);
-        }
-
-        return $values;
+        return $trimmed === '' ? [] : [$trimmed];
     }
 
     /**
@@ -2455,24 +2485,17 @@ final class ValueFactory
     {
         $raw = $document->get($namespace, $localName);
 
-        if (is_string($raw)) {
+        if (is_array($raw)) {
+            if ($raw === []) {
+                return [];
+            }
+        } elseif (is_string($raw)) {
             $raw = [$raw];
-        } elseif (!is_array($raw)) {
+        } else {
             return [];
         }
 
-        $values = [];
-        foreach ($raw as $value) {
-            if (!is_string($value)) {
-                $values[] = null;
-                continue;
-            }
-
-            $numeric  = XmpDocument::parseNumericValue($value);
-            $values[] = $numeric;
-        }
-
-        return $values;
+        return array_values(array_map(static fn(string $value): ?float => XmpDocument::parseNumericValue($value), $raw));
     }
 
     /**
@@ -2506,10 +2529,6 @@ final class ValueFactory
 
         $entries = [];
         foreach ($document->entries as $entry) {
-            if (!$entry instanceof MpfEntry) {
-                continue;
-            }
-
             $entries[] = new MultiPictureEntry(
                 attributes: $entry->attributes,
                 imageSize: $entry->imageSize,
