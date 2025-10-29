@@ -29,20 +29,14 @@ final readonly class ExifNumericList
     public array $values;
 
     /**
-     * @param list<int|float|UInt64> $values Ordered list of numeric components.
+     * @param array<int, int|float|UInt64> $values Ordered list of numeric components.
      */
     public function __construct(array $values)
     {
-        if (!array_is_list($values)) {
-            throw new InvalidArgumentException('Numeric EXIF values must form a list.');
-        }
+        self::assertList($values);
 
         foreach ($values as $value) {
-            if (is_int($value) || is_float($value) || $value instanceof UInt64) {
-                continue;
-            }
-
-            throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
+            self::assertNumericComponent($value);
         }
 
         /** @var list<int|float|UInt64> $values */
@@ -57,5 +51,28 @@ final readonly class ExifNumericList
     public function toArray(): array
     {
         return $this->values;
+    }
+
+    /**
+     * @param array<int, int|float|UInt64> $values
+     *
+     * @phpstan-assert list<int|float|UInt64> $values
+     */
+    private static function assertList(array $values): void
+    {
+        if (array_is_list($values)) {
+            return;
+        }
+
+        throw new InvalidArgumentException('Numeric EXIF values must form a list.');
+    }
+
+    private static function assertNumericComponent(mixed $value): void
+    {
+        if (is_int($value) || is_float($value) || $value instanceof UInt64) {
+            return;
+        }
+
+        throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
     }
 }
