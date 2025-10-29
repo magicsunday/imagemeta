@@ -44,6 +44,7 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 
 use function abs;
+use function array_find;
 use function array_key_exists;
 use function array_map;
 use function count;
@@ -804,11 +805,16 @@ final readonly class ExifDocument
             return $context['length'] > 0;
         }
 
-        foreach ($this->previewCandidateIfds() as $ifd) {
-            if ($ifd->get(ExifTag::PREVIEW_IMAGE_START) instanceof IfdEntry
-                || $ifd->get(ExifTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry) {
-                return false;
-            }
+        $candidates = $this->previewCandidateIfds();
+
+        $startOrLengthIfd = array_find(
+            $candidates,
+            static fn (Ifd $ifd): bool => $ifd->get(ExifTag::PREVIEW_IMAGE_START) instanceof IfdEntry
+                || $ifd->get(ExifTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry,
+        );
+
+        if ($startOrLengthIfd !== null) {
+            return false;
         }
 
         $otherPreviewTags = [
@@ -822,12 +828,16 @@ final readonly class ExifDocument
             ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
         ];
 
-        foreach ($this->previewCandidateIfds() as $ifd) {
-            foreach ($otherPreviewTags as $tag) {
-                if ($ifd->get($tag) instanceof IfdEntry) {
-                    return false;
-                }
-            }
+        $otherPreviewIfd = array_find(
+            $candidates,
+            fn (Ifd $ifd): bool => array_find(
+                $otherPreviewTags,
+                static fn ($tag): bool => $ifd->get($tag) instanceof IfdEntry,
+            ) !== null,
+        );
+
+        if ($otherPreviewIfd !== null) {
+            return false;
         }
 
         return null;

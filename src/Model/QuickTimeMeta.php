@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+use function array_find;
 use function array_key_exists;
 use function is_bool;
 use function is_float;
@@ -230,13 +231,12 @@ final readonly class QuickTimeMeta
     {
         $candidates = self::KEY_ALIASES[$key] ?? [$key];
 
-        foreach ($candidates as $candidate) {
-            if (array_key_exists($candidate, $this->keys)) {
-                return $this->keys[$candidate];
-            }
-        }
+        $candidate = array_find(
+            $candidates,
+            fn (string $candidate): bool => array_key_exists($candidate, $this->keys),
+        );
 
-        return null;
+        return $candidate === null ? null : $this->keys[$candidate];
     }
 
     /**
