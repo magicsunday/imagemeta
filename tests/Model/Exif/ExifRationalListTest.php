@@ -15,12 +15,14 @@ use InvalidArgumentException;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MagicSunday\ImageMeta\Model\Exif\ExifRationalList
  */
 #[CoversClass(ExifRationalList::class)]
+#[UsesClass(ExifRational::class)]
 final class ExifRationalListTest extends TestCase
 {
     public function testAcceptsListOfExifRationalValues(): void

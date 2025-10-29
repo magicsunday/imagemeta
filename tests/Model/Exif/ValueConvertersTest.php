@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -42,6 +43,8 @@ use function substr;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(FlashInfo::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(ExifFlash::class)]
 final class ValueConvertersTest extends TestCase
 {
     /**

@@ -21,7 +21,11 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
+use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Support\GpsTiffBuilder;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
@@ -34,10 +38,12 @@ use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function iconv;
@@ -57,6 +63,13 @@ use function substr;
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(TiffExifReader::class)]
 #[UsesClass(GpsTiffBuilder::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(Unpack::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 final class ExifDocumentTest extends TestCase
 {
     private const string ISO_8601_MILLISECONDS = 'Y-m-d\TH:i:s.vP';

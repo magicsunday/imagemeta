@@ -18,6 +18,8 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -37,6 +39,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(XmpParser::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(ValueConverters::class)]
 final class MetadataTest extends TestCase
 {
     /**

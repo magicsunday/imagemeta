@@ -13,12 +13,15 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
+use MagicSunday\ImageMeta\Convenience\ExifConvenience;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -33,6 +36,9 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(XmpDocument::class)]
+#[UsesClass(ExifConvenience::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(ValueConverters::class)]
 final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';

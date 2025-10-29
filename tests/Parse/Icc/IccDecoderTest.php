@@ -13,8 +13,10 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Icc;
 
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
+use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
@@ -27,6 +29,7 @@ use function substr_replace;
  * @covers \MagicSunday\ImageMeta\Parse\Icc\IccDecoder
  */
 #[CoversClass(IccDecoder::class)]
+#[UsesClass(IccRenderingIntent::class)]
 final class IccDecoderTest extends TestCase
 {
     #[Test]

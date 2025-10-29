@@ -15,12 +15,14 @@ use InvalidArgumentException;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \MagicSunday\ImageMeta\Model\Exif\ExifNumericList
  */
 #[CoversClass(ExifNumericList::class)]
+#[UsesClass(UInt64::class)]
 final class ExifNumericListTest extends TestCase
 {
     public function testAcceptsListOfNumericValues(): void

@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use MagicSunday\ImageMeta\Convenience\ExifConvenience;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -22,6 +24,7 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
@@ -36,6 +39,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 final class ExifConvenienceTest extends TestCase
 {
     /**
