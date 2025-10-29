@@ -7,17 +7,16 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 final class SemanticStyleTest extends TestCase
 {
     public function testFromQuickTimeParsesModernStructure(): void
     {
-        $meta = new QuickTimeMeta([
-            'SemanticStyle' => [
-                '_0' => 'Vivid',
-                '_2' => 0.15,
-                '_3' => ['value' => '0.25'],
-            ],
+        $meta = $this->quickTimeMeta([
+            '_0' => 'Vivid',
+            '_2' => 0.15,
+            '_3' => ['value' => '0.25'],
         ]);
 
         self::assertSame(['Vivid', 0.15, 0.25], SemanticStyle::fromQuickTime($meta));
@@ -41,5 +40,23 @@ final class SemanticStyleTest extends TestCase
     public function testFromValueReturnsNullWhenNoComponents(): void
     {
         self::assertNull(SemanticStyle::fromValue(['values' => []]));
+    }
+
+    /**
+     * Creates a QuickTime metadata container populated with the supplied semantic style payload.
+     *
+     * @param array<int|string, mixed> $semanticStyle
+     */
+    private function quickTimeMeta(array $semanticStyle): QuickTimeMeta
+    {
+        $reflector = new ReflectionClass(QuickTimeMeta::class);
+
+        /** @var QuickTimeMeta $meta */
+        $meta = $reflector->newInstanceWithoutConstructor();
+        $property = $reflector->getProperty('keys');
+        $property->setAccessible(true);
+        $property->setValue($meta, ['SemanticStyle' => $semanticStyle]);
+
+        return $meta;
     }
 }
