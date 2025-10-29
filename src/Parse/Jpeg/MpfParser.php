@@ -33,6 +33,11 @@ use function substr;
  */
 /**
  * Parses MPF payloads carried in JPEG APP2 segments.
+ *
+ * The parser follows the marker segment framing and TIFF-based container rules
+ * defined in EXIF 3.0 §B.1 (Multi-Picture Format APP2) and the associated
+ * MP Index/Attribute IFD definitions in §B.2–§B.4. Behaviour matches the legacy
+ * specification in EXIF 2.32 §G.1–§G.4 where the MPF container was introduced.
  */
 final class MpfParser
 {
@@ -72,6 +77,10 @@ final class MpfParser
 
     /**
      * Decodes the MPF payload into a structured document model.
+     *
+     * Validates the TIFF header, MP Index IFD pointer, MPEntry table, and the
+     * optional MP Attribute IFD according to EXIF 3.0 §B.2–§B.4 (mirroring
+     * EXIF 2.32 §G.2–§G.4).
      */
     public function parse(string $payload): MpfDocument
     {
@@ -136,6 +145,9 @@ final class MpfParser
 
     /**
      * Parses a TIFF IFD structure from the buffer.
+     *
+     * Implements the MP Index/Attribute directory layout mandated by EXIF 3.0
+     * §B.2.1 and §B.4.1 (unchanged from EXIF 2.32 §G.2.1 and §G.4.1).
      *
      * @return array{0: array<int, int|string|array>, 1: int}
      * @phpstan-return array{0: array<int, MpfDecodedValue>, 1: int}
@@ -295,6 +307,9 @@ final class MpfParser
     /**
      * Parses the MP entry list from the raw MPEntry data.
      *
+     * Applies the 16-byte MP Entry record structure from EXIF 3.0 §B.3
+     * (consistent with EXIF 2.32 §G.3).
+     *
      * @return list<MpfEntry>
      */
     private function parseEntries(string $data, Endian $endian): array
@@ -326,6 +341,9 @@ final class MpfParser
 
     /**
      * Builds the MP attribute structure from the decoded entries.
+     *
+     * Mirrors the MP Attribute IFD interpretation steps in EXIF 3.0 §B.4
+     * (same semantics as EXIF 2.32 §G.4).
      */
     private function buildAttributes(array $entries): MpfAttributes
     {
