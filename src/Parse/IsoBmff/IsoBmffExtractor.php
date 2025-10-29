@@ -925,6 +925,9 @@ final readonly class IsoBmffExtractor
         }
 
         $location = $locations[$itemId];
+        // EXIF 3.0 Annex A.2.4 and EXIF 2.32 Annex A.2.4 confine Exif item data to
+        // self-contained payloads (`construction_method = 0`, `data_reference_index = 0`),
+        // so we discard references that require external resolution.
         if ($location['constructionMethod'] !== 0) {
             return null;
         }
@@ -976,6 +979,10 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the item information box and returns descriptors for each entry.
      *
+     * EXIF 3.0 Annex A.2.2 and EXIF 2.32 Annex A.2.2 define the `iinf` container
+     * layout for Exif-in-ISO BMFF metadata collections and retain the same child
+     * sequencing requirements across both revisions.
+     *
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
      * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string}>
@@ -1009,6 +1016,10 @@ final readonly class IsoBmffExtractor
 
     /**
      * Parses a single item information entry (`infe`).
+     *
+     * EXIF 3.0 Annex A.2.3 and EXIF 2.32 Annex A.2.3 describe the item entry fields
+     * and the recommended item type/content type combinations for Exif payloads,
+     * with EXIF 3.0 merely clarifying the existing `Exif` and MIME label guidance.
      *
      * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
@@ -1059,6 +1070,10 @@ final readonly class IsoBmffExtractor
 
     /**
      * Parses item locations and returns extent definitions keyed by item id.
+     *
+     * EXIF 3.0 Annex A.2.4 and EXIF 2.32 Annex A.2.4 mandate how `iloc` describes
+     * Exif item offsets; EXIF 3.0 adds version 2 support while retaining the 2.32
+     * constraints on base offsets and extent sizing.
      *
      * @param BoxDescriptor $iloc Box descriptor representing the `iloc` payload.
      *
@@ -1130,6 +1145,10 @@ final readonly class IsoBmffExtractor
 
     /**
      * Parses the primary item box (`pitm`) and returns the referenced item id.
+     *
+     * EXIF 3.0 Annex A.2.5 and EXIF 2.32 Annex A.2.5 define how the primary item
+     * identifies the default metadata payload; EXIF 3.0 extends the item identifier
+     * width to 32 bits for version 1 boxes.
      *
      * @param BoxDescriptor $pitm Box descriptor containing the primary item payload.
      *
