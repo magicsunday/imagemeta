@@ -30,6 +30,7 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 
+use function array_any;
 use function array_slice;
 use function array_values;
 use function chr;
