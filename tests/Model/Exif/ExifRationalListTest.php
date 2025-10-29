@@ -1,0 +1,62 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Tests\Model\Exif;
+
+use InvalidArgumentException;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * @covers \MagicSunday\ImageMeta\Model\Exif\ExifRationalList
+ */
+#[CoversClass(ExifRationalList::class)]
+final class ExifRationalListTest extends TestCase
+{
+    public function testAcceptsListOfExifRationalValues(): void
+    {
+        $values = [
+            new ExifRational(1, 2),
+            new ExifRational(3, 4),
+        ];
+
+        $list = new ExifRationalList($values);
+
+        self::assertSame($values, $list->toArray());
+    }
+
+    public function testRejectsNonListInput(): void
+    {
+        $values = [
+            'first' => new ExifRational(1, 2),
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rational EXIF values must form a list.');
+
+        new ExifRationalList($values);
+    }
+
+    public function testRejectsNonExifRationalElements(): void
+    {
+        $values = [
+            new ExifRational(1, 2),
+            42,
+        ];
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Rational EXIF lists may only contain ExifRational instances.');
+
+        new ExifRationalList($values);
+    }
+}
