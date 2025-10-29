@@ -41,7 +41,14 @@ trait EnumFromIntStringNullable
         }
 
         // int|string → int
-        $intValue = is_int($value) ? $value : (is_numeric($value) ? (int) $value : null);
+        if (is_int($value)) {
+            $intValue = $value;
+        } elseif (is_numeric($value)) {
+            $intValue = (int) $value;
+        } else {
+            $intValue = null;
+        }
+
         if ($intValue === null) {
             return null;
         }
