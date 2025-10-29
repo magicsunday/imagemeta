@@ -834,16 +834,6 @@ final readonly class ExifDocument
     }
 
     /**
-     * Returns the resolved preview descriptor when both offset and length are valid.
-     *
-     * @return array{ifd:Ifd,offset:int,length:int}|null
-     */
-    private function previewContext(): ?array
-    {
-        return $this->previewContext;
-    }
-
-    /**
      * @return list<Ifd>
      *
      * EXIF 3.0 §4.6.12 permits preview tags inside the Exif IFD or auxiliary SubIFDs, so
