@@ -15,7 +15,7 @@ use finfo;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
-use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -100,7 +100,7 @@ final class MetadataReader
         $sampling        = $jpeg->getFrameComponentSamplingFactors();
         $subSampling     = $jpeg->getFrameYCbCrSubSampling();
 
-        $appleMapper = new AppleMakerNotesMapper();
+        $appleMerger = new AppleMakerNotesMerger();
 
         $exifDoc    = null;
         $xmpDoc     = null;
@@ -112,7 +112,7 @@ final class MetadataReader
             $makerNotes = $exifDoc->makerNotes();
         }
 
-        $makerNotes = $appleMapper->map($makerNotes, null);
+        $makerNotes = $appleMerger->merge($makerNotes, null);
 
         // Parse the embedded XMP packet when present.
         if ($xmpBlobs !== []) {
@@ -167,7 +167,7 @@ final class MetadataReader
     ): Metadata {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
 
-        $appleMapper = new AppleMakerNotesMapper();
+        $appleMerger = new AppleMakerNotesMerger();
 
         $exifDoc    = null;
         $xmpDoc     = null;
@@ -178,7 +178,7 @@ final class MetadataReader
             $makerNotes = $exifDoc->makerNotes();
         }
 
-        $makerNotes = $appleMapper->map($makerNotes, $qt);
+        $makerNotes = $appleMerger->merge($makerNotes, $qt);
 
         if ($xmpBlobs !== []) {
             $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);

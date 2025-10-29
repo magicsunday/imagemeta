@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
-use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\Test;
@@ -21,12 +21,12 @@ use PHPUnit\Framework\TestCase;
 use function str_repeat;
 
 /**
- * @covers \MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper
+ * @covers \MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger
  */
-final class AppleMakerNotesMapperTest extends TestCase
+final class AppleMakerNotesMergerTest extends TestCase
 {
     #[Test]
-    public function mapPrefersMakerNotesValues(): void
+    public function mergePrefersMakerNotesValues(): void
     {
         $makerNotes = new MakerNotesRecord(
             'Apple',
@@ -87,8 +87,8 @@ final class AppleMakerNotesMapperTest extends TestCase
             'ImageCaptureType'                    => 6,
         ]);
 
-        $mapper = new AppleMakerNotesMapper();
-        $mapped = $mapper->map($makerNotes, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge($makerNotes, $quickTime);
 
         self::assertNotNull($mapped);
 
@@ -110,7 +110,7 @@ final class AppleMakerNotesMapperTest extends TestCase
     }
 
     #[Test]
-    public function mapFillsMissingValuesFromQuickTime(): void
+    public function mergeFillsMissingValuesFromQuickTime(): void
     {
         $makerNotes = new MakerNotesRecord(
             'Apple',
@@ -168,8 +168,8 @@ final class AppleMakerNotesMapperTest extends TestCase
             'AFConfidence'                        => 0.6,
         ]);
 
-        $mapper = new AppleMakerNotesMapper();
-        $mapped = $mapper->map($makerNotes, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge($makerNotes, $quickTime);
 
         self::assertNotNull($mapped);
 
@@ -200,7 +200,7 @@ final class AppleMakerNotesMapperTest extends TestCase
     }
 
     #[Test]
-    public function mapCreatesMetadataFromQuickTimeWhenAbsent(): void
+    public function mergeCreatesMetadataFromQuickTimeWhenAbsent(): void
     {
         $quickTime = new QuickTimeMeta([
             QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'qt-content',
@@ -208,8 +208,8 @@ final class AppleMakerNotesMapperTest extends TestCase
             'AccelerationVector'                  => '0.3 -0.2 0.1',
         ]);
 
-        $mapper = new AppleMakerNotesMapper();
-        $mapped = $mapper->map(null, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge(null, $quickTime);
 
         self::assertNotNull($mapped);
         self::assertSame('Apple', $mapped->vendor());
@@ -224,7 +224,7 @@ final class AppleMakerNotesMapperTest extends TestCase
     }
 
     #[Test]
-    public function mapMergesQuickTimeFlags(): void
+    public function mergeMergesQuickTimeFlags(): void
     {
         $makerNotes = new MakerNotesRecord(
             'Apple',
@@ -259,8 +259,8 @@ final class AppleMakerNotesMapperTest extends TestCase
             'HdrAuto'   => true,
         ]);
 
-        $mapper = new AppleMakerNotesMapper();
-        $mapped = $mapper->map($makerNotes, $quickTime);
+        $merger = new AppleMakerNotesMerger();
+        $mapped = $merger->merge($makerNotes, $quickTime);
 
         self::assertNotNull($mapped);
 

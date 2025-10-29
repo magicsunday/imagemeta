@@ -9,13 +9,54 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\MakerNotes;
+namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 /**
- * Shared Apple metadata enumerations used across maker note and QuickTime resolvers.
+ * Central repository of Apple maker note and QuickTime metadata maps.
  */
-final class AppleMetadata
+final class AppleMaps
 {
+    /**
+     * Maps camera type codes to descriptive labels.
+     *
+     * @var array<int, string>
+     */
+    public const array CAMERA_TYPE_MAP = [
+        0 => 'Back Wide Angle',
+        1 => 'Back Normal',
+        6 => 'Front',
+    ];
+
+    /**
+     * Maker note keys that encode the Live Photo still frame index.
+     *
+     * @var list<string>
+     */
+    public const array LIVE_PHOTO_INDEX_KEYS = [
+        'LivePhotoVideoIndex',
+        'LivePhotoMovieIndex',
+    ];
+
+    /**
+     * Maps Apple bitfield sources (indexed by zero-based bit position) to normalised flags.
+     *
+     * @var array<string, array<int, string>>
+     */
+    public const array FLAG_MASK_MAP = [
+        'SceneFlags' => [
+            0 => 'nightMode',
+            1 => 'longExposure',
+        ],
+        'ImageProcessingFlags' => [
+            0 => 'hdrEnabled',
+            1 => 'hdrAuto',
+        ],
+        'PhotosAppFeatureFlags' => [
+            0 => 'personInPhoto',
+            1 => 'petInPhoto',
+        ],
+    ];
+
     /**
      * Maps maker note keys to normalised flag identifiers.
      *
