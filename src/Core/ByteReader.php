@@ -31,20 +31,20 @@ final readonly class ByteReader
     /**
      * Creates a reader backed by callbacks that operate on an external data source.
      *
-     * @param callable(int):string      $read    Callback that returns the requested number of bytes.
-     * @param callable():int            $tell    Callback that reports the current cursor position.
-     * @param callable(int|UInt64):void $seek    Callback that repositions the cursor of the data source.
+     * @param Closure(int):string      $read    Callback that returns the requested number of bytes.
+     * @param Closure():int            $tell    Callback that reports the current cursor position.
+     * @param Closure(int|UInt64):void $seek    Callback that repositions the cursor of the data source.
      * @param string                    $context Short description used in error messages.
      */
     public function __construct(
-        callable $read,
-        callable $tell,
-        callable $seek,
+        Closure $read,
+        Closure $tell,
+        Closure $seek,
         private string $context,
     ) {
-        $this->read = Closure::fromCallable($read);
-        $this->tell = Closure::fromCallable($tell);
-        $this->seek = Closure::fromCallable($seek);
+        $this->read = $read;
+        $this->tell = $tell;
+        $this->seek = $seek;
     }
 
     /**
