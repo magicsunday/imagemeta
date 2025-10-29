@@ -3878,9 +3878,11 @@ final readonly class ExifDocument
         $content           = $hasKnownPrefix ? substr($raw, 8) : $raw;
         $sanitized         = trim($content, "\0 ");
 
-        $resolvedEncoding = $hasKnownPrefix
-            ? ($sanitized === '' ? null : $canonicalEncoding)
-            : $this->inferUserCommentEncoding($content);
+        if ($hasKnownPrefix) {
+            $resolvedEncoding = $sanitized === '' ? null : $canonicalEncoding;
+        } else {
+            $resolvedEncoding = $this->inferUserCommentEncoding($content);
+        }
 
         if ($resolvedEncoding === null) {
             return null;
