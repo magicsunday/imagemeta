@@ -138,6 +138,14 @@ final class StreamWindow
         return $this->byteReader->readU64BE();
     }
 
+    /**
+     * Ensures the window cursor moves to a valid absolute position.
+     *
+     * @param int|UInt64 $pos Absolute byte offset relative to the window start.
+     *
+     * @throws BoundsError If the position is negative or beyond the window length.
+     * @throws ParseError  If the position cannot be converted to a supported integer range.
+     */
     private function seekInternal(int|UInt64 $pos): void
     {
         if ($pos instanceof UInt64) {
