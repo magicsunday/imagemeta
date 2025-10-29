@@ -18,10 +18,16 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @phpstan-import-type StructuredExpectation from ExifBackfillMatrixTest
+ */
 final class ExifVersionMatrixTest extends TestCase
 {
     use ExifExpectationAssertions;
 
+    /**
+     * @param StructuredExpectation $expectedStructured
+     */
     #[Test]
     #[DataProviderExternal(ExifVersionExpectations::class, 'provideStructured')]
     public function matchesStructuredExpectations(string $fixture, array $expectedStructured): void
