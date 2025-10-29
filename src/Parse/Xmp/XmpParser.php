@@ -14,7 +14,9 @@ namespace MagicSunday\ImageMeta\Parse\Xmp;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use XMLReader;
 
+use function array_filter;
 use function array_key_exists;
+use function array_values;
 use function is_array;
 use function sprintf;
 use function trim;
@@ -142,12 +144,10 @@ final class XmpParser
      */
     private function finalizeValue(array $items, string $text): array|string|null
     {
-        $filtered = [];
-        foreach ($items as $value) {
-            if ($value !== '') {
-                $filtered[] = $value;
-            }
-        }
+        $filtered = array_values(array_filter(
+            $items,
+            static fn (string $value): bool => $value !== '',
+        ));
 
         if ($filtered !== []) {
             return $filtered;
