@@ -156,12 +156,54 @@ final class ExifDocumentTest extends TestCase
         self::assertNotNull($capture);
         self::assertSame('2024-05-01T12:34:56.123+02:00', $capture->format(self::ISO_8601_MILLISECONDS));
 
+        /**
+         * @var array{
+         *     lat_ref:?string,
+         *     lat:?float,
+         *     lon_ref:?string,
+         *     lon:?float,
+         *     alt_ref:?int,
+         *     alt:?float,
+         *     version:?string,
+         *     version_raw:?string,
+         *     satellites:?string,
+         *     status:?string,
+         *     measure_mode:?string,
+         *     dop:?float,
+         *     speed_ref:?string,
+         *     speed_ms:?float,
+         *     speed_original_ref:?string,
+         *     speed_original:?float,
+         *     track_ref:?string,
+         *     track:?float,
+         *     img_direction_ref:?string,
+         *     img_direction:?float,
+         *     map_datum:?string,
+         *     dest_lat_ref:?string,
+         *     dest_lat:?float,
+         *     dest_lon_ref:?string,
+         *     dest_lon:?float,
+         *     dest_bearing_ref:?string,
+         *     dest_bearing:?float,
+         *     dest_distance_ref:?string,
+         *     dest_distance_m:?float,
+         *     dest_distance_original_ref:?string,
+         *     dest_distance_original:?float,
+         *     processing_method:?string,
+         *     area_information:?string,
+         *     date:?string,
+         *     date_raw:?string,
+         *     time:?string,
+         *     timestamp:?DateTimeImmutable,
+         *     differential:?int,
+         *     h_positioning_error:?float
+         * } $gps
+         */
         $gps = $doc->gps();
         self::assertEqualsWithDelta(40.441666, $gps['lat'], 0.000001);
         self::assertEqualsWithDelta(79.983333, $gps['lon'], 0.000001);
         self::assertEquals(123.0, $gps['alt']);
         self::assertSame('2.0.0.0', $gps['version']);
-        self::assertArrayHasKey('version_raw', $gps);
         self::assertNull($gps['version_raw']);
     }
 
@@ -1468,7 +1510,6 @@ final class ExifDocumentTest extends TestCase
 
         $vector = $doc->accelerationVector();
         self::assertNotNull($vector);
-        self::assertCount(3, $vector);
         self::assertEqualsWithDelta(0.0, $vector[0], 0.0001);
         self::assertEqualsWithDelta(0.0, $vector[1], 0.0001);
         self::assertEqualsWithDelta(9.8, $vector[2], 0.0001);

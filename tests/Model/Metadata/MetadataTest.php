@@ -175,8 +175,9 @@ final class MetadataTest extends TestCase
 
         self::assertSame('primary-exif-blob', $metadata->exifBlobs[0]);
         self::assertSame('clip-42', $metadata->quickTime?->contentIdentifier());
-        self::assertSame('Fujifilm', $metadata->exifDoc?->cameraMake());
-        self::assertSame('X-T5', $metadata->exifDoc?->cameraModel());
+        self::assertNotNull($metadata->exifDoc);
+        self::assertSame('Fujifilm', $metadata->exifDoc->cameraMake());
+        self::assertSame('X-T5', $metadata->exifDoc->cameraModel());
         self::assertSame(
             '2024-06-01',
             $metadata->xmpDoc?->get('http://ns.adobe.com/photoshop/1.0/', 'DateCreated')

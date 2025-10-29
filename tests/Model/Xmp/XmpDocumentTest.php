@@ -57,7 +57,6 @@ XML;
         $subjects = $document->find('subject');
         self::assertIsArray($subjects);
         self::assertSame(['First', 'Second'], $subjects);
-        self::assertContainsOnlyString($subjects);
         self::assertNull($document->get(self::DC_NAMESPACE, 'title'));
     }
 

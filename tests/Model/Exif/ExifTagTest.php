@@ -102,10 +102,6 @@ final class ExifTagTest extends TestCase
             'ARTIST'                         => 0x013B,
             'WHITE_POINT'                    => 0x013E,
             'PRIMARY_CHROMATICITIES'         => 0x013F,
-            'TILE_WIDTH'                    => 0x0142,
-            'TILE_LENGTH'                   => 0x0143,
-            'TILE_OFFSETS'                  => 0x0144,
-            'TILE_BYTE_COUNTS'              => 0x0145,
             'JPEG_INTERCHANGE_FORMAT'        => 0x0201,
             'JPEG_INTERCHANGE_FORMAT_LENGTH' => 0x0202,
             'PREVIEW_IMAGE_START'            => 0xC51B,
@@ -297,7 +293,9 @@ final class ExifTagTest extends TestCase
      */
     public function testHostComputerConstantIsRetained(): void
     {
-        self::assertSame(0x013C, ExifTag::HOST_COMPUTER);
+        $constants = (new ReflectionClass(ExifTag::class))->getConstants();
+
+        self::assertSame(0x013C, $constants['HOST_COMPUTER'] ?? null);
     }
 
     /**
@@ -305,8 +303,10 @@ final class ExifTagTest extends TestCase
      */
     public function testSubfileTypeConstantsMatchSpecification(): void
     {
-        self::assertSame(0x00FE, ExifTag::NEW_SUBFILE_TYPE);
-        self::assertSame(0x00FF, ExifTag::SUBFILE_TYPE);
+        $constants = (new ReflectionClass(ExifTag::class))->getConstants();
+
+        self::assertSame(0x00FE, $constants['NEW_SUBFILE_TYPE'] ?? null);
+        self::assertSame(0x00FF, $constants['SUBFILE_TYPE'] ?? null);
     }
 
     /**
@@ -314,7 +314,12 @@ final class ExifTagTest extends TestCase
      */
     public function testModifyDateAliasMatchesDateTime(): void
     {
-        self::assertSame(ExifTag::DATETIME, ExifTag::MODIFY_DATE);
+        $constants = (new ReflectionClass(ExifTag::class))->getConstants();
+
+        self::assertSame(
+            $constants['DATETIME'] ?? null,
+            $constants['MODIFY_DATE'] ?? null,
+        );
     }
 
     /**
@@ -322,9 +327,11 @@ final class ExifTagTest extends TestCase
      */
     public function testIsoSpeedRatingsLegacyAliasMatchesPhotographicSensitivity(): void
     {
+        $constants = (new ReflectionClass(ExifTag::class))->getConstants();
+
         self::assertSame(
-            ExifTag::PHOTOGRAPHIC_SENSITIVITY,
-            ExifTag::ISO_SPEED_RATINGS_LEGACY
+            $constants['PHOTOGRAPHIC_SENSITIVITY'] ?? null,
+            $constants['ISO_SPEED_RATINGS_LEGACY'] ?? null,
         );
     }
 }

@@ -189,7 +189,7 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{ExifRational|string, float|null}>
+     * @return iterable<string, array{ExifRational|string|null, float|null}>
      */
     public static function provideApexValues(): iterable
     {
@@ -211,7 +211,7 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{ExifRational|string, float|null}>
+     * @return iterable<string, array{ExifRational|string|null, float|null}>
      */
     public static function provideBatteryLevelValues(): iterable
     {
@@ -748,6 +748,7 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::toExifVersion("\x01\x02\x03\x04"));
 
         $flash = ValueConverters::flashFromShort(0x59);
+        self::assertInstanceOf(FlashInfo::class, $flash);
         self::assertTrue($flash->fired);
         self::assertSame(FlashMode::AUTO, $flash->mode);
         self::assertSame(FlashReturn::NO_STROBE_DETECTION, $flash->returnDetection);
