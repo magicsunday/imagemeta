@@ -101,7 +101,6 @@ use function is_string;
 use function ksort;
 use function log10;
 use function max;
-use function pow;
 use function preg_match;
 use function preg_replace;
 use function preg_split;
@@ -962,6 +961,7 @@ final class ValueFactory
         if ($hdrLabel === null) {
             $hdrLabel = $lookup->string('HDRImageType');
         }
+
         $nightMode = $lookup->bool('NightMode');
         if ($nightMode === null) {
             $nightMode = $this->appleFlag($appleFlags, 'nightMode');
@@ -1292,7 +1292,7 @@ final class ValueFactory
     {
         $gps = $this->resolveGps($metadata->exifDoc, $xmpDocument);
 
-        if ($gps === null) {
+        if (!$gps instanceof Gps) {
             return new Gps();
         }
 
@@ -1367,6 +1367,7 @@ final class ValueFactory
         if (!is_string($versionRaw)) {
             $versionRaw = null;
         }
+
         $satellites       = $this->stringValue($gpsData['satellites']);
         $status           = $this->stringValue($gpsData['status']);
         $measureMode      = $this->stringValue($gpsData['measure_mode']);
@@ -1400,6 +1401,7 @@ final class ValueFactory
         if (!is_string($dateRaw)) {
             $dateRaw = null;
         }
+
         $time = $this->stringValue($gpsData['time']);
 
         $timestamp = $exifDocument?->gpsTimestamp();
@@ -1460,6 +1462,7 @@ final class ValueFactory
         if ($speedRef === null) {
             $speedRef = $this->uppercase($xmpSpeedRef);
         }
+
         if ($speedOriginalRef === null) {
             $speedOriginalRef = $this->stringValue($xmpSpeedRef);
         }
@@ -1469,6 +1472,7 @@ final class ValueFactory
             if ($speedMs === null && $speedRef !== null) {
                 $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
             }
+
             if ($speedOriginal === null) {
                 $speedOriginal = $speedValue;
             }
@@ -1478,6 +1482,7 @@ final class ValueFactory
         if ($destDistRef === null) {
             $destDistRef = $this->uppercase($xmpDestDistRef);
         }
+
         if ($destDistOriginalRef === null) {
             $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
         }
@@ -1490,6 +1495,7 @@ final class ValueFactory
                     $destDistMetre = $convertedDistance;
                 }
             }
+
             if ($destDistOriginal === null) {
                 $destDistOriginal = $destDistValue;
             }
@@ -2378,7 +2384,7 @@ final class ValueFactory
             return 1.0;
         }
 
-        $scale = pow(10.0, ceil(log10($maxConfidence)));
+        $scale = 10.0 ** ceil(log10($maxConfidence));
 
         if ($scale <= 0.0) {
             return 1.0;
@@ -2465,7 +2471,7 @@ final class ValueFactory
                 return [];
             }
 
-            return array_values(array_map(static fn (string $value): string => trim($value), $raw));
+            return array_values(array_map(trim(...), $raw));
         }
 
         if (!is_string($raw)) {
@@ -2494,7 +2500,7 @@ final class ValueFactory
             return [];
         }
 
-        return array_values(array_map(static fn (string $value): ?float => XmpDocument::parseNumericValue($value), $raw));
+        return array_values(array_map(XmpDocument::parseNumericValue(...), $raw));
     }
 
     /**

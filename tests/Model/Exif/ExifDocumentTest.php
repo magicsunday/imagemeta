@@ -828,7 +828,7 @@ final class ExifDocumentTest extends TestCase
             [0x0101, 0x00000064],
         ];
 
-        $payload = "PrintIM\0" . '0400' . pack('n', count($parameters));
+        $payload = 'PrintIM 0400' . pack('n', count($parameters));
 
         foreach ($parameters as [$id, $value]) {
             $payload .= pack('nN', $id, $value);
@@ -1316,8 +1316,8 @@ final class ExifDocumentTest extends TestCase
     #[Test]
     public function exposesTable65Extensions(): void
     {
-        $oecfPayload = self::buildOecfPayload();
-        $sfrPayload  = self::buildSpatialFrequencyResponsePayload();
+        $oecfPayload = $this->buildOecfPayload();
+        $sfrPayload  = $this->buildSpatialFrequencyResponsePayload();
 
         $ifd0 = new Ifd([
             ExifTag::IMAGE_DESCRIPTION => new IfdEntry(ExifTag::IMAGE_DESCRIPTION, 2, 1, 'Coastal cliffs'),
@@ -2258,7 +2258,7 @@ final class ExifDocumentTest extends TestCase
         self::assertEqualsWithDelta(-0.5, $document->gimbalRollDeg(), 0.0001);
     }
 
-    private static function buildOecfPayload(): string
+    private function buildOecfPayload(): string
     {
         $columns = 2;
         $rows    = 2;
@@ -2269,15 +2269,15 @@ final class ExifDocumentTest extends TestCase
         $payload .= "Channel R\0";
         $payload .= "Channel G\0";
 
-        $payload .= self::packSrational(1, 10);
-        $payload .= self::packSrational(2, 10);
-        $payload .= self::packSrational(3, 10);
-        $payload .= self::packSrational(4, 10);
+        $payload .= $this->packSrational(1, 10);
+        $payload .= $this->packSrational(2, 10);
+        $payload .= $this->packSrational(3, 10);
+        $payload .= $this->packSrational(4, 10);
 
         return $payload;
     }
 
-    private static function buildSpatialFrequencyResponsePayload(): string
+    private function buildSpatialFrequencyResponsePayload(): string
     {
         $columns = 3;
         $rows    = 2;
@@ -2289,17 +2289,17 @@ final class ExifDocumentTest extends TestCase
         $payload .= "Luminance\0";
         $payload .= "Chrominance\0";
 
-        $payload .= self::packSrational(90, 100);
-        $payload .= self::packSrational(75, 100);
-        $payload .= self::packSrational(60, 100);
-        $payload .= self::packSrational(85, 100);
-        $payload .= self::packSrational(70, 100);
-        $payload .= self::packSrational(55, 100);
+        $payload .= $this->packSrational(90, 100);
+        $payload .= $this->packSrational(75, 100);
+        $payload .= $this->packSrational(60, 100);
+        $payload .= $this->packSrational(85, 100);
+        $payload .= $this->packSrational(70, 100);
+        $payload .= $this->packSrational(55, 100);
 
         return $payload;
     }
 
-    private static function packSrational(int $numerator, int $denominator): string
+    private function packSrational(int $numerator, int $denominator): string
     {
         return pack('N', $numerator) . pack('N', $denominator);
     }

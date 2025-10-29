@@ -21,11 +21,17 @@ use MagicSunday\ImageMeta\Value\Integrity;
 final readonly class FileMetadata
 {
     public ?string $mimeType;
+
     public ?int $fileSize;
+
     public ?string $extension;
+
     public ?string $digestSha1;
+
     public ?string $digestMd5;
+
     public Container $container;
+
     public Integrity $integrity;
 
     public function __construct(

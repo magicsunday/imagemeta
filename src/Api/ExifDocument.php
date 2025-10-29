@@ -35,23 +35,23 @@ use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 /**
  * Provides an EXIF-only structured view derived from a parsed document.
  */
-final class ExifDocument
+final readonly class ExifDocument
 {
-    private readonly ?ModelExifDocument $raw;
+    private ?ModelExifDocument $raw;
 
-    private readonly StructuredCamera $camera;
+    private StructuredCamera $camera;
 
-    private readonly StructuredLens $lens;
+    private StructuredLens $lens;
 
-    private readonly StructuredExposure $exposure;
+    private StructuredExposure $exposure;
 
-    private readonly StructuredGps $gps;
+    private StructuredGps $gps;
 
-    private readonly StructuredImage $image;
+    private StructuredImage $image;
 
-    private readonly StructuredPreview $preview;
+    private StructuredPreview $preview;
 
-    private readonly InteropValue $interop;
+    private InteropValue $interop;
 
     /**
      * Creates the structured EXIF view by aggregating the curated value objects extracted from the parser.
@@ -245,6 +245,7 @@ final class ExifDocument
         if ($firmware === null && (float) $document->exifProfile() < 3.0) {
             $firmware = $document->cameraFirmwareVersion();
         }
+
         if ($firmware === null) {
             $firmware = $document->software();
         }

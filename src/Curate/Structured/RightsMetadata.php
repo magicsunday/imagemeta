@@ -21,9 +21,13 @@ use MagicSunday\ImageMeta\Value\Rights as RightsValue;
 final readonly class RightsMetadata
 {
     public ?string $copyright;
+
     public ?string $usageTerms;
+
     public ?string $licenseUrl;
+
     public ?string $creditLine;
+
     public ?string $securityClassification;
 
     public function __construct(

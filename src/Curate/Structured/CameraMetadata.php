@@ -22,12 +22,19 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 final readonly class CameraMetadata
 {
     public ?string $make;
+
     public ?string $model;
+
     public ?string $ownerName;
+
     public ?string $serialNumber;
+
     public ?string $firmware;
+
     public ?FileSource $fileSource;
+
     public ?SensingMethod $sensingMethod;
+
     public Device $device;
 
     public function __construct(

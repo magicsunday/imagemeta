@@ -29,26 +29,47 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
 final readonly class ExposureMetadata
 {
     public ?int $iso;
+
     public ?float $exposureTimeSec;
+
     public ?float $fNumber;
+
     public ?float $exposureBiasEv;
+
     public ?ExposureProgram $program;
+
     public ?MeteringMode $meteringMode;
+
     public ?FlashInfo $flash;
+
     public ?WhiteBalance $whiteBalance;
+
     public ?float $brightnessEv;
+
     public ?ExposureMode $exposureMode;
+
     public ?GainControl $gainControl;
+
     public ?Contrast $contrast;
+
     public ?Saturation $saturation;
+
     public ?Sharpness $sharpness;
+
     public ?float $digitalZoomRatio;
+
     public ?float $shutterSpeedEv;
+
     public ?float $apertureEv;
+
     public ?int $isoLatitudeYyy;
+
     public ?int $isoLatitudeZzz;
+
     public ?float $exposureIndex;
+
     public ?float $flashEnergy;
+
     public ?float $ev100;
 
     public function __construct(ExposureValue $exposure, Derived $derived)

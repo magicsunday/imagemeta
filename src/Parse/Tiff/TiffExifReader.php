@@ -49,7 +49,6 @@ use function rtrim;
 use function sha1;
 use function sprintf;
 use function strlen;
-use function strncmp;
 use function strspn;
 use function substr;
 
@@ -185,6 +184,7 @@ final class TiffExifReader
     {
         $this->buf = new MemoryBuffer($tiffBlob);
         $this->buf->seek(0);
+
         $this->blobSize = UInt64::fromInt($this->buf->size());
 
         $this->makerNoteRaw          = null;
@@ -260,18 +260,18 @@ final class TiffExifReader
             $nextIfd          = $this->readIfd($nextOffset);
             $additionalIfds[] = $nextIfd;
 
-            if ($ifd1 === null) {
+            if (!$ifd1 instanceof Ifd) {
                 $ifd1 = $nextIfd;
             }
 
             $nextOffset = $nextIfd->nextIfdOffset;
         }
 
-        if ($interopIfd === null && $additionalIfds !== []) {
+        if (!$interopIfd instanceof Ifd && $additionalIfds !== []) {
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
         }
 
-        if ($interopIfd === null && $this->subIfds !== []) {
+        if (!$interopIfd instanceof Ifd && $this->subIfds !== []) {
             $interopIfd = $this->locateInteropIfd(...array_values($this->subIfds));
         }
 
@@ -376,6 +376,7 @@ final class TiffExifReader
             // notes the value is zero when the chain terminates.
             $next = $this->readU32();
         }
+
         $ifd = new Ifd($entries, $next > 0 ? $next : null);
 
         $this->ifdCache[$offsetInt] = $ifd;
@@ -456,9 +457,6 @@ final class TiffExifReader
         if ($count <= 0) {
             return new ExifNumericList([]);
         }
-
-        $isOffsetTag = $tag === ExifTag::STRIP_OFFSETS || $tag === ExifTag::TILE_OFFSETS;
-        $context     = sprintf('IFD tag 0x%04X', $tag);
 
         if ($count === 1) {
             if ($value instanceof ExifNumericList) {
@@ -631,9 +629,7 @@ final class TiffExifReader
     private function collectSubIfds(IfdEntry $entry): void
     {
         if (
-            $entry->type !== TiffConst::TYPE_IFD
-            && $entry->type !== TiffConst::TYPE_IFD8
-            && $entry->type !== TiffConst::TYPE_LONG
+            !in_array($entry->type, [TiffConst::TYPE_IFD, TiffConst::TYPE_IFD8, TiffConst::TYPE_LONG], true)
         ) {
             return;
         }
@@ -730,13 +726,7 @@ final class TiffExifReader
             ExifTag::RELATED_IMAGE_LENGTH,
         ];
 
-        foreach ($interopTags as $tag) {
-            if ($ifd->get($tag) instanceof IfdEntry) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($interopTags, fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry);
     }
 
     /**
@@ -889,7 +879,7 @@ final class TiffExifReader
             return '';
         }
 
-        if (strncmp($trimmed, "\xFF\xFE", 2) === 0) {
+        if (str_starts_with($trimmed, "\xFF\xFE")) {
             $trimmed = substr($trimmed, 2);
         }
 
@@ -1739,7 +1729,7 @@ final class TiffExifReader
 
         while ($words !== []) {
             [$words, $remainder] = $this->divModWordsBy10($words);
-            $digits              = (string) $remainder . $digits;
+            $digits              = $remainder . $digits;
             $words               = $this->trimLeadingZeroWords($words);
         }
 
@@ -1861,11 +1851,7 @@ final class TiffExifReader
             return $decLen <=> $intLen;
         }
 
-        if ($decimal === $intString) {
-            return 0;
-        }
-
-        return $decimal < $intString ? -1 : 1;
+        return $decimal <=> $intString;
     }
 
     /**

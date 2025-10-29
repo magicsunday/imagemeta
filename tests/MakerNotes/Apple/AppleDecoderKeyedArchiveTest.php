@@ -266,9 +266,11 @@ final class BinaryPlistEncoder
         if ($value > 0xFF) {
             $size = 2;
         }
+
         if ($value > 0xFFFF) {
             $size = 4;
         }
+
         if ($value > 0xFFFFFFFF) {
             $size = 8;
         }
@@ -456,9 +458,9 @@ final class BinaryPlistNullValue implements BinaryPlistValue
 /**
  * @internal
  */
-final class BinaryPlistBoolValue implements BinaryPlistValue
+final readonly class BinaryPlistBoolValue implements BinaryPlistValue
 {
-    public function __construct(private readonly bool $value)
+    public function __construct(private bool $value)
     {
     }
 
@@ -471,9 +473,9 @@ final class BinaryPlistBoolValue implements BinaryPlistValue
 /**
  * @internal
  */
-final class BinaryPlistIntValue implements BinaryPlistValue
+final readonly class BinaryPlistIntValue implements BinaryPlistValue
 {
-    public function __construct(private readonly int $value)
+    public function __construct(private int $value)
     {
     }
 
@@ -486,9 +488,9 @@ final class BinaryPlistIntValue implements BinaryPlistValue
 /**
  * @internal
  */
-final class BinaryPlistFloatValue implements BinaryPlistValue
+final readonly class BinaryPlistFloatValue implements BinaryPlistValue
 {
-    public function __construct(private readonly float $value)
+    public function __construct(private float $value)
     {
     }
 
@@ -501,9 +503,9 @@ final class BinaryPlistFloatValue implements BinaryPlistValue
 /**
  * @internal
  */
-final class BinaryPlistStringValue implements BinaryPlistValue
+final readonly class BinaryPlistStringValue implements BinaryPlistValue
 {
-    public function __construct(private readonly string $value)
+    public function __construct(private string $value)
     {
     }
 
@@ -516,12 +518,12 @@ final class BinaryPlistStringValue implements BinaryPlistValue
 /**
  * @internal
  */
-final class BinaryPlistArrayValue implements BinaryPlistValue
+final readonly class BinaryPlistArrayValue implements BinaryPlistValue
 {
     /**
      * @param list<BinaryPlistValue> $values
      */
-    public function __construct(private readonly array $values)
+    public function __construct(private array $values)
     {
     }
 
@@ -539,12 +541,12 @@ final class BinaryPlistArrayValue implements BinaryPlistValue
 /**
  * @internal
  */
-final class BinaryPlistDictionaryValue implements BinaryPlistValue
+final readonly class BinaryPlistDictionaryValue implements BinaryPlistValue
 {
     /**
      * @param array<string, BinaryPlistValue> $entries
      */
-    public function __construct(private readonly array $entries)
+    public function __construct(private array $entries)
     {
     }
 

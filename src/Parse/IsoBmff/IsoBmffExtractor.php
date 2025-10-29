@@ -311,7 +311,7 @@ final readonly class IsoBmffExtractor
         return [
             QuickTimeMeta::MAJOR_BRAND_KEY       => $majorBrand,
             QuickTimeMeta::MINOR_VERSION_KEY     => $minor,
-            QuickTimeMeta::COMPATIBLE_BRANDS_KEY => $brands === [] ? '' : implode(' ', $brands),
+            QuickTimeMeta::COMPATIBLE_BRANDS_KEY => implode(' ', $brands),
         ];
     }
 
@@ -494,6 +494,7 @@ final readonly class IsoBmffExtractor
 
         $win->read(4); // version/flags
         $win->read(4); // pre-defined
+
         $handler = $win->read(4);
         $win->read(12); // reserved
 

@@ -17,14 +17,10 @@ use MagicSunday\ImageMeta\Model\Metadata;
 /**
  * Assembles structured metadata aggregates from normalised value objects.
  */
-final class ExifAssembler
+final readonly class ExifAssembler
 {
-    private readonly ValueFactory $valueFactory;
-
-    public function __construct(
-        ?ValueFactory $valueFactory = null,
-    ) {
-        $this->valueFactory = $valueFactory ?? new ValueFactory();
+    public function __construct(private ?ValueFactory $valueFactory = new ValueFactory())
+    {
     }
 
     /**

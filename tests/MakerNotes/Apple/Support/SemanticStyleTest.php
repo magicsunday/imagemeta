@@ -61,7 +61,6 @@ final class SemanticStyleTest extends TestCase
         /** @var QuickTimeMeta $meta */
         $meta     = $reflector->newInstanceWithoutConstructor();
         $property = $reflector->getProperty('keys');
-        $property->setAccessible(true);
         $property->setValue($meta, ['SemanticStyle' => $semanticStyle]);
 
         return $meta;

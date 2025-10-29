@@ -22,13 +22,19 @@ use function is_int;
  */
 final class ExifFlash
 {
-    private const FIRED_MASK     = 0x01;
-    private const RETURN_SHIFT   = 1;
-    private const MODE_SHIFT     = 3;
-    private const FUNCTION_SHIFT = 5;
-    private const TWO_BIT_MASK   = 0x03;
-    private const ONE_BIT_MASK   = 0x01;
-    private const RED_EYE_MASK   = 0x40;
+    private const int FIRED_MASK = 0x01;
+
+    private const int RETURN_SHIFT = 1;
+
+    private const int MODE_SHIFT = 3;
+
+    private const int FUNCTION_SHIFT = 5;
+
+    private const int TWO_BIT_MASK = 0x03;
+
+    private const int ONE_BIT_MASK = 0x01;
+
+    private const int RED_EYE_MASK = 0x40;
 
     private function __construct()
     {

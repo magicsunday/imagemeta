@@ -206,10 +206,6 @@ final class ExifConvenience
         if ($value instanceof UInt64) {
             $intValue = self::uint64ToInt($value, 'ISO sensitivity');
 
-            if ($intValue === null) {
-                return null;
-            }
-
             return $intValue;
         }
 

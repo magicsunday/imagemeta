@@ -156,6 +156,7 @@ final class AppleMakerNotesMapper
         if ($flags === null) {
             $flags = [];
         }
+
         $quickTimeFlags = $this->quickTimeFlags($quickTime);
         foreach ($quickTimeFlags as $key => $value) {
             if (!array_key_exists($key, $flags)) {
@@ -436,7 +437,7 @@ final class AppleMakerNotesMapper
      */
     private function quickTimeFlags(?QuickTimeMeta $quickTime): array
     {
-        if ($quickTime === null) {
+        if (!$quickTime instanceof QuickTimeMeta) {
             return [];
         }
 

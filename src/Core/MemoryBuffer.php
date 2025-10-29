@@ -36,7 +36,7 @@ final class MemoryBuffer
         private int $pos = 0,
     ) {
         $this->byteReader = new ByteReader(
-            read: fn (int $length): string => $this->read($length),
+            read: $this->read(...),
             tell: fn (): int => $this->pos,
             seek: function (int|UInt64 $offset): void {
                 $this->seekInternal($offset);

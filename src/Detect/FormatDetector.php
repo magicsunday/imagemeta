@@ -44,7 +44,9 @@ final class FormatDetector
 
         try {
             $stream->seek(4);
-            $brand = $stream->read(4); // 'ftyp'
+
+            // 'ftyp'
+            $brand = $stream->read(4);
         } catch (BoundsError $exception) {
             throw new ParseError('Unable to read container signature', 0, $exception);
         }

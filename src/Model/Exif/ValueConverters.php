@@ -122,33 +122,42 @@ use const JSON_THROW_ON_ERROR;
  */
 final readonly class ValueConverters
 {
-    private const float FULL_FRAME_WIDTH_MM               = 36.0;
-    private const float FULL_FRAME_HEIGHT_MM              = 24.0;
-    private const float FULL_FRAME_DIAGONAL_MM            = 43.2666153056;
+    private const float FULL_FRAME_WIDTH_MM = 36.0;
+
+    private const float FULL_FRAME_HEIGHT_MM = 24.0;
+
+    private const float FULL_FRAME_DIAGONAL_MM = 43.2666153056;
+
     private const float FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.030;
 
     /**
      * EXIF 3.0 Annex C.3 keeps the legacy 64×64 SRATIONAL matrix cap from EXIF 2.32 Annex C.3.
      */
-    private const MAX_SRATIONAL_MATRIX_DIMENSION = 64;
+    private const int MAX_SRATIONAL_MATRIX_DIMENSION = 64;
+
     /**
      * EXIF 3.0 Annex C.3 and EXIF 2.32 Annex C.3 limit SRATIONAL matrix labels to 255 bytes.
      */
-    private const MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
+    private const int MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
+
     /**
      * SRATIONAL entries use two signed 32-bit integers per EXIF 3.0 Annex C.3 / EXIF 2.32 Annex C.3.
      */
-    private const SRATIONAL_VALUE_SIZE = 8;
+    private const int SRATIONAL_VALUE_SIZE = 8;
+
     /**
      * Epson’s Print Image Matching block allows up to 512 parameters per EXIF 3.0 §4.6.4, unchanged from EXIF 2.32 §4.6.4.
      */
-    private const MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
-    private const PRINTABLE_ASCII_MIN                 = 0x20;
-    private const PRINTABLE_ASCII_MAX                 = 0x7E;
+    private const int MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
+
+    private const int PRINTABLE_ASCII_MIN = 0x20;
+
+    private const int PRINTABLE_ASCII_MAX = 0x7E;
+
     /**
      * EXIF 3.0 §4.6.8 (GPSVersionID) preserves the EXIF 2.32 default value of 2.0.0.0 when the field is blank.
      */
-    private const DEFAULT_GPS_VERSION = '2.0.0.0';
+    private const string DEFAULT_GPS_VERSION = '2.0.0.0';
 
     /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.

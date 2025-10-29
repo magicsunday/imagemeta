@@ -767,7 +767,7 @@ final readonly class ExifDocument
      */
     public function previewImageOffset(): ?int
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -783,7 +783,7 @@ final readonly class ExifDocument
      */
     public function previewImageLength(): ?int
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -799,7 +799,7 @@ final readonly class ExifDocument
      */
     public function hasPreviewImage(): ?bool
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context !== null) {
             return $context['length'] > 0;
         }
@@ -882,11 +882,19 @@ final readonly class ExifDocument
                 continue;
             }
 
-            if ($offset === null || $length === null) {
+            if ($offset === null) {
                 continue;
             }
 
-            if ($offset <= 0 || $length <= 0) {
+            if ($length === null) {
+                continue;
+            }
+
+            if ($offset <= 0) {
+                continue;
+            }
+
+            if ($length <= 0) {
                 continue;
             }
 
@@ -907,7 +915,7 @@ final readonly class ExifDocument
      */
     public function previewImageWidth(): ?int
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -922,7 +930,7 @@ final readonly class ExifDocument
      */
     public function previewImageHeight(): ?int
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -937,7 +945,7 @@ final readonly class ExifDocument
      */
     public function previewImageEncoding(): ?string
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -952,7 +960,7 @@ final readonly class ExifDocument
      */
     public function previewImageMimeType(): ?string
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -967,7 +975,7 @@ final readonly class ExifDocument
      */
     public function previewImageBitDepth(): ?int
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -982,7 +990,7 @@ final readonly class ExifDocument
      */
     public function previewImageCompression(): ?int
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -999,7 +1007,7 @@ final readonly class ExifDocument
      */
     public function previewImageScale(): ?float
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -1020,7 +1028,7 @@ final readonly class ExifDocument
      */
     public function previewColorSpace(): ?int
     {
-        $context = $this->previewContext();
+        $context = $this->previewContext;
         if ($context === null) {
             return null;
         }
@@ -1429,13 +1437,11 @@ final readonly class ExifDocument
             }
         }
 
-        if ($this->subIfds !== []) {
-            foreach ($this->subIfds as $subIfd) {
-                foreach ($tagPriority as $tag) {
-                    $value = $this->coerceIntValue($this->value($subIfd, $tag));
-                    if ($value !== null) {
-                        return $value;
-                    }
+        foreach ($this->subIfds as $subIfd) {
+            foreach ($tagPriority as $tag) {
+                $value = $this->coerceIntValue($this->value($subIfd, $tag));
+                if ($value !== null) {
+                    return $value;
                 }
             }
         }
@@ -1733,9 +1739,7 @@ final readonly class ExifDocument
     {
         $signature = $this->str($this->exifIfd, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
 
-        return $signature !== null
-            ? $signature
-            : $this->str($this->ifd0, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
+        return $signature ?? $this->str($this->ifd0, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
     }
 
     /**
@@ -1745,9 +1749,7 @@ final readonly class ExifDocument
     {
         $signature = $this->str($this->exifIfd, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
 
-        return $signature !== null
-            ? $signature
-            : $this->str($this->ifd0, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
+        return $signature ?? $this->str($this->ifd0, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
     }
 
     /**
@@ -1811,7 +1813,11 @@ final readonly class ExifDocument
     {
         foreach ($this->profileIfds() as $ifd) {
             $values = $this->rationalList($ifd, ExifTag::PROFILE_TONE_CURVE);
-            if ($values === null || $values === []) {
+            if ($values === null) {
+                continue;
+            }
+
+            if ($values === []) {
                 continue;
             }
 
@@ -1832,7 +1838,11 @@ final readonly class ExifDocument
 
         foreach ($this->profileIfds() as $ifd) {
             $values = $this->rationalList($ifd, $gainTableTag->value);
-            if ($values === null || $values === []) {
+            if ($values === null) {
+                continue;
+            }
+
+            if ($values === []) {
                 continue;
             }
 
@@ -2825,12 +2835,7 @@ final readonly class ExifDocument
             }
         }
 
-        $gpsTimestamp = $this->gpsTimestamp();
-        if ($gpsTimestamp instanceof DateTimeImmutable) {
-            return $gpsTimestamp;
-        }
-
-        return null;
+        return $this->gpsTimestamp();
     }
 
     /**
@@ -2874,9 +2879,7 @@ final readonly class ExifDocument
             }
         }
 
-        foreach ($this->subsequentIfds as $ifd) {
-            $sources[] = $ifd;
-        }
+        $sources = $this->subsequentIfds;
 
         foreach ($this->subIfds as $ifd) {
             $sources[] = $ifd;

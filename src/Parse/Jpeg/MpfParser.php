@@ -246,6 +246,7 @@ final class MpfParser
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $values[] = $buf->readU8();
                 }
+
                 break;
 
             case self::TYPE_ASCII:
@@ -256,12 +257,14 @@ final class MpfParser
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $values[] = $endian === Endian::Little ? $buf->readU16LE() : $buf->readU16BE();
                 }
+
                 break;
 
             case self::TYPE_LONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
                     $values[] = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
                 }
+
                 break;
 
             case self::TYPE_SLONG:
@@ -269,6 +272,7 @@ final class MpfParser
                     $unsigned = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
                     $values[] = $this->toSigned32($unsigned);
                 }
+
                 break;
 
             case self::TYPE_RATIONAL:
@@ -286,6 +290,7 @@ final class MpfParser
                         'denominator' => $denominator,
                     ];
                 }
+
                 break;
 
             default:
@@ -494,13 +499,7 @@ final class MpfParser
             return false;
         }
 
-        foreach ($value as $component) {
-            if (!$this->isRational($component)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all($value, $this->isRational(...));
     }
 
     private function readU16(MemoryBuffer $buffer, Endian $endian): int

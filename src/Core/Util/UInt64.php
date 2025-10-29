@@ -20,7 +20,7 @@ use function sprintf;
 /**
  * Represents an unsigned 64-bit integer composed of two 32-bit halves.
  */
-final class UInt64
+final readonly class UInt64
 {
     private const int UINT32_MASK = 0xFFFFFFFF;
 
@@ -35,8 +35,8 @@ final class UInt64
      * @throws ParseError When either component falls outside the unsigned 32-bit range.
      */
     public function __construct(
-        private readonly int $hi,
-        private readonly int $lo,
+        private int $hi,
+        private int $lo,
     ) {
         $this->assertUint32($this->hi);
         $this->assertUint32($this->lo);

@@ -35,7 +35,7 @@ final class StreamWindow
         private readonly int $length,
     ) {
         $this->byteReader = new ByteReader(
-            read: fn (int $length): string => $this->read($length),
+            read: $this->read(...),
             tell: fn (): int => $this->cursor,
             seek: function (int|UInt64 $offset): void {
                 $this->seekInternal($offset);

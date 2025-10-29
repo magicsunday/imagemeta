@@ -33,10 +33,10 @@ final readonly class ExifNumericList
      */
     public function __construct(array $values)
     {
-        self::assertList($values);
+        $this->assertList($values);
 
         foreach ($values as $value) {
-            self::assertNumericComponent($value);
+            $this->assertNumericComponent($value);
         }
 
         /** @var list<int|float|UInt64> $values */
@@ -58,7 +58,7 @@ final readonly class ExifNumericList
      *
      * @phpstan-assert list<int|float|UInt64> $values
      */
-    private static function assertList(array $values): void
+    private function assertList(array $values): void
     {
         if (array_is_list($values)) {
             return;
@@ -67,7 +67,7 @@ final readonly class ExifNumericList
         throw new InvalidArgumentException('Numeric EXIF values must form a list.');
     }
 
-    private static function assertNumericComponent(mixed $value): void
+    private function assertNumericComponent(mixed $value): void
     {
         if (is_int($value) || is_float($value) || $value instanceof UInt64) {
             return;

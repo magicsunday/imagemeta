@@ -17,7 +17,7 @@ use PHPUnit\Framework\TestCase;
 
 final class ExifFallbacksTest extends TestCase
 {
-    private const SAMPLE = __DIR__ . '/../../test-images/Images/gps_exif_example.jpg';
+    private const string SAMPLE = __DIR__ . '/../../test-images/Images/gps_exif_example.jpg';
 
     #[Test]
     public function readsBestEffortExposureAndTemporalData(): void

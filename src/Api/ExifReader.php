@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Api;
 
+use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
@@ -21,19 +23,16 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 /**
  * Facade exposing EXIF-only access for supported container formats.
  */
-final class ExifReader
+final readonly class ExifReader
 {
-    private readonly TiffExifReader $tiffReader;
-
     /**
      * @param TiffExifReader|null $tiffReader Optional TIFF EXIF reader reused across calls.
      *
      * Providing a custom reader allows sharing caches or maker-notes registries in higher-level
      * code while defaulting to a new reader instance when no dependency is supplied.
      */
-    public function __construct(?TiffExifReader $tiffReader = null)
+    public function __construct(private ?TiffExifReader $tiffReader = new TiffExifReader())
     {
-        $this->tiffReader = $tiffReader ?? new TiffExifReader();
     }
 
     /**
@@ -46,8 +45,8 @@ final class ExifReader
      *                      height, and sample precision sourced from the container when the tags
      *                      are absent inside the metadata.
      *
-     * @throws \MagicSunday\ImageMeta\Core\ParseError  When container detection or downstream parsers encounter malformed data.
-     * @throws \MagicSunday\ImageMeta\Core\BoundsError When the stream ends before the required structures can be read.
+     * @throws ParseError  When container detection or downstream parsers encounter malformed data.
+     * @throws BoundsError When the stream ends before the required structures can be read.
      */
     public function read(string $path): ExifDocument
     {

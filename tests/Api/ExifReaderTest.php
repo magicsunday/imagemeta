@@ -11,7 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Api;
 
+use MagicSunday\ImageMeta\Api\ExifDocument;
 use MagicSunday\ImageMeta\Api\ExifReader;
+use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
 use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
@@ -99,8 +101,8 @@ use PHPUnit\Framework\TestCase;
  *     tiffEpStandardString: ?string,
  * }
  *
- * @method static void assertStructuredMatches(string $fixture, \MagicSunday\ImageMeta\Model\Metadata $metadata, StructuredExpectation $expected)
- * @method static void assertApiMatches(string $fixture, \MagicSunday\ImageMeta\Api\ExifDocument $document, ApiExpectation $expected)
+ * @method static void assertStructuredMatches(string $fixture, Metadata $metadata, StructuredExpectation $expected)
+ * @method static void assertApiMatches(string $fixture, ExifDocument $document, ApiExpectation $expected)
  * @method static void assertModelMatches(string $fixture, ?\MagicSunday\ImageMeta\Model\Exif\ExifDocument $document, ModelExpectation $expected)
  */
 final class ExifReaderTest extends TestCase

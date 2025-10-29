@@ -403,10 +403,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         while ($offset < $length) {
             $char = $raw[$offset];
             if (
-                $char === ';'
-                || $char === ','
-                || $char === ')'
-                || $char === '}'
+                in_array($char, [';', ',', ')', '}'], true)
                 || ctype_space($char)
             ) {
                 break;
@@ -487,13 +484,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return true;
         }
 
-        foreach ($value as $entry) {
-            if (is_array($entry) && $this->containsUidReference($entry)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($value, fn ($entry): bool => is_array($entry) && $this->containsUidReference($entry));
     }
 
     /**
@@ -625,6 +616,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         } else {
             $cameraType = $this->stringValue($dictionary, 'CameraType');
         }
+
         $hdrHeadroom             = $this->floatValue($dictionary, 'HdrHeadroom', 'HDRHeadroom');
         $hdrGain                 = $this->floatList($dictionary, 'HdrGain', 'HDRGain');
         $snr                     = $this->floatValue($dictionary, 'SNRSetting', 'SNR');
@@ -645,6 +637,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 $livePhotoTime = $livePhotoIndex / $timescale;
             }
         }
+
         $colorTemperature    = $this->intValue($dictionary, 'ColorTemperature');
         $semanticStylePreset = $this->stringValue($dictionary, 'SemanticStylePreset');
         $semanticStyleWarmth = $this->floatValue($dictionary, 'SemanticStyleWarmth');
@@ -665,6 +658,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 $semanticStyleTone = $compactTone;
             }
         }
+
         $accelerationVector    = $this->floatList($dictionary, 'AccelerationVector');
         $flags                 = $this->extractFlags($dictionary);
         $imageCaptureRequestId = $this->identifierValue($dictionary, 'ImageCaptureRequestID');
@@ -707,7 +701,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             && $imageCaptureRequestId === null
             && $qualityHint === null
             && $colorCorrectionMatrix === null
-            && $runTime === null
+            && !$runTime instanceof RunTime
             && $makerNoteVersion === null
             && $hdrImageType === null
             && $burstUuid === null
@@ -1032,10 +1026,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                     return $this->stringWithinIntRange($trimmed) ? (int) $trimmed : $trimmed;
                 }
 
-                if (is_numeric($trimmed)) {
-                    return $trimmed;
-                }
-
                 return $trimmed;
             }
         }
@@ -1324,7 +1314,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
             if (is_string($entry)) {
                 $trimmed = trim($entry);
-                if ($trimmed === '' || !is_numeric($trimmed)) {
+                if ($trimmed === '') {
+                    continue;
+                }
+
+                if (!is_numeric($trimmed)) {
                     continue;
                 }
 
@@ -1470,7 +1464,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                     $flags[$normalized] = false;
                 }
 
-                if ($enabledLookup === null || !array_key_exists($bitPosition, $enabledLookup)) {
+                if ($enabledLookup === null) {
+                    continue;
+                }
+
+                if (!array_key_exists($bitPosition, $enabledLookup)) {
                     continue;
                 }
 

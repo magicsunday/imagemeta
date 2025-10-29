@@ -227,7 +227,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -266,7 +265,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -293,7 +291,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -315,7 +312,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -332,7 +328,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -349,7 +344,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -369,7 +363,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -399,7 +392,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -459,7 +451,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $mapped = $method->invoke($decoder, [
             'ContentIdentifier' => 'mapped-camera',
@@ -482,7 +473,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $notes = $method->invoke($decoder, [
             'ContentIdentifier' => 'dictionary-style',
@@ -506,7 +496,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $dictionary = [
             'RunTime' => [
@@ -537,7 +526,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -573,7 +561,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         /** @var AppleMakerNotes|null $notes */
         $notes = $method->invoke($decoder, [
@@ -623,7 +610,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $scalarNotes = $method->invoke($decoder, [
             'ContentIdentifier'     => 'scalar',
@@ -688,7 +674,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $notes = $method->invoke($decoder, [
             'ContentIdentifier'     => 'override',
@@ -720,7 +705,6 @@ final class AppleDecoderTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $notes = $method->invoke($decoder, [
             'ContentIdentifier'     => 'positions',

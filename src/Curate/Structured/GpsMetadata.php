@@ -20,39 +20,73 @@ use MagicSunday\ImageMeta\Value\Gps as GpsValue;
 final readonly class GpsMetadata
 {
     public ?GpsCoordinate $latitude;
+
     public ?GpsCoordinate $longitude;
+
     public ?float $altitude;
+
     public ?int $altitudeReference;
+
     public ?string $version;
+
     public ?string $versionRaw;
+
     public ?string $satellites;
+
     public ?string $status;
+
     public ?string $measureMode;
+
     public ?float $dilutionOfPrecision;
+
     public ?string $speedReference;
+
     public ?float $speedMs;
+
     public ?string $speedOriginalReference;
+
     public ?float $speedOriginal;
+
     public ?string $trackReference;
+
     public ?float $track;
+
     public ?string $imageDirectionReference;
+
     public ?float $imageDirection;
+
     public ?string $mapDatum;
+
     public ?GpsCoordinate $destinationLatitude;
+
     public ?GpsCoordinate $destinationLongitude;
+
     public ?string $destinationBearingReference;
+
     public ?float $destinationBearing;
+
     public ?string $destinationDistanceReference;
+
     public ?float $destinationDistanceMetres;
+
     public ?string $destinationDistanceOriginalReference;
+
     public ?float $destinationDistanceOriginal;
+
     public ?string $processingMethod;
+
     public ?string $areaInformation;
+
     public ?string $date;
+
     public ?string $dateRaw;
+
     public ?string $time;
+
     public ?DateTimeImmutable $timestamp;
+
     public ?int $differential;
+
     public ?float $horizontalPositioningError;
 
     public function __construct(GpsValue $gps)

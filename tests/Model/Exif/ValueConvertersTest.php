@@ -691,7 +691,7 @@ final class ValueConvertersTest extends TestCase
         $payload = pack('n', 1) . pack('n', 1);
         $payload .= "Alpha\0";
         $payload .= "Beta\0";
-        $payload .= self::packSrational(1, 1);
+        $payload .= $this->packSrational(1, 1);
 
         $result = ValueConverters::decodeSpatialFrequencyResponse($payload);
 
@@ -703,7 +703,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function decodeSpatialFrequencyResponseParsesTable(): void
     {
-        $payload = self::buildSpatialFrequencyResponsePayload();
+        $payload = $this->buildSpatialFrequencyResponsePayload();
 
         $result = ValueConverters::decodeSpatialFrequencyResponse($payload);
 
@@ -723,7 +723,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function decodeSpatialFrequencyResponseRejectsInvalidPayload(): void
     {
-        $payload = substr(self::buildSpatialFrequencyResponsePayload(), 0, 8);
+        $payload = substr($this->buildSpatialFrequencyResponsePayload(), 0, 8);
 
         self::assertNull(ValueConverters::decodeSpatialFrequencyResponse($payload));
     }
@@ -951,7 +951,7 @@ final class ValueConvertersTest extends TestCase
         ];
     }
 
-    private static function buildSpatialFrequencyResponsePayload(): string
+    private function buildSpatialFrequencyResponsePayload(): string
     {
         $columns = 3;
         $rows    = 2;
@@ -963,17 +963,17 @@ final class ValueConvertersTest extends TestCase
         $payload .= "Luminance\0";
         $payload .= "Chrominance\0";
 
-        $payload .= self::packSrational(90, 100);
-        $payload .= self::packSrational(75, 100);
-        $payload .= self::packSrational(60, 100);
-        $payload .= self::packSrational(85, 100);
-        $payload .= self::packSrational(70, 100);
-        $payload .= self::packSrational(55, 100);
+        $payload .= $this->packSrational(90, 100);
+        $payload .= $this->packSrational(75, 100);
+        $payload .= $this->packSrational(60, 100);
+        $payload .= $this->packSrational(85, 100);
+        $payload .= $this->packSrational(70, 100);
+        $payload .= $this->packSrational(55, 100);
 
         return $payload;
     }
 
-    private static function packSrational(int $numerator, int $denominator): string
+    private function packSrational(int $numerator, int $denominator): string
     {
         return pack('N', $numerator) . pack('N', $denominator);
     }

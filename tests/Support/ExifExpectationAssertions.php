@@ -154,7 +154,7 @@ trait ExifExpectationAssertions
 
         foreach ($environmentMatchers as $key => $resolver) {
             $expectedValue = $expectedEnv[$key];
-            $actualValue   = $raw !== null ? $resolver($raw) : null;
+            $actualValue   = $raw instanceof ModelExifDocument ? $resolver($raw) : null;
 
             if ($expectedValue === null) {
                 Assert::assertNull($actualValue, sprintf('%s: %s', $fixture, ucfirst($key)));

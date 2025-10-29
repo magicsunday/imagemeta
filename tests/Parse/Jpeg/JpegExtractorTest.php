@@ -191,8 +191,8 @@ final class JpegExtractorTest extends TestCase
         $partOne  = 'flashpix-part-one';
         $partTwo  = 'flashpix-part-two';
 
-        $segment1 = self::segment(self::MARKER_APP2, self::fpxrPayload($streamId, 1, 2, $partOne));
-        $segment2 = self::segment(self::MARKER_APP2, self::fpxrPayload($streamId, 2, 2, $partTwo));
+        $segment1 = self::segment(self::MARKER_APP2, $this->fpxrPayload($streamId, 1, 2, $partOne));
+        $segment2 = self::segment(self::MARKER_APP2, $this->fpxrPayload($streamId, 2, 2, $partTwo));
 
         $jpeg = $this->jpeg($segment2, $segment1);
 
@@ -207,10 +207,10 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testFlashPixMultipleStreamsAreHandled(): void
     {
-        $streamOne  = self::segment(self::MARKER_APP2, self::fpxrPayload(1, 1, 1, 'stream-one'));
-        $streamTwoA = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 1, 3, 'alpha-'));
-        $streamTwoB = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 2, 3, 'beta-'));
-        $streamTwoC = self::segment(self::MARKER_APP2, self::fpxrPayload(2, 3, 3, 'gamma'));
+        $streamOne  = self::segment(self::MARKER_APP2, $this->fpxrPayload(1, 1, 1, 'stream-one'));
+        $streamTwoA = self::segment(self::MARKER_APP2, $this->fpxrPayload(2, 1, 3, 'alpha-'));
+        $streamTwoB = self::segment(self::MARKER_APP2, $this->fpxrPayload(2, 2, 3, 'beta-'));
+        $streamTwoC = self::segment(self::MARKER_APP2, $this->fpxrPayload(2, 3, 3, 'gamma'));
 
         $jpeg = $this->jpeg($streamTwoB, $streamOne, $streamTwoC, $streamTwoA);
 
@@ -230,8 +230,8 @@ final class JpegExtractorTest extends TestCase
     {
         $muLawData    = str_repeat("\x01\x02", 4);
         $pcmData      = pack('n*', 0x0102, 0x0304, 0x0506, 0x0708);
-        $muLawSegment = self::segment(self::MARKER_APP2, self::audioPayload(1, 1, 8_000, 8, $muLawData));
-        $pcmSegment   = self::segment(self::MARKER_APP2, self::audioPayload(0, 2, 44_100, 16, $pcmData));
+        $muLawSegment = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 8_000, 8, $muLawData));
+        $pcmSegment   = self::segment(self::MARKER_APP2, $this->audioPayload(0, 2, 44_100, 16, $pcmData));
 
         $jpeg      = $this->jpeg($muLawSegment . $pcmSegment);
         $extractor = $this->createExtractor($jpeg);
@@ -262,7 +262,7 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testAudioSegmentWithUnsupportedSampleRateThrows(): void
     {
-        $payload = self::segment(self::MARKER_APP2, self::audioPayload(0, 1, 12_000, 16, str_repeat("\x00", 4)));
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 12_000, 16, str_repeat("\x00", 4)));
         $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
@@ -278,7 +278,7 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testMuLawAudioSegmentWithNonEightKilohertzSampleRateThrows(): void
     {
-        $payload = self::segment(self::MARKER_APP2, self::audioPayload(1, 1, 11_025, 8, str_repeat("\x00", 8)));
+        $payload = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 11_025, 8, str_repeat("\x00", 8)));
         $jpeg    = $this->jpeg($payload);
 
         $extractor = $this->createExtractor($jpeg);
@@ -294,7 +294,7 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testMpfSegmentsAreBufferedAndParsed(): void
     {
-        $mpfBody = self::buildMpfPayload();
+        $mpfBody = $this->buildMpfPayload();
         $split   = 24;
 
         $segmentOne = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE . substr($mpfBody, 0, $split));
@@ -350,8 +350,8 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function testFlashPixInvalidSequenceDiscardsStream(): void
     {
-        $segment1 = self::segment(self::MARKER_APP2, self::fpxrPayload(5, 1, 2, 'first'));
-        $segment2 = self::segment(self::MARKER_APP2, self::fpxrPayload(5, 2, 3, 'second'));
+        $segment1 = self::segment(self::MARKER_APP2, $this->fpxrPayload(5, 1, 2, 'first'));
+        $segment2 = self::segment(self::MARKER_APP2, $this->fpxrPayload(5, 2, 3, 'second'));
 
         $jpeg = $this->jpeg($segment1, $segment2);
 
@@ -508,11 +508,11 @@ final class JpegExtractorTest extends TestCase
     /**
      * Builds a synthetic MPF payload containing two entries and attribute metadata.
      */
-    private static function buildMpfPayload(): string
+    private function buildMpfPayload(): string
     {
         $entries = [
-            self::mpfEntry(0x20000001, 12345, 1000, 0, 0),
-            self::mpfEntry(0x00000002, 54321, 2000, 1, 0),
+            $this->mpfEntry(0x20000001, 12345, 1000, 0, 0),
+            $this->mpfEntry(0x00000002, 54321, 2000, 1, 0),
         ];
 
         $entryData  = implode('', $entries);
@@ -525,20 +525,20 @@ final class JpegExtractorTest extends TestCase
         $attributeOffset = $mpEntryOffset + strlen($entryData);
 
         $indexIfd = pack('v', $entryCount)
-            . self::mpfIfdEntry(0xB000, 7, 4, '0100')
-            . self::mpfIfdEntry(0xB001, 4, 1, pack('V', $imageCount))
-            . self::mpfIfdEntry(0xB002, 7, strlen($entryData), offset: $mpEntryOffset)
+            . $this->mpfIfdEntry(0xB000, 7, 4, '0100')
+            . $this->mpfIfdEntry(0xB001, 4, 1, pack('V', $imageCount))
+            . $this->mpfIfdEntry(0xB002, 7, strlen($entryData), offset: $mpEntryOffset)
             . pack('V', $attributeOffset);
 
         $attributeIfd = pack('v', 2)
-            . self::mpfIfdEntry(0xB004, 4, 1, pack('V', 5))
-            . self::mpfIfdEntry(0xB005, 4, 1, pack('V', 1))
+            . $this->mpfIfdEntry(0xB004, 4, 1, pack('V', 5))
+            . $this->mpfIfdEntry(0xB005, 4, 1, pack('V', 1))
             . pack('V', 0);
 
         return $header . $indexIfd . $entryData . $attributeIfd;
     }
 
-    private static function mpfEntry(int $attributes, int $size, int $offset, int $dependent1, int $dependent2): string
+    private function mpfEntry(int $attributes, int $size, int $offset, int $dependent1, int $dependent2): string
     {
         return pack('V', $attributes)
             . pack('V', $size)
@@ -547,7 +547,7 @@ final class JpegExtractorTest extends TestCase
             . pack('v', $dependent2);
     }
 
-    private static function mpfIfdEntry(int $tag, int $type, int $count, string $value = '', ?int $offset = null): string
+    private function mpfIfdEntry(int $tag, int $type, int $count, string $value = '', ?int $offset = null): string
     {
         $entry = pack('v', $tag) . pack('v', $type) . pack('V', $count);
 
@@ -573,7 +573,7 @@ final class JpegExtractorTest extends TestCase
     /**
      * Builds a FlashPix APP2 payload with the provided header parameters.
      */
-    private static function fpxrPayload(int $streamId, int $sequence, int $count, string $data): string
+    private function fpxrPayload(int $streamId, int $sequence, int $count, string $data): string
     {
         return self::FPXR_SIGNATURE . pack('n', $streamId) . chr($sequence) . chr($count) . $data;
     }
@@ -581,7 +581,7 @@ final class JpegExtractorTest extends TestCase
     /**
      * Builds an EXIF audio APP2 payload with the provided metadata fields.
      */
-    private static function audioPayload(int $format, int $channels, int $sampleRate, int $bitDepth, string $data): string
+    private function audioPayload(int $format, int $channels, int $sampleRate, int $bitDepth, string $data): string
     {
         $sampleCount = 0;
         if ($format !== 2) {

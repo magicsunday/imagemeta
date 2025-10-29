@@ -374,7 +374,11 @@ final class JpegExtractor
         if ($this->flashPixSequences !== []) {
             foreach ($this->flashPixSequences as $streamId => $fragments) {
                 $expectedCount = $this->flashPixExpectedCounts[$streamId] ?? 0;
-                if ($expectedCount === 0 || count($fragments) !== $expectedCount) {
+                if ($expectedCount === 0) {
+                    continue;
+                }
+
+                if (count($fragments) !== $expectedCount) {
                     continue;
                 }
 

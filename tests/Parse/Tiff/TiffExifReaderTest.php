@@ -993,7 +993,6 @@ final class TiffExifReaderTest extends TestCase
 
         $refClass      = new ReflectionClass($reader);
         $pointerMethod = $refClass->getMethod('pointerOffset');
-        $pointerMethod->setAccessible(true);
 
         $this->expectException(BoundsError::class);
         $this->expectExceptionMessage('IFD pointer tag 0x0201 exceeds TIFF data length.');
@@ -1252,7 +1251,7 @@ final class TiffExifReaderTest extends TestCase
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
         $ifdEntryCount = 1;
-        $ifdLength     = 2 + ($ifdEntryCount * 12) + 4;
+        $ifdLength     = 2 + 12 + 4;
         $interopOffset = 8 + $ifdLength;
 
         $ifd0 = pack('v', $ifdEntryCount)
@@ -1416,7 +1415,7 @@ final class TiffExifReaderTest extends TestCase
         $header = 'II' . pack('v', 0x002A) . pack('V', 8);
 
         $ifdEntryCount = 1;
-        $ifdLength     = 2 + ($ifdEntryCount * 12) + 4;
+        $ifdLength     = 2 + 12 + 4;
         $ifd1Offset    = 8 + $ifdLength;
         $ifd2Offset    = $ifd1Offset + $ifdLength;
 
@@ -1510,15 +1509,11 @@ final class TiffExifReaderTest extends TestCase
      */
     private function buildClassicPrintImBlobFromPayload(string $payload): string
     {
-        $header = 'II' . pack('v', 0x002A) . pack('V', 8);
-
-        $ifd0EntryCount = 1;
-        $ifd0Size       = 2 + $ifd0EntryCount * 12 + 4;
-        $exifIfdOffset  = 8 + $ifd0Size;
-
-        $exifEntryCount = 1;
-        $exifIfdSize    = 2 + $exifEntryCount * 12 + 4;
-        $printImOffset  = $exifIfdOffset + $exifIfdSize;
+        $header        = 'II' . pack('v', 0x002A) . pack('V', 8);
+        $ifd0Size      = 2 + 12 + 4;
+        $exifIfdOffset = 8 + $ifd0Size;
+        $exifIfdSize   = 2 + 12 + 4;
+        $printImOffset = $exifIfdOffset + $exifIfdSize;
 
         $ifd0Entries = [
             self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
@@ -1544,7 +1539,7 @@ final class TiffExifReaderTest extends TestCase
             [0x0101, 0x00000064],
         ];
 
-        $payload = "PrintIM\0" . '0400' . pack('n', count($parameters));
+        $payload = 'PrintIM 0400' . pack('n', count($parameters));
 
         foreach ($parameters as [$id, $value]) {
             $payload .= pack('nN', $id, $value);
@@ -1564,7 +1559,7 @@ final class TiffExifReaderTest extends TestCase
 
         $ifd0EntryCount     = 1;
         $pointerCount       = 2;
-        $ifd0Size           = 2 + ($ifd0EntryCount * 12) + 4;
+        $ifd0Size           = 2 + 12 + 4;
         $pointerArrayOffset = 8 + $ifd0Size;
         $subIfdOffset       = 64;
 
@@ -1598,7 +1593,7 @@ final class TiffExifReaderTest extends TestCase
 
         $ifd0EntryCount     = 1;
         $pointerCount       = 2;
-        $ifd0Size           = 2 + ($ifd0EntryCount * 12) + 4;
+        $ifd0Size           = 2 + 12 + 4;
         $pointerArrayOffset = 8 + $ifd0Size;
         $firstSubIfdOffset  = 96;
         $secondSubIfdOffset = 160;
@@ -1712,12 +1707,11 @@ final class TiffExifReaderTest extends TestCase
         $ifd0Length     = 8 + ($ifd0EntryCount * 20) + 8;
         $baseOffset     = strlen($header) + $ifd0Length;
 
-        $exifEntryCount    = 3;
-        $exifIfdLength     = 8 + ($exifEntryCount * 20) + 8;
-        $interopEntryCount = 1;
-        $interopIfdLength  = 8 + ($interopEntryCount * 20) + 8;
-        $gpsEntryCount     = 6;
-        $gpsIfdLength      = 8 + ($gpsEntryCount * 20) + 8;
+        $exifEntryCount   = 3;
+        $exifIfdLength    = 8 + ($exifEntryCount * 20) + 8;
+        $interopIfdLength = 8 + 20 + 8;
+        $gpsEntryCount    = 6;
+        $gpsIfdLength     = 8 + ($gpsEntryCount * 20) + 8;
 
         $cursor = $baseOffset;
 
@@ -1940,7 +1934,8 @@ final class TiffExifReaderTest extends TestCase
 
         $cursor = $baseOffset;
 
-        $cursor             = self::alignOffset($cursor, 16);
+        $cursor = self::alignOffset($cursor, 16);
+
         $stripOffsetsOffset = $cursor;
         $cursor += strlen($stripOffsetsData);
 
@@ -2186,6 +2181,7 @@ final class TiffExifReaderTest extends TestCase
         if ($safety !== null) {
             $exifEntries[] = self::packClassicEntry(ExifTag::MAKER_NOTE_SAFETY, 3, 1, $safety);
         }
+
         $blob .= pack('v', $exifEntryCount) . implode('', $exifEntries) . pack('V', 0);
         $blob .= $makerNote;
 

@@ -50,8 +50,6 @@ final class GpsTiffBuilder
             . pack('V', 0);
 
         $definitions = self::gpsDefinitions();
-        /** @var list<GpsDefinition> $definitions */
-        $definitions = $definitions;
 
         $gpsEntryCount = count($definitions);
         $gpsIfdSize    = 2 + ($gpsEntryCount * 12) + 4;
@@ -68,9 +66,6 @@ final class GpsTiffBuilder
         };
 
         foreach ($definitions as $definition) {
-            /** @var GpsDefinition $definition */
-            $definition = $definition;
-
             $tag     = $definition['tag'];
             $type    = $definition['type'];
             $count   = $definition['count'];
@@ -280,8 +275,6 @@ final class GpsTiffBuilder
     private static function inlineBytes(array $bytes): int
     {
         $bytes = array_pad($bytes, 4, 0);
-        /** @var list<int<0, 255>> $bytes */
-        $bytes = $bytes;
 
         $packed = unpack('V', pack('C4', $bytes[0], $bytes[1], $bytes[2], $bytes[3]));
         if ($packed === false) {

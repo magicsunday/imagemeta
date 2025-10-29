@@ -79,8 +79,8 @@ final class ExifAssemblerTest extends TestCase
     #[Test]
     public function buildsStructuredAggregateForDslrJpeg(): void
     {
-        $oecfPayload = self::buildOecfPayload();
-        $sfrPayload  = self::buildSpatialFrequencyResponsePayload();
+        $oecfPayload = $this->buildOecfPayload();
+        $sfrPayload  = $this->buildSpatialFrequencyResponsePayload();
 
         $ifd0 = new Ifd([
             ExifTag::IMAGE_WIDTH                    => new IfdEntry(ExifTag::IMAGE_WIDTH, 4, 1, 6720),
@@ -937,7 +937,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument, [], null, $makerNotes);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = self::assertAppleMakerNotes($structured->makerNotes->apple);
+        $apple = $this->assertAppleMakerNotes($structured->makerNotes->apple);
         self::assertSame($appleMakerNotes, $apple);
 
         self::assertSame('maker-content', $apple->contentIdentifier);
@@ -999,7 +999,6 @@ final class ExifAssemblerTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $appleMakerNotes = $method->invoke($decoder, [
             'ContentIdentifier'     => 'bitfield',
@@ -1022,7 +1021,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], null, null, [], null, $makerNotes);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = self::assertAppleMakerNotes($structured->makerNotes->apple);
+        $apple = $this->assertAppleMakerNotes($structured->makerNotes->apple);
         self::assertTrue($apple->flags['nightMode']);
         self::assertTrue($apple->flags['longExposure']);
         self::assertTrue($apple->flags['hdrEnabled']);
@@ -1059,7 +1058,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = self::assertAppleMakerNotes($structured->makerNotes->apple);
+        $apple = $this->assertAppleMakerNotes($structured->makerNotes->apple);
         self::assertNull($apple->accelerationVector);
         self::assertEqualsWithDelta(-3.0, $structured->sensor->motion->accelX, 1e-12);
         self::assertEqualsWithDelta(4.0, $structured->sensor->motion->accelY, 1e-12);
@@ -1090,7 +1089,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = self::assertAppleMakerNotes($structured->makerNotes->apple);
+        $apple = $this->assertAppleMakerNotes($structured->makerNotes->apple);
         self::assertNull($apple->accelerationVector);
 
         self::assertEqualsWithDelta(0.2, $structured->sensor->motion->accelX, 1e-12);
@@ -2199,11 +2198,11 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $latitude = self::assertGpsCoordinate($structured->gps->latitude);
+        $latitude = $this->assertGpsCoordinate($structured->gps->latitude);
         self::assertSame('N', $latitude->reference());
         self::assertEqualsWithDelta(51.5, $latitude->toFloat(), 1e-6);
 
-        $longitude = self::assertGpsCoordinate($structured->gps->longitude);
+        $longitude = $this->assertGpsCoordinate($structured->gps->longitude);
         self::assertSame('E', $longitude->reference());
         self::assertEqualsWithDelta(8.5, $longitude->toFloat(), 1e-6);
         self::assertSame(0, $structured->gps->altitudeReference);
@@ -2222,11 +2221,11 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame('M', $structured->gps->imageDirectionReference);
         self::assertEqualsWithDelta(250.0, $structured->gps->imageDirection, 1e-6);
         self::assertSame('WGS-84', $structured->gps->mapDatum);
-        $destinationLatitude = self::assertGpsCoordinate($structured->gps->destinationLatitude);
+        $destinationLatitude = $this->assertGpsCoordinate($structured->gps->destinationLatitude);
         self::assertSame('N', $destinationLatitude->reference());
         self::assertEqualsWithDelta(41.0, $destinationLatitude->toFloat(), 1e-6);
 
-        $destinationLongitude = self::assertGpsCoordinate($structured->gps->destinationLongitude);
+        $destinationLongitude = $this->assertGpsCoordinate($structured->gps->destinationLongitude);
         self::assertSame('E', $destinationLongitude->reference());
         self::assertEqualsWithDelta(8.5, $destinationLongitude->toFloat(), 1e-6);
         self::assertSame('T', $structured->gps->destinationBearingReference);
@@ -2428,7 +2427,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(WhiteBalance::AUTO, $structured->processing->whiteBalance->mode);
         self::assertSame(5200, $structured->processing->whiteBalance->kelvin);
 
-        $apple = self::assertAppleMakerNotes($structured->makerNotes->apple);
+        $apple = $this->assertAppleMakerNotes($structured->makerNotes->apple);
         self::assertSame('uuid-123', $apple->contentIdentifier);
         self::assertSame(5200, $apple->colorTemperature);
         self::assertArrayHasKey('hdrEnabled', $apple->flags);
@@ -2649,7 +2648,7 @@ final class ExifAssemblerTest extends TestCase
     /**
      * Ensures Apple maker notes are available before dereferencing.
      */
-    private static function assertAppleMakerNotes(?AppleMakerNotes $apple): AppleMakerNotes
+    private function assertAppleMakerNotes(?AppleMakerNotes $apple): AppleMakerNotes
     {
         self::assertNotNull($apple);
 
@@ -2659,7 +2658,7 @@ final class ExifAssemblerTest extends TestCase
     /**
      * Ensures GPS coordinates are available before dereferencing.
      */
-    private static function assertGpsCoordinate(?GpsCoordinate $coordinate): GpsCoordinate
+    private function assertGpsCoordinate(?GpsCoordinate $coordinate): GpsCoordinate
     {
         self::assertNotNull($coordinate);
 
@@ -2683,7 +2682,7 @@ final class ExifAssemblerTest extends TestCase
         return $value[1];
     }
 
-    private static function buildOecfPayload(): string
+    private function buildOecfPayload(): string
     {
         $columns = 2;
         $rows    = 2;
@@ -2694,15 +2693,15 @@ final class ExifAssemblerTest extends TestCase
         $payload .= "Channel R\0";
         $payload .= "Channel G\0";
 
-        $payload .= self::packSrational(1, 10);
-        $payload .= self::packSrational(2, 10);
-        $payload .= self::packSrational(3, 10);
-        $payload .= self::packSrational(4, 10);
+        $payload .= $this->packSrational(1, 10);
+        $payload .= $this->packSrational(2, 10);
+        $payload .= $this->packSrational(3, 10);
+        $payload .= $this->packSrational(4, 10);
 
         return $payload;
     }
 
-    private static function buildSpatialFrequencyResponsePayload(): string
+    private function buildSpatialFrequencyResponsePayload(): string
     {
         $columns = 3;
         $rows    = 2;
@@ -2714,17 +2713,17 @@ final class ExifAssemblerTest extends TestCase
         $payload .= "Luminance\0";
         $payload .= "Chrominance\0";
 
-        $payload .= self::packSrational(90, 100);
-        $payload .= self::packSrational(75, 100);
-        $payload .= self::packSrational(60, 100);
-        $payload .= self::packSrational(85, 100);
-        $payload .= self::packSrational(70, 100);
-        $payload .= self::packSrational(55, 100);
+        $payload .= $this->packSrational(90, 100);
+        $payload .= $this->packSrational(75, 100);
+        $payload .= $this->packSrational(60, 100);
+        $payload .= $this->packSrational(85, 100);
+        $payload .= $this->packSrational(70, 100);
+        $payload .= $this->packSrational(55, 100);
 
         return $payload;
     }
 
-    private static function packSrational(int $numerator, int $denominator): string
+    private function packSrational(int $numerator, int $denominator): string
     {
         return pack('N', $numerator) . pack('N', $denominator);
     }

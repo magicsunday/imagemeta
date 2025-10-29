@@ -20,13 +20,13 @@ use function ord;
 /**
  * Provides shared unsigned integer read helpers for byte-oriented data sources.
  */
-final class ByteReader
+final readonly class ByteReader
 {
-    private readonly Closure $read;
+    private Closure $read;
 
-    private readonly Closure $tell;
+    private Closure $tell;
 
-    private readonly Closure $seek;
+    private Closure $seek;
 
     /**
      * Creates a reader backed by callbacks that operate on an external data source.
@@ -40,7 +40,7 @@ final class ByteReader
         callable $read,
         callable $tell,
         callable $seek,
-        private readonly string $context,
+        private string $context,
     ) {
         $this->read = Closure::fromCallable($read);
         $this->tell = Closure::fromCallable($tell);

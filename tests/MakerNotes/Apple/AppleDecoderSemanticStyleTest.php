@@ -27,7 +27,6 @@ final class AppleDecoderSemanticStyleTest extends TestCase
     {
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'buildAppleMakerNotes');
-        $method->setAccessible(true);
 
         $dictionary = [
             'SemanticStyle' => [
