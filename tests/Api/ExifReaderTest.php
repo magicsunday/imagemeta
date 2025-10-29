@@ -87,6 +87,7 @@ final class ExifReaderTest extends TestCase
 
         $expectation = ExifVersionExpectations::get($fixture);
 
+        self::assertModelMatches($fixture, $document->raw(), $expectation['model']);
         self::assertApiMatches($fixture, $document, $expectation['api']);
     }
 

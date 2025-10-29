@@ -17,7 +17,7 @@ final class ExifVersionExpectations
     private const string EXPECTATIONS_FILE = self::FIXTURE_DIR . '/expectations.json';
 
     /**
-     * @var array<string, array{structured: array<string, mixed>, api: array<string, mixed>}>|null
+     * @var array<string, array{structured: array<string, mixed>, api: array<string, mixed>, model: array<string, mixed>}>|null
      */
     private static ?array $cache = null;
 
@@ -50,20 +50,24 @@ final class ExifVersionExpectations
     }
 
     /**
-     * @return iterable<string, array{string, array<string, mixed>, array<string, mixed>}> Data provider payload for both
-     *                                                                                     structured and API expectations.
+     * @return iterable<string, array{string, array<string, mixed>, array<string, mixed>, array<string, mixed>}> Data provider
+     *                                                                                                          payload for
+     *                                                                                                          structured,
+     *                                                                                                          API and raw
+     *                                                                                                          model
+     *                                                                                                          expectations.
      */
     public static function provideAll(): iterable
     {
         foreach (self::all() as $fixture => $expectation) {
-            yield $fixture => [$fixture, $expectation['structured'], $expectation['api']];
+            yield $fixture => [$fixture, $expectation['structured'], $expectation['api'], $expectation['model']];
         }
     }
 
     /**
-     * Returns the structured and API expectations for a given fixture.
+     * Returns the structured, API and model expectations for a given fixture.
      *
-     * @return array{structured: array<string, mixed>, api: array<string, mixed>}
+     * @return array{structured: array<string, mixed>, api: array<string, mixed>, model: array<string, mixed>}
      */
     public static function get(string $fixture): array
     {
@@ -77,7 +81,7 @@ final class ExifVersionExpectations
     }
 
     /**
-     * @return array<string, array{structured: array<string, mixed>, api: array<string, mixed>}> Cached expectations.
+     * @return array<string, array{structured: array<string, mixed>, api: array<string, mixed>, model: array<string, mixed>}> Cached expectations.
      */
     private static function all(): array
     {
@@ -90,7 +94,7 @@ final class ExifVersionExpectations
             throw new RuntimeException(sprintf('Unable to read EXIF expectations from %s', self::EXPECTATIONS_FILE));
         }
 
-        /** @var array<string, array{structured: array<string, mixed>, api: array<string, mixed>}> $data */
+        /** @var array<string, array{structured: array<string, mixed>, api: array<string, mixed>, model: array<string, mixed>}> $data */
         $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
         self::$cache = $data;

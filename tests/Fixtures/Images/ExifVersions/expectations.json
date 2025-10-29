@@ -70,6 +70,13 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "1.00",
+            "exifProfile": "1.0",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": null,
+            "tiffEpStandardString": null
         }
     },
     "exif-1-1.jpg": {
@@ -143,6 +150,13 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "1.10",
+            "exifProfile": "1.1",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": null,
+            "tiffEpStandardString": null
         }
     },
     "exif-2-1.jpg": {
@@ -216,6 +230,13 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "2.10",
+            "exifProfile": "2.1",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": null,
+            "tiffEpStandardString": null
         }
     },
     "exif-2-2.jpg": {
@@ -289,6 +310,13 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "2.20",
+            "exifProfile": "2.2",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": null,
+            "tiffEpStandardString": null
         }
     },
     "exif-2-21.jpg": {
@@ -362,6 +390,13 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "2.21",
+            "exifProfile": "2.21",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": null,
+            "tiffEpStandardString": null
         }
     },
     "exif-2-3.jpg": {
@@ -440,6 +475,18 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "2.30",
+            "exifProfile": "2.3",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": [
+                2,
+                0,
+                0,
+                0
+            ],
+            "tiffEpStandardString": "2.0.0.0"
         }
     },
     "exif-2-31.jpg": {
@@ -518,6 +565,18 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "2.31",
+            "exifProfile": "2.31",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": [
+                2,
+                0,
+                0,
+                1
+            ],
+            "tiffEpStandardString": "2.0.0.1"
         }
     },
     "exif-2-32.jpg": {
@@ -596,6 +655,18 @@
                 "previewMimeType": null,
                 "previewScale": null
             }
+        },
+        "model": {
+            "exifVersion": "2.32",
+            "exifProfile": "2.32",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": [
+                2,
+                0,
+                0,
+                2
+            ],
+            "tiffEpStandardString": "2.0.0.2"
         }
     },
     "exif-3-0.jpg": {
@@ -675,6 +746,19 @@
                 "previewMimeType": null,
                 "previewScale": 0.5
             }
+        },
+        "model": {
+            "exifVersion": "3.00",
+            "exifProfile": "3.0",
+            "flashpixVersion": "1.00",
+            "tiffEpStandardId": [
+                48,
+                49,
+                48,
+                48,
+                0
+            ],
+            "tiffEpStandardString": "0100"
         }
     }
 }
