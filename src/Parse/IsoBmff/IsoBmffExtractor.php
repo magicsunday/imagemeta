@@ -670,6 +670,9 @@ final readonly class IsoBmffExtractor
             throw new ParseError('meta box truncated');
         }
 
+        // EXIF 3.0 Annex A.2 and EXIF 2.32 Annex A.2 describe how the `meta` box aggregates
+        // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
+        // channel before normalising the referenced data.
         $payloads = $this->collectDirectPayloads($meta);
 
         foreach ($payloads['directExif'] as $blob) {
@@ -729,6 +732,9 @@ final readonly class IsoBmffExtractor
         foreach ($this->walkChildren($meta, 4) as $child) {
             switch ($child->type) {
                 case self::BOX_EXIF:
+                    // EXIF 3.0 Annex A.2.1 and EXIF 2.32 Annex A.2.1 formalise the dedicated
+                    // `Exif` box wrapper inside ISO BMFF containers, including the redundant
+                    // APP1 signature that we trim via `normalizeExifBlob()` below.
                     $blob         = $this->readAll($child->window);
                     $directExif[] = $this->normalizeExifBlob($blob);
                     break;
@@ -785,6 +791,8 @@ final readonly class IsoBmffExtractor
         $xmpItemIds  = [];
 
         // Collect item IDs that advertise EXIF/XMP payloads via their metadata descriptors.
+        // EXIF 3.0 Annex A.2.3 and EXIF 2.32 Annex A.2.3 map item types and MIME hints that
+        // flag Exif or XMP payloads, so we treat those descriptors as authoritative signals.
         foreach ($itemInfos as $info) {
             if ($this->isExifItem($info)) {
                 $exifItemIds[] = $info['id'];
@@ -887,6 +895,9 @@ final readonly class IsoBmffExtractor
      */
     private function normalizeExifBlob(string $blob): string
     {
+        // EXIF 3.0 §4.5.2 and EXIF 2.32 §4.5.2 retain the APP1 "Exif\0\0" signature when the
+        // payload is repackaged into ISO BMFF boxes; the TIFF parser expects the stream to start
+        // at the byte-order marker, so we strip the redundant header if present.
         return str_starts_with($blob, "Exif\0\0") ? substr($blob, 6) : $blob;
     }
 
