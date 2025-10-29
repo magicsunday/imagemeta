@@ -19,10 +19,20 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * @phpstan-import-type StructuredExpectations from \MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions
+ * @phpstan-import-type ApiExpectations from \MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions
+ * @phpstan-import-type ModelExpectations from \MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions
+ */
 final class ExifBackfillMatrixTest extends TestCase
 {
     use ExifExpectationAssertions;
 
+    /**
+     * @phpstan-param StructuredExpectations $expectedStructured
+     * @phpstan-param ApiExpectations        $expectedApi
+     * @phpstan-param ModelExpectations      $expectedModel
+     */
     #[Test]
     #[DataProviderExternal(ExifVersionExpectations::class, 'provideAll')]
     public function extractsFallbackMetadataFromReferenceImages(

@@ -13,37 +13,86 @@ use PHPUnit\Framework\Assert;
 
 /**
  * Shared assertions for verifying EXIF expectation matrices.
+ *
+ * @phpstan-type StructuredExpectations array{
+ *     standards: array{
+ *         exifVersion: ?string,
+ *         profile: ?string,
+ *         flashpixVersion: ?string,
+ *         tiffEpStandardId: list<int>|null,
+ *         tiffEpStandardString: ?string,
+ *     },
+ *     exposure: array{iso: ?int},
+ *     capture: array{
+ *         dateTimeOriginal: ?string,
+ *         offsetTimeOriginal: ?string,
+ *         subSecTimeOriginal: ?string,
+ *     },
+ *     image: array{
+ *         userComment: ?string,
+ *         userCommentEncoding: ?string,
+ *     },
+ *     interop: array{
+ *         index: ?string,
+ *         version: ?string,
+ *         fileFormat: ?string,
+ *         width: ?int,
+ *         length: ?int,
+ *     },
+ *     preview: PreviewExpectations,
+ *     makerNotes: ?array{vendor: string, length: int, sha1: string, isSafe: ?bool},
+ *     environment: array{
+ *         temperatureC: ?float,
+ *         humidityPercent: ?float,
+ *         pressureHpa: ?float,
+ *     },
+ *     sensor: array{spatialFrequencyResponse: array<string, mixed>|null},
+ * }
+ *
+ * @phpstan-type ApiExpectations array{
+ *     iso: ?int,
+ *     dateTimeOriginal: ?string,
+ *     userComment: ?string,
+ *     userCommentEncoding: ?string,
+ *     interop: array{
+ *         index: ?string,
+ *         version: ?string,
+ *         fileFormat: ?string,
+ *         width: ?int,
+ *         length: ?int,
+ *     },
+ *     preview: PreviewExpectations,
+ * }
+ *
+ * @phpstan-type ModelExpectations array{
+ *     exifVersion: ?string,
+ *     exifProfile: string,
+ *     flashpixVersion: ?string,
+ *     tiffEpStandardId: list<int>|null,
+ *     tiffEpStandardString: ?string,
+ * }
+ *
+ * @phpstan-type PreviewExpectations array{
+ *     hasThumbnail: ?bool,
+ *     hasPreview: ?bool,
+ *     previewOffset: ?int,
+ *     previewLength: ?int,
+ *     previewWidth: ?int,
+ *     previewHeight: ?int,
+ *     previewBitDepth: ?int,
+ *     previewCompression: ?int,
+ *     previewCompressionName: ?string,
+ *     previewColorSpace: ?int,
+ *     previewColorSpaceName: ?string,
+ *     previewEncoding: ?string,
+ *     previewMimeType: ?string,
+ *     previewScale: ?float,
+ * }
  */
 trait ExifExpectationAssertions
 {
     /**
-     * @param Metadata $metadata
-     * @param array{
-     *     standards: array{exifVersion:?string, profile:?string, flashpixVersion:?string, tiffEpStandardId:?array, tiffEpStandardString:?string},
-     *     exposure: array{iso:?int},
-     *     capture: array{dateTimeOriginal:?string, offsetTimeOriginal:?string, subSecTimeOriginal:?string},
-     *     image: array{userComment:?string, userCommentEncoding:?string},
-     *     interop: array{index:?string, version:?string, fileFormat:?string, width:?int, length:?int},
-     *     preview: array{
-     *         hasThumbnail:?bool,
-     *         hasPreview:?bool,
-     *         previewOffset:?int,
-     *         previewLength:?int,
-     *         previewWidth:?int,
-     *         previewHeight:?int,
-     *         previewBitDepth:?int,
-     *         previewCompression:?int,
-     *         previewCompressionName:?string,
-     *         previewColorSpace:?int,
-     *         previewColorSpaceName:?string,
-     *         previewEncoding:?string,
-     *         previewMimeType:?string,
-     *         previewScale:?float,
-     *     },
-     *     makerNotes:?array{vendor:string,length:int,sha1:string,isSafe:?bool},
-     *     environment: array{temperatureC:?float, humidityPercent:?float, pressureHpa:?float},
-     *     sensor: array{spatialFrequencyResponse:?array},
-     * } $expected
+     * @phpstan-param StructuredExpectations $expected
      */
     private static function assertStructuredMatches(string $fixture, Metadata $metadata, array $expected): void
     {
@@ -109,29 +158,7 @@ trait ExifExpectationAssertions
 
         $expectedEnv = $expected['environment'];
         $raw = $metadata->exifDoc;
-        $environmentMatchers = [
-            'temperatureC'    => 'temperatureCelsius',
-            'humidityPercent' => 'humidityPercent',
-            'pressureHpa'     => 'pressureHPa',
-        ];
-
-        foreach ($environmentMatchers as $key => $method) {
-            $expectedValue = $expectedEnv[$key];
-            $actualValue   = $raw?->$method();
-
-            if ($expectedValue === null) {
-                Assert::assertNull($actualValue, sprintf('%s: %s', $fixture, ucfirst($key)));
-                continue;
-            }
-
-            Assert::assertNotNull($actualValue, sprintf('%s: %s presence', $fixture, ucfirst($key)));
-            Assert::assertEqualsWithDelta(
-                $expectedValue,
-                $actualValue,
-                1e-6,
-                sprintf('%s: %s value', $fixture, ucfirst($key)),
-            );
-        }
+        self::assertEnvironmentMatches($fixture, $expectedEnv, $raw);
 
         Assert::assertSame(
             $expected['sensor']['spatialFrequencyResponse'],
@@ -141,29 +168,7 @@ trait ExifExpectationAssertions
     }
 
     /**
-     * @param array{
-     *     iso:?int,
-     *     dateTimeOriginal:?string,
-     *     userComment:?string,
-     *     userCommentEncoding:?string,
-     *     interop: array{index:?string, version:?string, fileFormat:?string, width:?int, length:?int},
-     *     preview: array{
-     *         hasThumbnail:?bool,
-     *         hasPreview:?bool,
-     *         previewOffset:?int,
-     *         previewLength:?int,
-     *         previewWidth:?int,
-     *         previewHeight:?int,
-     *         previewBitDepth:?int,
-     *         previewCompression:?int,
-     *         previewCompressionName:?string,
-     *         previewColorSpace:?int,
-     *         previewColorSpaceName:?string,
-     *         previewEncoding:?string,
-     *         previewMimeType:?string,
-     *         previewScale:?float,
-     *     },
-     * } $expected
+     * @phpstan-param ApiExpectations $expected
      */
     private static function assertApiMatches(string $fixture, ApiExifDocument $document, array $expected): void
     {
@@ -194,13 +199,7 @@ trait ExifExpectationAssertions
     }
 
     /**
-     * @param array{
-     *     exifVersion:?string,
-     *     exifProfile:string,
-     *     flashpixVersion:?string,
-     *     tiffEpStandardId:?array,
-     *     tiffEpStandardString:?string,
-     * } $expected
+     * @phpstan-param ModelExpectations $expected
      */
     private static function assertModelMatches(string $fixture, ?ModelExifDocument $document, array $expected): void
     {
@@ -214,22 +213,7 @@ trait ExifExpectationAssertions
     }
 
     /**
-     * @param array{
-     *     hasThumbnail:?bool,
-     *     hasPreview:?bool,
-     *     previewOffset:?int,
-     *     previewLength:?int,
-     *     previewWidth:?int,
-     *     previewHeight:?int,
-     *     previewBitDepth:?int,
-     *     previewCompression:?int,
-     *     previewCompressionName:?string,
-     *     previewColorSpace:?int,
-     *     previewColorSpaceName:?string,
-     *     previewEncoding:?string,
-     *     previewMimeType:?string,
-     *     previewScale:?float,
-     * } $expected
+     * @phpstan-param PreviewExpectations $expected
      */
     private static function assertPreviewMatches(string $fixture, array $expected, PreviewValue|StructuredPreview $preview): void
     {
@@ -266,5 +250,31 @@ trait ExifExpectationAssertions
             Assert::assertNotNull($preview->previewScale, sprintf('%s: Preview scale', $fixture));
             Assert::assertEqualsWithDelta($expected['previewScale'], $preview->previewScale, 1e-6, sprintf('%s: Preview scale value', $fixture));
         }
+    }
+
+    /**
+     * @phpstan-param array{temperatureC: ?float, humidityPercent: ?float, pressureHpa: ?float} $expected
+     */
+    private static function assertEnvironmentMatches(string $fixture, array $expected, ?ModelExifDocument $document): void
+    {
+        $actualTemperature = $document?->temperatureCelsius();
+        $actualHumidity    = $document?->humidityPercent();
+        $actualPressure    = $document?->pressureHPa();
+
+        self::assertOptionalFloat($fixture, 'TemperatureC', $expected['temperatureC'], $actualTemperature);
+        self::assertOptionalFloat($fixture, 'HumidityPercent', $expected['humidityPercent'], $actualHumidity);
+        self::assertOptionalFloat($fixture, 'PressureHpa', $expected['pressureHpa'], $actualPressure);
+    }
+
+    private static function assertOptionalFloat(string $fixture, string $label, ?float $expected, ?float $actual): void
+    {
+        if ($expected === null) {
+            Assert::assertNull($actual, sprintf('%s: %s', $fixture, $label));
+
+            return;
+        }
+
+        Assert::assertNotNull($actual, sprintf('%s: %s presence', $fixture, $label));
+        Assert::assertEqualsWithDelta($expected, $actual, 1e-6, sprintf('%s: %s value', $fixture, $label));
     }
 }
