@@ -1660,6 +1660,11 @@ final class TiffExifReader
 
     /**
      * Reads a BigTIFF offset using the configured field width.
+     *
+     * EXIF 3.0 §4.5.2; EXIF 2.32 §4.5.2; TIFF 6.0 §8 define the BigTIFF offset field
+     * width (8 or 16 bytes), null-pointer semantics and the handling of offsets that
+     * exceed native integer precision, so this helper normalises the raw value into
+     * the closest PHP representation.
      */
     private function readBigTiffOffsetValue(): int|UInt64|string
     {
