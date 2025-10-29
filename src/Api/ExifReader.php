@@ -37,11 +37,14 @@ final class ExifReader
     }
 
     /**
-     * Reads EXIF metadata from JPEG and ISO-BMFF (e.g. HEIC, MOV, MP4) containers.
+     * Reads EXIF metadata from JPEG and ISO-BMFF (e.g. HEIC, MOV, MP4) containers while capturing
+     * fallback dimensions and precision whenever the file format exposes them outside of EXIF.
      *
      * @param string $path Absolute or relative path to the media file that should be parsed.
      *
-     * @return ExifDocument Value object with parsed EXIF data and fallback image attributes.
+     * @return ExifDocument Value object providing the parsed EXIF data alongside fallback width,
+     *                      height, and sample precision sourced from the container when the tags
+     *                      are absent inside the metadata.
      *
      * @throws \MagicSunday\ImageMeta\Core\ParseError When container detection or downstream parsers encounter malformed data.
      * @throws \MagicSunday\ImageMeta\Core\BoundsError When the stream ends before the required structures can be read.
