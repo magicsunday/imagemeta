@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\Value\RunTime;
 
+use function array_any;
 use function array_flip;
 use function array_is_list;
 use function array_key_exists;
