@@ -23,7 +23,12 @@ use function trim;
 final class ExifCapabilities
 {
     /**
-     * Maps a raw or normalised EXIF version string to the capability profile identifier.
+     * Normalises vendor provided EXIF version identifiers to known capability profile codes.
+     * Trims whitespace, removes trailing null bytes and maps digit-only fallbacks so unusual
+     * encodings still yield the canonical profile.
+     *
+     * @param ?string $exifVersion Raw EXIF version string as read from metadata, possibly null or padded.
+     * @return string Canonical capability profile identifier or "unknown" when normalisation fails.
      */
     public static function fromVersion(?string $exifVersion): string
     {
