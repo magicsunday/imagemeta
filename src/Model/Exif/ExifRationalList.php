@@ -26,7 +26,9 @@ final readonly class ExifRationalList
     public array $values;
 
     /**
-     * @param list<ExifRational> $values Ordered list of rational components.
+     * @param array<int, mixed> $values Ordered list of rational components.
+     *
+     * @throws InvalidArgumentException If the provided values are not a sequential list of ExifRational objects.
      */
     public function __construct(array $values)
     {
