@@ -29,7 +29,7 @@ final readonly class ExifNumericList
     public array $values;
 
     /**
-     * @param array<int|string, mixed> $values Ordered list of numeric components.
+     * @param list<int|float|UInt64> $values Ordered list of numeric components.
      */
     public function __construct(array $values)
     {
@@ -52,7 +52,7 @@ final readonly class ExifNumericList
     /**
      * Returns the list of numeric values as a plain array.
      *
-     * @return list<int|float>
+     * @return list<int|float|UInt64>
      */
     public function toArray(): array
     {

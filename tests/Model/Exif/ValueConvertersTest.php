@@ -97,17 +97,17 @@ final class ValueConvertersTest extends TestCase
     /**
      * Ensures invalid values cannot be converted and return null instead.
      *
-     * @param mixed $value The invalid rational input to convert.
+     * @param ExifRational|ExifNumericList|string|null $value The invalid rational input to convert.
      */
     #[Test]
     #[DataProvider('provideInvalidInputs')]
-    public function returnsNullForInvalidRationalInputs(mixed $value): void
+    public function returnsNullForInvalidRationalInputs(ExifRational|ExifNumericList|string|null $value): void
     {
         self::assertNull(ValueConverters::rationalToFloat($value));
     }
 
     /**
-     * @return iterable<string, array{mixed}>
+     * @return iterable<string, array{ExifRational|ExifNumericList|string|null}>
      */
     public static function provideInvalidInputs(): iterable
     {
@@ -118,12 +118,12 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param mixed      $value    The APEX encoded value.
+     * @param ExifRational|string $value    The APEX encoded value.
      * @param float|null $expected The expected f-number.
      */
     #[Test]
     #[DataProvider('provideApexValues')]
-    public function convertsApexValuesToFNumber(mixed $value, ?float $expected): void
+    public function convertsApexValuesToFNumber(ExifRational|string $value, ?float $expected): void
     {
         $result = ValueConverters::apexToFNumber($value);
 
@@ -189,7 +189,7 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{mixed, float|null}>
+     * @return iterable<string, array{ExifRational|string, float|null}>
      */
     public static function provideApexValues(): iterable
     {
@@ -200,18 +200,18 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param mixed      $value    Raw battery level value.
+     * @param ExifRational|string|null $value    Raw battery level value.
      * @param float|null $expected Normalised percentage value.
      */
     #[Test]
     #[DataProvider('provideBatteryLevelValues')]
-    public function normalisesBatteryLevelToPercent(mixed $value, ?float $expected): void
+    public function normalisesBatteryLevelToPercent(ExifRational|string|null $value, ?float $expected): void
     {
         self::assertSame($expected, ValueConverters::batteryLevelToPercent($value));
     }
 
     /**
-     * @return iterable<string, array{mixed, float|null}>
+     * @return iterable<string, array{ExifRational|string, float|null}>
      */
     public static function provideBatteryLevelValues(): iterable
     {
@@ -228,12 +228,12 @@ final class ValueConvertersTest extends TestCase
 
     /**
      * @param string|null $ref      The speed reference.
-     * @param mixed       $value    The raw speed value.
+     * @param ExifRational|string $value    The raw speed value.
      * @param float|null  $expected The expected metres per second.
      */
     #[Test]
     #[DataProvider('provideGpsSpeedValues')]
-    public function convertsGpsSpeedToMetresPerSecond(?string $ref, mixed $value, ?float $expected): void
+    public function convertsGpsSpeedToMetresPerSecond(?string $ref, ExifRational|string $value, ?float $expected): void
     {
         $result = ValueConverters::gpsSpeedToMs($ref, $value);
 
@@ -248,7 +248,7 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string|null, mixed, float|null}>
+     * @return iterable<string, array{string|null, ExifRational|string, float|null}>
      */
     public static function provideGpsSpeedValues(): iterable
     {
@@ -288,18 +288,18 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param mixed       $value    The raw offset representation.
+     * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset representation.
      * @param string|null $expected The expected canonical offset string.
      */
     #[Test]
     #[DataProvider('provideOffsetStrings')]
-    public function normalisesOffsetStrings(mixed $value, ?string $expected): void
+    public function normalisesOffsetStrings(int|float|string|ExifRational|ExifRationalList|null $value, ?string $expected): void
     {
         self::assertSame($expected, ValueConverters::parseOffsetString($value));
     }
 
     /**
-     * @return iterable<string, array{mixed, string|null}>
+     * @return iterable<string, array{int|float|string|ExifRational|ExifRationalList|null, string|null}>
      */
     public static function provideOffsetStrings(): iterable
     {
@@ -314,18 +314,18 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param mixed    $value    The raw offset value.
+     * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset value.
      * @param int|null $expected Expected minutes from UTC.
      */
     #[Test]
     #[DataProvider('provideOffsetMinutes')]
-    public function convertsOffsetToMinutes(mixed $value, ?int $expected): void
+    public function convertsOffsetToMinutes(int|float|string|ExifRational|ExifRationalList|null $value, ?int $expected): void
     {
         self::assertSame($expected, ValueConverters::offsetToMinutes($value));
     }
 
     /**
-     * @return iterable<string, array{mixed, int|null}>
+     * @return iterable<string, array{int|float|string|ExifRational|ExifRationalList|null, int|null}>
      */
     public static function provideOffsetMinutes(): iterable
     {
