@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\Value\RunTime;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -57,8 +56,6 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
-
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
@@ -96,8 +93,6 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
-
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
@@ -132,8 +127,6 @@ final class AppleDecoderTest extends TestCase
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         self::assertSame('Apple', $metadata->vendor());
         self::assertSame(strlen($raw), $metadata->length());
         self::assertSame(sha1($raw), $metadata->sha1());
@@ -167,8 +160,6 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
-
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('padded', $apple->contentIdentifier);
@@ -183,8 +174,6 @@ final class AppleDecoderTest extends TestCase
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -213,8 +202,6 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
-
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame(2, $apple->livePhotoIndex);
@@ -227,8 +214,6 @@ final class AppleDecoderTest extends TestCase
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
 
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
@@ -275,6 +260,9 @@ final class AppleDecoderTest extends TestCase
 
     #[Test]
     #[DataProvider('makerNoteVersionProvider')]
+    /**
+     * @param array{values:list<int>}|list<int>|int $makerNoteVersion
+     */
     public function buildAppleMakerNotesNormalisesMakerNoteVersionFromIntegers(array|int $makerNoteVersion, string $expected): void
     {
         $decoder = new AppleDecoder();
@@ -292,7 +280,7 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{array{values: list<int>}|list<int>|int, string}>
+     * @return iterable<int|string, array{array{values: list<int>}|list<int>|int, string}>
      */
     public static function makerNoteVersionProvider(): iterable
     {
@@ -395,7 +383,7 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * @return iterable<int, array{int, string}>
+     * @return iterable<int|string, array{int, string}>
      */
     public static function hdrImageTypeProvider(): iterable
     {
@@ -425,7 +413,7 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * @return iterable<int, array{int, string}>
+     * @return iterable<int|string, array{int, string}>
      */
     public static function imageCaptureTypeProvider(): iterable
     {
@@ -453,7 +441,6 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         $apple = $metadata->apple();
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('textual', $apple->contentIdentifier);
@@ -539,11 +526,12 @@ final class AppleDecoderTest extends TestCase
         self::assertInstanceOf(AppleMakerNotes::class, $notes);
         self::assertSame(1200, $notes->livePhotoIndex);
         self::assertEqualsWithDelta(2.0, $notes->livePhotoTime, 1e-12);
-        self::assertInstanceOf(RunTime::class, $notes->runTime);
-        self::assertSame(2, $notes->runTime?->epoch);
-        self::assertSame(600, $notes->runTime?->timescale);
-        self::assertSame(1500, $notes->runTime?->value);
-        self::assertSame(5, $notes->runTime?->flags);
+        $runTime = $notes->runTime;
+        self::assertInstanceOf(RunTime::class, $runTime);
+        self::assertSame(2, $runTime->epoch);
+        self::assertSame(600, $runTime->timescale);
+        self::assertSame(1500, $runTime->value);
+        self::assertSame(5, $runTime->flags);
     }
 
     #[Test]
@@ -601,7 +589,7 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * @return iterable<string, array{string, string|int, string, bool}>
+     * @return iterable<int|string, array{string, string|int, string, bool}>
      */
     public static function stabilityFlagProvider(): iterable
     {
@@ -630,7 +618,6 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode('Apple iOS' . str_repeat("\x00", 32), 'Apple', 'iPhone');
 
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata);
         self::assertNull($metadata->apple());
     }
 

@@ -6,13 +6,14 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use ReflectionClass;
 use PHPUnit\Framework\TestCase;
 
 final class SemanticStyleTest extends TestCase
 {
     public function testFromQuickTimeParsesModernStructure(): void
     {
-        $meta = new QuickTimeMeta([
+        $meta = $this->createQuickTimeMeta([
             'SemanticStyle' => [
                 '_0' => 'Vivid',
                 '_2' => 0.15,
@@ -41,5 +42,21 @@ final class SemanticStyleTest extends TestCase
     public function testFromValueReturnsNullWhenNoComponents(): void
     {
         self::assertNull(SemanticStyle::fromValue(['values' => []]));
+    }
+
+    /**
+     * @param array<string, mixed> $keys
+     */
+    private function createQuickTimeMeta(array $keys): QuickTimeMeta
+    {
+        $reflection = new ReflectionClass(QuickTimeMeta::class);
+        /** @var QuickTimeMeta $meta */
+        $meta = $reflection->newInstanceWithoutConstructor();
+
+        $property = $reflection->getProperty('keys');
+        $property->setAccessible(true);
+        $property->setValue($meta, $keys);
+
+        return $meta;
     }
 }

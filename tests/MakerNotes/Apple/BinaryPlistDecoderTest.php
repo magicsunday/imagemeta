@@ -57,10 +57,10 @@ final class BinaryPlistDecoderTest extends TestCase
         $keyObject = $keyMarker . $key;
 
         $uidLength = strlen($uidBytes);
-        $this->assertGreaterThan(0, $uidLength);
+        self::assertGreaterThan(0, $uidLength);
 
         if ($uidLength > 0x0F) {
-            $this->fail('Test fixture generator does not support UID payloads larger than 15 bytes.');
+            self::fail('Test fixture generator does not support UID payloads larger than 15 bytes.');
         }
 
         $uidMarker = chr(0x80 | ($uidLength - 1));
