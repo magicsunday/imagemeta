@@ -27,6 +27,8 @@ trait EnumFromIntStringNullable
      * numeric strings to integers before forwarding them to {@see self::tryFrom()}.
      *
      * @param int|string|null $value Raw EXIF value as delivered by the decoder.
+     *
+     * @return self|null Normalised enum value or null when the payload is invalid.
      */
     public static function fromExifValue(int|string|null $value): ?self
     {
