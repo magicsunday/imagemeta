@@ -26,8 +26,10 @@ final class ExifReader
     private readonly TiffExifReader $tiffReader;
 
     /**
-     * Allows injecting a custom TIFF EXIF reader instance, e.g. for sharing caches in
-     * higher-level code, while falling back to the default reader when none is provided.
+     * @param TiffExifReader|null $tiffReader Optional TIFF EXIF reader reused across calls.
+     *
+     * Providing a custom reader allows sharing caches or maker-notes registries in higher-level
+     * code while defaulting to a new reader instance when no dependency is supplied.
      */
     public function __construct(?TiffExifReader $tiffReader = null)
     {
@@ -40,6 +42,9 @@ final class ExifReader
      * @param string $path Absolute or relative path to the media file that should be parsed.
      *
      * @return ExifDocument Value object with parsed EXIF data and fallback image attributes.
+     *
+     * @throws \MagicSunday\ImageMeta\Core\ParseError When container detection or downstream parsers encounter malformed data.
+     * @throws \MagicSunday\ImageMeta\Core\BoundsError When the stream ends before the required structures can be read.
      */
     public function read(string $path): ExifDocument
     {
