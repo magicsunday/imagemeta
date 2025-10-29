@@ -14,6 +14,10 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMapper;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistValue;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
@@ -149,10 +153,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
         try {
-            return (new BinaryPlistDecoder())->decode($raw);
+            $value = (new BinaryPlistDecoder())->decode($raw);
         } catch (ParseError) {
             return null;
         }
+
+        return $this->plistValueToPhp($value);
     }
 
     /**
@@ -496,7 +502,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     {
         if ($this->isKeyedArchive($dictionary)) {
             try {
-                return (new KeyedArchiveUnarchiver())->unarchive($dictionary);
+                $plist = $this->nativeToPlistValue($dictionary);
+                if (!$plist instanceof ApplePlistDictionary) {
+                    return null;
+                }
+
+                $resolved = (new KeyedArchiveUnarchiver())->unarchive($plist);
+                $native   = $this->plistValueToPhp($resolved);
+
+                return is_array($native) && !array_is_list($native) ? $native : null;
             } catch (ParseError) {
                 return null;
             }
@@ -508,10 +522,81 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         try {
-            return (new KeyedArchiveUnarchiver())->unarchive($normalised);
+            $plist = $this->nativeToPlistValue($normalised);
+            if (!$plist instanceof ApplePlistDictionary) {
+                return null;
+            }
+
+            $resolved = (new KeyedArchiveUnarchiver())->unarchive($plist);
+            $native   = $this->plistValueToPhp($resolved);
+
+            return is_array($native) && !array_is_list($native) ? $native : null;
         } catch (ParseError) {
             return null;
         }
+    }
+
+    /**
+     * Converts a property list value into native PHP types.
+     *
+     * @return array<int|string, mixed>|bool|float|int|string|null
+     */
+    private function plistValueToPhp(ApplePlistValue $value): array|string|int|float|bool|null
+    {
+        if ($value instanceof ApplePlistScalar) {
+            return $value->value();
+        }
+
+        if ($value instanceof ApplePlistArray) {
+            $result = [];
+            foreach ($value->values() as $entry) {
+                $result[] = $this->plistValueToPhp($entry);
+            }
+
+            return $result;
+        }
+
+        if ($value instanceof ApplePlistDictionary) {
+            $result = [];
+            foreach ($value->entries() as $key => $entry) {
+                $result[$key] = $this->plistValueToPhp($entry);
+            }
+
+            return $result;
+        }
+
+        throw new ParseError('Unsupported property list value.');
+    }
+
+    private function nativeToPlistValue(mixed $value): ApplePlistValue
+    {
+        if (!is_array($value)) {
+            if (is_bool($value) || is_int($value) || is_float($value) || is_string($value) || $value === null) {
+                return new ApplePlistScalar($value);
+            }
+
+            throw new ParseError('Unsupported scalar property list value.');
+        }
+
+        if (array_is_list($value)) {
+            $entries = [];
+            foreach ($value as $entry) {
+                $entries[] = $this->nativeToPlistValue($entry);
+            }
+
+            return new ApplePlistArray($entries);
+        }
+
+        $entries = [];
+        foreach ($value as $key => $entry) {
+            if (!is_string($key)) {
+                throw new ParseError('Property list dictionaries must use string keys.');
+            }
+
+            $entries[$key] = $this->nativeToPlistValue($entry);
+        }
+
+        return new ApplePlistDictionary($entries);
     }
 
     /**
