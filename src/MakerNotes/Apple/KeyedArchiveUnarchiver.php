@@ -13,29 +13,23 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 
-use function array_is_list;
 use function array_key_exists;
 use function count;
-use function is_array;
 use function is_int;
 use function is_string;
 
 /**
  * Minimal keyed archive unarchiver converting `CF$UID` based dictionaries into associative arrays.
- *
- * @phpstan-type KeyedArchiveValue array<int|string, mixed>|bool|float|int|string|null
- * @phpstan-type KeyedArchiveList list<KeyedArchiveValue>
- * @phpstan-type KeyedArchiveDictionary array<int|string, KeyedArchiveValue>
  */
 final class KeyedArchiveUnarchiver
 {
     /**
-     * @var KeyedArchiveList
+     * @var list<ApplePlistValue>
      */
     private array $objects = [];
 
     /**
-     * @var array<int, KeyedArchiveValue>
+     * @var array<int, ApplePlistValue>
      */
     private array $resolved = [];
 
@@ -44,110 +38,106 @@ final class KeyedArchiveUnarchiver
      */
     private array $inProgress = [];
 
-    /**
-     * @param array<int|string, mixed> $archive
-     *
-     * @return KeyedArchiveDictionary
-     */
-    public function unarchive(array $archive): array
+    public function unarchive(ApplePlistDictionary $archive): ApplePlistDictionary
     {
-        if (!array_key_exists('$objects', $archive)) {
-            throw new ParseError('The keyed archive does not define any objects.');
-        }
-
-        $objects = $archive['$objects'];
-        if (!is_array($objects) || !array_is_list($objects) || $objects === []) {
+        $objectsValue = $archive->get('$objects');
+        if (!$objectsValue instanceof ApplePlistArray || $objectsValue->isEmpty()) {
             throw new ParseError('The keyed archive object table is malformed.');
         }
 
-        if (!array_key_exists('$top', $archive) || !is_array($archive['$top'])) {
+        $topValue = $archive->get('$top');
+        if (!$topValue instanceof ApplePlistDictionary) {
             throw new ParseError('The keyed archive is missing the top object reference.');
         }
 
-        $top = $archive['$top'];
-        if (!array_key_exists('root', $top) || !is_array($top['root'])) {
+        $rootValue = $topValue->get('root');
+        if (!$rootValue instanceof ApplePlistDictionary) {
             throw new ParseError('The keyed archive does not define a root object.');
         }
 
-        /** @var KeyedArchiveList $objects */
-        $this->objects    = $objects;
+        $this->objects    = $objectsValue->values();
         $this->resolved   = [];
         $this->inProgress = [];
 
-        $root = $this->resolveValue($top['root']);
-        if (!is_array($root) || array_is_list($root)) {
+        $root = $this->resolveValue($rootValue);
+        if (!$root instanceof ApplePlistDictionary) {
             throw new ParseError('The keyed archive root object must be a dictionary.');
         }
 
-        /** @var KeyedArchiveDictionary $root */
         return $root;
     }
 
-    /**
-     * @param KeyedArchiveValue $value
-     *
-     * @return KeyedArchiveValue
-     */
-    private function resolveValue(array|bool|float|int|string|null $value): array|bool|float|int|string|null
+    private function resolveValue(ApplePlistValue $value): ApplePlistValue
     {
-        if (!is_array($value)) {
-            return $value;
-        }
+        if ($value instanceof ApplePlistDictionary) {
+            if ($this->isUidReference($value)) {
+                $uidValue = $value->get('CF$UID');
+                if (!$uidValue instanceof ApplePlistScalar) {
+                    throw new ParseError('The keyed archive UID reference is invalid.');
+                }
 
-        if ($this->isUidReference($value)) {
-            $uid = $value['CF$UID'];
-            if (!is_int($uid)) {
-                throw new ParseError('The keyed archive UID reference is invalid.');
+                $uid = $uidValue->value();
+                if (!is_int($uid)) {
+                    throw new ParseError('The keyed archive UID reference is invalid.');
+                }
+
+                return $this->resolveUid($uid);
             }
 
-            return $this->resolveUid($uid);
-        }
-
-        if (array_key_exists('NS.keys', $value) && array_key_exists('NS.objects', $value)) {
-            /** @var array<int|string, mixed> $value */
-            return $this->resolveDictionary($value);
-        }
-
-        if (array_key_exists('NS.objects', $value) && !array_key_exists('NS.keys', $value)) {
-            /** @var array<int|string, mixed> $value */
-            return $this->resolveArray($value);
-        }
-
-        if (array_is_list($value)) {
-            $result = [];
-            foreach ($value as $entry) {
-                /** @var KeyedArchiveValue $entry */
-                $result[] = $this->resolveValue($entry);
+            if (
+                $value->has('NS.keys')
+                && $value->has('NS.objects')
+            ) {
+                return $this->resolveDictionary($value);
             }
 
-            return $result;
-        }
-
-        $result = [];
-        foreach ($value as $key => $entry) {
-            if ($key === '$class') {
-                continue;
+            if ($value->has('NS.objects') && !$value->has('NS.keys')) {
+                return $this->resolveArray($value);
             }
 
-            /** @var KeyedArchiveValue $entry */
-            $result[$key] = $this->resolveValue($entry);
+            $resolved = [];
+            foreach ($value->entries() as $key => $entry) {
+                if ($key === '$class') {
+                    continue;
+                }
+
+                $resolved[$key] = $this->resolveValue($entry);
+            }
+
+            return new ApplePlistDictionary($resolved);
         }
 
-        return $result;
+        if ($value instanceof ApplePlistArray) {
+            $resolved = [];
+            foreach ($value->values() as $entry) {
+                $resolved[] = $this->resolveValue($entry);
+            }
+
+            return new ApplePlistArray($resolved);
+        }
+
+        return $value;
     }
 
-    /**
-     * @param array<int|string, mixed> $reference
-     */
-    private function isUidReference(array $reference): bool
+    private function isUidReference(ApplePlistDictionary $reference): bool
     {
-        return count($reference) === 1 && array_key_exists('CF$UID', $reference);
+        $entries = $reference->entries();
+        if (count($entries) !== 1 || !array_key_exists('CF$UID', $entries)) {
+            return false;
+        }
+
+        $value = $entries['CF$UID'];
+
+        if (!$value instanceof ApplePlistScalar) {
+            return false;
+        }
+
+        $uid = $value->value();
+
+        return is_int($uid) || is_string($uid);
     }
 
-    /**
-     * @return KeyedArchiveValue
-     */
-    private function resolveUid(int $uid): array|bool|float|int|string|null
+    private function resolveUid(int $uid): ApplePlistValue
     {
         if (array_key_exists($uid, $this->resolved)) {
             return $this->resolved[$uid];
@@ -163,7 +153,6 @@ final class KeyedArchiveUnarchiver
 
         $this->inProgress[$uid] = true;
 
-        /** @var KeyedArchiveValue $object */
         $object = $this->objects[$uid];
         $value  = $this->resolveValue($object);
 
@@ -174,74 +163,57 @@ final class KeyedArchiveUnarchiver
         return $value;
     }
 
-    /**
-     * @param array<int|string, mixed> $dictionary
-     *
-     * @return KeyedArchiveDictionary
-     */
-    private function resolveDictionary(array $dictionary): array
+    private function resolveDictionary(ApplePlistDictionary $dictionary): ApplePlistDictionary
     {
-        if (!array_key_exists('NS.keys', $dictionary) || !array_key_exists('NS.objects', $dictionary)) {
-            throw new ParseError('The keyed archive dictionary is incomplete.');
-        }
+        $keysValue   = $dictionary->get('NS.keys');
+        $valuesValue = $dictionary->get('NS.objects');
 
-        $keys   = $dictionary['NS.keys'];
-        $values = $dictionary['NS.objects'];
-
-        if (!is_array($keys) || !array_is_list($keys)) {
+        if (!$keysValue instanceof ApplePlistArray) {
             throw new ParseError('The keyed archive dictionary keys are invalid.');
         }
 
-        if (!is_array($values) || !array_is_list($values)) {
+        if (!$valuesValue instanceof ApplePlistArray) {
             throw new ParseError('The keyed archive dictionary values are invalid.');
         }
+
+        $keys   = $keysValue->values();
+        $values = $valuesValue->values();
 
         if (count($keys) !== count($values)) {
             throw new ParseError('The keyed archive dictionary contains mismatched entries.');
         }
 
-        /** @var list<KeyedArchiveValue> $keys */
-        /** @var list<KeyedArchiveValue> $values */
         $result = [];
         foreach ($keys as $index => $keyReference) {
-            /** @var KeyedArchiveValue $keyReference */
             $key = $this->resolveValue($keyReference);
-            if (!is_string($key) && !is_int($key)) {
+            if (!$key instanceof ApplePlistScalar) {
                 continue;
             }
 
-            /** @var KeyedArchiveValue $value */
-            $value = $this->resolveValue($values[$index]);
+            $scalar = $key->value();
+            if (!is_string($scalar) && !is_int($scalar)) {
+                continue;
+            }
 
-            $result[(string) $key] = $value;
+            $value = $this->resolveValue($values[$index]);
+            $result[(string) $scalar] = $value;
         }
 
-        return $result;
+        return new ApplePlistDictionary($result);
     }
 
-    /**
-     * @param array<int|string, mixed> $array
-     *
-     * @return KeyedArchiveList
-     */
-    private function resolveArray(array $array): array
+    private function resolveArray(ApplePlistDictionary $array): ApplePlistArray
     {
-        if (!array_key_exists('NS.objects', $array)) {
-            throw new ParseError('The keyed archive array payload is missing its objects.');
-        }
-
-        $objects = $array['NS.objects'];
-        if (!is_array($objects) || !array_is_list($objects)) {
+        $objects = $array->get('NS.objects');
+        if (!$objects instanceof ApplePlistArray) {
             throw new ParseError('The keyed archive array contents are invalid.');
         }
 
-        /** @var list<KeyedArchiveValue> $objects */
-        $result = [];
-        foreach ($objects as $entry) {
-            /** @var KeyedArchiveValue $entry */
-            $result[] = $this->resolveValue($entry);
+        $resolved = [];
+        foreach ($objects->values() as $entry) {
+            $resolved[] = $this->resolveValue($entry);
         }
 
-        return $result;
+        return new ApplePlistArray($resolved);
     }
 }

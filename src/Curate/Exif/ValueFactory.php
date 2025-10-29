@@ -1014,28 +1014,14 @@ final class ValueFactory
     /**
      * Extracts a boolean flag from the Apple maker note flag map.
      *
-     * The Apple maker note `Flags` structure is inconsistently typed across
-     * devices and firmware versions: values may be stored as booleans, integers
-     * or even strings. This helper normalises those values to booleans and
-     * ignores keys that are missing or contain unexpected types.
+     * @param array<string, bool> $flags Normalised Apple maker note flag map.
+     * @param string              $key   Name of the flag to resolve.
      *
-     * @param array<string, mixed> $flags Normalised Apple maker note flag map.
-     * @param string               $key   Name of the flag to resolve.
-     *
-     * @return bool|null Resolved boolean flag or null when no boolean value exists.
+     * @return bool|null Resolved boolean flag or null when the flag is absent.
      */
     private function appleFlag(array $flags, string $key): ?bool
     {
-        if (!array_key_exists($key, $flags)) {
-            return null;
-        }
-
-        $value = $flags[$key];
-
-        // Some firmware versions encode booleans as integers (0/1) or strings.
-        // Only explicit boolean values are considered reliable scene hints.
-
-        return is_bool($value) ? $value : null;
+        return $flags[$key] ?? null;
     }
 
     /**

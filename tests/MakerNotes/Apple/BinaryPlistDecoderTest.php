@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -34,7 +36,10 @@ final class BinaryPlistDecoderTest extends TestCase
 
         $result = $decoder->decode($plist);
 
-        self::assertSame(['Uid' => 1], $result);
+        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+        $uid = $result->get('Uid');
+        self::assertInstanceOf(ApplePlistScalar::class, $uid);
+        self::assertSame(1, $uid->value());
     }
 
     #[Test]
@@ -45,7 +50,10 @@ final class BinaryPlistDecoderTest extends TestCase
 
         $result = $decoder->decode($plist);
 
-        self::assertSame(['Uid' => '9223372036854775808'], $result);
+        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+        $uid = $result->get('Uid');
+        self::assertInstanceOf(ApplePlistScalar::class, $uid);
+        self::assertSame('9223372036854775808', $uid->value());
     }
 
     private function createBinaryPlistWithUid(string $uidBytes): string

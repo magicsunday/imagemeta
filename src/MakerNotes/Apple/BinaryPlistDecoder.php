@@ -18,7 +18,6 @@ use function array_key_exists;
 use function chr;
 use function iconv;
 use function intdiv;
-use function is_array;
 use function is_float;
 use function is_int;
 use function is_string;
@@ -77,10 +76,8 @@ final class BinaryPlistDecoder
 
     /**
      * Decodes the supplied binary property list and returns the top level value.
-     *
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|bool|float|int|string|null
      */
-    public function decode(string $data): array|string|int|float|bool|null
+    public function decode(string $data): ApplePlistValue
     {
         if ($data === '') {
             throw new ParseError('The property list data must not be empty.');
@@ -117,8 +114,6 @@ final class BinaryPlistDecoder
 
     /**
      * Parses the property list trailer to configure offsets and reference sizing.
-     *
-     * @return void
      */
     private function decodeTrailer(): void
     {
@@ -159,10 +154,7 @@ final class BinaryPlistDecoder
         $this->topObjectIndex = $topObject;
     }
 
-    /**
-     * @return array<int|string, array<int|string, mixed>|bool|float|int|string|null>|bool|float|int|string|null
-     */
-    private function parseObject(int $index): array|string|int|float|bool|null
+    private function parseObject(int $index): ApplePlistValue
     {
         if (!array_key_exists($index, $this->offsetTable)) {
             throw new ParseError('The property list object reference is invalid.');
@@ -179,43 +171,35 @@ final class BinaryPlistDecoder
 
         return match ($type) {
             self::MARKER_TYPE_SIMPLE     => $this->parseSimple($info),
-            self::MARKER_TYPE_INTEGER    => $this->parseInteger($offset, $info),
-            self::MARKER_TYPE_REAL       => $this->parseReal($offset, $info),
-            self::MARKER_TYPE_DATA       => $this->parseData($offset, $info),
-            self::MARKER_TYPE_ASCII      => $this->parseAscii($offset, $info),
-            self::MARKER_TYPE_UNICODE    => $this->parseUnicode($offset, $info),
-            self::MARKER_TYPE_UID        => $this->parseUid($offset, $info),
+            self::MARKER_TYPE_INTEGER    => $this->wrapScalar($this->parseInteger($offset, $info)),
+            self::MARKER_TYPE_REAL       => $this->wrapScalar($this->parseReal($offset, $info)),
+            self::MARKER_TYPE_DATA       => $this->wrapScalar($this->parseData($offset, $info)),
+            self::MARKER_TYPE_ASCII      => $this->wrapScalar($this->parseAscii($offset, $info)),
+            self::MARKER_TYPE_UNICODE    => $this->wrapScalar($this->parseUnicode($offset, $info)),
+            self::MARKER_TYPE_UID        => $this->wrapScalar($this->parseUid($offset, $info)),
             self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
             self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
             default                      => throw new ParseError('Unsupported property list object type.'),
         };
     }
 
-    /**
-     * Decodes simple marker objects such as null and boolean values.
-     *
-     * @param int $info Marker information nibble extracted from the object header.
-     *
-     * @return bool|null Null for the null marker or boolean flag values.
-     */
-    private function parseSimple(int $info): ?bool
+    private function wrapScalar(bool|float|int|string|null $value): ApplePlistScalar
     {
-        return match ($info) {
+        return new ApplePlistScalar($value);
+    }
+
+    private function parseSimple(int $info): ApplePlistScalar
+    {
+        $value = match ($info) {
             self::MARKER_SIMPLE_NULL  => null,
             self::MARKER_SIMPLE_FALSE => false,
             self::MARKER_SIMPLE_TRUE  => true,
             default                   => throw new ParseError('Unsupported simple property list object.'),
         };
+
+        return new ApplePlistScalar($value);
     }
 
-    /**
-     * Reads an integer object from the payload.
-     *
-     * @param int $offset Byte offset of the object within the payload.
-     * @param int $info   Marker information nibble describing the integer width.
-     *
-     * @return int Decoded integer value.
-     */
     private function parseInteger(int $offset, int $info): int
     {
         $size = 1 << $info;
@@ -226,14 +210,6 @@ final class BinaryPlistDecoder
         return $this->readUint($offset + 1, $size);
     }
 
-    /**
-     * Reads a floating point object from the payload.
-     *
-     * @param int $offset Byte offset of the object within the payload.
-     * @param int $info   Marker information nibble describing the float width.
-     *
-     * @return float Decoded floating point value.
-     */
     private function parseReal(int $offset, int $info): float
     {
         $size = 1 << $info;
@@ -244,7 +220,7 @@ final class BinaryPlistDecoder
             }
 
             $value = unpack('Gfloat', $bytes);
-            if (!is_array($value) || !array_key_exists('float', $value)) {
+            if ($value === false || !array_key_exists('float', $value)) {
                 throw new ParseError('Failed to decode floating point value.');
             }
 
@@ -263,7 +239,7 @@ final class BinaryPlistDecoder
             }
 
             $value = unpack('Efloat', $bytes);
-            if (!is_array($value) || !array_key_exists('float', $value)) {
+            if ($value === false || !array_key_exists('float', $value)) {
                 throw new ParseError('Failed to decode floating point value.');
             }
 
@@ -278,14 +254,6 @@ final class BinaryPlistDecoder
         throw new ParseError('Unsupported floating point width.');
     }
 
-    /**
-     * Reads a binary data object from the payload.
-     *
-     * @param int $offset Byte offset of the object within the payload.
-     * @param int $info   Marker information nibble describing the payload length encoding.
-     *
-     * @return string Raw binary payload extracted from the property list.
-     */
     private function parseData(int $offset, int $info): string
     {
         [$size, $header] = $this->readLength($offset, $info);
@@ -298,14 +266,6 @@ final class BinaryPlistDecoder
         return $payload;
     }
 
-    /**
-     * Reads an ASCII string object from the payload.
-     *
-     * @param int $offset Byte offset of the object within the payload.
-     * @param int $info   Marker information nibble describing the payload length encoding.
-     *
-     * @return string ASCII string content extracted from the property list.
-     */
     private function parseAscii(int $offset, int $info): string
     {
         [$size, $header] = $this->readLength($offset, $info);
@@ -318,14 +278,6 @@ final class BinaryPlistDecoder
         return $payload;
     }
 
-    /**
-     * Reads a UTF-16 encoded string object from the payload and converts it to UTF-8.
-     *
-     * @param int $offset Byte offset of the object within the payload.
-     * @param int $info   Marker information nibble describing the payload length encoding.
-     *
-     * @return string Unicode string decoded from the property list.
-     */
     private function parseUnicode(int $offset, int $info): string
     {
         [$size, $header] = $this->readLength($offset, $info);
@@ -415,14 +367,11 @@ final class BinaryPlistDecoder
         return $trimmed === '' ? '0' : $trimmed;
     }
 
-    /**
-     * @return list<array<int|string, mixed>|bool|float|int|string|null>
-     */
-    private function parseArray(int $offset, int $info): array
+    private function parseArray(int $offset, int $info): ApplePlistArray
     {
         [$count, $header] = $this->readLength($offset, $info);
         if ($count === 0) {
-            return [];
+            return new ApplePlistArray([]);
         }
 
         $refsOffset = $offset + $header;
@@ -437,17 +386,14 @@ final class BinaryPlistDecoder
             $result[]  = $this->parseObject($reference);
         }
 
-        return $result;
+        return new ApplePlistArray($result);
     }
 
-    /**
-     * @return array<string, array<int|string, mixed>|bool|float|int|string|null>
-     */
-    private function parseDictionary(int $offset, int $info): array
+    private function parseDictionary(int $offset, int $info): ApplePlistDictionary
     {
         [$count, $header] = $this->readLength($offset, $info);
         if ($count === 0) {
-            return [];
+            return new ApplePlistDictionary([]);
         }
 
         $refsOffset = $offset + $header;
@@ -462,23 +408,23 @@ final class BinaryPlistDecoder
             $keyRef = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
             $valRef = $this->readUint(
                 $refsOffset + ($count * $this->objectRefSize) + ($idx * $this->objectRefSize),
-                $this->objectRefSize
+                $this->objectRefSize,
             );
 
             $keys[]   = $this->parseObject($keyRef);
             $values[] = $this->parseObject($valRef);
         }
 
-        $result = [];
+        $entries = [];
         foreach ($keys as $idx => $key) {
-            if (!is_string($key)) {
+            if (!$key instanceof ApplePlistScalar || !is_string($key->value())) {
                 throw new ParseError('Dictionary keys must be strings.');
             }
 
-            $result[$key] = $values[$idx];
+            $entries[$key->value()] = $values[$idx];
         }
 
-        return $result;
+        return new ApplePlistDictionary($entries);
     }
 
     /**
@@ -508,14 +454,6 @@ final class BinaryPlistDecoder
         return [$value, 2 + $sizeBytes];
     }
 
-    /**
-     * Reads an unsigned big-endian integer from the payload.
-     *
-     * @param int $offset Starting byte offset within the property list data.
-     * @param int $length Number of bytes to consume for the integer.
-     *
-     * @return int Parsed unsigned integer value.
-     */
     private function readUint(int $offset, int $length): int
     {
         if ($length < 1) {
@@ -534,14 +472,6 @@ final class BinaryPlistDecoder
         return $value;
     }
 
-    /**
-     * Reads an unsigned 64-bit big-endian integer from the provided string.
-     *
-     * @param string $data   Binary string containing the encoded integer.
-     * @param int    $offset Offset within the string where the integer begins.
-     *
-     * @return int Decoded 64-bit integer value.
-     */
     private function readUint64(string $data, int $offset): int
     {
         $slice = substr($data, $offset, 8);
@@ -550,7 +480,7 @@ final class BinaryPlistDecoder
         }
 
         $parts = unpack('Nhigh/Nlow', $slice);
-        if (!is_array($parts) || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
+        if ($parts === false || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
             throw new ParseError('Failed to unpack 64-bit integer.');
         }
 
