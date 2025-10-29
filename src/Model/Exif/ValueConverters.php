@@ -11,10 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Exif;
 
-/**
- * @phpstan-type RationalComponent array<int, int|float|string>
- * @phpstan-type RationalLike array<int, RationalComponent|ExifRational|int|float|string>
- */
 use BackedEnum;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -79,6 +75,8 @@ use const JSON_THROW_ON_ERROR;
  * payloads normalised by these converters; EXIF 2.32 §4.6 remains relevant for
  * legacy captures that pre-date the 3.0 additions.
  *
+ * @phpstan-type RationalComponent = array<int, int|float|string>
+ * @phpstan-type RationalLike = array<int, RationalComponent|ExifRational|int|float|string>
  * @phpstan-type ExifScalar int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null
  * @phpstan-type GpsFieldMap array{
  *     lat_ref:?string,
@@ -239,15 +237,15 @@ final readonly class ValueConverters
         }
 
         $vector = [];
-        foreach ($value->values as $index => $component) {
+        foreach ($value->values as $component) {
             if ($component->denominator === 0) {
                 return null;
             }
 
-            $vector[$index] = (float) $component->numerator / (float) $component->denominator;
+            $vector[] = (float) $component->numerator / (float) $component->denominator;
         }
 
-        return $vector;
+        return [$vector[0], $vector[1], $vector[2]];
     }
 
     /**
@@ -636,14 +634,14 @@ final readonly class ValueConverters
 
         if (preg_match('/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/', $normalized, $matches) === 1) {
             $denominator = (float) $matches[2];
-            if ($denominator == 0.0) {
+            if ($denominator === 0.0) {
                 return null;
             }
 
             return self::normaliseBatteryPercent((float) $matches[1] / $denominator);
         }
 
-        if ($normalized !== '' && $normalized[strlen($normalized) - 1] === '%') {
+        if ($normalized[strlen($normalized) - 1] === '%') {
             $numericPart = rtrim(substr($normalized, 0, -1));
             if ($numericPart === '') {
                 return null;
@@ -699,23 +697,23 @@ final readonly class ValueConverters
             return null;
         }
 
-        if (is_float($value)) {
+        if (is_int($value)) {
+            $intValue = $value;
+        } elseif (is_float($value)) {
             if (fmod($value, 1.0) !== 0.0) {
                 return null;
             }
 
-            $value = (int) $value;
+            $intValue = (int) $value;
+        } else {
+            if (!ctype_digit($value)) {
+                return null;
+            }
+
+            $intValue = (int) $value;
         }
 
-        if (is_string($value) && ctype_digit($value)) {
-            $value = (int) $value;
-        }
-
-        if (!is_int($value)) {
-            return null;
-        }
-
-        return match ($value) {
+        return match ($intValue) {
             0       => false,
             1       => true,
             default => null,
@@ -725,7 +723,7 @@ final readonly class ValueConverters
     /**
      * Normalises the TIFF/EP standard identifier to both byte and string representations.
      *
-     * @param list<int>|null $bytes Raw TIFF/EP identifier bytes.
+     * @param array<int, int|float|string>|null $bytes Raw TIFF/EP identifier bytes.
      *
      * @return array{bytes:list<int>, string:?string}|null
      */
@@ -750,10 +748,6 @@ final readonly class ValueConverters
             }
 
             $normalised[] = $byte;
-        }
-
-        if ($normalised === []) {
-            return null;
         }
 
         return [
@@ -1034,8 +1028,14 @@ final readonly class ValueConverters
             return null;
         }
 
-        $columns = (int) ($header['columns'] ?? 0);
-        $rows    = (int) ($header['rows'] ?? 0);
+        $columnsRaw = $header['columns'] ?? null;
+        $rowsRaw    = $header['rows'] ?? null;
+        if (!is_int($columnsRaw) || !is_int($rowsRaw)) {
+            return null;
+        }
+
+        $columns = $columnsRaw;
+        $rows    = $rowsRaw;
 
         if ($columns <= 0 || $rows <= 0) {
             return null;
@@ -1685,7 +1685,7 @@ final readonly class ValueConverters
         $versionRaw = substr($payload, 8, 4);
         $countBytes = substr($payload, 12, 2);
 
-        if ($countBytes === false || strlen($countBytes) !== 2) {
+        if (strlen($countBytes) !== 2) {
             return null;
         }
 
@@ -1694,7 +1694,12 @@ final readonly class ValueConverters
             return null;
         }
 
-        $count = (int) ($countData['count'] ?? 0);
+        $countRaw = $countData['count'] ?? null;
+        if (!is_int($countRaw)) {
+            return null;
+        }
+
+        $count = $countRaw;
         if ($count < 0 || $count > self::MAX_PRINT_IMAGE_MATCHING_PARAMETERS) {
             return null;
         }
@@ -1712,7 +1717,7 @@ final readonly class ValueConverters
             }
 
             $entryData = substr($payload, $offset, 6);
-            if ($entryData === false || strlen($entryData) !== 6) {
+            if (strlen($entryData) !== 6) {
                 return null;
             }
 
@@ -1721,9 +1726,15 @@ final readonly class ValueConverters
                 return null;
             }
 
+            $idRaw    = $entry['id'];
+            $valueRaw = $entry['value'];
+            if (!is_int($idRaw) || !is_int($valueRaw)) {
+                return null;
+            }
+
             $parameters[] = [
-                'id'    => (int) $entry['id'],
-                'value' => (int) $entry['value'],
+                'id'    => $idRaw,
+                'value' => $valueRaw,
             ];
 
             $offset += 6;
@@ -1783,7 +1794,12 @@ final readonly class ValueConverters
             return null;
         }
 
-        $int = (int) $value[1];
+        $raw = $value[1] ?? null;
+        if (!is_int($raw)) {
+            return null;
+        }
+
+        $int = $raw;
         if ($int >= BitMask::SIGN_BIT_32) {
             $int -= BitMask::UINT32_BASE;
         }
@@ -1838,7 +1854,23 @@ final readonly class ValueConverters
         $normalized = null;
 
         if ($value instanceof ExifNumericList) {
-            $components = array_map(static fn (int|float $component): int => (int) $component, $value->values);
+            $components = [];
+            foreach ($value->values as $component) {
+                if ($component instanceof UInt64) {
+                    $converted = self::uint64ToInt($component, 'GPSVersionID');
+                    if ($converted === null) {
+                        return [
+                            'normalized' => null,
+                            'raw'        => $raw,
+                        ];
+                    }
+
+                    $components[] = $converted;
+                    continue;
+                }
+
+                $components[] = (int) $component;
+            }
 
             $normalized = implode('.', $components);
             if ($normalized === '') {
