@@ -493,6 +493,8 @@ final class JpegExtractor
     /**
      * Processes APP1 payloads for EXIF and XMP signatures.
      *
+     * Specification reference: EXIF 2.32, Chapter 4 (APP1 Exif identifier and payload layout).
+     *
      * @param string $payload Raw APP1 payload including leading signature.
      */
     private function handleApp1(string $payload): void

@@ -74,6 +74,8 @@ use function spl_object_id;
 
 /**
  * Represents a parsed EXIF payload and exposes convenience accessors.
+ *
+ * Specification reference: EXIF 2.32, Chapter 4 (Attribute semantics and derived values).
  */
 final readonly class ExifDocument
 {

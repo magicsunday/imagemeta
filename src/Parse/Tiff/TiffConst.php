@@ -13,6 +13,10 @@ namespace MagicSunday\ImageMeta\Parse\Tiff;
 
 /**
  * Shared constants describing TIFF headers and data types.
+ *
+ * Specification references:
+ * - EXIF 2.32, Chapter 4 (Exif image file structure and TIFF field encodings)
+ * - EXIF 3.0, Chapter 4 (BigTIFF extensions and 64-bit field types)
  */
 final class TiffConst
 {

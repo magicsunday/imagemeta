@@ -13,6 +13,10 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 /**
  * Centralised list of EXIF tag identifiers used throughout the library.
+ *
+ * Specification references:
+ * - EXIF 2.32, Chapter 4 (Tag definitions and attribute tables)
+ * - EXIF 3.0, Chapter 4 (New preview and processing software tags)
  */
 final readonly class ExifTag
 {
@@ -167,7 +171,7 @@ final readonly class ExifTag
 
     public const int JPEG_INTERCHANGE_FORMAT_LENGTH = 0x0202;
 
-    // EXIF 3.0 preview tags
+    // EXIF 3.0 preview tags (see Chapter 4 of the EXIF 3.0 specification).
     public const int PREVIEW_IMAGE_START = 0xC51B;
 
     public const int PREVIEW_IMAGE_LENGTH = 0xC51C;

@@ -55,6 +55,10 @@ use function substr;
 
 /**
  * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
+ *
+ * Specification references:
+ * - EXIF 2.32, Chapter 4 (Exif image file structure and attribute IFD layout)
+ * - EXIF 3.0, Chapter 4 (BigTIFF header and 64-bit directory encoding rules)
  */
 final class TiffExifReader
 {
@@ -178,7 +182,7 @@ final class TiffExifReader
         $this->bigTiffOffsetSize      = 8;
         $this->interopVisitedOffsets = [];
 
-        // byte order
+        // Byte order marker and TIFF magic per EXIF 2.32 Chapter 4; BigTIFF marker per EXIF 3.0 Chapter 4.
         $boSig    = $this->buf->read(2);
         $this->bo = match ($boSig) {
             'II'    => Endian::Little,
@@ -206,7 +210,7 @@ final class TiffExifReader
             );
         }
 
-        // follow pointers
+        // Follow Exif/GPS/Interop linkage defined in EXIF 2.32 Chapter 4 to resolve subordinate IFDs.
         $exifIfd    = null;
         $gpsIfd     = null;
         $interopIfd = null;
@@ -269,6 +273,8 @@ final class TiffExifReader
 
     /**
      * Validates the BigTIFF header following the magic identifier.
+     *
+     * Specification reference: EXIF 3.0, Chapter 4 (BigTIFF header layout and offset-size field).
      */
     private function parseBigTiffHeader(): void
     {
@@ -321,6 +327,7 @@ final class TiffExifReader
         }
 
         $this->buf->seek($offsetInt);
+        // Entry count and directory entries follow the layout detailed in EXIF 2.32 Chapter 4.
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
         $entries    = [];
         for ($i = 0; $i < $entryCount; ++$i) {
@@ -359,6 +366,7 @@ final class TiffExifReader
             $inlineBytes = null;
         }
 
+        // Value offsets vs. inline storage mirrors EXIF 2.32 Chapter 4 guidance for component counts and storage.
         [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff, $inlineBytes);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
         $value      = $this->convertUInt64Values($tag, $type, $cnt, $rawBytes, $value);
@@ -368,6 +376,7 @@ final class TiffExifReader
         }
 
         if ($tag === ExifTag::MAKER_NOTE) {
+            // MakerNote handling aligns with EXIF 2.32 Chapter 4 guidance on proprietary maker data blocks.
             $this->makerNoteRaw = $rawBytes;
         }
 
@@ -387,6 +396,9 @@ final class TiffExifReader
     /**
      * Normalises numeric list fields that describe strip or tile data.
      *
+     * Specification reference: EXIF 2.32, Chapter 4 (StripOffsets/TileOffsets storage rules).
+     *
+     * @param int    $tag      TIFF tag identifier used to determine bounds checks.
      * @param int    $type     TIFF field type code.
      * @param int    $count    Number of values represented.
      * @param string $rawBytes Raw value bytes read for the entry.
@@ -458,6 +470,8 @@ final class TiffExifReader
 
     /**
      * Decodes numeric components for counted strip/tile entries into integers.
+     *
+     * Specification reference: EXIF 2.32, Chapter 4 (strip/tile data component sizing).
      *
      * @param int    $tag      TIFF tag identifier used to determine bounds checks.
      * @param int    $type     TIFF field type code.
@@ -566,6 +580,8 @@ final class TiffExifReader
 
     /**
      * Collects nested image file directories referenced by a SubIFDs entry.
+     *
+     * Specification reference: EXIF 2.32, Chapter 4 (SubIFD tag usage for multi-image sets).
      */
     private function collectSubIfds(IfdEntry $entry): void
     {
@@ -602,6 +618,8 @@ final class TiffExifReader
 
     /**
      * Attempts to resolve an interoperability IFD from the provided directories.
+     *
+     * Specification reference: EXIF 2.32, Chapter 4 (Interoperability IFD pointer resolution).
      */
     private function locateInteropIfd(?Ifd ...$ifds): ?Ifd
     {
@@ -650,6 +668,8 @@ final class TiffExifReader
 
     /**
      * Determines whether the provided directory contains interoperability tags.
+     *
+     * Specification reference: EXIF 2.32, Chapter 4 (Interoperability IFD attribute set).
      */
     private function ifdLooksLikeInterop(Ifd $ifd): bool
     {
