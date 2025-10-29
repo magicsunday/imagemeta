@@ -73,7 +73,11 @@ final class AppleMakerNotesMapper
         ?QuickTimeMeta $quickTime,
     ): AppleMakerNotes {
         $lookup = new QuickTimeLookup($quickTime);
-        $contentIdentifier = $makerNotes?->contentIdentifier ?? $quickTime?->contentIdentifier();
+
+        $contentIdentifier = $makerNotes?->contentIdentifier;
+        if ($contentIdentifier === null && $quickTime instanceof QuickTimeMeta) {
+            $contentIdentifier = $quickTime->contentIdentifier();
+        }
 
         $cameraType = $makerNotes?->cameraType;
         if ($cameraType === null) {
@@ -149,7 +153,10 @@ final class AppleMakerNotesMapper
             $accelerationVector = $this->quickTimeFloatList($lookup, 'AccelerationVector');
         }
 
-        $flags = $makerNotes?->flags ?? [];
+        $flags = $makerNotes?->flags;
+        if ($flags === null) {
+            $flags = [];
+        }
         $quickTimeFlags = $this->quickTimeFlags($quickTime);
         foreach ($quickTimeFlags as $key => $value) {
             if (!array_key_exists($key, $flags)) {
