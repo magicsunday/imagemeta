@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -87,7 +88,7 @@ final class ExifConvenience
         $entry = self::find($doc, ExifTag::EXPOSURE_TIME); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ExposureTime)
 
         return $entry instanceof IfdEntry
-            ? ValueConverters::rationalToFloat($entry->value)
+            ? self::rationalEntryToFloat($entry)
             : null;
     }
 
@@ -103,7 +104,7 @@ final class ExifConvenience
         $entry = self::find($doc, ExifTag::F_NUMBER); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FNumber)
 
         return $entry instanceof IfdEntry
-            ? ValueConverters::rationalToFloat($entry->value)
+            ? self::rationalEntryToFloat($entry)
             : null;
     }
 
@@ -119,7 +120,7 @@ final class ExifConvenience
         $entry = self::find($doc, ExifTag::FOCAL_LENGTH); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FocalLength)
 
         return $entry instanceof IfdEntry
-            ? ValueConverters::rationalToFloat($entry->value)
+            ? self::rationalEntryToFloat($entry)
             : null;
     }
 
@@ -201,6 +202,16 @@ final class ExifConvenience
         }
 
         $value = $entry->value;
+
+        if ($value instanceof UInt64) {
+            $intValue = self::uint64ToInt($value, 'ISO sensitivity');
+
+            if ($intValue === null) {
+                return null;
+            }
+
+            return $intValue;
+        }
 
         if (is_int($value)) {
             return $value;
@@ -318,5 +329,37 @@ final class ExifConvenience
         }
 
         return $doc->ifd0->get($tag);
+    }
+
+    /**
+     * Converts a rational-oriented EXIF entry into a float value.
+     */
+    private static function rationalEntryToFloat(IfdEntry $entry): ?float
+    {
+        $value = $entry->value;
+
+        if ($value instanceof UInt64) {
+            $intValue = self::uint64ToInt($value, 'EXIF rational entry');
+
+            if ($intValue === null) {
+                return null;
+            }
+
+            $value = $intValue;
+        }
+
+        return ValueConverters::rationalToFloat($value);
+    }
+
+    /**
+     * Converts an unsigned 64-bit value into an int when it fits the signed range.
+     */
+    private static function uint64ToInt(UInt64 $value, string $context): ?int
+    {
+        if (!$value->fitsSignedInt()) {
+            return null;
+        }
+
+        return $value->toInt($context);
     }
 }
