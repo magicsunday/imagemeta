@@ -361,7 +361,10 @@ final class JpegExtractor
             }
         }
 
-        if ($this->iccExpectedCount !== null && $this->iccExpectedCount > 0 && count($this->iccSequence) === $this->iccExpectedCount) {
+        if (
+            $this->iccExpectedCount > 0
+            && count($this->iccSequence) === $this->iccExpectedCount
+        ) {
             $expectedSequence = range(1, $this->iccExpectedCount);
             $presentSequence  = array_keys($this->iccSequence);
             sort($presentSequence);

@@ -991,7 +991,10 @@ final class TiffExifReader
                 . chr(self::UTF8_CONTINUATION_PREFIX | ($codePoint & BitMask::SIX_BIT_MASK));
         }
 
-        $codePoint = $codePoint > self::UTF8_MAX_CODE_POINT ? self::UTF8_MAX_CODE_POINT : $codePoint;
+        $codePoint = min(
+            $codePoint,
+            self::UTF8_MAX_CODE_POINT
+        );
 
         return chr(self::UTF8_FOUR_BYTE_PREFIX | ($codePoint >> 18))
             . chr(self::UTF8_CONTINUATION_PREFIX | (($codePoint >> 12) & BitMask::SIX_BIT_MASK))

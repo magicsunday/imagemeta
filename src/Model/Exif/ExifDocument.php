@@ -262,11 +262,7 @@ final readonly class ExifDocument
     {
         $serial = $this->str($this->exifIfd, ExifTag::CAMERA_SERIAL_NUMBER);
 
-        if ($serial !== null) {
-            return $serial;
-        }
-
-        return $this->bodySerialNumber();
+        return $serial ?? $this->bodySerialNumber();
     }
 
     /**
@@ -428,11 +424,10 @@ final readonly class ExifDocument
 
         $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE_LEGACY);
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        return $this->str($this->ifd0, ExifTag::IMAGE_DESCRIPTION);
+        return $value ?? $this->str(
+            $this->ifd0,
+            ExifTag::IMAGE_DESCRIPTION
+        );
     }
 
     /**
@@ -466,11 +461,7 @@ final readonly class ExifDocument
     {
         $value = $this->str($this->ifd0, ExifTag::IMAGE_DESCRIPTION);
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        return $this->xpComment();
+        return $value ?? $this->xpComment();
     }
 
     /**
@@ -485,11 +476,10 @@ final readonly class ExifDocument
             $value = $this->str($this->ifd0, ExifTag::PROCESSING_SOFTWARE);
         }
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        return $this->str($this->ifd0, ExifTag::SOFTWARE);
+        return $value ?? $this->str(
+            $this->ifd0,
+            ExifTag::SOFTWARE
+        );
     }
 
     /**
@@ -537,11 +527,10 @@ final readonly class ExifDocument
 
         $value = $this->str($this->ifd0, ExifTag::PHOTOGRAPHER_LEGACY);
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        return $this->str($this->ifd0, ExifTag::ARTIST);
+        return $value ?? $this->str(
+            $this->ifd0,
+            ExifTag::ARTIST
+        );
     }
 
     /**
@@ -563,11 +552,10 @@ final readonly class ExifDocument
 
         $value = $this->xpAuthor();
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        return $this->str($this->ifd0, ExifTag::IMAGE_EDITOR_LEGACY);
+        return $value ?? $this->str(
+            $this->ifd0,
+            ExifTag::IMAGE_EDITOR_LEGACY
+        );
     }
 
     /**
@@ -1240,8 +1228,7 @@ final readonly class ExifDocument
             'ASCII'   => 'ASCII',
             'JIS'     => 'JIS',
             'UNICODE' => 'UNICODE',
-            'UNDEFINED', 'UNDEF' => 'UNDEFINED',
-            'UTF8'  => 'UNDEFINED',
+            'UNDEFINED', 'UNDEF', 'UTF8' => 'UNDEFINED',
             default => '',
         };
     }
@@ -2804,7 +2791,7 @@ final readonly class ExifDocument
         $fallbackModify    = null;
 
         if ($offsetOriginal === null && $offsetDigitized === null && $offset === null) {
-            $primaryOffset   = $this->derivedOffsetFromTimeZoneOffset(0);
+            $primaryOffset   = $this->derivedOffsetFromTimeZoneOffset();
             $secondaryOffset = $this->derivedOffsetFromTimeZoneOffset(1);
 
             $fallbackOriginal  = $primaryOffset;
@@ -3400,11 +3387,10 @@ final readonly class ExifDocument
     {
         $value = $this->normalisedValue($this->gpsIfd, $tag);
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        return $this->normalisedValue($this->exifIfd, $tag);
+        return $value ?? $this->normalisedValue(
+            $this->exifIfd,
+            $tag
+        );
     }
 
     /**
@@ -3981,10 +3967,6 @@ final readonly class ExifDocument
 
         if ($this->looksPrintableAscii($trimmed)) {
             return 'ASCII';
-        }
-
-        if ($this->looksLikeUtf8($trimmed)) {
-            return 'UNDEFINED';
         }
 
         return 'UNDEFINED';

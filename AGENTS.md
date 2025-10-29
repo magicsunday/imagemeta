@@ -254,7 +254,7 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 * [ ] Kein `@deprecated` – Entfallenes entfernt
 * [ ] Tests für **jede** Klasse (inkl. Negativfälle)
 * [ ] Keine `mixed`-Typen, keine `empty()`-Aufrufe
-* [ ] **`array_find()`** genutzt, wo passend
+* [ ] **`array_find()`**, **`array_any`** genutzt, wo passend
 * [ ] **Typisierte Klassenkonstanten**
 * [ ] Redundante Casts/Default-Argumente entfernt
 * [ ] Keine `{}` für einfache String-Interpolation

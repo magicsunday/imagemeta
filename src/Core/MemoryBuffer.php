@@ -193,9 +193,7 @@ final class MemoryBuffer
     private function normaliseOffset(int|UInt64 $offset, int $length, string $message): int
     {
         if ($offset instanceof UInt64) {
-            $offsetInt = $this->normaliseUInt64($offset, $length, $message);
-
-            return $offsetInt;
+            return $this->normaliseUInt64($offset, $length, $message);
         }
 
         if ($offset < 0) {

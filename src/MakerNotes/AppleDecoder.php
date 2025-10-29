@@ -144,7 +144,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param string $raw Raw maker note data stream.
      *
-     * @return array<int|string, mixed>|bool|float|int|string|null|null
+     * @return array<int|string, mixed>|bool|float|int|string|null
      */
     private function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
@@ -611,6 +611,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $contentIdentifier = $this->stringValue($dictionary, 'ContentIdentifier');
         $cameraTypeCode    = $this->intValue($dictionary, 'CameraType');
+
         if ($cameraTypeCode !== null) {
             $cameraType = self::CAMERA_TYPE_MAP[$cameraTypeCode] ?? $cameraTypeCode;
         } else {

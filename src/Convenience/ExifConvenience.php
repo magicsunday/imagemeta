@@ -163,11 +163,9 @@ final class ExifConvenience
         }
 
         $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (PhotographicSensitivity)
-        if ($iso !== null) {
-            return $iso;
-        }
 
-        return self::isoFromEntry($doc->ifd0->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY)); // Legacy fallback retained for EXIF 2.32 §4.6.3 compatibility
+        // Legacy fallback retained for EXIF 2.32 §4.6.3 compatibility
+        return $iso ?? self::isoFromEntry($doc->ifd0->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY));
     }
 
     /**
@@ -204,9 +202,7 @@ final class ExifConvenience
         $value = $entry->value;
 
         if ($value instanceof UInt64) {
-            $intValue = self::uint64ToInt($value, 'ISO sensitivity');
-
-            return $intValue;
+            return self::uint64ToInt($value, 'ISO sensitivity');
         }
 
         if (is_int($value)) {

@@ -223,9 +223,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Integer object without payload.');
         }
 
-        $value = $this->readUint($offset + 1, $size);
-
-        return $value;
+        return $this->readUint($offset + 1, $size);
     }
 
     /**
