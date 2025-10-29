@@ -28,6 +28,10 @@ use function strlen;
 use function substr;
 
 /**
+ * @phpstan-type MpfRational array{numerator:int, denominator:int}
+ * @phpstan-type MpfDecodedValue int|string|list<int>|MpfRational|list<MpfRational>
+ */
+/**
  * Parses MPF payloads carried in JPEG APP2 segments.
  */
 final class MpfParser
@@ -133,7 +137,8 @@ final class MpfParser
     /**
      * Parses a TIFF IFD structure from the buffer.
      *
-     * @return array{0: array<int, mixed>, 1: int}
+     * @return array{0: array<int, int|string|array>, 1: int}
+     * @phpstan-return array{0: array<int, MpfDecodedValue>, 1: int}
      */
     private function readIfd(MemoryBuffer $buffer, Endian $endian, int $offset): array
     {
@@ -205,8 +210,10 @@ final class MpfParser
 
     /**
      * Decodes the raw value bytes using the specified TIFF field type.
+     *
+     * @phpstan-return MpfDecodedValue
      */
-    private function decodeValue(int $type, int $componentCount, string $data, Endian $endian): mixed
+    private function decodeValue(int $type, int $componentCount, string $data, Endian $endian): int|string|array
     {
         $values = [];
         $buf    = new MemoryBuffer($data);
@@ -358,8 +365,11 @@ final class MpfParser
 
     /**
      * Converts arbitrary decoded value into an integer when possible.
+     *
+     * @param int|string|array|null $value
+     * @phpstan-param MpfDecodedValue|null $value
      */
-    private function intValue(mixed $value): ?int
+    private function intValue(int|string|array|null $value): ?int
     {
         if (is_int($value)) {
             return $value;
@@ -370,8 +380,11 @@ final class MpfParser
 
     /**
      * Converts the decoded value into a trimmed string when appropriate.
+     *
+     * @param int|string|array|null $value
+     * @phpstan-param MpfDecodedValue|null $value
      */
-    private function stringValue(mixed $value): ?string
+    private function stringValue(int|string|array|null $value): ?string
     {
         if (!is_string($value)) {
             return null;

@@ -12,6 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Mpf;
 
 /**
+ * @phpstan-type MpfRational array{numerator:int, denominator:int}
+ * @phpstan-type MpfAttributeValue int|string|list<int>|MpfRational|list<MpfRational>
+ */
+/**
  * Represents optional MP Attribute IFD fields describing the image set.
  */
 final readonly class MpfAttributes
@@ -22,14 +26,18 @@ final readonly class MpfAttributes
      * @param int|null    $individualImageNumber  Sequence number of the current image within the set.
      * @param list<array{numerator:int, denominator:int}>|null $panoramaAngle Optional panorama angle rational values.
      * @param list<array{numerator:int, denominator:int}>|null $panoramaAxis  Optional panorama axis rational values.
-     * @param array<int, mixed> $additionalTags   Remaining MP attribute tags retained in raw form.
+     * @param array<int, int|string|array> $additionalTags   Remaining MP attribute tags retained in raw form.
+     * @phpstan-param array<int, MpfAttributeValue> $additionalTags   Remaining MP attribute tags retained in raw form.
      */
     public function __construct(
         public ?string $imageUidList,
         public ?int $totalFrames,
         public ?int $individualImageNumber,
+        /** @var list<array{numerator:int, denominator:int}>|null */
         public ?array $panoramaAngle,
+        /** @var list<array{numerator:int, denominator:int}>|null */
         public ?array $panoramaAxis,
+        /** @var array<int, MpfAttributeValue> */
         public array $additionalTags,
     ) {
     }

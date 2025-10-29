@@ -11,6 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Exif;
 
+/**
+ * @phpstan-type RationalComponent array<int, int|float|string>
+ * @phpstan-type RationalLike array<int, RationalComponent|ExifRational|int|float|string>
+ */
 use BackedEnum;
 use DateTimeImmutable;
 use DateTimeZone;
@@ -268,7 +272,8 @@ final readonly class ValueConverters
     /**
      * Converts a rational pair into a white point array.
      *
-     * @param array<int, mixed>|ExifRationalList|ExifNumericList|null $rational
+     * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
+     * @phpstan-param RationalLike|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float}|null
      */
@@ -319,7 +324,8 @@ final readonly class ValueConverters
     /**
      * Converts rational chromaticity pairs into a flat float array.
      *
-     * @param array<int, mixed>|ExifRationalList|ExifNumericList|null $rational
+     * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
+     * @phpstan-param RationalLike|ExifRationalList|ExifNumericList|null $rational
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
      */
@@ -374,7 +380,8 @@ final readonly class ValueConverters
     /**
      * Serialises a DNG matrix or CFA pattern into a reproducible string representation.
      *
-     * @param array<int, mixed>|ExifRationalList|ExifNumericList|null $matrix
+     * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $matrix
+     * @phpstan-param RationalLike|ExifRationalList|ExifNumericList|null $matrix
      */
     public static function dngMatrixToString(ExifRationalList|ExifNumericList|array|null $matrix): ?string
     {

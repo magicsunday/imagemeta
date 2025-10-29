@@ -26,7 +26,7 @@ final readonly class ExifRationalList
     public array $values;
 
     /**
-     * @param array<int|string, mixed> $values Ordered list of rational components.
+     * @param list<ExifRational> $values Ordered list of rational components.
      */
     public function __construct(array $values)
     {
