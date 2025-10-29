@@ -9,6 +9,7 @@
 
 declare(strict_types=1);
 
+use Rector\CodeQuality\Rector\Foreach_\ForeachItemsAssignToEmptyArrayToAssignRector;
 use Rector\CodeQuality\Rector\FunctionLike\SimplifyUselessVariableRector;
 use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
 use Rector\Config\RectorConfig;
@@ -79,6 +80,7 @@ return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->skip([
         CatchExceptionNameMatchingTypeRector::class,
         ClassPropertyAssignToConstructorPromotionRector::class,
+        ForeachItemsAssignToEmptyArrayToAssignRector::class,
         NewMethodCallWithoutParenthesesRector::class,
         PrivatizeFinalClassMethodRector::class,
         RemoveUnusedPrivateMethodParameterRector::class,

@@ -795,10 +795,8 @@ final readonly class ExifDocument
 
         if (array_any(
             $this->previewCandidateIfds(),
-            static function (Ifd $ifd): bool {
-                return $ifd->get(ExifTag::PREVIEW_IMAGE_START) instanceof IfdEntry
-                    || $ifd->get(ExifTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry;
-            },
+            static fn (Ifd $ifd): bool => $ifd->get(ExifTag::PREVIEW_IMAGE_START) instanceof IfdEntry
+                || $ifd->get(ExifTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry,
         )) {
             return false;
         }
@@ -816,12 +814,10 @@ final readonly class ExifDocument
 
         if (array_any(
             $this->previewCandidateIfds(),
-            static function (Ifd $ifd) use ($otherPreviewTags): bool {
-                return array_any(
-                    $otherPreviewTags,
-                    static fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry,
-                );
-            },
+            static fn (Ifd $ifd): bool => array_any(
+                $otherPreviewTags,
+                static fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry,
+            ),
         )) {
             return false;
         }
@@ -4054,29 +4050,6 @@ final readonly class ExifDocument
         }
 
         return $nullCount >= (int) ($length / 4);
-    }
-
-    /**
-     * Determines whether the provided string appears to be valid UTF-8 with non-ASCII characters.
-     */
-    private function looksLikeUtf8(string $content): bool
-    {
-        if ($content === '') {
-            return false;
-        }
-
-        if (preg_match('//u', $content) !== 1) {
-            return false;
-        }
-
-        $length = strlen($content);
-        for ($i = 0; $i < $length; ++$i) {
-            if (ord($content[$i]) > 0x7F) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**

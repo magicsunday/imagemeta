@@ -187,7 +187,7 @@ final class BitMaskTest extends TestCase
     private function bitMaskValue(string $name): int
     {
         /** @var int $value */
-        $value = constant(BitMask::class . '::' . $name);
+        $value = BitMask::{$name};
 
         return $value;
     }
