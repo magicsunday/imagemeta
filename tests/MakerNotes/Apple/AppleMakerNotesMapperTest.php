@@ -212,7 +212,6 @@ final class AppleMakerNotesMapperTest extends TestCase
         $mapped = $mapper->map(null, $quickTime);
 
         self::assertNotNull($mapped);
-        self::assertInstanceOf(MakerNotesRecord::class, $mapped);
         self::assertSame('Apple', $mapped->vendor());
         self::assertSame(0, $mapped->length());
         self::assertSame(str_repeat('0', 40), $mapped->sha1());
@@ -269,8 +268,8 @@ final class AppleMakerNotesMapperTest extends TestCase
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
 
         $flags = $apple->flags;
-        self::assertSame(true, $flags['nightMode']);
-        self::assertSame(false, $flags['hdrEnabled']);
-        self::assertSame(true, $flags['hdrAuto']);
+        self::assertTrue($flags['nightMode']);
+        self::assertFalse($flags['hdrEnabled']);
+        self::assertTrue($flags['hdrAuto']);
     }
 }
