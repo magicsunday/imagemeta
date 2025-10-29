@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Support;
 
 use MagicSunday\ImageMeta\Api\ExifDocument as ApiExifDocument;
+use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
 use MagicSunday\ImageMeta\Model\Exif\ExifDocument as ModelExifDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 use PHPUnit\Framework\Assert;
 
@@ -17,32 +17,61 @@ use PHPUnit\Framework\Assert;
 trait ExifExpectationAssertions
 {
     /**
-     * @param Metadata $metadata
      * @param array{
-     *     standards: array{exifVersion:?string, profile:?string, flashpixVersion:?string, tiffEpStandardId:?array, tiffEpStandardString:?string},
-     *     exposure: array{iso:?int},
-     *     capture: array{dateTimeOriginal:?string, offsetTimeOriginal:?string, subSecTimeOriginal:?string},
-     *     image: array{userComment:?string, userCommentEncoding:?string},
-     *     interop: array{index:?string, version:?string, fileFormat:?string, width:?int, length:?int},
-     *     preview: array{
-     *         hasThumbnail:?bool,
-     *         hasPreview:?bool,
-     *         previewOffset:?int,
-     *         previewLength:?int,
-     *         previewWidth:?int,
-     *         previewHeight:?int,
-     *         previewBitDepth:?int,
-     *         previewCompression:?int,
-     *         previewCompressionName:?string,
-     *         previewColorSpace:?int,
-     *         previewColorSpaceName:?string,
-     *         previewEncoding:?string,
-     *         previewMimeType:?string,
-     *         previewScale:?float,
+     *     standards: array{
+     *         exifVersion: string|null,
+     *         profile: string|null,
+     *         flashpixVersion: string|null,
+     *         tiffEpStandardId: array<int, int>|null,
+     *         tiffEpStandardString: string|null,
      *     },
-     *     makerNotes:?array{vendor:string,length:int,sha1:string,isSafe:?bool},
-     *     environment: array{temperatureC:?float, humidityPercent:?float, pressureHpa:?float},
-     *     sensor: array{spatialFrequencyResponse:?array},
+     *     exposure: array{iso: int|null},
+     *     capture: array{
+     *         dateTimeOriginal: string|null,
+     *         offsetTimeOriginal: string|null,
+     *         subSecTimeOriginal: string|null,
+     *     },
+     *     image: array{
+     *         userComment: string|null,
+     *         userCommentEncoding: string|null,
+     *     },
+     *     interop: array{
+     *         index: string|null,
+     *         version: string|null,
+     *         fileFormat: string|null,
+     *         width: int|null,
+     *         length: int|null,
+     *     },
+     *     preview: array{
+     *         hasThumbnail: bool|null,
+     *         hasPreview: bool|null,
+     *         previewOffset: int|null,
+     *         previewLength: int|null,
+     *         previewWidth: int|null,
+     *         previewHeight: int|null,
+     *         previewBitDepth: int|null,
+     *         previewCompression: int|null,
+     *         previewCompressionName: string|null,
+     *         previewColorSpace: int|null,
+     *         previewColorSpaceName: string|null,
+     *         previewEncoding: string|null,
+     *         previewMimeType: string|null,
+     *         previewScale: float|null,
+     *     },
+     *     makerNotes: array{
+     *         vendor: string,
+     *         length: int,
+     *         sha1: string,
+     *         isSafe: bool|null,
+     *     }|null,
+     *     environment: array{
+     *         temperatureC: float|null,
+     *         humidityPercent: float|null,
+     *         pressureHpa: float|null,
+     *     },
+     *     sensor: array{
+     *         spatialFrequencyResponse: array<array-key, mixed>|null,
+     *     },
      * } $expected
      */
     private static function assertStructuredMatches(string $fixture, Metadata $metadata, array $expected): void
@@ -109,15 +138,16 @@ trait ExifExpectationAssertions
 
         $expectedEnv = $expected['environment'];
         $raw = $metadata->exifDoc;
+        /** @var array<string, callable(ModelExifDocument): ?float> $environmentMatchers */
         $environmentMatchers = [
-            'temperatureC'    => 'temperatureCelsius',
-            'humidityPercent' => 'humidityPercent',
-            'pressureHpa'     => 'pressureHPa',
+            'temperatureC'    => static fn (ModelExifDocument $document): ?float => $document->temperatureCelsius(),
+            'humidityPercent' => static fn (ModelExifDocument $document): ?float => $document->humidityPercent(),
+            'pressureHpa'     => static fn (ModelExifDocument $document): ?float => $document->pressureHPa(),
         ];
 
-        foreach ($environmentMatchers as $key => $method) {
+        foreach ($environmentMatchers as $key => $resolver) {
             $expectedValue = $expectedEnv[$key];
-            $actualValue   = $raw?->$method();
+            $actualValue   = $raw !== null ? $resolver($raw) : null;
 
             if ($expectedValue === null) {
                 Assert::assertNull($actualValue, sprintf('%s: %s', $fixture, ucfirst($key)));
@@ -142,26 +172,32 @@ trait ExifExpectationAssertions
 
     /**
      * @param array{
-     *     iso:?int,
-     *     dateTimeOriginal:?string,
-     *     userComment:?string,
-     *     userCommentEncoding:?string,
-     *     interop: array{index:?string, version:?string, fileFormat:?string, width:?int, length:?int},
+     *     iso: int|null,
+     *     dateTimeOriginal: string|null,
+     *     userComment: string|null,
+     *     userCommentEncoding: string|null,
+     *     interop: array{
+     *         index: string|null,
+     *         version: string|null,
+     *         fileFormat: string|null,
+     *         width: int|null,
+     *         length: int|null,
+     *     },
      *     preview: array{
-     *         hasThumbnail:?bool,
-     *         hasPreview:?bool,
-     *         previewOffset:?int,
-     *         previewLength:?int,
-     *         previewWidth:?int,
-     *         previewHeight:?int,
-     *         previewBitDepth:?int,
-     *         previewCompression:?int,
-     *         previewCompressionName:?string,
-     *         previewColorSpace:?int,
-     *         previewColorSpaceName:?string,
-     *         previewEncoding:?string,
-     *         previewMimeType:?string,
-     *         previewScale:?float,
+     *         hasThumbnail: bool|null,
+     *         hasPreview: bool|null,
+     *         previewOffset: int|null,
+     *         previewLength: int|null,
+     *         previewWidth: int|null,
+     *         previewHeight: int|null,
+     *         previewBitDepth: int|null,
+     *         previewCompression: int|null,
+     *         previewCompressionName: string|null,
+     *         previewColorSpace: int|null,
+     *         previewColorSpaceName: string|null,
+     *         previewEncoding: string|null,
+     *         previewMimeType: string|null,
+     *         previewScale: float|null,
      *     },
      * } $expected
      */
@@ -195,11 +231,11 @@ trait ExifExpectationAssertions
 
     /**
      * @param array{
-     *     exifVersion:?string,
-     *     exifProfile:string,
-     *     flashpixVersion:?string,
-     *     tiffEpStandardId:?array,
-     *     tiffEpStandardString:?string,
+     *     exifVersion: string|null,
+     *     exifProfile: string,
+     *     flashpixVersion: string|null,
+     *     tiffEpStandardId: array<int, int>|null,
+     *     tiffEpStandardString: string|null,
      * } $expected
      */
     private static function assertModelMatches(string $fixture, ?ModelExifDocument $document, array $expected): void
@@ -215,20 +251,20 @@ trait ExifExpectationAssertions
 
     /**
      * @param array{
-     *     hasThumbnail:?bool,
-     *     hasPreview:?bool,
-     *     previewOffset:?int,
-     *     previewLength:?int,
-     *     previewWidth:?int,
-     *     previewHeight:?int,
-     *     previewBitDepth:?int,
-     *     previewCompression:?int,
-     *     previewCompressionName:?string,
-     *     previewColorSpace:?int,
-     *     previewColorSpaceName:?string,
-     *     previewEncoding:?string,
-     *     previewMimeType:?string,
-     *     previewScale:?float,
+     *     hasThumbnail: bool|null,
+     *     hasPreview: bool|null,
+     *     previewOffset: int|null,
+     *     previewLength: int|null,
+     *     previewWidth: int|null,
+     *     previewHeight: int|null,
+     *     previewBitDepth: int|null,
+     *     previewCompression: int|null,
+     *     previewCompressionName: string|null,
+     *     previewColorSpace: int|null,
+     *     previewColorSpaceName: string|null,
+     *     previewEncoding: string|null,
+     *     previewMimeType: string|null,
+     *     previewScale: float|null,
      * } $expected
      */
     private static function assertPreviewMatches(string $fixture, array $expected, PreviewValue|StructuredPreview $preview): void
