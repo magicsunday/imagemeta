@@ -90,8 +90,12 @@ final readonly class Gps
 
     public ?float $horizontalPositioningError;
 
+    /**
+     * @param GpsValue $gps Raw GPS value object containing the EXIF coordinates and references plus already parsed time data.
+     */
     public function __construct(GpsValue $gps)
     {
+        // Wrap EXIF coordinate values with their hemisphere reference so that signed decimal degrees stay consistent.
         $this->latitude                = $gps->latitude !== null ? new GpsCoordinate($gps->latitude, $gps->latitudeRef) : null;
         $this->longitude               = $gps->longitude !== null ? new GpsCoordinate($gps->longitude, $gps->longitudeRef) : null;
         $this->altitude                = $gps->altitude;

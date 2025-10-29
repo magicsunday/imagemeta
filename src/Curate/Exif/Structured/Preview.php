@@ -44,6 +44,9 @@ final readonly class Preview
 
     public ?int $previewLength;
 
+    /**
+     * @param PreviewValue $preview Raw preview value object describing embedded thumbnails and previews from EXIF.
+     */
     public function __construct(PreviewValue $preview)
     {
         $this->hasThumbnail      = $preview->hasThumbnail;

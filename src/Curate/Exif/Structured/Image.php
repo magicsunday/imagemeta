@@ -53,6 +53,9 @@ final readonly class Image
 
     public ?string $userCommentEncoding;
 
+    /**
+     * @param ImageValue $image Raw image value object sourced directly from EXIF, already normalised for enums and lists.
+     */
     public function __construct(ImageValue $image)
     {
         $this->width                   = $image->width;
