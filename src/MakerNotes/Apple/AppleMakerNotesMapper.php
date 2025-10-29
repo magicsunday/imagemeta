@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\MakerNotes\AppleMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
+use function array_any;
 use function array_key_exists;
 use function get_object_vars;
 use function is_array;
@@ -273,29 +274,24 @@ final class AppleMakerNotesMapper
      */
     private function hasAppleData(AppleMakerNotes $apple): bool
     {
-        foreach (get_object_vars($apple) as $key => $value) {
-            if ($key === 'flags') {
-                if ($value !== []) {
-                    return true;
-                }
+        $values = get_object_vars($apple);
 
-                continue;
-            }
-
-            if (is_array($value)) {
-                if ($value !== []) {
-                    return true;
-                }
-
-                continue;
-            }
-
-            if ($value !== null) {
-                return true;
-            }
+        if (array_key_exists('flags', $values) && $values['flags'] !== []) {
+            return true;
         }
 
-        return false;
+        unset($values['flags']);
+
+        return array_any(
+            $values,
+            static function ($value): bool {
+                if (is_array($value)) {
+                    return $value !== [];
+                }
+
+                return $value !== null;
+            },
+        );
     }
 
     /**
