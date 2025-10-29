@@ -93,6 +93,11 @@ final readonly class ExifDocument
     private ?string $tiffEpStandardIdString;
 
     /**
+     * @var array{ifd:Ifd, offset:int, length:int}|null
+     */
+    private ?array $previewContext;
+
+    /**
      * @param Ifd                   $ifd0           Root IFD of the TIFF structure.
      * @param Ifd|null              $exifIfd        Sub IFD containing EXIF-specific tags.
      * @param Ifd|null              $gpsIfd         Sub IFD containing GPS-related tags.
@@ -122,6 +127,8 @@ final readonly class ExifDocument
         $tiffEpStandard               = ValueConverters::tiffEpStandardId($tiffEpBytes);
         $this->tiffEpStandardId       = $tiffEpStandard['bytes'] ?? null;
         $this->tiffEpStandardIdString = $tiffEpStandard['string'] ?? null;
+
+        $this->previewContext = $this->resolvePreviewContext();
     }
 
     /**
@@ -796,11 +803,39 @@ final readonly class ExifDocument
     }
 
     /**
-     * Normalises the preview offset/length descriptor when both components are valid.
+     * Returns the resolved preview descriptor when both offset and length are valid.
      *
      * @return array{ifd:Ifd,offset:int,length:int}|null
      */
     private function previewContext(): ?array
+    {
+        return $this->previewContext;
+    }
+
+    /**
+     * @return list<Ifd>
+     */
+    private function previewCandidateIfds(): array
+    {
+        $candidates = [];
+
+        if ($this->exifIfd instanceof Ifd) {
+            $candidates[] = $this->exifIfd;
+        }
+
+        foreach ($this->fallbackIfds(includePrimaryThumbnail: false, includeIfd0: true) as $ifd) {
+            $candidates[] = $ifd;
+        }
+
+        return $candidates;
+    }
+
+    /**
+     * Resolves the EXIF 3.0 preview descriptor from the candidate directories.
+     *
+     * @return array{ifd:Ifd, offset:int, length:int}|null
+     */
+    private function resolvePreviewContext(): ?array
     {
         foreach ($this->previewCandidateIfds() as $ifd) {
             $offset = $this->int($ifd, ExifTag::PREVIEW_IMAGE_START);
@@ -826,24 +861,6 @@ final readonly class ExifDocument
         }
 
         return null;
-    }
-
-    /**
-     * @return list<Ifd>
-     */
-    private function previewCandidateIfds(): array
-    {
-        $candidates = [];
-
-        if ($this->exifIfd instanceof Ifd) {
-            $candidates[] = $this->exifIfd;
-        }
-
-        foreach ($this->fallbackIfds(includePrimaryThumbnail: false, includeIfd0: true) as $ifd) {
-            $candidates[] = $ifd;
-        }
-
-        return $candidates;
     }
 
     /**
