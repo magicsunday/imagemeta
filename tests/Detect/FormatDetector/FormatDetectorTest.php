@@ -104,9 +104,22 @@ final class FormatDetectorTest extends TestCase
     private function createStream(string $bytes): Stream
     {
         $handle = fopen('php://temp', 'w+b');
-        fwrite($handle, $bytes);
-        rewind($handle);
 
-        return new Stream($handle, strlen($bytes));
+        if ($handle === false) {
+            self::fail('Unable to create temporary stream resource.');
+        }
+
+        $length = strlen($bytes);
+        $written = fwrite($handle, $bytes);
+
+        if ($written === false || $written !== $length) {
+            self::fail('Unable to write bytes to temporary stream resource.');
+        }
+
+        if (rewind($handle) === false) {
+            self::fail('Unable to rewind temporary stream resource.');
+        }
+
+        return new Stream($handle, $length);
     }
 }
