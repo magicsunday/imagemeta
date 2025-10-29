@@ -215,6 +215,13 @@ final class JpegExtractor
         return $this->audioStreams;
     }
 
+    /**
+     * Returns the parsed MPF document or null when it is unavailable.
+     *
+     * Triggers lazy parsing via parseIfNeeded() if the stream has not been processed yet.
+     *
+     * @return MpfDocument|null
+     */
     public function getMpfDocument(): ?MpfDocument
     {
         $this->parseIfNeeded();
