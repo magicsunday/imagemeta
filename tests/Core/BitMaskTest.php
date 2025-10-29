@@ -56,82 +56,139 @@ final class BitMaskTest extends TestCase
         );
     }
 
-    public function testLowNibbleContainsFourLowestBits(): void
+    /**
+     * @return iterable<string, array{expected: string, bits: non-empty-list<string>}>
+     */
+    public static function bitCombinationProvider(): iterable
     {
-        $expected = BitMask::BIT_0
-            | BitMask::BIT_1
-            | BitMask::BIT_2
-            | BitMask::BIT_3;
-
-        self::assertSame($expected, BitMask::LOW_NIBBLE);
+        yield 'low nibble' => [
+            'expected' => 'LOW_NIBBLE',
+            'bits'     => ['BIT_0', 'BIT_1', 'BIT_2', 'BIT_3'],
+        ];
+        yield 'high nibble' => [
+            'expected' => 'HIGH_NIBBLE',
+            'bits'     => ['BIT_4', 'BIT_5', 'BIT_6', 'BIT_7'],
+        ];
+        yield 'low byte' => [
+            'expected' => 'LOW_BYTE',
+            'bits'     => ['LOW_NIBBLE', 'HIGH_NIBBLE'],
+        ];
+        yield 'six bit mask' => [
+            'expected' => 'SIX_BIT_MASK',
+            'bits'     => ['BIT_0', 'BIT_1', 'BIT_2', 'BIT_3', 'BIT_4', 'BIT_5'],
+        ];
+        yield 'seven bit mask' => [
+            'expected' => 'SEVEN_BIT_MASK',
+            'bits'     => ['SIX_BIT_MASK', 'BIT_6'],
+        ];
     }
 
-    public function testHighNibbleContainsFourHighestBitsOfByte(): void
+    /** @param array<int, string> $bits */
+    #[DataProvider('bitCombinationProvider')]
+    public function testBitCombinationsMatchExpectedMasks(string $expected, array $bits): void
     {
-        $expected = BitMask::BIT_4
-            | BitMask::BIT_5
-            | BitMask::BIT_6
-            | BitMask::BIT_7;
+        $mask = $this->combineMasks($bits);
 
-        self::assertSame($expected, BitMask::HIGH_NIBBLE);
+        self::assertSame($mask, $this->bitMaskValue($expected));
     }
 
-    public function testLowByteCombinesLowAndHighNibble(): void
+    /**
+     * @return iterable<string, array{source: string, shift: int, expected: string}>
+     */
+    public static function shiftedMaskProvider(): iterable
     {
-        self::assertSame(BitMask::LOW_NIBBLE | BitMask::HIGH_NIBBLE, BitMask::LOW_BYTE);
+        yield 'high byte' => [
+            'source'   => 'LOW_BYTE',
+            'shift'    => 8,
+            'expected' => 'HIGH_BYTE',
+        ];
     }
 
-    public function testHighByteIsLowByteShiftedByEightBits(): void
+    #[DataProvider('shiftedMaskProvider')]
+    public function testShiftedMasksMatchExpectedValue(string $source, int $shift, string $expected): void
     {
-        self::assertSame(BitMask::LOW_BYTE << 8, BitMask::HIGH_BYTE);
+        $shifted = $this->bitMaskValue($source) << $shift;
+
+        self::assertSame($shifted, $this->bitMaskValue($expected));
     }
 
-    public function testSixBitMaskCoversLowerSixBits(): void
+    /**
+     * @return iterable<string, array{source: string, expected: string}>
+     */
+    public static function incrementedMaskProvider(): iterable
     {
-        $expected = BitMask::BIT_0
-            | BitMask::BIT_1
-            | BitMask::BIT_2
-            | BitMask::BIT_3
-            | BitMask::BIT_4
-            | BitMask::BIT_5;
-
-        self::assertSame($expected, BitMask::SIX_BIT_MASK);
+        yield 'uint16 base' => [
+            'source'   => 'UINT16_MAX',
+            'expected' => 'UINT16_BASE',
+        ];
+        yield 'uint32 base' => [
+            'source'   => 'UINT32_MAX',
+            'expected' => 'UINT32_BASE',
+        ];
     }
 
-    public function testSevenBitMaskCoversLowerSevenBits(): void
+    #[DataProvider('incrementedMaskProvider')]
+    public function testIncrementedMasksMatchExpectedValue(string $source, string $expected): void
     {
-        $expected = BitMask::SIX_BIT_MASK | BitMask::BIT_6;
+        $incremented = $this->bitMaskValue($source) + 1;
 
-        self::assertSame($expected, BitMask::SEVEN_BIT_MASK);
+        self::assertSame($incremented, $this->bitMaskValue($expected));
     }
 
-    public function testUint16BaseIsOneMoreThanMax(): void
+    /**
+     * @return iterable<string, array{source: string, expected: string}>
+     */
+    public static function halvedMaskProvider(): iterable
     {
-        self::assertSame(BitMask::UINT16_MAX + 1, BitMask::UINT16_BASE);
+        yield 'uint16 sign bit' => [
+            'source'   => 'UINT16_BASE',
+            'expected' => 'SIGN_BIT_16',
+        ];
+        yield 'uint32 sign bit' => [
+            'source'   => 'UINT32_BASE',
+            'expected' => 'SIGN_BIT_32',
+        ];
     }
 
-    public function testUint32BaseIsOneMoreThanMax(): void
+    #[DataProvider('halvedMaskProvider')]
+    public function testHalvedMasksMatchExpectedValue(string $source, string $expected): void
     {
-        self::assertSame(BitMask::UINT32_MAX + 1, BitMask::UINT32_BASE);
-    }
+        $halved = intdiv($this->bitMaskValue($source), 2);
 
-    public function testSignBit16EqualsHalfOfUint16Base(): void
-    {
-        self::assertSame(BitMask::UINT16_BASE >> 1, BitMask::SIGN_BIT_16);
-    }
-
-    public function testSignBit32EqualsHalfOfUint32Base(): void
-    {
-        self::assertSame(BitMask::UINT32_BASE >> 1, BitMask::SIGN_BIT_32);
+        self::assertSame($halved, $this->bitMaskValue($expected));
     }
 
     public function testInt31MaxIsSignBit32MinusOne(): void
     {
-        self::assertSame(BitMask::SIGN_BIT_32 - 1, BitMask::INT31_MAX);
+        $decremented = $this->bitMaskValue('SIGN_BIT_32') - 1;
+
+        self::assertSame($decremented, $this->bitMaskValue('INT31_MAX'));
     }
 
     private function fromHex(string $hex): int
     {
         return (int) hexdec(str_replace(['_', '0x', '0X'], '', $hex));
+    }
+
+    /**
+     * @param array<int|string, string> $constants
+     */
+    private function combineMasks(array $constants): int
+    {
+        $mask = 0;
+
+        foreach ($constants as $name) {
+            $mask |= $this->bitMaskValue($name);
+        }
+
+        return $mask;
+    }
+
+    private function bitMaskValue(string $name): int
+    {
+        /** @var int $value */
+        $value = constant(BitMask::class . '::' . $name);
+
+        return $value;
     }
 }
