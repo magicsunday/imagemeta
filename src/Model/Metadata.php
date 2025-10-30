@@ -23,68 +23,71 @@ use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
  */
-final class Metadata
+final readonly class Metadata
 {
     /**
      * @var list<string>
      */
-    public readonly array $exifBlobs;
+    public array $exifBlobs;
 
-    public readonly ?QuickTimeMeta $quickTime;
+    public ?QuickTimeMeta $quickTime;
 
-    public readonly ?ParsedExif $exifDoc;
-
-    /**
-     * @var list<string>
-     */
-    public readonly array $xmpBlobs;
-
-    public readonly ?XmpDocument $xmpDoc;
-
-    public readonly ?MakerNotesRecord $makerNotes;
-
-    public readonly ?string $iccProfile;
+    public ?ParsedExif $exifDoc;
 
     /**
      * @var list<string>
      */
-    public readonly array $iccSegments;
+    public array $xmpBlobs;
+
+    public ?XmpDocument $xmpDoc;
+
+    public ?MakerNotesRecord $makerNotes;
+
+    public ?string $iccProfile;
+
+    /**
+     * @var list<string>
+     */
+    public array $iccSegments;
 
     /**
      * @var array<int, string>
      */
-    public readonly array $flashPixStreams;
+    public array $flashPixStreams;
 
-    public readonly ?MpfDocument $mpfDocument;
+    public ?MpfDocument $mpfDocument;
 
     /**
      * @var list<JpegAudioStream>
      */
-    public readonly array $jpegAudioStreams;
+    public array $jpegAudioStreams;
 
-    public readonly ?int $jpegBitsPerSample;
+    public ?int $jpegBitsPerSample;
 
     /** @var array<int, array{horizontal:int, vertical:int}>|null */
-    public readonly ?array $jpegFrameSamplingFactors;
+    public ?array $jpegFrameSamplingFactors;
 
     /** @var array{0:int,1:int}|null */
-    public readonly ?array $jpegYCbCrSubSampling;
+    public ?array $jpegYCbCrSubSampling;
 
-    public readonly ?int $jpegFrameWidth;
+    public ?int $jpegFrameWidth;
 
-    public readonly ?int $jpegFrameHeight;
+    public ?int $jpegFrameHeight;
 
-    public readonly ?string $mimeType;
+    public ?string $mimeType;
 
-    public readonly ?int $fileSize;
+    public ?int $fileSize;
 
-    public readonly ?string $extension;
+    public ?string $extension;
 
-    public readonly ?string $digestSha1;
+    public ?string $digestSha1;
 
-    public readonly ?string $digestMd5;
+    public ?string $digestMd5;
 
-    private ?StructuredMetadata $structured = null;
+    /**
+     * Lazily assembled structured metadata cache.
+     */
+    private StructuredMetadataCache $structuredCache;
 
     /**
      * @param list<string>                                         $exifBlobs                TIFF‑EXIF blobs (first is primary)
@@ -154,6 +157,7 @@ final class Metadata
         $this->digestMd5                = $digestMd5;
         $this->jpegFrameWidth           = $jpegFrameWidth;
         $this->jpegFrameHeight          = $jpegFrameHeight;
+        $this->structuredCache          = new StructuredMetadataCache();
     }
 
     /**
@@ -182,11 +186,6 @@ final class Metadata
      */
     public function structured(): StructuredMetadata
     {
-        if (!$this->structured instanceof StructuredMetadata) {
-            $assembler        = new ExifAssembler();
-            $this->structured = $assembler->assemble($this);
-        }
-
-        return $this->structured;
+        return $this->structuredCache->resolve($this);
     }
 }
