@@ -29,6 +29,18 @@ final class QuickTimeLookupTest extends TestCase
         self::assertSame('value', $lookup->string('Primary', 'Secondary'));
     }
 
+    public function testStringReturnsNullWhenCandidatesAreEmpty(): void
+    {
+        $meta = new QuickTimeMeta([
+            'Primary'   => '',
+            'Secondary' => '   ',
+        ]);
+
+        $lookup = new QuickTimeLookup($meta);
+
+        self::assertNull($lookup->string('Primary', 'Secondary'));
+    }
+
     public function testFloatFallsBackToNumericString(): void
     {
         $meta = new QuickTimeMeta([
