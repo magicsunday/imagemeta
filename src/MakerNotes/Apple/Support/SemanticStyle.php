@@ -28,7 +28,7 @@ use function trim;
  * Normalises Apple semantic style payloads into preset, warmth and tone tuples.
  *
  * @phpstan-type SemanticStyleScalar bool|float|int|string|null
- * @phpstan-type SemanticStyleArray array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar>>>>>
+ * @phpstan-type SemanticStyleArray array<int|string, SemanticStyleScalar|SemanticStyleArray>
  * @phpstan-type SemanticStyleValue SemanticStyleScalar|SemanticStyleArray
  * @phpstan-type SemanticStyleEntries array<int|string, SemanticStyleScalar>
  * @phpstan-type SemanticStyleDictionary array<int|string, SemanticStyleScalar|SemanticStyleArray|object>
@@ -54,7 +54,7 @@ final class SemanticStyle
     /**
      * Extracts semantic style values from a dictionary containing a `SemanticStyle` entry.
      *
-     * @param array<int|string, SemanticStyleScalar|SemanticStyleArray|object> $dictionary
+     * @param SemanticStyleDictionary $dictionary
      *
      * @phpstan-param SemanticStyleDictionary $dictionary
      *
@@ -82,7 +82,7 @@ final class SemanticStyle
     /**
      * Normalises the supplied semantic style collection when possible.
      *
-     * @param SemanticStyleScalar|array<int|string, SemanticStyleScalar|SemanticStyleArray> $value
+     * @param SemanticStyleValue $value
      *
      * @phpstan-param SemanticStyleValue $value
      *
@@ -119,7 +119,7 @@ final class SemanticStyle
     }
 
     /**
-     * @param array<int|string, SemanticStyleScalar|SemanticStyleArray|object> $semantic
+     * @param SemanticStyleDictionary $semantic
      *
      * @phpstan-param SemanticStyleDictionary $semantic
      *
@@ -154,7 +154,7 @@ final class SemanticStyle
     }
 
     /**
-     * @param SemanticStyleScalar|array<int|string, SemanticStyleScalar|SemanticStyleArray> $entry
+     * @param SemanticStyleValue $entry
      *
      * @phpstan-param SemanticStyleValue $entry
      */
