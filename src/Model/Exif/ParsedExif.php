@@ -983,6 +983,76 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the strip offsets for the preview image when stored without a contiguous payload.
+     *
+     * EXIF 3.0 §4.6.12 allows preview descriptors to omit PreviewImageStart/Length when
+     * the image data follows the TIFF strip/tile model inherited from EXIF 2.32 §4.6.4.
+     *
+     * @return list<int>|null
+     */
+    public function previewImageStripOffsets(): ?array
+    {
+        $context = $this->previewContext;
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->numericList($context['ifd'], ExifTag::STRIP_OFFSETS);
+    }
+
+    /**
+     * Returns the strip byte counts for the preview image when stored without a contiguous payload.
+     *
+     * EXIF 3.0 §4.6.12 reuses the TIFF strip layout from EXIF 2.32 §4.6.4.
+     *
+     * @return list<int>|null
+     */
+    public function previewImageStripByteCounts(): ?array
+    {
+        $context = $this->previewContext;
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->numericList($context['ifd'], ExifTag::STRIP_BYTE_COUNTS);
+    }
+
+    /**
+     * Returns the tile offsets for the preview image when stored in tiles.
+     *
+     * EXIF 3.0 §4.6.12 keeps compatibility with the TIFF tile storage described in
+     * EXIF 2.32 §4.6.4.
+     *
+     * @return list<int>|null
+     */
+    public function previewImageTileOffsets(): ?array
+    {
+        $context = $this->previewContext;
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->numericList($context['ifd'], ExifTag::TILE_OFFSETS);
+    }
+
+    /**
+     * Returns the tile byte counts for the preview image when stored in tiles.
+     *
+     * EXIF 3.0 §4.6.12 allows the TIFF tile model to be reused for previews.
+     *
+     * @return list<int>|null
+     */
+    public function previewImageTileByteCounts(): ?array
+    {
+        $context = $this->previewContext;
+        if ($context === null) {
+            return null;
+        }
+
+        return $this->numericList($context['ifd'], ExifTag::TILE_BYTE_COUNTS);
+    }
+
+    /**
      * Returns the preview image scale factor when provided.
      *
      * EXIF 3.0 §4.6.12 defines PreviewImageScale as the ratio between preview and primary image.
@@ -1036,6 +1106,61 @@ final readonly class ParsedExif
     public function previewDateTimeDigitizedRaw(): ?string
     {
         return $this->rawString($this->exifIfd, ExifTag::PREVIEW_DATE_TIME_DIGITIZED);
+    }
+
+    /**
+     * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
+     *
+     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 map the Compression tag in the
+     * thumbnail IFD to the embedded preview codec.
+     */
+    public function thumbnailCompression(): ?Compression
+    {
+        $value = $this->enumValue($this->ifd1, ExifTag::COMPRESSION);
+
+        return Compression::fromExifValue($value);
+    }
+
+    /**
+     * Returns the strip offsets for the thumbnail image when stored using TIFF strips.
+     *
+     * EXIF 3.0 §4.6.4 keeps the strip model from EXIF 2.32 §4.6.4 for thumbnails.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailStripOffsets(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
+    }
+
+    /**
+     * Returns the strip byte counts for the thumbnail image when stored using TIFF strips.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailStripByteCounts(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
+    }
+
+    /**
+     * Returns the tile offsets for the thumbnail image when stored using TIFF tiles.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailTileOffsets(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::TILE_OFFSETS);
+    }
+
+    /**
+     * Returns the tile byte counts for the thumbnail image when stored using TIFF tiles.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailTileByteCounts(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::TILE_BYTE_COUNTS);
     }
 
     /**

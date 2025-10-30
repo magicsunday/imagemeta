@@ -41,7 +41,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.5
+                "previewScale": 0.5,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -84,7 +96,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.5
+                "previewScale": 0.5,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -137,7 +161,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.6
+                "previewScale": 0.6,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -180,7 +216,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.6
+                "previewScale": 0.6,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -233,7 +281,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.6666666666666666
+                "previewScale": 0.6666666666666666,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -276,7 +336,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.6666666666666666
+                "previewScale": 0.6666666666666666,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -329,7 +401,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.5
+                "previewScale": 0.5,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -372,7 +456,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.5
+                "previewScale": 0.5,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -425,7 +521,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.4
+                "previewScale": 0.4,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -468,7 +576,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.4
+                "previewScale": 0.4,
+                "thumbnailOffset": 1215,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -526,7 +646,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.42857142857142855
+                "previewScale": 0.42857142857142855,
+                "thumbnailOffset": 1227,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -569,7 +701,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.42857142857142855
+                "previewScale": 0.42857142857142855,
+                "thumbnailOffset": 1227,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -632,7 +776,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.4444444444444444
+                "previewScale": 0.4444444444444444,
+                "thumbnailOffset": 1227,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -675,7 +831,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.4444444444444444
+                "previewScale": 0.4444444444444444,
+                "thumbnailOffset": 1227,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -738,7 +906,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.3333333333333333
+                "previewScale": 0.3333333333333333,
+                "thumbnailOffset": 1275,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -804,7 +984,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.3333333333333333
+                "previewScale": 0.3333333333333333,
+                "thumbnailOffset": 1275,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {
@@ -867,7 +1059,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.5
+                "previewScale": 0.5,
+                "thumbnailOffset": 1275,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             },
             "makerNotes": {
                 "vendor": "Unknown",
@@ -936,7 +1140,19 @@
                 "previewColorSpaceName": "SRGB",
                 "previewEncoding": "JPEG",
                 "previewMimeType": "image/jpeg",
-                "previewScale": 0.5
+                "previewScale": 0.5,
+                "thumbnailOffset": 1275,
+                "thumbnailLength": 21,
+                "thumbnailCompression": 6,
+                "thumbnailCompressionName": "JPEG_OLD_STYLE",
+                "thumbnailStripOffsets": null,
+                "thumbnailStripByteCounts": null,
+                "thumbnailTileOffsets": null,
+                "thumbnailTileByteCounts": null,
+                "previewStripOffsets": null,
+                "previewStripByteCounts": null,
+                "previewTileOffsets": null,
+                "previewTileByteCounts": null
             }
         },
         "model": {

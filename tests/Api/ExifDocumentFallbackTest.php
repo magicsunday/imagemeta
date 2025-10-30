@@ -114,6 +114,12 @@ final class ExifDocumentFallbackTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
         ]);
 
+        $thumbnailIfd = new Ifd([
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
+
         $exifIfd = new Ifd([
             ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 65_536),
             ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 32_768),
@@ -135,7 +141,7 @@ final class ExifDocumentFallbackTest extends TestCase
             ExifTag::PREVIEW_IMAGE_MIME_TYPE => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
         ]);
 
-        $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
+        $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, $thumbnailIfd));
 
         $preview = $apiDocument->preview();
 
@@ -149,6 +155,17 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertSame('image/jpeg', $preview->previewMimeType());
         self::assertSame(Compression::JPEG, $preview->previewCompression());
         self::assertEqualsWithDelta(0.5, $preview->previewScale() ?? 0.0, 1e-6);
+        self::assertSame(8_192, $preview->thumbnailOffset());
+        self::assertSame(2_048, $preview->thumbnailLength());
+        self::assertSame(Compression::JPEG, $preview->thumbnailCompression());
+        self::assertNull($preview->thumbnailStripOffsets());
+        self::assertNull($preview->thumbnailStripByteCounts());
+        self::assertNull($preview->thumbnailTileOffsets());
+        self::assertNull($preview->thumbnailTileByteCounts());
+        self::assertNull($preview->previewStripOffsets());
+        self::assertNull($preview->previewStripByteCounts());
+        self::assertNull($preview->previewTileOffsets());
+        self::assertNull($preview->previewTileByteCounts());
     }
 
     #[Test]
@@ -204,5 +221,16 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertSame(8, $preview->previewBitDepth());
         self::assertSame(Compression::JPEG_OLD_STYLE, $preview->previewCompression());
         self::assertEqualsWithDelta(0.75, $preview->previewScale() ?? 0.0, 1e-6);
+        self::assertNull($preview->thumbnailOffset());
+        self::assertNull($preview->thumbnailLength());
+        self::assertNull($preview->thumbnailCompression());
+        self::assertNull($preview->thumbnailStripOffsets());
+        self::assertNull($preview->thumbnailStripByteCounts());
+        self::assertNull($preview->thumbnailTileOffsets());
+        self::assertNull($preview->thumbnailTileByteCounts());
+        self::assertNull($preview->previewStripOffsets());
+        self::assertNull($preview->previewStripByteCounts());
+        self::assertNull($preview->previewTileOffsets());
+        self::assertNull($preview->previewTileByteCounts());
     }
 }

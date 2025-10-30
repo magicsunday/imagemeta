@@ -44,6 +44,52 @@ final readonly class Preview
 
     public ?int $previewLength;
 
+    public ?int $thumbnailOffset;
+
+    public ?int $thumbnailLength;
+
+    public ?Compression $thumbnailCompression;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $thumbnailStripOffsets;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $thumbnailStripByteCounts;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $thumbnailTileOffsets;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $thumbnailTileByteCounts;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $previewStripOffsets;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $previewStripByteCounts;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $previewTileOffsets;
+
+    /**
+     * @var list<int>|null
+     */
+    public ?array $previewTileByteCounts;
+
     /**
      * @param PreviewValue $preview Raw preview value object describing embedded thumbnails and previews from EXIF.
      */
@@ -61,6 +107,17 @@ final readonly class Preview
         $this->previewMimeType    = $preview->previewMimeType;
         $this->previewOffset      = $preview->previewOffset;
         $this->previewLength      = $preview->previewLength;
+        $this->thumbnailOffset    = $preview->thumbnailOffset;
+        $this->thumbnailLength    = $preview->thumbnailLength;
+        $this->thumbnailCompression = $preview->thumbnailCompression;
+        $this->thumbnailStripOffsets = $preview->thumbnailStripOffsets;
+        $this->thumbnailStripByteCounts = $preview->thumbnailStripByteCounts;
+        $this->thumbnailTileOffsets = $preview->thumbnailTileOffsets;
+        $this->thumbnailTileByteCounts = $preview->thumbnailTileByteCounts;
+        $this->previewStripOffsets = $preview->previewStripOffsets;
+        $this->previewStripByteCounts = $preview->previewStripByteCounts;
+        $this->previewTileOffsets = $preview->previewTileOffsets;
+        $this->previewTileByteCounts = $preview->previewTileByteCounts;
     }
 
     public function hasThumbnail(): ?bool
@@ -121,5 +178,84 @@ final readonly class Preview
     public function previewLength(): ?int
     {
         return $this->previewLength;
+    }
+
+    public function thumbnailOffset(): ?int
+    {
+        return $this->thumbnailOffset;
+    }
+
+    public function thumbnailLength(): ?int
+    {
+        return $this->thumbnailLength;
+    }
+
+    public function thumbnailCompression(): ?Compression
+    {
+        return $this->thumbnailCompression;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function thumbnailStripOffsets(): ?array
+    {
+        return $this->thumbnailStripOffsets;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function thumbnailStripByteCounts(): ?array
+    {
+        return $this->thumbnailStripByteCounts;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function thumbnailTileOffsets(): ?array
+    {
+        return $this->thumbnailTileOffsets;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function thumbnailTileByteCounts(): ?array
+    {
+        return $this->thumbnailTileByteCounts;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function previewStripOffsets(): ?array
+    {
+        return $this->previewStripOffsets;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function previewStripByteCounts(): ?array
+    {
+        return $this->previewStripByteCounts;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function previewTileOffsets(): ?array
+    {
+        return $this->previewTileOffsets;
+    }
+
+    /**
+     * @return list<int>|null
+     */
+    public function previewTileByteCounts(): ?array
+    {
+        return $this->previewTileByteCounts;
     }
 }

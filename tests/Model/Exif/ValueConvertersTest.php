@@ -474,6 +474,117 @@ final class ValueConvertersTest extends TestCase
         self::assertNull($result['alt']);
     }
 
+    #[Test]
+    public function handlesGpsCoordinatesWithNumericListComponents(): void
+    {
+        $gps = new Ifd([
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 1, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
+                ExifTag::GPS_LATITUDE,
+                5,
+                3,
+                new ExifNumericList([40.0, 30.0, 15.0]),
+            ),
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 1, 'E'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(
+                ExifTag::GPS_LONGITUDE,
+                5,
+                3,
+                new ExifNumericList([7.0, 45.0, 30.0]),
+            ),
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 1, 1, 0),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
+                ExifTag::GPS_ALTITUDE,
+                5,
+                1,
+                new ExifNumericList([250.0]),
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertEqualsWithDelta(40.504166, $result['lat'] ?? 0.0, 1e-6);
+        self::assertEqualsWithDelta(7.758333, $result['lon'] ?? 0.0, 1e-6);
+        self::assertEqualsWithDelta(250.0, $result['alt'] ?? 0.0, 1e-6);
+    }
+
+    #[Test]
+    public function altitudeReferenceAcceptsStringFlag(): void
+    {
+        $gps = new Ifd([
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 1, 'S'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
+                ExifTag::GPS_LATITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(33, 1),
+                    new ExifRational(0, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 1, 'E'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(
+                ExifTag::GPS_LONGITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(18, 1),
+                    new ExifRational(30, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_ALTITUDE_REF => new IfdEntry(ExifTag::GPS_ALTITUDE_REF, 2, 1, '1'),
+            ExifTag::GPS_ALTITUDE     => new IfdEntry(
+                ExifTag::GPS_ALTITUDE,
+                5,
+                1,
+                new ExifRational(120, 1),
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertEqualsWithDelta(-33.0, $result['lat'] ?? 0.0, 1e-6);
+        self::assertEqualsWithDelta(18.5, $result['lon'] ?? 0.0, 1e-6);
+        self::assertEqualsWithDelta(-120.0, $result['alt'] ?? 0.0, 1e-6);
+        self::assertSame(1, $result['alt_ref']);
+    }
+
+    #[Test]
+    public function returnsNullForGpsCoordinateWithInvalidSeconds(): void
+    {
+        $gps = new Ifd([
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 1, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
+                ExifTag::GPS_LATITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(12, 1),
+                    new ExifRational(34, 1),
+                    new ExifRational(1, 0),
+                ]),
+            ),
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 1, 'E'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(
+                ExifTag::GPS_LONGITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(56, 1),
+                    new ExifRational(0, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertNull($result['lat']);
+        self::assertEqualsWithDelta(56.0, $result['lon'] ?? 0.0, 1e-6);
+    }
+
     /**
      * Ensures EXIF 3.0 GPS tags are decoded into a rich metadata map including temporal and navigation fields.
      */
