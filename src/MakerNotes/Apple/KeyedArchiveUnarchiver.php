@@ -74,9 +74,9 @@ final class KeyedArchiveUnarchiver
     }
 
     /**
-     * @phpstan-return KeyedArchiveValue
+     * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
      */
-    private function resolveValue(ApplePlistValue $value): ApplePlistValue
+    private function resolveValue(ApplePlistValue $value): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
         if ($value instanceof ApplePlistDictionary) {
             if ($this->isUidReference($value)) {
@@ -153,9 +153,9 @@ final class KeyedArchiveUnarchiver
     }
 
     /**
-     * @phpstan-return KeyedArchiveValue
+     * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
      */
-    private function resolveUid(int $uid): ApplePlistValue
+    private function resolveUid(int $uid): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
         if (array_key_exists($uid, $this->resolved)) {
             return $this->resolved[$uid];
@@ -176,7 +176,7 @@ final class KeyedArchiveUnarchiver
 
         unset($this->inProgress[$uid]);
 
-        /** @var KeyedArchiveValue $value */
+        /** @var ApplePlistArray|ApplePlistDictionary|ApplePlistScalar $value */
         $this->resolved[$uid] = $value;
 
         return $value;
