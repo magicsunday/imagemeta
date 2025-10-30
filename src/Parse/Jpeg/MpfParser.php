@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 
+use function array_any;
 use function array_is_list;
 use function array_key_exists;
 use function count;
@@ -493,13 +494,10 @@ final class MpfParser
             return false;
         }
 
-        foreach ($value as $item) {
-            if (!is_array($item) || !$this->isRational($item)) {
-                return false;
-            }
-        }
-
-        return true;
+        return !array_any(
+            $value,
+            fn (mixed $item): bool => !is_array($item) || !$this->isRational($item)
+        );
     }
 
     private function readU16(MemoryBuffer $buffer, Endian $endian): int
