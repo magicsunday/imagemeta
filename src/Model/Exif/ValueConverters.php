@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
 use Throwable;
 
 use function abs;
+use function array_any;
 use function array_filter;
 use function array_map;
 use function array_slice;
@@ -245,14 +246,18 @@ final readonly class ValueConverters
             return null;
         }
 
-        $vector = [];
-        foreach ($value->values as $component) {
-            if ($component->denominator === 0) {
-                return null;
-            }
-
-            $vector[] = (float) $component->numerator / (float) $component->denominator;
+        if (array_any(
+            $value->values,
+            static fn (ExifRational $component): bool => $component->denominator === 0
+        )) {
+            return null;
         }
+
+        /** @var list<float> $vector */
+        $vector = array_map(
+            static fn (ExifRational $component): float => (float) $component->numerator / (float) $component->denominator,
+            $value->values
+        );
 
         return [$vector[0], $vector[1], $vector[2]];
     }
@@ -749,17 +754,18 @@ final readonly class ValueConverters
             return null;
         }
 
-        $normalised = [];
-        foreach ($bytes as $byte) {
-            if (!is_int($byte)) {
-                return null;
-            }
+        if (array_any($bytes, static fn (mixed $byte): bool => !is_int($byte))) {
+            return null;
+        }
 
-            if ($byte < 0 || $byte > BitMask::LOW_BYTE) {
-                return null;
-            }
+        /** @var list<int> $normalised */
+        $normalised = array_values($bytes);
 
-            $normalised[] = $byte;
+        if (array_any(
+            $normalised,
+            static fn (int $byte): bool => $byte < 0 || $byte > BitMask::LOW_BYTE
+        )) {
+            return null;
         }
 
         return [

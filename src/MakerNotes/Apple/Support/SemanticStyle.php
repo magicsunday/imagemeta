@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 
+use function array_find;
 use function array_is_list;
 use function array_key_exists;
 use function is_array;
@@ -128,10 +129,20 @@ final class SemanticStyle
     private static function normaliseEntries(array $semantic): ?array
     {
         if (!array_is_list($semantic)) {
-            foreach (['values', 'Values'] as $key) {
-                if (array_key_exists($key, $semantic) && is_array($semantic[$key])) {
-                    return self::normaliseEntries($semantic[$key]);
+            $nestedKey = array_find(
+                ['values', 'Values'],
+                static fn (string $key): bool => array_key_exists($key, $semantic) && is_array($semantic[$key])
+            );
+
+            if ($nestedKey !== null) {
+                $nested = $semantic[$nestedKey];
+
+                if (is_array($nested)) {
+                    /** @var array<int|string, mixed> $nested */
+                    return self::normaliseEntries($nested);
                 }
+
+                return null;
             }
         }
 
@@ -161,19 +172,52 @@ final class SemanticStyle
     private static function extractScalar(array|bool|float|int|string|null $entry): bool|float|int|string|null
     {
         if (is_array($entry)) {
-            foreach (['value', 'Value'] as $innerKey) {
-                if (array_key_exists($innerKey, $entry)) {
-                    return self::extractScalar($entry[$innerKey]);
+            $valueKey = array_find(
+                ['value', 'Value'],
+                static fn (string $innerKey): bool => array_key_exists($innerKey, $entry)
+            );
+
+            if ($valueKey !== null) {
+                $candidate = $entry[$valueKey];
+
+                if (
+                    is_array($candidate)
+                    || is_bool($candidate)
+                    || is_float($candidate)
+                    || is_int($candidate)
+                    || is_string($candidate)
+                    || $candidate === null
+                ) {
+                    return self::extractScalar($candidate);
                 }
+
+                return null;
             }
 
             if (array_is_list($entry)) {
-                foreach ($entry as $candidate) {
-                    $scalar = self::extractScalar($candidate);
-                    if ($scalar !== null) {
-                        return $scalar;
+                $scalar = null;
+
+                array_find(
+                    $entry,
+                    static function (mixed $candidate) use (&$scalar): bool {
+                        if (
+                            is_array($candidate)
+                            || is_bool($candidate)
+                            || is_float($candidate)
+                            || is_int($candidate)
+                            || is_string($candidate)
+                            || $candidate === null
+                        ) {
+                            $scalar = self::extractScalar($candidate);
+
+                            return $scalar !== null;
+                        }
+
+                        return false;
                     }
-                }
+                );
+
+                return $scalar;
             }
 
             return null;

@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\Value\RunTime;
 
 use function array_any;
+use function array_find;
 use function array_flip;
 use function array_is_list;
 use function array_key_exists;
@@ -613,13 +614,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function firstExistingKey(array $dictionary, string ...$keys): ?string
     {
-        foreach ($keys as $key) {
-            if (array_key_exists($key, $dictionary)) {
-                return $key;
-            }
-        }
-
-        return null;
+        return array_find(
+            $keys,
+            static fn (string $key): bool => array_key_exists($key, $dictionary)
+        );
     }
 
     /**
