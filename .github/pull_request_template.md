@@ -44,7 +44,7 @@ Beispiel: M1: Unify binary readers — Core/Stream
 - [ ] **Eine Klasse je Datei** • Test-Namespaces spiegeln `src/`-Struktur
 - [ ] Englische PHPDocs & englische Inline-Kommentare an komplexen Stellen
 - [ ] Sinnvolle Namen für Variablen/Konstanten; Magic Numbers/Strings vermieden
-- [ ] `array_find` / `array_any` gezielt statt trivialer `foreach` verwendet (wo es die Lesbarkeit verbessert)
+- [ ] `array_find` / `array_any` / `array_all` gezielt statt trivialer `foreach` verwendet (wo es die Lesbarkeit verbessert)
 
 ---
 

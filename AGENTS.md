@@ -2,7 +2,7 @@
 
 > Leitfaden für LLM-Agents (Codex/Copilot/ChatGPT o. ä.) in diesem Repo.
 > **Ziel:** reproduzierbare, sichere und schlanke **Pull Requests** mit Tests, Static Analysis und klaren Guardrails.
-> **Hinweis:** Es werden **keine Unified-Diff-Patches** erwartet (Workflow: Branch → Commits → PR).
+> **Hinweis:** Es werden **keine Unified-Diff-Patches** erwartet (Workflow: **Branch → Commits → PR**).
 
 ---
 
@@ -10,7 +10,7 @@
 
 **Projektziel:** Streaming-Parser für JPEG/HEIC/MOV/MP4; EXIF (Classic-TIFF & BigTIFF), XMP, QuickTime/ISOBMFF — **reines PHP 8.4**, ohne `exif_read_data()` und ohne externe CLI-Tools.
 
-**EXIF-Support (muss vollständig sein):** EXIF **1.x**, **2.x** (2.1/2.2/2.21/2.3/2.31/2.32) und **3.0** (Endianness, Classic-TIFF `0x2A`, BigTIFF `0x2B`/64-bit).
+**EXIF-Support (vollständig):** EXIF **1.x**, **2.x** (2.1/2.2/2.21/2.3/2.31/2.32) und **3.0** (Endianness, Classic-TIFF `0x2A`, BigTIFF `0x2B`/64-bit).
 **Referenzen im Repo:**
 
 * `docs/EXIF-210.pdf`, `docs/EXIF-220.pdf`, `docs/EXIF-230.pdf`, `docs/EXIF-231.pdf`, `docs/EXIF-232.pdf`, `docs/EXIF-300.pdf`
@@ -21,25 +21,27 @@
 * **Streaming only:** `Core\Stream`/`StreamWindow` — keine Ganzdatei-Reads.
 * **Sicherheit:** harte Bounds-Checks; Max-Limits für Längen/Offsets; XMP strikt mit `LIBXML_NONET` (keine DTD/Entities, kein Netz-I/O).
 * **Code-Qualität:** `declare(strict_types=1);`, PSR-12, **kein** `mixed`, **kein** `empty()`.
-* **Kompatibilität:** minimalinvasive Änderungen; keine API-Breaks ohne Changelog.
+* **Kompatibilität:** minimalinvasiv; keine API-Breaks ohne Changelog.
 * **Struktur & Doku:** genau **eine Klasse je Datei**; sprechende Bezeichner; **englische** PHPDoc-Blöcke (Zweck/Params/Return) und **englische** Inline-Kommentare an komplexen Stellen.
 * **Tests & Static:** PHPUnit 12 (Attribute), PHPStan (max Level), PHPCS; **Coverage-Ziel ≥ 90 %**.
 * **Namensräume spiegeln:** Tests folgen der `src/`-Struktur (z. B. `…\Parse\IsoBmff` → `…\Tests\Parse\IsoBmff`).
 * **Model/VOs:** Auslese liefert **Value-Objects** (sinnvoll gruppiert) mit **fluentem Zugriff**/Chaining.
-* **Nachvollziehbarkeit (Specs):**
-  In Parsern **am jeweiligen Code-Punkt** per PHPDoc/Inline-Kommentar das **zutreffende Kapitel der EXIF-Spezifikation** referenzieren (Form: `EXIF 3.0 §<Kapitel>`).
-  *Wenn mehrere Fassungen betroffen sind:* **immer die aktuellste** nennen und zusätzlich **alle abweichenden Kapitel** älterer Fassungen, die relevante Änderungen enthalten (z. B. „EXIF 3.0 §4.6.4; EXIF 2.32 §…“).
-  *Wenn bereits erfasst:* nur ergänzen, **wenn notwendig** (fehlend/unpräzise/veraltet).
-* **Enums für gängige Kodierungen:**
-  Nutze **native PHP-Enums** (backed) für häufige Kodierungen/Typen, z. B.:
 
-    * **Zeichenkodierung:** `ASCII`, `UTF8`, `UTF16BE`, `UTF16LE`
-    * **Endianness (TIFF):** `II` (little), `MM` (big)
-    * **EXIF/IFD-Bereiche:** `IFD0`, `ExifIFD`, `GPSIFD`, `InteropIFD`, `MakerNotes`
-    * **XMP-Container:** `Alt`, `Bag`, `Seq`
-    * **ISOBMFF-Construction:** `FileOffset`, `Offset64`, `ItemOffset` (falls relevant)
-    * **ColorSpace/Orientation/Compression** (wenn stabil und breit genutzt)
-      **Ziel:** weniger Magic Strings/Numbers, klarer Vertrag, bessere Typ-Sicherheit.
+**Nachvollziehbarkeit (Specs):**
+
+* In Parsern **am jeweiligen Code-Punkt** per PHPDoc/Inline-Kommentar das **zutreffende Kapitel** der EXIF-Spezifikation referenzieren (Form: `EXIF 3.0 §<Kapitel>`).
+* **Wenn mehrere Fassungen gelten:** immer die **aktuellste** nennen **und** zusätzlich alle **abweichenden Kapitel** älterer Fassungen mit relevanten Änderungen (z. B. „EXIF 3.0 §4.6.4; EXIF 2.32 §…“).
+* **Wenn bereits erfasst:** nur ergänzen, **wenn notwendig** (fehlend/unpräzise/veraltet).
+
+**Enums für gängige Kodierungen (native PHP-Enums, backed):**
+
+* **Zeichenkodierung:** `ASCII`, `UTF8`, `UTF16BE`, `UTF16LE`
+* **Endianness (TIFF):** `II` (little), `MM` (big)
+* **EXIF/IFD-Bereiche:** `IFD0`, `ExifIFD`, `GPSIFD`, `InteropIFD`, `MakerNotes`
+* **XMP-Container:** `Alt`, `Bag`, `Seq`
+* **ISOBMFF Construction:** `FileOffset`, `Offset64`, `ItemOffset` (falls relevant)
+* **Weitere stabile Typen:** z. B. `ColorSpace`, `Orientation`, `Compression`
+  **Ziel:** weniger Magic Numbers/Strings, klarer Vertrag, bessere Typ-Sicherheit.
 
 ---
 
@@ -66,6 +68,7 @@
 * **Tests:** `composer ci:test:php:unit`
 * **Coverage:** `composer ci:test:php:unit:coverage` (Ziel ≥ **90 %**)
 * **Static:** `composer ci:test:php:phpstan`
+* **CPD (Dupes):** `composer ci:test:php:cpd`
 * **CGL/Style:** `composer ci:cgl` (Änderungen vollständig übernehmen)
 
 **Git-Flow (ohne Diffs):**
@@ -82,14 +85,14 @@
 
 * **Nur** die im Issue freigegebenen Dateien ändern.
 * **Keine** externen Binaries/Extensions; **kein** `exif_read_data()`.
-* Harte **Max-Limits** für Segment/Box/Packet-Längen; immer Bounds-Checks; kein Netz-I/O.
+* Harte **Max-Limits** für Segment/Box/Packet-Längen; immer Bounds-Checks; **kein Netz-I/O**.
 
 **TIFF/EXIF**
 
 * Endianness strikt (Classic `0x2A`, BigTIFF `0x2B`/64-bit).
 * Inline-Werte: ≤ 4 Bytes (Classic) / ≤ 8 Bytes (BigTIFF).
-* `RATIONAL/SRATIONAL` korrekt; GPS-Vorzeichen über Ref-Tags (S/W negativ).
-* **Spezifikationshinweis:** Bei neuen Parser-Zweigen **Kapitelzitierung** gemäß „Nachvollziehbarkeit (Specs)“.
+* `RATIONAL/SRATIONAL` korrekt; GPS-Vorzeichen aus Ref-Tags (S/W negativ).
+* **Specs-Pflicht:** Neue/angepasste Parserzweige **mit Kapitelzitierung** (siehe „Nachvollziehbarkeit (Specs)“).
 
 **ISOBMFF/QuickTime**
 
@@ -116,7 +119,7 @@
 2. **Spec Writer** — **AC** & **Testfälle** (positiv/negativ) definieren; „rot“ klar benennen.
 3. **Test Agent (RED)** — nur `tests/**` committen; synthetische Streams/Blobs statt großer Binär-Fixtures.
 4. **Implementer (GREEN)** — minimaler Code-Change im Datei-Scope, der die Tests grün macht; Streaming & Guards einhalten;
-   **ergänze/prüfe**: *Spec-Kapitel-Referenzen*, *Docblocks*, *sprechende Variablennamen*, *Inline-Kommentare* (komplexe Stellen), *Enums* für gängige Kodierungen.
+   **ergänze/prüfe**: *Spec-Kapitel-Referenzen*, *Docblocks*, *sprechende Variablennamen*, *Inline-Kommentare* (komplexe Stellen), *Enums* (gängige Kodierungen).
 5. **Static/QA** — PHPStan/PHPCS grün; kleine Cleanups ohne Semantikwechsel.
 6. **Security** — Längen/Offsets/XMP-Flags prüfen; DoS-Flächen minimieren.
 7. **Reviewer & Release** — Review auf Minimalität/DX/AC **inkl. Spec-Referenzen & Enums**; PR-Text, Changelog, Labels, „Closes #…“, Tag.
@@ -132,9 +135,9 @@ Rolle: Implementer. Erfülle Issue „<TITEL>“.
 Kontext: PHP 8.4, strict_types=1, PSR-12, Streaming-Parser.
 Datei-Scope: <Liste der erlaubten Dateien>
 Guards: Bounds-Checks, Max-Größen, LIBXML_NONET, keine externen Tools.
-Dokumentation: Ergänze/prüfe EXIF-Spezifikationskapitel (aktuellste + betroffene ältere),
-vollständige Docblocks, sprechende Variablennamen, Inline-Kommentare an komplexen Stellen.
-Enums: Führe/verwende Enums für gängige Kodierungen (Encoding/Endianness/IFD/XMP etc.).
+Dokumentation: Ergänze/prüfe EXIF-Kapitel (aktuellste + betroffene ältere),
+vollständige Docblocks, sprechende Variablennamen, Inline-Kommentare (komplexe Stellen).
+Enums: Führe/verwende Enums für gängige Kodierungen (Encoding/Endianness/IFD/XMP …).
 Output: Commits (Conventional Commits) auf Branch + Pull Request.
 ```
 
@@ -143,7 +146,7 @@ Output: Commits (Conventional Commits) auf Branch + Pull Request.
 ```
 Rolle: Test Agent. Schreibe ausschließlich PHPUnit-Tests für „<TITEL>“.
 Nutze synthetische Streams/Blobs; decke Negative Pfade (ParseError/BoundsError) ab.
-Prüfe bei Specs: abweichende Kapitelstände (2.3x vs. 3.0) mit Tests untermauern.
+Validiere bei Specs abweichende Kapitelstände (2.3x vs. 3.0) mit gezielten Tests.
 Output: Commits unter tests/**; CI-Ausgabe kurz zusammenfassen.
 ```
 
@@ -160,7 +163,7 @@ aktualisiere bei Bedarf Spec-Referenzen/Enums/Docblocks/Kommentare; committe kon
 
 ```
 Rolle: Release. Schreibe PR-Beschreibung (Übersicht, Details, Tests, Risiken, Changelog, „Closes #…“).
-Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt „References“ auf.
+Liste geänderte/neu referenzierte EXIF-Kapitel (Version/§) im Abschnitt „References“ auf.
 ```
 
 ---
@@ -170,7 +173,7 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 * **EXIF/BigTIFF:** Inline-Grenzen; `RATIONAL/SRATIONAL` korrekt; GPS-Ref → Vorzeichen; Offsets als `uint64`.
   *Enums:* `Endianness`, `IfdKind`, `ExifType`, `CharacterEncoding`.
 * **ISOBMFF:** Header/Größen valid; 32/64-bit-Längen; `iloc`-Extents summieren; keine Remote-Refs.
-  *Enums:* `ConstructionMethod`, ggf. `BoxType` (string-backed, wenn stabil genutzt).
+  *Enums:* `ConstructionMethod`, optional `BoxType` (string-backed, wenn stabil genutzt).
 * **XMP:** Signaturen prüfen; Netz/DTD verbieten; defekte XML robust handhaben (Teilresultate, keine Fatals).
   *Enums:* `XmpContainer` (`Alt|Bag|Seq`).
 * **Security:** harte Limits, Exceptions statt Warnings; absolut kein Netz-I/O.
@@ -180,9 +183,10 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 ## 8) Definition of Done (DoD)
 
 * ✅ PHPUnit **grün** (inkl. Negativfälle)
-* ✅ **Coverage ≥ 90 %** (via `ci:test:php:unit:coverage`)
+* ✅ **Coverage ≥ 90 %** (`ci:test:php:unit:coverage`)
 * ✅ PHPStan **grün** (mind. alle geänderten Dateien)
 * ✅ PHPCS/CGL **grün**; Format-Änderungen übernommen
+* ✅ **CPD** ohne relevante Duplikate
 * ✅ Änderungen **minimal** und im Datei-Scope
 * ✅ AC erfüllt; README/Changelog/PR-Text aktualisiert
 * ✅ **Spec-Referenzen** (aktuellste + abweichende ältere Kapitel) im Code ergänzt/geprüft
@@ -201,8 +205,8 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
     * `tests/Parse/IsoBmff/**`
 * **Guards:** Box-Size ≥ Header; Offsets/Längen in `uint64`; Extent-Summe ≤ Datei-Größe; `data_reference_index ≠ 0` → skip.
 * **Erwartung:** EXIF via Exif-Box **oder** `iloc`; XMP via `uuid`/Item; `content.identifier` extrahiert; korrupt → `ParseError`.
-* **Dokumentation:** Parserstellen mit `iloc`/`uuid`/`keys`-Pfaden **mit EXIF/ISOBMFF-Kapiteln** referenzieren; Enums für `constructionMethod`/`dataRef` verwenden.
-* **Output:** Branch `feat/isobmff-fixes`, Commit-Serie (RED→GREEN→QA), PR mit CI grün.
+* **Dokumentation:** Parserstellen mit `iloc`/`uuid`/`keys` **mit EXIF/ISOBMFF-Kapiteln** referenzieren; Enums für `constructionMethod`/`dataRef` verwenden.
+* **Output:** Branch `feat/isobmff-fixes`, Commit-Serie (RED → GREEN → QA), PR mit CI grün.
 
 ---
 
@@ -214,6 +218,7 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 * **Fragiler XMP-Parser** → `LIBXML_NONET`, keine DTD/Entities, defekte XML tolerant behandeln.
 * **Magic Numbers/Strings** → zentrale **Konstanten/Enums** nutzen.
 * **Fehlende Spec-Referenzen** → bei Parser-Änderungen **Kapitel** ergänzen (aktuellste + abweichende ältere).
+* **Unnötige Kontrollfluss-Reste** → überflüssige `return`/`continue` entfernen (siehe Coding-Regeln).
 
 ---
 
@@ -223,12 +228,14 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 * [ ] Streaming beibehalten; keine ungeplanten Buffer/Ganzdatei-Reads
 * [ ] Harte Bounds-Checks & Max-Limits vorhanden
 * [ ] Tests (inkl. negativ) geschrieben/aktualisiert; **Coverage ≥ 90 %**
-* [ ] PHPStan/PHPCS grün
+* [ ] PHPStan/PHPCS **grün**; **CPD** ohne relevante Duplikate
 * [ ] Kein `mixed`, kein `empty()`, keine verschachtelten Ternaries
-* [ ] Sinnvolle Konstanten/Enums statt Magic Numbers/Strings
+* [ ] Sinnvolle **Konstanten/Enums** statt Magic Numbers/Strings
 * [ ] **Docblocks** vollständig; **sprechende Variablennamen**; **Inline-Kommentare** an komplexen Stellen
 * [ ] **EXIF-Kapitel** korrekt referenziert (aktuellste + relevante ältere Fassungen)
-* [ ] Interfaces dort, wo Verträge sinnvoll sind
+* [ ] **Bedingungen sauber geklammert** (siehe Coding-Regeln)
+* [ ] **Überflüssige `return`/`continue` entfernt** (wo gefahrlos)
+* [ ] Interfaces eingesetzt, wo Verträge sinnvoll sind
 * [ ] Conventional Commits; PR mit „Closes #…“
 
 ---
@@ -237,8 +244,8 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 
 **Umsetzungsrahmen**
 
-* [ ] EXIF 1.x/2.x/3.0 konform (siehe PDFs unter `docs/…`)
-* [ ] TIFF 6.0 beachtet (`docs/TIFF6.pdf`)
+* [ ] EXIF 1.x/2.x/3.0 konform (`docs/EXIF-*.pdf`)
+* [ ] TIFF 6.0 berücksichtigt (`docs/TIFF6.pdf`)
 * [ ] PHP 8.4+ Features/Kompatibilität
 * [ ] KISS, SOLID, DRY, YAGNI, GRASP, LoD, SoC, CoC eingehalten
 
@@ -246,6 +253,7 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 
 * [ ] `composer ci:test:php:unit:coverage` **grün** (≥ 90 %)
 * [ ] `composer ci:test:php:phpstan` **grün** (mind. geänderte Dateien)
+* [ ] `composer ci:test:php:cpd` **grün**, keine Duplikate
 * [ ] `composer ci:cgl` ausgeführt, Format-Änderungen übernommen
 
 **Coding**
@@ -254,14 +262,14 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 * [ ] Kein `@deprecated` – Entfallenes entfernt
 * [ ] Tests für **jede** Klasse (inkl. Negativfälle)
 * [ ] Keine `mixed`-Typen, keine `empty()`-Aufrufe
-* [ ] **`array_find()`**, **`array_any`** genutzt, wo passend
+* [ ] **`array_find()`**, **`array_any()`**, **`array_all()`**, `array_filter`, `array_map` genutzt, wo passend
 * [ ] **Typisierte Klassenkonstanten**
 * [ ] Redundante Casts/Default-Argumente entfernt
 * [ ] Keine `{}` für einfache String-Interpolation
 * [ ] Keine verschachtelten Ternaries
 * [ ] Null-Pointer-Risiken behandelt
 * [ ] FQN/Imports sinnvoll eingesetzt (`use`, `use function`, `use const`)
-* [ ] Klassen `readonly` wenn möglich; redundante `readonly` entfernt
+* [ ] Klassen `readonly`, wenn möglich; redundante `readonly` entfernt
 * [ ] Statische Methoden **nicht** via `->`
 * [ ] Redundante/ungenutzte Methoden/Klassen entfernt
 * [ ] **Eine Klasse je Datei**
@@ -269,7 +277,12 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (mit Version/§) im Abschnitt �
 * [ ] Test-Namespaces spiegeln `src/`-Struktur
 * [ ] Variablen/Konstanten **aussagekräftig** benannt
 * [ ] **Enums** für gängige Kodierungen vorhanden/genutzt
-* [ ] **EXIF-Spezifikationskapitel** an relevanten Code-Stellen referenziert/aktualisiert
+* [ ] **EXIF-Kapitel** an relevanten Code-Stellen referenziert/aktualisiert
+* [ ] **Bedingungen geklammert:**
+
+    * **Beispiel (klammern):** `if (($this->ifd1 instanceof Ifd) && ($ifd === $this->ifd1)) { … }`
+    * **Ausnahmen (ohne zusätzliche Klammern ok):** `if ($value !== null) …`, `if (is_array($value)) …`
+* [ ] **Überflüssige `return`/`continue` entfernt**, sofern gefahrlos und ohne Semantik-Änderung
 
 ---
 
