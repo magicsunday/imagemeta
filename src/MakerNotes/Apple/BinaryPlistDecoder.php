@@ -84,7 +84,7 @@ final class BinaryPlistDecoder
      *
      * @phpstan-return BinaryPlistValue
      */
-    public function decode(string $data): ApplePlistValue
+    public function decode(string $data): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
         if ($data === '') {
             throw new ParseError('The property list data must not be empty.');
@@ -164,7 +164,7 @@ final class BinaryPlistDecoder
     /**
      * @phpstan-return BinaryPlistValue
      */
-    private function parseObject(int $index): ApplePlistValue
+    private function parseObject(int $index): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
         if (!array_key_exists($index, $this->offsetTable)) {
             throw new ParseError('The property list object reference is invalid.');
