@@ -22,7 +22,7 @@ final class ExifCoverageTest extends TestCase
     public function testCoverageMapMatchesImplementation(): void
     {
         $map = $this->loadCoverageMap(__DIR__ . '/../../resources/exif-map.yaml');
-        $this->assertNotSame([], $map, 'Coverage map must not be empty.');
+        self::assertNotSame([], $map, 'Coverage map must not be empty.');
 
         $tagMethods = $this->collectTagUsage();
         $tagMetadata = $this->collectTagMetadata();
@@ -44,10 +44,12 @@ final class ExifCoverageTest extends TestCase
         $unknownTypes = [];
         foreach ($map as $tag => $entry) {
             self::assertArrayHasKey('ifd', $entry, sprintf('Entry for %s must define the ifd field.', $tag));
-            self::assertContains($entry['ifd'], $allowedIfds, sprintf('Entry for %s references an unknown IFD "%s".', $tag, (string) $entry['ifd']));
+            self::assertIsString($entry['ifd'], sprintf('Entry for %s must provide the ifd field as string.', $tag));
+            self::assertContains($entry['ifd'], $allowedIfds, sprintf('Entry for %s references an unknown IFD "%s".', $tag, $entry['ifd']));
 
             self::assertArrayHasKey('type', $entry, sprintf('Entry for %s must define the type field.', $tag));
-            $type = (string) $entry['type'];
+            self::assertIsString($entry['type'], sprintf('Entry for %s must provide the type field as string.', $tag));
+            $type = $entry['type'];
             if ($type !== 'auto') {
                 $typeConst = 'TYPE_' . strtoupper($type);
                 if (!defined(TiffConst::class . '::' . $typeConst)) {
@@ -56,11 +58,13 @@ final class ExifCoverageTest extends TestCase
             }
 
             self::assertArrayHasKey('minVersion', $entry, sprintf('Entry for %s must define the minVersion field.', $tag));
-            $minVersion = (string) $entry['minVersion'];
+            self::assertIsString($entry['minVersion'], sprintf('Entry for %s must provide the minVersion field as string.', $tag));
+            $minVersion = $entry['minVersion'];
             self::assertMatchesRegularExpression('/^[0-9]+\.[0-9]+$/', $minVersion, sprintf('Entry for %s has invalid minVersion "%s".', $tag, $minVersion));
 
             if (isset($entry['maxVersion'])) {
-                $maxVersion = (string) $entry['maxVersion'];
+                self::assertIsString($entry['maxVersion'], sprintf('Entry for %s must provide the maxVersion field as string.', $tag));
+                $maxVersion = $entry['maxVersion'];
                 self::assertMatchesRegularExpression('/^[0-9]+\.[0-9]+$/', $maxVersion, sprintf('Entry for %s has invalid maxVersion "%s".', $tag, $maxVersion));
             }
 
@@ -70,15 +74,24 @@ final class ExifCoverageTest extends TestCase
             }
 
             self::assertArrayHasKey('voGetter', $entry, sprintf('Entry for %s must define the voGetter field.', $tag));
-            $getters = $entry['voGetter'];
-            if (!is_array($getters)) {
-                $getters = [$getters];
+            $rawGetters = $entry['voGetter'];
+            $getters = [];
+
+            if (is_array($rawGetters)) {
+                foreach ($rawGetters as $getter) {
+                    self::assertIsString($getter, sprintf('Getter entry for %s must be a string.', $tag));
+                    $getters[] = $getter;
+                }
+            } elseif (is_string($rawGetters)) {
+                $getters[] = $rawGetters;
+            } else {
+                self::fail(sprintf('Entry for %s must define voGetter as string or list of strings.', $tag));
             }
 
             self::assertNotSame([], $getters, sprintf('Entry for %s must list at least one voGetter.', $tag));
 
+            /** @var list<string> $getters */
             foreach ($getters as $getter) {
-                self::assertIsString($getter, sprintf('Getter entry for %s must be a string.', $tag));
                 $this->assertValidGetterPath($getter, $structuredReflection, $knownParsedMethods);
             }
 
@@ -90,17 +103,32 @@ final class ExifCoverageTest extends TestCase
         // Ensure there are no dangling entries pointing to methods that no longer exist.
         $danglingEntries = [];
         foreach ($map as $tag => $entry) {
-            $getters = $entry['voGetter'];
-            if (!is_array($getters)) {
-                $getters = [$getters];
+            $rawGetters = $entry['voGetter'];
+            $getters = [];
+
+            if (is_array($rawGetters)) {
+                foreach ($rawGetters as $getter) {
+                    if (!is_string($getter)) {
+                        $danglingEntries[$tag] = $getter;
+                        continue;
+                    }
+
+                    $getters[] = $getter;
+                }
+            } elseif (is_string($rawGetters)) {
+                $getters[] = $rawGetters;
+            } else {
+                continue;
             }
 
+            /** @var list<string> $getters */
             foreach ($getters as $getter) {
-                $segments = explode('.', (string) $getter);
-                if ($segments === []) {
+                if ($getter === '') {
                     $danglingEntries[$tag] = $getter;
                     continue;
                 }
+
+                $segments = explode('.', $getter);
 
                 if ($segments[0] !== 'raw') {
                     continue;
@@ -177,14 +205,15 @@ final class ExifCoverageTest extends TestCase
     /**
      * Ensures that a getter path can be resolved via StructuredExif.
      *
+     * @param ReflectionClass<StructuredExif> $structuredReflection
      * @param array<string, bool> $knownParsedMethods
      */
     private function assertValidGetterPath(string $path, ReflectionClass $structuredReflection, array $knownParsedMethods): void
     {
+        self::assertNotSame('', $path, 'Getter path must not be empty.');
+        $currentClass = new ReflectionClass($structuredReflection->getName());
         $segments = explode('.', $path);
-        self::assertNotSame([], $segments, sprintf('Getter path "%s" is empty.', $path));
 
-        $currentClass = $structuredReflection;
         foreach ($segments as $index => $segment) {
             self::assertTrue($currentClass->hasMethod($segment), sprintf('Method "%s" not found on %s for getter "%s".', $segment, $currentClass->getName(), $path));
             $method = $currentClass->getMethod($segment);
@@ -298,7 +327,7 @@ final class ExifCoverageTest extends TestCase
         ksort($tagMethods);
         $result = [];
         foreach ($tagMethods as $tag => $methods) {
-            $result[$tag] = array_values(array_keys($methods));
+            $result[$tag] = array_keys($methods);
         }
 
         return $result;
@@ -359,14 +388,15 @@ final class ExifCoverageTest extends TestCase
                 continue;
             }
 
-            if (preg_match('/public const int ([A-Z0-9_]+) = [^;]+;(.*)/', $line, $matches)) {
+            if (preg_match('/public const int ([A-Z0-9_]+) = [^;]+;(.*)/', $line, $matches) === 1) {
                 $name = $matches[1];
-                $inlineComment = $matches[2] ?? '';
+                $inlineComment = $matches[2];
                 $commentText = $docBuffer . ' ' . $inlineComment;
                 $docBuffer = '';
 
-                preg_match_all('/EXIF\s+([0-9]+(?:\.[0-9]+)?)/i', $commentText, $versionMatches);
-                $versions = $versionMatches[1] ?? [];
+                $versionMatches = [];
+                $versionMatchCount = preg_match_all('/EXIF\s+([0-9]+(?:\.[0-9]+)?)/i', $commentText, $versionMatches);
+                $versions = ($versionMatchCount === false || $versionMatchCount === 0) ? [] : $versionMatches[1];
                 $normalizedVersions = [];
                 foreach ($versions as $version) {
                     $clean = rtrim($version, '.');
