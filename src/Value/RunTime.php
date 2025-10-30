@@ -29,4 +29,36 @@ final readonly class RunTime
         public ?int $flags,
     ) {
     }
+
+    /**
+     * Returns the timeline epoch of the runtime value.
+     */
+    public function epoch(): ?int
+    {
+        return $this->epoch;
+    }
+
+    /**
+     * Returns the timescale used to interpret the runtime value.
+     */
+    public function timescale(): ?int
+    {
+        return $this->timescale;
+    }
+
+    /**
+     * Returns the raw runtime value expressed in timescale units.
+     */
+    public function value(): ?int
+    {
+        return $this->value;
+    }
+
+    /**
+     * Returns the bit mask describing the runtime value state.
+     */
+    public function flags(): ?int
+    {
+        return $this->flags;
+    }
 }

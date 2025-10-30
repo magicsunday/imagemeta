@@ -48,4 +48,102 @@ final readonly class Temporal
         public ?array $timeZoneOffsetMinutes,
     ) {
     }
+
+    /**
+     * Returns the creation timestamp.
+     */
+    public function create(): ?DateTimeImmutable
+    {
+        return $this->create;
+    }
+
+    /**
+     * Returns the modification timestamp.
+     */
+    public function modify(): ?DateTimeImmutable
+    {
+        return $this->modify;
+    }
+
+    /**
+     * Returns the original capture timestamp.
+     */
+    public function original(): ?DateTimeImmutable
+    {
+        return $this->original;
+    }
+
+    /**
+     * Returns the derived time zone instance.
+     */
+    public function tz(): ?DateTimeZone
+    {
+        return $this->tz;
+    }
+
+    /**
+     * Returns the identifier of the metadata source providing the timezone.
+     */
+    public function tzSource(): ?string
+    {
+        return $this->tzSource;
+    }
+
+    /**
+     * Returns the OffsetTime tag value.
+     */
+    public function offsetTime(): ?string
+    {
+        return $this->offsetTime;
+    }
+
+    /**
+     * Returns the OffsetTimeOriginal tag value.
+     */
+    public function offsetTimeOriginal(): ?string
+    {
+        return $this->offsetTimeOriginal;
+    }
+
+    /**
+     * Returns the OffsetTimeDigitized tag value.
+     */
+    public function offsetTimeDigitized(): ?string
+    {
+        return $this->offsetTimeDigitized;
+    }
+
+    /**
+     * Returns the SubSecTime value from EXIF.
+     */
+    public function subSecTime(): ?string
+    {
+        return $this->subSecTime;
+    }
+
+    /**
+     * Returns the SubSecTimeOriginal value from EXIF.
+     */
+    public function subSecTimeOriginal(): ?string
+    {
+        return $this->subSecTimeOriginal;
+    }
+
+    /**
+     * Returns the SubSecTimeDigitized value from EXIF.
+     */
+    public function subSecTimeDigitized(): ?string
+    {
+        return $this->subSecTimeDigitized;
+    }
+
+    /**
+     * Returns the TimeZoneOffset values expressed in minutes.
+     *
+     * @return list<int>|null
+     */
+    public function timeZoneOffsetMinutes(): ?array
+    {
+        return $this->timeZoneOffsetMinutes;
+    }
 }

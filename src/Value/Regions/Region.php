@@ -39,4 +39,76 @@ final readonly class Region
         public ?string $faceId = null,
     ) {
     }
+
+    /**
+     * Returns the semantic classification of the region.
+     */
+    public function type(): ?RegionType
+    {
+        return $this->type;
+    }
+
+    /**
+     * Returns the normalised X coordinate of the top left corner.
+     */
+    public function x(): float
+    {
+        return $this->x;
+    }
+
+    /**
+     * Returns the normalised Y coordinate of the top left corner.
+     */
+    public function y(): float
+    {
+        return $this->y;
+    }
+
+    /**
+     * Returns the normalised region width.
+     */
+    public function w(): float
+    {
+        return $this->w;
+    }
+
+    /**
+     * Returns the normalised region height.
+     */
+    public function h(): float
+    {
+        return $this->h;
+    }
+
+    /**
+     * Returns the associated person name when the region marks a face.
+     */
+    public function personName(): ?string
+    {
+        return $this->personName;
+    }
+
+    /**
+     * Returns the detection confidence value if provided.
+     */
+    public function confidence(): ?float
+    {
+        return $this->confidence;
+    }
+
+    /**
+     * Returns the rotation angle in degrees, positive values rotate clockwise.
+     */
+    public function rotationDeg(): ?float
+    {
+        return $this->rotationDeg;
+    }
+
+    /**
+     * Returns the optional identifier emitted by face detection engines.
+     */
+    public function faceId(): ?string
+    {
+        return $this->faceId;
+    }
 }

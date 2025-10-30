@@ -33,4 +33,58 @@ final readonly class ColorProfileHueSatMap
         public ?array $mapData3,
     ) {
     }
+
+    /**
+     * Returns the number of hue slices stored in the map.
+     */
+    public function hueDivisions(): ?int
+    {
+        return $this->hueDivisions;
+    }
+
+    /**
+     * Returns the number of saturation slices stored in the map.
+     */
+    public function saturationDivisions(): ?int
+    {
+        return $this->saturationDivisions;
+    }
+
+    /**
+     * Returns the number of value/lightness slices stored in the map.
+     */
+    public function valueDivisions(): ?int
+    {
+        return $this->valueDivisions;
+    }
+
+    /**
+     * Returns the primary hue/saturation/value adjustment table.
+     *
+     * @return list<float>|null
+     */
+    public function mapData1(): ?array
+    {
+        return $this->mapData1;
+    }
+
+    /**
+     * Returns the secondary adjustment table when provided by the profile.
+     *
+     * @return list<float>|null
+     */
+    public function mapData2(): ?array
+    {
+        return $this->mapData2;
+    }
+
+    /**
+     * Returns the tertiary adjustment table when present in the profile.
+     *
+     * @return list<float>|null
+     */
+    public function mapData3(): ?array
+    {
+        return $this->mapData3;
+    }
 }

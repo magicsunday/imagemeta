@@ -31,4 +31,44 @@ final readonly class Container
         public ?string $audioCodec,
     ) {
     }
+
+    /**
+     * Returns the primary container format description.
+     */
+    public function format(): ?string
+    {
+        return $this->format;
+    }
+
+    /**
+     * Returns the encoder or muxer identifier responsible for the file.
+     */
+    public function encoder(): ?string
+    {
+        return $this->encoder;
+    }
+
+    /**
+     * Returns the average container bitrate in bits per second.
+     */
+    public function bitrate(): ?int
+    {
+        return $this->bitrate;
+    }
+
+    /**
+     * Returns the declared video codec identifier.
+     */
+    public function videoCodec(): ?string
+    {
+        return $this->videoCodec;
+    }
+
+    /**
+     * Returns the declared audio codec identifier.
+     */
+    public function audioCodec(): ?string
+    {
+        return $this->audioCodec;
+    }
 }

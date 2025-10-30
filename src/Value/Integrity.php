@@ -33,4 +33,52 @@ final readonly class Integrity
         public ?bool $makerNotesSafe = null,
     ) {
     }
+
+    /**
+     * Returns the original file name when available.
+     */
+    public function originalFileName(): ?string
+    {
+        return $this->originalFileName;
+    }
+
+    /**
+     * Returns the digest identifying the original asset.
+     */
+    public function originalDigest(): ?string
+    {
+        return $this->originalDigest;
+    }
+
+    /**
+     * Indicates whether editing history is present.
+     */
+    public function edited(): ?bool
+    {
+        return $this->edited;
+    }
+
+    /**
+     * Returns the last software recorded in the editing history.
+     */
+    public function historyLastSoftware(): ?string
+    {
+        return $this->historyLastSoftware;
+    }
+
+    /**
+     * Returns the free-form image history description.
+     */
+    public function imageHistory(): ?string
+    {
+        return $this->imageHistory;
+    }
+
+    /**
+     * Returns the flag denoting whether maker notes are safe to edit.
+     */
+    public function makerNotesSafe(): ?bool
+    {
+        return $this->makerNotesSafe;
+    }
 }

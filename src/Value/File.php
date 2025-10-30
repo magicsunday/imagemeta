@@ -31,4 +31,44 @@ final readonly class File
         public ?string $digestMd5,
     ) {
     }
+
+    /**
+     * Returns the detected mime type of the asset.
+     */
+    public function mimeType(): ?string
+    {
+        return $this->mimeType;
+    }
+
+    /**
+     * Returns the file size in bytes when known.
+     */
+    public function fileSize(): ?int
+    {
+        return $this->fileSize;
+    }
+
+    /**
+     * Returns the lower-case file extension derived from the container.
+     */
+    public function extension(): ?string
+    {
+        return $this->extension;
+    }
+
+    /**
+     * Returns the lowercase hexadecimal SHA-1 digest of the payload.
+     */
+    public function digestSha1(): ?string
+    {
+        return $this->digestSha1;
+    }
+
+    /**
+     * Returns the lowercase hexadecimal MD5 digest of the payload.
+     */
+    public function digestMd5(): ?string
+    {
+        return $this->digestMd5;
+    }
 }

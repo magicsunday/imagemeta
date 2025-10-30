@@ -31,4 +31,44 @@ final readonly class Rights
         public ?string $securityClassification,
     ) {
     }
+
+    /**
+     * Returns the copyright notice text.
+     */
+    public function copyright(): ?string
+    {
+        return $this->copyright;
+    }
+
+    /**
+     * Returns the usage terms or rights expression.
+     */
+    public function usageTerms(): ?string
+    {
+        return $this->usageTerms;
+    }
+
+    /**
+     * Returns the licence URL when provided.
+     */
+    public function licenseUrl(): ?string
+    {
+        return $this->licenseUrl;
+    }
+
+    /**
+     * Returns the credit line or byline.
+     */
+    public function creditLine(): ?string
+    {
+        return $this->creditLine;
+    }
+
+    /**
+     * Returns the security classification assigned to the asset.
+     */
+    public function securityClassification(): ?string
+    {
+        return $this->securityClassification;
+    }
 }

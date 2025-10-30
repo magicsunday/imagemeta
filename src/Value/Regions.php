@@ -24,4 +24,14 @@ final readonly class Regions
     public function __construct(public array $items)
     {
     }
+
+    /**
+     * Returns the list of annotated regions.
+     *
+     * @return list<Region>
+     */
+    public function items(): array
+    {
+        return $this->items;
+    }
 }

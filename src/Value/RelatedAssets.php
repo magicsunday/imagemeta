@@ -33,4 +33,52 @@ final readonly class RelatedAssets
         public ?string $relatedSoundFile,
     ) {
     }
+
+    /**
+     * Returns the identifier of the paired live photo asset.
+     */
+    public function livePhotoPairId(): ?string
+    {
+        return $this->livePhotoPairId;
+    }
+
+    /**
+     * Returns the identifier for the burst set.
+     */
+    public function burstId(): ?string
+    {
+        return $this->burstId;
+    }
+
+    /**
+     * Indicates whether this asset is the selected burst frame.
+     */
+    public function isPrimaryInBurst(): ?bool
+    {
+        return $this->isPrimaryInBurst;
+    }
+
+    /**
+     * Returns the panorama identifier when available.
+     */
+    public function panoramaId(): ?string
+    {
+        return $this->panoramaId;
+    }
+
+    /**
+     * Returns the identifier of an associated depth data asset.
+     */
+    public function depthDataId(): ?string
+    {
+        return $this->depthDataId;
+    }
+
+    /**
+     * Returns the name of a related sound file attached to the capture.
+     */
+    public function relatedSoundFile(): ?string
+    {
+        return $this->relatedSoundFile;
+    }
 }

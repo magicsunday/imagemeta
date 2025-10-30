@@ -31,4 +31,36 @@ final readonly class WhiteBalanceDetails
         public ?float $bgGain,
     ) {
     }
+
+    /**
+     * Returns the selected white balance mode.
+     */
+    public function mode(): ?WhiteBalance
+    {
+        return $this->mode;
+    }
+
+    /**
+     * Returns the colour temperature in Kelvin.
+     */
+    public function kelvin(): ?int
+    {
+        return $this->kelvin;
+    }
+
+    /**
+     * Returns the red/green channel gain ratio.
+     */
+    public function rgGain(): ?float
+    {
+        return $this->rgGain;
+    }
+
+    /**
+     * Returns the blue/green channel gain ratio.
+     */
+    public function bgGain(): ?float
+    {
+        return $this->bgGain;
+    }
 }
