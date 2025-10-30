@@ -16,6 +16,9 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
+/**
+ * @phpstan-import-type SemanticStyleDictionary from SemanticStyle
+ */
 final class SemanticStyleTest extends TestCase
 {
     public function testFromQuickTimeParsesModernStructure(): void
@@ -46,7 +49,32 @@ final class SemanticStyleTest extends TestCase
 
     public function testFromValueNormalisesDeeplyNestedStructure(): void
     {
-        $payload = [
+        $payload = $this->nestedSemanticStylePayload();
+
+        self::assertSame(['Cinematic', 0.45, 0.67], SemanticStyle::fromValue($payload));
+    }
+
+    public function testFromValueReturnsNullWhenNoComponents(): void
+    {
+        self::assertNull(SemanticStyle::fromValue(['values' => []]));
+    }
+
+    /**
+     * Builds a deeply nested semantic style payload used for normalisation tests.
+     *
+     * @return array{
+     *     values: array{
+     *         Values: array{
+     *             0: array{value: array{Value: array{value: array{Value: array{value: string}}}}},
+     *             1: array{value: list<array{Value: array{value: array{Value: array{value: float}}}}>},
+     *             2: array{value: list<array{value: list<array{Value: string}>}>}
+     *         }
+     *     }
+     * }
+     */
+    private function nestedSemanticStylePayload(): array
+    {
+        return [
             'values' => [
                 'Values' => [
                     0 => [
@@ -87,19 +115,15 @@ final class SemanticStyleTest extends TestCase
                 ],
             ],
         ];
-
-        self::assertSame(['Cinematic', 0.45, 0.67], SemanticStyle::fromValue($payload));
     }
 
-    public function testFromValueReturnsNullWhenNoComponents(): void
-    {
-        self::assertNull(SemanticStyle::fromValue(['values' => []]));
-    }
 
     /**
      * Creates a QuickTime metadata container populated with the supplied semantic style payload.
      *
-     * @param array<int|string, mixed> $semanticStyle
+     * @param SemanticStyleDictionary $semanticStyle
+     *
+     * @phpstan-param SemanticStyleDictionary $semanticStyle
      */
     private function quickTimeMeta(array $semanticStyle): QuickTimeMeta
     {

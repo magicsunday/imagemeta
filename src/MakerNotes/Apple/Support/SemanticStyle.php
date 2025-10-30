@@ -29,10 +29,20 @@ use function trim;
  * Normalises Apple semantic style payloads into preset, warmth and tone tuples.
  *
  * @phpstan-type SemanticStyleScalar bool|float|int|string|null
- * @phpstan-type SemanticStyleArray array<int|string, SemanticStyleScalar|SemanticStyleArray>
- * @phpstan-type SemanticStyleValue SemanticStyleScalar|SemanticStyleArray
+ * @phpstan-type SemanticStyleLayer0 array<int|string, SemanticStyleScalar|object>
+ * @phpstan-type SemanticStyleLayer1 array<int|string, SemanticStyleScalar|SemanticStyleLayer0|object>
+ * @phpstan-type SemanticStyleLayer2 array<int|string, SemanticStyleScalar|SemanticStyleLayer1|object>
+ * @phpstan-type SemanticStyleLayer3 array<int|string, SemanticStyleScalar|SemanticStyleLayer2|object>
+ * @phpstan-type SemanticStyleLayer4 array<int|string, SemanticStyleScalar|SemanticStyleLayer3|object>
+ * @phpstan-type SemanticStyleLayer5 array<int|string, SemanticStyleScalar|SemanticStyleLayer4|object>
+ * @phpstan-type SemanticStyleLayer6 array<int|string, SemanticStyleScalar|SemanticStyleLayer5|object>
+ * @phpstan-type SemanticStyleLayer7 array<int|string, SemanticStyleScalar|SemanticStyleLayer6|object>
+ * @phpstan-type SemanticStyleLayer8 array<int|string, SemanticStyleScalar|SemanticStyleLayer7|object>
+ * @phpstan-type SemanticStyleLayer9 array<int|string, SemanticStyleScalar|SemanticStyleLayer8|object>
+ * @phpstan-type SemanticStyleLayer10 array<int|string, SemanticStyleScalar|SemanticStyleLayer9|object>
+ * @phpstan-type SemanticStyleDictionary SemanticStyleLayer10
+ * @phpstan-type SemanticStyleValue SemanticStyleScalar|SemanticStyleDictionary
  * @phpstan-type SemanticStyleEntries array<int|string, SemanticStyleScalar>
- * @phpstan-type SemanticStyleDictionary array<int|string, SemanticStyleScalar|SemanticStyleArray|object>
  */
 final class SemanticStyle
 {
@@ -138,7 +148,6 @@ final class SemanticStyle
                 $nested = $semantic[$nestedKey];
 
                 if (is_array($nested)) {
-                    /** @var array<int|string, mixed> $nested */
                     return self::normaliseEntries($nested);
                 }
 
@@ -199,7 +208,7 @@ final class SemanticStyle
 
                 array_find(
                     $entry,
-                    static function (mixed $candidate) use (&$scalar): bool {
+                    static function (array|bool|float|int|string|null|object $candidate) use (&$scalar): bool {
                         if (
                             is_array($candidate)
                             || is_bool($candidate)
