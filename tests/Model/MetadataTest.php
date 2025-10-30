@@ -234,4 +234,18 @@ XML;
 
         self::assertSame($xmpDoc, $metadata->selectiveXmpDocument());
     }
+
+    /**
+     * Ensures structured metadata is computed lazily and cached for repeated lookups.
+     */
+    #[Test]
+    public function cachesStructuredAggregate(): void
+    {
+        $metadata = new Metadata([], null);
+
+        $first  = $metadata->structured();
+        $second = $metadata->structured();
+
+        self::assertSame($first, $second);
+    }
 }

@@ -1,0 +1,39 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Model;
+
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+
+/**
+ * Lazily assembles and caches structured metadata derived from the aggregate.
+ */
+final class StructuredMetadataCache
+{
+    private readonly ExifAssembler $assembler;
+
+    private ?StructuredMetadata $structured = null;
+
+    public function __construct(?ExifAssembler $assembler = null)
+    {
+        $this->assembler = $assembler ?? new ExifAssembler();
+    }
+
+    public function resolve(Metadata $metadata): StructuredMetadata
+    {
+        if (!$this->structured instanceof StructuredMetadata) {
+            $this->structured = $this->assembler->assemble($metadata);
+        }
+
+        return $this->structured;
+    }
+}
