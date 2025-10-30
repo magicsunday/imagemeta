@@ -232,11 +232,16 @@ final class MpfParser
     /**
      * Decodes the raw value bytes using the specified TIFF field type.
      *
-     * @return int|string|list<int>|MpfRational|list<MpfRational>
+     * @return int|string|array{numerator:int, denominator:int}|array<int, int>|array<int, array{numerator:int, denominator:int}>
      *
      * @phpstan-return MpfValue
      */
-    private function decodeValue(int $type, int $componentCount, string $data, Endian $endian): int|string|array
+    private function decodeValue(
+        int $type,
+        int $componentCount,
+        string $data,
+        Endian $endian,
+    ): int|string|array
     {
         if ($componentCount === 0) {
             return [];
