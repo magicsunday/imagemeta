@@ -30,6 +30,11 @@ use function substr;
 
 /**
  * Minimal decoder for Apple's binary property list format used inside maker notes.
+ *
+ * @phpstan-type BinaryPlistScalar bool|float|int|string|null
+ * @phpstan-type BinaryPlistValue ApplePlistScalar|ApplePlistArray|ApplePlistDictionary
+ * @phpstan-type BinaryPlistArray list<BinaryPlistValue>
+ * @phpstan-type BinaryPlistDictionary array<string, BinaryPlistValue>
  */
 final class BinaryPlistDecoder
 {
@@ -76,6 +81,8 @@ final class BinaryPlistDecoder
 
     /**
      * Decodes the supplied binary property list and returns the top level value.
+     *
+     * @phpstan-return BinaryPlistValue
      */
     public function decode(string $data): ApplePlistValue
     {
@@ -154,6 +161,9 @@ final class BinaryPlistDecoder
         $this->topObjectIndex = $topObject;
     }
 
+    /**
+     * @phpstan-return BinaryPlistValue
+     */
     private function parseObject(int $index): ApplePlistValue
     {
         if (!array_key_exists($index, $this->offsetTable)) {
@@ -183,6 +193,9 @@ final class BinaryPlistDecoder
         };
     }
 
+    /**
+     * @param BinaryPlistScalar $value
+     */
     private function wrapScalar(bool|float|int|string|null $value): ApplePlistScalar
     {
         return new ApplePlistScalar($value);
@@ -367,6 +380,9 @@ final class BinaryPlistDecoder
         return $trimmed === '' ? '0' : $trimmed;
     }
 
+    /**
+     * @phpstan-return ApplePlistArray
+     */
     private function parseArray(int $offset, int $info): ApplePlistArray
     {
         [$count, $header] = $this->readLength($offset, $info);
@@ -380,6 +396,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Array references exceed payload bounds.');
         }
 
+        /** @var BinaryPlistArray $result */
         $result = [];
         for ($idx = 0; $idx < $count; ++$idx) {
             $reference = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
@@ -389,6 +406,9 @@ final class BinaryPlistDecoder
         return new ApplePlistArray($result);
     }
 
+    /**
+     * @phpstan-return ApplePlistDictionary
+     */
     private function parseDictionary(int $offset, int $info): ApplePlistDictionary
     {
         [$count, $header] = $this->readLength($offset, $info);
@@ -402,7 +422,10 @@ final class BinaryPlistDecoder
             throw new ParseError('Dictionary references exceed payload bounds.');
         }
 
-        $keys   = [];
+        /** @var list<ApplePlistValue> $keys */
+        $keys = [];
+
+        /** @var list<ApplePlistValue> $values */
         $values = [];
         for ($idx = 0; $idx < $count; ++$idx) {
             $keyRef = $this->readUint($refsOffset + ($idx * $this->objectRefSize), $this->objectRefSize);
@@ -415,6 +438,7 @@ final class BinaryPlistDecoder
             $values[] = $this->parseObject($valRef);
         }
 
+        /** @var BinaryPlistDictionary $entries */
         $entries = [];
         foreach ($keys as $idx => $key) {
             if (!$key instanceof ApplePlistScalar || !is_string($key->value())) {

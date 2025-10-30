@@ -636,7 +636,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             && !array_key_exists('SemanticStyleWarmth', $dictionary)
             && !array_key_exists('SemanticStyleTone', $dictionary)
         ) {
-            $semanticStyleCompact = SemanticStyle::fromDictionary($dictionary);
+            /** @var array<int|string, bool|float|int|string|null|array<int|string, bool|float|int|string|null|array<int|string, bool|float|int|string|null|array<int|string, bool|float|int|string|null>>>|object> $semanticDictionary */
+            $semanticDictionary = $dictionary;
+            $semanticStyleCompact = SemanticStyle::fromDictionary($semanticDictionary);
             if ($semanticStyleCompact !== null) {
                 [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 
@@ -688,7 +690,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $semanticStylePreset = $this->stringValue($dictionary, 'SemanticStylePreset');
         $semanticStyleWarmth = $this->floatValue($dictionary, 'SemanticStyleWarmth');
         $semanticStyleTone   = $this->floatValue($dictionary, 'SemanticStyleTone');
-        $semanticStyleCompact ??= SemanticStyle::fromDictionary($dictionary);
+        if ($semanticStyleCompact === null) {
+            /** @var array<int|string, bool|float|int|string|null|array<int|string, bool|float|int|string|null|array<int|string, bool|float|int|string|null|array<int|string, bool|float|int|string|null>>>|object> $semanticDictionary */
+            $semanticDictionary = $dictionary;
+            $semanticStyleCompact = SemanticStyle::fromDictionary($semanticDictionary);
+        }
         if ($semanticStyleCompact !== null) {
             [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 

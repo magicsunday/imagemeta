@@ -20,16 +20,20 @@ use function is_string;
 
 /**
  * Minimal keyed archive unarchiver converting `CF$UID` based dictionaries into associative arrays.
+ *
+ * @phpstan-type KeyedArchiveValue ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+ * @phpstan-type KeyedArchiveArray list<KeyedArchiveValue>
+ * @phpstan-type KeyedArchiveDictionary array<string, KeyedArchiveValue>
  */
 final class KeyedArchiveUnarchiver
 {
     /**
-     * @var list<ApplePlistValue>
+     * @var KeyedArchiveArray
      */
     private array $objects = [];
 
     /**
-     * @var array<int, ApplePlistValue>
+     * @var array<int, KeyedArchiveValue>
      */
     private array $resolved = [];
 
@@ -55,7 +59,9 @@ final class KeyedArchiveUnarchiver
             throw new ParseError('The keyed archive does not define a root object.');
         }
 
-        $this->objects    = $objectsValue->values();
+        /** @var KeyedArchiveArray $objects */
+        $objects          = $objectsValue->values();
+        $this->objects    = $objects;
         $this->resolved   = [];
         $this->inProgress = [];
 
@@ -67,6 +73,9 @@ final class KeyedArchiveUnarchiver
         return $root;
     }
 
+    /**
+     * @phpstan-return KeyedArchiveValue
+     */
     private function resolveValue(ApplePlistValue $value): ApplePlistValue
     {
         if ($value instanceof ApplePlistDictionary) {
@@ -95,6 +104,7 @@ final class KeyedArchiveUnarchiver
                 return $this->resolveArray($value);
             }
 
+            /** @var KeyedArchiveDictionary $resolved */
             $resolved = [];
             foreach ($value->entries() as $key => $entry) {
                 if ($key === '$class') {
@@ -108,6 +118,7 @@ final class KeyedArchiveUnarchiver
         }
 
         if ($value instanceof ApplePlistArray) {
+            /** @var KeyedArchiveArray $resolved */
             $resolved = [];
             foreach ($value->values() as $entry) {
                 $resolved[] = $this->resolveValue($entry);
@@ -116,7 +127,11 @@ final class KeyedArchiveUnarchiver
             return new ApplePlistArray($resolved);
         }
 
-        return $value;
+        if ($value instanceof ApplePlistScalar) {
+            return $value;
+        }
+
+        throw new ParseError('Unsupported keyed archive value encountered.');
     }
 
     private function isUidReference(ApplePlistDictionary $reference): bool
@@ -137,6 +152,9 @@ final class KeyedArchiveUnarchiver
         return is_int($uid) || is_string($uid);
     }
 
+    /**
+     * @phpstan-return KeyedArchiveValue
+     */
     private function resolveUid(int $uid): ApplePlistValue
     {
         if (array_key_exists($uid, $this->resolved)) {
@@ -158,11 +176,15 @@ final class KeyedArchiveUnarchiver
 
         unset($this->inProgress[$uid]);
 
+        /** @var KeyedArchiveValue $value */
         $this->resolved[$uid] = $value;
 
         return $value;
     }
 
+    /**
+     * @phpstan-return ApplePlistDictionary
+     */
     private function resolveDictionary(ApplePlistDictionary $dictionary): ApplePlistDictionary
     {
         $keysValue   = $dictionary->get('NS.keys');
@@ -183,6 +205,7 @@ final class KeyedArchiveUnarchiver
             throw new ParseError('The keyed archive dictionary contains mismatched entries.');
         }
 
+        /** @var KeyedArchiveDictionary $result */
         $result = [];
         foreach ($keys as $index => $keyReference) {
             $key = $this->resolveValue($keyReference);
@@ -202,6 +225,9 @@ final class KeyedArchiveUnarchiver
         return new ApplePlistDictionary($result);
     }
 
+    /**
+     * @phpstan-return ApplePlistArray
+     */
     private function resolveArray(ApplePlistDictionary $array): ApplePlistArray
     {
         $objects = $array->get('NS.objects');
@@ -209,6 +235,7 @@ final class KeyedArchiveUnarchiver
             throw new ParseError('The keyed archive array contents are invalid.');
         }
 
+        /** @var KeyedArchiveArray $resolved */
         $resolved = [];
         foreach ($objects->values() as $entry) {
             $resolved[] = $this->resolveValue($entry);
