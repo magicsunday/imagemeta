@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Api;
 
 use MagicSunday\ImageMeta\Exif\ExifReader;
 use MagicSunday\ImageMeta\Exif\StructuredExif;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
 use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
@@ -103,7 +104,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @method static void assertStructuredMatches(string $fixture, Metadata $metadata, StructuredExpectation $expected)
  * @method static void assertApiMatches(string $fixture, StructuredExif $document, ApiExpectation $expected)
- * @method static void assertModelMatches(string $fixture, ?\MagicSunday\ImageMeta\Model\Exif\ParsedExif $document, ModelExpectation $expected)
+ * @method static void assertModelMatches(string $fixture, ?ParsedExif $document, ModelExpectation $expected)
  */
 final class ExifReaderTest extends TestCase
 {

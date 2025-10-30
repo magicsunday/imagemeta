@@ -424,7 +424,7 @@ final class MpfParser
     }
 
     /**
-     * @param MpfDirectory $entries
+     * @param MpfDirectory     $entries
      * @param array<int, true> $known
      *
      * @return MpfDirectory

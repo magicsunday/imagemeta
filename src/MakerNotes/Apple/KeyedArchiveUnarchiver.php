@@ -60,8 +60,9 @@ final class KeyedArchiveUnarchiver
         }
 
         /** @var KeyedArchiveArray $objects */
-        $objects          = $objectsValue->values();
-        $this->objects    = $objects;
+        $objects       = $objectsValue->values();
+        $this->objects = $objects;
+
         $this->resolved   = [];
         $this->inProgress = [];
 

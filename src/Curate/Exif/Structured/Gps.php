@@ -142,19 +142,9 @@ final readonly class Gps
         return $this->latitude;
     }
 
-    public function lat(): ?GpsCoordinate
-    {
-        return $this->latitude();
-    }
-
     public function longitude(): ?GpsCoordinate
     {
         return $this->longitude;
-    }
-
-    public function lon(): ?GpsCoordinate
-    {
-        return $this->longitude();
     }
 
     public function altitude(): ?float
