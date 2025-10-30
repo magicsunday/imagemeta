@@ -1828,7 +1828,7 @@ final readonly class ValueConverters
      * EXIF 3.0 §4.6.8 states that GPSLatitude/GPSLongitude are SRATIONAL triplets ordered as
      * degrees, minutes and seconds; the EXIF 2.32 §4.6.8 wording is followed for legacy data.
      *
-     * @param string|null                                    $ref Direction reference (N/E/S/W).
+     * @param string|null                           $ref Direction reference (N/E/S/W).
      * @param ExifRationalList|ExifNumericList|null $val Rational or numeric triplet describing the coordinate.
      *
      * @return float|null

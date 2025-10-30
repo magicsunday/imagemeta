@@ -117,7 +117,6 @@ final class SemanticStyleTest extends TestCase
         ];
     }
 
-
     /**
      * Creates a QuickTime metadata container populated with the supplied semantic style payload.
      *

@@ -242,8 +242,7 @@ final class MpfParser
         int $componentCount,
         string $data,
         Endian $endian,
-    ): int|string|array
-    {
+    ): int|string|array {
         if ($componentCount === 0) {
             return [];
         }

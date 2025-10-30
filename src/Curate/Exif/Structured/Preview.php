@@ -95,29 +95,29 @@ final readonly class Preview
      */
     public function __construct(PreviewValue $preview)
     {
-        $this->hasThumbnail       = $preview->hasThumbnail;
-        $this->hasPreview         = $preview->hasPreview;
-        $this->previewWidth       = $preview->previewWidth;
-        $this->previewHeight      = $preview->previewHeight;
-        $this->previewColorSpace  = $preview->previewColorSpace;
-        $this->previewBitDepth    = $preview->previewBitDepth;
-        $this->previewCompression = $preview->previewCompression;
-        $this->previewScale       = $preview->previewScale;
-        $this->previewEncoding    = $preview->previewEncoding;
-        $this->previewMimeType    = $preview->previewMimeType;
-        $this->previewOffset      = $preview->previewOffset;
-        $this->previewLength      = $preview->previewLength;
-        $this->thumbnailOffset    = $preview->thumbnailOffset;
-        $this->thumbnailLength    = $preview->thumbnailLength;
-        $this->thumbnailCompression = $preview->thumbnailCompression;
-        $this->thumbnailStripOffsets = $preview->thumbnailStripOffsets;
+        $this->hasThumbnail             = $preview->hasThumbnail;
+        $this->hasPreview               = $preview->hasPreview;
+        $this->previewWidth             = $preview->previewWidth;
+        $this->previewHeight            = $preview->previewHeight;
+        $this->previewColorSpace        = $preview->previewColorSpace;
+        $this->previewBitDepth          = $preview->previewBitDepth;
+        $this->previewCompression       = $preview->previewCompression;
+        $this->previewScale             = $preview->previewScale;
+        $this->previewEncoding          = $preview->previewEncoding;
+        $this->previewMimeType          = $preview->previewMimeType;
+        $this->previewOffset            = $preview->previewOffset;
+        $this->previewLength            = $preview->previewLength;
+        $this->thumbnailOffset          = $preview->thumbnailOffset;
+        $this->thumbnailLength          = $preview->thumbnailLength;
+        $this->thumbnailCompression     = $preview->thumbnailCompression;
+        $this->thumbnailStripOffsets    = $preview->thumbnailStripOffsets;
         $this->thumbnailStripByteCounts = $preview->thumbnailStripByteCounts;
-        $this->thumbnailTileOffsets = $preview->thumbnailTileOffsets;
-        $this->thumbnailTileByteCounts = $preview->thumbnailTileByteCounts;
-        $this->previewStripOffsets = $preview->previewStripOffsets;
-        $this->previewStripByteCounts = $preview->previewStripByteCounts;
-        $this->previewTileOffsets = $preview->previewTileOffsets;
-        $this->previewTileByteCounts = $preview->previewTileByteCounts;
+        $this->thumbnailTileOffsets     = $preview->thumbnailTileOffsets;
+        $this->thumbnailTileByteCounts  = $preview->thumbnailTileByteCounts;
+        $this->previewStripOffsets      = $preview->previewStripOffsets;
+        $this->previewStripByteCounts   = $preview->previewStripByteCounts;
+        $this->previewTileOffsets       = $preview->previewTileOffsets;
+        $this->previewTileByteCounts    = $preview->previewTileByteCounts;
     }
 
     public function hasThumbnail(): ?bool

@@ -19,13 +19,11 @@ use MagicSunday\ImageMeta\Curate\StructuredMetadata;
  */
 final class StructuredMetadataCache
 {
-    private readonly ExifAssembler $assembler;
-
     private ?StructuredMetadata $structured = null;
 
-    public function __construct(?ExifAssembler $assembler = null)
-    {
-        $this->assembler = $assembler ?? new ExifAssembler();
+    public function __construct(
+        private readonly ExifAssembler $assembler = new ExifAssembler(),
+    ) {
     }
 
     public function resolve(Metadata $metadata): StructuredMetadata

@@ -2,6 +2,9 @@
 
 /**
  * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
  */
 
 declare(strict_types=1);
@@ -24,11 +27,11 @@ final class ExifCoverageTest extends TestCase
         $map = $this->loadCoverageMap(__DIR__ . '/../../resources/exif-map.yaml');
         self::assertNotSame([], $map, 'Coverage map must not be empty.');
 
-        $tagMethods = $this->collectTagUsage();
+        $tagMethods  = $this->collectTagUsage();
         $tagMetadata = $this->collectTagMetadata();
 
         $missingTags = [];
-        foreach ($tagMethods as $tag => $methods) {
+        foreach (array_keys($tagMethods) as $tag) {
             if (!isset($map[$tag])) {
                 $missingTags[] = $tag;
             }
@@ -36,10 +39,10 @@ final class ExifCoverageTest extends TestCase
 
         self::assertSame([], $missingTags, 'All tags referenced by ParsedExif must be present in the coverage map.');
 
-        $allowedIfds = ['IFD0', 'ExifIFD', 'PreviewIFD', 'GPSIFD', 'InteropIFD'];
+        $allowedIfds          = ['IFD0', 'ExifIFD', 'PreviewIFD', 'GPSIFD', 'InteropIFD'];
         $structuredReflection = new ReflectionClass(StructuredExif::class);
-        $parsedReflection = new ReflectionClass(ParsedExif::class);
-        $knownParsedMethods = array_fill_keys(array_map(static fn (ReflectionMethod $method): string => $method->getName(), $parsedReflection->getMethods()), true);
+        $parsedReflection     = new ReflectionClass(ParsedExif::class);
+        $knownParsedMethods   = array_fill_keys(array_map(static fn (ReflectionMethod $method): string => $method->getName(), $parsedReflection->getMethods()), true);
 
         $unknownTypes = [];
         foreach ($map as $tag => $entry) {
@@ -60,12 +63,12 @@ final class ExifCoverageTest extends TestCase
             self::assertArrayHasKey('minVersion', $entry, sprintf('Entry for %s must define the minVersion field.', $tag));
             self::assertIsString($entry['minVersion'], sprintf('Entry for %s must provide the minVersion field as string.', $tag));
             $minVersion = $entry['minVersion'];
-            self::assertMatchesRegularExpression('/^[0-9]+\.[0-9]+$/', $minVersion, sprintf('Entry for %s has invalid minVersion "%s".', $tag, $minVersion));
+            self::assertMatchesRegularExpression('/^\d+\.\d+$/', $minVersion, sprintf('Entry for %s has invalid minVersion "%s".', $tag, $minVersion));
 
             if (isset($entry['maxVersion'])) {
                 self::assertIsString($entry['maxVersion'], sprintf('Entry for %s must provide the maxVersion field as string.', $tag));
                 $maxVersion = $entry['maxVersion'];
-                self::assertMatchesRegularExpression('/^[0-9]+\.[0-9]+$/', $maxVersion, sprintf('Entry for %s has invalid maxVersion "%s".', $tag, $maxVersion));
+                self::assertMatchesRegularExpression('/^\d+\.\d+$/', $maxVersion, sprintf('Entry for %s has invalid maxVersion "%s".', $tag, $maxVersion));
             }
 
             if (isset($tagMetadata[$tag])) {
@@ -75,7 +78,7 @@ final class ExifCoverageTest extends TestCase
 
             self::assertArrayHasKey('voGetter', $entry, sprintf('Entry for %s must define the voGetter field.', $tag));
             $rawGetters = $entry['voGetter'];
-            $getters = [];
+            $getters    = [];
 
             if (is_array($rawGetters)) {
                 foreach ($rawGetters as $getter) {
@@ -104,7 +107,7 @@ final class ExifCoverageTest extends TestCase
         $danglingEntries = [];
         foreach ($map as $tag => $entry) {
             $rawGetters = $entry['voGetter'];
-            $getters = [];
+            $getters    = [];
 
             if (is_array($rawGetters)) {
                 foreach ($rawGetters as $getter) {
@@ -156,18 +159,22 @@ final class ExifCoverageTest extends TestCase
             return [];
         }
 
-        $map = [];
+        $map        = [];
         $currentTag = null;
 
         foreach ($lines as $line) {
-            if ($line === '' || str_starts_with($line, '#')) {
+            if ($line === '') {
+                continue;
+            }
+
+            if (str_starts_with($line, '#')) {
                 continue;
             }
 
             if (!str_starts_with($line, ' ')) {
-                $tag = rtrim($line, ':');
+                $tag        = rtrim($line, ':');
                 $currentTag = $tag;
-                $map[$tag] = [];
+                $map[$tag]  = [];
                 continue;
             }
 
@@ -187,8 +194,8 @@ final class ExifCoverageTest extends TestCase
             }
 
             if (str_contains($trimmed, ':')) {
-                [$key, $value] = array_map('trim', explode(':', $trimmed, 2));
-                $cleanValue = $this->stripQuotes($value);
+                [$key, $value] = array_map(trim(...), explode(':', $trimmed, 2));
+                $cleanValue    = $this->stripQuotes($value);
 
                 if ($key === 'voGetter' && $cleanValue === '') {
                     $map[$currentTag][$key] = [];
@@ -206,13 +213,13 @@ final class ExifCoverageTest extends TestCase
      * Ensures that a getter path can be resolved via StructuredExif.
      *
      * @param ReflectionClass<StructuredExif> $structuredReflection
-     * @param array<string, bool> $knownParsedMethods
+     * @param array<string, bool>             $knownParsedMethods
      */
     private function assertValidGetterPath(string $path, ReflectionClass $structuredReflection, array $knownParsedMethods): void
     {
         self::assertNotSame('', $path, 'Getter path must not be empty.');
         $currentClass = new ReflectionClass($structuredReflection->getName());
-        $segments = explode('.', $path);
+        $segments     = explode('.', $path);
 
         foreach ($segments as $index => $segment) {
             self::assertTrue($currentClass->hasMethod($segment), sprintf('Method "%s" not found on %s for getter "%s".', $segment, $currentClass->getName(), $path));
@@ -222,6 +229,7 @@ final class ExifCoverageTest extends TestCase
                 if ($currentClass->getName() === ParsedExif::class) {
                     self::assertArrayHasKey($segment, $knownParsedMethods, sprintf('ParsedExif method "%s" referenced by getter "%s" is missing.', $segment, $path));
                 }
+
                 break;
             }
 
@@ -260,18 +268,18 @@ final class ExifCoverageTest extends TestCase
             return [];
         }
 
-        $tokens = token_get_all($code);
-        $tagMethods = [];
+        $tokens          = token_get_all($code);
+        $tagMethods      = [];
         $currentFunction = null;
-        $braceLevel = 0;
-        $inFunctionBody = false;
-        $tokenCount = count($tokens);
+        $braceLevel      = 0;
+        $inFunctionBody  = false;
+        $tokenCount      = count($tokens);
 
-        for ($i = 0; $i < $tokenCount; $i++) {
+        for ($i = 0; $i < $tokenCount; ++$i) {
             $token = $tokens[$i];
 
             if (is_array($token) && $token[0] === T_FUNCTION) {
-                $j = $i + 1;
+                $j            = $i + 1;
                 $functionName = null;
                 while ($j < $tokenCount) {
                     $next = $tokens[$j];
@@ -279,13 +287,14 @@ final class ExifCoverageTest extends TestCase
                         $functionName = $next[1];
                         break;
                     }
-                    $j++;
+
+                    ++$j;
                 }
 
                 $currentFunction = $functionName;
-                $braceLevel = 0;
-                $inFunctionBody = false;
-                $i = $j;
+                $braceLevel      = 0;
+                $inFunctionBody  = false;
+                $i               = $j;
                 continue;
             }
 
@@ -293,31 +302,33 @@ final class ExifCoverageTest extends TestCase
                 if (!$inFunctionBody) {
                     if ($token === '{' || (is_array($token) && $token[0] === T_CURLY_OPEN)) {
                         $inFunctionBody = true;
-                        $braceLevel = 1;
+                        $braceLevel     = 1;
                     }
+
                     continue;
                 }
 
                 if ($token === '{' || (is_array($token) && $token[0] === T_CURLY_OPEN)) {
-                    $braceLevel++;
+                    ++$braceLevel;
                     continue;
                 }
 
                 if ($token === '}') {
-                    $braceLevel--;
+                    --$braceLevel;
                     if ($braceLevel === 0) {
                         $currentFunction = null;
-                        $inFunctionBody = false;
+                        $inFunctionBody  = false;
                     }
+
                     continue;
                 }
 
                 if (is_array($token) && $token[0] === T_STRING && $token[1] === 'ExifTag') {
-                    $next1 = $tokens[$i + 1] ?? null;
-                    $next2 = $tokens[$i + 2] ?? null;
+                    $next1         = $tokens[$i + 1] ?? null;
+                    $next2         = $tokens[$i + 2] ?? null;
                     $isDoubleColon = (is_array($next1) && $next1[0] === T_DOUBLE_COLON) || $next1 === '::';
                     if ($isDoubleColon && is_array($next2) && $next2[0] === T_STRING) {
-                        $tag = $next2[1];
+                        $tag                                = $next2[1];
                         $tagMethods[$tag][$currentFunction] = true;
                     }
                 }
@@ -346,20 +357,20 @@ final class ExifCoverageTest extends TestCase
         }
 
         $sectionAliases = [
-            'IFD0' => 'IFD0',
-            'Preview' => 'PreviewIFD',
-            'Pointer' => 'IFD0',
-            'EXIF sub IFD' => 'ExifIFD',
-            'Opto-Electric' => 'ExifIFD',
-            'DNG colour profile' => 'ExifIFD',
-            'GPS sub IFD' => 'GPSIFD',
+            'IFD0'                 => 'IFD0',
+            'Preview'              => 'PreviewIFD',
+            'Pointer'              => 'IFD0',
+            'EXIF sub IFD'         => 'ExifIFD',
+            'Opto-Electric'        => 'ExifIFD',
+            'DNG colour profile'   => 'ExifIFD',
+            'GPS sub IFD'          => 'GPSIFD',
             'Interoperability IFD' => 'InteropIFD',
         ];
 
         $currentSection = 'IFD0';
-        $inDoc = false;
-        $docBuffer = '';
-        $metadata = [];
+        $inDoc          = false;
+        $docBuffer      = '';
+        $metadata       = [];
 
         foreach ($lines as $line) {
             $trim = trim($line);
@@ -371,11 +382,12 @@ final class ExifCoverageTest extends TestCase
                         break;
                     }
                 }
+
                 continue;
             }
 
             if (str_starts_with($trim, '/**')) {
-                $inDoc = true;
+                $inDoc     = true;
                 $docBuffer = $line;
                 continue;
             }
@@ -385,27 +397,30 @@ final class ExifCoverageTest extends TestCase
                 if (str_contains($trim, '*/')) {
                     $inDoc = false;
                 }
+
                 continue;
             }
 
             if (preg_match('/public const int ([A-Z0-9_]+) = [^;]+;(.*)/', $line, $matches) === 1) {
-                $name = $matches[1];
+                $name          = $matches[1];
                 $inlineComment = $matches[2];
-                $commentText = $docBuffer . ' ' . $inlineComment;
-                $docBuffer = '';
+                $commentText   = $docBuffer . ' ' . $inlineComment;
+                $docBuffer     = '';
 
-                $versionMatches = [];
-                $versionMatchCount = preg_match_all('/EXIF\s+([0-9]+(?:\.[0-9]+)?)/i', $commentText, $versionMatches);
-                $versions = ($versionMatchCount === false || $versionMatchCount === 0) ? [] : $versionMatches[1];
+                $versionMatches     = [];
+                $versionMatchCount  = preg_match_all('/EXIF\s+([0-9]+(?:\.[0-9]+)?)/i', $commentText, $versionMatches);
+                $versions           = ($versionMatchCount === false || $versionMatchCount === 0) ? [] : $versionMatches[1];
                 $normalizedVersions = [];
                 foreach ($versions as $version) {
                     $clean = rtrim($version, '.');
                     if (str_contains($clean, '.')) {
                         $clean = rtrim(rtrim($clean, '0'), '.');
                     }
+
                     if (!str_contains($clean, '.')) {
                         $clean .= '.0';
                     }
+
                     $normalizedVersions[$clean] = true;
                 }
 
@@ -430,7 +445,7 @@ final class ExifCoverageTest extends TestCase
             return '';
         }
 
-        if (($trimmed[0] === '"' && str_ends_with($trimmed, '"')) || ($trimmed[0] === '\'' && str_ends_with($trimmed, '\''))) {
+        if (($trimmed[0] === '"' && str_ends_with($trimmed, '"')) || ($trimmed[0] === "'" && str_ends_with($trimmed, "'"))) {
             return substr($trimmed, 1, -1);
         }
 

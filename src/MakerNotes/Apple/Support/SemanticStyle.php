@@ -208,7 +208,7 @@ final class SemanticStyle
 
                 array_find(
                     $entry,
-                    static function (array|bool|float|int|string|null|object $candidate) use (&$scalar): bool {
+                    static function (array|bool|float|int|string|object|null $candidate) use (&$scalar): bool {
                         if (
                             is_array($candidate)
                             || is_bool($candidate)
