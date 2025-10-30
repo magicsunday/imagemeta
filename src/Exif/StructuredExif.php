@@ -593,6 +593,16 @@ final readonly class StructuredExif
             $previewCompression = Compression::fromExifValue($document->previewImageCompression());
         }
 
+        $previewStripOffsets      = $document?->previewImageStripOffsets();
+        $previewStripByteCounts   = $document?->previewImageStripByteCounts();
+        $previewTileOffsets       = $document?->previewImageTileOffsets();
+        $previewTileByteCounts    = $document?->previewImageTileByteCounts();
+        $thumbnailCompressionEnum = $document?->thumbnailCompression();
+        $thumbnailStripOffsets    = $document?->thumbnailStripOffsets();
+        $thumbnailStripByteCounts = $document?->thumbnailStripByteCounts();
+        $thumbnailTileOffsets     = $document?->thumbnailTileOffsets();
+        $thumbnailTileByteCounts  = $document?->thumbnailTileByteCounts();
+
         return new PreviewValue(
             hasThumbnail: $document?->hasThumbnail(),
             hasPreview: $document?->hasPreviewImage(),
@@ -606,6 +616,17 @@ final readonly class StructuredExif
             previewMimeType: $document?->previewImageMimeType(),
             previewOffset: $document?->previewImageOffset(),
             previewLength: $document?->previewImageLength(),
+            thumbnailOffset: $document?->jpegThumbnailOffset(),
+            thumbnailLength: $document?->jpegThumbnailLength(),
+            thumbnailCompression: $thumbnailCompressionEnum,
+            thumbnailStripOffsets: $thumbnailStripOffsets,
+            thumbnailStripByteCounts: $thumbnailStripByteCounts,
+            thumbnailTileOffsets: $thumbnailTileOffsets,
+            thumbnailTileByteCounts: $thumbnailTileByteCounts,
+            previewStripOffsets: $previewStripOffsets,
+            previewStripByteCounts: $previewStripByteCounts,
+            previewTileOffsets: $previewTileOffsets,
+            previewTileByteCounts: $previewTileByteCounts,
         );
     }
 }

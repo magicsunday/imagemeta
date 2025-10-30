@@ -308,19 +308,42 @@ final class ValueFactory
             ),
         );
 
+        $previewColorSpace      = ColorSpace::fromExifValue($exifDocument?->previewColorSpace());
+        $previewCompressionEnum = Compression::fromExifValue($exifDocument?->previewImageCompression());
+        $previewStripOffsets    = $exifDocument?->previewImageStripOffsets();
+        $previewStripByteCounts = $exifDocument?->previewImageStripByteCounts();
+        $previewTileOffsets     = $exifDocument?->previewImageTileOffsets();
+        $previewTileByteCounts  = $exifDocument?->previewImageTileByteCounts();
+        $thumbnailCompression   = $exifDocument?->thumbnailCompression();
+        $thumbnailStripOffsets  = $exifDocument?->thumbnailStripOffsets();
+        $thumbnailStripCounts   = $exifDocument?->thumbnailStripByteCounts();
+        $thumbnailTileOffsets   = $exifDocument?->thumbnailTileOffsets();
+        $thumbnailTileCounts    = $exifDocument?->thumbnailTileByteCounts();
+
         $preview = new Preview(
             $exifDocument?->hasThumbnail(),
             $exifDocument?->hasPreviewImage(),
             $exifDocument?->previewImageWidth(),
             $exifDocument?->previewImageHeight(),
-            ColorSpace::fromExifValue($exifDocument?->previewColorSpace()),
+            $previewColorSpace,
             $exifDocument?->previewImageBitDepth(),
-            Compression::fromExifValue($exifDocument?->previewImageCompression()),
+            $previewCompressionEnum,
             $exifDocument?->previewImageScale(),
             $exifDocument?->previewImageEncoding(),
             $exifDocument?->previewImageMimeType(),
             $exifDocument?->previewImageOffset(),
             $exifDocument?->previewImageLength(),
+            $exifDocument?->jpegThumbnailOffset(),
+            $exifDocument?->jpegThumbnailLength(),
+            $thumbnailCompression,
+            $thumbnailStripOffsets,
+            $thumbnailStripCounts,
+            $thumbnailTileOffsets,
+            $thumbnailTileCounts,
+            $previewStripOffsets,
+            $previewStripByteCounts,
+            $previewTileOffsets,
+            $previewTileByteCounts,
         );
 
         $video = new Video(

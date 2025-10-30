@@ -1532,33 +1532,30 @@ final readonly class ValueConverters
         $result['lat_ref'] = is_string($latRef) ? strtoupper(trim($latRef)) : null;
         $result['lon_ref'] = is_string($lonRef) ? strtoupper(trim($lonRef)) : null;
 
-        $latPairs = $latVal instanceof ExifRationalList ? $latVal : null;
-        $lonPairs = $lonVal instanceof ExifRationalList ? $lonVal : null;
+        $latPairs = $latVal instanceof ExifRationalList ? $latVal : ($latVal instanceof ExifNumericList ? $latVal : null);
+        $lonPairs = $lonVal instanceof ExifRationalList ? $lonVal : ($lonVal instanceof ExifNumericList ? $lonVal : null);
 
         $result['lat'] = self::dmsToFloat($result['lat_ref'], $latPairs);
         $result['lon'] = self::dmsToFloat($result['lon_ref'], $lonPairs);
 
         $altRefEntry = $gps->get(ExifTag::GPS_ALTITUDE_REF);
         $altRefValue = $altRefEntry?->value;
-        if ($altRefValue instanceof ExifNumericList) {
-            $altRefValue = $altRefValue->values[0] ?? null;
-        }
-
-        if (is_int($altRefValue)) {
-            $result['alt_ref'] = $altRefValue;
-        } elseif (is_float($altRefValue)) {
-            $result['alt_ref'] = (int) round($altRefValue);
+        $altRef      = self::normaliseGpsAltitudeRef($altRefValue);
+        if ($altRef !== null) {
+            $result['alt_ref'] = $altRef;
         }
 
         $altEntry = $gps->get(ExifTag::GPS_ALTITUDE);
-        if ($altEntry instanceof IfdEntry && $altEntry->value instanceof ExifRational) {
+        if ($altEntry instanceof IfdEntry) {
             $alt = self::rationalToFloat($altEntry->value);
 
             if ($alt !== null && $result['alt_ref'] === 1) {
                 $alt = -$alt;
             }
 
-            $result['alt'] = $alt;
+            if ($alt !== null) {
+                $result['alt'] = $alt;
+            }
         }
 
         $versionEntry     = $gps->get(ExifTag::GPS_VERSION_ID);
@@ -1825,28 +1822,127 @@ final readonly class ValueConverters
      * EXIF 3.0 §4.6.8 states that GPSLatitude/GPSLongitude are SRATIONAL triplets ordered as
      * degrees, minutes and seconds; the EXIF 2.32 §4.6.8 wording is followed for legacy data.
      *
-     * @param string|null           $ref Direction reference (N/E/S/W).
-     * @param ExifRationalList|null $val Rational triplet describing the coordinate.
+     * @param string|null                                    $ref Direction reference (N/E/S/W).
+     * @param ExifRationalList|ExifNumericList|null $val Rational or numeric triplet describing the coordinate.
      *
      * @return float|null
      */
-    private static function dmsToFloat(?string $ref, ?ExifRationalList $val): ?float
+    private static function dmsToFloat(?string $ref, ExifRationalList|ExifNumericList|null $val): ?float
     {
-        if (!is_string($ref) || !$val instanceof ExifRationalList || count($val->values) < 3) {
+        if (!is_string($ref) || $val === null) {
             return null;
         }
 
-        $values = $val->values;
-        $deg    = self::rationalToFloat($values[0]);
-        $min    = self::rationalToFloat($values[1]);
-        $sec    = self::rationalToFloat($values[2]);
-        if ($deg === null || $min === null || $sec === null) {
+        $components = [];
+
+        if ($val instanceof ExifRationalList) {
+            foreach ($val->values as $index => $component) {
+                if ($index >= 3) {
+                    break;
+                }
+
+                if ($component instanceof ExifRational) {
+                    $numeric = self::rationalToFloat($component);
+                } else {
+                    $numeric = self::normaliseNumericComponent($component);
+                }
+
+                if ($numeric === null) {
+                    return null;
+                }
+
+                $components[] = abs($numeric);
+            }
+        } else {
+            foreach ($val->values as $index => $component) {
+                if ($index >= 3) {
+                    break;
+                }
+
+                $numeric = self::normaliseNumericComponent($component);
+                if ($numeric === null) {
+                    return null;
+                }
+
+                $components[] = abs($numeric);
+            }
+        }
+
+        if ($components === []) {
             return null;
         }
+
+        $deg = $components[0] ?? null;
+        if ($deg === null) {
+            return null;
+        }
+
+        $min = $components[1] ?? 0.0;
+        $sec = $components[2] ?? 0.0;
 
         $sign = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
 
         return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+    }
+
+    /**
+     * Normalises the GPS altitude reference into a binary sign indicator.
+     *
+     * EXIF 3.0 §4.6.8 and EXIF 2.32 §4.6.8 define GPSAltitudeRef as a BYTE flag
+     * where 0 indicates an altitude above sea level and 1 indicates below sea
+     * level. Some encoders store the flag using wider numeric or rational
+     * representations, so the value is coerced into the canonical 0/1 range.
+     *
+     * @return int|null 0 for above sea level, 1 for below, null when unknown.
+     */
+    private static function normaliseGpsAltitudeRef(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?int {
+        if ($value instanceof ExifNumericList) {
+            $component = $value->values[0] ?? null;
+
+            return self::normaliseGpsAltitudeRef($component);
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $component = $value->values[0] ?? null;
+
+            return $component instanceof ExifRational
+                ? self::normaliseGpsAltitudeRef($component)
+                : null;
+        }
+
+        if ($value instanceof ExifRational) {
+            $numeric = self::rationalToFloat($value);
+
+            return $numeric === null ? null : self::normaliseGpsAltitudeRef($numeric);
+        }
+
+        if ($value instanceof UInt64) {
+            $intValue = self::uint64ToInt($value, 'GPSAltitudeRef');
+            if ($intValue === null) {
+                return null;
+            }
+
+            return self::normaliseGpsAltitudeRef($intValue);
+        }
+
+        if (is_string($value)) {
+            $clean = trim($value);
+            if ($clean === '' || !is_numeric($clean)) {
+                return null;
+            }
+
+            return self::normaliseGpsAltitudeRef((float) $clean);
+        }
+
+        if (is_int($value) || is_float($value)) {
+            $normalized = (int) round((float) $value);
+
+            return $normalized > 0 ? 1 : 0;
+        }
+
+        return null;
     }
 
     /**
