@@ -45,4 +45,100 @@ final readonly class ColorProfile
         public ?ColorProfileGainMap $gainMap = null,
     ) {
     }
+
+    /**
+     * Returns the human readable profile description.
+     */
+    public function profileName(): ?string
+    {
+        return $this->profileName;
+    }
+
+    /**
+     * Returns the profile version string.
+     */
+    public function profileVersion(): ?string
+    {
+        return $this->profileVersion;
+    }
+
+    /**
+     * Returns the profile connection space identifier.
+     */
+    public function pcs(): ?string
+    {
+        return $this->pcs;
+    }
+
+    /**
+     * Returns the rendering intent description.
+     */
+    public function renderingIntent(): ?string
+    {
+        return $this->renderingIntent;
+    }
+
+    /**
+     * Returns the scene gamma value when provided.
+     */
+    public function gamma(): ?float
+    {
+        return $this->gamma;
+    }
+
+    /**
+     * Returns the optional profile identifier (MD5).
+     */
+    public function profileId(): ?string
+    {
+        return $this->profileId;
+    }
+
+    /**
+     * Returns the optional DNG camera calibration signature.
+     */
+    public function cameraCalibrationSignature(): ?string
+    {
+        return $this->cameraCalibrationSignature;
+    }
+
+    /**
+     * Returns the optional DNG profile calibration signature.
+     */
+    public function profileCalibrationSignature(): ?string
+    {
+        return $this->profileCalibrationSignature;
+    }
+
+    /**
+     * Returns the optional hue/saturation/value correction map.
+     */
+    public function hueSatMap(): ?ColorProfileHueSatMap
+    {
+        return $this->hueSatMap;
+    }
+
+    /**
+     * Returns the optional profile look table data.
+     */
+    public function lookTable(): ?ColorProfileLookTable
+    {
+        return $this->lookTable;
+    }
+
+    /**
+     * Returns the optional profile tone curve definition.
+     */
+    public function toneCurve(): ?ColorProfileToneCurve
+    {
+        return $this->toneCurve;
+    }
+
+    /**
+     * Returns the optional profile gain map payload.
+     */
+    public function gainMap(): ?ColorProfileGainMap
+    {
+        return $this->gainMap;
+    }
 }

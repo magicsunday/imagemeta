@@ -25,4 +25,24 @@ final readonly class Keywords
         public ?array $hierarchical,
     ) {
     }
+
+    /**
+     * Returns the flat keyword list.
+     *
+     * @return list<string>
+     */
+    public function flat(): array
+    {
+        return $this->flat;
+    }
+
+    /**
+     * Returns the optional hierarchical keywords.
+     *
+     * @return list<string>|null
+     */
+    public function hierarchical(): ?array
+    {
+        return $this->hierarchical;
+    }
 }

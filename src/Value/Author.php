@@ -33,4 +33,52 @@ final readonly class Author
         public ?string $imageEditor,
     ) {
     }
+
+    /**
+     * Returns the artist or photographer name.
+     */
+    public function artist(): ?string
+    {
+        return $this->artist;
+    }
+
+    /**
+     * Returns the camera owner name.
+     */
+    public function ownerName(): ?string
+    {
+        return $this->ownerName;
+    }
+
+    /**
+     * Returns the creator attribution from XMP.
+     */
+    public function creator(): ?string
+    {
+        return $this->creator;
+    }
+
+    /**
+     * Returns the creator contact email address.
+     */
+    public function creatorEmail(): ?string
+    {
+        return $this->creatorEmail;
+    }
+
+    /**
+     * Returns the photographer attribution from EXIF.
+     */
+    public function photographer(): ?string
+    {
+        return $this->photographer;
+    }
+
+    /**
+     * Returns the image editor attribution from EXIF.
+     */
+    public function imageEditor(): ?string
+    {
+        return $this->imageEditor;
+    }
 }

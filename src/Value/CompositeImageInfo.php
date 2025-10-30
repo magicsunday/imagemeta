@@ -29,4 +29,32 @@ final readonly class CompositeImageInfo
         public ?array $exposureTimesTotal,
     ) {
     }
+
+    /**
+     * Returns the composite image classification.
+     */
+    public function type(): ?CompositeImage
+    {
+        return $this->type;
+    }
+
+    /**
+     * Returns the pair of source and used frame counts.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    public function counts(): ?array
+    {
+        return $this->counts;
+    }
+
+    /**
+     * Returns the exposure times for contributing frames.
+     *
+     * @return list<float>|null
+     */
+    public function exposureTimesTotal(): ?array
+    {
+        return $this->exposureTimesTotal;
+    }
 }

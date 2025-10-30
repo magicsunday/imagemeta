@@ -39,4 +39,76 @@ final readonly class Motion
         public ?float $gyroZ,
     ) {
     }
+
+    /**
+     * Returns the roll angle in degrees.
+     */
+    public function rollDeg(): ?float
+    {
+        return $this->rollDeg;
+    }
+
+    /**
+     * Returns the pitch angle in degrees.
+     */
+    public function pitchDeg(): ?float
+    {
+        return $this->pitchDeg;
+    }
+
+    /**
+     * Returns the yaw angle in degrees.
+     */
+    public function yawDeg(): ?float
+    {
+        return $this->yawDeg;
+    }
+
+    /**
+     * Returns the acceleration along the X axis.
+     */
+    public function accelX(): ?float
+    {
+        return $this->accelX;
+    }
+
+    /**
+     * Returns the acceleration along the Y axis.
+     */
+    public function accelY(): ?float
+    {
+        return $this->accelY;
+    }
+
+    /**
+     * Returns the acceleration along the Z axis.
+     */
+    public function accelZ(): ?float
+    {
+        return $this->accelZ;
+    }
+
+    /**
+     * Returns the gyroscope reading around the X axis.
+     */
+    public function gyroX(): ?float
+    {
+        return $this->gyroX;
+    }
+
+    /**
+     * Returns the gyroscope reading around the Y axis.
+     */
+    public function gyroY(): ?float
+    {
+        return $this->gyroY;
+    }
+
+    /**
+     * Returns the gyroscope reading around the Z axis.
+     */
+    public function gyroZ(): ?float
+    {
+        return $this->gyroZ;
+    }
 }

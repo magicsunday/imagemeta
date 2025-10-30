@@ -22,4 +22,14 @@ final readonly class ColorProfileToneCurve
     public function __construct(public array $points)
     {
     }
+
+    /**
+     * Returns the normalised tone curve points in input/output pairs.
+     *
+     * @return list<array{0: float, 1: float}>
+     */
+    public function points(): array
+    {
+        return $this->points;
+    }
 }

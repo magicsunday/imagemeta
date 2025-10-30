@@ -29,4 +29,36 @@ final readonly class Device
         public ?string $metadataEditingSoftware,
     ) {
     }
+
+    /**
+     * Returns the software version or build identifier.
+     */
+    public function software(): ?string
+    {
+        return $this->software;
+    }
+
+    /**
+     * Returns the raw developing software identifier when available.
+     */
+    public function rawDevelopingSoftware(): ?string
+    {
+        return $this->rawDevelopingSoftware;
+    }
+
+    /**
+     * Returns the image editing software identifier when available.
+     */
+    public function imageEditingSoftware(): ?string
+    {
+        return $this->imageEditingSoftware;
+    }
+
+    /**
+     * Returns the metadata editing software identifier when available.
+     */
+    public function metadataEditingSoftware(): ?string
+    {
+        return $this->metadataEditingSoftware;
+    }
 }

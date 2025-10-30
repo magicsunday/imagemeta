@@ -35,4 +35,60 @@ final readonly class Derived
         public ?float $cropFactor,
     ) {
     }
+
+    /**
+     * Returns the exposure value normalised to ISO 100.
+     */
+    public function ev100(): ?float
+    {
+        return $this->ev100;
+    }
+
+    /**
+     * Returns the hyperfocal distance in metres.
+     */
+    public function hyperfocalM(): ?float
+    {
+        return $this->hyperfocalM;
+    }
+
+    /**
+     * Returns the diagonal field of view in degrees.
+     */
+    public function fovDiagonalDeg(): ?float
+    {
+        return $this->fovDiagonalDeg;
+    }
+
+    /**
+     * Returns the horizontal field of view in degrees.
+     */
+    public function fovHorizontalDeg(): ?float
+    {
+        return $this->fovHorizontalDeg;
+    }
+
+    /**
+     * Returns the vertical field of view in degrees.
+     */
+    public function fovVerticalDeg(): ?float
+    {
+        return $this->fovVerticalDeg;
+    }
+
+    /**
+     * Returns the 35mm equivalent focal length.
+     */
+    public function focalLength35mm(): ?int
+    {
+        return $this->focalLength35mm;
+    }
+
+    /**
+     * Returns the estimated crop factor.
+     */
+    public function cropFactor(): ?float
+    {
+        return $this->cropFactor;
+    }
 }

@@ -35,4 +35,44 @@ final readonly class FlashInfo
         public bool $redEyeReduction = false,
     ) {
     }
+
+    /**
+     * Indicates whether the flash fired.
+     */
+    public function fired(): bool
+    {
+        return $this->fired;
+    }
+
+    /**
+     * Returns the selected flash mode.
+     */
+    public function mode(): ?FlashMode
+    {
+        return $this->mode;
+    }
+
+    /**
+     * Returns the detected return light status.
+     */
+    public function returnDetection(): ?FlashReturn
+    {
+        return $this->returnDetection;
+    }
+
+    /**
+     * Indicates whether the camera features a flash function.
+     */
+    public function functionPresence(): ?FlashFunction
+    {
+        return $this->functionPresence;
+    }
+
+    /**
+     * Indicates whether red-eye reduction support is reported.
+     */
+    public function redEyeReduction(): bool
+    {
+        return $this->redEyeReduction;
+    }
 }

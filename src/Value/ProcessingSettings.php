@@ -43,4 +43,76 @@ final readonly class ProcessingSettings
         public ?string $processingSoftware,
     ) {
     }
+
+    /**
+     * Returns the sharpness adjustment level.
+     */
+    public function sharpness(): ?Sharpness
+    {
+        return $this->sharpness;
+    }
+
+    /**
+     * Returns the contrast adjustment level.
+     */
+    public function contrast(): ?Contrast
+    {
+        return $this->contrast;
+    }
+
+    /**
+     * Returns the saturation adjustment level.
+     */
+    public function saturation(): ?Saturation
+    {
+        return $this->saturation;
+    }
+
+    /**
+     * Returns the vendor specific picture style identifier.
+     */
+    public function pictureStyle(): ?string
+    {
+        return $this->pictureStyle;
+    }
+
+    /**
+     * Returns the noise reduction strength reported by the camera.
+     */
+    public function noiseReduction(): ?float
+    {
+        return $this->noiseReduction;
+    }
+
+    /**
+     * Returns the clarity adjustment level.
+     */
+    public function clarity(): ?int
+    {
+        return $this->clarity;
+    }
+
+    /**
+     * Indicates whether a custom rendering was applied in-camera.
+     */
+    public function customRendered(): ?int
+    {
+        return $this->customRendered;
+    }
+
+    /**
+     * Returns the binary device setting description payload.
+     */
+    public function deviceSettingDescription(): ?string
+    {
+        return $this->deviceSettingDescription;
+    }
+
+    /**
+     * Returns the final processing software recorded by the camera.
+     */
+    public function processingSoftware(): ?string
+    {
+        return $this->processingSoftware;
+    }
 }

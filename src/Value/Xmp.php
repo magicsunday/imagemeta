@@ -24,4 +24,12 @@ final readonly class Xmp
     public function __construct(public ?XmpDocument $document)
     {
     }
+
+    /**
+     * Returns the parsed XMP document instance.
+     */
+    public function document(): ?XmpDocument
+    {
+        return $this->document;
+    }
 }
