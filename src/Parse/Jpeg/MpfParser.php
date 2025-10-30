@@ -32,6 +32,10 @@ use function substr;
  *
  * EXIF 3.0 §4.6 describes the Multi-Picture Format container, with the JPEG
  * encapsulation and TIFF header layout retained from EXIF 2.32 §4.6.
+ *
+ * @phpstan-type MpfRational array{numerator:int, denominator:int}
+ * @phpstan-type MpfValue int|string|list<int>|MpfRational|list<MpfRational>
+ * @phpstan-type MpfDirectory array<int, MpfValue>
  */
 final class MpfParser
 {
@@ -151,9 +155,7 @@ final class MpfParser
      * Both the MP Index IFD and MP Attribute IFD re-use the classic TIFF IFD
      * layout (EXIF 3.0 §4.6.2/§4.6.4; EXIF 2.32 §4.6.2/§4.6.4).
      *
-     * @return array{0: array<int, int|string|array>, 1: int}
-     *
-     * @phpstan-return array{0: array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>>, 1: int}
+     * @return array{0: MpfDirectory, 1: int}
      */
     private function readIfd(MemoryBuffer $buffer, Endian $endian, int $offset): array
     {
@@ -230,7 +232,9 @@ final class MpfParser
     /**
      * Decodes the raw value bytes using the specified TIFF field type.
      *
-     * @phpstan-return int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>
+     * @return int|string|list<int>|MpfRational|list<MpfRational>
+     *
+     * @phpstan-return MpfValue
      */
     private function decodeValue(int $type, int $componentCount, string $data, Endian $endian): int|string|array
     {
@@ -360,9 +364,7 @@ final class MpfParser
      * same tag semantics documented in EXIF 2.32 §4.6.4.
      */
     /**
-     * @param array<int, int|string|array> $entries
-     *
-     * @phpstan-param array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>> $entries
+     * @param MpfDirectory $entries
      */
     private function buildAttributes(array $entries): MpfAttributes
     {
@@ -396,9 +398,7 @@ final class MpfParser
     /**
      * Converts arbitrary decoded value into an integer when possible.
      *
-     * @param int|string|array|null $value
-     *
-     * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
+     * @param MpfValue|null $value
      */
     private function intValue(int|string|array|null $value): ?int
     {
@@ -412,9 +412,7 @@ final class MpfParser
     /**
      * Converts the decoded value into a trimmed string when appropriate.
      *
-     * @param int|string|array|null $value
-     *
-     * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
+     * @param MpfValue|null $value
      */
     private function stringValue(int|string|array|null $value): ?string
     {
@@ -426,13 +424,10 @@ final class MpfParser
     }
 
     /**
-     * @param array<int, int|string|array> $entries
-     * @param array<int, true>             $known
+     * @param MpfDirectory $entries
+     * @param array<int, true> $known
      *
-     * @phpstan-param array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>> $entries
-     * @phpstan-param array<int, true> $known
-     *
-     * @phpstan-return array<int, int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>>
+     * @return MpfDirectory
      */
     private function filterAdditionalTags(array $entries, array $known): array
     {
@@ -447,11 +442,9 @@ final class MpfParser
     }
 
     /**
-     * @param int|string|array|null $value
+     * @param MpfValue|null $value
      *
-     * @phpstan-param int|string|list<int>|array{numerator:int, denominator:int}|list<array{numerator:int, denominator:int}>|null $value
-     *
-     * @phpstan-return list<array{numerator:int, denominator:int}>|null
+     * @return list<MpfRational>|null
      */
     private function rationalListValue(int|string|array|null $value): ?array
     {
@@ -471,9 +464,9 @@ final class MpfParser
     }
 
     /**
-     * @param array<int|string, mixed> $value
+     * @param array<int|string, MpfValue> $value
      *
-     * @phpstan-assert-if-true array{numerator:int, denominator:int} $value
+     * @phpstan-assert-if-true MpfRational $value
      */
     private function isRational(array $value): bool
     {
@@ -485,9 +478,9 @@ final class MpfParser
     }
 
     /**
-     * @param array<int|string, mixed> $value
+     * @param array<int|string, MpfValue> $value
      *
-     * @phpstan-assert-if-true list<array{numerator:int, denominator:int}> $value
+     * @phpstan-assert-if-true list<MpfRational> $value
      */
     private function isRationalList(array $value): bool
     {
@@ -495,10 +488,13 @@ final class MpfParser
             return false;
         }
 
-        return array_all(
-            $value,
-            fn (mixed $item): bool => is_array($item) && $this->isRational($item),
-        );
+        foreach ($value as $item) {
+            if (!is_array($item) || !$this->isRational($item)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private function readU16(MemoryBuffer $buffer, Endian $endian): int

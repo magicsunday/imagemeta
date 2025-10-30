@@ -20,11 +20,18 @@ use function is_bool;
 use function is_float;
 use function is_int;
 use function is_numeric;
+use function is_object;
 use function is_string;
 use function trim;
 
 /**
  * Normalises Apple semantic style payloads into preset, warmth and tone tuples.
+ *
+ * @phpstan-type SemanticStyleScalar bool|float|int|string|null
+ * @phpstan-type SemanticStyleArray array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar|array<int|string, SemanticStyleScalar>>>>>
+ * @phpstan-type SemanticStyleValue SemanticStyleScalar|SemanticStyleArray
+ * @phpstan-type SemanticStyleEntries array<int|string, SemanticStyleScalar>
+ * @phpstan-type SemanticStyleDictionary array<int|string, SemanticStyleScalar|SemanticStyleArray|object>
  */
 final class SemanticStyle
 {
@@ -47,7 +54,9 @@ final class SemanticStyle
     /**
      * Extracts semantic style values from a dictionary containing a `SemanticStyle` entry.
      *
-     * @param array<int|string, mixed> $dictionary
+     * @param array<int|string, SemanticStyleScalar|SemanticStyleArray|object> $dictionary
+     *
+     * @phpstan-param SemanticStyleDictionary $dictionary
      *
      * @return array{0:?string,1:?float,2:?float}|null
      */
@@ -57,8 +66,15 @@ final class SemanticStyle
             return null;
         }
 
-        /** @var array<int|string, mixed>|bool|float|int|string|null $value */
         $value = $dictionary['SemanticStyle'];
+
+        if ($value === null) {
+            return null;
+        }
+
+        if (!is_array($value) && !is_string($value) && !is_int($value) && !is_float($value) && !is_bool($value)) {
+            return null;
+        }
 
         return self::fromValue($value);
     }
@@ -66,7 +82,9 @@ final class SemanticStyle
     /**
      * Normalises the supplied semantic style collection when possible.
      *
-     * @param array<int|string, mixed>|bool|float|int|string|null $value
+     * @param SemanticStyleScalar|array<int|string, SemanticStyleScalar|SemanticStyleArray> $value
+     *
+     * @phpstan-param SemanticStyleValue $value
      *
      * @return array{0:?string,1:?float,2:?float}|null
      */
@@ -76,10 +94,7 @@ final class SemanticStyle
             return null;
         }
 
-        /** @var array<int|string, mixed> $semantic */
-        $semantic = $value;
-
-        $entries = self::normaliseEntries($semantic);
+        $entries = self::normaliseEntries($value);
         if ($entries === null) {
             return null;
         }
@@ -104,30 +119,77 @@ final class SemanticStyle
     }
 
     /**
-     * @param array<int|string, mixed> $semantic
+     * @param array<int|string, SemanticStyleScalar|SemanticStyleArray|object> $semantic
      *
-     * @return array<int|string, mixed>|null
+     * @phpstan-param SemanticStyleDictionary $semantic
+     *
+     * @return SemanticStyleEntries|null
      */
     private static function normaliseEntries(array $semantic): ?array
     {
         if (!array_is_list($semantic)) {
             foreach (['values', 'Values'] as $key) {
                 if (array_key_exists($key, $semantic) && is_array($semantic[$key])) {
-                    /** @var array<int|string, mixed> $values */
-                    $values = $semantic[$key];
-
-                    return self::normaliseEntries($values);
+                    return self::normaliseEntries($semantic[$key]);
                 }
             }
         }
 
-        return $semantic;
+        $result = [];
+
+        foreach ($semantic as $key => $entry) {
+            if (is_object($entry)) {
+                continue;
+            }
+
+            $scalar = self::extractScalar($entry);
+            if ($scalar === null && $entry !== null) {
+                continue;
+            }
+
+            $result[$key] = $scalar;
+        }
+
+        return $result === [] ? null : $result;
     }
 
     /**
-     * @param array<int|string, mixed> $entries
+     * @param SemanticStyleScalar|array<int|string, SemanticStyleScalar|SemanticStyleArray> $entry
      *
-     * @return string|int|float|bool|null
+     * @phpstan-param SemanticStyleValue $entry
+     */
+    private static function extractScalar(array|bool|float|int|string|null $entry): bool|float|int|string|null
+    {
+        if (is_array($entry)) {
+            foreach (['value', 'Value'] as $innerKey) {
+                if (array_key_exists($innerKey, $entry)) {
+                    return self::extractScalar($entry[$innerKey]);
+                }
+            }
+
+            if (array_is_list($entry)) {
+                foreach ($entry as $candidate) {
+                    $scalar = self::extractScalar($candidate);
+                    if ($scalar !== null) {
+                        return $scalar;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        if (is_string($entry) || is_int($entry) || is_float($entry) || is_bool($entry)) {
+            return $entry;
+        }
+
+        return null;
+    }
+
+    /**
+     * @param SemanticStyleEntries $entries
+     *
+     * @return SemanticStyleScalar
      */
     private static function entry(array $entries, int ...$indexes): string|int|float|bool|null
     {
@@ -139,23 +201,6 @@ final class SemanticStyle
                 }
 
                 $value = $entries[$key];
-                if (is_array($value)) {
-                    foreach (['value', 'Value'] as $innerKey) {
-                        if (array_key_exists($innerKey, $value)) {
-                            $inner = $value[$innerKey];
-                            if (!is_array($inner)) {
-                                $value = $inner;
-                            }
-
-                            break;
-                        }
-                    }
-
-                    if (is_array($value)) {
-                        continue;
-                    }
-                }
-
                 if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
                     return $value;
                 }
