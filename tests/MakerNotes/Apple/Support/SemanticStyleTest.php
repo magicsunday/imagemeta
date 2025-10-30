@@ -44,6 +44,53 @@ final class SemanticStyleTest extends TestCase
         self::assertSame(['Warm', 0.5, 0.75], SemanticStyle::fromDictionary($dictionary));
     }
 
+    public function testFromValueNormalisesDeeplyNestedStructure(): void
+    {
+        $payload = [
+            'values' => [
+                'Values' => [
+                    0 => [
+                        'value' => [
+                            'Value' => [
+                                'value' => [
+                                    'Value' => [
+                                        'value' => '  Cinematic  ',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    1 => [
+                        'value' => [
+                            [
+                                'Value' => [
+                                    'value' => [
+                                        'Value' => [
+                                            'value' => 0.45,
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                    2 => [
+                        'value' => [
+                            [
+                                'value' => [
+                                    [
+                                        'Value' => '0.67',
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ];
+
+        self::assertSame(['Cinematic', 0.45, 0.67], SemanticStyle::fromValue($payload));
+    }
+
     public function testFromValueReturnsNullWhenNoComponents(): void
     {
         self::assertNull(SemanticStyle::fromValue(['values' => []]));
