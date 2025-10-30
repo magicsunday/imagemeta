@@ -1847,12 +1847,7 @@ final readonly class ValueConverters
                     break;
                 }
 
-                if ($component instanceof ExifRational) {
-                    $numeric = self::rationalToFloat($component);
-                } else {
-                    $numeric = self::normaliseNumericComponent($component);
-                }
-
+                $numeric = self::rationalToFloat($component);
                 if ($numeric === null) {
                     return null;
                 }
@@ -1878,11 +1873,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        $deg = $components[0] ?? null;
-        if ($deg === null) {
-            return null;
-        }
-
+        $deg = $components[0];
         $min = $components[1] ?? 0.0;
         $sec = $components[2] ?? 0.0;
 
