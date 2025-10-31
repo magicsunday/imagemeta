@@ -73,7 +73,7 @@ final readonly class Lens
 
     public function equivalent35mm(): ?int
     {
-        return $this->lens->focalLengthIn35mm ?? $this->derived->focalLength35mm;
+        return $this->lens->focalLengthIn35mm ?? $this->derived->equivalent35mm;
     }
 
     public function cropFactor(): ?float
@@ -83,21 +83,21 @@ final readonly class Lens
 
     public function hyperfocalDistance(): ?float
     {
-        return $this->derived->hyperfocalM;
+        return $this->derived->hyperfocalDistanceMetres;
     }
 
     public function fieldOfViewHorizontal(): ?float
     {
-        return $this->derived->fovHorizontalDeg;
+        return $this->derived->fieldOfViewHorizontalDeg;
     }
 
     public function fieldOfViewVertical(): ?float
     {
-        return $this->derived->fovVerticalDeg;
+        return $this->derived->fieldOfViewVerticalDeg;
     }
 
     public function fieldOfViewDiagonal(): ?float
     {
-        return $this->derived->fovDiagonalDeg;
+        return $this->derived->fieldOfViewDiagonalDeg;
     }
 }

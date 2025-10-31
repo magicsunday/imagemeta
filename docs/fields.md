@@ -6,13 +6,13 @@ circle of confusion (CoC) model used by the derived metrics helper.
 ## Units
 
 * **Metres (m)**
-  * `Derived::hyperfocalM`
+  * `Derived::hyperfocalDistanceMetres`
   * `Capture::waterDepthM`
   * `Gps::altitude`, `Gps::destinationDistanceMetres`, `Gps::horizontalPositioningError`
 * **Kelvin (K)**
   * `Apple::colorTemperature` reports the device supplied white balance as an absolute colour temperature.
 * **Degrees (°)**
-  * `Derived::fovDiagonalDeg`, `Derived::fovHorizontalDeg`, `Derived::fovVerticalDeg`
+  * `Derived::fieldOfViewDiagonalDeg`, `Derived::fieldOfViewHorizontalDeg`, `Derived::fieldOfViewVerticalDeg`
   * `Motion::rollDeg`, `Motion::pitchDeg`, `Motion::yawDeg`
   * `Capture::cameraElevationAngleDeg`
   * `Gps::track`, `Gps::imageDirection`, `Gps::destinationBearing`

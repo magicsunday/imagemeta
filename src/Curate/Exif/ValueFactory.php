@@ -552,15 +552,15 @@ final class ValueFactory
                 $exposure->fNumber,
                 $exposure->iso,
             ),
-            hyperfocalM: ValueConverters::calcHyperfocalM(
+            hyperfocalDistanceMetres: ValueConverters::calcHyperfocalM(
                 $lens->focalLengthMm,
                 $exposure->fNumber,
                 $circleOfConfusionMm,
             ),
-            fovDiagonalDeg: ValueConverters::calcFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            fovHorizontalDeg: ValueConverters::calcHorizontalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            fovVerticalDeg: ValueConverters::calcVerticalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
-            focalLength35mm: $lens->focalLengthIn35mm,
+            fieldOfViewDiagonalDeg: ValueConverters::calcFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            fieldOfViewHorizontalDeg: ValueConverters::calcHorizontalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            fieldOfViewVerticalDeg: ValueConverters::calcVerticalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
+            equivalent35mm: $lens->focalLengthIn35mm,
             cropFactor: $cropFactor,
         );
 

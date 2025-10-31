@@ -38,7 +38,7 @@ final readonly class Gps
             return null;
         }
 
-        return new GpsCoordinate($this->gps->latitude, $this->gps->latitudeRef);
+        return new GpsCoordinate($this->gps->latitude, $this->gps->latitudeReference());
     }
 
     public function longitude(): ?GpsCoordinate
@@ -47,7 +47,7 @@ final readonly class Gps
             return null;
         }
 
-        return new GpsCoordinate($this->gps->longitude, $this->gps->longitudeRef);
+        return new GpsCoordinate($this->gps->longitude, $this->gps->longitudeReference());
     }
 
     public function altitude(): ?float
@@ -57,7 +57,7 @@ final readonly class Gps
 
     public function altitudeReference(): ?int
     {
-        return $this->gps->altitudeRef;
+        return $this->gps->altitudeReference();
     }
 
     public function version(): ?string
@@ -87,12 +87,12 @@ final readonly class Gps
 
     public function dilutionOfPrecision(): ?float
     {
-        return $this->gps->dop;
+        return $this->gps->dilutionOfPrecision();
     }
 
     public function speedReference(): ?string
     {
-        return $this->gps->speedRef;
+        return $this->gps->speedReference();
     }
 
     public function speedMs(): ?float
@@ -102,7 +102,7 @@ final readonly class Gps
 
     public function speedOriginalReference(): ?string
     {
-        return $this->gps->speedOriginalRef;
+        return $this->gps->speedOriginalReference();
     }
 
     public function speedOriginal(): ?float
@@ -112,7 +112,7 @@ final readonly class Gps
 
     public function trackReference(): ?string
     {
-        return $this->gps->trackRef;
+        return $this->gps->trackReference();
     }
 
     public function track(): ?float
@@ -122,7 +122,7 @@ final readonly class Gps
 
     public function imageDirectionReference(): ?string
     {
-        return $this->gps->imageDirectionRef;
+        return $this->gps->imageDirectionReference();
     }
 
     public function imageDirection(): ?float
@@ -141,7 +141,7 @@ final readonly class Gps
             return null;
         }
 
-        return new GpsCoordinate($this->gps->destinationLatitude, $this->gps->destinationLatitudeRef);
+        return new GpsCoordinate($this->gps->destinationLatitude, $this->gps->destinationLatitudeReference());
     }
 
     public function destinationLongitude(): ?GpsCoordinate
@@ -150,12 +150,12 @@ final readonly class Gps
             return null;
         }
 
-        return new GpsCoordinate($this->gps->destinationLongitude, $this->gps->destinationLongitudeRef);
+        return new GpsCoordinate($this->gps->destinationLongitude, $this->gps->destinationLongitudeReference());
     }
 
     public function destinationBearingReference(): ?string
     {
-        return $this->gps->destinationBearingRef;
+        return $this->gps->destinationBearingReference();
     }
 
     public function destinationBearing(): ?float
@@ -165,7 +165,7 @@ final readonly class Gps
 
     public function destinationDistanceReference(): ?string
     {
-        return $this->gps->destinationDistanceRef;
+        return $this->gps->destinationDistanceReference();
     }
 
     public function destinationDistanceMetres(): ?float
@@ -175,7 +175,7 @@ final readonly class Gps
 
     public function destinationDistanceOriginalReference(): ?string
     {
-        return $this->gps->destinationDistanceOriginalRef;
+        return $this->gps->destinationDistanceOriginalReference();
     }
 
     public function destinationDistanceOriginal(): ?float
