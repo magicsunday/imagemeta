@@ -12,17 +12,17 @@ in the following table:
 | `$meta->file()->file()` | `$meta->file()` |
 | `$meta->file()->container` | `$meta->container()` |
 | `$meta->camera()->device` | `$meta->device()` |
-| `$meta->lens()->lens()` | `$meta->lens()` |
-| `$meta->lens()->equivalent35mm()` | `$meta->lens()->focalLengthIn35mm ?? $meta->derived()->equivalent35mm()` |
-| `$meta->exposure()->exposure` | `$meta->exposure()` |
+| `$meta->lens()->lens()` | `$meta->lens` |
+| `$meta->lens()->equivalent35mm()` | `$meta->lens->focalLengthIn35mm ?? $meta->derived->equivalent35mm()` |
+| `$meta->exposure()->exposure` | `$meta->exposure` |
 | `$meta->capture()->temporal` | `$meta->temporal()` |
 | `$meta->capture()->regions` | `$meta->regions()` |
-| `$meta->media()->image` | `$meta->image()` |
-| `$meta->media()->preview` | `$meta->preview()` |
+| `$meta->media()->image` | `$meta->image` |
+| `$meta->media()->preview` | `$meta->preview` |
 | `$meta->media()->composite` | `$meta->composite()` |
-| `$meta->technical()->interop` | `$meta->interop()` |
+| `$meta->technical()->interop` | `$meta->interop` |
 | `$meta->technical()->tiff` | `$meta->tiff()` |
-| `$meta->technical()->standards` | `$meta->standards()` |
+| `$meta->technical()->standards` | `$meta->standards` |
 | `$meta->rights()->author` | `$meta->author()` |
 | `$meta->rights()->related` | `$meta->related()` |
 | `$meta->makerNotes()->apple` | `$meta->makerNotesApple()` |

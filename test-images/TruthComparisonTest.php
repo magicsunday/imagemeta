@@ -90,9 +90,9 @@ final class TruthComparisonTest extends TestCase
             ->structured();
 
         // Camera information
-        $this->assertSame($exif['IFD0:Make'] ?? null, $meta->camera()->camera->make ?? null, "$file: Make");
-        $this->assertSame($exif['IFD0:Model'] ?? null, $meta->camera()->camera->model ?? null, "$file: Model");
-        $this->assertSame($exif['IFD0:Software'] ?? null, $meta->camera()->camera->firmware ?? null, "$file: Firmware");
+        $this->assertSame($exif['IFD0:Make'] ?? null, $meta->camera->make ?? null, "$file: Make");
+        $this->assertSame($exif['IFD0:Model'] ?? null, $meta->camera->model ?? null, "$file: Model");
+        $this->assertSame($exif['IFD0:Software'] ?? null, $meta->camera->firmware ?? null, "$file: Firmware");
 
         // Image dimensions
         $this->assertSame((int)($exif['File:ImageWidth'] ?? 0), $meta->media()->image->width ?? 0, "$file: width");
@@ -118,39 +118,39 @@ final class TruthComparisonTest extends TestCase
         }
 
         // Core EXIF exposure data
-        $this->assertEqualsWithDelta((float)($exif['EXIF:FNumber'] ?? 0), (float)($meta->exposure()->exposure->fNumber ?? 0), Normalizer::DELTA, "$file: FNumber");
-        $this->assertEqualsWithDelta((float)($exif['EXIF:ExposureTime'] ?? 0), (float)($meta->exposure()->exposure->exposureTimeSec ?? 0), Normalizer::DELTA, "$file: ExposureTime");
-        $this->assertSame((int)($exif['EXIF:ISOSpeedRatings'] ?? $exif['EXIF:ISO'] ?? 0), (int)($meta->exposure()->exposure->iso ?? 0), "$file: ISO");
+        $this->assertEqualsWithDelta((float)($exif['EXIF:FNumber'] ?? 0), (float)($meta->exposure->fNumber ?? 0), Normalizer::DELTA, "$file: FNumber");
+        $this->assertEqualsWithDelta((float)($exif['EXIF:ExposureTime'] ?? 0), (float)($meta->exposure->exposureTimeSec ?? 0), Normalizer::DELTA, "$file: ExposureTime");
+        $this->assertSame((int)($exif['EXIF:ISOSpeedRatings'] ?? $exif['EXIF:ISO'] ?? 0), (int)($meta->exposure->iso ?? 0), "$file: ISO");
 
         // Program, metering and white balance
         if (isset($exif['EXIF:ExposureProgram'])) {
-            $ok = $this->norm->compareEnum('ExposureProgram', (int)$exif['EXIF:ExposureProgram'], $meta->exposure()->exposure->program ?? null);
+            $ok = $this->norm->compareEnum('ExposureProgram', (int)$exif['EXIF:ExposureProgram'], $meta->exposure->program ?? null);
             $this->assertTrue($ok, "$file: ExposureProgram enum");
         }
         if (isset($exif['EXIF:MeteringMode'])) {
-            $ok = $this->norm->compareEnum('MeteringMode', (int)$exif['EXIF:MeteringMode'], $meta->exposure()->exposure->meteringMode ?? null);
+            $ok = $this->norm->compareEnum('MeteringMode', (int)$exif['EXIF:MeteringMode'], $meta->exposure->meteringMode ?? null);
             $this->assertTrue($ok, "$file: MeteringMode enum");
         }
         if (isset($exif['EXIF:WhiteBalance'])) {
-            $ok = $this->norm->compareEnum('WhiteBalance', (int)$exif['EXIF:WhiteBalance'], $meta->exposure()->exposure->whiteBalance ?? $meta->processing()->whiteBalance->mode ?? null);
+            $ok = $this->norm->compareEnum('WhiteBalance', (int)$exif['EXIF:WhiteBalance'], $meta->exposure->whiteBalance ?? $meta->processing()->whiteBalance->mode ?? null);
             $this->assertTrue($ok, "$file: WhiteBalance enum");
         }
 
         // Exposure mode
         if (isset($exif['EXIF:ExposureMode'])) {
-            $ok = $this->norm->compareEnum('ExposureMode', (int)$exif['EXIF:ExposureMode'], $meta->exposure()->exposure->exposureMode ?? null);
+            $ok = $this->norm->compareEnum('ExposureMode', (int)$exif['EXIF:ExposureMode'], $meta->exposure->exposureMode ?? null);
             $this->assertTrue($ok, "$file: ExposureMode enum");
         }
 
         // Lens information
         if (isset($exif['EXIF:FocalLength'])) {
-            $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens()->lens()->focalLengthMm ?? $meta->media()->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
+            $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens->focalLengthMm ?? $meta->media()->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
         }
         if (isset($exif['EXIF:FocalLengthIn35mmFormat'])) {
-            $this->assertSame((int)$exif['EXIF:FocalLengthIn35mmFormat'], (int)($meta->lens()->equivalent35mm() ?? 0), "$file: FocalLength35mm");
+            $this->assertSame((int)$exif['EXIF:FocalLengthIn35mmFormat'], (int)($meta->lens->focalLengthIn35mm ?? $meta->derived->equivalent35mm() ?? 0), "$file: FocalLength35mm");
         }
         if (isset($exif['EXIF:LensModel'])) {
-            $this->assertSame($exif['EXIF:LensModel'], $meta->lens()->lens()->lensModel ?? null, "$file: LensModel");
+            $this->assertSame($exif['EXIF:LensModel'], $meta->lens->lensModel ?? null, "$file: LensModel");
         }
 
         // Temporal metadata (ISO-8601)
@@ -170,14 +170,14 @@ final class TruthComparisonTest extends TestCase
 
         // GPS
         if (isset($exif['GPS:GPSLatitude'], $exif['GPS:GPSLongitude'])) {
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLatitude'],  (float)($meta->gps()->latitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lat");
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLongitude'], (float)($meta->gps()->longitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lon");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLatitude'],  (float)($meta->gps->latitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lat");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLongitude'], (float)($meta->gps->longitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lon");
         }
         if (isset($exif['GPS:GPSAltitude'])) {
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSAltitude'], (float)($meta->gps()->altitude() ?? 0), 1e-3, "$file: GPS alt");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSAltitude'], (float)($meta->gps->altitude() ?? 0), 1e-3, "$file: GPS alt");
         }
         if (isset($exif['GPS:GPSImgDirection'])) {
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSImgDirection'], (float)($meta->gps()->imageDirection() ?? 0), 1e-6, "$file: GPS direction");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSImgDirection'], (float)($meta->gps->imageDirection() ?? 0), 1e-6, "$file: GPS direction");
         }
 
         // ICC profile
@@ -195,13 +195,13 @@ final class TruthComparisonTest extends TestCase
         }
 
         // Flash bitmask decoded into structured fields
-        if (isset($exif['EXIF:Flash']) && isset($meta->exposure()->exposure->flash)) {
+        if (isset($exif['EXIF:Flash']) && isset($meta->exposure->flash)) {
             $decoded = Normalizer::decodeExifFlash((int)$exif['EXIF:Flash']);
-            $this->assertSame($decoded['fired'], (bool)$meta->exposure()->exposure->flash->fired, "$file: Flash fired");
-            $this->assertSame($decoded['returnDetection'], enumName($meta->exposure()->exposure->flash->returnDetection ?? null), "$file: Flash returnDetection");
-            $this->assertSame($decoded['mode'],             enumName($meta->exposure()->exposure->flash->mode ?? null),             "$file: Flash mode");
-            $this->assertSame($decoded['functionPresence'],  enumName($meta->exposure()->exposure->flash->functionPresence ?? null), "$file: Flash functionPresence");
-            $this->assertSame($decoded['redEyeReduction'],  (bool)$meta->exposure()->exposure->flash->redEyeReduction,              "$file: Flash redEyeReduction");
+            $this->assertSame($decoded['fired'], (bool)$meta->exposure->flash->fired, "$file: Flash fired");
+            $this->assertSame($decoded['returnDetection'], enumName($meta->exposure->flash->returnDetection ?? null), "$file: Flash returnDetection");
+            $this->assertSame($decoded['mode'],             enumName($meta->exposure->flash->mode ?? null),             "$file: Flash mode");
+            $this->assertSame($decoded['functionPresence'],  enumName($meta->exposure->flash->functionPresence ?? null), "$file: Flash functionPresence");
+            $this->assertSame($decoded['redEyeReduction'],  (bool)$meta->exposure->flash->redEyeReduction,              "$file: Flash redEyeReduction");
         }
     }
 

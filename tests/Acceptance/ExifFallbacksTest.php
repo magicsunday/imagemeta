@@ -26,18 +26,18 @@ final class ExifFallbacksTest extends TestCase
             ->read(self::SAMPLE)
             ->structured();
 
-        self::assertSame(80, $structured->exposure()->iso);
+        self::assertSame(80, $structured->exposure->iso);
         self::assertSame(
             '2011-12-06T11:08:37+00:00',
             $structured->temporal()->original?->format(DATE_ATOM),
         );
         self::assertSame(
             '400 N Michigan Ave, Chicago, IL 60611, USA',
-            $structured->image()->userComment,
+            $structured->image->userComment,
         );
-        self::assertSame('ASCII', $structured->image()->userCommentEncoding);
+        self::assertSame('ASCII', $structured->image->userCommentEncoding);
 
-        $interop = $structured->interop();
+        $interop = $structured->interop;
         self::assertSame('R98', $interop->index);
         self::assertSame('0100', $interop->version);
         self::assertSame(4000, $interop->relatedImageWidth);
