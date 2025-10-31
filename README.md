@@ -2,6 +2,12 @@
 
 MagicSunday/ImageMeta provides a streaming metadata parser for JPEG, HEIC and ISO Base Media File Format containers. It unifies EXIF, XMP and QuickTime sources into a common PHP domain model.
 
+## Milestone M1 Goals
+
+- Establish a single value layer without duplicate wrapper APIs.
+- Ensure `StructuredMetadata` exposes raw value objects alongside derived helpers.
+- Track migration progress in `docs/upgrade/m1-single-value-layer.md`.
+
 ## Structured Metadata API
 
 The library exposes a structured and fully typed metadata aggregate via `Metadata::structured()`. The aggregate wraps immutable value objects that hide any tag or container specifics.

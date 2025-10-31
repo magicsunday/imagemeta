@@ -35,6 +35,10 @@ use MagicSunday\ImageMeta\Value\Standards;
 
 /**
  * Provides an EXIF-only structured view derived from a parsed document.
+ *
+ * This legacy aggregate bridges the deprecated structured EXIF wrappers until
+ * the single value layer migration completes. Prefer {@see \MagicSunday\ImageMeta\Curate\StructuredMetadata}
+ * for new integrations.
  */
 final readonly class StructuredExif
 {

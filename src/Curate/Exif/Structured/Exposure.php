@@ -25,6 +25,9 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
 
 /**
  * Captures EXIF exposure values alongside derived exposure metrics.
+ *
+ * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
+ *             Use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata instead.
  */
 final readonly class Exposure
 {

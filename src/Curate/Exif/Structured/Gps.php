@@ -17,6 +17,9 @@ use MagicSunday\ImageMeta\Value\Gps as GpsValue;
 
 /**
  * Offers EXIF GPS metadata without external augmentation.
+ *
+ * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
+ *             Use MagicSunday\ImageMeta\Curate\Structured\GpsMetadata instead.
  */
 final readonly class Gps
 {
