@@ -39,6 +39,10 @@ use MagicSunday\ImageMeta\Value\Standards;
  * This legacy aggregate bridges the deprecated structured EXIF wrappers until
  * the single value layer migration completes. Prefer {@see \MagicSunday\ImageMeta\Curate\StructuredMetadata}
  * for new integrations.
+ *
+ * @deprecated since milestone M4. The wrapper will be removed once the structured
+ *             value layer rollout completes. Use value objects exposed by the
+ *             curated metadata instead.
  */
 final readonly class StructuredExif
 {

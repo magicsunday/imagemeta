@@ -18,73 +18,52 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 /**
  * Provides EXIF backed camera metadata without container fallbacks.
  *
- * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
- *             Use MagicSunday\ImageMeta\Curate\Structured\CameraMetadata instead.
+ * @deprecated since milestone M4. This transitional wrapper will be removed in the
+ *             following release. Consume the underlying Value objects directly instead.
  */
 final readonly class Camera
 {
-    public ?string $make;
-
-    public ?string $model;
-
-    public ?string $ownerName;
-
-    public ?string $serialNumber;
-
-    public ?string $firmware;
-
-    public ?FileSource $fileSource;
-
-    public ?SensingMethod $sensingMethod;
-
-    /**
-     * @param CameraValue $camera Raw camera value object produced by the parser with unmodified EXIF fields. The mapped
-     *                            properties expose the textual identifiers as-is while keeping enum wrappers for file
-     *                            source and sensing method.
-     */
-    public function __construct(CameraValue $camera)
+    public function __construct(private CameraValue $camera)
     {
-        $this->make          = $camera->make;
-        $this->model         = $camera->model;
-        $this->ownerName     = $camera->ownerName;
-        $this->serialNumber  = $camera->serialNumber;
-        $this->firmware      = $camera->firmware;
-        $this->fileSource    = $camera->fileSource;
-        $this->sensingMethod = $camera->sensingMethod;
+    }
+
+    public function value(): CameraValue
+    {
+        return $this->camera;
     }
 
     public function make(): ?string
     {
-        return $this->make;
+        return $this->camera->make;
     }
 
     public function model(): ?string
     {
-        return $this->model;
+        return $this->camera->model;
     }
 
     public function ownerName(): ?string
     {
-        return $this->ownerName;
+        return $this->camera->ownerName;
     }
 
     public function serialNumber(): ?string
     {
-        return $this->serialNumber;
+        return $this->camera->serialNumber;
     }
 
     public function firmware(): ?string
     {
-        return $this->firmware;
+        return $this->camera->firmware;
     }
 
     public function fileSource(): ?FileSource
     {
-        return $this->fileSource;
+        return $this->camera->fileSource;
     }
 
     public function sensingMethod(): ?SensingMethod
     {
-        return $this->sensingMethod;
+        return $this->camera->sensingMethod;
     }
 }

@@ -14,18 +14,6 @@ namespace MagicSunday\ImageMeta\Curate\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
-use MagicSunday\ImageMeta\Curate\Structured\CameraMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\CaptureMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\FileMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\GpsMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\LensMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\MakerNotesView;
-use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\ProcessingMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\RightsMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\SensorMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\TechnicalMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
@@ -128,18 +116,43 @@ final class ValueFactory
      * @param XmpDocument|null $xmpDocument Optional pre-parsed XMP document reused by the caller.
      *
      * @return array{
-     *     file: FileMetadata,
-     *     camera: CameraMetadata,
-     *     lens: LensMetadata,
-     *     media: MediaMetadata,
-     *     exposure: ExposureMetadata,
-     *     capture: CaptureMetadata,
-     *     gps: GpsMetadata,
-     *     sensor: SensorMetadata,
-     *     processing: ProcessingMetadata,
-     *     technical: TechnicalMetadata,
-     *     rights: RightsMetadata,
-     *     makerNotes: MakerNotesView,
+     *     file: File,
+     *     container: Container,
+     *     integrity: Integrity,
+     *     camera: Camera,
+     *     device: Device,
+     *     lens: Lens,
+     *     derived: Derived,
+     *     image: Image,
+     *     preview: Preview,
+     *     video: Video,
+     *     audio: Audio,
+     *     embeddedAudio: AudioClips,
+     *     colorProfile: ColorProfile,
+     *     composite: CompositeImageInfo,
+     *     multiPicture: MultiPicture,
+     *     exposure: Exposure,
+     *     capture: Capture,
+     *     scene: Scene,
+     *     temporal: Temporal,
+     *     regions: Regions,
+     *     keywords: Keywords,
+     *     gps: Gps,
+     *     sensor: Sensor,
+     *     focus: Focus,
+     *     motion: Motion,
+     *     uav: Uav,
+     *     processing: ProcessingSettings,
+     *     whiteBalance: WhiteBalanceDetails,
+     *     interop: Interop,
+     *     tiff: TiffData,
+     *     standards: Standards,
+     *     flashPix: FlashPix,
+     *     xmp: Xmp,
+     *     rights: Rights,
+     *     author: Author,
+     *     related: RelatedAssets,
+     *     makerNotesApple: AppleMakerNotes|null,
      * }
      */
     public function createComponents(
@@ -599,18 +612,43 @@ final class ValueFactory
         );
 
         return [
-            'file'       => new FileMetadata($file, $container, $integrity),
-            'camera'     => new CameraMetadata($camera, $device),
-            'lens'       => new LensMetadata($lens, $derived),
-            'media'      => new MediaMetadata($image, $preview, $video, $audio, $embeddedAudio, $colorProfile, $composite, $multiPicture),
-            'exposure'   => new ExposureMetadata($exposure, $derived),
-            'capture'    => new CaptureMetadata($capture, $scene, $temporal, $regions, $keywords),
-            'gps'        => new GpsMetadata($gps),
-            'sensor'     => new SensorMetadata($sensor, $focus, $motion, $uav),
-            'processing' => new ProcessingMetadata($processing, $whiteBalanceDetails),
-            'technical'  => new TechnicalMetadata($interop, $tiff, $standards, $flashPix, $xmp),
-            'rights'     => new RightsMetadata($rights, $author, $related),
-            'makerNotes' => new MakerNotesView($apple),
+            'file' => $file,
+            'container' => $container,
+            'integrity' => $integrity,
+            'camera' => $camera,
+            'device' => $device,
+            'lens' => $lens,
+            'derived' => $derived,
+            'image' => $image,
+            'preview' => $preview,
+            'video' => $video,
+            'audio' => $audio,
+            'embeddedAudio' => $embeddedAudio,
+            'colorProfile' => $colorProfile,
+            'composite' => $composite,
+            'multiPicture' => $multiPicture,
+            'exposure' => $exposure,
+            'capture' => $capture,
+            'scene' => $scene,
+            'temporal' => $temporal,
+            'regions' => $regions,
+            'keywords' => $keywords,
+            'gps' => $gps,
+            'sensor' => $sensor,
+            'focus' => $focus,
+            'motion' => $motion,
+            'uav' => $uav,
+            'processing' => $processing,
+            'whiteBalance' => $whiteBalanceDetails,
+            'interop' => $interop,
+            'tiff' => $tiff,
+            'standards' => $standards,
+            'flashPix' => $flashPix,
+            'xmp' => $xmp,
+            'rights' => $rights,
+            'author' => $author,
+            'related' => $related,
+            'makerNotesApple' => $apple,
         ];
     }
 

@@ -12,89 +12,26 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate\Structured;
 
 use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Enum\Contrast;
-use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
-use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
-use MagicSunday\ImageMeta\Value\Enum\GainControl;
-use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
-use MagicSunday\ImageMeta\Value\Enum\Saturation;
-use MagicSunday\ImageMeta\Value\Enum\Sharpness;
-use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Exposure as ExposureValue;
-use MagicSunday\ImageMeta\Value\FlashInfo;
 
 /**
  * Exposure measurements merged with derived exposure metrics.
  */
 final readonly class ExposureMetadata
 {
-    public ?int $iso;
+    public function __construct(
+        public ExposureValue $exposure,
+        public Derived $derived,
+    ) {
+    }
 
-    public ?float $exposureTimeSec;
-
-    public ?float $fNumber;
-
-    public ?float $exposureBiasEv;
-
-    public ?ExposureProgram $program;
-
-    public ?MeteringMode $meteringMode;
-
-    public ?FlashInfo $flash;
-
-    public ?WhiteBalance $whiteBalance;
-
-    public ?float $brightnessEv;
-
-    public ?ExposureMode $exposureMode;
-
-    public ?GainControl $gainControl;
-
-    public ?Contrast $contrast;
-
-    public ?Saturation $saturation;
-
-    public ?Sharpness $sharpness;
-
-    public ?float $digitalZoomRatio;
-
-    public ?float $shutterSpeedEv;
-
-    public ?float $apertureEv;
-
-    public ?int $isoLatitudeYyy;
-
-    public ?int $isoLatitudeZzz;
-
-    public ?float $exposureIndex;
-
-    public ?float $flashEnergy;
-
-    public ?float $ev100;
-
-    public function __construct(ExposureValue $exposure, Derived $derived)
+    public function exposure(): ExposureValue
     {
-        $this->iso              = $exposure->iso;
-        $this->exposureTimeSec  = $exposure->exposureTimeSec;
-        $this->fNumber          = $exposure->fNumber;
-        $this->exposureBiasEv   = $exposure->exposureBiasEv;
-        $this->program          = $exposure->program;
-        $this->meteringMode     = $exposure->meteringMode;
-        $this->flash            = $exposure->flash;
-        $this->whiteBalance     = $exposure->whiteBalance;
-        $this->brightnessEv     = $exposure->brightnessEv;
-        $this->exposureMode     = $exposure->exposureMode;
-        $this->gainControl      = $exposure->gainControl;
-        $this->contrast         = $exposure->contrast;
-        $this->saturation       = $exposure->saturation;
-        $this->sharpness        = $exposure->sharpness;
-        $this->digitalZoomRatio = $exposure->digitalZoomRatio;
-        $this->shutterSpeedEv   = $exposure->shutterSpeedEv;
-        $this->apertureEv       = $exposure->apertureEv;
-        $this->isoLatitudeYyy   = $exposure->isoLatitudeYyy;
-        $this->isoLatitudeZzz   = $exposure->isoLatitudeZzz;
-        $this->exposureIndex    = $exposure->exposureIndex;
-        $this->flashEnergy      = $exposure->flashEnergy;
-        $this->ev100            = $derived->ev100;
+        return $this->exposure;
+    }
+
+    public function derived(): Derived
+    {
+        return $this->derived;
     }
 }

@@ -105,7 +105,7 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedStandards['tiffEpStandardId'], $standards->tiffEpStandardId(), sprintf('%s: TIFF/EP standard ID', $fixture));
         Assert::assertSame($expectedStandards['tiffEpStandardString'], $standards->tiffEpStandardString(), sprintf('%s: TIFF/EP standard string', $fixture));
 
-        Assert::assertSame($expected['exposure']['iso'], $structured->exposure->iso, sprintf('%s: ISO fallback', $fixture));
+        Assert::assertSame($expected['exposure']['iso'], $structured->exposure->exposure->iso, sprintf('%s: ISO fallback', $fixture));
 
         $temporal        = $structured->capture->temporal;
         $expectedCapture = $expected['capture']['dateTimeOriginal'];
