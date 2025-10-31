@@ -12,261 +12,178 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
-use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
-use Throwable;
+use MagicSunday\ImageMeta\Value\Camera;
+use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\Image;
+use MagicSunday\ImageMeta\Value\Lens;
 
-use function is_float;
-use function is_int;
+use function abs;
+use function implode;
+use function round;
+use function rtrim;
+use function sprintf;
+use function strcasecmp;
+use function strlen;
+use function strncmp;
+use function strtolower;
+use function trim;
+
+use const DATE_ATOM;
 
 /**
- * Helper routines that extract frequently-used EXIF values in a safe manner.
+ * Presentation helpers that format value objects for UI consumption.
  */
 final class ExifConvenience
 {
     /**
-     * Extracts camera identification details from the EXIF document.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     *
-     * @return array{make: ?string, model: ?string, lens: ?string} camera details ready for display
+     * Returns the capture timestamp value from the capture metadata.
      */
-    public static function camera(ParsedExif $doc): array
+    public static function captureDateTime(Capture $capture): ?DateTimeImmutable
     {
-        return [
-            'make'  => $doc->cameraMake(),  // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Make)
-            'model' => $doc->cameraModel(), // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Model)
-            'lens'  => $doc->lensModel(),   // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (LensModel)
-        ];
+        return $capture->dateTime();
     }
 
     /**
-     * Normalises the capture timestamp by combining the EXIF datetime and offset.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     *
-     * @return DateTimeImmutable|null the capture timestamp or null when unavailable
+     * Formats the capture timestamp as a string using the supplied format.
      */
-    public static function captureDateTime(ParsedExif $doc): ?DateTimeImmutable
+    public static function captureDateTimeString(Capture $capture, string $format = DATE_ATOM): ?string
     {
-        try {
-            // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 harmonise DateTimeOriginal with OffsetTime*.
-            return $doc->captureDateTime();
-        } catch (Throwable) {
+        $dateTime = $capture->dateTime();
+
+        if (!$dateTime instanceof DateTimeImmutable) {
             return null;
         }
+
+        return $dateTime->format($format);
     }
 
     /**
-     * Returns the GPS coordinates extracted from the EXIF document.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     *
-     * @return array{lat: ?float, lon: ?float, alt: ?float} geographic coordinates
+     * Builds a compact camera and lens description string.
      */
-    public static function gps(ParsedExif $doc): array
+    public static function cameraDescription(Camera $camera, ?Lens $lens = null): ?string
     {
-        // GPSLatitude/GPSLongitude/GPSAltitude (EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8).
-        return $doc->gps(); // ['lat'=>?float,'lon'=>?float,'alt'=>?float]
-    }
+        $make  = self::normalise($camera->make());
+        $model = self::normalise($camera->model());
 
-    /**
-     * Converts the exposure time rational to seconds.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     *
-     * @return float|null exposure duration in seconds
-     */
-    public static function exposureTime(ParsedExif $doc): ?float
-    {
-        $entry = self::find($doc, ExifTag::EXPOSURE_TIME); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ExposureTime)
+        $cameraLabel = null;
 
-        return $entry instanceof IfdEntry
-            ? self::rationalEntryToFloat($entry)
-            : null;
-    }
-
-    /**
-     * Retrieves the aperture (f-number) from the EXIF data.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     *
-     * @return float|null aperture value
-     */
-    public static function fNumber(ParsedExif $doc): ?float
-    {
-        $entry = self::find($doc, ExifTag::F_NUMBER); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FNumber)
-
-        return $entry instanceof IfdEntry
-            ? self::rationalEntryToFloat($entry)
-            : null;
-    }
-
-    /**
-     * Retrieves the focal length from the EXIF data in millimetres.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     *
-     * @return float|null focal length in millimetres
-     */
-    public static function focalLength(ParsedExif $doc): ?float
-    {
-        $entry = self::find($doc, ExifTag::FOCAL_LENGTH); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FocalLength)
-
-        return $entry instanceof IfdEntry
-            ? self::rationalEntryToFloat($entry)
-            : null;
-    }
-
-    /**
-     * Determines the ISO sensitivity from either the modern or legacy tag.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     *
-     * @return int|null ISO value when available
-     */
-    public static function iso(ParsedExif $doc): ?int
-    {
-        try {
-            $iso = $doc->isoBestEffort();
-            if ($iso !== null) {
-                return $iso;
+        if ($make !== null && $model !== null) {
+            if (self::startsWithCaseInsensitive($model, $make)) {
+                $cameraLabel = $model;
+            } else {
+                $cameraLabel = $make . ' ' . $model;
             }
-        } catch (Throwable) {
-            // ignore and fall back to manual resolution
+        } elseif ($make !== null || $model !== null) {
+            $cameraLabel = $make ?? $model;
         }
 
-        $iso = self::isoFromSensitivityType($doc); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (SensitivityType)
+        $lensLabel = self::normalise($lens?->lensModel());
+
+        $parts = [];
+        if ($cameraLabel !== null) {
+            $parts[] = $cameraLabel;
+        }
+
+        if ($lensLabel !== null) {
+            $parts[] = $lensLabel;
+        }
+
+        if ($parts === []) {
+            return null;
+        }
+
+        return implode(' · ', $parts);
+    }
+
+    /**
+     * Formats the exposure metadata into a readable summary string.
+     */
+    public static function exposureSummary(Exposure $exposure, ?Lens $lens = null, ?Derived $derived = null): ?string
+    {
+        $parts = [];
+
+        $seconds = $exposure->exposureTimeSec();
+        if ($seconds !== null) {
+            $parts[] = self::formatExposureTime($seconds);
+        }
+
+        $fNumber = $exposure->fNumber();
+        if ($fNumber !== null) {
+            $parts[] = self::formatFNumber($fNumber);
+        }
+
+        $iso = $exposure->iso();
         if ($iso !== null) {
-            return $iso;
+            $parts[] = self::formatIso($iso);
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::ISO_SPEED)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ISOSpeedRatings)
-        if ($iso !== null) {
-            return $iso;
+        $focalLength = $lens?->focalLengthMm();
+        if ($focalLength !== null) {
+            $parts[] = self::formatFocalLength($focalLength);
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::STANDARD_OUTPUT_SENSITIVITY)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (StandardOutputSensitivity)
-        if ($iso !== null) {
-            return $iso;
+        $equivalent = $derived?->focalLength35mm();
+        if ($equivalent !== null && !self::containsEquivalent($parts, $equivalent)) {
+            $parts[] = sprintf('%d mm eq', $equivalent);
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::RECOMMENDED_EXPOSURE_INDEX)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (RecommendedExposureIndex)
-        if ($iso !== null) {
-            return $iso;
+        if ($parts === []) {
+            return null;
         }
 
-        $iso = self::isoFromEntry($doc->exifIfd?->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (PhotographicSensitivity)
-
-        // Legacy fallback retained for EXIF 2.32 §4.6.3 compatibility
-        return $iso ?? self::isoFromEntry($doc->ifd0->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY));
+        return implode(' · ', $parts);
     }
 
     /**
-     * Resolves ISO sensitivity using the EXIF 3.x sensitivity type priority rules.
-     *
-     * EXIF 3.0 §4.6.3 formalises the SensitivityType-driven priority order retained from EXIF 2.32 §4.6.3.
+     * Formats the image dimensions into a `WIDTH×HEIGHT px` string.
      */
-    private static function isoFromSensitivityType(ParsedExif $doc): ?int
+    public static function imageDimensions(Image $image): ?string
     {
-        $type = self::isoFromEntry($doc->exifIfd?->get(ExifTag::SENSITIVITY_TYPE)); // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (SensitivityType)
-        if ($type === null) {
+        $width  = $image->width();
+        $height = $image->height();
+
+        if ($width === null || $height === null) {
             return null;
         }
 
-        foreach (self::sensitivityTagPriority($type) as $tag) {
-            $iso = self::isoFromEntry($doc->exifIfd?->get($tag));
-            if ($iso !== null) {
-                return $iso;
-            }
-        }
-
-        return null;
+        return sprintf('%d×%d px', $width, $height);
     }
 
     /**
-     * Converts various EXIF value representations into an ISO integer.
+     * Formats the primary GPS coordinates and optionally altitude.
      */
-    private static function isoFromEntry(?IfdEntry $entry): ?int
+    public static function gpsString(Gps $gps, int $precision = 6, bool $includeAltitude = false): ?string
     {
-        if (!$entry instanceof IfdEntry) {
+        $latitude  = $gps->latitude();
+        $longitude = $gps->longitude();
+
+        if ($latitude === null || $longitude === null) {
             return null;
         }
 
-        $value = $entry->value;
+        $latitudeRef  = self::resolveLatitudeRef($gps, $latitude);
+        $longitudeRef = self::resolveLongitudeRef($gps, $longitude);
 
-        if ($value instanceof UInt64) {
-            return self::uint64ToInt($value, 'ISO sensitivity');
-        }
+        $latValue = self::formatCoordinate(abs($latitude), $precision) . '° ' . $latitudeRef;
+        $lonValue = self::formatCoordinate(abs($longitude), $precision) . '° ' . $longitudeRef;
 
-        if (is_int($value)) {
-            return $value;
-        }
+        $result = $latValue . ', ' . $lonValue;
 
-        if (is_float($value)) {
-            return (int) $value;
-        }
-
-        if ($value instanceof ExifNumericList) {
-            $first = $value->values[0] ?? null;
-            if (is_int($first)) {
-                return $first;
+        if ($includeAltitude) {
+            $altitude = self::resolveAltitude($gps);
+            if ($altitude !== null) {
+                $result .= ' (' . self::formatNumber($altitude, 1) . ' m)';
             }
-
-            if (is_float($first)) {
-                return (int) $first;
-            }
-
-            $numeric = ValueConverters::rationalToFloat($value);
-            if ($numeric !== null) {
-                return (int) $numeric;
-            }
-
-            return null;
         }
 
-        if ($value instanceof ExifRational || $value instanceof ExifRationalList) {
-            $float = ValueConverters::rationalToFloat($value);
-            if ($float !== null) {
-                return (int) $float;
-            }
-
-            return null;
-        }
-
-        return null;
+        return $result;
     }
 
     /**
-     * Maps sensitivity type enumerations to ISO tag priorities.
-     *
-     * @return list<int>
-     */
-    private static function sensitivityTagPriority(int $type): array
-    {
-        // Mapping derived from the EXIF SensitivityType table (EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3).
-        return match ($type) {
-            1       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
-            2       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            3       => [ExifTag::ISO_SPEED],
-            4       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            5       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
-            6       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
-            7       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
-            default => [],
-        };
-    }
-
-    /**
-     * Provides a flattened associative representation of common EXIF values.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
+     * Provides a flattened array representation of frequently used values.
      *
      * @return array{
      *     make:?string,
@@ -281,77 +198,162 @@ final class ExifConvenience
      *     gps_lat:?float,
      *     gps_lon:?float,
      *     gps_alt:?float
-     * } normalised metadata values
+     * }
      */
-    public static function toArray(ParsedExif $doc): array
-    {
-        $dt  = self::captureDateTime($doc);
-        $gps = $doc->gps();
+    public static function toArray(
+        Camera $camera,
+        Lens $lens,
+        Image $image,
+        Capture $capture,
+        Exposure $exposure,
+        Gps $gps
+    ): array {
+        $capturedAt = $capture->dateTime();
 
         return [
-            'make'  => $doc->cameraMake(),  // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Make)
-            'model' => $doc->cameraModel(), // EXIF 3.0 §4.6.4; EXIF 2.32 §4.6.4 (Model)
-            'lens'  => $doc->lensModel(),   // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (LensModel)
-            // Expose the numeric orientation code to preserve the legacy convenience contract.
-            'orientation' => $doc->orientation()?->value,
-            'captured_at' => $dt?->format(DATE_ATOM),
-            'exposure_s'  => self::exposureTime($doc), // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ExposureTime)
-            'fnumber'     => self::fNumber($doc),      // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FNumber)
-            'focal_mm'    => self::focalLength($doc),  // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (FocalLength)
-            'iso'         => self::iso($doc),          // EXIF 3.0 §4.6.3; EXIF 2.32 §4.6.3 (ISO values)
-            'gps_lat'     => $gps['lat'],              // EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 (GPSLatitude)
-            'gps_lon'     => $gps['lon'],              // EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 (GPSLongitude)
-            'gps_alt'     => $gps['alt'],              // EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8 (GPSAltitude)
+            'make'        => self::normalise($camera->make()),
+            'model'       => self::normalise($camera->model()),
+            'lens'        => self::normalise($lens->lensModel()),
+            'orientation' => $image->orientation()?->value,
+            'captured_at' => $capturedAt?->format(DATE_ATOM),
+            'exposure_s'  => $exposure->exposureTimeSec(),
+            'fnumber'     => $exposure->fNumber(),
+            'focal_mm'    => $lens->focalLengthMm(),
+            'iso'         => $exposure->iso(),
+            'gps_lat'     => $gps->latitude(),
+            'gps_lon'     => $gps->longitude(),
+            'gps_alt'     => self::resolveAltitude($gps),
         ];
     }
 
     /**
-     * Finds a tag either within the EXIF IFD or as a fallback in IFD0.
-     *
-     * @param ParsedExif $doc parsed EXIF metadata
-     * @param int        $tag tag identifier to search for
-     *
-     * @return IfdEntry|null matching tag entry when present
+     * @param list<string> $parts
      */
-    private static function find(ParsedExif $doc, int $tag): ?IfdEntry
+    private static function containsEquivalent(array $parts, int $equivalent): bool
     {
-        $exifEntry = $doc->exifIfd?->get($tag);
-        if ($exifEntry instanceof IfdEntry) {
-            return $exifEntry;
-        }
+        $needle = sprintf('%d mm eq', $equivalent);
 
-        return $doc->ifd0->get($tag);
-    }
-
-    /**
-     * Converts a rational-oriented EXIF entry into a float value.
-     */
-    private static function rationalEntryToFloat(IfdEntry $entry): ?float
-    {
-        $value = $entry->value;
-
-        if ($value instanceof UInt64) {
-            $intValue = self::uint64ToInt($value, 'EXIF rational entry');
-
-            if ($intValue === null) {
-                return null;
+        foreach ($parts as $part) {
+            if (strcasecmp($part, $needle) === 0) {
+                return true;
             }
-
-            $value = $intValue;
         }
 
-        return ValueConverters::rationalToFloat($value);
+        return false;
     }
 
-    /**
-     * Converts an unsigned 64-bit value into an int when it fits the signed range.
-     */
-    private static function uint64ToInt(UInt64 $value, string $context): ?int
+    private static function formatExposureTime(float $seconds): string
     {
-        if (!$value->fitsSignedInt()) {
+        if ($seconds <= 0.0) {
+            return self::formatNumber($seconds, 3) . ' s';
+        }
+
+        if ($seconds >= 1.0) {
+            $formatted = self::formatNumber($seconds, $seconds < 10.0 ? 2 : 1);
+
+            return $formatted . ' s';
+        }
+
+        $denominator = (int) round(1.0 / $seconds);
+        if ($denominator > 0) {
+            $approximation = 1.0 / $denominator;
+            if (abs($approximation - $seconds) < 0.0001) {
+                return '1/' . $denominator . ' s';
+            }
+        }
+
+        return self::formatNumber($seconds, 3) . ' s';
+    }
+
+    private static function formatFNumber(float $fNumber): string
+    {
+        return 'f/' . self::formatNumber($fNumber, 1);
+    }
+
+    private static function formatIso(int $iso): string
+    {
+        return 'ISO ' . $iso;
+    }
+
+    private static function formatFocalLength(float $focalLength): string
+    {
+        return self::formatNumber($focalLength, 1) . ' mm';
+    }
+
+    private static function formatCoordinate(float $value, int $precision): string
+    {
+        if ($precision < 0) {
+            $precision = 0;
+        }
+
+        $format = '%.' . $precision . 'f';
+
+        return sprintf($format, $value);
+    }
+
+    private static function formatNumber(float $value, int $precision): string
+    {
+        $precision = $precision < 0 ? 0 : $precision;
+        $format    = '%.' . $precision . 'f';
+
+        $formatted = sprintf($format, $value);
+
+        return rtrim(rtrim($formatted, '0'), '.');
+    }
+
+    private static function normalise(?string $value): ?string
+    {
+        if ($value === null) {
             return null;
         }
 
-        return $value->toInt($context);
+        $normalised = trim($value);
+
+        return $normalised === '' ? null : $normalised;
+    }
+
+    private static function startsWithCaseInsensitive(string $haystack, string $needle): bool
+    {
+        $needleLength = strlen($needle);
+        if ($needleLength === 0) {
+            return true;
+        }
+
+        return strncmp(strtolower($haystack), strtolower($needle), $needleLength) === 0;
+    }
+
+    private static function resolveLatitudeRef(Gps $gps, float $latitude): string
+    {
+        $ref = $gps->latitudeReference();
+        if ($ref !== null) {
+            return $ref;
+        }
+
+        return $latitude >= 0.0 ? 'N' : 'S';
+    }
+
+    private static function resolveLongitudeRef(Gps $gps, float $longitude): string
+    {
+        $ref = $gps->longitudeReference();
+        if ($ref !== null) {
+            return $ref;
+        }
+
+        return $longitude >= 0.0 ? 'E' : 'W';
+    }
+
+    private static function resolveAltitude(Gps $gps): ?float
+    {
+        $altitude = $gps->altitude();
+        if ($altitude === null) {
+            return null;
+        }
+
+        $reference = $gps->altitudeReference();
+        if ($reference === 1) {
+            return -$altitude;
+        }
+
+        return $altitude;
     }
 }
