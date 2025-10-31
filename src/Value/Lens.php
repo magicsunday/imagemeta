@@ -11,10 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Contracts\LensInterface;
+
 /**
  * Represents lens information used when capturing the image.
  */
-final readonly class Lens
+final readonly class Lens implements LensInterface
 {
     /**
      * @var array{0:float,1:float,2:float,3:float}|null

@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Contracts\ImageInterface;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 
 /**
  * Encapsulates image level metadata.
  */
-final readonly class Image
+final readonly class Image implements ImageInterface
 {
     /**
      * @param int|null         $width                   Final image width in pixels.

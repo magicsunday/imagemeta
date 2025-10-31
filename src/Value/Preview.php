@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Contracts\PreviewInterface;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 
 /**
  * Describes the availability of embedded previews or thumbnails.
  */
-final readonly class Preview
+final readonly class Preview implements PreviewInterface
 {
     /**
      * @param bool|null        $hasThumbnail             Whether an embedded thumbnail exists.
