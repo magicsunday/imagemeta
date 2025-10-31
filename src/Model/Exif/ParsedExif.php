@@ -1861,22 +1861,30 @@ final readonly class ParsedExif
     /**
      * Returns the hue/saturation/value profile adjustment maps.
      *
-     * @return array{dimensions:list<int>|null,map1:list<float>|null,map2:list<float>|null,map3:list<float>|null}|null
+     * @return array{
+     *     dimensions:list<int>|null,
+     *     encodings:list<int>|null,
+     *     map1:list<float>|null,
+     *     map2:list<float>|null,
+     *     map3:list<float>|null,
+     * }|null
      */
     public function profileHueSatMap(): ?array
     {
         foreach ($this->profileIfds() as $ifd) {
             $dimensions = $this->numericList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DIMS);
+            $encodings  = $this->numericList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS);
             $map1       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_1);
             $map2       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_2);
             $map3       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_3);
 
-            if ($dimensions === null && $map1 === null && $map2 === null && $map3 === null) {
+            if ($dimensions === null && $encodings === null && $map1 === null && $map2 === null && $map3 === null) {
                 continue;
             }
 
             return [
                 'dimensions' => $dimensions,
+                'encodings'  => $encodings,
                 'map1'       => $map1,
                 'map2'       => $map2,
                 'map3'       => $map3,
@@ -3007,6 +3015,7 @@ final readonly class ParsedExif
 
         foreach ($this->profileSourceIfds() as $ifd) {
             if ($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS) instanceof IfdEntry
+                || $ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS) instanceof IfdEntry
                 || $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS) instanceof IfdEntry
                 || $ifd->get(ExifTag::PROFILE_TONE_CURVE) instanceof IfdEntry
                 || $ifd->get($gainTableTag->value) instanceof IfdEntry) {

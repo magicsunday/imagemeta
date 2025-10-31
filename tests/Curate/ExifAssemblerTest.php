@@ -2020,6 +2020,7 @@ final class ExifAssemblerTest extends TestCase
 
         $profileIfd = new Ifd([
             ExifTag::PROFILE_HUE_SAT_MAP_DIMS   => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DIMS, 4, 3, new ExifNumericList([6, 3, 2])),
+            ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS, 3, 3, new ExifNumericList([0, 1, 2])),
             ExifTag::PROFILE_HUE_SAT_MAP_DATA_1 => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA_1, 11, 12, new ExifNumericList([
                 0.1,
                 0.2,
@@ -2068,6 +2069,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(6, $profile->hueSatMap->hueDivisions);
         self::assertSame(3, $profile->hueSatMap->saturationDivisions);
         self::assertSame(2, $profile->hueSatMap->valueDivisions);
+        self::assertSame([0, 1, 2], $profile->hueSatMap->encodings);
         self::assertNotNull($profile->hueSatMap->mapData1);
         self::assertCount(12, $profile->hueSatMap->mapData1);
         self::assertNotNull($profile->hueSatMap->mapData2);

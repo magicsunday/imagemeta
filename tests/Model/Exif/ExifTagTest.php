@@ -175,6 +175,7 @@ final class ExifTagTest extends TestCase
             'MAKER_NOTE'                               => 0x927C,
             'PRINT_IMAGE_MATCHING'                     => 0xC4A5,
             'MAKER_NOTE_SAFETY'                        => 0xC635,
+            'PROFILE_HUE_SAT_MAP_ENCODINGS'            => 0xC6F5,
             'PROFILE_HUE_SAT_MAP_DIMS'                 => 0xC6F6,
             'PROFILE_HUE_SAT_MAP_DATA_1'               => 0xC6F7,
             'PROFILE_HUE_SAT_MAP_DATA_2'               => 0xC6F8,
