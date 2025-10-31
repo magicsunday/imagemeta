@@ -12,12 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Exif;
 
 use DateTimeImmutable;
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Camera as StructuredCamera;
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Exposure as StructuredExposure;
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Gps as StructuredGps;
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Image as StructuredImage;
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Lens as StructuredLens;
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Value\Camera as CameraValue;
@@ -48,17 +42,19 @@ final readonly class StructuredExif
 {
     private ?ParsedExif $raw;
 
-    private StructuredCamera $camera;
+    private CameraValue $camera;
 
-    private StructuredLens $lens;
+    private LensValue $lens;
 
-    private StructuredExposure $exposure;
+    private Derived $derived;
 
-    private StructuredGps $gps;
+    private ExposureValue $exposure;
 
-    private StructuredImage $image;
+    private GpsValue $gps;
 
-    private StructuredPreview $preview;
+    private ImageValue $image;
+
+    private PreviewValue $preview;
 
     private InteropValue $interop;
 
@@ -96,12 +92,13 @@ final readonly class StructuredExif
         );
 
         // Build structured view models that expose the curated EXIF metadata slices.
-        $this->camera    = new StructuredCamera($cameraValue);
-        $this->lens      = new StructuredLens($lensValue, $derived);
-        $this->exposure  = new StructuredExposure($exposureValue, $derived);
-        $this->gps       = new StructuredGps($gpsValue);
-        $this->image     = new StructuredImage($imageValue);
-        $this->preview   = new StructuredPreview($previewValue);
+        $this->camera    = $cameraValue;
+        $this->lens      = $lensValue;
+        $this->derived   = $derived;
+        $this->exposure  = $exposureValue;
+        $this->gps       = $gpsValue;
+        $this->image     = $imageValue;
+        $this->preview   = $previewValue;
         $this->interop   = $interopValue;
         $this->standards = $this->createStandardsValue($document);
     }
@@ -109,9 +106,9 @@ final readonly class StructuredExif
     /**
      * Returns the structured camera metadata derived from the raw EXIF document.
      *
-     * @return StructuredCamera Camera metadata accessor.
+     * @return CameraValue Camera metadata accessor.
      */
-    public function camera(): StructuredCamera
+    public function camera(): CameraValue
     {
         return $this->camera;
     }
@@ -119,19 +116,29 @@ final readonly class StructuredExif
     /**
      * Returns the structured lens metadata derived from the raw EXIF document.
      *
-     * @return StructuredLens Lens metadata accessor.
+     * @return LensValue Lens metadata accessor.
      */
-    public function lens(): StructuredLens
+    public function lens(): LensValue
     {
         return $this->lens;
     }
 
     /**
+     * Returns derived exposure and optical metrics calculated from the raw document.
+     *
+     * @return Derived Derived exposure and lens helper values.
+     */
+    public function derived(): Derived
+    {
+        return $this->derived;
+    }
+
+    /**
      * Returns the structured exposure metadata derived from the raw EXIF document.
      *
-     * @return StructuredExposure Exposure metadata accessor.
+     * @return ExposureValue Exposure metadata accessor.
      */
-    public function exposure(): StructuredExposure
+    public function exposure(): ExposureValue
     {
         return $this->exposure;
     }
@@ -139,9 +146,9 @@ final readonly class StructuredExif
     /**
      * Returns the structured GPS metadata derived from the raw EXIF document.
      *
-     * @return StructuredGps GPS metadata accessor.
+     * @return GpsValue GPS metadata accessor.
      */
-    public function gps(): StructuredGps
+    public function gps(): GpsValue
     {
         return $this->gps;
     }
@@ -149,9 +156,9 @@ final readonly class StructuredExif
     /**
      * Returns the structured image metadata derived from the raw EXIF document.
      *
-     * @return StructuredImage Image metadata accessor.
+     * @return ImageValue Image metadata accessor.
      */
-    public function image(): StructuredImage
+    public function image(): ImageValue
     {
         return $this->image;
     }
@@ -159,9 +166,9 @@ final readonly class StructuredExif
     /**
      * Returns the structured preview metadata derived from the raw EXIF document.
      *
-     * @return StructuredPreview Preview metadata accessor.
+     * @return PreviewValue Preview metadata accessor.
      */
-    public function preview(): StructuredPreview
+    public function preview(): PreviewValue
     {
         return $this->preview;
     }

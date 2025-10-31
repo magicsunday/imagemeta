@@ -11,127 +11,272 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate;
 
-use MagicSunday\ImageMeta\Curate\Structured\CameraMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\CaptureMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\FileMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\GpsMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\LensMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\MakerNotesView;
-use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\ProcessingMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\RightsMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\SensorMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\TechnicalMetadata;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClips;
+use MagicSunday\ImageMeta\Value\Author;
+use MagicSunday\ImageMeta\Value\Camera;
+use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\CompositeImageInfo;
+use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\File;
+use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Value\Focus;
+use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
+use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
+use MagicSunday\ImageMeta\Value\Keywords;
+use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\Motion;
+use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\Preview;
+use MagicSunday\ImageMeta\Value\ProcessingSettings;
+use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\RelatedAssets;
+use MagicSunday\ImageMeta\Value\Rights;
+use MagicSunday\ImageMeta\Value\Scene;
+use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
+use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\Uav;
+use MagicSunday\ImageMeta\Value\Video;
+use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
+use MagicSunday\ImageMeta\Value\Xmp;
 
 /**
- * Aggregates curated metadata in a grouped, chainable representation.
+ * Aggregates curated metadata as immutable value objects that can be accessed fluently.
  */
 final readonly class StructuredMetadata
 {
     public function __construct(
-        private FileMetadata $file,
-        private CameraMetadata $camera,
-        private LensMetadata $lens,
-        private MediaMetadata $media,
-        private ExposureMetadata $exposure,
-        private CaptureMetadata $capture,
-        private GpsMetadata $gps,
-        private SensorMetadata $sensor,
-        private ProcessingMetadata $processing,
-        private TechnicalMetadata $technical,
-        private RightsMetadata $rights,
-        private MakerNotesView $makerNotes,
+        private File $file,
+        private Container $container,
+        private Integrity $integrity,
+        private Camera $camera,
+        private Device $device,
+        private Lens $lens,
+        private Derived $derived,
+        private Image $image,
+        private Preview $preview,
+        private Video $video,
+        private Audio $audio,
+        private AudioClips $embeddedAudio,
+        private ColorProfile $colorProfile,
+        private CompositeImageInfo $composite,
+        private MultiPicture $multiPicture,
+        private Exposure $exposure,
+        private Capture $capture,
+        private Scene $scene,
+        private Temporal $temporal,
+        private Regions $regions,
+        private Keywords $keywords,
+        private Gps $gps,
+        private Sensor $sensor,
+        private Focus $focus,
+        private Motion $motion,
+        private Uav $uav,
+        private ProcessingSettings $processing,
+        private WhiteBalanceDetails $whiteBalance,
+        private Interop $interop,
+        private TiffData $tiff,
+        private Standards $standards,
+        private FlashPix $flashPix,
+        private Xmp $xmp,
+        private Rights $rights,
+        private Author $author,
+        private RelatedAssets $related,
+        private ?AppleMakerNotes $makerNotesApple,
     ) {
     }
 
-    public function file(): FileMetadata
+    public function file(): File
     {
         return $this->file;
     }
 
-    public function camera(): CameraMetadata
+    public function container(): Container
+    {
+        return $this->container;
+    }
+
+    public function integrity(): Integrity
+    {
+        return $this->integrity;
+    }
+
+    public function camera(): Camera
     {
         return $this->camera;
     }
 
-    public function lens(): LensMetadata
+    public function device(): Device
+    {
+        return $this->device;
+    }
+
+    public function lens(): Lens
     {
         return $this->lens;
     }
 
-    public function media(): MediaMetadata
+    public function derived(): Derived
     {
-        return $this->media;
-    }
-
-    public function exposure(): ExposureMetadata
-    {
-        return $this->exposure;
-    }
-
-    public function capture(): CaptureMetadata
-    {
-        return $this->capture;
-    }
-
-    public function gps(): GpsMetadata
-    {
-        return $this->gps;
-    }
-
-    public function sensor(): SensorMetadata
-    {
-        return $this->sensor;
-    }
-
-    public function processing(): ProcessingMetadata
-    {
-        return $this->processing;
-    }
-
-    public function technical(): TechnicalMetadata
-    {
-        return $this->technical;
-    }
-
-    public function rights(): RightsMetadata
-    {
-        return $this->rights;
-    }
-
-    public function makerNotes(): MakerNotesView
-    {
-        return $this->makerNotes;
+        return $this->derived;
     }
 
     public function image(): Image
     {
-        return $this->media->image;
+        return $this->image;
     }
 
     public function preview(): Preview
     {
-        return $this->media->preview;
+        return $this->preview;
+    }
+
+    public function video(): Video
+    {
+        return $this->video;
+    }
+
+    public function audio(): Audio
+    {
+        return $this->audio;
+    }
+
+    public function embeddedAudio(): AudioClips
+    {
+        return $this->embeddedAudio;
+    }
+
+    public function colorProfile(): ColorProfile
+    {
+        return $this->colorProfile;
+    }
+
+    public function composite(): CompositeImageInfo
+    {
+        return $this->composite;
+    }
+
+    public function multiPicture(): MultiPicture
+    {
+        return $this->multiPicture;
+    }
+
+    public function exposure(): Exposure
+    {
+        return $this->exposure;
+    }
+
+    public function capture(): Capture
+    {
+        return $this->capture;
+    }
+
+    public function scene(): Scene
+    {
+        return $this->scene;
+    }
+
+    public function temporal(): Temporal
+    {
+        return $this->temporal;
+    }
+
+    public function regions(): Regions
+    {
+        return $this->regions;
+    }
+
+    public function keywords(): Keywords
+    {
+        return $this->keywords;
+    }
+
+    public function gps(): Gps
+    {
+        return $this->gps;
+    }
+
+    public function sensor(): Sensor
+    {
+        return $this->sensor;
+    }
+
+    public function focus(): Focus
+    {
+        return $this->focus;
+    }
+
+    public function motion(): Motion
+    {
+        return $this->motion;
+    }
+
+    public function uav(): Uav
+    {
+        return $this->uav;
+    }
+
+    public function processing(): ProcessingSettings
+    {
+        return $this->processing;
+    }
+
+    public function whiteBalance(): WhiteBalanceDetails
+    {
+        return $this->whiteBalance;
     }
 
     public function interop(): Interop
     {
-        return $this->technical->interop;
+        return $this->interop;
+    }
+
+    public function tiff(): TiffData
+    {
+        return $this->tiff;
     }
 
     public function standards(): Standards
     {
-        return $this->technical->standards;
+        return $this->standards;
     }
 
-    public function derived(): Derived
+    public function flashPix(): FlashPix
     {
-        return $this->lens->derived();
+        return $this->flashPix;
+    }
+
+    public function xmp(): Xmp
+    {
+        return $this->xmp;
+    }
+
+    public function rights(): Rights
+    {
+        return $this->rights;
+    }
+
+    public function author(): Author
+    {
+        return $this->author;
+    }
+
+    public function related(): RelatedAssets
+    {
+        return $this->related;
+    }
+
+    public function makerNotesApple(): ?AppleMakerNotes
+    {
+        return $this->makerNotesApple;
     }
 }

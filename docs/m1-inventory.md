@@ -13,13 +13,13 @@ This inventory documents every reference to the legacy structured EXIF wrappers 
 | `Image` | `src/Exif/StructuredExif.php` | Supplies image dimension accessors required by the EXIF wrapper. |
 | `Preview` | `src/Exif/StructuredExif.php`, `tests/Support/ExifExpectationAssertions.php` | Used by the API wrapper and expectation helpers to expose thumbnail and preview metadata. |
 
-## `MagicSunday\\ImageMeta\\Curate\\Structured\\*`
+## Structured metadata value layer
 
 | Aggregate | Location | Purpose |
 | --- | --- | --- |
 | `StructuredMetadata` | `src/Curate/StructuredMetadata.php` | Central aggregate composed of curated value objects spanning file, camera, lens, exposure, GPS, sensor, processing, technical and rights metadata. |
-| `CameraMetadata`, `LensMetadata`, `ExposureMetadata`, `GpsMetadata` | `src/Curate/StructuredMetadata.php`, `src/Curate/Exif/ValueFactory.php` | Value-object aggregates assembled by `ValueFactory` and injected into `StructuredMetadata`. |
-| `CaptureMetadata`, `MediaMetadata`, `ProcessingMetadata`, `SensorMetadata`, `TechnicalMetadata`, `RightsMetadata`, `MakerNotesView`, `FileMetadata` | `src/Curate/StructuredMetadata.php`, `src/Curate/Exif/ValueFactory.php` | Additional grouped metadata slices created during curation and exposed through the structured aggregate. |
+| `Camera`, `Lens`, `Exposure`, `Gps` | `src/Curate/StructuredMetadata.php`, `src/Curate/Exif/ValueFactory.php` | Immutable value objects assembled by `ValueFactory` and exposed directly via `StructuredMetadata`. |
+| `Capture`, `Scene`, `Temporal`, `Regions`, `Keywords`, `Sensor`, `Focus`, `Motion`, `Uav`, `ProcessingSettings`, `WhiteBalanceDetails`, `Interop`, `TiffData`, `Standards`, `FlashPix`, `Xmp`, `Rights`, `Author`, `RelatedAssets`, `Container`, `Integrity`, `Preview`, `Image`, `Video`, `Audio`, `AudioClips`, `ColorProfile`, `CompositeImageInfo`, `MultiPicture`, `Derived` | `src/Curate/StructuredMetadata.php`, `src/Curate/Exif/ValueFactory.php` | Additional metadata slices exposed through dedicated getters on `StructuredMetadata`. |
 
 ## `MagicSunday\\ImageMeta\\Convenience\\ExifConvenience::gps()`
 

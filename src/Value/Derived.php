@@ -17,13 +17,13 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Derived
 {
     /**
-     * @param float|null $ev100                      Exposure value normalised to ISO 100.
-     * @param float|null $hyperfocalDistanceMetres   Hyperfocal distance in metres.
-     * @param float|null $fieldOfViewDiagonalDeg     Diagonal field of view in degrees.
-     * @param float|null $fieldOfViewHorizontalDeg   Horizontal field of view in degrees.
-     * @param float|null $fieldOfViewVerticalDeg     Vertical field of view in degrees.
-     * @param int|null   $equivalent35mm             Equivalent focal length in 35mm terms.
-     * @param float|null $cropFactor                 Estimated crop factor.
+     * @param float|null $ev100                    Exposure value normalised to ISO 100.
+     * @param float|null $hyperfocalDistanceMetres Hyperfocal distance in metres.
+     * @param float|null $fieldOfViewDiagonalDeg   Diagonal field of view in degrees.
+     * @param float|null $fieldOfViewHorizontalDeg Horizontal field of view in degrees.
+     * @param float|null $fieldOfViewVerticalDeg   Vertical field of view in degrees.
+     * @param int|null   $equivalent35mm           Equivalent focal length in 35mm terms.
+     * @param float|null $cropFactor               Estimated crop factor.
      */
     public function __construct(
         public ?float $ev100,

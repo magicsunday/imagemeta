@@ -17,6 +17,14 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Camera;
+use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\File as FileValue;
+use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\Preview;
+use MagicSunday\ImageMeta\Value\Rights;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -91,11 +99,40 @@ final class MetadataReaderTest extends TestCase
         self::assertNull($metadata->digestMd5);
 
         $structured = $metadata->structured();
-        self::assertSame('image/jpeg', $structured->file()->file()->mimeType);
-        self::assertSame(strlen($jpeg), $structured->file()->file()->fileSize);
-        self::assertSame('jpg', $structured->file()->file()->extension);
-        self::assertNull($structured->file()->file()->digestSha1);
-        self::assertNull($structured->file()->file()->digestMd5);
+
+        /** @var array<string, callable(): mixed> $componentAccessors */
+        $componentAccessors = [
+            'file'      => static fn () => $structured->file(),
+            'container' => static fn () => $structured->container(),
+            'camera'    => static fn () => $structured->camera(),
+            'lens'      => static fn () => $structured->lens(),
+            'derived'   => static fn () => $structured->derived(),
+            'exposure'  => static fn () => $structured->exposure(),
+            'preview'   => static fn () => $structured->preview(),
+            'rights'    => static fn () => $structured->rights(),
+        ];
+
+        $expectedClasses = [
+            'file'      => FileValue::class,
+            'container' => Container::class,
+            'camera'    => Camera::class,
+            'lens'      => Lens::class,
+            'derived'   => Derived::class,
+            'exposure'  => Exposure::class,
+            'preview'   => Preview::class,
+            'rights'    => Rights::class,
+        ];
+
+        foreach ($componentAccessors as $name => $accessor) {
+            $value = $accessor();
+            self::assertInstanceOf($expectedClasses[$name], $value);
+        }
+
+        self::assertSame('image/jpeg', $structured->file()->mimeType);
+        self::assertSame(strlen($jpeg), $structured->file()->fileSize);
+        self::assertSame('jpg', $structured->file()->extension);
+        self::assertNull($structured->file()->digestSha1);
+        self::assertNull($structured->file()->digestMd5);
     }
 
     /**
@@ -126,8 +163,8 @@ final class MetadataReaderTest extends TestCase
         self::assertSame($expectedMd5, $metadata->digestMd5);
 
         $structured = $metadata->structured();
-        self::assertSame($expectedSha1, $structured->file()->file()->digestSha1);
-        self::assertSame($expectedMd5, $structured->file()->file()->digestMd5);
+        self::assertSame($expectedSha1, $structured->file()->digestSha1);
+        self::assertSame($expectedMd5, $structured->file()->digestMd5);
     }
 
     /**
@@ -152,7 +189,7 @@ final class MetadataReaderTest extends TestCase
 
         self::assertSame(8, $metadata->jpegBitsPerSample);
 
-        $image = $metadata->structured()->media()->image;
+        $image = $metadata->structured()->image();
 
         self::assertSame(8, $image->bitsPerSample);
         self::assertSame(448, $image->width);

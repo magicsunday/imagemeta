@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Value;
 use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Value\Contracts\GpsInterface;
-use MagicSunday\ImageMeta\Value\GpsCoordinate;
 
 /**
  * Describes the GPS position at capture time including navigation details.
@@ -441,6 +440,24 @@ final readonly class Gps implements GpsInterface
         }
 
         return new GpsCoordinate($this->longitude, $this->longitudeRef, false);
+    }
+
+    public function destinationLatitudeCoordinate(): ?GpsCoordinate
+    {
+        if ($this->destinationLatitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->destinationLatitude, $this->destinationLatitudeRef, true);
+    }
+
+    public function destinationLongitudeCoordinate(): ?GpsCoordinate
+    {
+        if ($this->destinationLongitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->destinationLongitude, $this->destinationLongitudeRef, false);
     }
 
     private function signedCoordinate(?float $value, ?string $reference, string $negativeReference, string $positiveReference): ?float
