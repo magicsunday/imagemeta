@@ -19,116 +19,203 @@ use MagicSunday\ImageMeta\Value\Gps as GpsValue;
  */
 final readonly class GpsMetadata
 {
-    public ?GpsCoordinate $latitude;
-
-    public ?GpsCoordinate $longitude;
-
-    public ?float $altitude;
-
-    public ?int $altitudeReference;
-
-    public ?string $version;
-
-    public ?string $versionRaw;
-
-    public ?string $satellites;
-
-    public ?string $status;
-
-    public ?string $measureMode;
-
-    public ?float $dilutionOfPrecision;
-
-    public ?string $speedReference;
-
-    public ?float $speedMs;
-
-    public ?string $speedOriginalReference;
-
-    public ?float $speedOriginal;
-
-    public ?string $trackReference;
-
-    public ?float $track;
-
-    public ?string $imageDirectionReference;
-
-    public ?float $imageDirection;
-
-    public ?string $mapDatum;
-
-    public ?GpsCoordinate $destinationLatitude;
-
-    public ?GpsCoordinate $destinationLongitude;
-
-    public ?string $destinationBearingReference;
-
-    public ?float $destinationBearing;
-
-    public ?string $destinationDistanceReference;
-
-    public ?float $destinationDistanceMetres;
-
-    public ?string $destinationDistanceOriginalReference;
-
-    public ?float $destinationDistanceOriginal;
-
-    public ?string $processingMethod;
-
-    public ?string $areaInformation;
-
-    public ?string $date;
-
-    public ?string $dateRaw;
-
-    public ?string $time;
-
-    public ?DateTimeImmutable $timestamp;
-
-    public ?int $differential;
-
-    public ?float $horizontalPositioningError;
-
-    public function __construct(GpsValue $gps)
+    public function __construct(public GpsValue $gps)
     {
-        $this->latitude                = $gps->latitude !== null ? new GpsCoordinate($gps->latitude, $gps->latitudeRef) : null;
-        $this->longitude               = $gps->longitude !== null ? new GpsCoordinate($gps->longitude, $gps->longitudeRef) : null;
-        $this->altitude                = $gps->altitude;
-        $this->altitudeReference       = $gps->altitudeRef;
-        $this->version                 = $gps->version;
-        $this->versionRaw              = $gps->versionRaw;
-        $this->satellites              = $gps->satellites;
-        $this->status                  = $gps->status;
-        $this->measureMode             = $gps->measureMode;
-        $this->dilutionOfPrecision     = $gps->dop;
-        $this->speedReference          = $gps->speedRef;
-        $this->speedMs                 = $gps->speedMs;
-        $this->speedOriginalReference  = $gps->speedOriginalRef;
-        $this->speedOriginal           = $gps->speedOriginal;
-        $this->trackReference          = $gps->trackRef;
-        $this->track                   = $gps->track;
-        $this->imageDirectionReference = $gps->imageDirectionRef;
-        $this->imageDirection          = $gps->imageDirection;
-        $this->mapDatum                = $gps->mapDatum;
-        $this->destinationLatitude     = $gps->destinationLatitude !== null
-            ? new GpsCoordinate($gps->destinationLatitude, $gps->destinationLatitudeRef)
-            : null;
-        $this->destinationLongitude = $gps->destinationLongitude !== null
-            ? new GpsCoordinate($gps->destinationLongitude, $gps->destinationLongitudeRef)
-            : null;
-        $this->destinationBearingReference          = $gps->destinationBearingRef;
-        $this->destinationBearing                   = $gps->destinationBearing;
-        $this->destinationDistanceReference         = $gps->destinationDistanceRef;
-        $this->destinationDistanceMetres            = $gps->destinationDistanceMetres;
-        $this->destinationDistanceOriginalReference = $gps->destinationDistanceOriginalRef;
-        $this->destinationDistanceOriginal          = $gps->destinationDistanceOriginal;
-        $this->processingMethod                     = $gps->processingMethod;
-        $this->areaInformation                      = $gps->areaInformation;
-        $this->date                                 = $gps->date;
-        $this->dateRaw                              = $gps->dateRaw;
-        $this->time                                 = $gps->time;
-        $this->timestamp                            = $gps->timestamp;
-        $this->differential                         = $gps->differential;
-        $this->horizontalPositioningError           = $gps->horizontalPositioningError;
+    }
+
+    public function gps(): GpsValue
+    {
+        return $this->gps;
+    }
+
+    public function latitude(): ?GpsCoordinate
+    {
+        if ($this->gps->latitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->gps->latitude, $this->gps->latitudeRef);
+    }
+
+    public function longitude(): ?GpsCoordinate
+    {
+        if ($this->gps->longitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->gps->longitude, $this->gps->longitudeRef);
+    }
+
+    public function altitude(): ?float
+    {
+        return $this->gps->altitude;
+    }
+
+    public function altitudeReference(): ?int
+    {
+        return $this->gps->altitudeRef;
+    }
+
+    public function version(): ?string
+    {
+        return $this->gps->version;
+    }
+
+    public function versionRaw(): ?string
+    {
+        return $this->gps->versionRaw;
+    }
+
+    public function satellites(): ?string
+    {
+        return $this->gps->satellites;
+    }
+
+    public function status(): ?string
+    {
+        return $this->gps->status;
+    }
+
+    public function measureMode(): ?string
+    {
+        return $this->gps->measureMode;
+    }
+
+    public function dilutionOfPrecision(): ?float
+    {
+        return $this->gps->dop;
+    }
+
+    public function speedReference(): ?string
+    {
+        return $this->gps->speedRef;
+    }
+
+    public function speedMs(): ?float
+    {
+        return $this->gps->speedMs;
+    }
+
+    public function speedOriginalReference(): ?string
+    {
+        return $this->gps->speedOriginalRef;
+    }
+
+    public function speedOriginal(): ?float
+    {
+        return $this->gps->speedOriginal;
+    }
+
+    public function trackReference(): ?string
+    {
+        return $this->gps->trackRef;
+    }
+
+    public function track(): ?float
+    {
+        return $this->gps->track;
+    }
+
+    public function imageDirectionReference(): ?string
+    {
+        return $this->gps->imageDirectionRef;
+    }
+
+    public function imageDirection(): ?float
+    {
+        return $this->gps->imageDirection;
+    }
+
+    public function mapDatum(): ?string
+    {
+        return $this->gps->mapDatum;
+    }
+
+    public function destinationLatitude(): ?GpsCoordinate
+    {
+        if ($this->gps->destinationLatitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->gps->destinationLatitude, $this->gps->destinationLatitudeRef);
+    }
+
+    public function destinationLongitude(): ?GpsCoordinate
+    {
+        if ($this->gps->destinationLongitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->gps->destinationLongitude, $this->gps->destinationLongitudeRef);
+    }
+
+    public function destinationBearingReference(): ?string
+    {
+        return $this->gps->destinationBearingRef;
+    }
+
+    public function destinationBearing(): ?float
+    {
+        return $this->gps->destinationBearing;
+    }
+
+    public function destinationDistanceReference(): ?string
+    {
+        return $this->gps->destinationDistanceRef;
+    }
+
+    public function destinationDistanceMetres(): ?float
+    {
+        return $this->gps->destinationDistanceMetres;
+    }
+
+    public function destinationDistanceOriginalReference(): ?string
+    {
+        return $this->gps->destinationDistanceOriginalRef;
+    }
+
+    public function destinationDistanceOriginal(): ?float
+    {
+        return $this->gps->destinationDistanceOriginal;
+    }
+
+    public function processingMethod(): ?string
+    {
+        return $this->gps->processingMethod;
+    }
+
+    public function areaInformation(): ?string
+    {
+        return $this->gps->areaInformation;
+    }
+
+    public function date(): ?string
+    {
+        return $this->gps->date;
+    }
+
+    public function dateRaw(): ?string
+    {
+        return $this->gps->dateRaw;
+    }
+
+    public function time(): ?string
+    {
+        return $this->gps->time;
+    }
+
+    public function timestamp(): ?DateTimeImmutable
+    {
+        return $this->gps->timestamp;
+    }
+
+    public function differential(): ?int
+    {
+        return $this->gps->differential;
+    }
+
+    public function horizontalPositioningError(): ?float
+    {
+        return $this->gps->horizontalPositioningError;
     }
 }

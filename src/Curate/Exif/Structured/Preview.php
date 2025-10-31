@@ -18,184 +18,93 @@ use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 /**
  * Indicates the availability of previews and thumbnails from EXIF.
  *
- * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
- *             Use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata for preview data.
+ * @deprecated since milestone M4. This transitional wrapper will be removed in the
+ *             following release. Consume the underlying Value objects directly instead.
  */
 final readonly class Preview
 {
-    public ?bool $hasThumbnail;
-
-    public ?bool $hasPreview;
-
-    public ?int $previewWidth;
-
-    public ?int $previewHeight;
-
-    public ?ColorSpace $previewColorSpace;
-
-    public ?int $previewBitDepth;
-
-    public ?Compression $previewCompression;
-
-    public ?float $previewScale;
-
-    public ?string $previewEncoding;
-
-    public ?string $previewMimeType;
-
-    public ?int $previewOffset;
-
-    public ?int $previewLength;
-
-    public ?int $thumbnailOffset;
-
-    public ?int $thumbnailLength;
-
-    public ?Compression $thumbnailCompression;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $thumbnailStripOffsets;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $thumbnailStripByteCounts;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $thumbnailTileOffsets;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $thumbnailTileByteCounts;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $previewStripOffsets;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $previewStripByteCounts;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $previewTileOffsets;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $previewTileByteCounts;
-
-    /**
-     * @param PreviewValue $preview Raw preview value object describing embedded thumbnails and previews from EXIF.
-     */
-    public function __construct(PreviewValue $preview)
+    public function __construct(private PreviewValue $preview)
     {
-        $this->hasThumbnail             = $preview->hasThumbnail;
-        $this->hasPreview               = $preview->hasPreview;
-        $this->previewWidth             = $preview->previewWidth;
-        $this->previewHeight            = $preview->previewHeight;
-        $this->previewColorSpace        = $preview->previewColorSpace;
-        $this->previewBitDepth          = $preview->previewBitDepth;
-        $this->previewCompression       = $preview->previewCompression;
-        $this->previewScale             = $preview->previewScale;
-        $this->previewEncoding          = $preview->previewEncoding;
-        $this->previewMimeType          = $preview->previewMimeType;
-        $this->previewOffset            = $preview->previewOffset;
-        $this->previewLength            = $preview->previewLength;
-        $this->thumbnailOffset          = $preview->thumbnailOffset;
-        $this->thumbnailLength          = $preview->thumbnailLength;
-        $this->thumbnailCompression     = $preview->thumbnailCompression;
-        $this->thumbnailStripOffsets    = $preview->thumbnailStripOffsets;
-        $this->thumbnailStripByteCounts = $preview->thumbnailStripByteCounts;
-        $this->thumbnailTileOffsets     = $preview->thumbnailTileOffsets;
-        $this->thumbnailTileByteCounts  = $preview->thumbnailTileByteCounts;
-        $this->previewStripOffsets      = $preview->previewStripOffsets;
-        $this->previewStripByteCounts   = $preview->previewStripByteCounts;
-        $this->previewTileOffsets       = $preview->previewTileOffsets;
-        $this->previewTileByteCounts    = $preview->previewTileByteCounts;
+    }
+
+    public function value(): PreviewValue
+    {
+        return $this->preview;
     }
 
     public function hasThumbnail(): ?bool
     {
-        return $this->hasThumbnail;
+        return $this->preview->hasThumbnail;
     }
 
     public function hasPreview(): ?bool
     {
-        return $this->hasPreview;
+        return $this->preview->hasPreview;
     }
 
     public function previewWidth(): ?int
     {
-        return $this->previewWidth;
+        return $this->preview->previewWidth;
     }
 
     public function previewHeight(): ?int
     {
-        return $this->previewHeight;
+        return $this->preview->previewHeight;
     }
 
     public function previewColorSpace(): ?ColorSpace
     {
-        return $this->previewColorSpace;
+        return $this->preview->previewColorSpace;
     }
 
     public function previewBitDepth(): ?int
     {
-        return $this->previewBitDepth;
+        return $this->preview->previewBitDepth;
     }
 
     public function previewCompression(): ?Compression
     {
-        return $this->previewCompression;
+        return $this->preview->previewCompression;
     }
 
     public function previewScale(): ?float
     {
-        return $this->previewScale;
+        return $this->preview->previewScale;
     }
 
     public function previewEncoding(): ?string
     {
-        return $this->previewEncoding;
+        return $this->preview->previewEncoding;
     }
 
     public function previewMimeType(): ?string
     {
-        return $this->previewMimeType;
+        return $this->preview->previewMimeType;
     }
 
     public function previewOffset(): ?int
     {
-        return $this->previewOffset;
+        return $this->preview->previewOffset;
     }
 
     public function previewLength(): ?int
     {
-        return $this->previewLength;
+        return $this->preview->previewLength;
     }
 
     public function thumbnailOffset(): ?int
     {
-        return $this->thumbnailOffset;
+        return $this->preview->thumbnailOffset;
     }
 
     public function thumbnailLength(): ?int
     {
-        return $this->thumbnailLength;
+        return $this->preview->thumbnailLength;
     }
 
     public function thumbnailCompression(): ?Compression
     {
-        return $this->thumbnailCompression;
+        return $this->preview->thumbnailCompression;
     }
 
     /**
@@ -203,7 +112,7 @@ final readonly class Preview
      */
     public function thumbnailStripOffsets(): ?array
     {
-        return $this->thumbnailStripOffsets;
+        return $this->preview->thumbnailStripOffsets;
     }
 
     /**
@@ -211,7 +120,7 @@ final readonly class Preview
      */
     public function thumbnailStripByteCounts(): ?array
     {
-        return $this->thumbnailStripByteCounts;
+        return $this->preview->thumbnailStripByteCounts;
     }
 
     /**
@@ -219,7 +128,7 @@ final readonly class Preview
      */
     public function thumbnailTileOffsets(): ?array
     {
-        return $this->thumbnailTileOffsets;
+        return $this->preview->thumbnailTileOffsets;
     }
 
     /**
@@ -227,7 +136,7 @@ final readonly class Preview
      */
     public function thumbnailTileByteCounts(): ?array
     {
-        return $this->thumbnailTileByteCounts;
+        return $this->preview->thumbnailTileByteCounts;
     }
 
     /**
@@ -235,7 +144,7 @@ final readonly class Preview
      */
     public function previewStripOffsets(): ?array
     {
-        return $this->previewStripOffsets;
+        return $this->preview->previewStripOffsets;
     }
 
     /**
@@ -243,7 +152,7 @@ final readonly class Preview
      */
     public function previewStripByteCounts(): ?array
     {
-        return $this->previewStripByteCounts;
+        return $this->preview->previewStripByteCounts;
     }
 
     /**
@@ -251,7 +160,7 @@ final readonly class Preview
      */
     public function previewTileOffsets(): ?array
     {
-        return $this->previewTileOffsets;
+        return $this->preview->previewTileOffsets;
     }
 
     /**
@@ -259,6 +168,6 @@ final readonly class Preview
      */
     public function previewTileByteCounts(): ?array
     {
-        return $this->previewTileByteCounts;
+        return $this->preview->previewTileByteCounts;
     }
 }

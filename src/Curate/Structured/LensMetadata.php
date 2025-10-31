@@ -19,53 +19,24 @@ use MagicSunday\ImageMeta\Value\Lens as LensValue;
  */
 final readonly class LensMetadata
 {
-    public ?string $make;
-
-    public ?string $model;
-
-    public ?string $serialNumber;
-
-    public ?float $focalLength;
-
-    public ?float $maximumAperture;
-
-    /**
-     * @var array{0:float,1:float,2:float,3:float}|null
-     */
-    public ?array $specification;
-
-    public ?float $cropFactor;
-
-    public ?float $hyperfocalDistance;
-
-    public ?float $fieldOfViewHorizontal;
-
-    public ?float $fieldOfViewVertical;
-
-    public ?float $fieldOfViewDiagonal;
-
-    private ?int $equivalent35mm;
-
     public function __construct(
-        LensValue $lens,
-        Derived $derived,
+        public LensValue $lens,
+        public Derived $derived,
     ) {
-        $this->make                  = $lens->lensMake;
-        $this->model                 = $lens->lensModel;
-        $this->serialNumber          = $lens->lensSerialNumber;
-        $this->focalLength           = $lens->focalLengthMm;
-        $this->maximumAperture       = $lens->maxApertureFNumber;
-        $this->specification         = $lens->lensSpecification;
-        $this->equivalent35mm        = $lens->focalLengthIn35mm ?? $derived->focalLength35mm;
-        $this->cropFactor            = $derived->cropFactor;
-        $this->hyperfocalDistance    = $derived->hyperfocalM;
-        $this->fieldOfViewHorizontal = $derived->fovHorizontalDeg;
-        $this->fieldOfViewVertical   = $derived->fovVerticalDeg;
-        $this->fieldOfViewDiagonal   = $derived->fovDiagonalDeg;
+    }
+
+    public function lens(): LensValue
+    {
+        return $this->lens;
+    }
+
+    public function derived(): Derived
+    {
+        return $this->derived;
     }
 
     public function equivalent35mm(): ?int
     {
-        return $this->equivalent35mm;
+        return $this->lens->focalLengthIn35mm ?? $this->derived->focalLength35mm;
     }
 }

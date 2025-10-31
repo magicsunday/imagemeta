@@ -18,114 +18,68 @@ use MagicSunday\ImageMeta\Value\Image as ImageValue;
 /**
  * Holds EXIF image attributes without QuickTime fallbacks.
  *
- * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
- *             Use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata for curated image data.
+ * @deprecated since milestone M4. This transitional wrapper will be removed in the
+ *             following release. Consume the underlying Value objects directly instead.
  */
 final readonly class Image
 {
-    public ?int $width;
-
-    public ?int $height;
-
-    public ?Orientation $orientation;
-
-    public ?int $bitsPerSample;
-
-    public ?ColorSpace $colorSpace;
-
-    public ?string $imageUniqueId;
-
-    public ?int $imageNumber;
-
-    public ?string $documentName;
-
-    public ?string $description;
-
-    public ?string $title;
-
-    /**
-     * @var list<int>|null
-     */
-    public ?array $componentsConfiguration;
-
-    public ?float $compressedBitsPerPixel;
-
-    public ?int $interlace;
-
-    public ?string $userComment;
-
-    public ?string $userCommentEncoding;
-
-    /**
-     * @param ImageValue $image Raw image value object sourced directly from EXIF, already normalised for enums and lists.
-     */
-    public function __construct(ImageValue $image)
+    public function __construct(private ImageValue $image)
     {
-        $this->width                   = $image->width;
-        $this->height                  = $image->height;
-        $this->orientation             = $image->orientation;
-        $this->bitsPerSample           = $image->bitsPerSample;
-        $this->colorSpace              = $image->colorSpace;
-        $this->imageUniqueId           = $image->imageUniqueId;
-        $this->imageNumber             = $image->imageNumber;
-        $this->documentName            = $image->documentName;
-        $this->description             = $image->description;
-        $this->title                   = $image->title;
-        $this->componentsConfiguration = $image->componentsConfiguration;
-        $this->compressedBitsPerPixel  = $image->compressedBitsPerPixel;
-        $this->interlace               = $image->interlace;
-        $this->userComment             = $image->userComment;
-        $this->userCommentEncoding     = $image->userCommentEncoding;
+    }
+
+    public function value(): ImageValue
+    {
+        return $this->image;
     }
 
     public function width(): ?int
     {
-        return $this->width;
+        return $this->image->width;
     }
 
     public function height(): ?int
     {
-        return $this->height;
+        return $this->image->height;
     }
 
     public function orientation(): ?Orientation
     {
-        return $this->orientation;
+        return $this->image->orientation;
     }
 
     public function bitsPerSample(): ?int
     {
-        return $this->bitsPerSample;
+        return $this->image->bitsPerSample;
     }
 
     public function colorSpace(): ?ColorSpace
     {
-        return $this->colorSpace;
+        return $this->image->colorSpace;
     }
 
     public function imageUniqueId(): ?string
     {
-        return $this->imageUniqueId;
+        return $this->image->imageUniqueId;
     }
 
     public function imageNumber(): ?int
     {
-        return $this->imageNumber;
+        return $this->image->imageNumber;
     }
 
     public function documentName(): ?string
     {
-        return $this->documentName;
+        return $this->image->documentName;
     }
 
     public function description(): ?string
     {
-        return $this->description;
+        return $this->image->description;
     }
 
     public function title(): ?string
     {
-        return $this->title;
+        return $this->image->title;
     }
 
     /**
@@ -133,26 +87,26 @@ final readonly class Image
      */
     public function componentsConfiguration(): ?array
     {
-        return $this->componentsConfiguration;
+        return $this->image->componentsConfiguration;
     }
 
     public function compressedBitsPerPixel(): ?float
     {
-        return $this->compressedBitsPerPixel;
+        return $this->image->compressedBitsPerPixel;
     }
 
     public function interlace(): ?int
     {
-        return $this->interlace;
+        return $this->image->interlace;
     }
 
     public function userComment(): ?string
     {
-        return $this->userComment;
+        return $this->image->userComment;
     }
 
     public function userCommentEncoding(): ?string
     {
-        return $this->userCommentEncoding;
+        return $this->image->userCommentEncoding;
     }
 }

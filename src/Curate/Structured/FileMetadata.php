@@ -20,31 +20,25 @@ use MagicSunday\ImageMeta\Value\Integrity;
  */
 final readonly class FileMetadata
 {
-    public ?string $mimeType;
-
-    public ?int $fileSize;
-
-    public ?string $extension;
-
-    public ?string $digestSha1;
-
-    public ?string $digestMd5;
-
-    public Container $container;
-
-    public Integrity $integrity;
-
     public function __construct(
-        FileValue $file,
-        Container $container,
-        Integrity $integrity,
+        public FileValue $file,
+        public Container $container,
+        public Integrity $integrity,
     ) {
-        $this->mimeType   = $file->mimeType;
-        $this->fileSize   = $file->fileSize;
-        $this->extension  = $file->extension;
-        $this->digestSha1 = $file->digestSha1;
-        $this->digestMd5  = $file->digestMd5;
-        $this->container  = $container;
-        $this->integrity  = $integrity;
+    }
+
+    public function file(): FileValue
+    {
+        return $this->file;
+    }
+
+    public function container(): Container
+    {
+        return $this->container;
+    }
+
+    public function integrity(): Integrity
+    {
+        return $this->integrity;
     }
 }

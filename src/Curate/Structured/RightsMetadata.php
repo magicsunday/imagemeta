@@ -20,25 +20,25 @@ use MagicSunday\ImageMeta\Value\Rights as RightsValue;
  */
 final readonly class RightsMetadata
 {
-    public ?string $copyright;
-
-    public ?string $usageTerms;
-
-    public ?string $licenseUrl;
-
-    public ?string $creditLine;
-
-    public ?string $securityClassification;
-
     public function __construct(
-        RightsValue $rights,
+        public RightsValue $rights,
         public Author $author,
         public RelatedAssets $related,
     ) {
-        $this->copyright              = $rights->copyright;
-        $this->usageTerms             = $rights->usageTerms;
-        $this->licenseUrl             = $rights->licenseUrl;
-        $this->creditLine             = $rights->creditLine;
-        $this->securityClassification = $rights->securityClassification;
+    }
+
+    public function rights(): RightsValue
+    {
+        return $this->rights;
+    }
+
+    public function author(): Author
+    {
+        return $this->author;
+    }
+
+    public function related(): RelatedAssets
+    {
+        return $this->related;
     }
 }

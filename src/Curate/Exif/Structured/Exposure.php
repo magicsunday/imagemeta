@@ -26,193 +26,134 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
 /**
  * Captures EXIF exposure values alongside derived exposure metrics.
  *
- * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
- *             Use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata instead.
+ * @deprecated since milestone M4. This transitional wrapper will be removed in the
+ *             following release. Consume the underlying Value objects directly instead.
  */
 final readonly class Exposure
 {
-    public ?int $iso;
+    public function __construct(
+        private ExposureValue $exposure,
+        private Derived $derived,
+    ) {
+    }
 
-    public ?float $exposureTimeSec;
-
-    public ?float $fNumber;
-
-    public ?float $exposureBiasEv;
-
-    public ?ExposureProgram $program;
-
-    public ?MeteringMode $meteringMode;
-
-    public ?FlashInfo $flash;
-
-    public ?WhiteBalance $whiteBalance;
-
-    public ?float $brightnessEv;
-
-    public ?ExposureMode $exposureMode;
-
-    public ?GainControl $gainControl;
-
-    public ?Contrast $contrast;
-
-    public ?Saturation $saturation;
-
-    public ?Sharpness $sharpness;
-
-    public ?float $digitalZoomRatio;
-
-    public ?float $shutterSpeedEv;
-
-    public ?float $apertureEv;
-
-    public ?int $isoLatitudeYyy;
-
-    public ?int $isoLatitudeZzz;
-
-    public ?float $exposureIndex;
-
-    public ?float $flashEnergy;
-
-    public ?float $ev100;
-
-    /**
-     * @param ExposureValue $exposure Raw exposure value object with EXIF shutter, aperture and metering metadata.
-     * @param Derived       $derived  Derived optics helper providing calculated EV100 and related exposure math.
-     */
-    public function __construct(ExposureValue $exposure, Derived $derived)
+    public function value(): ExposureValue
     {
-        $this->iso              = $exposure->iso;
-        $this->exposureTimeSec  = $exposure->exposureTimeSec;
-        $this->fNumber          = $exposure->fNumber;
-        $this->exposureBiasEv   = $exposure->exposureBiasEv;
-        $this->program          = $exposure->program;
-        $this->meteringMode     = $exposure->meteringMode;
-        $this->flash            = $exposure->flash;
-        $this->whiteBalance     = $exposure->whiteBalance;
-        $this->brightnessEv     = $exposure->brightnessEv;
-        $this->exposureMode     = $exposure->exposureMode;
-        $this->gainControl      = $exposure->gainControl;
-        $this->contrast         = $exposure->contrast;
-        $this->saturation       = $exposure->saturation;
-        $this->sharpness        = $exposure->sharpness;
-        $this->digitalZoomRatio = $exposure->digitalZoomRatio;
-        $this->shutterSpeedEv   = $exposure->shutterSpeedEv;
-        $this->apertureEv       = $exposure->apertureEv;
-        $this->isoLatitudeYyy   = $exposure->isoLatitudeYyy;
-        $this->isoLatitudeZzz   = $exposure->isoLatitudeZzz;
-        $this->exposureIndex    = $exposure->exposureIndex;
-        $this->flashEnergy      = $exposure->flashEnergy;
-        // EV100 stems from the derived helper and expresses exposure at ISO 100 regardless of the recorded ISO.
-        $this->ev100 = $derived->ev100;
+        return $this->exposure;
+    }
+
+    public function derived(): Derived
+    {
+        return $this->derived;
     }
 
     public function iso(): ?int
     {
-        return $this->iso;
+        return $this->exposure->iso;
     }
 
     public function exposureTimeSec(): ?float
     {
-        return $this->exposureTimeSec;
+        return $this->exposure->exposureTimeSec;
     }
 
     public function fNumber(): ?float
     {
-        return $this->fNumber;
+        return $this->exposure->fNumber;
     }
 
     public function exposureBiasEv(): ?float
     {
-        return $this->exposureBiasEv;
+        return $this->exposure->exposureBiasEv;
     }
 
     public function program(): ?ExposureProgram
     {
-        return $this->program;
+        return $this->exposure->program;
     }
 
     public function meteringMode(): ?MeteringMode
     {
-        return $this->meteringMode;
+        return $this->exposure->meteringMode;
     }
 
     public function flash(): ?FlashInfo
     {
-        return $this->flash;
+        return $this->exposure->flash;
     }
 
     public function whiteBalance(): ?WhiteBalance
     {
-        return $this->whiteBalance;
+        return $this->exposure->whiteBalance;
     }
 
     public function brightnessEv(): ?float
     {
-        return $this->brightnessEv;
+        return $this->exposure->brightnessEv;
     }
 
     public function exposureMode(): ?ExposureMode
     {
-        return $this->exposureMode;
+        return $this->exposure->exposureMode;
     }
 
     public function gainControl(): ?GainControl
     {
-        return $this->gainControl;
+        return $this->exposure->gainControl;
     }
 
     public function contrast(): ?Contrast
     {
-        return $this->contrast;
+        return $this->exposure->contrast;
     }
 
     public function saturation(): ?Saturation
     {
-        return $this->saturation;
+        return $this->exposure->saturation;
     }
 
     public function sharpness(): ?Sharpness
     {
-        return $this->sharpness;
+        return $this->exposure->sharpness;
     }
 
     public function digitalZoomRatio(): ?float
     {
-        return $this->digitalZoomRatio;
+        return $this->exposure->digitalZoomRatio;
     }
 
     public function shutterSpeedEv(): ?float
     {
-        return $this->shutterSpeedEv;
+        return $this->exposure->shutterSpeedEv;
     }
 
     public function apertureEv(): ?float
     {
-        return $this->apertureEv;
+        return $this->exposure->apertureEv;
     }
 
     public function isoLatitudeYyy(): ?int
     {
-        return $this->isoLatitudeYyy;
+        return $this->exposure->isoLatitudeYyy;
     }
 
     public function isoLatitudeZzz(): ?int
     {
-        return $this->isoLatitudeZzz;
+        return $this->exposure->isoLatitudeZzz;
     }
 
     public function exposureIndex(): ?float
     {
-        return $this->exposureIndex;
+        return $this->exposure->exposureIndex;
     }
 
     public function flashEnergy(): ?float
     {
-        return $this->flashEnergy;
+        return $this->exposure->flashEnergy;
     }
 
     public function ev100(): ?float
     {
-        return $this->ev100;
+        return $this->derived->ev100;
     }
 }
