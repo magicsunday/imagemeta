@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use MagicSunday\ImageMeta\Value\Contracts\GpsInterface;
+use MagicSunday\ImageMeta\Value\GpsCoordinate;
 
 /**
  * Describes the GPS position at capture time including navigation details.
@@ -113,11 +115,27 @@ final readonly class Gps implements GpsInterface
         return $this->longitude;
     }
 
+    public function latitudeReference(): ?string
+    {
+        return $this->latitudeRef;
+    }
+
+    /**
+     * @deprecated Use latitudeReference() instead.
+     */
     public function latitudeRef(): ?string
     {
         return $this->latitudeRef;
     }
 
+    public function longitudeReference(): ?string
+    {
+        return $this->longitudeRef;
+    }
+
+    /**
+     * @deprecated Use longitudeReference() instead.
+     */
     public function longitudeRef(): ?string
     {
         return $this->longitudeRef;
@@ -128,6 +146,14 @@ final readonly class Gps implements GpsInterface
         return $this->altitude;
     }
 
+    public function altitudeReference(): ?int
+    {
+        return $this->altitudeRef;
+    }
+
+    /**
+     * @deprecated Use altitudeReference() instead.
+     */
     public function altitudeRef(): ?int
     {
         return $this->altitudeRef;
@@ -158,11 +184,27 @@ final readonly class Gps implements GpsInterface
         return $this->measureMode;
     }
 
+    public function dilutionOfPrecision(): ?float
+    {
+        return $this->dop;
+    }
+
+    /**
+     * @deprecated Use dilutionOfPrecision() instead.
+     */
     public function dop(): ?float
     {
         return $this->dop;
     }
 
+    public function speedReference(): ?string
+    {
+        return $this->speedRef;
+    }
+
+    /**
+     * @deprecated Use speedReference() instead.
+     */
     public function speedRef(): ?string
     {
         return $this->speedRef;
@@ -173,6 +215,14 @@ final readonly class Gps implements GpsInterface
         return $this->speedMs;
     }
 
+    public function speedOriginalReference(): ?string
+    {
+        return $this->speedOriginalRef;
+    }
+
+    /**
+     * @deprecated Use speedOriginalReference() instead.
+     */
     public function speedOriginalRef(): ?string
     {
         return $this->speedOriginalRef;
@@ -183,6 +233,14 @@ final readonly class Gps implements GpsInterface
         return $this->speedOriginal;
     }
 
+    public function trackReference(): ?string
+    {
+        return $this->trackRef;
+    }
+
+    /**
+     * @deprecated Use trackReference() instead.
+     */
     public function trackRef(): ?string
     {
         return $this->trackRef;
@@ -193,6 +251,14 @@ final readonly class Gps implements GpsInterface
         return $this->track;
     }
 
+    public function imageDirectionReference(): ?string
+    {
+        return $this->imageDirectionRef;
+    }
+
+    /**
+     * @deprecated Use imageDirectionReference() instead.
+     */
     public function imageDirectionRef(): ?string
     {
         return $this->imageDirectionRef;
@@ -208,6 +274,14 @@ final readonly class Gps implements GpsInterface
         return $this->mapDatum;
     }
 
+    public function destinationLatitudeReference(): ?string
+    {
+        return $this->destinationLatitudeRef;
+    }
+
+    /**
+     * @deprecated Use destinationLatitudeReference() instead.
+     */
     public function destinationLatitudeRef(): ?string
     {
         return $this->destinationLatitudeRef;
@@ -218,6 +292,14 @@ final readonly class Gps implements GpsInterface
         return $this->destinationLatitude;
     }
 
+    public function destinationLongitudeReference(): ?string
+    {
+        return $this->destinationLongitudeRef;
+    }
+
+    /**
+     * @deprecated Use destinationLongitudeReference() instead.
+     */
     public function destinationLongitudeRef(): ?string
     {
         return $this->destinationLongitudeRef;
@@ -228,6 +310,14 @@ final readonly class Gps implements GpsInterface
         return $this->destinationLongitude;
     }
 
+    public function destinationBearingReference(): ?string
+    {
+        return $this->destinationBearingRef;
+    }
+
+    /**
+     * @deprecated Use destinationBearingReference() instead.
+     */
     public function destinationBearingRef(): ?string
     {
         return $this->destinationBearingRef;
@@ -238,6 +328,14 @@ final readonly class Gps implements GpsInterface
         return $this->destinationBearing;
     }
 
+    public function destinationDistanceReference(): ?string
+    {
+        return $this->destinationDistanceRef;
+    }
+
+    /**
+     * @deprecated Use destinationDistanceReference() instead.
+     */
     public function destinationDistanceRef(): ?string
     {
         return $this->destinationDistanceRef;
@@ -248,6 +346,14 @@ final readonly class Gps implements GpsInterface
         return $this->destinationDistanceMetres;
     }
 
+    public function destinationDistanceOriginalReference(): ?string
+    {
+        return $this->destinationDistanceOriginalRef;
+    }
+
+    /**
+     * @deprecated Use destinationDistanceOriginalReference() instead.
+     */
     public function destinationDistanceOriginalRef(): ?string
     {
         return $this->destinationDistanceOriginalRef;
@@ -283,9 +389,20 @@ final readonly class Gps implements GpsInterface
         return $this->time;
     }
 
+    /**
+     * Returns the combined capture timestamp normalised to UTC.
+     */
     public function timestamp(): ?DateTimeImmutable
     {
-        return $this->timestamp;
+        if ($this->timestamp === null) {
+            return null;
+        }
+
+        if ($this->timestamp->getTimezone()->getName() === 'UTC') {
+            return $this->timestamp;
+        }
+
+        return $this->timestamp->setTimezone(new DateTimeZone('UTC'));
     }
 
     public function differential(): ?int
@@ -296,5 +413,63 @@ final readonly class Gps implements GpsInterface
     public function horizontalPositioningError(): ?float
     {
         return $this->horizontalPositioningError;
+    }
+
+    public function latitudeSigned(): ?float
+    {
+        return $this->signedCoordinate($this->latitude, $this->latitudeRef, 'S', 'N');
+    }
+
+    public function longitudeSigned(): ?float
+    {
+        return $this->signedCoordinate($this->longitude, $this->longitudeRef, 'W', 'E');
+    }
+
+    public function latitudeCoordinate(): ?GpsCoordinate
+    {
+        if ($this->latitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->latitude, $this->latitudeRef, true);
+    }
+
+    public function longitudeCoordinate(): ?GpsCoordinate
+    {
+        if ($this->longitude === null) {
+            return null;
+        }
+
+        return new GpsCoordinate($this->longitude, $this->longitudeRef, false);
+    }
+
+    private function signedCoordinate(?float $value, ?string $reference, string $negativeReference, string $positiveReference): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if ($reference === null) {
+            return $value;
+        }
+
+        $normalizedReference = strtoupper($reference);
+        $normalizedReference = $normalizedReference[0] ?? '';
+
+        if ($normalizedReference === '') {
+            return $value;
+        }
+
+        $magnitude = abs($value);
+
+        if ($normalizedReference === $negativeReference) {
+            return -$magnitude;
+        }
+
+        if ($normalizedReference === $positiveReference) {
+            return $magnitude;
+        }
+
+        return $value;
     }
 }
