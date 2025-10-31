@@ -104,11 +104,11 @@ final class MetadataReaderTest extends TestCase
         $componentAccessors = [
             'file'      => static fn () => $structured->file(),
             'container' => static fn () => $structured->container(),
-            'camera'    => static fn () => $structured->camera(),
-            'lens'      => static fn () => $structured->lens(),
-            'derived'   => static fn () => $structured->derived(),
-            'exposure'  => static fn () => $structured->exposure(),
-            'preview'   => static fn () => $structured->preview(),
+            'camera'    => static fn () => $structured->camera,
+            'lens'      => static fn () => $structured->lens,
+            'derived'   => static fn () => $structured->derived,
+            'exposure'  => static fn () => $structured->exposure,
+            'preview'   => static fn () => $structured->preview,
             'rights'    => static fn () => $structured->rights(),
         ];
 
@@ -189,7 +189,7 @@ final class MetadataReaderTest extends TestCase
 
         self::assertSame(8, $metadata->jpegBitsPerSample);
 
-        $image = $metadata->structured()->image();
+        $image = $metadata->structured()->image;
 
         self::assertSame(8, $image->bitsPerSample);
         self::assertSame(448, $image->width);

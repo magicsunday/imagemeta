@@ -20,14 +20,14 @@ $meta = (new MetadataReader())->read('photo.heic')->structured();
 
 $meta->file()->mimeType;
 $meta->device()->software;
-$meta->lens()->lensModel();
-$meta->lens()->focalLengthMm();
-$meta->derived()->equivalent35mm();
-$meta->exposure()->program();
-$meta->gps()->latitudeCoordinate()?->toFloat();
-$meta->preview()->hasThumbnail();
-$meta->interop()->relatedImageWidth();
-$meta->standards()->exifVersion();
+$meta->lens->lensModel();
+$meta->lens->focalLengthMm();
+$meta->derived->equivalent35mm();
+$meta->exposure->program();
+$meta->gps->latitudeCoordinate()?->toFloat();
+$meta->preview->hasThumbnail();
+$meta->interop->relatedImageWidth();
+$meta->standards->exifVersion();
 ```
 
 ### Mapping overview
@@ -76,14 +76,14 @@ used directly without consulting tag identifiers.
 ```php
 $s = $meta->structured();
 $s->tiff()->compression;              // Compression::JPEG
-$s->lens()->lensSpecification();       // [minF, minAperture, maxF, maxAperture]
+$s->lens->lensSpecification();       // [minF, minAperture, maxF, maxAperture]
 $s->composite()->type;                // CompositeImage::GeneralComposite
-$s->standards()->exifVersion();         // "3.00"
+$s->standards->exifVersion();         // "3.00"
 ```
 
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.
 
-The diagonal field of view exposed via `lens()->derived()->fieldOfViewDiagonalDeg()` corresponds to the value previously documented as `fovDeg`. The new horizontal and vertical helpers provide axis-specific angles so clients can present per-dimension compositions without additional trigonometry.
+The diagonal field of view exposed via `$s->derived->fieldOfViewDiagonalDeg()` corresponds to the value previously documented as `fovDeg`. The new horizontal and vertical helpers provide axis-specific angles so clients can present per-dimension compositions without additional trigonometry.
 
 The expanded temporal aggregate surfaces raw EXIF offset tags alongside a resolved `DateTimeZone` instance. This makes it possible to reconstruct original capture times even when the offset varies between creation, digitisation and modification steps. File level metadata now reports size, extension and cryptographic digests to help consumers correlate assets or detect tampering.
 

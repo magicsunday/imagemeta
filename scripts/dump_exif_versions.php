@@ -57,7 +57,7 @@ foreach ($files as $file) {
                 'tiffEpStandardString' => $standards->tiffEpStandardString(),
             ],
             'exposure' => [
-                'iso' => $structured->exposure()->exposure->iso,
+                'iso' => $structured->exposure->iso,
             ],
             'capture' => [
                 'dateTimeOriginal' => $capture->original?->format(DATE_ATOM),

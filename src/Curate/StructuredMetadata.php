@@ -58,34 +58,34 @@ final readonly class StructuredMetadata
         private File $file,
         private Container $container,
         private Integrity $integrity,
-        private Camera $camera,
+        public Camera $camera,
         private Device $device,
-        private Lens $lens,
-        private Derived $derived,
-        private Image $image,
-        private Preview $preview,
+        public Lens $lens,
+        public Derived $derived,
+        public Image $image,
+        public Preview $preview,
         private Video $video,
         private Audio $audio,
         private AudioClips $embeddedAudio,
         private ColorProfile $colorProfile,
         private CompositeImageInfo $composite,
         private MultiPicture $multiPicture,
-        private Exposure $exposure,
+        public Exposure $exposure,
         private Capture $capture,
         private Scene $scene,
         private Temporal $temporal,
         private Regions $regions,
         private Keywords $keywords,
-        private Gps $gps,
+        public Gps $gps,
         private Sensor $sensor,
         private Focus $focus,
         private Motion $motion,
         private Uav $uav,
         private ProcessingSettings $processing,
         private WhiteBalanceDetails $whiteBalance,
-        private Interop $interop,
+        public Interop $interop,
         private TiffData $tiff,
-        private Standards $standards,
+        public Standards $standards,
         private FlashPix $flashPix,
         private Xmp $xmp,
         private Rights $rights,
@@ -110,34 +110,9 @@ final readonly class StructuredMetadata
         return $this->integrity;
     }
 
-    public function camera(): Camera
-    {
-        return $this->camera;
-    }
-
     public function device(): Device
     {
         return $this->device;
-    }
-
-    public function lens(): Lens
-    {
-        return $this->lens;
-    }
-
-    public function derived(): Derived
-    {
-        return $this->derived;
-    }
-
-    public function image(): Image
-    {
-        return $this->image;
-    }
-
-    public function preview(): Preview
-    {
-        return $this->preview;
     }
 
     public function video(): Video
@@ -170,11 +145,6 @@ final readonly class StructuredMetadata
         return $this->multiPicture;
     }
 
-    public function exposure(): Exposure
-    {
-        return $this->exposure;
-    }
-
     public function capture(): Capture
     {
         return $this->capture;
@@ -198,11 +168,6 @@ final readonly class StructuredMetadata
     public function keywords(): Keywords
     {
         return $this->keywords;
-    }
-
-    public function gps(): Gps
-    {
-        return $this->gps;
     }
 
     public function sensor(): Sensor
@@ -235,19 +200,9 @@ final readonly class StructuredMetadata
         return $this->whiteBalance;
     }
 
-    public function interop(): Interop
-    {
-        return $this->interop;
-    }
-
     public function tiff(): TiffData
     {
         return $this->tiff;
-    }
-
-    public function standards(): Standards
-    {
-        return $this->standards;
     }
 
     public function flashPix(): FlashPix
