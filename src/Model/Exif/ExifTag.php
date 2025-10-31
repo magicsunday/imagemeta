@@ -469,6 +469,12 @@ final readonly class ExifTag
     public const int PROFILE_CALIBRATION_SIGNATURE = 0xC6F4; // EXIF 3.0 §4.6.3 Tables 35–41; EXIF 2.32 §4.6.3 Tables 35–41
 
     /**
+     * Lists the encoding functions applied to each hue/saturation/value channel in the profile maps.
+     * EXIF 3.0 §4.6.3 Tables 35–41; EXIF 2.32 §4.6.3 Tables 35–41.
+     */
+    public const int PROFILE_HUE_SAT_MAP_ENCODINGS = 0xC6F5; // EXIF 3.0 §4.6.3 Tables 35–41; EXIF 2.32 §4.6.3 Tables 35–41
+
+    /**
      * Records the hue/saturation/value grid dimensions used by the profile maps.
      */
     public const int PROFILE_HUE_SAT_MAP_DIMS = 0xC6F6; // EXIF 3.0 §4.6.3 Tables 35–41; EXIF 2.32 §4.6.3 Tables 35–41

@@ -396,6 +396,7 @@ final class ValueFactory
                 $dimensions[0] ?? null,
                 $dimensions[1] ?? null,
                 $dimensions[2] ?? null,
+                $hueSatMapData['encodings'] ?? null,
                 $hueSatMapData['map1'] ?? null,
                 $hueSatMapData['map2'] ?? null,
                 $hueSatMapData['map3'] ?? null,

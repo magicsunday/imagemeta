@@ -1902,6 +1902,27 @@ final class ParsedExifTest extends TestCase
     }
 
     #[Test]
+    public function profileHueSatMapIncludesEncodings(): void
+    {
+        $profileIfd = new Ifd([
+            ExifTag::PROFILE_HUE_SAT_MAP_DIMS      => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DIMS, 4, 3, new ExifNumericList([4, 2, 1])),
+            ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS, 3, 3, new ExifNumericList([0, 2, 1])),
+            ExifTag::PROFILE_HUE_SAT_MAP_DATA_1    => new IfdEntry(ExifTag::PROFILE_HUE_SAT_MAP_DATA_1, 11, 2, new ExifNumericList([0.25, 0.5])),
+        ]);
+
+        $document = new ParsedExif(new Ifd([]), null, null, null, null, null, [], [
+            0 => $profileIfd,
+        ]);
+
+        $map = $document->profileHueSatMap();
+
+        self::assertNotNull($map);
+        self::assertSame([4, 2, 1], $map['dimensions']);
+        self::assertSame([0, 2, 1], $map['encodings']);
+        self::assertSame([0.25, 0.5], $map['map1']);
+    }
+
+    #[Test]
     #[DataProvider('provideExifVersionMatrix')]
     public function normalizesExifVersions(string $raw, string $expectedVersion, string $expectedProfile): void
     {

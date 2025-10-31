@@ -20,6 +20,7 @@ final readonly class ColorProfileHueSatMap
      * @param int|null         $hueDivisions        Number of hue slices stored in the map.
      * @param int|null         $saturationDivisions Number of saturation slices stored in the map.
      * @param int|null         $valueDivisions      Number of value/lightness slices stored in the map.
+     * @param list<int>|null   $encodings           Optional encoding identifiers for hue/saturation/value channels.
      * @param list<float>|null $mapData1            Primary hue/saturation/value adjustment table.
      * @param list<float>|null $mapData2            Secondary adjustment table when provided by the profile.
      * @param list<float>|null $mapData3            Tertiary adjustment table when present in the profile.
@@ -28,6 +29,7 @@ final readonly class ColorProfileHueSatMap
         public ?int $hueDivisions,
         public ?int $saturationDivisions,
         public ?int $valueDivisions,
+        public ?array $encodings,
         public ?array $mapData1,
         public ?array $mapData2,
         public ?array $mapData3,
@@ -66,6 +68,16 @@ final readonly class ColorProfileHueSatMap
     public function mapData1(): ?array
     {
         return $this->mapData1;
+    }
+
+    /**
+     * Returns the encoding identifiers applied to the hue/saturation/value channels.
+     *
+     * @return list<int>|null
+     */
+    public function encodings(): ?array
+    {
+        return $this->encodings;
     }
 
     /**

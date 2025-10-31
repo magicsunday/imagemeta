@@ -785,6 +785,12 @@ PROFILE_HUE_SAT_MAP_DATA_3:
   minVersion: "2.32"
   voGetter:
     - raw.profileHueSatMap
+PROFILE_HUE_SAT_MAP_ENCODINGS:
+  ifd: ExifIFD
+  type: auto
+  minVersion: "2.32"
+  voGetter:
+    - raw.profileHueSatMap
 PROFILE_HUE_SAT_MAP_DIMS:
   ifd: ExifIFD
   type: auto
