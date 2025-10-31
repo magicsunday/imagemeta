@@ -12,9 +12,11 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Convenience;
 
 use DateTimeImmutable;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\Temporal;
 use Throwable;
 
 use function is_array;
@@ -24,37 +26,38 @@ use function trim;
 
 /**
  * Resolves the best available capture timestamp for an image asset.
- *
- * The resolver prefers EXIF information as it typically offers the most
- * accurate capture metadata, but it can fall back to XMP when EXIF data is
- * missing or incomplete.
  */
 final class CaptureDateResolver
 {
     /**
      * Determines the most precise capture timestamp contained in the metadata.
-     *
-     * @param Metadata $metadata structured metadata extracted from the asset
-     *
-     * @return DateTimeImmutable|null a normalised timestamp or null when no usable
-     *                                value is available
      */
     public static function bestCaptureDateTime(Metadata $metadata): ?DateTimeImmutable
     {
-        if ($metadata->exifDoc instanceof ParsedExif) {
-            $dateTime = ExifConvenience::captureDateTime($metadata->exifDoc);
+        $structured = $metadata->structured();
 
-            if ($dateTime instanceof DateTimeImmutable) {
-                return $dateTime;
-            }
+        $capture   = $structured->capture->details;
+        $temporal  = $structured->capture->temporal;
+        $gps       = $structured->gps->gps();
+
+        $candidate = self::captureDate($capture)
+            ?? self::temporalFallback($temporal)
+            ?? self::gpsFallback($gps);
+
+        if ($candidate instanceof DateTimeImmutable) {
+            return $candidate;
         }
 
-        if ($metadata->xmpDoc instanceof XmpDocument) {
-            $createDate = self::readXmpCreateDate($metadata->xmpDoc);
+        $xmpDocument = $metadata->xmpDoc;
+        if (!$xmpDocument instanceof XmpDocument) {
+            $xmpDocument = $metadata->selectiveXmpDocument();
+        }
+
+        if ($xmpDocument instanceof XmpDocument) {
+            $createDate = self::readXmpCreateDate($xmpDocument);
 
             if ($createDate !== null) {
                 try {
-                    // XMP createDate is already ISO 8601, so we can consume it directly.
                     return new DateTimeImmutable($createDate);
                 } catch (Throwable) {
                     // Ignore malformed timestamps and continue searching for fallbacks.
@@ -65,12 +68,35 @@ final class CaptureDateResolver
         return null;
     }
 
+    private static function captureDate(Capture $capture): ?DateTimeImmutable
+    {
+        return $capture->dateTime();
+    }
+
+    private static function temporalFallback(Temporal $temporal): ?DateTimeImmutable
+    {
+        $candidates = [
+            $temporal->original(),
+            $temporal->create(),
+            $temporal->modify(),
+        ];
+
+        foreach ($candidates as $candidate) {
+            if ($candidate instanceof DateTimeImmutable) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static function gpsFallback(Gps $gps): ?DateTimeImmutable
+    {
+        return $gps->timestamp();
+    }
+
     /**
      * Extracts the ISO 8601 create date from the XMP document.
-     *
-     * @param XmpDocument $document XMP document holding metadata properties.
-     *
-     * @return string|null ISO 8601 timestamp or null when unavailable.
      */
     private static function readXmpCreateDate(XmpDocument $document): ?string
     {

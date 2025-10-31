@@ -13,13 +13,12 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
-use MagicSunday\ImageMeta\Convenience\ExifConvenience;
-use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Model\Exif\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -36,17 +35,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(XmpDocument::class)]
-#[UsesClass(ExifConvenience::class)]
-#[UsesClass(ExifCapabilities::class)]
-#[UsesClass(ValueConverters::class)]
 final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';
 
-    /**
-     * Uses only XMP metadata to confirm the resolver falls back to the CreateDate string and
-     * returns a DateTimeImmutable instance.
-     */
     #[Test]
     public function returnsXmpCreateDateWhenExifIsMissing(): void
     {
@@ -66,10 +58,6 @@ final class CaptureDateResolverTest extends TestCase
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
     }
 
-    /**
-     * Provides an invalid CreateDate value to ensure the resolver rejects non-ISO formatted
-     * strings and returns null.
-     */
     #[Test]
     public function ignoresNonIsoCreateDateValues(): void
     {
@@ -86,10 +74,6 @@ final class CaptureDateResolverTest extends TestCase
         self::assertNull(CaptureDateResolver::bestCaptureDateTime($metadata));
     }
 
-    /**
-     * Supplies multiple XMP CreateDate entries and checks that the first ISO-8601 value is
-     * accepted and converted to a DateTimeImmutable instance.
-     */
     #[Test]
     public function acceptsFirstArrayElementWhenIsoString(): void
     {
@@ -112,10 +96,6 @@ final class CaptureDateResolverTest extends TestCase
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
     }
 
-    /**
-     * Ensures EXIF capture timestamps are preferred and that fallback logic covers digitised
-     * timestamps when DateTimeOriginal is not provided.
-     */
     #[Test]
     public function prefersExifCaptureDateWhenAvailable(): void
     {
@@ -152,5 +132,55 @@ final class CaptureDateResolverTest extends TestCase
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-04-05T01:02:03+01:00', $result->format(DATE_ATOM));
+    }
+
+    #[Test]
+    public function usesGpsTimestampWhenCaptureDateMissing(): void
+    {
+        $timeStamp = new ExifRationalList([
+            new ExifRational(12, 1),
+            new ExifRational(34, 1),
+            new ExifRational(56, 1),
+        ]);
+
+        $gpsIfd = new Ifd([
+            ExifTag::GPS_DATE_STAMP   => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 11, '2024:05:01'),
+            ExifTag::GPS_TIME_STAMP   => new IfdEntry(ExifTag::GPS_TIME_STAMP, 5, 3, $timeStamp),
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(
+                ExifTag::GPS_LATITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(51, 1),
+                    new ExifRational(30, 1),
+                    new ExifRational(0, 1),
+                ]),
+            ),
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(
+                ExifTag::GPS_LONGITUDE,
+                5,
+                3,
+                new ExifRationalList([
+                    new ExifRational(0, 1),
+                    new ExifRational(7, 1),
+                    new ExifRational(3000, 100),
+                ]),
+            ),
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: new ParsedExif(new Ifd([]), null, $gpsIfd, null, null),
+            xmpBlobs: [],
+            xmpDoc: null,
+        );
+
+        $result = CaptureDateResolver::bestCaptureDateTime($metadata);
+
+        self::assertInstanceOf(DateTimeImmutable::class, $result);
+        self::assertSame('2024-05-01T12:34:56+00:00', $result->format(DATE_ATOM));
     }
 }
