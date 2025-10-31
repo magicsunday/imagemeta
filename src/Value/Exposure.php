@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Contracts\ExposureInterface;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
@@ -23,7 +24,7 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 /**
  * Aggregates exposure related measurements.
  */
-final readonly class Exposure
+final readonly class Exposure implements ExposureInterface
 {
     /**
      * @param int|null             $iso              ISO sensitivity.

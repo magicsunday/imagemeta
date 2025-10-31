@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\Contracts\CameraInterface;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 
 /**
  * Captures camera specific information.
  */
-final readonly class Camera
+final readonly class Camera implements CameraInterface
 {
     /**
      * @param string|null        $make          Camera manufacturer.

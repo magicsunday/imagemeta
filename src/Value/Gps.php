@@ -12,11 +12,12 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Value\Contracts\GpsInterface;
 
 /**
  * Describes the GPS position at capture time including navigation details.
  */
-final readonly class Gps
+final readonly class Gps implements GpsInterface
 {
     /**
      * @param float|null             $latitude                       Latitude in decimal degrees.
