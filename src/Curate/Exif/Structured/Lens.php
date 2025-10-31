@@ -16,6 +16,9 @@ use MagicSunday\ImageMeta\Value\Lens as LensValue;
 
 /**
  * Represents EXIF lens metadata enriched with derived optical metrics.
+ *
+ * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
+ *             Use MagicSunday\ImageMeta\Curate\Structured\LensMetadata instead.
  */
 final readonly class Lens
 {

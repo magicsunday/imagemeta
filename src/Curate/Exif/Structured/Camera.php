@@ -17,6 +17,9 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 
 /**
  * Provides EXIF backed camera metadata without container fallbacks.
+ *
+ * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
+ *             Use MagicSunday\ImageMeta\Curate\Structured\CameraMetadata instead.
  */
 final readonly class Camera
 {

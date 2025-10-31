@@ -17,6 +17,9 @@ use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
 
 /**
  * Indicates the availability of previews and thumbnails from EXIF.
+ *
+ * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
+ *             Use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata for preview data.
  */
 final readonly class Preview
 {

@@ -17,6 +17,9 @@ use MagicSunday\ImageMeta\Value\Image as ImageValue;
 
 /**
  * Holds EXIF image attributes without QuickTime fallbacks.
+ *
+ * @deprecated Internal bridging wrapper scheduled for removal after Milestone M1.
+ *             Use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata for curated image data.
  */
 final readonly class Image
 {
