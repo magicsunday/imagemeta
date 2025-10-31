@@ -125,7 +125,7 @@ final class ExifConvenience
             $parts[] = self::formatFocalLength($focalLength);
         }
 
-        $equivalent = $derived?->focalLength35mm();
+        $equivalent = $derived?->equivalent35mm();
         if ($equivalent !== null && !self::containsEquivalent($parts, $equivalent)) {
             $parts[] = sprintf('%d mm eq', $equivalent);
         }

@@ -96,7 +96,7 @@ trait ExifExpectationAssertions
     private static function assertStructuredMatches(string $fixture, Metadata $metadata, array $expected): void
     {
         $structured        = $metadata->structured();
-        $standards         = $structured->technical->standards;
+        $standards         = $structured->technical()->standards;
         $expectedStandards = $expected['standards'];
 
         Assert::assertSame($expectedStandards['exifVersion'], $standards->exifVersion(), sprintf('%s: EXIF version', $fixture));
@@ -105,9 +105,9 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedStandards['tiffEpStandardId'], $standards->tiffEpStandardId(), sprintf('%s: TIFF/EP standard ID', $fixture));
         Assert::assertSame($expectedStandards['tiffEpStandardString'], $standards->tiffEpStandardString(), sprintf('%s: TIFF/EP standard string', $fixture));
 
-        Assert::assertSame($expected['exposure']['iso'], $structured->exposure->exposure->iso, sprintf('%s: ISO fallback', $fixture));
+        Assert::assertSame($expected['exposure']['iso'], $structured->exposure()->exposure->iso, sprintf('%s: ISO fallback', $fixture));
 
-        $temporal        = $structured->capture->temporal;
+        $temporal        = $structured->capture()->temporal;
         $expectedCapture = $expected['capture']['dateTimeOriginal'];
         $actualOriginal  = $temporal->original;
         if ($expectedCapture === null) {
@@ -129,11 +129,11 @@ trait ExifExpectationAssertions
             sprintf('%s: SubSecTimeOriginal', $fixture),
         );
 
-        $image = $structured->media->image;
+        $image = $structured->media()->image;
         Assert::assertSame($expected['image']['userComment'], $image->userComment(), sprintf('%s: UserComment fallback', $fixture));
         Assert::assertSame($expected['image']['userCommentEncoding'], $image->userCommentEncoding(), sprintf('%s: UserComment encoding', $fixture));
 
-        $interop         = $structured->technical->interop;
+        $interop         = $structured->technical()->interop;
         $expectedInterop = $expected['interop'];
         Assert::assertSame($expectedInterop['index'], $interop->index(), sprintf('%s: Interop index', $fixture));
         Assert::assertSame($expectedInterop['version'], $interop->version(), sprintf('%s: Interop version', $fixture));
@@ -141,7 +141,7 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth(), sprintf('%s: Interop width', $fixture));
         Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength(), sprintf('%s: Interop length', $fixture));
 
-        self::assertPreviewMatches($fixture, $expected['preview'], $structured->media->preview);
+        self::assertPreviewMatches($fixture, $expected['preview'], $structured->media()->preview);
 
         $expectedMaker = $expected['makerNotes'];
         $actualMaker   = $metadata->makerNotes;
@@ -184,7 +184,7 @@ trait ExifExpectationAssertions
 
         Assert::assertSame(
             $expected['sensor']['spatialFrequencyResponse'],
-            $structured->sensor->hardware->spatialFrequencyResponse,
+            $structured->sensor()->hardware->spatialFrequencyResponse,
             sprintf('%s: Spatial frequency response', $fixture),
         );
     }

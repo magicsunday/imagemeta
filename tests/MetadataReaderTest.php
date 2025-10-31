@@ -91,11 +91,11 @@ final class MetadataReaderTest extends TestCase
         self::assertNull($metadata->digestMd5);
 
         $structured = $metadata->structured();
-        self::assertSame('image/jpeg', $structured->file->file()->mimeType);
-        self::assertSame(strlen($jpeg), $structured->file->file()->fileSize);
-        self::assertSame('jpg', $structured->file->file()->extension);
-        self::assertNull($structured->file->file()->digestSha1);
-        self::assertNull($structured->file->file()->digestMd5);
+        self::assertSame('image/jpeg', $structured->file()->file()->mimeType);
+        self::assertSame(strlen($jpeg), $structured->file()->file()->fileSize);
+        self::assertSame('jpg', $structured->file()->file()->extension);
+        self::assertNull($structured->file()->file()->digestSha1);
+        self::assertNull($structured->file()->file()->digestMd5);
     }
 
     /**
@@ -126,8 +126,8 @@ final class MetadataReaderTest extends TestCase
         self::assertSame($expectedMd5, $metadata->digestMd5);
 
         $structured = $metadata->structured();
-        self::assertSame($expectedSha1, $structured->file->file()->digestSha1);
-        self::assertSame($expectedMd5, $structured->file->file()->digestMd5);
+        self::assertSame($expectedSha1, $structured->file()->file()->digestSha1);
+        self::assertSame($expectedMd5, $structured->file()->file()->digestMd5);
     }
 
     /**
@@ -152,7 +152,7 @@ final class MetadataReaderTest extends TestCase
 
         self::assertSame(8, $metadata->jpegBitsPerSample);
 
-        $image = $metadata->structured()->media->image;
+        $image = $metadata->structured()->media()->image;
 
         self::assertSame(8, $image->bitsPerSample);
         self::assertSame(448, $image->width);

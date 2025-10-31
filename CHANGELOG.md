@@ -3,8 +3,8 @@
 ## Unreleased
 
 ### Added
-- Added `Value\Derived::fovHorizontalDeg` and `Value\Derived::fovVerticalDeg` to expose axis specific angles of view alongside the
-  diagonal `fovDiagonalDeg` helper.
+- Added `Value\Derived::fieldOfViewHorizontalDeg` and `Value\Derived::fieldOfViewVerticalDeg` to expose axis specific angles of view alongside the
+  diagonal `fieldOfViewDiagonalDeg` helper.
 - Extended `Value\Temporal` with offset tags, a resolved `DateTimeZone` instance and minute level EXIF offsets for reliable
   capture time reconstruction.
 - Enriched `Value\File` with mime type, file size, extension and SHA-1/MD5 digests so that consumers can correlate assets without
@@ -18,7 +18,7 @@
   primary thumbnails, including timezone offsets carried outside the main EXIF directory.
 
 ### Changed
-- Renamed the diagonal field-of-view helper from `fovDeg` to `fovDiagonalDeg`; consumers should switch to the new property name.
+- Renamed derived field helpers to `equivalent35mm`, `fieldOfView*` and `hyperfocalDistanceMetres`; legacy accessors remain as deprecated aliases.
 - Backfilled structured JPEG image bit depth from the start-of-frame precision when the EXIF tag is missing.
 
 ### Removed

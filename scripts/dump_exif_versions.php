@@ -21,11 +21,11 @@ foreach ($files as $file) {
     $raw = $metadata->exifDoc;
     $maker = $metadata->makerNotes;
 
-    $standards = $structured->technical->standards;
-    $preview = $structured->media->preview;
-    $interop = $structured->technical->interop;
-    $image = $structured->media->image;
-    $capture = $structured->capture->temporal;
+    $standards = $structured->technical()->standards;
+    $preview = $structured->media()->preview;
+    $interop = $structured->technical()->interop;
+    $image = $structured->media()->image;
+    $capture = $structured->capture()->temporal;
 
     $makerInfo = null;
     if ($maker !== null) {
@@ -37,7 +37,7 @@ foreach ($files as $file) {
         ];
     }
 
-    $sensor = $structured->sensor->hardware;
+    $sensor = $structured->sensor()->hardware;
 
     $env = [
         'temperatureC' => $raw?->temperatureCelsius(),
@@ -57,7 +57,7 @@ foreach ($files as $file) {
                 'tiffEpStandardString' => $standards->tiffEpStandardString(),
             ],
             'exposure' => [
-                'iso' => $structured->exposure->iso,
+                'iso' => $structured->exposure()->exposure->iso,
             ],
             'capture' => [
                 'dateTimeOriginal' => $capture->original?->format(DATE_ATOM),

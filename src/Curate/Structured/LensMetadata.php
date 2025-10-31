@@ -37,6 +37,6 @@ final readonly class LensMetadata
 
     public function equivalent35mm(): ?int
     {
-        return $this->lens->focalLengthIn35mm ?? $this->derived->focalLength35mm;
+        return $this->lens->focalLengthIn35mm ?? $this->derived->equivalent35mm;
     }
 }

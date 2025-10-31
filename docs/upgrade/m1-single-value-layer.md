@@ -21,12 +21,12 @@ The following classes are tagged with `@deprecated` and will be removed after Mi
 2. Access curated value objects directly, for example:
    ```php
    $metadata = (new MetadataReader())->read($path)->structured();
-   $metadata->camera->device->model;
-   $metadata->lens->optics->equivalent35mm();
-   $metadata->media->image->width;
-   $metadata->gps->coordinates->latitude?->toFloat();
+   $metadata->camera()->camera()->model;
+   $metadata->lens()->equivalent35mm();
+   $metadata->media()->image->width;
+   $metadata->gps()->latitude()?->toFloat();
    ```
-3. For preview information, use `$metadata->media->preview` instead of the deprecated `Structured\Preview` wrapper.
+3. For preview information, use `$metadata->media()->preview` instead of the deprecated `Structured\Preview` wrapper.
 
 ## Deprecation Mechanics
 
