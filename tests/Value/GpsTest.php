@@ -95,7 +95,7 @@ final class GpsTest extends TestCase
         self::assertSame(-12.5, $gps->latitudeSigned());
         self::assertSame(-7.5, $gps->longitudeSigned());
 
-        $latitudeCoordinate = $gps->latitudeCoordinate();
+        $latitudeCoordinate  = $gps->latitudeCoordinate();
         $longitudeCoordinate = $gps->longitudeCoordinate();
 
         self::assertNotNull($latitudeCoordinate);
@@ -112,7 +112,7 @@ final class GpsTest extends TestCase
     public function returnsUtcTimestamp(): void
     {
         $timestamp = new DateTimeImmutable('2024-05-17 12:34:56', new DateTimeZone('Europe/Berlin'));
-        $gps = new Gps(timestamp: $timestamp);
+        $gps       = new Gps(timestamp: $timestamp);
 
         $utcTimestamp = $gps->timestamp();
 

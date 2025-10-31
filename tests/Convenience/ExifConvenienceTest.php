@@ -16,11 +16,11 @@ use MagicSunday\ImageMeta\Convenience\ExifConvenience;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Lens;
-use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -198,9 +198,9 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function toArrayReturnsNormalisedShape(): void
     {
-        $camera = new Camera('Canon', 'EOS', null, null, null, null, null);
-        $lens   = new Lens(null, 'EF 50mm', null, 50.0, null, null);
-        $image  = new Image(6000, 4000, Orientation::TOP_LEFT, null, null, null, null, null, null, null, null, null, null, null, null);
+        $camera  = new Camera('Canon', 'EOS', null, null, null, null, null);
+        $lens    = new Lens(null, 'EF 50mm', null, 50.0, null, null);
+        $image   = new Image(6000, 4000, Orientation::TOP_LEFT, null, null, null, null, null, null, null, null, null, null, null, null);
         $capture = new Capture(
             new DateTimeImmutable('2024-05-01T12:34:56+02:00'),
             null,

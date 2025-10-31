@@ -12,18 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate;
 
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
-use MagicSunday\ImageMeta\Curate\Structured\CameraMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\CaptureMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\ExposureMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\FileMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\GpsMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\LensMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\MakerNotesView;
-use MagicSunday\ImageMeta\Curate\Structured\MediaMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\ProcessingMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\RightsMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\SensorMetadata;
-use MagicSunday\ImageMeta\Curate\Structured\TechnicalMetadata;
 use MagicSunday\ImageMeta\Model\Metadata;
 
 /**
@@ -45,44 +33,43 @@ final readonly class ExifAssembler
         );
 
         return new StructuredMetadata(
-            file: new FileMetadata($components['file'], $components['container'], $components['integrity']),
-            camera: new CameraMetadata($components['camera'], $components['device']),
-            lens: new LensMetadata($components['lens'], $components['derived']),
-            media: new MediaMetadata(
-                $components['image'],
-                $components['preview'],
-                $components['video'],
-                $components['audio'],
-                $components['embeddedAudio'],
-                $components['colorProfile'],
-                $components['composite'],
-                $components['multiPicture'],
-            ),
-            exposure: new ExposureMetadata($components['exposure'], $components['derived']),
-            capture: new CaptureMetadata(
-                $components['capture'],
-                $components['scene'],
-                $components['temporal'],
-                $components['regions'],
-                $components['keywords'],
-            ),
-            gps: new GpsMetadata($components['gps']),
-            sensor: new SensorMetadata(
-                $components['sensor'],
-                $components['focus'],
-                $components['motion'],
-                $components['uav'],
-            ),
-            processing: new ProcessingMetadata($components['processing'], $components['whiteBalance']),
-            technical: new TechnicalMetadata(
-                $components['interop'],
-                $components['tiff'],
-                $components['standards'],
-                $components['flashPix'],
-                $components['xmp'],
-            ),
-            rights: new RightsMetadata($components['rights'], $components['author'], $components['related']),
-            makerNotes: new MakerNotesView($components['makerNotesApple']),
+            file: $components['file'],
+            container: $components['container'],
+            integrity: $components['integrity'],
+            camera: $components['camera'],
+            device: $components['device'],
+            lens: $components['lens'],
+            derived: $components['derived'],
+            image: $components['image'],
+            preview: $components['preview'],
+            video: $components['video'],
+            audio: $components['audio'],
+            embeddedAudio: $components['embeddedAudio'],
+            colorProfile: $components['colorProfile'],
+            composite: $components['composite'],
+            multiPicture: $components['multiPicture'],
+            exposure: $components['exposure'],
+            capture: $components['capture'],
+            scene: $components['scene'],
+            temporal: $components['temporal'],
+            regions: $components['regions'],
+            keywords: $components['keywords'],
+            gps: $components['gps'],
+            sensor: $components['sensor'],
+            focus: $components['focus'],
+            motion: $components['motion'],
+            uav: $components['uav'],
+            processing: $components['processing'],
+            whiteBalance: $components['whiteBalance'],
+            interop: $components['interop'],
+            tiff: $components['tiff'],
+            standards: $components['standards'],
+            flashPix: $components['flashPix'],
+            xmp: $components['xmp'],
+            rights: $components['rights'],
+            author: $components['author'],
+            related: $components['related'],
+            makerNotesApple: $components['makerNotesApple'],
         );
     }
 }

@@ -206,7 +206,7 @@ final class ExifConvenience
         Image $image,
         Capture $capture,
         Exposure $exposure,
-        Gps $gps
+        Gps $gps,
     ): array {
         $capturedAt = $capture->dateTime();
 

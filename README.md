@@ -18,13 +18,13 @@ use MagicSunday\ImageMeta\MetadataReader;
 
 $meta = (new MetadataReader())->read('photo.heic')->structured();
 
-$meta->file()->file()->mimeType;
-$meta->camera()->device->software;
-$meta->lens()->lens()->lensModel();
-$meta->lens()->lens()->focalLengthMm();
-$meta->lens()->equivalent35mm();
-$meta->exposure()->exposure->program;
-$meta->gps()->latitude()?->toFloat();
+$meta->file()->mimeType;
+$meta->device()->software;
+$meta->lens()->lensModel();
+$meta->lens()->focalLengthMm();
+$meta->derived()->equivalent35mm();
+$meta->exposure()->program();
+$meta->gps()->latitudeCoordinate()?->toFloat();
 $meta->preview()->hasThumbnail();
 $meta->interop()->relatedImageWidth();
 $meta->standards()->exifVersion();
@@ -75,10 +75,10 @@ used directly without consulting tag identifiers.
 
 ```php
 $s = $meta->structured();
-$s->technical()->tiff->compression;              // Compression::JPEG
-$s->lens()->lens()->lensSpecification();       // [minF, minAperture, maxF, maxAperture]
-$s->media()->composite->type;                // CompositeImage::GeneralComposite
-$s->technical()->standards->exifVersion;         // "3.00"
+$s->tiff()->compression;              // Compression::JPEG
+$s->lens()->lensSpecification();       // [minF, minAperture, maxF, maxAperture]
+$s->composite()->type;                // CompositeImage::GeneralComposite
+$s->standards()->exifVersion();         // "3.00"
 ```
 
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.

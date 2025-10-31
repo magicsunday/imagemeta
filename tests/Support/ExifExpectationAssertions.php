@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Support;
 
-use MagicSunday\ImageMeta\Curate\Exif\Structured\Preview as StructuredPreview;
 use MagicSunday\ImageMeta\Exif\StructuredExif as ApiStructuredExif;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif as ModelExifDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -96,7 +95,7 @@ trait ExifExpectationAssertions
     private static function assertStructuredMatches(string $fixture, Metadata $metadata, array $expected): void
     {
         $structured        = $metadata->structured();
-        $standards         = $structured->technical()->standards;
+        $standards         = $structured->standards();
         $expectedStandards = $expected['standards'];
 
         Assert::assertSame($expectedStandards['exifVersion'], $standards->exifVersion(), sprintf('%s: EXIF version', $fixture));
@@ -105,9 +104,9 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedStandards['tiffEpStandardId'], $standards->tiffEpStandardId(), sprintf('%s: TIFF/EP standard ID', $fixture));
         Assert::assertSame($expectedStandards['tiffEpStandardString'], $standards->tiffEpStandardString(), sprintf('%s: TIFF/EP standard string', $fixture));
 
-        Assert::assertSame($expected['exposure']['iso'], $structured->exposure()->exposure->iso, sprintf('%s: ISO fallback', $fixture));
+        Assert::assertSame($expected['exposure']['iso'], $structured->exposure()->iso, sprintf('%s: ISO fallback', $fixture));
 
-        $temporal        = $structured->capture()->temporal;
+        $temporal        = $structured->temporal();
         $expectedCapture = $expected['capture']['dateTimeOriginal'];
         $actualOriginal  = $temporal->original;
         if ($expectedCapture === null) {
@@ -129,11 +128,11 @@ trait ExifExpectationAssertions
             sprintf('%s: SubSecTimeOriginal', $fixture),
         );
 
-        $image = $structured->media()->image;
+        $image = $structured->image();
         Assert::assertSame($expected['image']['userComment'], $image->userComment(), sprintf('%s: UserComment fallback', $fixture));
         Assert::assertSame($expected['image']['userCommentEncoding'], $image->userCommentEncoding(), sprintf('%s: UserComment encoding', $fixture));
 
-        $interop         = $structured->technical()->interop;
+        $interop         = $structured->interop();
         $expectedInterop = $expected['interop'];
         Assert::assertSame($expectedInterop['index'], $interop->index(), sprintf('%s: Interop index', $fixture));
         Assert::assertSame($expectedInterop['version'], $interop->version(), sprintf('%s: Interop version', $fixture));
@@ -141,7 +140,7 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth(), sprintf('%s: Interop width', $fixture));
         Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength(), sprintf('%s: Interop length', $fixture));
 
-        self::assertPreviewMatches($fixture, $expected['preview'], $structured->media()->preview);
+        self::assertPreviewMatches($fixture, $expected['preview'], $structured->preview());
 
         $expectedMaker = $expected['makerNotes'];
         $actualMaker   = $metadata->makerNotes;
@@ -184,7 +183,7 @@ trait ExifExpectationAssertions
 
         Assert::assertSame(
             $expected['sensor']['spatialFrequencyResponse'],
-            $structured->sensor()->hardware->spatialFrequencyResponse,
+            $structured->sensor()->spatialFrequencyResponse,
             sprintf('%s: Spatial frequency response', $fixture),
         );
     }
@@ -310,7 +309,7 @@ trait ExifExpectationAssertions
      *     previewTileByteCounts: array<int, int>|null,
      * } $expected
      */
-    private static function assertPreviewMatches(string $fixture, array $expected, PreviewValue|StructuredPreview $preview): void
+    private static function assertPreviewMatches(string $fixture, array $expected, PreviewValue $preview): void
     {
         Assert::assertSame($expected['hasThumbnail'], $preview->hasThumbnail(), sprintf('%s: Preview thumbnail availability', $fixture));
         Assert::assertSame($expected['hasPreview'], $preview->hasPreview(), sprintf('%s: Preview availability', $fixture));

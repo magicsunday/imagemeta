@@ -152,7 +152,7 @@ final class ExifReaderTest extends TestCase
         self::assertEqualsWithDelta(3.4, $exposure->fNumber(), 1e-2);
 
         $lens = $document->lens();
-        self::assertEqualsWithDelta(5.0, $lens->focalLength() ?? 0.0, 1e-6);
+        self::assertEqualsWithDelta(5.0, $lens->focalLengthMm() ?? 0.0, 1e-6);
 
         $image = $document->image();
         self::assertSame(4000, $image->width());
@@ -169,10 +169,13 @@ final class ExifReaderTest extends TestCase
         self::assertNull($interop->relatedImageFileFormat());
         self::assertSame(4000, $interop->relatedImageWidth());
         self::assertSame(3000, $interop->relatedImageLength());
-        self::assertNotNull($gps->latitude());
-        self::assertEqualsWithDelta(41.888948, $gps->latitude()->toFloat() ?? 0.0, 1e-6);
-        self::assertNotNull($gps->longitude());
-        self::assertEqualsWithDelta(-87.624494, $gps->longitude()->toFloat() ?? 0.0, 1e-6);
+        $latitudeCoordinate = $gps->latitudeCoordinate();
+        self::assertNotNull($latitudeCoordinate);
+        self::assertEqualsWithDelta(41.888948, $latitudeCoordinate->signed(), 1e-6);
+
+        $longitudeCoordinate = $gps->longitudeCoordinate();
+        self::assertNotNull($longitudeCoordinate);
+        self::assertEqualsWithDelta(-87.624494, $longitudeCoordinate->signed(), 1e-6);
 
         $preview = $document->preview();
         self::assertTrue($preview->hasThumbnail());
@@ -229,7 +232,7 @@ final class ExifReaderTest extends TestCase
 
             self::assertFalse($document->hasData());
             self::assertNull($document->camera()->make());
-            self::assertNull($document->lens()->focalLength());
+            self::assertNull($document->lens()->focalLengthMm());
             self::assertNull($document->gps()->latitude());
         } finally {
             @unlink($path);

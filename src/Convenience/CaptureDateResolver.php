@@ -36,9 +36,9 @@ final class CaptureDateResolver
     {
         $structured = $metadata->structured();
 
-        $capture   = $structured->capture()->details;
-        $temporal  = $structured->capture()->temporal;
-        $gps       = $structured->gps()->gps();
+        $capture  = $structured->capture();
+        $temporal = $structured->temporal();
+        $gps      = $structured->gps();
 
         $candidate = self::captureDate($capture)
             ?? self::temporalFallback($temporal)

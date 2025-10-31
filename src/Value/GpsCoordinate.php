@@ -24,8 +24,8 @@ final readonly class GpsCoordinate
 
     public function __construct(float $value, ?string $reference, bool $isLatitude)
     {
-        $this->value = $value;
-        $this->reference = $this->normaliseReference($reference);
+        $this->value      = $value;
+        $this->reference  = $this->normaliseReference($reference);
         $this->isLatitude = $isLatitude;
     }
 
