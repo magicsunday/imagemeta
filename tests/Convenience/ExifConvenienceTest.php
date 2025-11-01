@@ -92,7 +92,16 @@ final class ExifConvenienceTest extends TestCase
             flashEnergy: null,
         );
 
-        $derived = new Derived(null, null, null, null, null, 75, null);
+        $derived = new Derived(
+            ev100: null,
+            hyperfocalDistanceMetres: null,
+            circleOfConfusionMm: null,
+            fieldOfViewDiagonalDeg: null,
+            fieldOfViewHorizontalDeg: null,
+            fieldOfViewVerticalDeg: null,
+            equivalent35mm: 75,
+            cropFactor: null,
+        );
 
         self::assertSame('75 mm eq', ExifConvenience::exposureSummary($exposure, null, $derived));
     }

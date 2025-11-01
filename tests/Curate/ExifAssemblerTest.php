@@ -306,6 +306,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
         self::assertEqualsWithDelta(43.09095238095239, $structured->derived->hyperfocalDistanceMetres, 1e-6);
+        self::assertEqualsWithDelta(0.03, $structured->derived->circleOfConfusionMm, 1e-6);
         self::assertEqualsWithDelta(28.558322, $structured->derived->fieldOfViewDiagonalDeg, 1e-6);
         self::assertEqualsWithDelta(23.913168, $structured->derived->fieldOfViewHorizontalDeg, 1e-6);
         self::assertEqualsWithDelta(16.071421, $structured->derived->fieldOfViewVerticalDeg, 1e-6);

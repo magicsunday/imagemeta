@@ -83,7 +83,7 @@ $s->standards->exifVersion;          // "3.00"
 
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.
 
-The diagonal field of view exposed via `$s->derived->fieldOfViewDiagonalDeg` corresponds to the value previously documented as `fovDeg`. The new horizontal and vertical helpers provide axis-specific angles so clients can present per-dimension compositions without additional trigonometry.
+The diagonal field of view exposed via `$s->derived->fieldOfViewDiagonalDeg` corresponds to the value previously documented as `fovDeg`. The new horizontal and vertical helpers provide axis-specific angles so clients can present per-dimension compositions without additional trigonometry. The circle of confusion used for depth-of-field calculations is exposed through `$s->derived->circleOfConfusionMm`.
 
 The expanded temporal aggregate surfaces raw EXIF offset tags alongside a resolved `DateTimeZone` instance. This makes it possible to reconstruct original capture times even when the offset varies between creation, digitisation and modification steps. File level metadata now reports size, extension and cryptographic digests to help consumers correlate assets or detect tampering.
 
