@@ -86,9 +86,9 @@ final class MetadataReaderTest extends TestCase
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
-        self::assertSame('Nikon', $metadata->makerNotes->vendor());
-        self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
-        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
+        self::assertSame('Nikon', $metadata->makerNotes->vendor);
+        self::assertSame(strlen($makerNote), $metadata->makerNotes->length);
+        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1);
         self::assertNull($metadata->iccProfile);
         self::assertSame([], $metadata->iccSegments);
         self::assertSame([], $metadata->flashPixStreams);
@@ -102,14 +102,14 @@ final class MetadataReaderTest extends TestCase
 
         /** @var array<string, callable(): mixed> $componentAccessors */
         $componentAccessors = [
-            'file'      => static fn () => $structured->file(),
-            'container' => static fn () => $structured->container(),
+            'file'      => static fn () => $structured->file,
+            'container' => static fn () => $structured->container,
             'camera'    => static fn () => $structured->camera,
             'lens'      => static fn () => $structured->lens,
             'derived'   => static fn () => $structured->derived,
             'exposure'  => static fn () => $structured->exposure,
             'preview'   => static fn () => $structured->preview,
-            'rights'    => static fn () => $structured->rights(),
+            'rights'    => static fn () => $structured->rights,
         ];
 
         $expectedClasses = [
@@ -128,11 +128,11 @@ final class MetadataReaderTest extends TestCase
             self::assertInstanceOf($expectedClasses[$name], $value);
         }
 
-        self::assertSame('image/jpeg', $structured->file()->mimeType);
-        self::assertSame(strlen($jpeg), $structured->file()->fileSize);
-        self::assertSame('jpg', $structured->file()->extension);
-        self::assertNull($structured->file()->digestSha1);
-        self::assertNull($structured->file()->digestMd5);
+        self::assertSame('image/jpeg', $structured->file->mimeType);
+        self::assertSame(strlen($jpeg), $structured->file->fileSize);
+        self::assertSame('jpg', $structured->file->extension);
+        self::assertNull($structured->file->digestSha1);
+        self::assertNull($structured->file->digestMd5);
     }
 
     /**
@@ -163,8 +163,8 @@ final class MetadataReaderTest extends TestCase
         self::assertSame($expectedMd5, $metadata->digestMd5);
 
         $structured = $metadata->structured();
-        self::assertSame($expectedSha1, $structured->file()->digestSha1);
-        self::assertSame($expectedMd5, $structured->file()->digestMd5);
+        self::assertSame($expectedSha1, $structured->file->digestSha1);
+        self::assertSame($expectedMd5, $structured->file->digestMd5);
     }
 
     /**
@@ -231,9 +231,9 @@ final class MetadataReaderTest extends TestCase
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
-        self::assertSame('Sony', $metadata->makerNotes->vendor());
-        self::assertSame(strlen($makerNote), $metadata->makerNotes->length());
-        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1());
+        self::assertSame('Sony', $metadata->makerNotes->vendor);
+        self::assertSame(strlen($makerNote), $metadata->makerNotes->length);
+        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1);
         self::assertNull($metadata->iccProfile);
         self::assertSame([], $metadata->iccSegments);
     }

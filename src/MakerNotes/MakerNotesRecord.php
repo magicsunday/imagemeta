@@ -26,64 +26,26 @@ final readonly class MakerNotesRecord
      * @param int                  $length Number of bytes contained in the payload. Must be zero or positive.
      * @param string               $sha1   Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
      * @param AppleMakerNotes|null $apple  Additional Apple specific maker note data.
+     * @param bool|null            $isSafe Optional maker note safety flag.
      */
     public function __construct(
-        private string $vendor,
-        private int $length,
-        private string $sha1,
-        private ?AppleMakerNotes $apple = null,
-        private ?bool $isSafe = null,
+        public string $vendor,
+        public int $length,
+        public string $sha1,
+        public ?AppleMakerNotes $apple = null,
+        public ?bool $isSafe = null,
     ) {
-        if ($vendor === '') {
+        if ($this->vendor === '') {
             throw new InvalidArgumentException('The vendor must not be empty.');
         }
 
-        if ($length < 0) {
+        if ($this->length < 0) {
             throw new InvalidArgumentException('The payload length must be zero or positive.');
         }
 
-        if (preg_match('/^[0-9a-f]{40}$/', $sha1) !== 1) {
+        if (preg_match('/^[0-9a-f]{40}$/', $this->sha1) !== 1) {
             throw new InvalidArgumentException('The payload hash must be a 40 character lowercase hexadecimal string.');
         }
     }
-
-    /**
-     * Returns the vendor responsible for the maker note payload.
-     */
-    public function vendor(): string
-    {
-        return $this->vendor;
-    }
-
-    /**
-     * Returns the number of bytes contained in the maker note payload.
-     */
-    public function length(): int
-    {
-        return $this->length;
-    }
-
-    /**
-     * Returns the lowercase hexadecimal SHA-1 digest of the payload.
-     */
-    public function sha1(): string
-    {
-        return $this->sha1;
-    }
-
-    /**
-     * Returns Apple specific maker note data when available.
-     */
-    public function apple(): ?AppleMakerNotes
-    {
-        return $this->apple;
-    }
-
-    /**
-     * Returns whether the maker note payload is marked safe to edit.
-     */
-    public function isSafe(): ?bool
-    {
-        return $this->isSafe;
-    }
 }
+

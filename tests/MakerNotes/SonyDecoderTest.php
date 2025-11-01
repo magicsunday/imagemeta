@@ -36,8 +36,8 @@ final class SonyDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Sony', 'ILCE-7RM5');
 
-        self::assertSame('Sony', $metadata->vendor());
-        self::assertSame(strlen($raw), $metadata->length());
-        self::assertSame(sha1($raw), $metadata->sha1());
+        self::assertSame('Sony', $metadata->vendor);
+        self::assertSame(strlen($raw), $metadata->length);
+        self::assertSame(sha1($raw), $metadata->sha1);
     }
 }

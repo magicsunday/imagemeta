@@ -29,7 +29,7 @@ final class ExifFallbacksTest extends TestCase
         self::assertSame(80, $structured->exposure->iso);
         self::assertSame(
             '2011-12-06T11:08:37+00:00',
-            $structured->temporal()->original?->format(DATE_ATOM),
+            $structured->temporal->original?->format(DATE_ATOM),
         );
         self::assertSame(
             '400 N Michigan Ave, Chicago, IL 60611, USA',

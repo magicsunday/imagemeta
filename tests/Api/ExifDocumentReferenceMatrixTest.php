@@ -160,7 +160,7 @@ final class ExifDocumentReferenceMatrixTest extends TestCase
 
         $document = new ApiStructuredExif($modelDocument);
 
-        self::assertSame($modelDocument, $document->raw(), sprintf('%s: Raw document reference', $fixture));
+        self::assertSame($modelDocument, $document->raw, sprintf('%s: Raw document reference', $fixture));
 
         self::assertApiMatches($fixture, $document, $expectedApi);
     }

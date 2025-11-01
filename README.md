@@ -18,8 +18,8 @@ use MagicSunday\ImageMeta\MetadataReader;
 
 $meta = (new MetadataReader())->read('photo.heic')->structured();
 
-$meta->file()->mimeType;
-$meta->device()->software;
+$meta->file->mimeType;
+$meta->device->software;
 $meta->lens->lensModel;
 $meta->lens->focalLengthMm;
 $meta->derived->equivalent35mm;
@@ -75,9 +75,9 @@ used directly without consulting tag identifiers.
 
 ```php
 $s = $meta->structured();
-$s->tiff()->compression;              // Compression::JPEG
+$s->tiff->compression;              // Compression::JPEG
 $s->lens->lensSpecification;       // [minF, minAperture, maxF, maxAperture]
-$s->composite()->type;                // CompositeImage::GeneralComposite
+$s->composite->type;                // CompositeImage::GeneralComposite
 $s->standards->exifVersion;          // "3.00"
 ```
 

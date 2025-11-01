@@ -59,21 +59,21 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertNotNull($bestEffortOriginal);
         self::assertSame('2024-05-06T07:08:09+02:00', $bestEffortOriginal->format(DATE_ATOM));
 
-        $apiOriginal = $apiDocument->dateTimeOriginal();
+        $apiOriginal = $apiDocument->dateTimeOriginal;
         self::assertNotNull($apiOriginal);
         self::assertSame('2024-05-06T07:08:09+02:00', $apiOriginal->format(DATE_ATOM));
 
-        self::assertSame(400, $apiDocument->iso());
+        self::assertSame(400, $apiDocument->iso);
 
-        $exposure = $apiDocument->exposure();
+        $exposure = $apiDocument->exposure;
         self::assertSame(400, $exposure->iso);
 
-        $image = $apiDocument->image();
+        $image = $apiDocument->image;
         self::assertSame('Shot with ND filter', $image->userComment);
         self::assertSame('ASCII', $image->userCommentEncoding);
 
-        self::assertSame('Shot with ND filter', $apiDocument->userComment());
-        self::assertSame('ASCII', $apiDocument->userCommentEncoding());
+        self::assertSame('Shot with ND filter', $apiDocument->userComment);
+        self::assertSame('ASCII', $apiDocument->userCommentEncoding);
     }
 
     #[Test]
@@ -93,7 +93,7 @@ final class ExifDocumentFallbackTest extends TestCase
 
         $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
 
-        $preview = $apiDocument->preview();
+        $preview = $apiDocument->preview;
         self::assertNull($preview->previewCompression);
         self::assertNull($preview->previewScale);
         self::assertFalse($preview->hasPreview);
@@ -143,7 +143,7 @@ final class ExifDocumentFallbackTest extends TestCase
 
         $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, $thumbnailIfd));
 
-        $preview = $apiDocument->preview();
+        $preview = $apiDocument->preview;
 
         self::assertTrue($preview->hasThumbnail);
         self::assertTrue($preview->hasPreview);
@@ -209,7 +209,7 @@ final class ExifDocumentFallbackTest extends TestCase
             ],
         );
 
-        $preview = (new ApiStructuredExif($document))->preview();
+        $preview = (new ApiStructuredExif($document))->preview;
 
         self::assertTrue($preview->hasPreview);
         self::assertSame(1_024, $preview->previewWidth);
