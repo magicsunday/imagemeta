@@ -24,8 +24,8 @@ final class GpsCoordinateTest extends TestCase
     {
         $coordinate = new GpsCoordinate(15.75, null, true);
 
-        self::assertSame(15.75, $coordinate->value());
-        self::assertSame(15.75, $coordinate->signed());
+        self::assertSame(15.75, $coordinate->value);
+        self::assertSame(15.75, $coordinate->signed);
         self::assertSame('15.75°', (string) $coordinate);
     }
 
@@ -34,10 +34,10 @@ final class GpsCoordinateTest extends TestCase
     {
         $coordinate = new GpsCoordinate(42.0, 'west', false);
 
-        self::assertSame(42.0, $coordinate->value());
-        self::assertSame('W', $coordinate->reference());
-        self::assertSame(-42.0, $coordinate->signed());
+        self::assertSame(42.0, $coordinate->value);
+        self::assertSame('W', $coordinate->reference);
+        self::assertSame(-42.0, $coordinate->signed);
         self::assertSame('42° W', (string) $coordinate);
-        self::assertFalse($coordinate->isLatitude());
+        self::assertFalse($coordinate->isLatitude);
     }
 }

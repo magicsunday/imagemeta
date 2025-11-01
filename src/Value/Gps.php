@@ -13,13 +13,26 @@ namespace MagicSunday\ImageMeta\Value;
 
 use DateTimeImmutable;
 use DateTimeZone;
-use MagicSunday\ImageMeta\Value\Contracts\GpsInterface;
 
 /**
  * Describes the GPS position at capture time including navigation details.
  */
-final readonly class Gps implements GpsInterface
+final readonly class Gps
 {
+    public readonly ?DateTimeImmutable $timestamp;
+
+    public readonly ?float $latitudeSigned;
+
+    public readonly ?float $longitudeSigned;
+
+    public readonly ?GpsCoordinate $latitudeCoordinate;
+
+    public readonly ?GpsCoordinate $longitudeCoordinate;
+
+    public readonly ?GpsCoordinate $destinationLatitudeCoordinate;
+
+    public readonly ?GpsCoordinate $destinationLongitudeCoordinate;
+
     /**
      * @param float|null             $latitude                       Latitude in decimal degrees.
      * @param float|null             $longitude                      Longitude in decimal degrees.
@@ -62,402 +75,75 @@ final readonly class Gps implements GpsInterface
      * @param float|null             $horizontalPositioningError     Horizontal positioning error in metres.
      */
     public function __construct(
-        public ?float $latitude = null,
-        public ?float $longitude = null,
-        public ?string $latitudeRef = null,
-        public ?string $longitudeRef = null,
-        public ?float $altitude = null,
-        public ?int $altitudeRef = null,
-        public ?string $version = null,
-        public ?string $versionRaw = null,
-        public ?string $satellites = null,
-        public ?string $status = null,
-        public ?string $measureMode = null,
-        public ?float $dop = null,
-        public ?string $speedRef = null,
-        public ?float $speedMs = null,
-        public ?string $speedOriginalRef = null,
-        public ?float $speedOriginal = null,
-        public ?string $trackRef = null,
-        public ?float $track = null,
-        public ?string $imageDirectionRef = null,
-        public ?float $imageDirection = null,
-        public ?string $mapDatum = null,
-        public ?string $destinationLatitudeRef = null,
-        public ?float $destinationLatitude = null,
-        public ?string $destinationLongitudeRef = null,
-        public ?float $destinationLongitude = null,
-        public ?string $destinationBearingRef = null,
-        public ?float $destinationBearing = null,
-        public ?string $destinationDistanceRef = null,
-        public ?float $destinationDistanceMetres = null,
-        public ?string $destinationDistanceOriginalRef = null,
-        public ?float $destinationDistanceOriginal = null,
-        public ?string $processingMethod = null,
-        public ?string $areaInformation = null,
-        public ?string $date = null,
-        public ?string $dateRaw = null,
-        public ?string $time = null,
-        public ?DateTimeImmutable $timestamp = null,
-        public ?int $differential = null,
-        public ?float $horizontalPositioningError = null,
+        public readonly ?float $latitude = null,
+        public readonly ?float $longitude = null,
+        public readonly ?string $latitudeRef = null,
+        public readonly ?string $longitudeRef = null,
+        public readonly ?float $altitude = null,
+        public readonly ?int $altitudeRef = null,
+        public readonly ?string $version = null,
+        public readonly ?string $versionRaw = null,
+        public readonly ?string $satellites = null,
+        public readonly ?string $status = null,
+        public readonly ?string $measureMode = null,
+        public readonly ?float $dop = null,
+        public readonly ?string $speedRef = null,
+        public readonly ?float $speedMs = null,
+        public readonly ?string $speedOriginalRef = null,
+        public readonly ?float $speedOriginal = null,
+        public readonly ?string $trackRef = null,
+        public readonly ?float $track = null,
+        public readonly ?string $imageDirectionRef = null,
+        public readonly ?float $imageDirection = null,
+        public readonly ?string $mapDatum = null,
+        public readonly ?string $destinationLatitudeRef = null,
+        public readonly ?float $destinationLatitude = null,
+        public readonly ?string $destinationLongitudeRef = null,
+        public readonly ?float $destinationLongitude = null,
+        public readonly ?string $destinationBearingRef = null,
+        public readonly ?float $destinationBearing = null,
+        public readonly ?string $destinationDistanceRef = null,
+        public readonly ?float $destinationDistanceMetres = null,
+        public readonly ?string $destinationDistanceOriginalRef = null,
+        public readonly ?float $destinationDistanceOriginal = null,
+        public readonly ?string $processingMethod = null,
+        public readonly ?string $areaInformation = null,
+        public readonly ?string $date = null,
+        public readonly ?string $dateRaw = null,
+        public readonly ?string $time = null,
+        ?DateTimeImmutable $timestamp = null,
+        public readonly ?int $differential = null,
+        public readonly ?float $horizontalPositioningError = null,
     ) {
+        $this->timestamp                      = $this->normaliseTimestamp($timestamp);
+        $this->latitudeSigned                 = $this->signedCoordinate($this->latitude, $this->latitudeRef, 'S', 'N');
+        $this->longitudeSigned                = $this->signedCoordinate($this->longitude, $this->longitudeRef, 'W', 'E');
+        $this->latitudeCoordinate             = $this->createCoordinate($this->latitude, $this->latitudeRef, true);
+        $this->longitudeCoordinate            = $this->createCoordinate($this->longitude, $this->longitudeRef, false);
+        $this->destinationLatitudeCoordinate  = $this->createCoordinate($this->destinationLatitude, $this->destinationLatitudeRef, true);
+        $this->destinationLongitudeCoordinate = $this->createCoordinate($this->destinationLongitude, $this->destinationLongitudeRef, false);
     }
 
-    public function latitude(): ?float
+    private function normaliseTimestamp(?DateTimeImmutable $timestamp): ?DateTimeImmutable
     {
-        return $this->latitude;
-    }
-
-    public function longitude(): ?float
-    {
-        return $this->longitude;
-    }
-
-    public function latitudeReference(): ?string
-    {
-        return $this->latitudeRef;
-    }
-
-    /**
-     * @deprecated Use latitudeReference() instead.
-     */
-    public function latitudeRef(): ?string
-    {
-        return $this->latitudeRef;
-    }
-
-    public function longitudeReference(): ?string
-    {
-        return $this->longitudeRef;
-    }
-
-    /**
-     * @deprecated Use longitudeReference() instead.
-     */
-    public function longitudeRef(): ?string
-    {
-        return $this->longitudeRef;
-    }
-
-    public function altitude(): ?float
-    {
-        return $this->altitude;
-    }
-
-    public function altitudeReference(): ?int
-    {
-        return $this->altitudeRef;
-    }
-
-    /**
-     * @deprecated Use altitudeReference() instead.
-     */
-    public function altitudeRef(): ?int
-    {
-        return $this->altitudeRef;
-    }
-
-    public function version(): ?string
-    {
-        return $this->version;
-    }
-
-    public function versionRaw(): ?string
-    {
-        return $this->versionRaw;
-    }
-
-    public function satellites(): ?string
-    {
-        return $this->satellites;
-    }
-
-    public function status(): ?string
-    {
-        return $this->status;
-    }
-
-    public function measureMode(): ?string
-    {
-        return $this->measureMode;
-    }
-
-    public function dilutionOfPrecision(): ?float
-    {
-        return $this->dop;
-    }
-
-    /**
-     * @deprecated Use dilutionOfPrecision() instead.
-     */
-    public function dop(): ?float
-    {
-        return $this->dop;
-    }
-
-    public function speedReference(): ?string
-    {
-        return $this->speedRef;
-    }
-
-    /**
-     * @deprecated Use speedReference() instead.
-     */
-    public function speedRef(): ?string
-    {
-        return $this->speedRef;
-    }
-
-    public function speedMs(): ?float
-    {
-        return $this->speedMs;
-    }
-
-    public function speedOriginalReference(): ?string
-    {
-        return $this->speedOriginalRef;
-    }
-
-    /**
-     * @deprecated Use speedOriginalReference() instead.
-     */
-    public function speedOriginalRef(): ?string
-    {
-        return $this->speedOriginalRef;
-    }
-
-    public function speedOriginal(): ?float
-    {
-        return $this->speedOriginal;
-    }
-
-    public function trackReference(): ?string
-    {
-        return $this->trackRef;
-    }
-
-    /**
-     * @deprecated Use trackReference() instead.
-     */
-    public function trackRef(): ?string
-    {
-        return $this->trackRef;
-    }
-
-    public function track(): ?float
-    {
-        return $this->track;
-    }
-
-    public function imageDirectionReference(): ?string
-    {
-        return $this->imageDirectionRef;
-    }
-
-    /**
-     * @deprecated Use imageDirectionReference() instead.
-     */
-    public function imageDirectionRef(): ?string
-    {
-        return $this->imageDirectionRef;
-    }
-
-    public function imageDirection(): ?float
-    {
-        return $this->imageDirection;
-    }
-
-    public function mapDatum(): ?string
-    {
-        return $this->mapDatum;
-    }
-
-    public function destinationLatitudeReference(): ?string
-    {
-        return $this->destinationLatitudeRef;
-    }
-
-    /**
-     * @deprecated Use destinationLatitudeReference() instead.
-     */
-    public function destinationLatitudeRef(): ?string
-    {
-        return $this->destinationLatitudeRef;
-    }
-
-    public function destinationLatitude(): ?float
-    {
-        return $this->destinationLatitude;
-    }
-
-    public function destinationLongitudeReference(): ?string
-    {
-        return $this->destinationLongitudeRef;
-    }
-
-    /**
-     * @deprecated Use destinationLongitudeReference() instead.
-     */
-    public function destinationLongitudeRef(): ?string
-    {
-        return $this->destinationLongitudeRef;
-    }
-
-    public function destinationLongitude(): ?float
-    {
-        return $this->destinationLongitude;
-    }
-
-    public function destinationBearingReference(): ?string
-    {
-        return $this->destinationBearingRef;
-    }
-
-    /**
-     * @deprecated Use destinationBearingReference() instead.
-     */
-    public function destinationBearingRef(): ?string
-    {
-        return $this->destinationBearingRef;
-    }
-
-    public function destinationBearing(): ?float
-    {
-        return $this->destinationBearing;
-    }
-
-    public function destinationDistanceReference(): ?string
-    {
-        return $this->destinationDistanceRef;
-    }
-
-    /**
-     * @deprecated Use destinationDistanceReference() instead.
-     */
-    public function destinationDistanceRef(): ?string
-    {
-        return $this->destinationDistanceRef;
-    }
-
-    public function destinationDistanceMetres(): ?float
-    {
-        return $this->destinationDistanceMetres;
-    }
-
-    public function destinationDistanceOriginalReference(): ?string
-    {
-        return $this->destinationDistanceOriginalRef;
-    }
-
-    /**
-     * @deprecated Use destinationDistanceOriginalReference() instead.
-     */
-    public function destinationDistanceOriginalRef(): ?string
-    {
-        return $this->destinationDistanceOriginalRef;
-    }
-
-    public function destinationDistanceOriginal(): ?float
-    {
-        return $this->destinationDistanceOriginal;
-    }
-
-    public function processingMethod(): ?string
-    {
-        return $this->processingMethod;
-    }
-
-    public function areaInformation(): ?string
-    {
-        return $this->areaInformation;
-    }
-
-    public function date(): ?string
-    {
-        return $this->date;
-    }
-
-    public function dateRaw(): ?string
-    {
-        return $this->dateRaw;
-    }
-
-    public function time(): ?string
-    {
-        return $this->time;
-    }
-
-    /**
-     * Returns the combined capture timestamp normalised to UTC.
-     */
-    public function timestamp(): ?DateTimeImmutable
-    {
-        if ($this->timestamp === null) {
+        if ($timestamp === null) {
             return null;
         }
 
-        if ($this->timestamp->getTimezone()->getName() === 'UTC') {
-            return $this->timestamp;
+        if ($timestamp->getTimezone()->getName() === 'UTC') {
+            return $timestamp;
         }
 
-        return $this->timestamp->setTimezone(new DateTimeZone('UTC'));
+        return $timestamp->setTimezone(new DateTimeZone('UTC'));
     }
 
-    public function differential(): ?int
+    private function createCoordinate(?float $value, ?string $reference, bool $isLatitude): ?GpsCoordinate
     {
-        return $this->differential;
-    }
-
-    public function horizontalPositioningError(): ?float
-    {
-        return $this->horizontalPositioningError;
-    }
-
-    public function latitudeSigned(): ?float
-    {
-        return $this->signedCoordinate($this->latitude, $this->latitudeRef, 'S', 'N');
-    }
-
-    public function longitudeSigned(): ?float
-    {
-        return $this->signedCoordinate($this->longitude, $this->longitudeRef, 'W', 'E');
-    }
-
-    public function latitudeCoordinate(): ?GpsCoordinate
-    {
-        if ($this->latitude === null) {
+        if ($value === null) {
             return null;
         }
 
-        return new GpsCoordinate($this->latitude, $this->latitudeRef, true);
-    }
-
-    public function longitudeCoordinate(): ?GpsCoordinate
-    {
-        if ($this->longitude === null) {
-            return null;
-        }
-
-        return new GpsCoordinate($this->longitude, $this->longitudeRef, false);
-    }
-
-    public function destinationLatitudeCoordinate(): ?GpsCoordinate
-    {
-        if ($this->destinationLatitude === null) {
-            return null;
-        }
-
-        return new GpsCoordinate($this->destinationLatitude, $this->destinationLatitudeRef, true);
-    }
-
-    public function destinationLongitudeCoordinate(): ?GpsCoordinate
-    {
-        if ($this->destinationLongitude === null) {
-            return null;
-        }
-
-        return new GpsCoordinate($this->destinationLongitude, $this->destinationLongitudeRef, false);
+        return new GpsCoordinate($value, $reference, $isLatitude);
     }
 
     private function signedCoordinate(?float $value, ?string $reference, string $negativeReference, string $positiveReference): ?float

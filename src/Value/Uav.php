@@ -27,78 +27,14 @@ final readonly class Uav
      * @param float|null  $gimbalRoll   Gimbal roll angle in degrees.
      */
     public function __construct(
-        public ?string $manufacturer,
-        public ?string $model,
-        public ?float $flightYaw,
-        public ?float $flightPitch,
-        public ?float $flightRoll,
-        public ?float $gimbalYaw,
-        public ?float $gimbalPitch,
-        public ?float $gimbalRoll,
+        public readonly ?string $manufacturer,
+        public readonly ?string $model,
+        public readonly ?float $flightYaw,
+        public readonly ?float $flightPitch,
+        public readonly ?float $flightRoll,
+        public readonly ?float $gimbalYaw,
+        public readonly ?float $gimbalPitch,
+        public readonly ?float $gimbalRoll,
     ) {
-    }
-
-    /**
-     * Returns the drone manufacturer name.
-     */
-    public function manufacturer(): ?string
-    {
-        return $this->manufacturer;
-    }
-
-    /**
-     * Returns the drone model name.
-     */
-    public function model(): ?string
-    {
-        return $this->model;
-    }
-
-    /**
-     * Returns the flight yaw angle in degrees.
-     */
-    public function flightYaw(): ?float
-    {
-        return $this->flightYaw;
-    }
-
-    /**
-     * Returns the flight pitch angle in degrees.
-     */
-    public function flightPitch(): ?float
-    {
-        return $this->flightPitch;
-    }
-
-    /**
-     * Returns the flight roll angle in degrees.
-     */
-    public function flightRoll(): ?float
-    {
-        return $this->flightRoll;
-    }
-
-    /**
-     * Returns the gimbal yaw angle in degrees.
-     */
-    public function gimbalYaw(): ?float
-    {
-        return $this->gimbalYaw;
-    }
-
-    /**
-     * Returns the gimbal pitch angle in degrees.
-     */
-    public function gimbalPitch(): ?float
-    {
-        return $this->gimbalPitch;
-    }
-
-    /**
-     * Returns the gimbal roll angle in degrees.
-     */
-    public function gimbalRoll(): ?float
-    {
-        return $this->gimbalRoll;
     }
 }

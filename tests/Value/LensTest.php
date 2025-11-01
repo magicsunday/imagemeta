@@ -35,18 +35,11 @@ final class LensTest extends TestCase
         );
 
         self::assertSame('Canon', $lens->lensMake);
-        self::assertSame('Canon', $lens->lensMake());
         self::assertSame('EF 35-105mm', $lens->lensModel);
-        self::assertSame('EF 35-105mm', $lens->lensModel());
         self::assertSame('LN123', $lens->lensSerialNumber);
-        self::assertSame('LN123', $lens->lensSerialNumber());
         self::assertSame(85.0, $lens->focalLengthMm);
-        self::assertSame(85.0, $lens->focalLengthMm());
         self::assertSame(80, $lens->focalLengthIn35mm);
-        self::assertSame(80, $lens->focalLengthIn35mm());
         self::assertSame(2.0, $lens->maxApertureFNumber);
-        self::assertSame(2.0, $lens->maxApertureFNumber());
         self::assertSame($specification, $lens->lensSpecification);
-        self::assertSame($specification, $lens->lensSpecification());
     }
 }

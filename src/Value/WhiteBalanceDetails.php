@@ -25,42 +25,10 @@ final readonly class WhiteBalanceDetails
      * @param float|null        $bgGain Blue/green channel gain ratio.
      */
     public function __construct(
-        public ?WhiteBalance $mode,
-        public ?int $kelvin,
-        public ?float $rgGain,
-        public ?float $bgGain,
+        public readonly ?WhiteBalance $mode,
+        public readonly ?int $kelvin,
+        public readonly ?float $rgGain,
+        public readonly ?float $bgGain,
     ) {
-    }
-
-    /**
-     * Returns the selected white balance mode.
-     */
-    public function mode(): ?WhiteBalance
-    {
-        return $this->mode;
-    }
-
-    /**
-     * Returns the colour temperature in Kelvin.
-     */
-    public function kelvin(): ?int
-    {
-        return $this->kelvin;
-    }
-
-    /**
-     * Returns the red/green channel gain ratio.
-     */
-    public function rgGain(): ?float
-    {
-        return $this->rgGain;
-    }
-
-    /**
-     * Returns the blue/green channel gain ratio.
-     */
-    public function bgGain(): ?float
-    {
-        return $this->bgGain;
     }
 }

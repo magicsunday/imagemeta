@@ -25,60 +25,12 @@ final readonly class Focus
      * @param string|null $afMode           Active auto focus mode name.
      */
     public function __construct(
-        public ?float $subjectDistanceM,
-        public ?int $subjectAreaX,
-        public ?int $subjectAreaY,
-        public ?int $subjectAreaW,
-        public ?int $subjectAreaH,
-        public ?string $afMode,
+        public readonly ?float $subjectDistanceM,
+        public readonly ?int $subjectAreaX,
+        public readonly ?int $subjectAreaY,
+        public readonly ?int $subjectAreaW,
+        public readonly ?int $subjectAreaH,
+        public readonly ?string $afMode,
     ) {
-    }
-
-    /**
-     * Returns the focus distance to the subject in metres.
-     */
-    public function subjectDistanceM(): ?float
-    {
-        return $this->subjectDistanceM;
-    }
-
-    /**
-     * Returns the normalised subject area X origin.
-     */
-    public function subjectAreaX(): ?int
-    {
-        return $this->subjectAreaX;
-    }
-
-    /**
-     * Returns the normalised subject area Y origin.
-     */
-    public function subjectAreaY(): ?int
-    {
-        return $this->subjectAreaY;
-    }
-
-    /**
-     * Returns the normalised subject area width.
-     */
-    public function subjectAreaW(): ?int
-    {
-        return $this->subjectAreaW;
-    }
-
-    /**
-     * Returns the normalised subject area height.
-     */
-    public function subjectAreaH(): ?int
-    {
-        return $this->subjectAreaH;
-    }
-
-    /**
-     * Returns the active auto focus mode name.
-     */
-    public function afMode(): ?string
-    {
-        return $this->afMode;
     }
 }

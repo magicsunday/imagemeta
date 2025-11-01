@@ -32,87 +32,19 @@ final readonly class ProcessingSettings
      * @param string|null     $processingSoftware       Final processing software recorded by the camera.
      */
     public function __construct(
-        public ?Sharpness $sharpness,
-        public ?Contrast $contrast,
-        public ?Saturation $saturation,
-        public ?string $pictureStyle,
-        public ?float $noiseReduction,
-        public ?int $clarity,
-        public ?int $customRendered,
-        public ?string $deviceSettingDescription,
-        public ?string $processingSoftware,
+        public readonly ?Sharpness $sharpness,
+        public readonly ?Contrast $contrast,
+        public readonly ?Saturation $saturation,
+        public readonly ?string $pictureStyle,
+        public readonly ?float $noiseReduction,
+        public readonly ?int $clarity,
+        public readonly ?int $customRendered,
+        public readonly ?string $deviceSettingDescription,
+        public readonly ?string $processingSoftware,
     ) {
-    }
-
-    /**
-     * Returns the sharpness adjustment level.
-     */
-    public function sharpness(): ?Sharpness
-    {
-        return $this->sharpness;
-    }
-
-    /**
-     * Returns the contrast adjustment level.
-     */
-    public function contrast(): ?Contrast
-    {
-        return $this->contrast;
-    }
-
-    /**
-     * Returns the saturation adjustment level.
-     */
-    public function saturation(): ?Saturation
-    {
-        return $this->saturation;
-    }
-
-    /**
-     * Returns the vendor specific picture style identifier.
-     */
-    public function pictureStyle(): ?string
-    {
-        return $this->pictureStyle;
-    }
-
-    /**
-     * Returns the noise reduction strength reported by the camera.
-     */
-    public function noiseReduction(): ?float
-    {
-        return $this->noiseReduction;
-    }
-
-    /**
-     * Returns the clarity adjustment level.
-     */
-    public function clarity(): ?int
-    {
-        return $this->clarity;
     }
 
     /**
      * Indicates whether a custom rendering was applied in-camera.
      */
-    public function customRendered(): ?int
-    {
-        return $this->customRendered;
-    }
-
-    /**
-     * Returns the binary device setting description payload.
-     */
-    public function deviceSettingDescription(): ?string
-    {
-        return $this->deviceSettingDescription;
-    }
-
-    /**
-     * Returns the final processing software recorded by the camera.
-     */
-    public function processingSoftware(): ?string
-    {
-        return $this->processingSoftware;
-    }
 }

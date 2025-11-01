@@ -28,87 +28,15 @@ final readonly class Region
      * @param string|null     $faceId      Optional identifier emitted by face detection engines.
      */
     public function __construct(
-        public ?RegionType $type,
-        public float $x,
-        public float $y,
-        public float $w,
-        public float $h,
-        public ?string $personName = null,
-        public ?float $confidence = null,
-        public ?float $rotationDeg = null,
-        public ?string $faceId = null,
+        public readonly ?RegionType $type,
+        public readonly float $x,
+        public readonly float $y,
+        public readonly float $w,
+        public readonly float $h,
+        public readonly ?string $personName = null,
+        public readonly ?float $confidence = null,
+        public readonly ?float $rotationDeg = null,
+        public readonly ?string $faceId = null,
     ) {
-    }
-
-    /**
-     * Returns the semantic classification of the region.
-     */
-    public function type(): ?RegionType
-    {
-        return $this->type;
-    }
-
-    /**
-     * Returns the normalised X coordinate of the top left corner.
-     */
-    public function x(): float
-    {
-        return $this->x;
-    }
-
-    /**
-     * Returns the normalised Y coordinate of the top left corner.
-     */
-    public function y(): float
-    {
-        return $this->y;
-    }
-
-    /**
-     * Returns the normalised region width.
-     */
-    public function w(): float
-    {
-        return $this->w;
-    }
-
-    /**
-     * Returns the normalised region height.
-     */
-    public function h(): float
-    {
-        return $this->h;
-    }
-
-    /**
-     * Returns the associated person name when the region marks a face.
-     */
-    public function personName(): ?string
-    {
-        return $this->personName;
-    }
-
-    /**
-     * Returns the detection confidence value if provided.
-     */
-    public function confidence(): ?float
-    {
-        return $this->confidence;
-    }
-
-    /**
-     * Returns the rotation angle in degrees, positive values rotate clockwise.
-     */
-    public function rotationDeg(): ?float
-    {
-        return $this->rotationDeg;
-    }
-
-    /**
-     * Returns the optional identifier emitted by face detection engines.
-     */
-    public function faceId(): ?string
-    {
-        return $this->faceId;
     }
 }

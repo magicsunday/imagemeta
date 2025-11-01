@@ -24,36 +24,11 @@ final readonly class Interop
      * @param int|null    $relatedImageLength     Pixel length of the related image asset.
      */
     public function __construct(
-        public ?string $index,
-        public ?string $version,
-        public ?string $relatedImageFileFormat = null,
-        public ?int $relatedImageWidth = null,
-        public ?int $relatedImageLength = null,
+        public readonly ?string $index,
+        public readonly ?string $version,
+        public readonly ?string $relatedImageFileFormat = null,
+        public readonly ?int $relatedImageWidth = null,
+        public readonly ?int $relatedImageLength = null,
     ) {
-    }
-
-    public function index(): ?string
-    {
-        return $this->index;
-    }
-
-    public function version(): ?string
-    {
-        return $this->version;
-    }
-
-    public function relatedImageFileFormat(): ?string
-    {
-        return $this->relatedImageFileFormat;
-    }
-
-    public function relatedImageWidth(): ?int
-    {
-        return $this->relatedImageWidth;
-    }
-
-    public function relatedImageLength(): ?int
-    {
-        return $this->relatedImageLength;
     }
 }

@@ -28,87 +28,15 @@ final readonly class Motion
      * @param float|null $gyroZ    Gyroscope reading around the Z axis.
      */
     public function __construct(
-        public ?float $rollDeg,
-        public ?float $pitchDeg,
-        public ?float $yawDeg,
-        public ?float $accelX,
-        public ?float $accelY,
-        public ?float $accelZ,
-        public ?float $gyroX,
-        public ?float $gyroY,
-        public ?float $gyroZ,
+        public readonly ?float $rollDeg,
+        public readonly ?float $pitchDeg,
+        public readonly ?float $yawDeg,
+        public readonly ?float $accelX,
+        public readonly ?float $accelY,
+        public readonly ?float $accelZ,
+        public readonly ?float $gyroX,
+        public readonly ?float $gyroY,
+        public readonly ?float $gyroZ,
     ) {
-    }
-
-    /**
-     * Returns the roll angle in degrees.
-     */
-    public function rollDeg(): ?float
-    {
-        return $this->rollDeg;
-    }
-
-    /**
-     * Returns the pitch angle in degrees.
-     */
-    public function pitchDeg(): ?float
-    {
-        return $this->pitchDeg;
-    }
-
-    /**
-     * Returns the yaw angle in degrees.
-     */
-    public function yawDeg(): ?float
-    {
-        return $this->yawDeg;
-    }
-
-    /**
-     * Returns the acceleration along the X axis.
-     */
-    public function accelX(): ?float
-    {
-        return $this->accelX;
-    }
-
-    /**
-     * Returns the acceleration along the Y axis.
-     */
-    public function accelY(): ?float
-    {
-        return $this->accelY;
-    }
-
-    /**
-     * Returns the acceleration along the Z axis.
-     */
-    public function accelZ(): ?float
-    {
-        return $this->accelZ;
-    }
-
-    /**
-     * Returns the gyroscope reading around the X axis.
-     */
-    public function gyroX(): ?float
-    {
-        return $this->gyroX;
-    }
-
-    /**
-     * Returns the gyroscope reading around the Y axis.
-     */
-    public function gyroY(): ?float
-    {
-        return $this->gyroY;
-    }
-
-    /**
-     * Returns the gyroscope reading around the Z axis.
-     */
-    public function gyroZ(): ?float
-    {
-        return $this->gyroZ;
     }
 }

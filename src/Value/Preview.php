@@ -11,14 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use MagicSunday\ImageMeta\Value\Contracts\PreviewInterface;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 
 /**
  * Describes the availability of embedded previews or thumbnails.
  */
-final readonly class Preview implements PreviewInterface
+final readonly class Preview
 {
     /**
      * @param bool|null        $hasThumbnail             Whether an embedded thumbnail exists.
@@ -46,168 +45,29 @@ final readonly class Preview implements PreviewInterface
      * @param list<int>|null   $previewTileByteCounts    Tile byte counts describing the EXIF 3.0 preview payload.
      */
     public function __construct(
-        public ?bool $hasThumbnail,
-        public ?bool $hasPreview,
-        public ?int $previewWidth,
-        public ?int $previewHeight,
-        public ?ColorSpace $previewColorSpace,
-        public ?int $previewBitDepth,
-        public ?Compression $previewCompression,
-        public ?float $previewScale,
-        public ?string $previewEncoding,
-        public ?string $previewMimeType,
-        public ?int $previewOffset,
-        public ?int $previewLength,
-        public ?int $thumbnailOffset = null,
-        public ?int $thumbnailLength = null,
-        public ?Compression $thumbnailCompression = null,
-        public ?array $thumbnailStripOffsets = null,
-        public ?array $thumbnailStripByteCounts = null,
-        public ?array $thumbnailTileOffsets = null,
-        public ?array $thumbnailTileByteCounts = null,
-        public ?array $previewStripOffsets = null,
-        public ?array $previewStripByteCounts = null,
-        public ?array $previewTileOffsets = null,
-        public ?array $previewTileByteCounts = null,
+        public readonly ?bool $hasThumbnail,
+        public readonly ?bool $hasPreview,
+        public readonly ?int $previewWidth,
+        public readonly ?int $previewHeight,
+        public readonly ?ColorSpace $previewColorSpace,
+        public readonly ?int $previewBitDepth,
+        public readonly ?Compression $previewCompression,
+        public readonly ?float $previewScale,
+        public readonly ?string $previewEncoding,
+        public readonly ?string $previewMimeType,
+        public readonly ?int $previewOffset,
+        public readonly ?int $previewLength,
+        public readonly ?int $thumbnailOffset = null,
+        public readonly ?int $thumbnailLength = null,
+        public readonly ?Compression $thumbnailCompression = null,
+        public readonly ?array $thumbnailStripOffsets = null,
+        public readonly ?array $thumbnailStripByteCounts = null,
+        public readonly ?array $thumbnailTileOffsets = null,
+        public readonly ?array $thumbnailTileByteCounts = null,
+        public readonly ?array $previewStripOffsets = null,
+        public readonly ?array $previewStripByteCounts = null,
+        public readonly ?array $previewTileOffsets = null,
+        public readonly ?array $previewTileByteCounts = null,
     ) {
-    }
-
-    public function hasThumbnail(): ?bool
-    {
-        return $this->hasThumbnail;
-    }
-
-    public function hasPreview(): ?bool
-    {
-        return $this->hasPreview;
-    }
-
-    public function previewWidth(): ?int
-    {
-        return $this->previewWidth;
-    }
-
-    public function previewHeight(): ?int
-    {
-        return $this->previewHeight;
-    }
-
-    public function previewColorSpace(): ?ColorSpace
-    {
-        return $this->previewColorSpace;
-    }
-
-    public function previewBitDepth(): ?int
-    {
-        return $this->previewBitDepth;
-    }
-
-    public function previewCompression(): ?Compression
-    {
-        return $this->previewCompression;
-    }
-
-    public function previewScale(): ?float
-    {
-        return $this->previewScale;
-    }
-
-    public function previewEncoding(): ?string
-    {
-        return $this->previewEncoding;
-    }
-
-    public function previewMimeType(): ?string
-    {
-        return $this->previewMimeType;
-    }
-
-    public function previewOffset(): ?int
-    {
-        return $this->previewOffset;
-    }
-
-    public function previewLength(): ?int
-    {
-        return $this->previewLength;
-    }
-
-    public function thumbnailOffset(): ?int
-    {
-        return $this->thumbnailOffset;
-    }
-
-    public function thumbnailLength(): ?int
-    {
-        return $this->thumbnailLength;
-    }
-
-    public function thumbnailCompression(): ?Compression
-    {
-        return $this->thumbnailCompression;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function thumbnailStripOffsets(): ?array
-    {
-        return $this->thumbnailStripOffsets;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function thumbnailStripByteCounts(): ?array
-    {
-        return $this->thumbnailStripByteCounts;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function thumbnailTileOffsets(): ?array
-    {
-        return $this->thumbnailTileOffsets;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function thumbnailTileByteCounts(): ?array
-    {
-        return $this->thumbnailTileByteCounts;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function previewStripOffsets(): ?array
-    {
-        return $this->previewStripOffsets;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function previewStripByteCounts(): ?array
-    {
-        return $this->previewStripByteCounts;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function previewTileOffsets(): ?array
-    {
-        return $this->previewTileOffsets;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function previewTileByteCounts(): ?array
-    {
-        return $this->previewTileByteCounts;
     }
 }

@@ -11,14 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use MagicSunday\ImageMeta\Value\Contracts\CameraInterface;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 
 /**
  * Captures camera specific information.
  */
-final readonly class Camera implements CameraInterface
+final readonly class Camera
 {
     /**
      * @param string|null        $make          Camera manufacturer.
@@ -30,48 +29,13 @@ final readonly class Camera implements CameraInterface
      * @param SensingMethod|null $sensingMethod Sensor sampling method.
      */
     public function __construct(
-        public ?string $make,
-        public ?string $model,
-        public ?string $ownerName,
-        public ?string $serialNumber,
-        public ?string $firmware,
-        public ?FileSource $fileSource,
-        public ?SensingMethod $sensingMethod,
+        public readonly ?string $make,
+        public readonly ?string $model,
+        public readonly ?string $ownerName,
+        public readonly ?string $serialNumber,
+        public readonly ?string $firmware,
+        public readonly ?FileSource $fileSource,
+        public readonly ?SensingMethod $sensingMethod,
     ) {
-    }
-
-    public function make(): ?string
-    {
-        return $this->make;
-    }
-
-    public function model(): ?string
-    {
-        return $this->model;
-    }
-
-    public function ownerName(): ?string
-    {
-        return $this->ownerName;
-    }
-
-    public function serialNumber(): ?string
-    {
-        return $this->serialNumber;
-    }
-
-    public function firmware(): ?string
-    {
-        return $this->firmware;
-    }
-
-    public function fileSource(): ?FileSource
-    {
-        return $this->fileSource;
-    }
-
-    public function sensingMethod(): ?SensingMethod
-    {
-        return $this->sensingMethod;
     }
 }

@@ -19,17 +19,7 @@ final readonly class FlashPix
     /**
      * @param array<int, string> $streams Concatenated FlashPix extension streams keyed by stream identifier.
      */
-    public function __construct(public array $streams)
+    public function __construct(public readonly array $streams)
     {
-    }
-
-    /**
-     * Returns the concatenated FlashPix extension streams keyed by identifier.
-     *
-     * @return array<int, string>
-     */
-    public function streams(): array
-    {
-        return $this->streams;
     }
 }

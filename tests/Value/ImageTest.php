@@ -45,34 +45,19 @@ final class ImageTest extends TestCase
         );
 
         self::assertSame(6000, $image->width);
-        self::assertSame(6000, $image->width());
         self::assertSame(4000, $image->height);
-        self::assertSame(4000, $image->height());
         self::assertSame(Orientation::RIGHT_TOP, $image->orientation);
-        self::assertSame(Orientation::RIGHT_TOP, $image->orientation());
         self::assertSame(14, $image->bitsPerSample);
-        self::assertSame(14, $image->bitsPerSample());
         self::assertSame(ColorSpace::ADOBE_RGB, $image->colorSpace);
-        self::assertSame(ColorSpace::ADOBE_RGB, $image->colorSpace());
         self::assertSame('unique-id', $image->imageUniqueId);
-        self::assertSame('unique-id', $image->imageUniqueId());
         self::assertSame(42, $image->imageNumber);
-        self::assertSame(42, $image->imageNumber());
         self::assertSame('IMG_0042', $image->documentName);
-        self::assertSame('IMG_0042', $image->documentName());
         self::assertSame('Sunrise', $image->description);
-        self::assertSame('Sunrise', $image->description());
         self::assertSame('Sunrise over Mountains', $image->title);
-        self::assertSame('Sunrise over Mountains', $image->title());
         self::assertSame($components, $image->componentsConfiguration);
-        self::assertSame($components, $image->componentsConfiguration());
         self::assertSame(3.2, $image->compressedBitsPerPixel);
-        self::assertSame(3.2, $image->compressedBitsPerPixel());
         self::assertSame(1, $image->interlace);
-        self::assertSame(1, $image->interlace());
         self::assertSame('Captured with tripod', $image->userComment);
-        self::assertSame('Captured with tripod', $image->userComment());
         self::assertSame('ASCII', $image->userCommentEncoding);
-        self::assertSame('ASCII', $image->userCommentEncoding());
     }
 }

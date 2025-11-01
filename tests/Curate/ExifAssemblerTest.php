@@ -301,14 +301,14 @@ final class ExifAssemblerTest extends TestCase
 
         self::assertSame('EF 85mm f/1.4L', $structured->lens->lensModel);
         self::assertSame(85.0, $structured->lens->focalLengthMm);
-        self::assertSame(85, $structured->lens->focalLengthIn35mm ?? $structured->derived->equivalent35mm());
+        self::assertSame(85, $structured->lens->focalLengthIn35mm ?? $structured->derived->equivalent35mm);
         self::assertSame([35.0, 4.0, 150.0, 5.6], $structured->lens->lensSpecification);
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
-        self::assertEqualsWithDelta(43.09095238095239, $structured->derived->hyperfocalDistanceMetres(), 1e-6);
-        self::assertEqualsWithDelta(28.558322, $structured->derived->fieldOfViewDiagonalDeg(), 1e-6);
-        self::assertEqualsWithDelta(23.913168, $structured->derived->fieldOfViewHorizontalDeg(), 1e-6);
-        self::assertEqualsWithDelta(16.071421, $structured->derived->fieldOfViewVerticalDeg(), 1e-6);
+        self::assertEqualsWithDelta(43.09095238095239, $structured->derived->hyperfocalDistanceMetres, 1e-6);
+        self::assertEqualsWithDelta(28.558322, $structured->derived->fieldOfViewDiagonalDeg, 1e-6);
+        self::assertEqualsWithDelta(23.913168, $structured->derived->fieldOfViewHorizontalDeg, 1e-6);
+        self::assertEqualsWithDelta(16.071421, $structured->derived->fieldOfViewVerticalDeg, 1e-6);
         self::assertEqualsWithDelta(1.0, $structured->derived->cropFactor, 1e-6);
 
         self::assertSame(6720, $structured->image->width);
@@ -2083,7 +2083,8 @@ final class ExifAssemblerTest extends TestCase
         self::assertNotNull($profile->toneCurve);
         self::assertSame([[0.0, 0.0], [0.5, 0.6]], $profile->toneCurve->points);
         self::assertNotNull($profile->gainMap);
-        self::assertSame('ProfileGainTableMap', $profile->gainMap->label());
+        self::assertNotNull($profile->gainMap);
+        self::assertSame('ProfileGainTableMap', $profile->gainMap->tag->label());
         self::assertSame([1.0, 1.05, 0.95, 1.1], $profile->gainMap->values);
     }
 
@@ -2103,10 +2104,10 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('K', $structured->gps->speedReference());
-        self::assertEqualsWithDelta(33.3333333, $structured->gps->speedMs(), 1e-6);
-        self::assertSame('K', $structured->gps->speedOriginalReference());
-        self::assertEqualsWithDelta(120.0, $structured->gps->speedOriginal(), 1e-6);
+        self::assertSame('K', $structured->gps->speedRef);
+        self::assertEqualsWithDelta(33.3333333, $structured->gps->speedMs, 1e-6);
+        self::assertSame('K', $structured->gps->speedOriginalRef);
+        self::assertEqualsWithDelta(120.0, $structured->gps->speedOriginal, 1e-6);
     }
 
     /**
@@ -2200,51 +2201,51 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $latitude = $this->assertGpsCoordinate($structured->gps->latitudeCoordinate());
-        self::assertSame('N', $latitude->reference());
-        self::assertEqualsWithDelta(51.5, $latitude->signed(), 1e-6);
+        $latitude = $this->assertGpsCoordinate($structured->gps->latitudeCoordinate);
+        self::assertSame('N', $latitude->reference);
+        self::assertEqualsWithDelta(51.5, $latitude->signed, 1e-6);
 
-        $longitude = $this->assertGpsCoordinate($structured->gps->longitudeCoordinate());
-        self::assertSame('E', $longitude->reference());
-        self::assertEqualsWithDelta(8.5, $longitude->signed(), 1e-6);
-        self::assertSame(0, $structured->gps->altitudeReference());
-        self::assertEqualsWithDelta(150.0, $structured->gps->altitude(), 1e-6);
-        self::assertSame('3.0.0.0', $structured->gps->version());
-        self::assertSame('05', $structured->gps->satellites());
-        self::assertSame('A', $structured->gps->status());
-        self::assertSame('3', $structured->gps->measureMode());
-        self::assertEqualsWithDelta(2.5, $structured->gps->dilutionOfPrecision(), 1e-6);
-        self::assertSame('K', $structured->gps->speedReference());
-        self::assertEqualsWithDelta(20.0, $structured->gps->speedMs(), 1e-6);
-        self::assertSame('K', $structured->gps->speedOriginalReference());
-        self::assertEqualsWithDelta(72.0, $structured->gps->speedOriginal(), 1e-6);
-        self::assertSame('T', $structured->gps->trackReference());
-        self::assertEqualsWithDelta(123.45, $structured->gps->track(), 1e-6);
-        self::assertSame('M', $structured->gps->imageDirectionReference());
-        self::assertEqualsWithDelta(250.0, $structured->gps->imageDirection(), 1e-6);
-        self::assertSame('WGS-84', $structured->gps->mapDatum());
-        $destinationLatitude = $this->assertGpsCoordinate($structured->gps->destinationLatitudeCoordinate());
-        self::assertSame('N', $destinationLatitude->reference());
-        self::assertEqualsWithDelta(41.0, $destinationLatitude->signed(), 1e-6);
+        $longitude = $this->assertGpsCoordinate($structured->gps->longitudeCoordinate);
+        self::assertSame('E', $longitude->reference);
+        self::assertEqualsWithDelta(8.5, $longitude->signed, 1e-6);
+        self::assertSame(0, $structured->gps->altitudeRef);
+        self::assertEqualsWithDelta(150.0, $structured->gps->altitude, 1e-6);
+        self::assertSame('3.0.0.0', $structured->gps->version);
+        self::assertSame('05', $structured->gps->satellites);
+        self::assertSame('A', $structured->gps->status);
+        self::assertSame('3', $structured->gps->measureMode);
+        self::assertEqualsWithDelta(2.5, $structured->gps->dop, 1e-6);
+        self::assertSame('K', $structured->gps->speedRef);
+        self::assertEqualsWithDelta(20.0, $structured->gps->speedMs, 1e-6);
+        self::assertSame('K', $structured->gps->speedOriginalRef);
+        self::assertEqualsWithDelta(72.0, $structured->gps->speedOriginal, 1e-6);
+        self::assertSame('T', $structured->gps->trackRef);
+        self::assertEqualsWithDelta(123.45, $structured->gps->track, 1e-6);
+        self::assertSame('M', $structured->gps->imageDirectionRef);
+        self::assertEqualsWithDelta(250.0, $structured->gps->imageDirection, 1e-6);
+        self::assertSame('WGS-84', $structured->gps->mapDatum);
+        $destinationLatitude = $this->assertGpsCoordinate($structured->gps->destinationLatitudeCoordinate);
+        self::assertSame('N', $destinationLatitude->reference);
+        self::assertEqualsWithDelta(41.0, $destinationLatitude->signed, 1e-6);
 
-        $destinationLongitude = $this->assertGpsCoordinate($structured->gps->destinationLongitudeCoordinate());
-        self::assertSame('E', $destinationLongitude->reference());
-        self::assertEqualsWithDelta(8.5, $destinationLongitude->signed(), 1e-6);
-        self::assertSame('T', $structured->gps->destinationBearingReference());
-        self::assertEqualsWithDelta(123.0, $structured->gps->destinationBearing(), 1e-6);
-        self::assertSame('K', $structured->gps->destinationDistanceReference());
-        self::assertEqualsWithDelta(42000.0, $structured->gps->destinationDistanceMetres(), 1e-6);
-        self::assertSame('K', $structured->gps->destinationDistanceOriginalReference());
-        self::assertEqualsWithDelta(42.0, $structured->gps->destinationDistanceOriginal(), 1e-6);
-        self::assertSame('NETWORK', $structured->gps->processingMethod());
-        self::assertSame('AreaName', $structured->gps->areaInformation());
-        self::assertSame('2024-05-06', $structured->gps->date());
-        self::assertSame('12:34:56.789', $structured->gps->time());
-        $timestamp = $structured->gps->timestamp();
+        $destinationLongitude = $this->assertGpsCoordinate($structured->gps->destinationLongitudeCoordinate);
+        self::assertSame('E', $destinationLongitude->reference);
+        self::assertEqualsWithDelta(8.5, $destinationLongitude->signed, 1e-6);
+        self::assertSame('T', $structured->gps->destinationBearingRef);
+        self::assertEqualsWithDelta(123.0, $structured->gps->destinationBearing, 1e-6);
+        self::assertSame('K', $structured->gps->destinationDistanceRef);
+        self::assertEqualsWithDelta(42000.0, $structured->gps->destinationDistanceMetres, 1e-6);
+        self::assertSame('K', $structured->gps->destinationDistanceOriginalRef);
+        self::assertEqualsWithDelta(42.0, $structured->gps->destinationDistanceOriginal, 1e-6);
+        self::assertSame('NETWORK', $structured->gps->processingMethod);
+        self::assertSame('AreaName', $structured->gps->areaInformation);
+        self::assertSame('2024-05-06', $structured->gps->date);
+        self::assertSame('12:34:56.789', $structured->gps->time);
+        $timestamp = $structured->gps->timestamp;
         self::assertInstanceOf(DateTimeImmutable::class, $timestamp);
         self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
-        self::assertSame(2, $structured->gps->differential());
-        self::assertEqualsWithDelta(1.5, $structured->gps->horizontalPositioningError(), 1e-6);
+        self::assertSame(2, $structured->gps->differential);
+        self::assertEqualsWithDelta(1.5, $structured->gps->horizontalPositioningError, 1e-6);
     }
 
     /**

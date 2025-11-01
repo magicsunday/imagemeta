@@ -66,11 +66,11 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertSame(400, $apiDocument->iso());
 
         $exposure = $apiDocument->exposure();
-        self::assertSame(400, $exposure->iso());
+        self::assertSame(400, $exposure->iso);
 
         $image = $apiDocument->image();
-        self::assertSame('Shot with ND filter', $image->userComment());
-        self::assertSame('ASCII', $image->userCommentEncoding());
+        self::assertSame('Shot with ND filter', $image->userComment);
+        self::assertSame('ASCII', $image->userCommentEncoding);
 
         self::assertSame('Shot with ND filter', $apiDocument->userComment());
         self::assertSame('ASCII', $apiDocument->userCommentEncoding());
@@ -94,16 +94,16 @@ final class ExifDocumentFallbackTest extends TestCase
         $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
 
         $preview = $apiDocument->preview();
-        self::assertNull($preview->previewCompression());
-        self::assertNull($preview->previewScale());
-        self::assertFalse($preview->hasPreview());
-        self::assertNull($preview->previewWidth());
-        self::assertNull($preview->previewHeight());
-        self::assertNull($preview->previewBitDepth());
-        self::assertNull($preview->previewEncoding());
-        self::assertNull($preview->previewMimeType());
-        self::assertNull($preview->previewOffset());
-        self::assertNull($preview->previewLength());
+        self::assertNull($preview->previewCompression);
+        self::assertNull($preview->previewScale);
+        self::assertFalse($preview->hasPreview);
+        self::assertNull($preview->previewWidth);
+        self::assertNull($preview->previewHeight);
+        self::assertNull($preview->previewBitDepth);
+        self::assertNull($preview->previewEncoding);
+        self::assertNull($preview->previewMimeType);
+        self::assertNull($preview->previewOffset);
+        self::assertNull($preview->previewLength);
     }
 
     #[Test]
@@ -145,27 +145,27 @@ final class ExifDocumentFallbackTest extends TestCase
 
         $preview = $apiDocument->preview();
 
-        self::assertTrue($preview->hasThumbnail());
-        self::assertTrue($preview->hasPreview());
-        self::assertSame(1_600, $preview->previewWidth());
-        self::assertSame(900, $preview->previewHeight());
-        self::assertSame(65_536, $preview->previewOffset());
-        self::assertSame(32_768, $preview->previewLength());
-        self::assertSame('JPEG', $preview->previewEncoding());
-        self::assertSame('image/jpeg', $preview->previewMimeType());
-        self::assertSame(Compression::JPEG, $preview->previewCompression());
-        self::assertEqualsWithDelta(0.5, $preview->previewScale() ?? 0.0, 1e-6);
-        self::assertSame(8_192, $preview->thumbnailOffset());
-        self::assertSame(2_048, $preview->thumbnailLength());
-        self::assertSame(Compression::JPEG, $preview->thumbnailCompression());
-        self::assertNull($preview->thumbnailStripOffsets());
-        self::assertNull($preview->thumbnailStripByteCounts());
-        self::assertNull($preview->thumbnailTileOffsets());
-        self::assertNull($preview->thumbnailTileByteCounts());
-        self::assertNull($preview->previewStripOffsets());
-        self::assertNull($preview->previewStripByteCounts());
-        self::assertNull($preview->previewTileOffsets());
-        self::assertNull($preview->previewTileByteCounts());
+        self::assertTrue($preview->hasThumbnail);
+        self::assertTrue($preview->hasPreview);
+        self::assertSame(1_600, $preview->previewWidth);
+        self::assertSame(900, $preview->previewHeight);
+        self::assertSame(65_536, $preview->previewOffset);
+        self::assertSame(32_768, $preview->previewLength);
+        self::assertSame('JPEG', $preview->previewEncoding);
+        self::assertSame('image/jpeg', $preview->previewMimeType);
+        self::assertSame(Compression::JPEG, $preview->previewCompression);
+        self::assertEqualsWithDelta(0.5, $preview->previewScale ?? 0.0, 1e-6);
+        self::assertSame(8_192, $preview->thumbnailOffset);
+        self::assertSame(2_048, $preview->thumbnailLength);
+        self::assertSame(Compression::JPEG, $preview->thumbnailCompression);
+        self::assertNull($preview->thumbnailStripOffsets);
+        self::assertNull($preview->thumbnailStripByteCounts);
+        self::assertNull($preview->thumbnailTileOffsets);
+        self::assertNull($preview->thumbnailTileByteCounts);
+        self::assertNull($preview->previewStripOffsets);
+        self::assertNull($preview->previewStripByteCounts);
+        self::assertNull($preview->previewTileOffsets);
+        self::assertNull($preview->previewTileByteCounts);
     }
 
     #[Test]
@@ -211,26 +211,26 @@ final class ExifDocumentFallbackTest extends TestCase
 
         $preview = (new ApiStructuredExif($document))->preview();
 
-        self::assertTrue($preview->hasPreview());
-        self::assertSame(1_024, $preview->previewWidth());
-        self::assertSame(768, $preview->previewHeight());
-        self::assertSame(131_072, $preview->previewOffset());
-        self::assertSame(65_536, $preview->previewLength());
-        self::assertSame('JPEG', $preview->previewEncoding());
-        self::assertSame('image/jpeg', $preview->previewMimeType());
-        self::assertSame(8, $preview->previewBitDepth());
-        self::assertSame(Compression::JPEG_OLD_STYLE, $preview->previewCompression());
-        self::assertEqualsWithDelta(0.75, $preview->previewScale() ?? 0.0, 1e-6);
-        self::assertNull($preview->thumbnailOffset());
-        self::assertNull($preview->thumbnailLength());
-        self::assertNull($preview->thumbnailCompression());
-        self::assertNull($preview->thumbnailStripOffsets());
-        self::assertNull($preview->thumbnailStripByteCounts());
-        self::assertNull($preview->thumbnailTileOffsets());
-        self::assertNull($preview->thumbnailTileByteCounts());
-        self::assertNull($preview->previewStripOffsets());
-        self::assertNull($preview->previewStripByteCounts());
-        self::assertNull($preview->previewTileOffsets());
-        self::assertNull($preview->previewTileByteCounts());
+        self::assertTrue($preview->hasPreview);
+        self::assertSame(1_024, $preview->previewWidth);
+        self::assertSame(768, $preview->previewHeight);
+        self::assertSame(131_072, $preview->previewOffset);
+        self::assertSame(65_536, $preview->previewLength);
+        self::assertSame('JPEG', $preview->previewEncoding);
+        self::assertSame('image/jpeg', $preview->previewMimeType);
+        self::assertSame(8, $preview->previewBitDepth);
+        self::assertSame(Compression::JPEG_OLD_STYLE, $preview->previewCompression);
+        self::assertEqualsWithDelta(0.75, $preview->previewScale ?? 0.0, 1e-6);
+        self::assertNull($preview->thumbnailOffset);
+        self::assertNull($preview->thumbnailLength);
+        self::assertNull($preview->thumbnailCompression);
+        self::assertNull($preview->thumbnailStripOffsets);
+        self::assertNull($preview->thumbnailStripByteCounts);
+        self::assertNull($preview->thumbnailTileOffsets);
+        self::assertNull($preview->thumbnailTileByteCounts);
+        self::assertNull($preview->previewStripOffsets);
+        self::assertNull($preview->previewStripByteCounts);
+        self::assertNull($preview->previewTileOffsets);
+        self::assertNull($preview->previewTileByteCounts);
     }
 }

@@ -147,7 +147,7 @@ final class TruthComparisonTest extends TestCase
             $this->assertEqualsWithDelta((float)$exif['EXIF:FocalLength'], (float)($meta->lens->focalLengthMm ?? $meta->media()->image->focalLengthMm ?? 0.0), Normalizer::DELTA, "$file: FocalLength");
         }
         if (isset($exif['EXIF:FocalLengthIn35mmFormat'])) {
-            $this->assertSame((int)$exif['EXIF:FocalLengthIn35mmFormat'], (int)($meta->lens->focalLengthIn35mm ?? $meta->derived->equivalent35mm() ?? 0), "$file: FocalLength35mm");
+            $this->assertSame((int)$exif['EXIF:FocalLengthIn35mmFormat'], (int)($meta->lens->focalLengthIn35mm ?? $meta->derived->equivalent35mm ?? 0), "$file: FocalLength35mm");
         }
         if (isset($exif['EXIF:LensModel'])) {
             $this->assertSame($exif['EXIF:LensModel'], $meta->lens->lensModel ?? null, "$file: LensModel");
@@ -170,14 +170,14 @@ final class TruthComparisonTest extends TestCase
 
         // GPS
         if (isset($exif['GPS:GPSLatitude'], $exif['GPS:GPSLongitude'])) {
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLatitude'],  (float)($meta->gps->latitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lat");
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLongitude'], (float)($meta->gps->longitude?->toFloat() ?? 0), Normalizer::DELTA, "$file: GPS lon");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLatitude'],  (float)($meta->gps->latitude ?? 0), Normalizer::DELTA, "$file: GPS lat");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSLongitude'], (float)($meta->gps->longitude ?? 0), Normalizer::DELTA, "$file: GPS lon");
         }
         if (isset($exif['GPS:GPSAltitude'])) {
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSAltitude'], (float)($meta->gps->altitude() ?? 0), 1e-3, "$file: GPS alt");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSAltitude'], (float)($meta->gps->altitude ?? 0), 1e-3, "$file: GPS alt");
         }
         if (isset($exif['GPS:GPSImgDirection'])) {
-            $this->assertEqualsWithDelta((float)$exif['GPS:GPSImgDirection'], (float)($meta->gps->imageDirection() ?? 0), 1e-6, "$file: GPS direction");
+            $this->assertEqualsWithDelta((float)$exif['GPS:GPSImgDirection'], (float)($meta->gps->imageDirection ?? 0), 1e-6, "$file: GPS direction");
         }
 
         // ICC profile
