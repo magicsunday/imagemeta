@@ -40,26 +40,36 @@ use MagicSunday\ImageMeta\Value\Standards;
  */
 final readonly class StructuredExif
 {
-    private ?ParsedExif $raw;
+    public ?ParsedExif $raw;
 
-    private CameraValue $camera;
+    public CameraValue $camera;
 
-    private LensValue $lens;
+    public LensValue $lens;
 
-    private Derived $derived;
+    public Derived $derived;
 
-    private ExposureValue $exposure;
+    public ExposureValue $exposure;
 
-    private GpsValue $gps;
+    public GpsValue $gps;
 
-    private ImageValue $image;
+    public ImageValue $image;
 
-    private PreviewValue $preview;
+    public PreviewValue $preview;
 
-    private InteropValue $interop;
+    public InteropValue $interop;
 
-    private Standards $standards;
+    public Standards $standards;
 
+
+    public ?int $iso;
+
+    public ?DateTimeImmutable $dateTimeOriginal;
+
+    public ?string $userComment;
+
+    public ?string $userCommentEncoding;
+
+    public bool $hasData;
     /**
      * Creates the structured EXIF view by aggregating the curated value objects extracted from the parser.
      *
@@ -75,6 +85,7 @@ final readonly class StructuredExif
         ?int $fallbackBitsPerSample = null,
     ) {
         $this->raw = $document;
+        $this->hasData = $document instanceof ParsedExif;
 
         $cameraValue   = $this->createCameraValue($document);
         $lensValue     = $this->createLensValue($document);
@@ -101,136 +112,10 @@ final readonly class StructuredExif
         $this->preview   = $previewValue;
         $this->interop   = $interopValue;
         $this->standards = $this->createStandardsValue($document);
-    }
-
-    /**
-     * Returns the structured camera metadata derived from the raw EXIF document.
-     *
-     * @return CameraValue Camera metadata accessor.
-     */
-    public function camera(): CameraValue
-    {
-        return $this->camera;
-    }
-
-    /**
-     * Returns the structured lens metadata derived from the raw EXIF document.
-     *
-     * @return LensValue Lens metadata accessor.
-     */
-    public function lens(): LensValue
-    {
-        return $this->lens;
-    }
-
-    /**
-     * Returns derived exposure and optical metrics calculated from the raw document.
-     *
-     * @return Derived Derived exposure and lens helper values.
-     */
-    public function derived(): Derived
-    {
-        return $this->derived;
-    }
-
-    /**
-     * Returns the structured exposure metadata derived from the raw EXIF document.
-     *
-     * @return ExposureValue Exposure metadata accessor.
-     */
-    public function exposure(): ExposureValue
-    {
-        return $this->exposure;
-    }
-
-    /**
-     * Returns the structured GPS metadata derived from the raw EXIF document.
-     *
-     * @return GpsValue GPS metadata accessor.
-     */
-    public function gps(): GpsValue
-    {
-        return $this->gps;
-    }
-
-    /**
-     * Returns the structured image metadata derived from the raw EXIF document.
-     *
-     * @return ImageValue Image metadata accessor.
-     */
-    public function image(): ImageValue
-    {
-        return $this->image;
-    }
-
-    /**
-     * Returns the structured preview metadata derived from the raw EXIF document.
-     *
-     * @return PreviewValue Preview metadata accessor.
-     */
-    public function preview(): PreviewValue
-    {
-        return $this->preview;
-    }
-
-    /**
-     * Returns the metadata standard identifiers derived from the EXIF document.
-     *
-     * @return Standards Standards value object with EXIF, FlashPix and TIFF/EP identifiers.
-     */
-    public function standards(): Standards
-    {
-        return $this->standards;
-    }
-
-    /**
-     * Returns the interoperability metadata extracted from the raw EXIF document.
-     *
-     * @return InteropValue Interoperability metadata accessor.
-     */
-    public function interop(): InteropValue
-    {
-        return $this->interop;
-    }
-
-    /**
-     * Returns the best-effort ISO value from the raw EXIF document, if available.
-     *
-     * @return int|null Normalised ISO value or null when unknown.
-     */
-    public function iso(): ?int
-    {
-        return $this->raw?->isoBestEffort();
-    }
-
-    /**
-     * Returns the original capture timestamp resolved from the raw EXIF document.
-     *
-     * @return DateTimeImmutable|null Capture timestamp or null when unavailable.
-     */
-    public function dateTimeOriginal(): ?DateTimeImmutable
-    {
-        return $this->raw?->dateTimeOriginalBestEffort();
-    }
-
-    /**
-     * Returns the user comment stored in the EXIF document without re-encoding.
-     *
-     * @return string|null Raw user comment or null when absent.
-     */
-    public function userComment(): ?string
-    {
-        return $this->raw?->userComment();
-    }
-
-    /**
-     * Returns the best-effort encoding label for the user comment.
-     *
-     * @return string|null Encoding hint or null when unknown.
-     */
-    public function userCommentEncoding(): ?string
-    {
-        return $this->raw?->userCommentEncodingBestEffort();
+        $this->iso = $document?->isoBestEffort();
+        $this->dateTimeOriginal = $document?->dateTimeOriginalBestEffort();
+        $this->userComment = $document?->userComment();
+        $this->userCommentEncoding = $document?->userCommentEncodingBestEffort();
     }
 
     /**
@@ -238,21 +123,6 @@ final readonly class StructuredExif
      *
      * @return bool True when a parsed EXIF document is available.
      */
-    public function hasData(): bool
-    {
-        return $this->raw instanceof ParsedExif;
-    }
-
-    /**
-     * Returns the underlying raw EXIF document instance.
-     *
-     * @return ParsedExif|null Raw model or null when no EXIF data was parsed.
-     */
-    public function raw(): ?ParsedExif
-    {
-        return $this->raw;
-    }
-
     /**
      * Creates a camera value object from the parsed EXIF document.
      *

@@ -56,7 +56,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        $apple = $metadata->apple();
+        $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
         self::assertSame('Front', $apple->cameraType);
@@ -93,7 +93,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        $apple = $metadata->apple();
+        $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('archived-photo-uuid', $apple->contentIdentifier);
         self::assertEqualsWithDelta(3.25, $apple->hdrHeadroom, 1e-12);
@@ -126,11 +126,11 @@ final class AppleDecoderTest extends TestCase
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-        self::assertSame('Apple', $metadata->vendor());
-        self::assertSame(strlen($raw), $metadata->length());
-        self::assertSame(sha1($raw), $metadata->sha1());
+        self::assertSame('Apple', $metadata->vendor);
+        self::assertSame(strlen($raw), $metadata->length);
+        self::assertSame(sha1($raw), $metadata->sha1);
 
-        $apple = $metadata->apple();
+        $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('photo-uuid', $apple->contentIdentifier);
         self::assertSame('Tele', $apple->cameraType);
@@ -159,7 +159,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        $apple = $metadata->apple();
+        $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('padded', $apple->contentIdentifier);
         self::assertTrue($apple->flags['livePhotoAuto']);
@@ -174,7 +174,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        $apple = $metadata->apple();
+        $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('flags-zero', $apple->contentIdentifier);
 
@@ -201,7 +201,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        $apple = $metadata->apple();
+        $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame(2, $apple->livePhotoIndex);
     }
@@ -214,7 +214,7 @@ final class AppleDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
 
-        $apple = $metadata->apple();
+        $apple = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('compact-style', $apple->contentIdentifier);
         self::assertSame('Vivid', $apple->semanticStylePreset);
@@ -431,7 +431,7 @@ final class AppleDecoderTest extends TestCase
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode($raw, 'Apple', 'iPhone');
-        $apple    = $metadata->apple();
+        $apple    = $metadata->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('textual', $apple->contentIdentifier);
         self::assertSame('1.4', $apple->makerNoteVersion);
@@ -602,7 +602,7 @@ final class AppleDecoderTest extends TestCase
         $decoder = new AppleDecoder();
 
         $metadata = $decoder->decode('Apple iOS' . str_repeat("\x00", 32), 'Apple', 'iPhone');
-        self::assertNull($metadata->apple());
+        self::assertNull($metadata->apple);
     }
 
     #[Test]

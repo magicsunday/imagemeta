@@ -19,6 +19,8 @@ use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionNamedType;
+use ReflectionType;
+use ReflectionUnionType;
 
 final class ExifCoverageTest extends TestCase
 {
@@ -222,6 +224,28 @@ final class ExifCoverageTest extends TestCase
         $segments     = explode('.', $path);
 
         foreach ($segments as $index => $segment) {
+            if ($currentClass->hasProperty($segment)) {
+                $property = $currentClass->getProperty($segment);
+
+                if ($index === count($segments) - 1) {
+                    break;
+                }
+
+                $nextClassName = $this->resolveNextClassName($property->getType(), $currentClass->getName());
+
+                if ($nextClassName === ParsedExif::class) {
+                    $currentClass = new ReflectionClass(ParsedExif::class);
+                    continue;
+                }
+
+                if ($nextClassName === null || !class_exists($nextClassName)) {
+                    break;
+                }
+
+                $currentClass = new ReflectionClass($nextClassName);
+                continue;
+            }
+
             self::assertTrue($currentClass->hasMethod($segment), sprintf('Method "%s" not found on %s for getter "%s".', $segment, $currentClass->getName(), $path));
             $method = $currentClass->getMethod($segment);
 
@@ -233,27 +257,51 @@ final class ExifCoverageTest extends TestCase
                 break;
             }
 
-            $returnType = $method->getReturnType();
-            if (!$returnType instanceof ReflectionNamedType) {
-                break;
-            }
+            $nextClassName = $this->resolveNextClassName($method->getReturnType(), $currentClass->getName());
 
-            $nextClassName = $returnType->getName();
-            if ($nextClassName === 'self') {
-                $nextClassName = $currentClass->getName();
-            }
-
-            if ($nextClassName === ParsedExif::class || $segment === 'raw') {
+            if ($nextClassName === ParsedExif::class) {
                 $currentClass = new ReflectionClass(ParsedExif::class);
                 continue;
             }
 
-            if (!class_exists($nextClassName)) {
+            if ($nextClassName === null || !class_exists($nextClassName)) {
                 break;
             }
 
             $currentClass = new ReflectionClass($nextClassName);
         }
+    }
+
+    private function resolveNextClassName(?ReflectionType $type, string $context): ?string
+    {
+        if ($type instanceof ReflectionUnionType) {
+            foreach ($type->getTypes() as $inner) {
+                if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin() && $inner->getName() !== 'null') {
+                    return $inner->getName();
+                }
+            }
+
+            return null;
+        }
+
+        if ($type instanceof ReflectionNamedType) {
+            if ($type->isBuiltin()) {
+                return null;
+            }
+
+            $name = $type->getName();
+            if ($name === 'self') {
+                return $context;
+            }
+
+            if ($name === 'null') {
+                return null;
+            }
+
+            return $name;
+        }
+
+        return null;
     }
 
     /**

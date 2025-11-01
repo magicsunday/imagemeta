@@ -92,12 +92,12 @@ final class AppleMakerNotesMergerTest extends TestCase
 
         self::assertNotNull($mapped);
 
-        $apple = $mapped->apple();
+        $apple = $mapped->apple;
 
         self::assertNotSame($makerNotes, $mapped);
-        self::assertSame('Apple', $mapped->vendor());
-        self::assertSame(128, $mapped->length());
-        self::assertSame(str_repeat('1', 40), $mapped->sha1());
+        self::assertSame('Apple', $mapped->vendor);
+        self::assertSame(128, $mapped->length);
+        self::assertSame(str_repeat('1', 40), $mapped->sha1);
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('maker-note', $apple->contentIdentifier);
@@ -173,7 +173,7 @@ final class AppleMakerNotesMergerTest extends TestCase
 
         self::assertNotNull($mapped);
 
-        $apple = $mapped->apple();
+        $apple = $mapped->apple;
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('qt-content', $apple->contentIdentifier);
@@ -212,11 +212,11 @@ final class AppleMakerNotesMergerTest extends TestCase
         $mapped = $merger->merge(null, $quickTime);
 
         self::assertNotNull($mapped);
-        self::assertSame('Apple', $mapped->vendor());
-        self::assertSame(0, $mapped->length());
-        self::assertSame(str_repeat('0', 40), $mapped->sha1());
+        self::assertSame('Apple', $mapped->vendor);
+        self::assertSame(0, $mapped->length);
+        self::assertSame(str_repeat('0', 40), $mapped->sha1);
 
-        $apple = $mapped->apple();
+        $apple = $mapped->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('qt-content', $apple->contentIdentifier);
         self::assertSame([0.3, -0.2, 0.1], $apple->accelerationVector);
@@ -264,7 +264,7 @@ final class AppleMakerNotesMergerTest extends TestCase
 
         self::assertNotNull($mapped);
 
-        $apple = $mapped->apple();
+        $apple = $mapped->apple;
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
 
         $flags = $apple->flags;

@@ -36,8 +36,8 @@ final class CanonDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Canon', 'Canon EOS R5');
 
-        self::assertSame('Canon', $metadata->vendor());
-        self::assertSame(strlen($raw), $metadata->length());
-        self::assertSame(sha1($raw), $metadata->sha1());
+        self::assertSame('Canon', $metadata->vendor);
+        self::assertSame(strlen($raw), $metadata->length);
+        self::assertSame(sha1($raw), $metadata->sha1);
     }
 }

@@ -1250,15 +1250,15 @@ final class TiffExifReader
      */
     private function applyMakerNoteSafety(MakerNotesRecord $metadata, ?bool $isSafe): MakerNotesRecord
     {
-        if ($metadata->isSafe() === $isSafe) {
+        if ($metadata->isSafe === $isSafe) {
             return $metadata;
         }
 
         return new MakerNotesRecord(
-            $metadata->vendor(),
-            $metadata->length(),
-            $metadata->sha1(),
-            $metadata->apple(),
+            $metadata->vendor,
+            $metadata->length,
+            $metadata->sha1,
+            $metadata->apple,
             $isSafe,
         );
     }

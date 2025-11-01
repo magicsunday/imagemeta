@@ -106,7 +106,7 @@ trait ExifExpectationAssertions
 
         Assert::assertSame($expected['exposure']['iso'], $structured->exposure->iso, sprintf('%s: ISO fallback', $fixture));
 
-        $temporal        = $structured->temporal();
+        $temporal        = $structured->temporal;
         $expectedCapture = $expected['capture']['dateTimeOriginal'];
         $actualOriginal  = $temporal->original;
         if ($expectedCapture === null) {
@@ -148,10 +148,10 @@ trait ExifExpectationAssertions
             Assert::assertNull($actualMaker, sprintf('%s: Maker notes digest', $fixture));
         } else {
             Assert::assertNotNull($actualMaker, sprintf('%s: Maker notes digest', $fixture));
-            Assert::assertSame($expectedMaker['vendor'], $actualMaker->vendor(), sprintf('%s: Maker note vendor', $fixture));
-            Assert::assertSame($expectedMaker['length'], $actualMaker->length(), sprintf('%s: Maker note length', $fixture));
-            Assert::assertSame($expectedMaker['sha1'], $actualMaker->sha1(), sprintf('%s: Maker note SHA-1', $fixture));
-            Assert::assertSame($expectedMaker['isSafe'], $actualMaker->isSafe(), sprintf('%s: Maker note safety', $fixture));
+            Assert::assertSame($expectedMaker['vendor'], $actualMaker->vendor, sprintf('%s: Maker note vendor', $fixture));
+            Assert::assertSame($expectedMaker['length'], $actualMaker->length, sprintf('%s: Maker note length', $fixture));
+            Assert::assertSame($expectedMaker['sha1'], $actualMaker->sha1, sprintf('%s: Maker note SHA-1', $fixture));
+            Assert::assertSame($expectedMaker['isSafe'], $actualMaker->isSafe, sprintf('%s: Maker note safety', $fixture));
         }
 
         $expectedEnv = $expected['environment'];
@@ -183,7 +183,7 @@ trait ExifExpectationAssertions
 
         Assert::assertSame(
             $expected['sensor']['spatialFrequencyResponse'],
-            $structured->sensor()->spatialFrequencyResponse,
+            $structured->sensor->spatialFrequencyResponse,
             sprintf('%s: Spatial frequency response', $fixture),
         );
     }
@@ -233,11 +233,11 @@ trait ExifExpectationAssertions
      */
     private static function assertApiMatches(string $fixture, ApiStructuredExif $document, array $expected): void
     {
-        Assert::assertTrue($document->hasData(), sprintf('%s: Document contains EXIF data', $fixture));
-        Assert::assertSame($expected['iso'], $document->iso(), sprintf('%s: ISO value', $fixture));
+        Assert::assertTrue($document->hasData, sprintf('%s: Document contains EXIF data', $fixture));
+        Assert::assertSame($expected['iso'], $document->iso, sprintf('%s: ISO value', $fixture));
 
         $expectedOriginal = $expected['dateTimeOriginal'];
-        $actualOriginal   = $document->dateTimeOriginal();
+        $actualOriginal   = $document->dateTimeOriginal;
         if ($expectedOriginal === null) {
             Assert::assertNull($actualOriginal, sprintf('%s: API DateTimeOriginal', $fixture));
         } else {
@@ -245,10 +245,10 @@ trait ExifExpectationAssertions
             Assert::assertSame($expectedOriginal, $actualOriginal->format(DATE_ATOM), sprintf('%s: API DateTimeOriginal value', $fixture));
         }
 
-        Assert::assertSame($expected['userComment'], $document->userComment(), sprintf('%s: API UserComment', $fixture));
-        Assert::assertSame($expected['userCommentEncoding'], $document->userCommentEncoding(), sprintf('%s: API UserComment encoding', $fixture));
+        Assert::assertSame($expected['userComment'], $document->userComment, sprintf('%s: API UserComment', $fixture));
+        Assert::assertSame($expected['userCommentEncoding'], $document->userCommentEncoding, sprintf('%s: API UserComment encoding', $fixture));
 
-        $interop         = $document->interop();
+        $interop         = $document->interop;
         $expectedInterop = $expected['interop'];
         Assert::assertSame($expectedInterop['index'], $interop->index, sprintf('%s: API Interop index', $fixture));
         Assert::assertSame($expectedInterop['version'], $interop->version, sprintf('%s: API Interop version', $fixture));
@@ -256,7 +256,7 @@ trait ExifExpectationAssertions
         Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth, sprintf('%s: API Interop width', $fixture));
         Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength, sprintf('%s: API Interop length', $fixture));
 
-        self::assertPreviewMatches($fixture, $expected['preview'], $document->preview());
+        self::assertPreviewMatches($fixture, $expected['preview'], $document->preview);
     }
 
     /**

@@ -44,7 +44,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
 
         $decoder  = new AppleDecoder();
         $metadata = $decoder->decode($blob, 'Apple', 'UnitTestDevice');
-        $apple    = $metadata->apple();
+        $apple    = $metadata->apple;
 
         self::assertInstanceOf(AppleMakerNotes::class, $apple);
         self::assertSame('content-identifier-xyz', $apple->contentIdentifier);

@@ -37,11 +37,11 @@ final class AppleMakerNotesMerger
         ?MakerNotesRecord $makerNotes,
         ?QuickTimeMeta $quickTime,
     ): ?MakerNotesRecord {
-        if ($makerNotes instanceof MakerNotesRecord && $makerNotes->vendor() !== 'Apple') {
+        if ($makerNotes instanceof MakerNotesRecord && $makerNotes->vendor !== 'Apple') {
             return $makerNotes;
         }
 
-        $apple = $this->buildAppleMakerNotes($makerNotes?->apple(), $quickTime);
+        $apple = $this->buildAppleMakerNotes($makerNotes?->apple, $quickTime);
 
         if (!$this->hasAppleData($apple)) {
             return $makerNotes;
@@ -49,11 +49,11 @@ final class AppleMakerNotesMerger
 
         if ($makerNotes instanceof MakerNotesRecord) {
             return new MakerNotesRecord(
-                $makerNotes->vendor(),
-                $makerNotes->length(),
-                $makerNotes->sha1(),
+                $makerNotes->vendor,
+                $makerNotes->length,
+                $makerNotes->sha1,
                 $apple,
-                $makerNotes->isSafe(),
+                $makerNotes->isSafe,
             );
         }
 

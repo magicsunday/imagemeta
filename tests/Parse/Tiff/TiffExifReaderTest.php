@@ -700,10 +700,10 @@ final class TiffExifReaderTest extends TestCase
         $makerNotes = $document->makerNotes();
 
         self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
-        self::assertSame('DATA', $makerNotes->vendor());
-        self::assertSame(strlen($makerNoteData), $makerNotes->length());
-        self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
-        self::assertNull($makerNotes->isSafe());
+        self::assertSame('DATA', $makerNotes->vendor);
+        self::assertSame(strlen($makerNoteData), $makerNotes->length);
+        self::assertSame(sha1($makerNoteData), $makerNotes->sha1);
+        self::assertNull($makerNotes->isSafe);
     }
 
     /**
@@ -726,10 +726,10 @@ final class TiffExifReaderTest extends TestCase
         $makerNotes = $document->makerNotes();
 
         self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
-        self::assertSame('Unknown', $makerNotes->vendor());
-        self::assertSame(strlen($makerNoteData), $makerNotes->length());
-        self::assertSame(sha1($makerNoteData), $makerNotes->sha1());
-        self::assertNull($makerNotes->isSafe());
+        self::assertSame('Unknown', $makerNotes->vendor);
+        self::assertSame(strlen($makerNoteData), $makerNotes->length);
+        self::assertSame(sha1($makerNoteData), $makerNotes->sha1);
+        self::assertNull($makerNotes->isSafe);
     }
 
     /**
@@ -755,7 +755,7 @@ final class TiffExifReaderTest extends TestCase
 
         self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
         self::assertTrue($document->makerNoteSafety());
-        self::assertTrue($makerNotes->isSafe());
+        self::assertTrue($makerNotes->isSafe);
 
         self::assertTrue($document->makerNoteSafety());
     }
@@ -773,7 +773,7 @@ final class TiffExifReaderTest extends TestCase
 
         self::assertInstanceOf(MakerNotesRecord::class, $makerNotes);
         self::assertFalse($document->makerNoteSafety());
-        self::assertFalse($makerNotes->isSafe());
+        self::assertFalse($makerNotes->isSafe);
 
         self::assertFalse($document->makerNoteSafety());
     }

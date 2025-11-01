@@ -270,34 +270,34 @@ final class ExifAssemblerTest extends TestCase
             get_object_vars($structured->interop),
         );
 
-        self::assertSame(Compression::JPEG, $structured->tiff()->compression);
-        self::assertSame(Photometric::YCBCR, $structured->tiff()->photometric);
-        self::assertSame([2, 2], $structured->tiff()->ycbcrSubSampling);
-        self::assertSame([0.299, 0.587, 0.114], $structured->tiff()->ycbcrCoefficients);
-        self::assertSame([0.3127, 0.329], $structured->tiff()->whitePoint);
-        self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], $structured->tiff()->primaryChromaticities);
-        self::assertSame([512, 1024, 1536], $structured->tiff()->stripOffsets);
-        self::assertSame([2048, 2048, 1024], $structured->tiff()->stripByteCounts);
-        self::assertSame(256, $structured->tiff()->tileWidth);
-        self::assertSame(256, $structured->tiff()->tileLength);
-        self::assertSame([4096, 8192, 12288], $structured->tiff()->tileOffsets);
-        self::assertSame([1024, 2048, 2048], $structured->tiff()->tileByteCounts);
-        self::assertSame([0, 32768, 65535], $structured->tiff()->transferFunction);
-        self::assertSame(24576, $structured->tiff()->jpegInterchangeFormat);
-        self::assertSame(8192, $structured->tiff()->jpegInterchangeFormatLength);
-        self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $structured->tiff()->referenceBlackWhite);
-        self::assertSame('Jane Doe 2024', $structured->tiff()->copyright);
+        self::assertSame(Compression::JPEG, $structured->tiff->compression);
+        self::assertSame(Photometric::YCBCR, $structured->tiff->photometric);
+        self::assertSame([2, 2], $structured->tiff->ycbcrSubSampling);
+        self::assertSame([0.299, 0.587, 0.114], $structured->tiff->ycbcrCoefficients);
+        self::assertSame([0.3127, 0.329], $structured->tiff->whitePoint);
+        self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], $structured->tiff->primaryChromaticities);
+        self::assertSame([512, 1024, 1536], $structured->tiff->stripOffsets);
+        self::assertSame([2048, 2048, 1024], $structured->tiff->stripByteCounts);
+        self::assertSame(256, $structured->tiff->tileWidth);
+        self::assertSame(256, $structured->tiff->tileLength);
+        self::assertSame([4096, 8192, 12288], $structured->tiff->tileOffsets);
+        self::assertSame([1024, 2048, 2048], $structured->tiff->tileByteCounts);
+        self::assertSame([0, 32768, 65535], $structured->tiff->transferFunction);
+        self::assertSame(24576, $structured->tiff->jpegInterchangeFormat);
+        self::assertSame(8192, $structured->tiff->jpegInterchangeFormatLength);
+        self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $structured->tiff->referenceBlackWhite);
+        self::assertSame('Jane Doe 2024', $structured->tiff->copyright);
 
         self::assertSame('Canon', $structured->camera->make);
         self::assertSame('EOS R6 II', $structured->camera->model);
-        self::assertSame('Jane Doe', $structured->author()->artist);
-        self::assertSame('Jane Owner', $structured->author()->ownerName);
-        self::assertSame('Jane Doe 2024', $structured->rights()->copyright);
-        self::assertSame('Restricted', $structured->rights()->securityClassification);
+        self::assertSame('Jane Doe', $structured->author->artist);
+        self::assertSame('Jane Owner', $structured->author->ownerName);
+        self::assertSame('Jane Doe 2024', $structured->rights->copyright);
+        self::assertSame('Restricted', $structured->rights->securityClassification);
         self::assertSame('1.2.3', $structured->camera->firmware);
         self::assertSame(FileSource::DIGITAL_CAMERA, $structured->camera->fileSource);
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $structured->camera->sensingMethod);
-        self::assertSame([], $structured->flashPix()->streams);
+        self::assertSame([], $structured->flashPix->streams);
 
         self::assertSame('EF 85mm f/1.4L', $structured->lens->lensModel);
         self::assertSame(85.0, $structured->lens->focalLengthMm);
@@ -325,8 +325,8 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(1, $structured->image->interlace);
         self::assertSame('Shot with ND filter', $structured->image->userComment);
         self::assertSame('ASCII', $structured->image->userCommentEncoding);
-        self::assertSame('Developed in Raw Studio', $structured->integrity()->imageHistory);
-        self::assertTrue($structured->integrity()->makerNotesSafe);
+        self::assertSame('Developed in Raw Studio', $structured->integrity->imageHistory);
+        self::assertTrue($structured->integrity->makerNotesSafe);
         self::assertTrue($structured->preview->hasThumbnail);
         self::assertTrue($structured->preview->hasPreview);
         self::assertSame(2_048, $structured->preview->previewWidth);
@@ -362,9 +362,9 @@ final class ExifAssemblerTest extends TestCase
         self::assertNotNull($flash);
         self::assertTrue($flash->fired);
 
-        self::assertSame(SceneCaptureType::STANDARD, $structured->scene()->type);
-        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $structured->scene()->sceneType);
-        self::assertSame(SubjectDistanceRange::DISTANT, $structured->scene()->subjectDistanceRange);
+        self::assertSame(SceneCaptureType::STANDARD, $structured->scene->type);
+        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $structured->scene->sceneType);
+        self::assertSame(SubjectDistanceRange::DISTANT, $structured->scene->subjectDistanceRange);
 
         self::assertSame('3.00', $structured->standards->exifVersion);
         self::assertSame('3.0', $structured->standards->profile);
@@ -374,25 +374,25 @@ final class ExifAssemblerTest extends TestCase
 
         self::assertEqualsWithDelta(1.9965, $structured->lens->maxApertureFNumber, 0.001);
 
-        self::assertEqualsWithDelta(21.5, $structured->capture()->temperatureC, 0.001);
-        self::assertEqualsWithDelta(82.0, $structured->capture()->batteryLevelPercent, 0.001);
-        self::assertEqualsWithDelta(60.0, $structured->capture()->humidityPercent, 0.001);
-        self::assertEqualsWithDelta(1013.25, $structured->capture()->pressureHPa, 0.001);
-        self::assertEqualsWithDelta(15.0, $structured->capture()->waterDepthM, 0.001);
-        self::assertEqualsWithDelta(9.8, $structured->capture()->accelerationMs2, 0.001);
-        self::assertEqualsWithDelta(15.0, $structured->capture()->cameraElevationAngleDeg, 0.001);
-        self::assertSame(10, $structured->capture()->selfTimerModeSeconds);
-        self::assertSame('DJI', $structured->uav()->manufacturer);
-        self::assertSame('Mavic 3', $structured->uav()->model);
-        self::assertEqualsWithDelta(12.3, $structured->uav()->flightYaw ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(-3.5, $structured->uav()->flightPitch ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(2.0, $structured->uav()->flightRoll ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(21.0, $structured->uav()->gimbalYaw ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(-11.0, $structured->uav()->gimbalPitch ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(0.5, $structured->uav()->gimbalRoll ?? 0.0, 0.0001);
-        $motionRoll  = $structured->motion()->rollDeg;
-        $motionPitch = $structured->motion()->pitchDeg;
-        $motionYaw   = $structured->motion()->yawDeg;
+        self::assertEqualsWithDelta(21.5, $structured->capture->temperatureC, 0.001);
+        self::assertEqualsWithDelta(82.0, $structured->capture->batteryLevelPercent, 0.001);
+        self::assertEqualsWithDelta(60.0, $structured->capture->humidityPercent, 0.001);
+        self::assertEqualsWithDelta(1013.25, $structured->capture->pressureHPa, 0.001);
+        self::assertEqualsWithDelta(15.0, $structured->capture->waterDepthM, 0.001);
+        self::assertEqualsWithDelta(9.8, $structured->capture->accelerationMs2, 0.001);
+        self::assertEqualsWithDelta(15.0, $structured->capture->cameraElevationAngleDeg, 0.001);
+        self::assertSame(10, $structured->capture->selfTimerModeSeconds);
+        self::assertSame('DJI', $structured->uav->manufacturer);
+        self::assertSame('Mavic 3', $structured->uav->model);
+        self::assertEqualsWithDelta(12.3, $structured->uav->flightYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-3.5, $structured->uav->flightPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(2.0, $structured->uav->flightRoll ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(21.0, $structured->uav->gimbalYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-11.0, $structured->uav->gimbalPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(0.5, $structured->uav->gimbalRoll ?? 0.0, 0.0001);
+        $motionRoll  = $structured->motion->rollDeg;
+        $motionPitch = $structured->motion->pitchDeg;
+        $motionYaw   = $structured->motion->yawDeg;
         self::assertNotNull($motionRoll);
         self::assertNotNull($motionPitch);
         self::assertNotNull($motionYaw);
@@ -400,10 +400,10 @@ final class ExifAssemblerTest extends TestCase
         self::assertEqualsWithDelta(-3.5, $motionPitch, 0.0001);
         self::assertEqualsWithDelta(12.3, $motionYaw, 0.0001);
 
-        self::assertSame('sound.wav', $structured->related()->relatedSoundFile);
+        self::assertSame('sound.wav', $structured->related->relatedSoundFile);
 
-        self::assertSame('Standard Spectral', $structured->sensor()->spectralSensitivity);
-        $sensorOecf = $structured->sensor()->oecf;
+        self::assertSame('Standard Spectral', $structured->sensor->spectralSensitivity);
+        $sensorOecf = $structured->sensor->oecf;
         self::assertNotNull($sensorOecf);
         self::assertSame($oecfPayload, $sensorOecf['payload']);
         $sensorOecfMatrix = $sensorOecf['matrix'];
@@ -414,7 +414,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertEqualsWithDelta(0.2, $sensorOecfMatrix['values'][0][1] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(0.3, $sensorOecfMatrix['values'][1][0] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(0.4, $sensorOecfMatrix['values'][1][1] ?? 0.0, 0.0001);
-        $sensorSfr = $structured->sensor()->spatialFrequencyResponse;
+        $sensorSfr = $structured->sensor->spatialFrequencyResponse;
         self::assertNotNull($sensorSfr);
         self::assertSame(['10lp/mm', '20lp/mm', '40lp/mm'], $sensorSfr['labels']['columns']);
         self::assertSame(['Luminance', 'Chrominance'], $sensorSfr['labels']['rows']);
@@ -424,36 +424,36 @@ final class ExifAssemblerTest extends TestCase
         self::assertEqualsWithDelta(0.85, $sensorSfr['values'][1][0] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(0.7, $sensorSfr['values'][1][1] ?? 0.0, 0.0001);
         self::assertEqualsWithDelta(0.55, $sensorSfr['values'][1][2] ?? 0.0, 0.0001);
-        self::assertSame(8, $structured->sensor()->cfaWidth);
-        self::assertSame(6, $structured->sensor()->cfaHeight);
-        self::assertSame([2, 1, 1, 0], $structured->sensor()->cfaPattern);
-        self::assertEqualsWithDelta(43.21, $structured->sensor()->focalPlaneXResolution, 0.001);
-        self::assertEqualsWithDelta(43.0, $structured->sensor()->focalPlaneYResolution, 0.001);
-        self::assertSame(ResolutionUnit::CENTIMETER, $structured->sensor()->focalPlaneResolutionUnit);
+        self::assertSame(8, $structured->sensor->cfaWidth);
+        self::assertSame(6, $structured->sensor->cfaHeight);
+        self::assertSame([2, 1, 1, 0], $structured->sensor->cfaPattern);
+        self::assertEqualsWithDelta(43.21, $structured->sensor->focalPlaneXResolution, 0.001);
+        self::assertEqualsWithDelta(43.0, $structured->sensor->focalPlaneYResolution, 0.001);
+        self::assertSame(ResolutionUnit::CENTIMETER, $structured->sensor->focalPlaneResolutionUnit);
 
-        self::assertSame(Sharpness::HARD, $structured->processing()->sharpness);
-        self::assertSame(Contrast::SOFT, $structured->processing()->contrast);
-        self::assertSame(Saturation::NORMAL, $structured->processing()->saturation);
-        self::assertSame('Profile:Portrait', $structured->processing()->deviceSettingDescription);
-        self::assertSame(1, $structured->processing()->customRendered);
-        self::assertSame('ImageMeta Studio', $structured->processing()->processingSoftware);
-        self::assertEqualsWithDelta(45.6, $structured->processing()->noiseReduction, 0.0001);
+        self::assertSame(Sharpness::HARD, $structured->processing->sharpness);
+        self::assertSame(Contrast::SOFT, $structured->processing->contrast);
+        self::assertSame(Saturation::NORMAL, $structured->processing->saturation);
+        self::assertSame('Profile:Portrait', $structured->processing->deviceSettingDescription);
+        self::assertSame(1, $structured->processing->customRendered);
+        self::assertSame('ImageMeta Studio', $structured->processing->processingSoftware);
+        self::assertEqualsWithDelta(45.6, $structured->processing->noiseReduction, 0.0001);
 
-        self::assertSame('Jane D. Photographer', $structured->author()->photographer);
-        self::assertSame('John Editor', $structured->author()->imageEditor);
+        self::assertSame('Jane D. Photographer', $structured->author->photographer);
+        self::assertSame('John Editor', $structured->author->imageEditor);
 
-        self::assertSame('Raw Studio', $structured->device()->rawDevelopingSoftware);
-        self::assertSame('Image Studio', $structured->device()->imageEditingSoftware);
-        self::assertSame('Metadata Studio', $structured->device()->metadataEditingSoftware);
+        self::assertSame('Raw Studio', $structured->device->rawDevelopingSoftware);
+        self::assertSame('Image Studio', $structured->device->imageEditingSoftware);
+        self::assertSame('Metadata Studio', $structured->device->metadataEditingSoftware);
 
-        self::assertSame('321', $structured->temporal()->subSecTime);
-        self::assertSame('123', $structured->temporal()->subSecTimeOriginal);
-        self::assertSame('456', $structured->temporal()->subSecTimeDigitized);
-        self::assertSame('+01:30', $structured->temporal()->offsetTime);
-        self::assertSame('+01:30', $structured->temporal()->offsetTimeOriginal);
-        self::assertSame('+01:30', $structured->temporal()->offsetTimeDigitized);
-        self::assertSame([-120, -60], $structured->temporal()->timeZoneOffsetMinutes);
-        self::assertSame('OffsetTimeOriginal', $structured->temporal()->tzSource);
+        self::assertSame('321', $structured->temporal->subSecTime);
+        self::assertSame('123', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('456', $structured->temporal->subSecTimeDigitized);
+        self::assertSame('+01:30', $structured->temporal->offsetTime);
+        self::assertSame('+01:30', $structured->temporal->offsetTimeOriginal);
+        self::assertSame('+01:30', $structured->temporal->offsetTimeDigitized);
+        self::assertSame([-120, -60], $structured->temporal->timeZoneOffsetMinutes);
+        self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
     }
 
     #[Test]
@@ -520,7 +520,7 @@ final class ExifAssemblerTest extends TestCase
 
         $metadata   = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, null, null, null));
         $structured = (new ExifAssembler())->assemble($metadata);
-        $temporal   = $structured->temporal();
+        $temporal   = $structured->temporal;
         $preview    = $structured->preview;
 
         self::assertSame(400, $structured->exposure->iso);
@@ -559,9 +559,9 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertNull($structured->rights()->copyright);
-        self::assertNull($structured->author()->ownerName);
-        self::assertSame('XMP Creator', $structured->author()->creator);
+        self::assertNull($structured->rights->copyright);
+        self::assertNull($structured->author->ownerName);
+        self::assertSame('XMP Creator', $structured->author->creator);
     }
 
     #[Test]
@@ -598,14 +598,14 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('Parrot', $structured->uav()->manufacturer);
-        self::assertSame('Anafi', $structured->uav()->model);
-        self::assertEqualsWithDelta(72.5, $structured->uav()->flightYaw ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(-12.0, $structured->uav()->flightPitch ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(3.2, $structured->uav()->flightRoll ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(15.4, $structured->uav()->gimbalYaw ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(-8.6, $structured->uav()->gimbalPitch ?? 0.0, 0.0001);
-        self::assertEqualsWithDelta(1.1, $structured->uav()->gimbalRoll ?? 0.0, 0.0001);
+        self::assertSame('Parrot', $structured->uav->manufacturer);
+        self::assertSame('Anafi', $structured->uav->model);
+        self::assertEqualsWithDelta(72.5, $structured->uav->flightYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-12.0, $structured->uav->flightPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(3.2, $structured->uav->flightRoll ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(15.4, $structured->uav->gimbalYaw ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(-8.6, $structured->uav->gimbalPitch ?? 0.0, 0.0001);
+        self::assertEqualsWithDelta(1.1, $structured->uav->gimbalRoll ?? 0.0, 0.0001);
     }
 
     #[Test]
@@ -626,8 +626,8 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertNull($structured->sensor()->cfaWidth);
-        self::assertNull($structured->sensor()->cfaHeight);
+        self::assertNull($structured->sensor->cfaWidth);
+        self::assertNull($structured->sensor->cfaHeight);
     }
 
     #[Test]
@@ -660,9 +660,9 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame('XP Subject', $structured->image->documentName);
         self::assertSame('XP Title', $structured->image->title);
         self::assertSame('XP Comment', $structured->image->description);
-        self::assertSame('XP Author', $structured->author()->photographer);
-        self::assertSame('XP Author', $structured->author()->imageEditor);
-        self::assertSame(['Alpha', 'Beta'], $structured->keywords()->flat);
+        self::assertSame('XP Author', $structured->author->photographer);
+        self::assertSame('XP Author', $structured->author->imageEditor);
+        self::assertSame(['Alpha', 'Beta'], $structured->keywords->flat);
     }
 
     /**
@@ -694,11 +694,11 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('image/jpeg', $structured->file()->mimeType);
-        self::assertSame(54321, $structured->file()->fileSize);
-        self::assertSame('jpg', $structured->file()->extension);
-        self::assertSame('sha1-digest', $structured->file()->digestSha1);
-        self::assertSame('md5-digest', $structured->file()->digestMd5);
+        self::assertSame('image/jpeg', $structured->file->mimeType);
+        self::assertSame(54321, $structured->file->fileSize);
+        self::assertSame('jpg', $structured->file->extension);
+        self::assertSame('sha1-digest', $structured->file->digestSha1);
+        self::assertSame('md5-digest', $structured->file->digestMd5);
     }
 
     /**
@@ -766,8 +766,8 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $structured->composite()->type);
-        self::assertSame([9, 4], $structured->composite()->counts);
+        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $structured->composite->type);
+        self::assertSame([9, 4], $structured->composite->counts);
         $expectedCompositeExposureTimes = [
             0.008333333333333333,
             0.016666666666666666,
@@ -775,7 +775,7 @@ final class ExifAssemblerTest extends TestCase
             0.06666666666666667,
         ];
 
-        $compositeExposureTimes = $structured->composite()->exposureTimesTotal;
+        $compositeExposureTimes = $structured->composite->exposureTimesTotal;
         self::assertNotNull($compositeExposureTimes);
         self::assertCount(count($expectedCompositeExposureTimes), $compositeExposureTimes);
 
@@ -787,15 +787,15 @@ final class ExifAssemblerTest extends TestCase
             );
         }
 
-        self::assertSame('iOS 17.3', $structured->device()->software);
+        self::assertSame('iOS 17.3', $structured->device->software);
 
-        self::assertTrue($structured->scene()->hdrScene);
-        self::assertTrue($structured->scene()->nightMode);
+        self::assertTrue($structured->scene->hdrScene);
+        self::assertTrue($structured->scene->nightMode);
 
         self::assertSame('3.0', $structured->standards->profile);
 
-        self::assertSame('OffsetTimeOriginal', $structured->temporal()->tzSource);
-        $originalCaptureTime = $structured->temporal()->original;
+        self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
+        $originalCaptureTime = $structured->temporal->original;
         self::assertInstanceOf(DateTimeImmutable::class, $originalCaptureTime);
         self::assertSame('+01:00', $originalCaptureTime->format('P'));
     }
@@ -824,7 +824,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('ImageMeta Studio', $structured->device()->software);
+        self::assertSame('ImageMeta Studio', $structured->device->software);
     }
 
     #[Test]
@@ -850,7 +850,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('PowerMac G4', $structured->device()->software);
+        self::assertSame('PowerMac G4', $structured->device->software);
     }
 
     #[Test]
@@ -867,7 +867,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('QuickTime Studio', $structured->device()->software);
+        self::assertSame('QuickTime Studio', $structured->device->software);
     }
 
     /**
@@ -938,7 +938,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], $quickTime, $exifDocument, [], null, $makerNotes);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple());
+        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple);
         self::assertSame($appleMakerNotes, $apple);
 
         self::assertSame('maker-content', $apple->contentIdentifier);
@@ -984,15 +984,15 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(100, $runTime->value);
         self::assertSame(9, $runTime->flags);
 
-        self::assertSame(4300, $structured->whiteBalance()->kelvin);
-        self::assertNull($structured->motion()->rollDeg);
-        self::assertNull($structured->motion()->pitchDeg);
-        self::assertNull($structured->motion()->yawDeg);
-        self::assertEqualsWithDelta(0.05, $structured->motion()->accelX, 1e-12);
-        self::assertEqualsWithDelta(0.1, $structured->motion()->accelY, 1e-12);
-        self::assertEqualsWithDelta(-0.1, $structured->motion()->accelZ, 1e-12);
-        self::assertFalse($structured->scene()->nightMode);
-        self::assertFalse($structured->integrity()->makerNotesSafe);
+        self::assertSame(4300, $structured->whiteBalance->kelvin);
+        self::assertNull($structured->motion->rollDeg);
+        self::assertNull($structured->motion->pitchDeg);
+        self::assertNull($structured->motion->yawDeg);
+        self::assertEqualsWithDelta(0.05, $structured->motion->accelX, 1e-12);
+        self::assertEqualsWithDelta(0.1, $structured->motion->accelY, 1e-12);
+        self::assertEqualsWithDelta(-0.1, $structured->motion->accelZ, 1e-12);
+        self::assertFalse($structured->scene->nightMode);
+        self::assertFalse($structured->integrity->makerNotesSafe);
     }
 
     #[Test]
@@ -1022,7 +1022,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], null, null, [], null, $makerNotes);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple());
+        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple);
         self::assertTrue($apple->flags['nightMode']);
         self::assertTrue($apple->flags['longExposure']);
         self::assertTrue($apple->flags['hdrEnabled']);
@@ -1059,11 +1059,11 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple());
+        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple);
         self::assertNull($apple->accelerationVector);
-        self::assertEqualsWithDelta(-3.0, $structured->motion()->accelX, 1e-12);
-        self::assertEqualsWithDelta(4.0, $structured->motion()->accelY, 1e-12);
-        self::assertEqualsWithDelta(0.5, $structured->motion()->accelZ, 1e-12);
+        self::assertEqualsWithDelta(-3.0, $structured->motion->accelX, 1e-12);
+        self::assertEqualsWithDelta(4.0, $structured->motion->accelY, 1e-12);
+        self::assertEqualsWithDelta(0.5, $structured->motion->accelZ, 1e-12);
     }
 
     /**
@@ -1090,12 +1090,12 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], null, $exifDocument, []);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple());
+        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple);
         self::assertNull($apple->accelerationVector);
 
-        self::assertEqualsWithDelta(0.2, $structured->motion()->accelX, 1e-12);
-        self::assertEqualsWithDelta(-0.3, $structured->motion()->accelY, 1e-12);
-        self::assertEqualsWithDelta(0.35, $structured->motion()->accelZ, 1e-12);
+        self::assertEqualsWithDelta(0.2, $structured->motion->accelX, 1e-12);
+        self::assertEqualsWithDelta(-0.3, $structured->motion->accelY, 1e-12);
+        self::assertEqualsWithDelta(0.35, $structured->motion->accelZ, 1e-12);
     }
 
     /**
@@ -1143,7 +1143,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame($nightModeFlag, $structured->scene()->nightMode);
+        self::assertSame($nightModeFlag, $structured->scene->nightMode);
     }
 
     /**
@@ -1196,7 +1196,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertNull($structured->scene()->hdrScene);
+        self::assertNull($structured->scene->hdrScene);
 
         $headroomMakerNotes = new AppleMakerNotes(
             contentIdentifier: null,
@@ -1231,7 +1231,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structuredHeadroom = (new ExifAssembler())->assemble($headroomMetadata);
 
-        self::assertTrue($structuredHeadroom->scene()->hdrScene);
+        self::assertTrue($structuredHeadroom->scene->hdrScene);
 
         $flagMakerNotes = new AppleMakerNotes(
             contentIdentifier: null,
@@ -1266,7 +1266,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structuredFlags = (new ExifAssembler())->assemble($flagMetadata);
 
-        self::assertTrue($structuredFlags->scene()->hdrScene);
+        self::assertTrue($structuredFlags->scene->hdrScene);
     }
 
     /**
@@ -1314,8 +1314,8 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertTrue($structured->scene()->nightMode);
-        self::assertTrue($structured->scene()->hdrScene);
+        self::assertTrue($structured->scene->nightMode);
+        self::assertTrue($structured->scene->hdrScene);
     }
 
     /**
@@ -1354,7 +1354,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertTrue($structured->scene()->hdrScene);
+        self::assertTrue($structured->scene->hdrScene);
 
         $makerNotesWithFlags = new AppleMakerNotes(
             contentIdentifier: null,
@@ -1386,7 +1386,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structuredFlags = (new ExifAssembler())->assemble($metadataFlags);
 
-        self::assertTrue($structuredFlags->scene()->hdrScene);
+        self::assertTrue($structuredFlags->scene->hdrScene);
     }
 
     /**
@@ -1449,7 +1449,7 @@ final class ExifAssemblerTest extends TestCase
             ],
             get_object_vars($structured->interop),
         );
-        self::assertNull($structured->tiff()->compression);
+        self::assertNull($structured->tiff->compression);
         self::assertNull($structured->camera->make);
         self::assertSame('2.2', $structured->standards->profile);
     }
@@ -1513,7 +1513,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertNull($structured->exposure->iso);
         self::assertNull($structured->exposure->exposureTimeSec);
         self::assertNull($structured->exposure->fNumber);
-        self::assertNull($structured->capture()->dateTime);
+        self::assertNull($structured->capture->dateTime);
     }
 
     /**
@@ -1576,8 +1576,8 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('TimeZoneOffset', $structured->temporal()->tzSource);
-        $originalCaptureTime = $structured->temporal()->original;
+        self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
+        $originalCaptureTime = $structured->temporal->original;
         self::assertInstanceOf(DateTimeImmutable::class, $originalCaptureTime);
         self::assertSame('-02:00', $originalCaptureTime->format('P'));
     }
@@ -1606,11 +1606,11 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('TimeZoneOffset', $structured->temporal()->tzSource);
-        $originalCaptureTime = $structured->temporal()->original;
+        self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
+        $originalCaptureTime = $structured->temporal->original;
         self::assertInstanceOf(DateTimeImmutable::class, $originalCaptureTime);
         self::assertSame('+05:30', $originalCaptureTime->format('P'));
-        self::assertSame([330], $structured->temporal()->timeZoneOffsetMinutes);
+        self::assertSame([330], $structured->temporal->timeZoneOffsetMinutes);
     }
 
     /**
@@ -1632,15 +1632,15 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $originalCaptureTime = $structured->temporal()->original;
+        $originalCaptureTime = $structured->temporal->original;
         self::assertInstanceOf(DateTimeImmutable::class, $originalCaptureTime);
         self::assertSame('2024-07-03T10:11:12+02:30', $originalCaptureTime->format('c'));
-        $timeZone = $structured->temporal()->tz;
+        $timeZone = $structured->temporal->tz;
         self::assertNotNull($timeZone);
         self::assertSame('+02:30', $timeZone->getName());
-        self::assertNull($structured->temporal()->subSecTimeOriginal);
-        self::assertSame('987', $structured->temporal()->subSecTimeDigitized);
-        self::assertSame('987', $structured->temporal()->subSecTime);
+        self::assertNull($structured->temporal->subSecTimeOriginal);
+        self::assertSame('987', $structured->temporal->subSecTimeDigitized);
+        self::assertSame('987', $structured->temporal->subSecTime);
     }
 
     /**
@@ -1662,9 +1662,9 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal()->original);
-        self::assertNull($structured->temporal()->tz);
-        self::assertNull($structured->temporal()->tzSource);
+        self::assertInstanceOf(DateTimeImmutable::class, $structured->temporal->original);
+        self::assertNull($structured->temporal->tz);
+        self::assertNull($structured->temporal->tzSource);
     }
 
     /**
@@ -1691,8 +1691,8 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame(200, $structured->exposure->iso);
         self::assertSame(4000, $structured->image->width);
         self::assertSame(3000, $structured->image->height);
-        self::assertNull($structured->temporal()->tz);
-        self::assertNull($structured->temporal()->tzSource);
+        self::assertNull($structured->temporal->tz);
+        self::assertNull($structured->temporal->tzSource);
     }
 
     #[Test]
@@ -1730,14 +1730,14 @@ final class ExifAssemblerTest extends TestCase
 
         self::assertSame(5472, $structured->image->width);
         self::assertSame(3648, $structured->image->height);
-        self::assertNull($structured->video()->width);
-        self::assertNull($structured->video()->height);
-        self::assertNull($structured->video()->durationSec);
-        self::assertNull($structured->video()->frameRate);
-        self::assertNull($structured->video()->codec);
-        self::assertNull($structured->video()->hdr);
-        self::assertNull($structured->video()->transferFunction);
-        self::assertNull($structured->video()->colorPrimaries);
+        self::assertNull($structured->video->width);
+        self::assertNull($structured->video->height);
+        self::assertNull($structured->video->durationSec);
+        self::assertNull($structured->video->frameRate);
+        self::assertNull($structured->video->codec);
+        self::assertNull($structured->video->hdr);
+        self::assertNull($structured->video->transferFunction);
+        self::assertNull($structured->video->colorPrimaries);
     }
 
     /**
@@ -1797,11 +1797,11 @@ final class ExifAssemblerTest extends TestCase
         $structured = (new ExifAssembler())->assemble($metadata);
 
         self::assertSame(320, $structured->exposure->iso);
-        self::assertSame('TimeZoneOffset', $structured->temporal()->tzSource);
-        $originalCaptureTime = $structured->temporal()->original;
+        self::assertSame('TimeZoneOffset', $structured->temporal->tzSource);
+        $originalCaptureTime = $structured->temporal->original;
         self::assertInstanceOf(DateTimeImmutable::class, $originalCaptureTime);
         self::assertSame('-01:30', $originalCaptureTime->format('P'));
-        self::assertSame([-90], $structured->temporal()->timeZoneOffsetMinutes);
+        self::assertSame([-90], $structured->temporal->timeZoneOffsetMinutes);
     }
 
     /**
@@ -1831,15 +1831,15 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('OffsetTimeOriginal', $structured->temporal()->tzSource);
-        self::assertSame('+02:30', $structured->temporal()->offsetTimeOriginal);
-        self::assertSame('321', $structured->temporal()->subSecTime);
-        self::assertSame('654', $structured->temporal()->subSecTimeOriginal);
-        self::assertSame('987', $structured->temporal()->subSecTimeDigitized);
+        self::assertSame('OffsetTimeOriginal', $structured->temporal->tzSource);
+        self::assertSame('+02:30', $structured->temporal->offsetTimeOriginal);
+        self::assertSame('321', $structured->temporal->subSecTime);
+        self::assertSame('654', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('987', $structured->temporal->subSecTimeDigitized);
 
-        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $structured->composite()->type);
-        self::assertSame([5, 2], $structured->composite()->counts);
-        $compositeExposureTimes = $structured->composite()->exposureTimesTotal;
+        self::assertSame(CompositeImage::GENERAL_COMPOSITE, $structured->composite->type);
+        self::assertSame([5, 2], $structured->composite->counts);
+        $compositeExposureTimes = $structured->composite->exposureTimesTotal;
         self::assertNotNull($compositeExposureTimes);
         $expectedExposureTimes = [0.0333333333, 0.0666666666, 0.125];
         self::assertCount(count($expectedExposureTimes), $compositeExposureTimes);
@@ -1866,9 +1866,9 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('654', $structured->temporal()->subSecTime);
-        self::assertSame('123', $structured->temporal()->subSecTimeOriginal);
-        self::assertSame('987', $structured->temporal()->subSecTimeDigitized);
+        self::assertSame('654', $structured->temporal->subSecTime);
+        self::assertSame('123', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('987', $structured->temporal->subSecTimeDigitized);
     }
 
     /**
@@ -1887,9 +1887,9 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('957', $structured->temporal()->subSecTimeOriginal);
-        self::assertSame('957', $structured->temporal()->subSecTimeDigitized);
-        self::assertSame('957', $structured->temporal()->subSecTime);
+        self::assertSame('957', $structured->temporal->subSecTimeOriginal);
+        self::assertSame('957', $structured->temporal->subSecTimeDigitized);
+        self::assertSame('957', $structured->temporal->subSecTime);
     }
 
     /**
@@ -1907,9 +1907,9 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertNull($structured->temporal()->subSecTimeOriginal);
-        self::assertSame('957', $structured->temporal()->subSecTimeDigitized);
-        self::assertSame('957', $structured->temporal()->subSecTime);
+        self::assertNull($structured->temporal->subSecTimeOriginal);
+        self::assertSame('957', $structured->temporal->subSecTimeDigitized);
+        self::assertSame('957', $structured->temporal->subSecTime);
     }
 
     /**
@@ -1996,7 +1996,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata([], null, null, [], null, null, $icc, []);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $profile = $structured->colorProfile();
+        $profile = $structured->colorProfile;
         self::assertSame('Test Profile', $profile->profileName);
         self::assertSame('4.2.1', $profile->profileVersion);
         self::assertSame('XYZ ', $profile->pcs);
@@ -2063,7 +2063,7 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata(['primary'], null, $document);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        $profile = $structured->colorProfile();
+        $profile = $structured->colorProfile;
         self::assertSame('CameraSig v1.0', $profile->cameraCalibrationSignature);
         self::assertSame('ProfileSig v2', $profile->profileCalibrationSignature);
         self::assertNotNull($profile->hueSatMap);
@@ -2259,49 +2259,49 @@ final class ExifAssemblerTest extends TestCase
 
         /** @var array<string, object> $components */
         $components = [
-            'file'          => $structured->file(),
-            'container'     => $structured->container(),
-            'integrity'     => $structured->integrity(),
+            'file'          => $structured->file,
+            'container'     => $structured->container,
+            'integrity'     => $structured->integrity,
             'camera'        => $structured->camera,
-            'device'        => $structured->device(),
+            'device'        => $structured->device,
             'lens'          => $structured->lens,
             'derived'       => $structured->derived,
             'image'         => $structured->image,
             'preview'       => $structured->preview,
-            'video'         => $structured->video(),
-            'audio'         => $structured->audio(),
-            'embeddedAudio' => $structured->embeddedAudio(),
-            'colorProfile'  => $structured->colorProfile(),
-            'composite'     => $structured->composite(),
-            'multiPicture'  => $structured->multiPicture(),
+            'video'         => $structured->video,
+            'audio'         => $structured->audio,
+            'embeddedAudio' => $structured->embeddedAudio,
+            'colorProfile'  => $structured->colorProfile,
+            'composite'     => $structured->composite,
+            'multiPicture'  => $structured->multiPicture,
             'exposure'      => $structured->exposure,
-            'capture'       => $structured->capture(),
-            'scene'         => $structured->scene(),
-            'temporal'      => $structured->temporal(),
-            'regions'       => $structured->regions(),
-            'keywords'      => $structured->keywords(),
+            'capture'       => $structured->capture,
+            'scene'         => $structured->scene,
+            'temporal'      => $structured->temporal,
+            'regions'       => $structured->regions,
+            'keywords'      => $structured->keywords,
             'gps'           => $structured->gps,
-            'sensor'        => $structured->sensor(),
-            'focus'         => $structured->focus(),
-            'motion'        => $structured->motion(),
-            'uav'           => $structured->uav(),
-            'processing'    => $structured->processing(),
-            'whiteBalance'  => $structured->whiteBalance(),
+            'sensor'        => $structured->sensor,
+            'focus'         => $structured->focus,
+            'motion'        => $structured->motion,
+            'uav'           => $structured->uav,
+            'processing'    => $structured->processing,
+            'whiteBalance'  => $structured->whiteBalance,
             'interop'       => $structured->interop,
-            'tiff'          => $structured->tiff(),
+            'tiff'          => $structured->tiff,
             'standards'     => $structured->standards,
-            'flashPix'      => $structured->flashPix(),
-            'xmp'           => $structured->xmp(),
-            'rights'        => $structured->rights(),
-            'author'        => $structured->author(),
-            'related'       => $structured->related(),
+            'flashPix'      => $structured->flashPix,
+            'xmp'           => $structured->xmp,
+            'rights'        => $structured->rights,
+            'author'        => $structured->author,
+            'related'       => $structured->related,
         ];
 
         foreach ($components as $name => $value) {
             self::assertNullStateComponent($name, $value);
         }
 
-        $appleNotes = $structured->makerNotesApple();
+        $appleNotes = $structured->makerNotesApple;
         self::assertInstanceOf(AppleMakerNotes::class, $appleNotes);
         self::assertNullStateAppleMakerNotes($appleNotes);
     }
@@ -2328,7 +2328,7 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame($flashPix, $structured->flashPix()->streams);
+        self::assertSame($flashPix, $structured->flashPix->streams);
     }
 
     /**
@@ -2359,10 +2359,10 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata([], null, null, [], $xmpDocument);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame(2, $structured->scene()->faceCount);
-        self::assertCount(3, $structured->regions()->items);
+        self::assertSame(2, $structured->scene->faceCount);
+        self::assertCount(3, $structured->regions->items);
 
-        $first = $structured->regions()->items[0];
+        $first = $structured->regions->items[0];
         self::assertSame(RegionType::FACE, $first->type);
         self::assertSame('Alice', $first->personName);
         self::assertSame('101', $first->faceId);
@@ -2371,7 +2371,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertNotNull($first->rotationDeg);
         self::assertEqualsWithDelta(12.5, $first->rotationDeg, 0.0001);
 
-        $third = $structured->regions()->items[2];
+        $third = $structured->regions->items[2];
         self::assertSame(RegionType::FACE, $third->type);
         self::assertSame('Bob', $third->personName);
         self::assertSame('202', $third->faceId);
@@ -2425,10 +2425,10 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame(WhiteBalance::AUTO, $structured->whiteBalance()->mode);
-        self::assertSame(5200, $structured->whiteBalance()->kelvin);
+        self::assertSame(WhiteBalance::AUTO, $structured->whiteBalance->mode);
+        self::assertSame(5200, $structured->whiteBalance->kelvin);
 
-        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple());
+        $apple = $this->assertAppleMakerNotes($structured->makerNotesApple);
         self::assertSame('uuid-123', $apple->contentIdentifier);
         self::assertSame(5200, $apple->colorTemperature);
         self::assertArrayHasKey('hdrEnabled', $apple->flags);
@@ -2460,9 +2460,9 @@ final class ExifAssemblerTest extends TestCase
         self::assertSame('3.0', $structured->standards->profile);
         self::assertSame('Autumn Sunset', $structured->image->title);
         self::assertNull($structured->camera->firmware);
-        self::assertSame('Raw Developer X', $structured->device()->rawDevelopingSoftware);
-        self::assertSame('Image Editor Y', $structured->device()->imageEditingSoftware);
-        self::assertSame('Metadata Tool Z', $structured->device()->metadataEditingSoftware);
+        self::assertSame('Raw Developer X', $structured->device->rawDevelopingSoftware);
+        self::assertSame('Image Editor Y', $structured->device->imageEditingSoftware);
+        self::assertSame('Metadata Tool Z', $structured->device->metadataEditingSoftware);
     }
 
     #[Test]
@@ -2493,25 +2493,25 @@ final class ExifAssemblerTest extends TestCase
         $metadata   = new Metadata([], $quickTime);
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame('qt', $structured->container()->format);
-        self::assertSame('Apple Encoder', $structured->container()->encoder);
-        self::assertSame(22000000, $structured->container()->bitrate);
-        self::assertSame('Apple ProRes 422', $structured->container()->videoCodec);
-        self::assertSame('lpcm', $structured->container()->audioCodec);
+        self::assertSame('qt', $structured->container->format);
+        self::assertSame('Apple Encoder', $structured->container->encoder);
+        self::assertSame(22000000, $structured->container->bitrate);
+        self::assertSame('Apple ProRes 422', $structured->container->videoCodec);
+        self::assertSame('lpcm', $structured->container->audioCodec);
 
-        self::assertEqualsWithDelta(12.5, $structured->video()->durationSec, 1e-6);
-        self::assertSame(24.0, $structured->video()->frameRate);
-        self::assertSame(1920, $structured->video()->width);
-        self::assertSame(1080, $structured->video()->height);
-        self::assertSame('Apple ProRes 422', $structured->video()->codec);
-        self::assertTrue($structured->video()->hdr);
-        self::assertSame('PQ', $structured->video()->transferFunction);
-        self::assertSame('BT2020', $structured->video()->colorPrimaries);
+        self::assertEqualsWithDelta(12.5, $structured->video->durationSec, 1e-6);
+        self::assertSame(24.0, $structured->video->frameRate);
+        self::assertSame(1920, $structured->video->width);
+        self::assertSame(1080, $structured->video->height);
+        self::assertSame('Apple ProRes 422', $structured->video->codec);
+        self::assertTrue($structured->video->hdr);
+        self::assertSame('PQ', $structured->video->transferFunction);
+        self::assertSame('BT2020', $structured->video->colorPrimaries);
 
-        self::assertSame(2, $structured->audio()->channels);
-        self::assertSame(48000, $structured->audio()->sampleRate);
-        self::assertSame('lpcm', $structured->audio()->codec);
-        self::assertSame(24, $structured->audio()->bitDepth);
+        self::assertSame(2, $structured->audio->channels);
+        self::assertSame(48000, $structured->audio->sampleRate);
+        self::assertSame('lpcm', $structured->audio->codec);
+        self::assertSame(24, $structured->audio->bitDepth);
     }
 
     #[Test]
@@ -2522,9 +2522,9 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertCount(1, $structured->embeddedAudio()->clips);
+        self::assertCount(1, $structured->embeddedAudio->clips);
 
-        $clip = $structured->embeddedAudio()->clips[0];
+        $clip = $structured->embeddedAudio->clips[0];
         self::assertSame('PCM', $clip->format);
         self::assertSame(2, $clip->channels);
         self::assertSame(44_100, $clip->sampleRate);
@@ -2561,8 +2561,8 @@ final class ExifAssemblerTest extends TestCase
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
-        self::assertSame(8, $structured->tiff()->bitsPerSample);
-        self::assertSame([2, 2], $structured->tiff()->ycbcrSubSampling);
+        self::assertSame(8, $structured->tiff->bitsPerSample);
+        self::assertSame([2, 2], $structured->tiff->ycbcrSubSampling);
     }
 
     /**
@@ -2602,7 +2602,7 @@ final class ExifAssemblerTest extends TestCase
         );
 
         $structured   = (new ExifAssembler())->assemble($metadata);
-        $multiPicture = $structured->multiPicture();
+        $multiPicture = $structured->multiPicture;
 
         self::assertSame('0100', $multiPicture->version);
         self::assertSame(2, $multiPicture->imageCount);

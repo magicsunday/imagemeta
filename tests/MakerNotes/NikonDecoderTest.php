@@ -36,8 +36,8 @@ final class NikonDecoderTest extends TestCase
 
         $metadata = $decoder->decode($raw, 'Nikon Corporation', 'NIKON Z 8');
 
-        self::assertSame('Nikon', $metadata->vendor());
-        self::assertSame(strlen($raw), $metadata->length());
-        self::assertSame(sha1($raw), $metadata->sha1());
+        self::assertSame('Nikon', $metadata->vendor);
+        self::assertSame(strlen($raw), $metadata->length);
+        self::assertSame(sha1($raw), $metadata->sha1);
     }
 }

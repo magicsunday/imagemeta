@@ -167,7 +167,7 @@ final class ValueFactory
         $exifDocument    = $metadata->exifDoc;
         $quickTimeMeta   = $metadata->quickTime;
         $quickTimeLookup = new QuickTimeLookup($quickTimeMeta);
-        $appleMakerNotes = $metadata->makerNotes?->apple();
+        $appleMakerNotes = $metadata->makerNotes?->apple;
 
         $interop = new Interop(
             index: $exifDocument?->interopIndex(),
@@ -601,7 +601,7 @@ final class ValueFactory
         $uav = $this->buildUav($exifDocument, $quickTimeMeta);
 
         $hasHistory     = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
-        $makerNotesSafe = $metadata->makerNotes?->isSafe();
+        $makerNotesSafe = $metadata->makerNotes?->isSafe;
         if ($makerNotesSafe === null) {
             $makerNotesSafe = $exifDocument?->makerNoteSafety();
         }
