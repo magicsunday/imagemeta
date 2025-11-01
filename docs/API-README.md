@@ -29,12 +29,12 @@ if ($exposure->program === ExposureProgram::PROGRAM_APERTURE_PRIORITY) {
     echo "Captured in aperture priority mode" . PHP_EOL;
 }
 
-if ($exposure->flash?->fired() === true) {
+if ($exposure->flash?->fired === true) {
     echo "Flash fired" . PHP_EOL;
 }
 
-$whiteBalanceKelvin = $metadata->processing->whiteBalance->kelvin();
-printf("White balance: %s K\n", $whiteBalanceKelvin !== null ? (string) $whiteBalanceKelvin : 'auto');
+$whiteBalance = $metadata->whiteBalance();
+printf("White balance: %s K\n", $whiteBalance->kelvin !== null ? (string) $whiteBalance->kelvin : 'auto');
 ```
 
 The `MetadataReader` streams the file, so the example works for JPEG and HEIC containers without loading the full asset into
@@ -46,13 +46,13 @@ memory. Every nested aggregate returns well-defined value objects, e.g. the flas
 ```php
 $gps = $metadata->gps;
 
-if (($gps->latitude !== null) && ($gps->longitude !== null)) {
+if (($gps->latitudeSigned !== null) && ($gps->longitudeSigned !== null)) {
     printf(
         "Coordinates: %.6f°, %.6f° (%s/%s)\n",
-        $gps->latitude->toFloat() ?? 0.0,
-        $gps->longitude->toFloat() ?? 0.0,
-        $gps->latitude->reference() ?? '?',
-        $gps->longitude->reference() ?? '?',
+        $gps->latitudeSigned,
+        $gps->longitudeSigned,
+        $gps->latitudeRef ?? '?',
+        $gps->longitudeRef ?? '?',
     );
 }
 ```
