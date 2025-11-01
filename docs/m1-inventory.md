@@ -1,17 +1,17 @@
 # Milestone M1 Inventory
 
-This inventory documents every reference to the legacy structured EXIF wrappers and the curated metadata aggregates. It highlights call sites that need to be migrated while converging on a single value layer.
+This inventory tracks the migration towards a single structured value layer and
+documents the remaining touch points after removing the legacy wrappers.
 
-## `MagicSunday\\ImageMeta\\Curate\\Exif\\Structured\\*`
+## Removed structured EXIF wrappers
 
-| Wrapper | Location | Purpose |
-| --- | --- | --- |
-| `Camera` | `src/Exif/StructuredExif.php` | Imported and instantiated inside `StructuredExif` to expose EXIF-only camera metadata without cross-container fallbacks. |
-| `Lens` | `src/Exif/StructuredExif.php` | Instantiated by `StructuredExif` to wrap the derived lens value objects. |
-| `Exposure` | `src/Exif/StructuredExif.php` | Created by `StructuredExif` to surface exposure settings alongside derived EV helpers. |
-| `Gps` | `src/Exif/StructuredExif.php` | Provides EXIF-only GPS data for the legacy `StructuredExif` aggregate. |
-| `Image` | `src/Exif/StructuredExif.php` | Supplies image dimension accessors required by the EXIF wrapper. |
-| `Preview` | `src/Exif/StructuredExif.php`, `tests/Support/ExifExpectationAssertions.php` | Used by the API wrapper and expectation helpers to expose thumbnail and preview metadata. |
+* No PHP files remain under `src/Curate/Exif/Structured`; the namespace was
+  deleted as part of the wrapper removal.
+* `src/Exif/StructuredExif.php` instantiates `MagicSunday\\ImageMeta\\Value`
+  objects directly (`Camera`, `Lens`, `Exposure`, `Gps`, `Image`, `Preview`).
+* `tests/Support/ExifExpectationAssertions.php` exercises these value objects
+  without intermediate wrappers, ensuring API expectations stay aligned with the
+  curated aggregates.
 
 ## Structured metadata value layer
 
@@ -21,7 +21,12 @@ This inventory documents every reference to the legacy structured EXIF wrappers 
 | `Camera`, `Lens`, `Exposure`, `Gps` | `src/Curate/StructuredMetadata.php`, `src/Curate/Exif/ValueFactory.php` | Immutable value objects assembled by `ValueFactory` and exposed directly via `StructuredMetadata`. |
 | `Capture`, `Scene`, `Temporal`, `Regions`, `Keywords`, `Sensor`, `Focus`, `Motion`, `Uav`, `ProcessingSettings`, `WhiteBalanceDetails`, `Interop`, `TiffData`, `Standards`, `FlashPix`, `Xmp`, `Rights`, `Author`, `RelatedAssets`, `Container`, `Integrity`, `Preview`, `Image`, `Video`, `Audio`, `AudioClips`, `ColorProfile`, `CompositeImageInfo`, `MultiPicture`, `Derived` | `src/Curate/StructuredMetadata.php`, `src/Curate/Exif/ValueFactory.php` | Additional metadata slices exposed through dedicated getters on `StructuredMetadata`. |
 
-## `MagicSunday\\ImageMeta\\Convenience\\ExifConvenience::gps()`
+## Convenience helpers
 
-* Defined in `src/Convenience/ExifConvenience.php` where it forwards to `ParsedExif::gps()` while retaining EXIF specification references.
-* No external call sites were found during the repository scan, indicating that the helper currently lacks dedicated consumers or tests.
+* `src/Convenience/ExifConvenience.php` exposes presentation helpers for
+  formatted strings (`cameraDescription`, `exposureSummary`, `gpsString`,
+  `imageDimensions`, `captureDateTimeString`, `toArray`). The helper only
+  formats data supplied via value objects; it does not perform parsing or tag
+  resolution.
+* `tests/Convenience/ExifConvenienceTest.php` covers formatting behaviour and
+  ensures the helper remains side-effect free.
