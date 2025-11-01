@@ -102,14 +102,14 @@ final class MetadataReaderTest extends TestCase
 
         /** @var array<string, callable(): mixed> $componentAccessors */
         $componentAccessors = [
-            'file'      => static fn () => $structured->file,
-            'container' => static fn () => $structured->container,
-            'camera'    => static fn () => $structured->camera,
-            'lens'      => static fn () => $structured->lens,
-            'derived'   => static fn () => $structured->derived,
-            'exposure'  => static fn () => $structured->exposure,
-            'preview'   => static fn () => $structured->preview,
-            'rights'    => static fn () => $structured->rights,
+            'file'      => static fn (): FileValue => $structured->file,
+            'container' => static fn (): Container => $structured->container,
+            'camera'    => static fn (): Camera => $structured->camera,
+            'lens'      => static fn (): Lens => $structured->lens,
+            'derived'   => static fn (): Derived => $structured->derived,
+            'exposure'  => static fn (): Exposure => $structured->exposure,
+            'preview'   => static fn (): Preview => $structured->preview,
+            'rights'    => static fn (): Rights => $structured->rights,
         ];
 
         $expectedClasses = [

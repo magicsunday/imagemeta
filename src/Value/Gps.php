@@ -126,7 +126,7 @@ final readonly class Gps
 
     private function normaliseTimestamp(?DateTimeImmutable $timestamp): ?DateTimeImmutable
     {
-        if ($timestamp === null) {
+        if (!$timestamp instanceof DateTimeImmutable) {
             return null;
         }
 

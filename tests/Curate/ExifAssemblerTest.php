@@ -2298,12 +2298,12 @@ final class ExifAssemblerTest extends TestCase
         ];
 
         foreach ($components as $name => $value) {
-            self::assertNullStateComponent($name, $value);
+            $this->assertNullStateComponent($name, $value);
         }
 
         $appleNotes = $structured->makerNotesApple;
         self::assertInstanceOf(AppleMakerNotes::class, $appleNotes);
-        self::assertNullStateAppleMakerNotes($appleNotes);
+        $this->assertNullStateAppleMakerNotes($appleNotes);
     }
 
     /**
@@ -2646,7 +2646,7 @@ final class ExifAssemblerTest extends TestCase
         return $header . $ifd0 . $exifIfd;
     }
 
-    private static function assertNullStateComponent(string $name, object $value): void
+    private function assertNullStateComponent(string $name, object $value): void
     {
         foreach (get_object_vars($value) as $field => $fieldValue) {
             if ($fieldValue === null) {
@@ -2691,7 +2691,7 @@ final class ExifAssemblerTest extends TestCase
         }
     }
 
-    private static function assertNullStateAppleMakerNotes(AppleMakerNotes $appleNotes): void
+    private function assertNullStateAppleMakerNotes(AppleMakerNotes $appleNotes): void
     {
         foreach (get_object_vars($appleNotes) as $field => $fieldValue) {
             if ($field === 'flags') {

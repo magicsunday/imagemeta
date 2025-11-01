@@ -11,12 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use Stringable;
+
 use function sprintf;
 
 /**
  * Represents a geographic coordinate with optional hemisphere reference.
  */
-final readonly class GpsCoordinate
+final readonly class GpsCoordinate implements Stringable
 {
     public float $signed;
 

@@ -26,8 +26,8 @@ final class GpsTest extends TestCase
     {
         $gps = new Gps(
             latitude: 1.23,
-            latitudeRef: 'N',
             longitude: 4.56,
+            latitudeRef: 'N',
             longitudeRef: 'E',
             dop: 0.8,
             speedRef: 'K',
@@ -62,8 +62,8 @@ final class GpsTest extends TestCase
     {
         $gps = new Gps(
             latitude: 12.5,
-            latitudeRef: 's',
             longitude: 7.5,
+            latitudeRef: 's',
             longitudeRef: 'W',
         );
 

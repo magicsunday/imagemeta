@@ -71,11 +71,7 @@ final class ExifConvenience
         $cameraLabel = null;
 
         if ($make !== null && $model !== null) {
-            if (self::startsWithCaseInsensitive($model, $make)) {
-                $cameraLabel = $model;
-            } else {
-                $cameraLabel = $make . ' ' . $model;
-            }
+            $cameraLabel = self::startsWithCaseInsensitive($model, $make) ? $model : $make . ' ' . $model;
         } elseif ($make !== null || $model !== null) {
             $cameraLabel = $make ?? $model;
         }
@@ -233,13 +229,7 @@ final class ExifConvenience
     {
         $needle = sprintf('%d mm eq', $equivalent);
 
-        foreach ($parts as $part) {
-            if (strcasecmp($part, $needle) === 0) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($parts, fn ($part): bool => strcasecmp($part, $needle) === 0);
     }
 
     private static function formatExposureTime(float $seconds): string
@@ -293,7 +283,7 @@ final class ExifConvenience
 
     private static function formatNumber(float $value, int $precision): string
     {
-        $precision = $precision < 0 ? 0 : $precision;
+        $precision = max(0, $precision);
         $format    = '%.' . $precision . 'f';
 
         $formatted = sprintf($format, $value);
