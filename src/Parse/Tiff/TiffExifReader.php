@@ -1247,7 +1247,7 @@ final class TiffExifReader
     {
         $raw = $this->makerNoteRaw ?? '';
 
-        return new MakerNotesRecord('Unknown', strlen($raw), sha1($raw), null, $isSafe);
+        return new MakerNotesRecord('Unknown', strlen($raw), sha1($raw), $isSafe);
     }
 
     /**
@@ -1263,7 +1263,6 @@ final class TiffExifReader
             $metadata->vendor,
             $metadata->length,
             $metadata->sha1,
-            $metadata->apple,
             $isSafe,
         );
     }

@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Model;
 
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Extensions;
 
 /**
  * Lazily assembles and caches structured metadata derived from the aggregate.
@@ -29,7 +30,13 @@ final class StructuredMetadataCache
     public function resolve(Metadata $metadata): StructuredMetadata
     {
         if (!$this->structured instanceof StructuredMetadata) {
-            $this->structured = $this->assembler->assemble($metadata);
+            $structured = $this->assembler->assemble($metadata);
+
+            foreach (Extensions::registry()->enrichers() as $enricher) {
+                $structured = $enricher->enrich($metadata, $structured);
+            }
+
+            $this->structured = $structured;
         }
 
         return $this->structured;

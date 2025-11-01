@@ -1,0 +1,14 @@
+{
+  "name": "magicsunday/imagemeta-xmp",
+  "description": "Optional XMP module for MagicSunday/ImageMeta",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.4",
+    "magicsunday/imagemeta": "^1.0"
+  },
+  "autoload": {
+    "psr-4": { "MagicSunday\\ImageMeta\\Xmp\\": "src/" },
+    "files": ["src/register.php"]
+  }
+}

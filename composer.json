@@ -1,6 +1,6 @@
 {
     "name": "magicsunday/imagemeta",
-    "description": "Unified EXIF 3.0 / XMP / IPTC / ISOBMFF metadata for PHP.",
+    "description": "Unified EXIF 3.0 metadata for PHP.",
     "type": "library",
     "license": "MIT",
     "authors": [

@@ -12,31 +12,12 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\MakerNotes;
 
 /**
- * Factory that creates maker note registries with all built-in decoders registered.
+ * Factory that creates maker note registries.
  */
 final class RegistryFactory
 {
-    /**
-     * Creates a registry pre-populated with the built-in maker note decoders.
-     */
     public static function createDefault(): Registry
     {
-        $registry = new Registry();
-
-        $appleDecoder = new AppleDecoder();
-        $canonDecoder = new CanonDecoder();
-        $nikonDecoder = new NikonDecoder();
-        $sonyDecoder  = new SonyDecoder();
-
-        $registry->register('Apple', $appleDecoder);
-        $registry->register('Canon', $canonDecoder);
-        $registry->register('Canon Inc', $canonDecoder);
-        $registry->register('Canon Inc.', $canonDecoder);
-        $registry->register('Nikon', $nikonDecoder);
-        $registry->register('Nikon Corporation', $nikonDecoder);
-        $registry->register('Sony', $sonyDecoder);
-        $registry->register('Sony Corporation', $sonyDecoder);
-
-        return $registry;
+        return new Registry();
     }
 }

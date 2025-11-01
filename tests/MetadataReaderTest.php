@@ -1,38 +1,25 @@
 <?php
 
-/**
- * This file is part of the package magicsunday/imagemeta.
- *
- * For the full copyright and license information, please read the
- * LICENSE file that was distributed with this source code.
- */
-
 declare(strict_types=1);
 
-namespace MagicSunday\imagemeta\tests;
+namespace MagicSunday\ImageMeta\Tests;
 
-use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Container;
-use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File as FileValue;
-use MagicSunday\ImageMeta\Value\Lens;
-use MagicSunday\ImageMeta\Value\Preview;
-use MagicSunday\ImageMeta\Value\Rights;
+use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\Image;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
 use function file_put_contents;
-use function ltrim;
 use function md5;
 use function pack;
+use function ltrim;
 use function rename;
 use function sha1;
 use function strlen;
@@ -40,36 +27,28 @@ use function sys_get_temp_dir;
 use function tempnam;
 use function unlink;
 
-/**
- * Integration coverage for the convenience metadata reader.
- *
- * @covers \MagicSunday\ImageMeta\MetadataReader
- */
 final class MetadataReaderTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
-    private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
-
     private const int MARKER_APP1 = 0xE1;
 
-    /**
-     * Ensures JPEG detection extracts EXIF and XMP payloads with parsed documents.
-     */
+    private const int MARKER_SOF0 = 0xC0;
+
     #[Test]
-    public function testReadJpegPopulatesMetadata(): void
+    public function readJpegExtractsExifMetadata(): void
     {
-        $makerNote = 'synthetic-nikon-maker-note';
-        $tiff      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
-        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
-            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
-            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:title="Synthetic" />'
-            . '</rdf:RDF>'
-            . '</x:xmpmeta>';
+        $tiff = $this->littleEndianTiff(
+            make: 'MagicSunday',
+            model: 'ImageMeta',
+            width: 512,
+            height: 256,
+            dateTimeOriginal: '2024:03:01 12:34:56',
+        );
 
         $jpeg = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
-            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
+            . $this->segment(self::MARKER_SOF0, $this->baselineSofPayload(512, 256))
             . "\xFF\xD9";
 
         $path = $this->writeTempFile($jpeg, 'jpg');
@@ -81,71 +60,31 @@ final class MetadataReaderTest extends TestCase
         }
 
         self::assertSame([$tiff], $metadata->exifBlobs);
-        self::assertSame([$xmp], $metadata->xmpBlobs);
-        self::assertNull($metadata->quickTime);
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
-        self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
-        self::assertSame('Nikon', $metadata->makerNotes->vendor);
-        self::assertSame(strlen($makerNote), $metadata->makerNotes->length);
-        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1);
-        self::assertNull($metadata->iccProfile);
-        self::assertSame([], $metadata->iccSegments);
-        self::assertSame([], $metadata->flashPixStreams);
-        self::assertSame('image/jpeg', $metadata->mimeType);
-        self::assertSame(strlen($jpeg), $metadata->fileSize);
-        self::assertSame('jpg', $metadata->extension);
-        self::assertNull($metadata->digestSha1);
-        self::assertNull($metadata->digestMd5);
+        self::assertSame(8, $metadata->jpegBitsPerSample);
+        self::assertSame(256, $metadata->jpegFrameHeight);
+        self::assertSame(512, $metadata->jpegFrameWidth);
 
         $structured = $metadata->structured();
 
-        /** @var array<string, callable(): mixed> $componentAccessors */
-        $componentAccessors = [
-            'file'      => static fn (): FileValue => $structured->file,
-            'container' => static fn (): Container => $structured->container,
-            'camera'    => static fn (): Camera => $structured->camera,
-            'lens'      => static fn (): Lens => $structured->lens,
-            'derived'   => static fn (): Derived => $structured->derived,
-            'exposure'  => static fn (): Exposure => $structured->exposure,
-            'preview'   => static fn (): Preview => $structured->preview,
-            'rights'    => static fn (): Rights => $structured->rights,
-        ];
+        self::assertInstanceOf(FileValue::class, $structured->file);
+        self::assertInstanceOf(Container::class, $structured->container);
+        self::assertInstanceOf(Image::class, $structured->image);
+        self::assertInstanceOf(Exposure::class, $structured->exposure);
+        self::assertInstanceOf(Gps::class, $structured->gps);
 
-        $expectedClasses = [
-            'file'      => FileValue::class,
-            'container' => Container::class,
-            'camera'    => Camera::class,
-            'lens'      => Lens::class,
-            'derived'   => Derived::class,
-            'exposure'  => Exposure::class,
-            'preview'   => Preview::class,
-            'rights'    => Rights::class,
-        ];
-
-        foreach ($componentAccessors as $name => $accessor) {
-            $value = $accessor();
-            self::assertInstanceOf($expectedClasses[$name], $value);
-        }
-
-        self::assertSame('image/jpeg', $structured->file->mimeType);
-        self::assertSame(strlen($jpeg), $structured->file->fileSize);
-        self::assertSame('jpg', $structured->file->extension);
-        self::assertNull($structured->file->digestSha1);
-        self::assertNull($structured->file->digestMd5);
+        self::assertSame('JPEG', $structured->container->format);
+        self::assertSame(512, $structured->image->width);
+        self::assertSame(256, $structured->image->height);
     }
 
-    /**
-     * Ensures optional digest calculation provides SHA-1 and MD5 for JPEG payloads.
-     */
     #[Test]
-    public function testReadJpegWithDigestsPopulatesChecksums(): void
+    public function readJpegWithDigestsCalculatesChecksums(): void
     {
-        $makerNote = 'digest-maker-note';
-        $tiff      = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R6', $makerNote);
-
+        $tiff = $this->littleEndianTiff('Vendor', 'Model', 128, 64, '2024:01:01 00:00:01');
         $jpeg = "\xFF\xD8"
             . $this->segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $tiff)
+            . $this->segment(self::MARKER_SOF0, $this->baselineSofPayload(128, 64))
             . "\xFF\xD9";
 
         $path = $this->writeTempFile($jpeg, 'jpeg');
@@ -156,117 +95,90 @@ final class MetadataReaderTest extends TestCase
             @unlink($path);
         }
 
-        $expectedSha1 = sha1($jpeg);
-        $expectedMd5  = md5($jpeg);
-
-        self::assertSame($expectedSha1, $metadata->digestSha1);
-        self::assertSame($expectedMd5, $metadata->digestMd5);
+        self::assertSame(sha1($jpeg), $metadata->digestSha1);
+        self::assertSame(md5($jpeg), $metadata->digestMd5);
 
         $structured = $metadata->structured();
-        self::assertSame($expectedSha1, $structured->file->digestSha1);
-        self::assertSame($expectedMd5, $structured->file->digestMd5);
-    }
-
-    /**
-     * Ensures the structured image aggregate falls back to the SOF precision when EXIF lacks the tag.
-     */
-    #[Test]
-    public function testStructuredImageBitsPerSampleFallbacksToFramePrecision(): void
-    {
-        $sofPayload = $this->buildBaselineStartOfFramePayload(8, 672, 448);
-
-        $jpeg = "\xFF\xD8"
-            . $this->segment(0xC0, $sofPayload)
-            . "\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg, 'jpg');
-
-        try {
-            $metadata = (new MetadataReader())->read($path);
-        } finally {
-            @unlink($path);
-        }
-
-        self::assertSame(8, $metadata->jpegBitsPerSample);
-
-        $image = $metadata->structured()->image;
-
-        self::assertSame(8, $image->bitsPerSample);
-        self::assertSame(448, $image->width);
-        self::assertSame(672, $image->height);
-    }
-
-    /**
-     * Ensures ISO BMFF detection populates EXIF/XMP blobs and QuickTime metadata.
-     */
-    #[Test]
-    public function testReadIsoBmffPopulatesMetadata(): void
-    {
-        $makerNote = 'synthetic-sony-maker-note';
-        $tiff      = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote);
-        $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
-            . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
-            . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
-            . '</rdf:RDF>'
-            . '</x:xmpmeta>';
-        $identifier = 'qt-meta-identifier';
-
-        $ftyp       = $this->box('ftyp', 'isom');
-        $meta       = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp));
-        $moov       = $this->quickTimeMoov($identifier);
-        $isoPayload = $ftyp . $meta . $moov;
-
-        $path = $this->writeTempFile($isoPayload);
-
-        try {
-            $metadata = (new MetadataReader())->read($path);
-        } finally {
-            @unlink($path);
-        }
-
-        self::assertSame([$tiff], $metadata->exifBlobs);
-        self::assertSame([$xmp], $metadata->xmpBlobs);
-        self::assertInstanceOf(QuickTimeMeta::class, $metadata->quickTime);
-        self::assertSame($identifier, $metadata->quickTime->contentIdentifier());
-        self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
-        self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
-        self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
-        self::assertSame('Sony', $metadata->makerNotes->vendor);
-        self::assertSame(strlen($makerNote), $metadata->makerNotes->length);
-        self::assertSame(sha1($makerNote), $metadata->makerNotes->sha1);
-        self::assertNull($metadata->iccProfile);
-        self::assertSame([], $metadata->iccSegments);
+        self::assertSame(sha1($jpeg), $structured->file->digestSha1);
+        self::assertSame(md5($jpeg), $structured->file->digestMd5);
     }
 
     #[Test]
-    public function testDeduplicatesXmpPacketsByHash(): void
+    public function unsupportedContainerThrowsParseError(): void
     {
-        $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" /></x:xmpmeta>';
+        $this->expectExceptionMessage('Only JPEG containers are supported by the core reader.');
 
-        $jpeg = "\xFF\xD8"
-            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
-            . $this->segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmp)
-            . "\xFF\xD9";
-
-        $path = $this->writeTempFile($jpeg);
+        $path = $this->writeTempFile('not a jpeg');
 
         try {
-            $metadata = (new MetadataReader())->read($path);
+            (new MetadataReader())->read($path);
         } finally {
             @unlink($path);
         }
-
-        self::assertCount(1, $metadata->xmpBlobs);
-        self::assertSame($xmp, $metadata->xmpBlobs[0]);
     }
 
-    /**
-     * Writes the provided binary payload to a temporary file and returns its path.
-     *
-     * @param string $payload Binary payload to persist on disk.
-     *
-     * @return string Absolute path to the temporary file containing the payload.
-     */
+    private function littleEndianTiff(string $make, string $model, int $width, int $height, string $dateTimeOriginal): string
+    {
+        $makeData  = $make . "\0";
+        $modelData = $model . "\0";
+        $dateData  = $dateTimeOriginal . "\0";
+
+        $ifd0Offset = 8;
+        $ifd0Count  = 5;
+        $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
+
+        $currentOffset = $ifd0Offset + $ifd0Size;
+
+        $makeOffset = $currentOffset;
+        $currentOffset += strlen($makeData);
+
+        $modelOffset = $currentOffset;
+        $currentOffset += strlen($modelData);
+
+        $exifIfdOffset = $currentOffset;
+        $exifIfdCount  = 1;
+        $exifIfdSize   = 2 + ($exifIfdCount * 12) + 4;
+
+        $dateOffset = $exifIfdOffset + $exifIfdSize;
+
+        $ifd0 = pack('v', $ifd0Count)
+            . pack('v', ExifTag::MAKE) . pack('v', 2) . pack('V', strlen($makeData)) . pack('V', $makeOffset)
+            . pack('v', ExifTag::MODEL) . pack('v', 2) . pack('V', strlen($modelData)) . pack('V', $modelOffset)
+            . pack('v', ExifTag::IMAGE_WIDTH) . pack('v', 4) . pack('V', 1) . pack('V', $width)
+            . pack('v', ExifTag::IMAGE_HEIGHT) . pack('v', 4) . pack('V', 1) . pack('V', $height)
+            . pack('v', ExifTag::EXIF_IFD_POINTER) . pack('v', 4) . pack('V', 1) . pack('V', $exifIfdOffset)
+            . pack('V', 0);
+
+        $exifIfd = pack('v', $exifIfdCount)
+            . pack('v', ExifTag::DATETIME_ORIGINAL) . pack('v', 2) . pack('V', strlen($dateData)) . pack('V', $dateOffset)
+            . pack('V', 0);
+
+        return 'II'
+            . pack('v', 0x2A)
+            . pack('V', $ifd0Offset)
+            . $ifd0
+            . $makeData
+            . $modelData
+            . $exifIfd
+            . $dateData;
+    }
+
+    private function baselineSofPayload(int $width, int $height): string
+    {
+        return chr(8)
+            . pack('n', $height)
+            . pack('n', $width)
+            . chr(3)
+            . chr(1) . chr(0x11) . chr(0)
+            . chr(2) . chr(0x11) . chr(1)
+            . chr(3) . chr(0x11) . chr(1);
+    }
+
+    private function segment(int $marker, string $payload): string
+    {
+        return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
+    }
+
     private function writeTempFile(string $payload, ?string $extension = null): string
     {
         $path = tempnam(sys_get_temp_dir(), 'meta');
@@ -288,161 +200,5 @@ final class MetadataReaderTest extends TestCase
         }
 
         return $path;
-    }
-
-    /**
-     * Builds a minimal little-endian TIFF containing make/model strings and maker notes.
-     */
-    private function littleEndianTiffWithMakerNote(string $make, string $model, string $makerNote): string
-    {
-        $makeData   = $make . "\0";
-        $modelData  = $model . "\0";
-        $ifd0Offset = 8;
-        $ifd0Count  = 3;
-        $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
-
-        $currentOffset = $ifd0Offset + $ifd0Size;
-
-        $makeOffset = $currentOffset;
-        $currentOffset += strlen($makeData);
-
-        $modelOffset = $currentOffset;
-        $currentOffset += strlen($modelData);
-
-        $exifIfdOffset = $currentOffset;
-        $exifIfdCount  = 1;
-        $exifIfdSize   = 2 + 12 + 4;
-
-        $makerNoteOffset = $exifIfdOffset + $exifIfdSize;
-
-        $ifd0 = pack('v', $ifd0Count)
-            . pack('v', ExifTag::MAKE)
-            . pack('v', 2)
-            . pack('V', strlen($makeData))
-            . pack('V', $makeOffset)
-            . pack('v', ExifTag::MODEL)
-            . pack('v', 2)
-            . pack('V', strlen($modelData))
-            . pack('V', $modelOffset)
-            . pack('v', ExifTag::EXIF_IFD_POINTER)
-            . pack('v', 4)
-            . pack('V', 1)
-            . pack('V', $exifIfdOffset)
-            . pack('V', 0);
-
-        $exifIfd = pack('v', $exifIfdCount)
-            . pack('v', ExifTag::MAKER_NOTE)
-            . pack('v', 7)
-            . pack('V', strlen($makerNote))
-            . pack('V', $makerNoteOffset)
-            . pack('V', 0);
-
-        return 'II'
-            . pack('v', 0x2A)
-            . pack('V', $ifd0Offset)
-            . $ifd0
-            . $makeData
-            . $modelData
-            . $exifIfd
-            . $makerNote;
-    }
-
-    /**
-     * Builds a baseline start of frame payload with three colour components.
-     *
-     * @param int $precision Sample precision reported by the SOF marker.
-     * @param int $height    Frame height in image lines.
-     * @param int $width     Frame width in samples per line.
-     *
-     * @return string Serialized SOF payload excluding marker and length fields.
-     */
-    private function buildBaselineStartOfFramePayload(int $precision, int $height, int $width): string
-    {
-        $components = [
-            [1, 0x22, 0],
-            [2, 0x11, 1],
-            [3, 0x11, 1],
-        ];
-
-        $payload = pack('CnnC', $precision, $height, $width, count($components));
-
-        foreach ($components as [$id, $sampling, $table]) {
-            $payload .= pack('CCC', $id, $sampling, $table);
-        }
-
-        return $payload;
-    }
-
-    /**
-     * Wraps a payload with a JPEG marker and its big-endian length field.
-     *
-     * @param int    $marker  Marker identifier without the 0xFF prefix.
-     * @param string $payload Binary segment payload.
-     *
-     * @return string Serialized JPEG segment.
-     */
-    private function segment(int $marker, string $payload): string
-    {
-        return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
-    }
-
-    /**
-     * Constructs a standard ISO BMFF box header around the provided payload.
-     *
-     * @param string $type    Four-character box type.
-     * @param string $payload Box payload data.
-     *
-     * @return string Serialized box bytes.
-     */
-    private function box(string $type, string $payload): string
-    {
-        $size = 8 + strlen($payload);
-
-        return pack('N', $size) . $type . $payload;
-    }
-
-    /**
-     * Constructs a full box (including version and flags) around a payload.
-     *
-     * @param string $type    Four-character box type.
-     * @param string $payload Box payload data.
-     * @param int    $version Version byte to prepend to the payload.
-     * @param int    $flags   Three-byte flag field to prepend to the payload.
-     *
-     * @return string Serialized full box bytes.
-     */
-    private function fullBox(string $type, string $payload, int $version = 0, int $flags = 0): string
-    {
-        $header = chr($version)
-            . chr(($flags >> 16) & 0xFF)
-            . chr(($flags >> 8) & 0xFF)
-            . chr($flags & 0xFF);
-
-        return $this->box($type, $header . $payload);
-    }
-
-    /**
-     * Builds a QuickTime moov/udta/meta structure containing a content identifier.
-     *
-     * @param string $value Content identifier to store inside the structure.
-     *
-     * @return string Serialized QuickTime `moov` box structure.
-     */
-    private function quickTimeMoov(string $value): string
-    {
-        $keysEntry = pack('N', 8 + strlen('com.apple.quicktime.content.identifier'))
-            . 'mdta'
-            . 'com.apple.quicktime.content.identifier';
-        $keys = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keysEntry);
-
-        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
-        $ilstEntry = $this->box(pack('N', 1), $dataBox);
-        $ilst      = $this->box('ilst', $ilstEntry);
-
-        $metaPayload = "\0\0\0\0" . $keys . $ilst;
-        $meta        = $this->box('meta', $metaPayload);
-        $udta        = $this->box('udta', $meta);
-
-        return $this->box('moov', $udta);
     }
 }

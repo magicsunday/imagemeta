@@ -12,17 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta;
 
 use finfo;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
-use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
-use MagicSunday\ImageMeta\MakerNotes\Registry;
-use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
-use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
 use function class_exists;
 use function filesize;
@@ -42,11 +38,9 @@ final class MetadataReader
     /**
      * Reads metadata from the given file path by delegating to the appropriate parser.
      *
-     * @param string $path        Path to the image or media file being inspected.
+     * @param string $path        Path to the image file being inspected.
      * @param bool   $withDigests When true the SHA-1 and MD5 digests are calculated as part of the
      *                            returned metadata aggregate.
-     *
-     * @return Metadata
      */
     public function read(string $path, bool $withDigests = false): Metadata
     {
@@ -57,25 +51,29 @@ final class MetadataReader
         [$sha1, $md5] = $withDigests ? $this->calculateDigests($path) : [null, null];
 
         $stream = Stream::fromPath($path);
-        $type   = FormatDetector::detect($stream);
 
-        return match ($type) {
-            ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
-            ContainerType::ISOBMFF => $this->fromIsoBmff($stream, $mimeType, $fileSize, $extension, $sha1, $md5),
-        };
+        try {
+            $type = FormatDetector::detect($stream);
+        } catch (ParseError $exception) {
+            throw new ParseError('Only JPEG containers are supported by the core reader.', 0, $exception);
+        }
+
+        if ($type !== ContainerType::JPEG) {
+            throw new ParseError('Only JPEG containers are supported by the core reader.');
+        }
+
+        return $this->fromJpeg(
+            $stream,
+            $mimeType,
+            $fileSize,
+            $extension,
+            $sha1,
+            $md5,
+        );
     }
 
     /**
      * Extracts metadata from a JPEG container.
-     *
-     * @param Stream  $stream     Source stream positioned at the start of the file.
-     * @param ?string $mimeType   MIME type associated with the inspected file.
-     * @param ?int    $fileSize   File size in bytes if it could be determined.
-     * @param ?string $extension  File extension detected from the path or stream.
-     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
-     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
-     *
-     * @return Metadata
      */
     private function fromJpeg(
         Stream $stream,
@@ -86,119 +84,21 @@ final class MetadataReader
         ?string $digestMd5,
     ): Metadata {
         $jpeg = new JpegExtractor($stream);
-        // Extract the JPEG segments along with frame and auxiliary stream data.
-        $exifBlobs       = $jpeg->extractExifBlobs();
-        $xmpBlobs        = $jpeg->extractXmpPackets();
-        $iccProfile      = $jpeg->getIccProfile();
-        $iccSegments     = $jpeg->getIccSegments();
-        $flashPixStreams = $jpeg->getFlashPixStreams();
-        $audioStreams    = $jpeg->getAudioStreams();
-        $mpfDocument     = $jpeg->getMpfDocument();
-        $bitsPerSample   = $jpeg->getFrameSamplePrecision();
-        $frameHeight     = $jpeg->getFrameHeight();
-        $frameWidth      = $jpeg->getFrameWidth();
-        $sampling        = $jpeg->getFrameComponentSamplingFactors();
-        $subSampling     = $jpeg->getFrameYCbCrSubSampling();
 
-        $appleMerger = new AppleMakerNotesMerger();
-
-        $exifDoc    = null;
-        $xmpDoc     = null;
-        $makerNotes = null;
-        // Parse the primary EXIF blob and map vendor-specific maker notes.
+        $exifBlobs = $jpeg->extractExifBlobs();
+        $exifDoc   = null;
         if ($exifBlobs !== []) {
-            $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
-            $makerNotes = $exifDoc->makerNotes();
-        }
-
-        $makerNotes = $appleMerger->merge($makerNotes, null);
-
-        // Parse the embedded XMP packet when present.
-        if ($xmpBlobs !== []) {
-            $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
-        }
-
-        // Assemble the final metadata aggregate with container context.
-        return new Metadata(
-            $exifBlobs,
-            null,
-            $exifDoc,
-            $xmpBlobs,
-            $xmpDoc,
-            $makerNotes,
-            $iccProfile,
-            $iccSegments,
-            $flashPixStreams,
-            $mpfDocument,
-            $audioStreams,
-            $bitsPerSample,
-            $sampling,
-            $subSampling,
-            mimeType: $mimeType,
-            fileSize: $fileSize,
-            extension: $extension,
-            digestSha1: $digestSha1,
-            digestMd5: $digestMd5,
-            jpegFrameWidth: $frameWidth,
-            jpegFrameHeight: $frameHeight,
-        );
-    }
-
-    /**
-     * Extracts metadata from an ISO Base Media File Format container.
-     *
-     * @param Stream  $stream     Source stream positioned at the start of the file.
-     * @param ?string $mimeType   MIME type associated with the inspected file.
-     * @param ?int    $fileSize   File size in bytes if it could be determined.
-     * @param ?string $extension  File extension detected from the path or stream.
-     * @param ?string $digestSha1 Pre-computed SHA-1 digest for the stream contents.
-     * @param ?string $digestMd5  Pre-computed MD5 digest for the stream contents.
-     *
-     * @return Metadata
-     */
-    private function fromIsoBmff(
-        Stream $stream,
-        ?string $mimeType,
-        ?int $fileSize,
-        ?string $extension,
-        ?string $digestSha1,
-        ?string $digestMd5,
-    ): Metadata {
-        [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
-
-        $appleMerger = new AppleMakerNotesMerger();
-
-        $exifDoc    = null;
-        $xmpDoc     = null;
-        $makerNotes = null;
-        if ($exifBlobs !== []) {
-            $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
-            $makerNotes = $exifDoc->makerNotes();
-        }
-
-        $makerNotes = $appleMerger->merge($makerNotes, $qt);
-
-        if ($xmpBlobs !== []) {
-            $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
+            $exifDoc = (new TiffExifReader())->parseFromBlob($exifBlobs[0]);
         }
 
         return new Metadata(
             $exifBlobs,
-            $qt,
             $exifDoc,
-            $xmpBlobs,
-            $xmpDoc,
-            $makerNotes,
-            null,
-            [],
-            [],
-            null,
-            [],
-            null,
-            null,
-            null,
+            $jpeg->getFrameSamplePrecision(),
+            $jpeg->getFrameComponentSamplingFactors(),
+            $jpeg->getFrameYCbCrSubSampling(),
+            $jpeg->getFrameWidth(),
+            $jpeg->getFrameHeight(),
             $mimeType,
             $fileSize,
             $extension,
@@ -268,13 +168,5 @@ final class MetadataReader
             is_string($sha1) ? $sha1 : null,
             is_string($md5) ? $md5 : null,
         ];
-    }
-
-    /**
-     * Builds the maker notes registry populated with the bundled decoders.
-     */
-    private function createMakerNotesRegistry(): Registry
-    {
-        return RegistryFactory::createDefault();
     }
 }

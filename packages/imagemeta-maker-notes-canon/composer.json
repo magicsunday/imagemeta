@@ -1,0 +1,15 @@
+{
+  "name": "magicsunday/imagemeta-maker-notes-canon",
+  "description": "Canon maker notes decoder for MagicSunday/ImageMeta",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.4",
+    "magicsunday/imagemeta": "^1.0",
+    "magicsunday/imagemeta-maker-notes": "^1.0"
+  },
+  "autoload": {
+    "psr-4": { "MagicSunday\\ImageMeta\\MakerNotes\\Canon\\": "src/" },
+    "files": ["src/register.php"]
+  }
+}
