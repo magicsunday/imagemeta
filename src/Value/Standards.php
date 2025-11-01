@@ -24,39 +24,11 @@ final readonly class Standards
      * @param string|null    $tiffEpStandardString Human readable TIFF/EP identifier.
      */
     public function __construct(
-        public ?string $exifVersion,
-        public ?string $profile,
-        public ?string $flashpixVersion,
-        public ?array $tiffEpStandardId,
-        public ?string $tiffEpStandardString,
+        public readonly ?string $exifVersion,
+        public readonly ?string $profile,
+        public readonly ?string $flashpixVersion,
+        public readonly ?array $tiffEpStandardId,
+        public readonly ?string $tiffEpStandardString,
     ) {
-    }
-
-    public function exifVersion(): ?string
-    {
-        return $this->exifVersion;
-    }
-
-    public function profile(): ?string
-    {
-        return $this->profile;
-    }
-
-    public function flashpixVersion(): ?string
-    {
-        return $this->flashpixVersion;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function tiffEpStandardId(): ?array
-    {
-        return $this->tiffEpStandardId;
-    }
-
-    public function tiffEpStandardString(): ?string
-    {
-        return $this->tiffEpStandardString;
     }
 }

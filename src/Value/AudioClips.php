@@ -21,7 +21,7 @@ final readonly class AudioClips
     /**
      * @param list<AudioClip> $clips
      */
-    public function __construct(public array $clips)
+    public function __construct(public readonly array $clips)
     {
     }
 

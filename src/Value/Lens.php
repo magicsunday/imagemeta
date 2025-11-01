@@ -11,17 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use MagicSunday\ImageMeta\Value\Contracts\LensInterface;
-
 /**
  * Represents lens information used when capturing the image.
  */
-final readonly class Lens implements LensInterface
+final readonly class Lens
 {
     /**
      * @var array{0:float,1:float,2:float,3:float}|null
      */
-    public ?array $lensSpecification;
+    public readonly ?array $lensSpecification;
 
     /**
      * @param string|null                                 $lensMake           Lens manufacturer.
@@ -33,52 +31,14 @@ final readonly class Lens implements LensInterface
      * @param array{0:float,1:float,2:float,3:float}|null $lensSpecification  Lens specification describing zoom and aperture range.
      */
     public function __construct(
-        public ?string $lensMake,
-        public ?string $lensModel,
-        public ?string $lensSerialNumber,
-        public ?float $focalLengthMm,
-        public ?int $focalLengthIn35mm,
-        public ?float $maxApertureFNumber,
+        public readonly ?string $lensMake,
+        public readonly ?string $lensModel,
+        public readonly ?string $lensSerialNumber,
+        public readonly ?float $focalLengthMm,
+        public readonly ?int $focalLengthIn35mm,
+        public readonly ?float $maxApertureFNumber,
         ?array $lensSpecification = null,
     ) {
         $this->lensSpecification = $lensSpecification;
-    }
-
-    /**
-     * @return array{0:float,1:float,2:float,3:float}|null
-     */
-    public function lensSpecification(): ?array
-    {
-        return $this->lensSpecification;
-    }
-
-    public function lensMake(): ?string
-    {
-        return $this->lensMake;
-    }
-
-    public function lensModel(): ?string
-    {
-        return $this->lensModel;
-    }
-
-    public function lensSerialNumber(): ?string
-    {
-        return $this->lensSerialNumber;
-    }
-
-    public function focalLengthMm(): ?float
-    {
-        return $this->focalLengthMm;
-    }
-
-    public function focalLengthIn35mm(): ?int
-    {
-        return $this->focalLengthIn35mm;
-    }
-
-    public function maxApertureFNumber(): ?float
-    {
-        return $this->maxApertureFNumber;
     }
 }

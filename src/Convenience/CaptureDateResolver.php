@@ -70,15 +70,15 @@ final class CaptureDateResolver
 
     private static function captureDate(Capture $capture): ?DateTimeImmutable
     {
-        return $capture->dateTime();
+        return $capture->dateTime;
     }
 
     private static function temporalFallback(Temporal $temporal): ?DateTimeImmutable
     {
         $candidates = [
-            $temporal->original(),
-            $temporal->create(),
-            $temporal->modify(),
+            $temporal->original,
+            $temporal->create,
+            $temporal->modify,
         ];
 
         foreach ($candidates as $candidate) {
@@ -92,7 +92,7 @@ final class CaptureDateResolver
 
     private static function gpsFallback(Gps $gps): ?DateTimeImmutable
     {
-        return $gps->timestamp();
+        return $gps->timestamp;
     }
 
     /**

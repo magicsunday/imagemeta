@@ -25,60 +25,16 @@ final readonly class Integrity
      * @param bool|null   $makerNotesSafe      Flag denoting whether the maker notes are safe to edit.
      */
     public function __construct(
-        public ?string $originalFileName,
-        public ?string $originalDigest,
-        public ?bool $edited,
-        public ?string $historyLastSoftware,
-        public ?string $imageHistory,
-        public ?bool $makerNotesSafe = null,
+        public readonly ?string $originalFileName,
+        public readonly ?string $originalDigest,
+        public readonly ?bool $edited,
+        public readonly ?string $historyLastSoftware,
+        public readonly ?string $imageHistory,
+        public readonly ?bool $makerNotesSafe = null,
     ) {
-    }
-
-    /**
-     * Returns the original file name when available.
-     */
-    public function originalFileName(): ?string
-    {
-        return $this->originalFileName;
-    }
-
-    /**
-     * Returns the digest identifying the original asset.
-     */
-    public function originalDigest(): ?string
-    {
-        return $this->originalDigest;
     }
 
     /**
      * Indicates whether editing history is present.
      */
-    public function edited(): ?bool
-    {
-        return $this->edited;
-    }
-
-    /**
-     * Returns the last software recorded in the editing history.
-     */
-    public function historyLastSoftware(): ?string
-    {
-        return $this->historyLastSoftware;
-    }
-
-    /**
-     * Returns the free-form image history description.
-     */
-    public function imageHistory(): ?string
-    {
-        return $this->imageHistory;
-    }
-
-    /**
-     * Returns the flag denoting whether maker notes are safe to edit.
-     */
-    public function makerNotesSafe(): ?bool
-    {
-        return $this->makerNotesSafe;
-    }
 }

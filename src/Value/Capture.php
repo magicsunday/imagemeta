@@ -30,87 +30,15 @@ final readonly class Capture
      * @param int|null               $selfTimerModeSeconds    Configured self timer delay in seconds.
      */
     public function __construct(
-        public ?DateTimeImmutable $dateTime,
-        public ?float $temperatureC,
-        public ?float $humidityPercent,
-        public ?float $pressureHPa,
-        public ?float $batteryLevelPercent,
-        public ?float $waterDepthM,
-        public ?float $accelerationMs2,
-        public ?float $cameraElevationAngleDeg,
-        public ?int $selfTimerModeSeconds,
+        public readonly ?DateTimeImmutable $dateTime,
+        public readonly ?float $temperatureC,
+        public readonly ?float $humidityPercent,
+        public readonly ?float $pressureHPa,
+        public readonly ?float $batteryLevelPercent,
+        public readonly ?float $waterDepthM,
+        public readonly ?float $accelerationMs2,
+        public readonly ?float $cameraElevationAngleDeg,
+        public readonly ?int $selfTimerModeSeconds,
     ) {
-    }
-
-    /**
-     * Returns the capture timestamp when available.
-     */
-    public function dateTime(): ?DateTimeImmutable
-    {
-        return $this->dateTime;
-    }
-
-    /**
-     * Returns the recorded ambient temperature in Celsius.
-     */
-    public function temperatureC(): ?float
-    {
-        return $this->temperatureC;
-    }
-
-    /**
-     * Returns the relative humidity percentage.
-     */
-    public function humidityPercent(): ?float
-    {
-        return $this->humidityPercent;
-    }
-
-    /**
-     * Returns the ambient pressure in hectopascals.
-     */
-    public function pressureHPa(): ?float
-    {
-        return $this->pressureHPa;
-    }
-
-    /**
-     * Returns the remaining battery level percentage.
-     */
-    public function batteryLevelPercent(): ?float
-    {
-        return $this->batteryLevelPercent;
-    }
-
-    /**
-     * Returns the water depth in metres when the capture device provides it.
-     */
-    public function waterDepthM(): ?float
-    {
-        return $this->waterDepthM;
-    }
-
-    /**
-     * Returns the camera acceleration in metres per second squared.
-     */
-    public function accelerationMs2(): ?float
-    {
-        return $this->accelerationMs2;
-    }
-
-    /**
-     * Returns the camera elevation angle in degrees.
-     */
-    public function cameraElevationAngleDeg(): ?float
-    {
-        return $this->cameraElevationAngleDeg;
-    }
-
-    /**
-     * Returns the configured self-timer delay in seconds.
-     */
-    public function selfTimerModeSeconds(): ?int
-    {
-        return $this->selfTimerModeSeconds;
     }
 }

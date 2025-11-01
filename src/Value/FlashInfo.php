@@ -28,51 +28,23 @@ final readonly class FlashInfo
      * @param bool               $redEyeReduction  Indicates red-eye reduction support.
      */
     public function __construct(
-        public bool $fired,
-        public ?FlashMode $mode = null,
-        public ?FlashReturn $returnDetection = null,
-        public ?FlashFunction $functionPresence = null,
-        public bool $redEyeReduction = false,
+        public readonly bool $fired,
+        public readonly ?FlashMode $mode = null,
+        public readonly ?FlashReturn $returnDetection = null,
+        public readonly ?FlashFunction $functionPresence = null,
+        public readonly bool $redEyeReduction = false,
     ) {
     }
 
     /**
      * Indicates whether the flash fired.
      */
-    public function fired(): bool
-    {
-        return $this->fired;
-    }
-
-    /**
-     * Returns the selected flash mode.
-     */
-    public function mode(): ?FlashMode
-    {
-        return $this->mode;
-    }
-
-    /**
-     * Returns the detected return light status.
-     */
-    public function returnDetection(): ?FlashReturn
-    {
-        return $this->returnDetection;
-    }
 
     /**
      * Indicates whether the camera features a flash function.
      */
-    public function functionPresence(): ?FlashFunction
-    {
-        return $this->functionPresence;
-    }
 
     /**
      * Indicates whether red-eye reduction support is reported.
      */
-    public function redEyeReduction(): bool
-    {
-        return $this->redEyeReduction;
-    }
 }

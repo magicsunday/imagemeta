@@ -13,7 +13,7 @@ in the following table:
 | `$meta->file()->container` | `$meta->container()` |
 | `$meta->camera()->device` | `$meta->device()` |
 | `$meta->lens()->lens()` | `$meta->lens` |
-| `$meta->lens()->equivalent35mm()` | `$meta->lens->focalLengthIn35mm ?? $meta->derived->equivalent35mm()` |
+| `$meta->lens()->equivalent35mm()` | `$meta->lens->focalLengthIn35mm ?? $meta->derived->equivalent35mm` |
 | `$meta->exposure()->exposure` | `$meta->exposure` |
 | `$meta->capture()->temporal` | `$meta->temporal()` |
 | `$meta->capture()->regions` | `$meta->regions()` |
@@ -27,12 +27,20 @@ in the following table:
 | `$meta->rights()->related` | `$meta->related()` |
 | `$meta->makerNotes()->apple` | `$meta->makerNotesApple()` |
 
+### Value objects
+
+All value objects under `MagicSunday\\ImageMeta\\Value` now expose public readonly
+properties. Legacy getters such as `$image->width()` or `$camera->model()` have
+been removed. Update integrations to read the properties directly, e.g.
+`$image->width`, `$camera->model`, `$exposure->iso` and `$preview->hasThumbnail`.
+
 ### GPS helpers
 
-The GPS value object continues to provide decoded coordinate helpers. The
-deprecated `dop()` accessor has been removed; use `dilutionOfPrecision()` instead.
-Coordinate objects are now available via `latitudeCoordinate()` and
-`longitudeCoordinate()`.
+The GPS value object retains derived helpers but now surfaces them as properties.
+Former accessors like `dilutionOfPrecision()` and `dop()` have been removed; use
+`$gps->dop` directly. Coordinate helpers are available via properties such as
+`$gps->latitudeCoordinate` and `$gps->longitudeCoordinate`. The `$gps->timestamp`
+property always contains a UTC-normalised `DateTimeImmutable` when present.
 
 ### StructuredExif compatibility
 
@@ -43,9 +51,9 @@ the curated metadata aggregate. Update API usages as follows:
 | --- | --- |
 | `$document->camera()->value()` | `$document->camera()` |
 | `$document->lens()->value()` | `$document->lens()` |
-| `$document->lens()->focalLength()` | `$document->lens()->focalLengthMm()` |
+| `$document->lens()->focalLength()` | `$document->lens()->focalLengthMm` |
 | `$document->lens()->derived()` | `$document->derived()` |
-| `$document->gps()->latitude()` | `$document->gps()->latitudeCoordinate()` |
+| `$document->gps()->latitude()` | `$document->gps()->latitudeCoordinate` |
 | `$document->image()->value()` | `$document->image()` |
 | `$document->preview()->value()` | `$document->preview()` |
 

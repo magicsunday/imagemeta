@@ -23,42 +23,10 @@ final readonly class Device
      * @param string|null $metadataEditingSoftware Metadata editing software identifier.
      */
     public function __construct(
-        public ?string $software,
-        public ?string $rawDevelopingSoftware,
-        public ?string $imageEditingSoftware,
-        public ?string $metadataEditingSoftware,
+        public readonly ?string $software,
+        public readonly ?string $rawDevelopingSoftware,
+        public readonly ?string $imageEditingSoftware,
+        public readonly ?string $metadataEditingSoftware,
     ) {
-    }
-
-    /**
-     * Returns the software version or build identifier.
-     */
-    public function software(): ?string
-    {
-        return $this->software;
-    }
-
-    /**
-     * Returns the raw developing software identifier when available.
-     */
-    public function rawDevelopingSoftware(): ?string
-    {
-        return $this->rawDevelopingSoftware;
-    }
-
-    /**
-     * Returns the image editing software identifier when available.
-     */
-    public function imageEditingSoftware(): ?string
-    {
-        return $this->imageEditingSoftware;
-    }
-
-    /**
-     * Returns the metadata editing software identifier when available.
-     */
-    public function metadataEditingSoftware(): ?string
-    {
-        return $this->metadataEditingSoftware;
     }
 }

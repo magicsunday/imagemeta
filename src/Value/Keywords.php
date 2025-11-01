@@ -21,28 +21,8 @@ final readonly class Keywords
      * @param list<string>|null $hierarchical Optional hierarchical keywords.
      */
     public function __construct(
-        public array $flat,
-        public ?array $hierarchical,
+        public readonly array $flat,
+        public readonly ?array $hierarchical,
     ) {
-    }
-
-    /**
-     * Returns the flat keyword list.
-     *
-     * @return list<string>
-     */
-    public function flat(): array
-    {
-        return $this->flat;
-    }
-
-    /**
-     * Returns the optional hierarchical keywords.
-     *
-     * @return list<string>|null
-     */
-    public function hierarchical(): ?array
-    {
-        return $this->hierarchical;
     }
 }

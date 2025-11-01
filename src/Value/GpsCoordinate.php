@@ -16,68 +16,22 @@ namespace MagicSunday\ImageMeta\Value;
  */
 final readonly class GpsCoordinate
 {
-    private float $value;
+    public readonly float $signed;
 
-    private ?string $reference;
+    public readonly ?string $reference;
 
-    private bool $isLatitude;
-
-    public function __construct(float $value, ?string $reference, bool $isLatitude)
-    {
-        $this->value      = $value;
-        $this->reference  = $this->normaliseReference($reference);
-        $this->isLatitude = $isLatitude;
-    }
-
-    public function value(): float
-    {
-        return $this->value;
-    }
-
-    public function reference(): ?string
-    {
-        return $this->reference;
-    }
-
-    public function isLatitude(): bool
-    {
-        return $this->isLatitude;
-    }
-
-    public function signed(): float
-    {
-        if ($this->reference === null) {
-            return $this->value;
-        }
-
-        $magnitude = abs($this->value);
-
-        if ($this->isLatitude) {
-            if ($this->reference === 'S') {
-                return -$magnitude;
-            }
-
-            if ($this->reference === 'N') {
-                return $magnitude;
-            }
-
-            return $this->value;
-        }
-
-        if ($this->reference === 'W') {
-            return -$magnitude;
-        }
-
-        if ($this->reference === 'E') {
-            return $magnitude;
-        }
-
-        return $this->value;
+    public function __construct(
+        public readonly float $value,
+        ?string $reference,
+        public readonly bool $isLatitude,
+    ) {
+        $this->reference = $this->normaliseReference($reference);
+        $this->signed    = $this->calculateSigned($this->value, $this->reference, $this->isLatitude);
     }
 
     public function __toString(): string
     {
-        $signed = $this->signed();
+        $signed = $this->signed;
 
         if ($this->reference === null) {
             return sprintf('%s°', $this->formatDecimal($signed));
@@ -97,6 +51,37 @@ final readonly class GpsCoordinate
         $normalized = strtoupper($reference);
 
         return $normalized[0] ?? null;
+    }
+
+    private function calculateSigned(float $value, ?string $reference, bool $isLatitude): float
+    {
+        if ($reference === null) {
+            return $value;
+        }
+
+        $magnitude = abs($value);
+
+        if ($isLatitude) {
+            if ($reference === 'S') {
+                return -$magnitude;
+            }
+
+            if ($reference === 'N') {
+                return $magnitude;
+            }
+
+            return $value;
+        }
+
+        if ($reference === 'W') {
+            return -$magnitude;
+        }
+
+        if ($reference === 'E') {
+            return $magnitude;
+        }
+
+        return $value;
     }
 
     private function formatDecimal(float $value): string

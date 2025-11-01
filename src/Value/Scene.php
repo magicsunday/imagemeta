@@ -31,69 +31,21 @@ final readonly class Scene
      * @param SubjectDistanceRange|null $subjectDistanceRange Subject distance classification.
      */
     public function __construct(
-        public ?SceneCaptureType $type,
-        public ?SceneType $sceneType,
-        public ?LightSource $light,
-        public ?int $faceCount,
-        public ?bool $hdrScene,
-        public ?bool $nightMode,
-        public ?SubjectDistanceRange $subjectDistanceRange,
+        public readonly ?SceneCaptureType $type,
+        public readonly ?SceneType $sceneType,
+        public readonly ?LightSource $light,
+        public readonly ?int $faceCount,
+        public readonly ?bool $hdrScene,
+        public readonly ?bool $nightMode,
+        public readonly ?SubjectDistanceRange $subjectDistanceRange,
     ) {
-    }
-
-    /**
-     * Returns the scene capture type classification.
-     */
-    public function type(): ?SceneCaptureType
-    {
-        return $this->type;
-    }
-
-    /**
-     * Returns the scene type classification.
-     */
-    public function sceneType(): ?SceneType
-    {
-        return $this->sceneType;
-    }
-
-    /**
-     * Returns the dominant light source as reported by the camera.
-     */
-    public function light(): ?LightSource
-    {
-        return $this->light;
-    }
-
-    /**
-     * Returns the number of detected faces.
-     */
-    public function faceCount(): ?int
-    {
-        return $this->faceCount;
     }
 
     /**
      * Indicates whether HDR scene processing was applied.
      */
-    public function hdrScene(): ?bool
-    {
-        return $this->hdrScene;
-    }
 
     /**
      * Indicates whether night mode or low light processing was used.
      */
-    public function nightMode(): ?bool
-    {
-        return $this->nightMode;
-    }
-
-    /**
-     * Returns the subject distance classification.
-     */
-    public function subjectDistanceRange(): ?SubjectDistanceRange
-    {
-        return $this->subjectDistanceRange;
-    }
 }

@@ -23,44 +23,10 @@ final readonly class ColorProfileLookTable
      * @param list<array{0: float, 1: float, 2: float}>|null $entries             Per-entry RGB adjustments in floating point.
      */
     public function __construct(
-        public ?int $hueDivisions,
-        public ?int $saturationDivisions,
-        public ?int $valueDivisions,
-        public ?array $entries,
+        public readonly ?int $hueDivisions,
+        public readonly ?int $saturationDivisions,
+        public readonly ?int $valueDivisions,
+        public readonly ?array $entries,
     ) {
-    }
-
-    /**
-     * Returns the number of hue divisions encoded in the table.
-     */
-    public function hueDivisions(): ?int
-    {
-        return $this->hueDivisions;
-    }
-
-    /**
-     * Returns the number of saturation divisions encoded in the table.
-     */
-    public function saturationDivisions(): ?int
-    {
-        return $this->saturationDivisions;
-    }
-
-    /**
-     * Returns the number of value divisions encoded in the table.
-     */
-    public function valueDivisions(): ?int
-    {
-        return $this->valueDivisions;
-    }
-
-    /**
-     * Returns the per-entry RGB adjustments in floating point.
-     *
-     * @return list<array{0: float, 1: float, 2: float}>|null
-     */
-    public function entries(): ?array
-    {
-        return $this->entries;
     }
 }

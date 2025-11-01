@@ -61,46 +61,25 @@ final class ExposureTest extends TestCase
         );
 
         self::assertSame(200, $exposure->iso);
-        self::assertSame(200, $exposure->iso());
         self::assertSame(0.01, $exposure->exposureTimeSec);
-        self::assertSame(0.01, $exposure->exposureTimeSec());
         self::assertSame(4.0, $exposure->fNumber);
-        self::assertSame(4.0, $exposure->fNumber());
         self::assertSame(-0.3, $exposure->exposureBiasEv);
-        self::assertSame(-0.3, $exposure->exposureBiasEv());
         self::assertSame(ExposureProgram::MANUAL, $exposure->program);
-        self::assertSame(ExposureProgram::MANUAL, $exposure->program());
         self::assertSame(MeteringMode::SPOT, $exposure->meteringMode);
-        self::assertSame(MeteringMode::SPOT, $exposure->meteringMode());
         self::assertSame($flashInfo, $exposure->flash);
-        self::assertSame($flashInfo, $exposure->flash());
         self::assertSame(WhiteBalance::MANUAL, $exposure->whiteBalance);
-        self::assertSame(WhiteBalance::MANUAL, $exposure->whiteBalance());
         self::assertSame(6.5, $exposure->brightnessEv);
-        self::assertSame(6.5, $exposure->brightnessEv());
         self::assertSame(ExposureMode::MANUAL, $exposure->exposureMode);
-        self::assertSame(ExposureMode::MANUAL, $exposure->exposureMode());
         self::assertSame(GainControl::HIGH_GAIN_UP, $exposure->gainControl);
-        self::assertSame(GainControl::HIGH_GAIN_UP, $exposure->gainControl());
         self::assertSame(Contrast::HARD, $exposure->contrast);
-        self::assertSame(Contrast::HARD, $exposure->contrast());
         self::assertSame(Saturation::HIGH, $exposure->saturation);
-        self::assertSame(Saturation::HIGH, $exposure->saturation());
         self::assertSame(Sharpness::HARD, $exposure->sharpness);
-        self::assertSame(Sharpness::HARD, $exposure->sharpness());
         self::assertSame(1.5, $exposure->digitalZoomRatio);
-        self::assertSame(1.5, $exposure->digitalZoomRatio());
         self::assertSame(7.0, $exposure->shutterSpeedEv);
-        self::assertSame(7.0, $exposure->shutterSpeedEv());
         self::assertSame(4.0, $exposure->apertureEv);
-        self::assertSame(4.0, $exposure->apertureEv());
         self::assertSame(180, $exposure->isoLatitudeYyy);
-        self::assertSame(180, $exposure->isoLatitudeYyy());
         self::assertSame(220, $exposure->isoLatitudeZzz);
-        self::assertSame(220, $exposure->isoLatitudeZzz());
         self::assertSame(160.0, $exposure->exposureIndex);
-        self::assertSame(160.0, $exposure->exposureIndex());
         self::assertSame(1.2, $exposure->flashEnergy);
-        self::assertSame(1.2, $exposure->flashEnergy());
     }
 }

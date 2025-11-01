@@ -98,11 +98,11 @@ trait ExifExpectationAssertions
         $standards         = $structured->standards;
         $expectedStandards = $expected['standards'];
 
-        Assert::assertSame($expectedStandards['exifVersion'], $standards->exifVersion(), sprintf('%s: EXIF version', $fixture));
-        Assert::assertSame($expectedStandards['profile'], $standards->profile(), sprintf('%s: EXIF profile', $fixture));
-        Assert::assertSame($expectedStandards['flashpixVersion'], $standards->flashpixVersion(), sprintf('%s: FlashPix version', $fixture));
-        Assert::assertSame($expectedStandards['tiffEpStandardId'], $standards->tiffEpStandardId(), sprintf('%s: TIFF/EP standard ID', $fixture));
-        Assert::assertSame($expectedStandards['tiffEpStandardString'], $standards->tiffEpStandardString(), sprintf('%s: TIFF/EP standard string', $fixture));
+        Assert::assertSame($expectedStandards['exifVersion'], $standards->exifVersion, sprintf('%s: EXIF version', $fixture));
+        Assert::assertSame($expectedStandards['profile'], $standards->profile, sprintf('%s: EXIF profile', $fixture));
+        Assert::assertSame($expectedStandards['flashpixVersion'], $standards->flashpixVersion, sprintf('%s: FlashPix version', $fixture));
+        Assert::assertSame($expectedStandards['tiffEpStandardId'], $standards->tiffEpStandardId, sprintf('%s: TIFF/EP standard ID', $fixture));
+        Assert::assertSame($expectedStandards['tiffEpStandardString'], $standards->tiffEpStandardString, sprintf('%s: TIFF/EP standard string', $fixture));
 
         Assert::assertSame($expected['exposure']['iso'], $structured->exposure->iso, sprintf('%s: ISO fallback', $fixture));
 
@@ -129,16 +129,16 @@ trait ExifExpectationAssertions
         );
 
         $image = $structured->image;
-        Assert::assertSame($expected['image']['userComment'], $image->userComment(), sprintf('%s: UserComment fallback', $fixture));
-        Assert::assertSame($expected['image']['userCommentEncoding'], $image->userCommentEncoding(), sprintf('%s: UserComment encoding', $fixture));
+        Assert::assertSame($expected['image']['userComment'], $image->userComment, sprintf('%s: UserComment fallback', $fixture));
+        Assert::assertSame($expected['image']['userCommentEncoding'], $image->userCommentEncoding, sprintf('%s: UserComment encoding', $fixture));
 
         $interop         = $structured->interop;
         $expectedInterop = $expected['interop'];
-        Assert::assertSame($expectedInterop['index'], $interop->index(), sprintf('%s: Interop index', $fixture));
-        Assert::assertSame($expectedInterop['version'], $interop->version(), sprintf('%s: Interop version', $fixture));
-        Assert::assertSame($expectedInterop['fileFormat'], $interop->relatedImageFileFormat(), sprintf('%s: Interop file format', $fixture));
-        Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth(), sprintf('%s: Interop width', $fixture));
-        Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength(), sprintf('%s: Interop length', $fixture));
+        Assert::assertSame($expectedInterop['index'], $interop->index, sprintf('%s: Interop index', $fixture));
+        Assert::assertSame($expectedInterop['version'], $interop->version, sprintf('%s: Interop version', $fixture));
+        Assert::assertSame($expectedInterop['fileFormat'], $interop->relatedImageFileFormat, sprintf('%s: Interop file format', $fixture));
+        Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth, sprintf('%s: Interop width', $fixture));
+        Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength, sprintf('%s: Interop length', $fixture));
 
         self::assertPreviewMatches($fixture, $expected['preview'], $structured->preview);
 
@@ -250,11 +250,11 @@ trait ExifExpectationAssertions
 
         $interop         = $document->interop();
         $expectedInterop = $expected['interop'];
-        Assert::assertSame($expectedInterop['index'], $interop->index(), sprintf('%s: API Interop index', $fixture));
-        Assert::assertSame($expectedInterop['version'], $interop->version(), sprintf('%s: API Interop version', $fixture));
-        Assert::assertSame($expectedInterop['fileFormat'], $interop->relatedImageFileFormat(), sprintf('%s: API Interop file format', $fixture));
-        Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth(), sprintf('%s: API Interop width', $fixture));
-        Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength(), sprintf('%s: API Interop length', $fixture));
+        Assert::assertSame($expectedInterop['index'], $interop->index, sprintf('%s: API Interop index', $fixture));
+        Assert::assertSame($expectedInterop['version'], $interop->version, sprintf('%s: API Interop version', $fixture));
+        Assert::assertSame($expectedInterop['fileFormat'], $interop->relatedImageFileFormat, sprintf('%s: API Interop file format', $fixture));
+        Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth, sprintf('%s: API Interop width', $fixture));
+        Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength, sprintf('%s: API Interop length', $fixture));
 
         self::assertPreviewMatches($fixture, $expected['preview'], $document->preview());
     }
@@ -311,59 +311,59 @@ trait ExifExpectationAssertions
      */
     private static function assertPreviewMatches(string $fixture, array $expected, PreviewValue $preview): void
     {
-        Assert::assertSame($expected['hasThumbnail'], $preview->hasThumbnail(), sprintf('%s: Preview thumbnail availability', $fixture));
-        Assert::assertSame($expected['hasPreview'], $preview->hasPreview(), sprintf('%s: Preview availability', $fixture));
-        Assert::assertSame($expected['previewOffset'], $preview->previewOffset(), sprintf('%s: Preview offset', $fixture));
-        Assert::assertSame($expected['previewLength'], $preview->previewLength(), sprintf('%s: Preview length', $fixture));
-        Assert::assertSame($expected['previewWidth'], $preview->previewWidth(), sprintf('%s: Preview width', $fixture));
-        Assert::assertSame($expected['previewHeight'], $preview->previewHeight(), sprintf('%s: Preview height', $fixture));
-        Assert::assertSame($expected['previewBitDepth'], $preview->previewBitDepth(), sprintf('%s: Preview bit depth', $fixture));
+        Assert::assertSame($expected['hasThumbnail'], $preview->hasThumbnail, sprintf('%s: Preview thumbnail availability', $fixture));
+        Assert::assertSame($expected['hasPreview'], $preview->hasPreview, sprintf('%s: Preview availability', $fixture));
+        Assert::assertSame($expected['previewOffset'], $preview->previewOffset, sprintf('%s: Preview offset', $fixture));
+        Assert::assertSame($expected['previewLength'], $preview->previewLength, sprintf('%s: Preview length', $fixture));
+        Assert::assertSame($expected['previewWidth'], $preview->previewWidth, sprintf('%s: Preview width', $fixture));
+        Assert::assertSame($expected['previewHeight'], $preview->previewHeight, sprintf('%s: Preview height', $fixture));
+        Assert::assertSame($expected['previewBitDepth'], $preview->previewBitDepth, sprintf('%s: Preview bit depth', $fixture));
 
         if ($expected['previewCompression'] === null) {
-            Assert::assertNull($preview->previewCompression(), sprintf('%s: Preview compression enum', $fixture));
+            Assert::assertNull($preview->previewCompression, sprintf('%s: Preview compression enum', $fixture));
         } else {
-            Assert::assertNotNull($preview->previewCompression(), sprintf('%s: Preview compression enum', $fixture));
-            Assert::assertSame($expected['previewCompression'], $preview->previewCompression()->value, sprintf('%s: Preview compression value', $fixture));
-            Assert::assertSame($expected['previewCompressionName'], $preview->previewCompression()->name, sprintf('%s: Preview compression name', $fixture));
+            Assert::assertNotNull($preview->previewCompression, sprintf('%s: Preview compression enum', $fixture));
+            Assert::assertSame($expected['previewCompression'], $preview->previewCompression->value, sprintf('%s: Preview compression value', $fixture));
+            Assert::assertSame($expected['previewCompressionName'], $preview->previewCompression->name, sprintf('%s: Preview compression name', $fixture));
         }
 
         if ($expected['previewColorSpace'] === null) {
-            Assert::assertNull($preview->previewColorSpace(), sprintf('%s: Preview colour space enum', $fixture));
+            Assert::assertNull($preview->previewColorSpace, sprintf('%s: Preview colour space enum', $fixture));
         } else {
-            Assert::assertNotNull($preview->previewColorSpace(), sprintf('%s: Preview colour space enum', $fixture));
-            Assert::assertSame($expected['previewColorSpace'], $preview->previewColorSpace()->value, sprintf('%s: Preview colour space value', $fixture));
-            Assert::assertSame($expected['previewColorSpaceName'], $preview->previewColorSpace()->name, sprintf('%s: Preview colour space name', $fixture));
+            Assert::assertNotNull($preview->previewColorSpace, sprintf('%s: Preview colour space enum', $fixture));
+            Assert::assertSame($expected['previewColorSpace'], $preview->previewColorSpace->value, sprintf('%s: Preview colour space value', $fixture));
+            Assert::assertSame($expected['previewColorSpaceName'], $preview->previewColorSpace->name, sprintf('%s: Preview colour space name', $fixture));
         }
 
-        Assert::assertSame($expected['previewEncoding'], $preview->previewEncoding(), sprintf('%s: Preview encoding', $fixture));
-        Assert::assertSame($expected['previewMimeType'], $preview->previewMimeType(), sprintf('%s: Preview MIME type', $fixture));
+        Assert::assertSame($expected['previewEncoding'], $preview->previewEncoding, sprintf('%s: Preview encoding', $fixture));
+        Assert::assertSame($expected['previewMimeType'], $preview->previewMimeType, sprintf('%s: Preview MIME type', $fixture));
 
         if ($expected['previewScale'] === null) {
-            Assert::assertNull($preview->previewScale(), sprintf('%s: Preview scale', $fixture));
+            Assert::assertNull($preview->previewScale, sprintf('%s: Preview scale', $fixture));
         } else {
-            Assert::assertNotNull($preview->previewScale(), sprintf('%s: Preview scale', $fixture));
-            Assert::assertEqualsWithDelta($expected['previewScale'], $preview->previewScale(), 1e-6, sprintf('%s: Preview scale value', $fixture));
+            Assert::assertNotNull($preview->previewScale, sprintf('%s: Preview scale', $fixture));
+            Assert::assertEqualsWithDelta($expected['previewScale'], $preview->previewScale, 1e-6, sprintf('%s: Preview scale value', $fixture));
         }
 
-        Assert::assertSame($expected['thumbnailOffset'], $preview->thumbnailOffset(), sprintf('%s: Thumbnail offset', $fixture));
-        Assert::assertSame($expected['thumbnailLength'], $preview->thumbnailLength(), sprintf('%s: Thumbnail length', $fixture));
+        Assert::assertSame($expected['thumbnailOffset'], $preview->thumbnailOffset, sprintf('%s: Thumbnail offset', $fixture));
+        Assert::assertSame($expected['thumbnailLength'], $preview->thumbnailLength, sprintf('%s: Thumbnail length', $fixture));
 
         if ($expected['thumbnailCompression'] === null) {
-            Assert::assertNull($preview->thumbnailCompression(), sprintf('%s: Thumbnail compression enum', $fixture));
+            Assert::assertNull($preview->thumbnailCompression, sprintf('%s: Thumbnail compression enum', $fixture));
         } else {
-            Assert::assertNotNull($preview->thumbnailCompression(), sprintf('%s: Thumbnail compression enum', $fixture));
-            Assert::assertSame($expected['thumbnailCompression'], $preview->thumbnailCompression()->value, sprintf('%s: Thumbnail compression value', $fixture));
-            Assert::assertSame($expected['thumbnailCompressionName'], $preview->thumbnailCompression()->name, sprintf('%s: Thumbnail compression name', $fixture));
+            Assert::assertNotNull($preview->thumbnailCompression, sprintf('%s: Thumbnail compression enum', $fixture));
+            Assert::assertSame($expected['thumbnailCompression'], $preview->thumbnailCompression->value, sprintf('%s: Thumbnail compression value', $fixture));
+            Assert::assertSame($expected['thumbnailCompressionName'], $preview->thumbnailCompression->name, sprintf('%s: Thumbnail compression name', $fixture));
         }
 
-        Assert::assertSame($expected['thumbnailStripOffsets'], $preview->thumbnailStripOffsets(), sprintf('%s: Thumbnail strip offsets', $fixture));
-        Assert::assertSame($expected['thumbnailStripByteCounts'], $preview->thumbnailStripByteCounts(), sprintf('%s: Thumbnail strip byte counts', $fixture));
-        Assert::assertSame($expected['thumbnailTileOffsets'], $preview->thumbnailTileOffsets(), sprintf('%s: Thumbnail tile offsets', $fixture));
-        Assert::assertSame($expected['thumbnailTileByteCounts'], $preview->thumbnailTileByteCounts(), sprintf('%s: Thumbnail tile byte counts', $fixture));
+        Assert::assertSame($expected['thumbnailStripOffsets'], $preview->thumbnailStripOffsets, sprintf('%s: Thumbnail strip offsets', $fixture));
+        Assert::assertSame($expected['thumbnailStripByteCounts'], $preview->thumbnailStripByteCounts, sprintf('%s: Thumbnail strip byte counts', $fixture));
+        Assert::assertSame($expected['thumbnailTileOffsets'], $preview->thumbnailTileOffsets, sprintf('%s: Thumbnail tile offsets', $fixture));
+        Assert::assertSame($expected['thumbnailTileByteCounts'], $preview->thumbnailTileByteCounts, sprintf('%s: Thumbnail tile byte counts', $fixture));
 
-        Assert::assertSame($expected['previewStripOffsets'], $preview->previewStripOffsets(), sprintf('%s: Preview strip offsets', $fixture));
-        Assert::assertSame($expected['previewStripByteCounts'], $preview->previewStripByteCounts(), sprintf('%s: Preview strip byte counts', $fixture));
-        Assert::assertSame($expected['previewTileOffsets'], $preview->previewTileOffsets(), sprintf('%s: Preview tile offsets', $fixture));
-        Assert::assertSame($expected['previewTileByteCounts'], $preview->previewTileByteCounts(), sprintf('%s: Preview tile byte counts', $fixture));
+        Assert::assertSame($expected['previewStripOffsets'], $preview->previewStripOffsets, sprintf('%s: Preview strip offsets', $fixture));
+        Assert::assertSame($expected['previewStripByteCounts'], $preview->previewStripByteCounts, sprintf('%s: Preview strip byte counts', $fixture));
+        Assert::assertSame($expected['previewTileOffsets'], $preview->previewTileOffsets, sprintf('%s: Preview tile offsets', $fixture));
+        Assert::assertSame($expected['previewTileByteCounts'], $preview->previewTileByteCounts, sprintf('%s: Preview tile byte counts', $fixture));
     }
 }

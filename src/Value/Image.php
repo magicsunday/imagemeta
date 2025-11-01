@@ -11,14 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use MagicSunday\ImageMeta\Value\Contracts\ImageInterface;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 
 /**
  * Encapsulates image level metadata.
  */
-final readonly class Image implements ImageInterface
+final readonly class Image
 {
     /**
      * @param int|null         $width                   Final image width in pixels.
@@ -39,99 +38,21 @@ final readonly class Image implements ImageInterface
      * @param string|null      $userCommentEncoding     Declared encoding for the user comment payload.
      */
     public function __construct(
-        public ?int $width,
-        public ?int $height,
-        public ?Orientation $orientation,
-        public ?int $bitsPerSample,
-        public ?ColorSpace $colorSpace,
-        public ?string $imageUniqueId,
-        public ?int $imageNumber,
-        public ?string $documentName,
-        public ?string $description,
-        public ?string $title,
-        public ?array $componentsConfiguration,
-        public ?float $compressedBitsPerPixel,
-        public ?int $interlace,
-        public ?string $userComment,
-        public ?string $userCommentEncoding,
+        public readonly ?int $width,
+        public readonly ?int $height,
+        public readonly ?Orientation $orientation,
+        public readonly ?int $bitsPerSample,
+        public readonly ?ColorSpace $colorSpace,
+        public readonly ?string $imageUniqueId,
+        public readonly ?int $imageNumber,
+        public readonly ?string $documentName,
+        public readonly ?string $description,
+        public readonly ?string $title,
+        public readonly ?array $componentsConfiguration,
+        public readonly ?float $compressedBitsPerPixel,
+        public readonly ?int $interlace,
+        public readonly ?string $userComment,
+        public readonly ?string $userCommentEncoding,
     ) {
-    }
-
-    public function width(): ?int
-    {
-        return $this->width;
-    }
-
-    public function height(): ?int
-    {
-        return $this->height;
-    }
-
-    public function orientation(): ?Orientation
-    {
-        return $this->orientation;
-    }
-
-    public function bitsPerSample(): ?int
-    {
-        return $this->bitsPerSample;
-    }
-
-    public function colorSpace(): ?ColorSpace
-    {
-        return $this->colorSpace;
-    }
-
-    public function imageUniqueId(): ?string
-    {
-        return $this->imageUniqueId;
-    }
-
-    public function imageNumber(): ?int
-    {
-        return $this->imageNumber;
-    }
-
-    public function documentName(): ?string
-    {
-        return $this->documentName;
-    }
-
-    public function description(): ?string
-    {
-        return $this->description;
-    }
-
-    public function title(): ?string
-    {
-        return $this->title;
-    }
-
-    /**
-     * @return list<int>|null
-     */
-    public function componentsConfiguration(): ?array
-    {
-        return $this->componentsConfiguration;
-    }
-
-    public function compressedBitsPerPixel(): ?float
-    {
-        return $this->compressedBitsPerPixel;
-    }
-
-    public function interlace(): ?int
-    {
-        return $this->interlace;
-    }
-
-    public function userComment(): ?string
-    {
-        return $this->userComment;
-    }
-
-    public function userCommentEncoding(): ?string
-    {
-        return $this->userCommentEncoding;
     }
 }

@@ -20,6 +20,7 @@
 ### Changed
 - Renamed derived field helpers to `equivalent35mm`, `fieldOfView*` and `hyperfocalDistanceMetres`; legacy accessors remain as deprecated aliases.
 - Backfilled structured JPEG image bit depth from the start-of-frame precision when the EXIF tag is missing.
+- Normalised all `MagicSunday\\ImageMeta\\Value` classes to expose public readonly properties; remove legacy getters such as `$image->width()`, `$camera->model()` and `dilutionOfPrecision()` in favour of direct property access (`$image->width`, `$camera->model`, `$gps->dop`).
 
 ### Removed
 - Dropped the implicit QuickTime video metadata fallback to avoid mixing still-image data with movie track information.

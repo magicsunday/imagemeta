@@ -22,7 +22,7 @@ use PHPUnit\Framework\TestCase;
 final class GpsTest extends TestCase
 {
     #[Test]
-    public function exposesAliasGetters(): void
+    public function exposesGpsProperties(): void
     {
         $gps = new Gps(
             latitude: 1.23,
@@ -41,45 +41,20 @@ final class GpsTest extends TestCase
             destinationDistanceOriginalRef: 'N',
         );
 
-        self::assertSame('N', $gps->latitudeReference());
-        self::assertSame($gps->latitudeRef, $gps->latitudeReference());
-        self::assertSame('E', $gps->longitudeReference());
-        self::assertSame($gps->longitudeRef, $gps->longitudeReference());
-        self::assertSame(0.8, $gps->dilutionOfPrecision());
-        self::assertSame($gps->dop, $gps->dilutionOfPrecision());
-        self::assertSame('K', $gps->speedReference());
-        self::assertSame($gps->speedRef, $gps->speedReference());
-        self::assertSame('M', $gps->speedOriginalReference());
-        self::assertSame($gps->speedOriginalRef, $gps->speedOriginalReference());
-        self::assertSame('T', $gps->trackReference());
-        self::assertSame($gps->trackRef, $gps->trackReference());
-        self::assertSame('M', $gps->imageDirectionReference());
-        self::assertSame($gps->imageDirectionRef, $gps->imageDirectionReference());
-        self::assertSame('N', $gps->destinationLatitudeReference());
-        self::assertSame($gps->destinationLatitudeRef, $gps->destinationLatitudeReference());
-        self::assertSame('E', $gps->destinationLongitudeReference());
-        self::assertSame($gps->destinationLongitudeRef, $gps->destinationLongitudeReference());
-        self::assertSame('T', $gps->destinationBearingReference());
-        self::assertSame($gps->destinationBearingRef, $gps->destinationBearingReference());
-        self::assertSame('K', $gps->destinationDistanceReference());
-        self::assertSame($gps->destinationDistanceRef, $gps->destinationDistanceReference());
-        self::assertSame('N', $gps->destinationDistanceOriginalReference());
-        self::assertSame($gps->destinationDistanceOriginalRef, $gps->destinationDistanceOriginalReference());
-
-        $methods = get_class_methods($gps);
-
-        self::assertContains('latitudeRef', $methods);
-        self::assertContains('longitudeRef', $methods);
-        self::assertContains('dop', $methods);
-        self::assertContains('speedRef', $methods);
-        self::assertContains('speedOriginalRef', $methods);
-        self::assertContains('trackRef', $methods);
-        self::assertContains('imageDirectionRef', $methods);
-        self::assertContains('destinationLatitudeRef', $methods);
-        self::assertContains('destinationLongitudeRef', $methods);
-        self::assertContains('destinationBearingRef', $methods);
-        self::assertContains('destinationDistanceRef', $methods);
-        self::assertContains('destinationDistanceOriginalRef', $methods);
+        self::assertSame(1.23, $gps->latitude);
+        self::assertSame('N', $gps->latitudeRef);
+        self::assertSame(4.56, $gps->longitude);
+        self::assertSame('E', $gps->longitudeRef);
+        self::assertSame(0.8, $gps->dop);
+        self::assertSame('K', $gps->speedRef);
+        self::assertSame('M', $gps->speedOriginalRef);
+        self::assertSame('T', $gps->trackRef);
+        self::assertSame('M', $gps->imageDirectionRef);
+        self::assertSame('N', $gps->destinationLatitudeRef);
+        self::assertSame('E', $gps->destinationLongitudeRef);
+        self::assertSame('T', $gps->destinationBearingRef);
+        self::assertSame('K', $gps->destinationDistanceRef);
+        self::assertSame('N', $gps->destinationDistanceOriginalRef);
     }
 
     #[Test]
@@ -92,19 +67,19 @@ final class GpsTest extends TestCase
             longitudeRef: 'W',
         );
 
-        self::assertSame(-12.5, $gps->latitudeSigned());
-        self::assertSame(-7.5, $gps->longitudeSigned());
+        self::assertSame(-12.5, $gps->latitudeSigned);
+        self::assertSame(-7.5, $gps->longitudeSigned);
 
-        $latitudeCoordinate  = $gps->latitudeCoordinate();
-        $longitudeCoordinate = $gps->longitudeCoordinate();
+        $latitudeCoordinate  = $gps->latitudeCoordinate;
+        $longitudeCoordinate = $gps->longitudeCoordinate;
 
         self::assertNotNull($latitudeCoordinate);
         self::assertNotNull($longitudeCoordinate);
-        self::assertSame(-12.5, $latitudeCoordinate->signed());
-        self::assertSame('S', $latitudeCoordinate->reference());
+        self::assertSame(-12.5, $latitudeCoordinate->signed);
+        self::assertSame('S', $latitudeCoordinate->reference);
         self::assertSame('12.5° S', (string) $latitudeCoordinate);
-        self::assertSame(-7.5, $longitudeCoordinate->signed());
-        self::assertSame('W', $longitudeCoordinate->reference());
+        self::assertSame(-7.5, $longitudeCoordinate->signed);
+        self::assertSame('W', $longitudeCoordinate->reference);
         self::assertSame('7.5° W', (string) $longitudeCoordinate);
     }
 
@@ -114,7 +89,7 @@ final class GpsTest extends TestCase
         $timestamp = new DateTimeImmutable('2024-05-17 12:34:56', new DateTimeZone('Europe/Berlin'));
         $gps       = new Gps(timestamp: $timestamp);
 
-        $utcTimestamp = $gps->timestamp();
+        $utcTimestamp = $gps->timestamp;
 
         self::assertNotNull($utcTimestamp);
         self::assertSame('UTC', $utcTimestamp->getTimezone()->getName());

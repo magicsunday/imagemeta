@@ -25,60 +25,12 @@ final readonly class Author
      * @param string|null $imageEditor  Image editor attribution from EXIF 3.0 tags.
      */
     public function __construct(
-        public ?string $artist,
-        public ?string $ownerName,
-        public ?string $creator,
-        public ?string $creatorEmail,
-        public ?string $photographer,
-        public ?string $imageEditor,
+        public readonly ?string $artist,
+        public readonly ?string $ownerName,
+        public readonly ?string $creator,
+        public readonly ?string $creatorEmail,
+        public readonly ?string $photographer,
+        public readonly ?string $imageEditor,
     ) {
-    }
-
-    /**
-     * Returns the artist or photographer name.
-     */
-    public function artist(): ?string
-    {
-        return $this->artist;
-    }
-
-    /**
-     * Returns the camera owner name.
-     */
-    public function ownerName(): ?string
-    {
-        return $this->ownerName;
-    }
-
-    /**
-     * Returns the creator attribution from XMP.
-     */
-    public function creator(): ?string
-    {
-        return $this->creator;
-    }
-
-    /**
-     * Returns the creator contact email address.
-     */
-    public function creatorEmail(): ?string
-    {
-        return $this->creatorEmail;
-    }
-
-    /**
-     * Returns the photographer attribution from EXIF.
-     */
-    public function photographer(): ?string
-    {
-        return $this->photographer;
-    }
-
-    /**
-     * Returns the image editor attribution from EXIF.
-     */
-    public function imageEditor(): ?string
-    {
-        return $this->imageEditor;
     }
 }

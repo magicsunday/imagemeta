@@ -143,51 +143,51 @@ final class ExifReaderTest extends TestCase
         $document = $reader->read($path);
 
         self::assertTrue($document->hasData());
-        self::assertSame('Canon', $document->camera()->make());
-        self::assertSame('Canon PowerShot SX130 IS', $document->camera()->model());
+        self::assertSame('Canon', $document->camera()->make);
+        self::assertSame('Canon PowerShot SX130 IS', $document->camera()->model);
 
         $exposure = $document->exposure();
-        self::assertSame(80, $exposure->iso());
-        self::assertEqualsWithDelta(0.01, $exposure->exposureTimeSec(), 1e-5);
-        self::assertEqualsWithDelta(3.4, $exposure->fNumber(), 1e-2);
+        self::assertSame(80, $exposure->iso);
+        self::assertEqualsWithDelta(0.01, $exposure->exposureTimeSec, 1e-5);
+        self::assertEqualsWithDelta(3.4, $exposure->fNumber, 1e-2);
 
         $lens = $document->lens();
-        self::assertEqualsWithDelta(5.0, $lens->focalLengthMm() ?? 0.0, 1e-6);
+        self::assertEqualsWithDelta(5.0, $lens->focalLengthMm ?? 0.0, 1e-6);
 
         $image = $document->image();
-        self::assertSame(4000, $image->width());
-        self::assertSame('ASCII', $image->userCommentEncoding());
-        self::assertSame(3000, $image->height());
-        self::assertSame(Orientation::TOP_LEFT, $image->orientation());
-        self::assertSame(ColorSpace::SRGB, $image->colorSpace());
+        self::assertSame(4000, $image->width);
+        self::assertSame('ASCII', $image->userCommentEncoding);
+        self::assertSame(3000, $image->height);
+        self::assertSame(Orientation::TOP_LEFT, $image->orientation);
+        self::assertSame(ColorSpace::SRGB, $image->colorSpace);
 
         $gps = $document->gps();
 
         $interop = $document->interop();
-        self::assertSame('R98', $interop->index());
-        self::assertSame('0100', $interop->version());
-        self::assertNull($interop->relatedImageFileFormat());
-        self::assertSame(4000, $interop->relatedImageWidth());
-        self::assertSame(3000, $interop->relatedImageLength());
-        $latitudeCoordinate = $gps->latitudeCoordinate();
+        self::assertSame('R98', $interop->index);
+        self::assertSame('0100', $interop->version);
+        self::assertNull($interop->relatedImageFileFormat);
+        self::assertSame(4000, $interop->relatedImageWidth);
+        self::assertSame(3000, $interop->relatedImageLength);
+        $latitudeCoordinate = $gps->latitudeCoordinate;
         self::assertNotNull($latitudeCoordinate);
-        self::assertEqualsWithDelta(41.888948, $latitudeCoordinate->signed(), 1e-6);
+        self::assertEqualsWithDelta(41.888948, $latitudeCoordinate->signed, 1e-6);
 
-        $longitudeCoordinate = $gps->longitudeCoordinate();
+        $longitudeCoordinate = $gps->longitudeCoordinate;
         self::assertNotNull($longitudeCoordinate);
-        self::assertEqualsWithDelta(-87.624494, $longitudeCoordinate->signed(), 1e-6);
+        self::assertEqualsWithDelta(-87.624494, $longitudeCoordinate->signed, 1e-6);
 
         $preview = $document->preview();
-        self::assertTrue($preview->hasThumbnail());
-        self::assertNull($preview->hasPreview());
-        self::assertNull($preview->previewEncoding());
-        self::assertNull($preview->previewMimeType());
-        self::assertNull($preview->previewBitDepth());
-        self::assertNull($preview->previewColorSpace());
-        self::assertNull($preview->previewCompression());
-        self::assertNull($preview->previewScale());
-        self::assertNull($preview->previewOffset());
-        self::assertNull($preview->previewLength());
+        self::assertTrue($preview->hasThumbnail);
+        self::assertNull($preview->hasPreview);
+        self::assertNull($preview->previewEncoding);
+        self::assertNull($preview->previewMimeType);
+        self::assertNull($preview->previewBitDepth);
+        self::assertNull($preview->previewColorSpace);
+        self::assertNull($preview->previewCompression);
+        self::assertNull($preview->previewScale);
+        self::assertNull($preview->previewOffset);
+        self::assertNull($preview->previewLength);
     }
 
     #[Test]
@@ -231,9 +231,9 @@ final class ExifReaderTest extends TestCase
             $document = $reader->read($path);
 
             self::assertFalse($document->hasData());
-            self::assertNull($document->camera()->make());
-            self::assertNull($document->lens()->focalLengthMm());
-            self::assertNull($document->gps()->latitude());
+            self::assertNull($document->camera()->make);
+            self::assertNull($document->lens()->focalLengthMm);
+            self::assertNull($document->gps()->latitude);
         } finally {
             @unlink($path);
         }

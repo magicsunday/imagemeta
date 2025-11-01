@@ -23,42 +23,10 @@ final readonly class RunTime
      * @param int|null $flags     Bit mask describing the runtime value state.
      */
     public function __construct(
-        public ?int $epoch,
-        public ?int $timescale,
-        public ?int $value,
-        public ?int $flags,
+        public readonly ?int $epoch,
+        public readonly ?int $timescale,
+        public readonly ?int $value,
+        public readonly ?int $flags,
     ) {
-    }
-
-    /**
-     * Returns the timeline epoch of the runtime value.
-     */
-    public function epoch(): ?int
-    {
-        return $this->epoch;
-    }
-
-    /**
-     * Returns the timescale used to interpret the runtime value.
-     */
-    public function timescale(): ?int
-    {
-        return $this->timescale;
-    }
-
-    /**
-     * Returns the raw runtime value expressed in timescale units.
-     */
-    public function value(): ?int
-    {
-        return $this->value;
-    }
-
-    /**
-     * Returns the bit mask describing the runtime value state.
-     */
-    public function flags(): ?int
-    {
-        return $this->flags;
     }
 }

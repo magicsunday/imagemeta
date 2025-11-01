@@ -24,51 +24,11 @@ final readonly class Rights
      * @param string|null $securityClassification Security classification assigned to the asset.
      */
     public function __construct(
-        public ?string $copyright,
-        public ?string $usageTerms,
-        public ?string $licenseUrl,
-        public ?string $creditLine,
-        public ?string $securityClassification,
+        public readonly ?string $copyright,
+        public readonly ?string $usageTerms,
+        public readonly ?string $licenseUrl,
+        public readonly ?string $creditLine,
+        public readonly ?string $securityClassification,
     ) {
-    }
-
-    /**
-     * Returns the copyright notice text.
-     */
-    public function copyright(): ?string
-    {
-        return $this->copyright;
-    }
-
-    /**
-     * Returns the usage terms or rights expression.
-     */
-    public function usageTerms(): ?string
-    {
-        return $this->usageTerms;
-    }
-
-    /**
-     * Returns the licence URL when provided.
-     */
-    public function licenseUrl(): ?string
-    {
-        return $this->licenseUrl;
-    }
-
-    /**
-     * Returns the credit line or byline.
-     */
-    public function creditLine(): ?string
-    {
-        return $this->creditLine;
-    }
-
-    /**
-     * Returns the security classification assigned to the asset.
-     */
-    public function securityClassification(): ?string
-    {
-        return $this->securityClassification;
     }
 }

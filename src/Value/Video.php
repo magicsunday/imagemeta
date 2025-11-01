@@ -27,14 +27,14 @@ final readonly class Video
      * @param string|null $colorPrimaries   Colour primaries name as reported by the container.
      */
     public function __construct(
-        public ?float $durationSec,
-        public ?float $frameRate,
-        public ?int $width,
-        public ?int $height,
-        public ?string $codec,
-        public ?bool $hdr,
-        public ?string $transferFunction,
-        public ?string $colorPrimaries,
+        public readonly ?float $durationSec,
+        public readonly ?float $frameRate,
+        public readonly ?int $width,
+        public readonly ?int $height,
+        public readonly ?string $codec,
+        public readonly ?bool $hdr,
+        public readonly ?string $transferFunction,
+        public readonly ?string $colorPrimaries,
     ) {
     }
 }

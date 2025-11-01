@@ -21,15 +21,7 @@ final readonly class Xmp
     /**
      * @param XmpDocument|null $document Parsed XMP document.
      */
-    public function __construct(public ?XmpDocument $document)
+    public function __construct(public readonly ?XmpDocument $document)
     {
-    }
-
-    /**
-     * Returns the parsed XMP document instance.
-     */
-    public function document(): ?XmpDocument
-    {
-        return $this->document;
     }
 }
