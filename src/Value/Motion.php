@@ -28,15 +28,15 @@ final readonly class Motion
      * @param float|null $gyroZ    Gyroscope reading around the Z axis.
      */
     public function __construct(
-        public readonly ?float $rollDeg,
-        public readonly ?float $pitchDeg,
-        public readonly ?float $yawDeg,
-        public readonly ?float $accelX,
-        public readonly ?float $accelY,
-        public readonly ?float $accelZ,
-        public readonly ?float $gyroX,
-        public readonly ?float $gyroY,
-        public readonly ?float $gyroZ,
+        public ?float $rollDeg,
+        public ?float $pitchDeg,
+        public ?float $yawDeg,
+        public ?float $accelX,
+        public ?float $accelY,
+        public ?float $accelZ,
+        public ?float $gyroX,
+        public ?float $gyroY,
+        public ?float $gyroZ,
     ) {
     }
 }

@@ -27,14 +27,14 @@ final readonly class Uav
      * @param float|null  $gimbalRoll   Gimbal roll angle in degrees.
      */
     public function __construct(
-        public readonly ?string $manufacturer,
-        public readonly ?string $model,
-        public readonly ?float $flightYaw,
-        public readonly ?float $flightPitch,
-        public readonly ?float $flightRoll,
-        public readonly ?float $gimbalYaw,
-        public readonly ?float $gimbalPitch,
-        public readonly ?float $gimbalRoll,
+        public ?string $manufacturer,
+        public ?string $model,
+        public ?float $flightYaw,
+        public ?float $flightPitch,
+        public ?float $flightRoll,
+        public ?float $gimbalYaw,
+        public ?float $gimbalPitch,
+        public ?float $gimbalRoll,
     ) {
     }
 }

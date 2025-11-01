@@ -11,19 +11,21 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use function sprintf;
+
 /**
  * Represents a geographic coordinate with optional hemisphere reference.
  */
 final readonly class GpsCoordinate
 {
-    public readonly float $signed;
+    public float $signed;
 
-    public readonly ?string $reference;
+    public ?string $reference;
 
     public function __construct(
-        public readonly float $value,
+        public float $value,
         ?string $reference,
-        public readonly bool $isLatitude,
+        public bool $isLatitude,
     ) {
         $this->reference = $this->normaliseReference($reference);
         $this->signed    = $this->calculateSigned($this->value, $this->reference, $this->isLatitude);

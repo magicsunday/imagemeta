@@ -23,10 +23,10 @@ final readonly class RunTime
      * @param int|null $flags     Bit mask describing the runtime value state.
      */
     public function __construct(
-        public readonly ?int $epoch,
-        public readonly ?int $timescale,
-        public readonly ?int $value,
-        public readonly ?int $flags,
+        public ?int $epoch,
+        public ?int $timescale,
+        public ?int $value,
+        public ?int $flags,
     ) {
     }
 }

@@ -24,9 +24,9 @@ final readonly class CompositeImageInfo
      * @param list<float>|null        $exposureTimesTotal Exposure times for contributing frames.
      */
     public function __construct(
-        public readonly ?CompositeImage $type,
-        public readonly ?array $counts,
-        public readonly ?array $exposureTimesTotal,
+        public ?CompositeImage $type,
+        public ?array $counts,
+        public ?array $exposureTimesTotal,
     ) {
     }
 }

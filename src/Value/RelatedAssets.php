@@ -25,12 +25,12 @@ final readonly class RelatedAssets
      * @param string|null $relatedSoundFile Name of a related sound file attached to the capture.
      */
     public function __construct(
-        public readonly ?string $livePhotoPairId,
-        public readonly ?string $burstId,
-        public readonly ?bool $isPrimaryInBurst,
-        public readonly ?string $panoramaId,
-        public readonly ?string $depthDataId,
-        public readonly ?string $relatedSoundFile,
+        public ?string $livePhotoPairId,
+        public ?string $burstId,
+        public ?bool $isPrimaryInBurst,
+        public ?string $panoramaId,
+        public ?string $depthDataId,
+        public ?string $relatedSoundFile,
     ) {
     }
 

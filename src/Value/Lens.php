@@ -19,7 +19,7 @@ final readonly class Lens
     /**
      * @var array{0:float,1:float,2:float,3:float}|null
      */
-    public readonly ?array $lensSpecification;
+    public ?array $lensSpecification;
 
     /**
      * @param string|null                                 $lensMake           Lens manufacturer.
@@ -31,12 +31,12 @@ final readonly class Lens
      * @param array{0:float,1:float,2:float,3:float}|null $lensSpecification  Lens specification describing zoom and aperture range.
      */
     public function __construct(
-        public readonly ?string $lensMake,
-        public readonly ?string $lensModel,
-        public readonly ?string $lensSerialNumber,
-        public readonly ?float $focalLengthMm,
-        public readonly ?int $focalLengthIn35mm,
-        public readonly ?float $maxApertureFNumber,
+        public ?string $lensMake,
+        public ?string $lensModel,
+        public ?string $lensSerialNumber,
+        public ?float $focalLengthMm,
+        public ?int $focalLengthIn35mm,
+        public ?float $maxApertureFNumber,
         ?array $lensSpecification = null,
     ) {
         $this->lensSpecification = $lensSpecification;

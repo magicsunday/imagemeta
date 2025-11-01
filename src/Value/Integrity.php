@@ -25,12 +25,12 @@ final readonly class Integrity
      * @param bool|null   $makerNotesSafe      Flag denoting whether the maker notes are safe to edit.
      */
     public function __construct(
-        public readonly ?string $originalFileName,
-        public readonly ?string $originalDigest,
-        public readonly ?bool $edited,
-        public readonly ?string $historyLastSoftware,
-        public readonly ?string $imageHistory,
-        public readonly ?bool $makerNotesSafe = null,
+        public ?string $originalFileName,
+        public ?string $originalDigest,
+        public ?bool $edited,
+        public ?string $historyLastSoftware,
+        public ?string $imageHistory,
+        public ?bool $makerNotesSafe = null,
     ) {
     }
 

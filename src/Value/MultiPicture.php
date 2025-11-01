@@ -22,14 +22,14 @@ final readonly class MultiPicture
      * @param list<array{numerator:int, denominator:int}>|null $panoramaAxis
      */
     public function __construct(
-        public readonly ?string $version,
-        public readonly int $imageCount,
-        public readonly array $entries,
-        public readonly ?int $totalFrames,
-        public readonly ?int $individualImageNumber,
-        public readonly ?string $imageUidList,
-        public readonly ?array $panoramaAngle,
-        public readonly ?array $panoramaAxis,
+        public ?string $version,
+        public int $imageCount,
+        public array $entries,
+        public ?int $totalFrames,
+        public ?int $individualImageNumber,
+        public ?string $imageUidList,
+        public ?array $panoramaAngle,
+        public ?array $panoramaAxis,
     ) {
     }
 }

@@ -25,12 +25,12 @@ final readonly class Author
      * @param string|null $imageEditor  Image editor attribution from EXIF 3.0 tags.
      */
     public function __construct(
-        public readonly ?string $artist,
-        public readonly ?string $ownerName,
-        public readonly ?string $creator,
-        public readonly ?string $creatorEmail,
-        public readonly ?string $photographer,
-        public readonly ?string $imageEditor,
+        public ?string $artist,
+        public ?string $ownerName,
+        public ?string $creator,
+        public ?string $creatorEmail,
+        public ?string $photographer,
+        public ?string $imageEditor,
     ) {
     }
 }

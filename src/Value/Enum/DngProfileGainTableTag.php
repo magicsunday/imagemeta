@@ -37,7 +37,7 @@ enum DngProfileGainTableTag: int
     }
 
     /**
-     * Returns the human readable tag label.
+     * Returns the human-readable tag label.
      */
     public function label(): string
     {

@@ -24,11 +24,11 @@ final readonly class File
      * @param string|null $digestMd5  Lowercase hexadecimal MD5 digest of the payload.
      */
     public function __construct(
-        public readonly ?string $mimeType,
-        public readonly ?int $fileSize,
-        public readonly ?string $extension,
-        public readonly ?string $digestSha1,
-        public readonly ?string $digestMd5,
+        public ?string $mimeType,
+        public ?int $fileSize,
+        public ?string $extension,
+        public ?string $digestSha1,
+        public ?string $digestMd5,
     ) {
     }
 }

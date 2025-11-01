@@ -32,15 +32,15 @@ final readonly class ProcessingSettings
      * @param string|null     $processingSoftware       Final processing software recorded by the camera.
      */
     public function __construct(
-        public readonly ?Sharpness $sharpness,
-        public readonly ?Contrast $contrast,
-        public readonly ?Saturation $saturation,
-        public readonly ?string $pictureStyle,
-        public readonly ?float $noiseReduction,
-        public readonly ?int $clarity,
-        public readonly ?int $customRendered,
-        public readonly ?string $deviceSettingDescription,
-        public readonly ?string $processingSoftware,
+        public ?Sharpness $sharpness,
+        public ?Contrast $contrast,
+        public ?Saturation $saturation,
+        public ?string $pictureStyle,
+        public ?float $noiseReduction,
+        public ?int $clarity,
+        public ?int $customRendered,
+        public ?string $deviceSettingDescription,
+        public ?string $processingSoftware,
     ) {
     }
 

@@ -26,13 +26,13 @@ final readonly class ColorProfileHueSatMap
      * @param list<float>|null $mapData3            Tertiary adjustment table when present in the profile.
      */
     public function __construct(
-        public readonly ?int $hueDivisions,
-        public readonly ?int $saturationDivisions,
-        public readonly ?int $valueDivisions,
-        public readonly ?array $encodings,
-        public readonly ?array $mapData1,
-        public readonly ?array $mapData2,
-        public readonly ?array $mapData3,
+        public ?int $hueDivisions,
+        public ?int $saturationDivisions,
+        public ?int $valueDivisions,
+        public ?array $encodings,
+        public ?array $mapData1,
+        public ?array $mapData2,
+        public ?array $mapData3,
     ) {
     }
 }

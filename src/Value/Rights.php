@@ -24,11 +24,11 @@ final readonly class Rights
      * @param string|null $securityClassification Security classification assigned to the asset.
      */
     public function __construct(
-        public readonly ?string $copyright,
-        public readonly ?string $usageTerms,
-        public readonly ?string $licenseUrl,
-        public readonly ?string $creditLine,
-        public readonly ?string $securityClassification,
+        public ?string $copyright,
+        public ?string $usageTerms,
+        public ?string $licenseUrl,
+        public ?string $creditLine,
+        public ?string $securityClassification,
     ) {
     }
 }

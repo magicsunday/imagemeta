@@ -25,10 +25,10 @@ final readonly class WhiteBalanceDetails
      * @param float|null        $bgGain Blue/green channel gain ratio.
      */
     public function __construct(
-        public readonly ?WhiteBalance $mode,
-        public readonly ?int $kelvin,
-        public readonly ?float $rgGain,
-        public readonly ?float $bgGain,
+        public ?WhiteBalance $mode,
+        public ?int $kelvin,
+        public ?float $rgGain,
+        public ?float $bgGain,
     ) {
     }
 }

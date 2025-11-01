@@ -34,18 +34,18 @@ final readonly class Temporal
      * @param list<int>|null         $timeZoneOffsetMinutes TimeZoneOffset values expressed in minutes.
      */
     public function __construct(
-        public readonly ?DateTimeImmutable $create,
-        public readonly ?DateTimeImmutable $modify,
-        public readonly ?DateTimeImmutable $original,
-        public readonly ?DateTimeZone $tz,
-        public readonly ?string $tzSource,
-        public readonly ?string $offsetTime,
-        public readonly ?string $offsetTimeOriginal,
-        public readonly ?string $offsetTimeDigitized,
-        public readonly ?string $subSecTime,
-        public readonly ?string $subSecTimeOriginal,
-        public readonly ?string $subSecTimeDigitized,
-        public readonly ?array $timeZoneOffsetMinutes,
+        public ?DateTimeImmutable $create,
+        public ?DateTimeImmutable $modify,
+        public ?DateTimeImmutable $original,
+        public ?DateTimeZone $tz,
+        public ?string $tzSource,
+        public ?string $offsetTime,
+        public ?string $offsetTimeOriginal,
+        public ?string $offsetTimeDigitized,
+        public ?string $subSecTime,
+        public ?string $subSecTimeOriginal,
+        public ?string $subSecTimeDigitized,
+        public ?array $timeZoneOffsetMinutes,
     ) {
     }
 }

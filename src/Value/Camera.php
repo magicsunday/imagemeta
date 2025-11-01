@@ -29,13 +29,13 @@ final readonly class Camera
      * @param SensingMethod|null $sensingMethod Sensor sampling method.
      */
     public function __construct(
-        public readonly ?string $make,
-        public readonly ?string $model,
-        public readonly ?string $ownerName,
-        public readonly ?string $serialNumber,
-        public readonly ?string $firmware,
-        public readonly ?FileSource $fileSource,
-        public readonly ?SensingMethod $sensingMethod,
+        public ?string $make,
+        public ?string $model,
+        public ?string $ownerName,
+        public ?string $serialNumber,
+        public ?string $firmware,
+        public ?FileSource $fileSource,
+        public ?SensingMethod $sensingMethod,
     ) {
     }
 }

@@ -19,19 +19,19 @@ use DateTimeZone;
  */
 final readonly class Gps
 {
-    public readonly ?DateTimeImmutable $timestamp;
+    public ?DateTimeImmutable $timestamp;
 
-    public readonly ?float $latitudeSigned;
+    public ?float $latitudeSigned;
 
-    public readonly ?float $longitudeSigned;
+    public ?float $longitudeSigned;
 
-    public readonly ?GpsCoordinate $latitudeCoordinate;
+    public ?GpsCoordinate $latitudeCoordinate;
 
-    public readonly ?GpsCoordinate $longitudeCoordinate;
+    public ?GpsCoordinate $longitudeCoordinate;
 
-    public readonly ?GpsCoordinate $destinationLatitudeCoordinate;
+    public ?GpsCoordinate $destinationLatitudeCoordinate;
 
-    public readonly ?GpsCoordinate $destinationLongitudeCoordinate;
+    public ?GpsCoordinate $destinationLongitudeCoordinate;
 
     /**
      * @param float|null             $latitude                       Latitude in decimal degrees.
@@ -75,45 +75,45 @@ final readonly class Gps
      * @param float|null             $horizontalPositioningError     Horizontal positioning error in metres.
      */
     public function __construct(
-        public readonly ?float $latitude = null,
-        public readonly ?float $longitude = null,
-        public readonly ?string $latitudeRef = null,
-        public readonly ?string $longitudeRef = null,
-        public readonly ?float $altitude = null,
-        public readonly ?int $altitudeRef = null,
-        public readonly ?string $version = null,
-        public readonly ?string $versionRaw = null,
-        public readonly ?string $satellites = null,
-        public readonly ?string $status = null,
-        public readonly ?string $measureMode = null,
-        public readonly ?float $dop = null,
-        public readonly ?string $speedRef = null,
-        public readonly ?float $speedMs = null,
-        public readonly ?string $speedOriginalRef = null,
-        public readonly ?float $speedOriginal = null,
-        public readonly ?string $trackRef = null,
-        public readonly ?float $track = null,
-        public readonly ?string $imageDirectionRef = null,
-        public readonly ?float $imageDirection = null,
-        public readonly ?string $mapDatum = null,
-        public readonly ?string $destinationLatitudeRef = null,
-        public readonly ?float $destinationLatitude = null,
-        public readonly ?string $destinationLongitudeRef = null,
-        public readonly ?float $destinationLongitude = null,
-        public readonly ?string $destinationBearingRef = null,
-        public readonly ?float $destinationBearing = null,
-        public readonly ?string $destinationDistanceRef = null,
-        public readonly ?float $destinationDistanceMetres = null,
-        public readonly ?string $destinationDistanceOriginalRef = null,
-        public readonly ?float $destinationDistanceOriginal = null,
-        public readonly ?string $processingMethod = null,
-        public readonly ?string $areaInformation = null,
-        public readonly ?string $date = null,
-        public readonly ?string $dateRaw = null,
-        public readonly ?string $time = null,
+        public ?float $latitude = null,
+        public ?float $longitude = null,
+        public ?string $latitudeRef = null,
+        public ?string $longitudeRef = null,
+        public ?float $altitude = null,
+        public ?int $altitudeRef = null,
+        public ?string $version = null,
+        public ?string $versionRaw = null,
+        public ?string $satellites = null,
+        public ?string $status = null,
+        public ?string $measureMode = null,
+        public ?float $dop = null,
+        public ?string $speedRef = null,
+        public ?float $speedMs = null,
+        public ?string $speedOriginalRef = null,
+        public ?float $speedOriginal = null,
+        public ?string $trackRef = null,
+        public ?float $track = null,
+        public ?string $imageDirectionRef = null,
+        public ?float $imageDirection = null,
+        public ?string $mapDatum = null,
+        public ?string $destinationLatitudeRef = null,
+        public ?float $destinationLatitude = null,
+        public ?string $destinationLongitudeRef = null,
+        public ?float $destinationLongitude = null,
+        public ?string $destinationBearingRef = null,
+        public ?float $destinationBearing = null,
+        public ?string $destinationDistanceRef = null,
+        public ?float $destinationDistanceMetres = null,
+        public ?string $destinationDistanceOriginalRef = null,
+        public ?float $destinationDistanceOriginal = null,
+        public ?string $processingMethod = null,
+        public ?string $areaInformation = null,
+        public ?string $date = null,
+        public ?string $dateRaw = null,
+        public ?string $time = null,
         ?DateTimeImmutable $timestamp = null,
-        public readonly ?int $differential = null,
-        public readonly ?float $horizontalPositioningError = null,
+        public ?int $differential = null,
+        public ?float $horizontalPositioningError = null,
     ) {
         $this->timestamp                      = $this->normaliseTimestamp($timestamp);
         $this->latitudeSigned                 = $this->signedCoordinate($this->latitude, $this->latitudeRef, 'S', 'N');

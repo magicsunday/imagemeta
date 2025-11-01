@@ -27,14 +27,14 @@ final readonly class Derived
      * @param float|null $cropFactor               Estimated crop factor.
      */
     public function __construct(
-        public readonly ?float $ev100,
-        public readonly ?float $hyperfocalDistanceMetres,
-        public readonly ?float $circleOfConfusionMm,
-        public readonly ?float $fieldOfViewDiagonalDeg,
-        public readonly ?float $fieldOfViewHorizontalDeg,
-        public readonly ?float $fieldOfViewVerticalDeg,
-        public readonly ?int $equivalent35mm,
-        public readonly ?float $cropFactor,
+        public ?float $ev100,
+        public ?float $hyperfocalDistanceMetres,
+        public ?float $circleOfConfusionMm,
+        public ?float $fieldOfViewDiagonalDeg,
+        public ?float $fieldOfViewHorizontalDeg,
+        public ?float $fieldOfViewVerticalDeg,
+        public ?int $equivalent35mm,
+        public ?float $cropFactor,
     ) {
     }
 }

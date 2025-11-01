@@ -21,7 +21,7 @@ final readonly class Regions
     /**
      * @param list<Region> $items List of annotated regions.
      */
-    public function __construct(public readonly array $items)
+    public function __construct(public array $items)
     {
     }
 }

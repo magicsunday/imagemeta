@@ -23,10 +23,10 @@ final readonly class Device
      * @param string|null $metadataEditingSoftware Metadata editing software identifier.
      */
     public function __construct(
-        public readonly ?string $software,
-        public readonly ?string $rawDevelopingSoftware,
-        public readonly ?string $imageEditingSoftware,
-        public readonly ?string $metadataEditingSoftware,
+        public ?string $software,
+        public ?string $rawDevelopingSoftware,
+        public ?string $imageEditingSoftware,
+        public ?string $metadataEditingSoftware,
     ) {
     }
 }

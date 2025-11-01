@@ -23,10 +23,10 @@ final readonly class Audio
      * @param int|null    $bitDepth   Bit depth per sample.
      */
     public function __construct(
-        public readonly ?int $channels,
-        public readonly ?int $sampleRate,
-        public readonly ?string $codec,
-        public readonly ?int $bitDepth,
+        public ?int $channels,
+        public ?int $sampleRate,
+        public ?string $codec,
+        public ?int $bitDepth,
     ) {
     }
 }

@@ -31,18 +31,18 @@ final readonly class ColorProfile
      * @param ColorProfileGainMap|null   $gainMap                     Optional profile gain map payload.
      */
     public function __construct(
-        public readonly ?string $profileName,
-        public readonly ?string $profileVersion,
-        public readonly ?string $pcs,
-        public readonly ?string $renderingIntent,
-        public readonly ?float $gamma,
-        public readonly ?string $profileId = null,
-        public readonly ?string $cameraCalibrationSignature = null,
-        public readonly ?string $profileCalibrationSignature = null,
-        public readonly ?ColorProfileHueSatMap $hueSatMap = null,
-        public readonly ?ColorProfileLookTable $lookTable = null,
-        public readonly ?ColorProfileToneCurve $toneCurve = null,
-        public readonly ?ColorProfileGainMap $gainMap = null,
+        public ?string $profileName,
+        public ?string $profileVersion,
+        public ?string $pcs,
+        public ?string $renderingIntent,
+        public ?float $gamma,
+        public ?string $profileId = null,
+        public ?string $cameraCalibrationSignature = null,
+        public ?string $profileCalibrationSignature = null,
+        public ?ColorProfileHueSatMap $hueSatMap = null,
+        public ?ColorProfileLookTable $lookTable = null,
+        public ?ColorProfileToneCurve $toneCurve = null,
+        public ?ColorProfileGainMap $gainMap = null,
     ) {
     }
 }

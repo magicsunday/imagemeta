@@ -23,8 +23,8 @@ final readonly class ColorProfileGainMap
      * @param list<float>            $values Normalised per-pixel gain factors stored in scan-line order.
      */
     public function __construct(
-        public readonly DngProfileGainTableTag $tag,
-        public readonly array $values,
+        public DngProfileGainTableTag $tag,
+        public array $values,
     ) {
     }
 }

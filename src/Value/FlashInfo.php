@@ -28,11 +28,11 @@ final readonly class FlashInfo
      * @param bool               $redEyeReduction  Indicates red-eye reduction support.
      */
     public function __construct(
-        public readonly bool $fired,
-        public readonly ?FlashMode $mode = null,
-        public readonly ?FlashReturn $returnDetection = null,
-        public readonly ?FlashFunction $functionPresence = null,
-        public readonly bool $redEyeReduction = false,
+        public bool $fired,
+        public ?FlashMode $mode = null,
+        public ?FlashReturn $returnDetection = null,
+        public ?FlashFunction $functionPresence = null,
+        public bool $redEyeReduction = false,
     ) {
     }
 

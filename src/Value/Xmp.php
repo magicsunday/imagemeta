@@ -21,7 +21,7 @@ final readonly class Xmp
     /**
      * @param XmpDocument|null $document Parsed XMP document.
      */
-    public function __construct(public readonly ?XmpDocument $document)
+    public function __construct(public ?XmpDocument $document)
     {
     }
 }

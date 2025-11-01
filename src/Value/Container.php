@@ -24,11 +24,11 @@ final readonly class Container
      * @param string|null $audioCodec Audio codec identifier when available.
      */
     public function __construct(
-        public readonly ?string $format,
-        public readonly ?string $encoder,
-        public readonly ?int $bitrate,
-        public readonly ?string $videoCodec,
-        public readonly ?string $audioCodec,
+        public ?string $format,
+        public ?string $encoder,
+        public ?int $bitrate,
+        public ?string $videoCodec,
+        public ?string $audioCodec,
     ) {
     }
 }

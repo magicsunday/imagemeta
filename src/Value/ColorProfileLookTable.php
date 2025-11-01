@@ -23,10 +23,10 @@ final readonly class ColorProfileLookTable
      * @param list<array{0: float, 1: float, 2: float}>|null $entries             Per-entry RGB adjustments in floating point.
      */
     public function __construct(
-        public readonly ?int $hueDivisions,
-        public readonly ?int $saturationDivisions,
-        public readonly ?int $valueDivisions,
-        public readonly ?array $entries,
+        public ?int $hueDivisions,
+        public ?int $saturationDivisions,
+        public ?int $valueDivisions,
+        public ?array $entries,
     ) {
     }
 }

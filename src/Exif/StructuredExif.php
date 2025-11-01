@@ -60,7 +60,6 @@ final readonly class StructuredExif
 
     public Standards $standards;
 
-
     public ?int $iso;
 
     public ?DateTimeImmutable $dateTimeOriginal;
@@ -70,6 +69,7 @@ final readonly class StructuredExif
     public ?string $userCommentEncoding;
 
     public bool $hasData;
+
     /**
      * Creates the structured EXIF view by aggregating the curated value objects extracted from the parser.
      *
@@ -84,7 +84,7 @@ final readonly class StructuredExif
         ?int $fallbackHeight = null,
         ?int $fallbackBitsPerSample = null,
     ) {
-        $this->raw = $document;
+        $this->raw     = $document;
         $this->hasData = $document instanceof ParsedExif;
 
         $cameraValue   = $this->createCameraValue($document);
@@ -103,18 +103,18 @@ final readonly class StructuredExif
         );
 
         // Build structured view models that expose the curated EXIF metadata slices.
-        $this->camera    = $cameraValue;
-        $this->lens      = $lensValue;
-        $this->derived   = $derived;
-        $this->exposure  = $exposureValue;
-        $this->gps       = $gpsValue;
-        $this->image     = $imageValue;
-        $this->preview   = $previewValue;
-        $this->interop   = $interopValue;
-        $this->standards = $this->createStandardsValue($document);
-        $this->iso = $document?->isoBestEffort();
-        $this->dateTimeOriginal = $document?->dateTimeOriginalBestEffort();
-        $this->userComment = $document?->userComment();
+        $this->camera              = $cameraValue;
+        $this->lens                = $lensValue;
+        $this->derived             = $derived;
+        $this->exposure            = $exposureValue;
+        $this->gps                 = $gpsValue;
+        $this->image               = $imageValue;
+        $this->preview             = $previewValue;
+        $this->interop             = $interopValue;
+        $this->standards           = $this->createStandardsValue($document);
+        $this->iso                 = $document?->isoBestEffort();
+        $this->dateTimeOriginal    = $document?->dateTimeOriginalBestEffort();
+        $this->userComment         = $document?->userComment();
         $this->userCommentEncoding = $document?->userCommentEncodingBestEffort();
     }
 

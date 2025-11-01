@@ -31,13 +31,13 @@ final readonly class Scene
      * @param SubjectDistanceRange|null $subjectDistanceRange Subject distance classification.
      */
     public function __construct(
-        public readonly ?SceneCaptureType $type,
-        public readonly ?SceneType $sceneType,
-        public readonly ?LightSource $light,
-        public readonly ?int $faceCount,
-        public readonly ?bool $hdrScene,
-        public readonly ?bool $nightMode,
-        public readonly ?SubjectDistanceRange $subjectDistanceRange,
+        public ?SceneCaptureType $type,
+        public ?SceneType $sceneType,
+        public ?LightSource $light,
+        public ?int $faceCount,
+        public ?bool $hdrScene,
+        public ?bool $nightMode,
+        public ?SubjectDistanceRange $subjectDistanceRange,
     ) {
     }
 

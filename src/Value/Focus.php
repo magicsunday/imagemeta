@@ -25,12 +25,12 @@ final readonly class Focus
      * @param string|null $afMode           Active auto focus mode name.
      */
     public function __construct(
-        public readonly ?float $subjectDistanceM,
-        public readonly ?int $subjectAreaX,
-        public readonly ?int $subjectAreaY,
-        public readonly ?int $subjectAreaW,
-        public readonly ?int $subjectAreaH,
-        public readonly ?string $afMode,
+        public ?float $subjectDistanceM,
+        public ?int $subjectAreaX,
+        public ?int $subjectAreaY,
+        public ?int $subjectAreaW,
+        public ?int $subjectAreaH,
+        public ?string $afMode,
     ) {
     }
 }

@@ -51,13 +51,6 @@
             "MagicSunday\\ImageMeta\\Tests\\": "tests/"
         }
     },
-    "suggest": {
-        "magicsunday/imagemeta-maker-notes": "Install to enable maker note decoding and mapping support.",
-        "magicsunday/imagemeta-quicktime": "Install to parse QuickTime/ISO BMFF metadata payloads.",
-        "magicsunday/imagemeta-xmp": "Install to parse XMP packets and build structured XMP documents.",
-        "magicsunday/imagemeta-mpf": "Install to parse JPEG MPF APP2 segments.",
-        "magicsunday/imagemeta-curate-exif": "Install to expose curated EXIF value objects."
-    },
     "scripts": {
         "ci:cgl": [
             "php-cs-fixer fix --config .build/.php-cs-fixer.dist.php --diff --verbose"

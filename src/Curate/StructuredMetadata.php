@@ -94,5 +94,4 @@ final readonly class StructuredMetadata
         public ?AppleMakerNotes $makerNotesApple,
     ) {
     }
-
 }

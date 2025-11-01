@@ -24,11 +24,11 @@ final readonly class MultiPictureEntry
      * @param int $dependentImage2 Index of the second dependent image entry.
      */
     public function __construct(
-        public readonly int $attributes,
-        public readonly int $imageSize,
-        public readonly int $dataOffset,
-        public readonly int $dependentImage1,
-        public readonly int $dependentImage2,
+        public int $attributes,
+        public int $imageSize,
+        public int $dataOffset,
+        public int $dependentImage1,
+        public int $dependentImage2,
     ) {
     }
 }

@@ -25,12 +25,12 @@ final readonly class AudioClip
      * @param string $version    Version string reported by the EXIF audio header.
      */
     public function __construct(
-        public readonly string $format,
-        public readonly int $channels,
-        public readonly int $sampleRate,
-        public readonly int $bitDepth,
-        public readonly string $data,
-        public readonly string $version,
+        public string $format,
+        public int $channels,
+        public int $sampleRate,
+        public int $bitDepth,
+        public string $data,
+        public string $version,
     ) {
     }
 }

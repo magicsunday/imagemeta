@@ -40,7 +40,7 @@ enum IccRenderingIntent: int
     }
 
     /**
-     * Returns the human readable rendering intent label.
+     * Returns the human-readable rendering intent label.
      */
     public function label(): string
     {

@@ -25,7 +25,7 @@ final readonly class Preview
      * @param int|null         $previewWidth             Width of the preview image in pixels.
      * @param int|null         $previewHeight            Height of the preview image in pixels.
      * @param ColorSpace|null  $previewColorSpace        Colour space of the preview image.
-     * @param int|null         $previewBitDepth          Bit depth of the preview image.
+     * @param int|null         $previewBitDepth          The bit depth of the preview image.
      * @param Compression|null $previewCompression       Compression applied to the preview payload.
      * @param float|null       $previewScale             Scale factor applied to the preview relative to the main image.
      * @param string|null      $previewEncoding          Encoding name for the preview image payload.
@@ -45,29 +45,29 @@ final readonly class Preview
      * @param list<int>|null   $previewTileByteCounts    Tile byte counts describing the EXIF 3.0 preview payload.
      */
     public function __construct(
-        public readonly ?bool $hasThumbnail,
-        public readonly ?bool $hasPreview,
-        public readonly ?int $previewWidth,
-        public readonly ?int $previewHeight,
-        public readonly ?ColorSpace $previewColorSpace,
-        public readonly ?int $previewBitDepth,
-        public readonly ?Compression $previewCompression,
-        public readonly ?float $previewScale,
-        public readonly ?string $previewEncoding,
-        public readonly ?string $previewMimeType,
-        public readonly ?int $previewOffset,
-        public readonly ?int $previewLength,
-        public readonly ?int $thumbnailOffset = null,
-        public readonly ?int $thumbnailLength = null,
-        public readonly ?Compression $thumbnailCompression = null,
-        public readonly ?array $thumbnailStripOffsets = null,
-        public readonly ?array $thumbnailStripByteCounts = null,
-        public readonly ?array $thumbnailTileOffsets = null,
-        public readonly ?array $thumbnailTileByteCounts = null,
-        public readonly ?array $previewStripOffsets = null,
-        public readonly ?array $previewStripByteCounts = null,
-        public readonly ?array $previewTileOffsets = null,
-        public readonly ?array $previewTileByteCounts = null,
+        public ?bool $hasThumbnail,
+        public ?bool $hasPreview,
+        public ?int $previewWidth,
+        public ?int $previewHeight,
+        public ?ColorSpace $previewColorSpace,
+        public ?int $previewBitDepth,
+        public ?Compression $previewCompression,
+        public ?float $previewScale,
+        public ?string $previewEncoding,
+        public ?string $previewMimeType,
+        public ?int $previewOffset,
+        public ?int $previewLength,
+        public ?int $thumbnailOffset = null,
+        public ?int $thumbnailLength = null,
+        public ?Compression $thumbnailCompression = null,
+        public ?array $thumbnailStripOffsets = null,
+        public ?array $thumbnailStripByteCounts = null,
+        public ?array $thumbnailTileOffsets = null,
+        public ?array $thumbnailTileByteCounts = null,
+        public ?array $previewStripOffsets = null,
+        public ?array $previewStripByteCounts = null,
+        public ?array $previewTileOffsets = null,
+        public ?array $previewTileByteCounts = null,
     ) {
     }
 }

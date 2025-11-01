@@ -30,7 +30,7 @@ final readonly class Image
      * @param int|null         $imageNumber             Sequential number of the image as reported by the camera.
      * @param string|null      $documentName            Optional document or file name derived from metadata sources.
      * @param string|null      $description             Free-form description provided by the camera.
-     * @param string|null      $title                   Human readable title provided by the camera or metadata.
+     * @param string|null      $title                   Human-readable title provided by the camera or metadata.
      * @param list<int>|null   $componentsConfiguration Layout of the colour components for each pixel sample.
      * @param float|null       $compressedBitsPerPixel  Average bits per pixel after compression.
      * @param int|null         $interlace               Interlace indicator reported by the camera.
@@ -38,21 +38,21 @@ final readonly class Image
      * @param string|null      $userCommentEncoding     Declared encoding for the user comment payload.
      */
     public function __construct(
-        public readonly ?int $width,
-        public readonly ?int $height,
-        public readonly ?Orientation $orientation,
-        public readonly ?int $bitsPerSample,
-        public readonly ?ColorSpace $colorSpace,
-        public readonly ?string $imageUniqueId,
-        public readonly ?int $imageNumber,
-        public readonly ?string $documentName,
-        public readonly ?string $description,
-        public readonly ?string $title,
-        public readonly ?array $componentsConfiguration,
-        public readonly ?float $compressedBitsPerPixel,
-        public readonly ?int $interlace,
-        public readonly ?string $userComment,
-        public readonly ?string $userCommentEncoding,
+        public ?int $width,
+        public ?int $height,
+        public ?Orientation $orientation,
+        public ?int $bitsPerSample,
+        public ?ColorSpace $colorSpace,
+        public ?string $imageUniqueId,
+        public ?int $imageNumber,
+        public ?string $documentName,
+        public ?string $description,
+        public ?string $title,
+        public ?array $componentsConfiguration,
+        public ?float $compressedBitsPerPixel,
+        public ?int $interlace,
+        public ?string $userComment,
+        public ?string $userCommentEncoding,
     ) {
     }
 }

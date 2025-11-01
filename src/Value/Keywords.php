@@ -21,8 +21,8 @@ final readonly class Keywords
      * @param list<string>|null $hierarchical Optional hierarchical keywords.
      */
     public function __construct(
-        public readonly array $flat,
-        public readonly ?array $hierarchical,
+        public array $flat,
+        public ?array $hierarchical,
     ) {
     }
 }

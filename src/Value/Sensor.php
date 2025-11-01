@@ -33,18 +33,18 @@ final readonly class Sensor
      * @param ResolutionUnit|null                                                                                                                                          $focalPlaneResolutionUnit Focal plane resolution unit.
      */
     public function __construct(
-        public readonly ?float $pixelPitchUm,
-        public readonly ?int $cfaWidth,
-        public readonly ?int $cfaHeight,
-        public readonly ?string $sensorType,
-        public readonly ?bool $ibis,
-        public readonly ?array $cfaPattern,
-        public readonly ?string $spectralSensitivity,
-        public readonly ?array $oecf,
-        public readonly ?array $spatialFrequencyResponse,
-        public readonly ?float $focalPlaneXResolution,
-        public readonly ?float $focalPlaneYResolution,
-        public readonly ?ResolutionUnit $focalPlaneResolutionUnit,
+        public ?float $pixelPitchUm,
+        public ?int $cfaWidth,
+        public ?int $cfaHeight,
+        public ?string $sensorType,
+        public ?bool $ibis,
+        public ?array $cfaPattern,
+        public ?string $spectralSensitivity,
+        public ?array $oecf,
+        public ?array $spatialFrequencyResponse,
+        public ?float $focalPlaneXResolution,
+        public ?float $focalPlaneYResolution,
+        public ?ResolutionUnit $focalPlaneResolutionUnit,
     ) {
     }
 }

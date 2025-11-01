@@ -28,15 +28,15 @@ final readonly class Region
      * @param string|null     $faceId      Optional identifier emitted by face detection engines.
      */
     public function __construct(
-        public readonly ?RegionType $type,
-        public readonly float $x,
-        public readonly float $y,
-        public readonly float $w,
-        public readonly float $h,
-        public readonly ?string $personName = null,
-        public readonly ?float $confidence = null,
-        public readonly ?float $rotationDeg = null,
-        public readonly ?string $faceId = null,
+        public ?RegionType $type,
+        public float $x,
+        public float $y,
+        public float $w,
+        public float $h,
+        public ?string $personName = null,
+        public ?float $confidence = null,
+        public ?float $rotationDeg = null,
+        public ?string $faceId = null,
     ) {
     }
 }
