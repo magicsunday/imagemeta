@@ -5,6 +5,7 @@
 ### Added
 - Added `Value\Derived::fieldOfViewHorizontalDeg` and `Value\Derived::fieldOfViewVerticalDeg` to expose axis specific angles of view alongside the
   diagonal `fieldOfViewDiagonalDeg` helper.
+- Exposed the calculated circle of confusion via `Value\Derived::circleOfConfusionMm` so clients can reuse the depth-of-field baseline.
 - Extended `Value\Temporal` with offset tags, a resolved `DateTimeZone` instance and minute level EXIF offsets for reliable
   capture time reconstruction.
 - Enriched `Value\File` with mime type, file size, extension and SHA-1/MD5 digests so that consumers can correlate assets without

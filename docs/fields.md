@@ -16,6 +16,8 @@ circle of confusion (CoC) model used by the derived metrics helper.
   * `Motion::rollDeg`, `Motion::pitchDeg`, `Motion::yawDeg`
   * `Capture::cameraElevationAngleDeg`
   * `Gps::track`, `Gps::imageDirection`, `Gps::destinationBearing`
+* **Millimetres (mm)**
+  * `Derived::circleOfConfusionMm`
 * **Metres per second squared (m/s²)**
   * `Capture::accelerationMs2`
   * `Motion::accelX`, `Motion::accelY`, `Motion::accelZ`
@@ -28,7 +30,7 @@ When the EXIF GPS IFD omits `GPSVersionID` or only includes null padding, `Gps::
 
 ## Circle of confusion model
 
-`ValueConverters::calcCircleOfConfusionMm()` assumes a full-frame reference circle of confusion of 0.030&nbsp;mm. When a crop
+`ValueConverters::calcCircleOfConfusionMm()` assumes a full-frame reference circle of confusion of 0.030&nbsp;mm. The resulting value is exposed to consumers via `Derived::circleOfConfusionMm`. When a crop
 factor is available, the constant is divided by the crop factor to approximate the effective CoC for the captured format. If no
 crop factor can be derived the function keeps the 0.030&nbsp;mm baseline, and it returns `null` whenever an invalid (zero or
 negative) crop factor is encountered. This value feeds into the hyperfocal distance calculator and the three field-of-view helpers.

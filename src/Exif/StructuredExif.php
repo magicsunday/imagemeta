@@ -396,7 +396,9 @@ final readonly class StructuredExif
     private function createDerivedValues(LensValue $lens, ExposureValue $exposure): Derived
     {
         $cropFactor          = ValueConverters::calcCropFactor($lens->focalLengthIn35mm, $lens->focalLengthMm);
-        $circleOfConfusionMm = ValueConverters::calcCircleOfConfusionMm($cropFactor);
+        $circleOfConfusionMm = $cropFactor !== null
+            ? ValueConverters::calcCircleOfConfusionMm($cropFactor)
+            : null;
 
         return new Derived(
             ev100: ValueConverters::calcEv100(
@@ -409,6 +411,7 @@ final readonly class StructuredExif
                 $exposure->fNumber,
                 $circleOfConfusionMm,
             ),
+            circleOfConfusionMm: $circleOfConfusionMm,
             fieldOfViewDiagonalDeg: ValueConverters::calcFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
             fieldOfViewHorizontalDeg: ValueConverters::calcHorizontalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),
             fieldOfViewVerticalDeg: ValueConverters::calcVerticalFovDeg($lens->focalLengthIn35mm, $cropFactor, $lens->focalLengthMm),

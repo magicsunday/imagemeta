@@ -19,6 +19,7 @@ final readonly class Derived
     /**
      * @param float|null $ev100                    Exposure value normalised to ISO 100.
      * @param float|null $hyperfocalDistanceMetres Hyperfocal distance in metres.
+     * @param float|null $circleOfConfusionMm      Circle of confusion in millimetres used for depth calculations.
      * @param float|null $fieldOfViewDiagonalDeg   Diagonal field of view in degrees.
      * @param float|null $fieldOfViewHorizontalDeg Horizontal field of view in degrees.
      * @param float|null $fieldOfViewVerticalDeg   Vertical field of view in degrees.
@@ -28,6 +29,7 @@ final readonly class Derived
     public function __construct(
         public readonly ?float $ev100,
         public readonly ?float $hyperfocalDistanceMetres,
+        public readonly ?float $circleOfConfusionMm,
         public readonly ?float $fieldOfViewDiagonalDeg,
         public readonly ?float $fieldOfViewHorizontalDeg,
         public readonly ?float $fieldOfViewVerticalDeg,
