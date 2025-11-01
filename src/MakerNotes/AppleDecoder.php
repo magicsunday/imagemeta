@@ -30,6 +30,7 @@ use function array_is_list;
 use function array_key_exists;
 use function array_unique;
 use function array_values;
+use function count;
 use function ctype_space;
 use function ctype_xdigit;
 use function hexdec;
@@ -518,10 +519,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         if ($value instanceof ApplePlistDictionary) {
-            $result = [];
-            foreach ($value->entries() as $key => $entry) {
-                $result[$key] = $this->plistValueToPhp($entry);
-            }
+            $result = array_map(
+                $this->plistValueToPhp(...),
+                $value->entries()
+            );
 
             return $result;
         }

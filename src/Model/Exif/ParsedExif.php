@@ -51,6 +51,7 @@ use function count;
 use function iconv;
 use function in_array;
 use function intdiv;
+use function is_array;
 use function is_float;
 use function is_int;
 use function is_numeric;
@@ -2903,6 +2904,8 @@ final readonly class ParsedExif
     /**
      * Returns a single value from the cached GPS metadata map.
      *
+     * @param string $key
+     *
      * @return string|int|float|DateTimeImmutable|null
      */
     private function gpsValue(string $key): string|int|float|DateTimeImmutable|null
@@ -3479,6 +3482,9 @@ final readonly class ParsedExif
     /**
      * Returns an integer value from the given IFD if present.
      *
+     * @param Ifd|null $ifd
+     * @param int      $tag
+     *
      * @return int|null
      */
     private function int(?Ifd $ifd, int $tag): ?int
@@ -3490,6 +3496,9 @@ final readonly class ParsedExif
 
     /**
      * Returns a rational or numeric value converted to float if present in the given IFD.
+     *
+     * @param Ifd|null $ifd
+     * @param int      $tag
      *
      * @return float|null
      */
@@ -3521,6 +3530,8 @@ final readonly class ParsedExif
     /**
      * Retrieves a raw entry value preferring the GPS IFD before falling back to the EXIF IFD.
      *
+     * @param int $tag
+     *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
     private function valueFromGpsOrExif(int $tag): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
@@ -3535,6 +3546,9 @@ final readonly class ParsedExif
 
     /**
      * Retrieves the raw entry value for the provided tag.
+     *
+     * @param Ifd|null $ifd
+     * @param int      $tag
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null
      */
@@ -3715,6 +3729,8 @@ final readonly class ParsedExif
     }
 
     /**
+     * @param int|float|string|null $value
+     *
      * @return int|string|null
      */
     private function componentsInputFromScalar(int|float|string|null $value): int|string|null

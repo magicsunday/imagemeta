@@ -13,6 +13,11 @@ namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
 use LogicException;
 
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
+
 /**
  * Represents scalar property list values.
  */

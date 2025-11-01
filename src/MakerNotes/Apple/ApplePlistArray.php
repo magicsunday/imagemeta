@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use function count;
+
 /**
  * Represents array property list values.
  */

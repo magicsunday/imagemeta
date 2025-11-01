@@ -195,6 +195,8 @@ final class BinaryPlistDecoder
 
     /**
      * @param BinaryPlistScalar $value
+     *
+     * @return ApplePlistScalar
      */
     private function wrapScalar(bool|float|int|string|null $value): ApplePlistScalar
     {

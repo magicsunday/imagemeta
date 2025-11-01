@@ -81,13 +81,10 @@ final class CaptureDateResolver
             $temporal->modify,
         ];
 
-        foreach ($candidates as $candidate) {
-            if ($candidate instanceof DateTimeImmutable) {
-                return $candidate;
-            }
-        }
-
-        return null;
+        return array_find(
+            $candidates,
+            fn ($candidate): bool => $candidate instanceof DateTimeImmutable
+        );
     }
 
     private static function gpsFallback(Gps $gps): ?DateTimeImmutable

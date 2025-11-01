@@ -2551,6 +2551,8 @@ final readonly class ValueConverters
      * Normalises a numeric component from a rational pair.
      *
      * @param int|float|string|UInt64 $component
+     *
+     * @return float|null
      */
     private static function normaliseNumericComponent(int|float|string|UInt64 $component): ?float
     {

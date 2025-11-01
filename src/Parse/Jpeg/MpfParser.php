@@ -24,6 +24,9 @@ use function array_any;
 use function array_is_list;
 use function array_key_exists;
 use function count;
+use function is_array;
+use function is_int;
+use function is_string;
 use function pack;
 use function strlen;
 use function substr;
@@ -436,12 +439,11 @@ final class MpfParser
      */
     private function filterAdditionalTags(array $entries, array $known): array
     {
-        $additional = [];
-        foreach ($entries as $tag => $value) {
-            if (!isset($known[$tag])) {
-                $additional[$tag] = $value;
-            }
-        }
+        $additional = array_filter(
+            $entries,
+            fn ($tag): bool => !isset($known[$tag]),
+            ARRAY_FILTER_USE_KEY
+        );
 
         return $additional;
     }

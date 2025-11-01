@@ -34,6 +34,7 @@ use function array_any;
 use function array_slice;
 use function array_values;
 use function chr;
+use function count;
 use function function_exists;
 use function iconv;
 use function in_array;
@@ -446,10 +447,11 @@ final class TiffExifReader
      * tags whose component counts are normalised here (see EXIF 2.32 §4.6.2/§4.6.4
      * for the legacy wording, and EXIF 2.1 §2.6.4 for the original tag listings).
      *
-     * @param int                                                            $type     TIFF field type code.
-     * @param int                                                            $count    Number of values represented.
-     * @param string                                                         $rawBytes Raw value bytes read for the entry.
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList $value
+     * @param int                                                                   $tag
+     * @param int                                                                   $type     TIFF field type code.
+     * @param int                                                                   $count    Number of values represented.
+     * @param string                                                                $rawBytes Raw value bytes read for the entry.
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value
      *
      * @return int|ExifNumericList
      */
@@ -605,6 +607,9 @@ final class TiffExifReader
 
     /**
      * Normalises a UInt64 scalar into an integer when possible, preserving oversized pointer values.
+     *
+     * @param int    $tag
+     * @param UInt64 $value
      *
      * @return int|UInt64
      */

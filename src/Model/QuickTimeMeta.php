@@ -225,6 +225,8 @@ final readonly class QuickTimeMeta
     /**
      * Resolves the first available value for the given metadata key or its aliases.
      *
+     * @param string $key
+     *
      * @return string|int|float|bool|null
      */
     private function lookupValue(string $key): string|int|float|bool|null

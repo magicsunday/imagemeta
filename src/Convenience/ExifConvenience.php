@@ -315,21 +315,15 @@ final class ExifConvenience
     private static function resolveLatitudeRef(Gps $gps, float $latitude): string
     {
         $ref = $gps->latitudeRef;
-        if ($ref !== null) {
-            return $ref;
-        }
 
-        return $latitude >= 0.0 ? 'N' : 'S';
+        return $ref ?? ($latitude >= 0.0 ? 'N' : 'S');
     }
 
     private static function resolveLongitudeRef(Gps $gps, float $longitude): string
     {
         $ref = $gps->longitudeRef;
-        if ($ref !== null) {
-            return $ref;
-        }
 
-        return $longitude >= 0.0 ? 'E' : 'W';
+        return $ref ?? ($longitude >= 0.0 ? 'E' : 'W');
     }
 
     private static function resolveAltitude(Gps $gps): ?float

@@ -241,6 +241,7 @@ final class SemanticStyle
 
     /**
      * @param SemanticStyleEntries $entries
+     * @param int                  ...$indexes
      *
      * @return SemanticStyleScalar
      */
