@@ -113,8 +113,7 @@ final class ValueFactory implements ValueFactoryInterface
     /**
      * Produces normalised value objects derived from the supplied metadata container.
      *
-     * @param Metadata         $metadata    Metadata container with decoded EXIF, XMP and QuickTime data.
-     * @param XmpDocument|null $xmpDocument Optional pre-parsed XMP document reused by the caller.
+     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return array{
      *     file: File,
@@ -156,11 +155,9 @@ final class ValueFactory implements ValueFactoryInterface
      *     makerNotesApple: AppleMakerNotes|null,
      * }
      */
-    public function createComponents(
-        Metadata $metadata,
-        ?XmpDocument $xmpDocument = null,
-    ): array {
-        $xmpDocument ??= $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+    public function createComponents(Metadata $metadata): array
+    {
+        $xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 
         $gps             = $this->createGps($metadata, $xmpDocument);
         $regions         = $this->createRegions($xmpDocument);

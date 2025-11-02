@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Core;
 
 use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
+use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use const SEEK_CUR;
@@ -25,6 +26,7 @@ use const SEEK_SET;
 final class StreamWindow implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
+    use NormalisesOffsets;
 
     private int $cursor = 0;
 
@@ -85,7 +87,7 @@ final class StreamWindow implements BinaryReadAccessInterface
             return '';
         }
 
-        $len = $this->normaliseLength($length);
+        $len = $this->normaliseReadLength($length, 'window read length out of range');
 
         if ($this->cursor + $len > $this->length) {
             throw new BoundsError('window read out of range');
@@ -101,6 +103,11 @@ final class StreamWindow implements BinaryReadAccessInterface
     /**
      * Exposes the ByteReader instance for the shared primitive read trait.
      */
+    protected function offsetLimit(): int
+    {
+        return $this->length;
+    }
+
     protected function byteReader(): ByteReader
     {
         return $this->byteReader;
@@ -118,66 +125,4 @@ final class StreamWindow implements BinaryReadAccessInterface
         $this->cursor = $target;
     }
 
-    /**
-     * @return positive-int
-     */
-    private function normaliseLength(int|UInt64 $length): int
-    {
-        if ($length instanceof UInt64) {
-            if ($length->isZero()) {
-                throw new BoundsError('window read length out of range: ' . $length->toHex());
-            }
-
-            $length = $length->toInt('window read length out of range');
-        }
-
-        if ($length <= 0) {
-            throw new BoundsError('window read length out of range: ' . $length);
-        }
-
-        return $length;
-    }
-
-    private function normaliseAbsoluteOffset(int|UInt64 $offset, string $message): int
-    {
-        if ($offset instanceof UInt64) {
-            if ($offset->compareInt($this->length) > 0) {
-                throw new BoundsError($message . ': ' . $offset->toHex());
-            }
-
-            $offset = $offset->toInt($message);
-        }
-
-        if ($offset < 0 || $offset > $this->length) {
-            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
-        }
-
-        return $offset;
-    }
-
-    private function normaliseRelativeOffset(int|UInt64 $offset, int $base, string $message): int
-    {
-        $delta  = $this->resolveOffsetValue($offset, $message);
-        $target = $base + $delta;
-
-        if ($target < 0 || $target > $this->length) {
-            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
-        }
-
-        return $target;
-    }
-
-    private function resolveOffsetValue(int|UInt64 $offset, string $message): int
-    {
-        if ($offset instanceof UInt64) {
-            return $offset->toInt($message);
-        }
-
-        return $offset;
-    }
-
-    private function formatOffset(int|UInt64 $offset): string
-    {
-        return $offset instanceof UInt64 ? $offset->toHex() : (string) $offset;
-    }
 }
