@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Curate\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
+use MagicSunday\ImageMeta\Contracts\ValueFactoryInterface;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
@@ -107,7 +108,7 @@ use const PREG_SPLIT_NO_EMPTY;
  * Builds the structured metadata aggregate by orchestrating value-object creation from
  * ParsedExif, QuickTimeMeta and MakerNotes sources.
  */
-final class ValueFactory
+final class ValueFactory implements ValueFactoryInterface
 {
     /**
      * Produces normalised value objects derived from the supplied metadata container.

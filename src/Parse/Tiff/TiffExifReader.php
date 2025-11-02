@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Contracts\ExifReaderInterface;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
@@ -63,7 +64,7 @@ use function substr;
  * original TIFF header and directory traversal rules, while TIFF 6.0 §8 provides
  * the baseline directory semantics shared by both formats.
  */
-final class TiffExifReader
+final class TiffExifReader implements ExifReaderInterface
 {
     /**
      * XP metadata tags stored as UTF-16LE byte sequences.

@@ -11,13 +11,14 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate;
 
+use MagicSunday\ImageMeta\Contracts\StructuredAssemblerInterface;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 
 /**
  * Assembles structured metadata aggregates from normalised value objects.
  */
-final readonly class ExifAssembler
+final readonly class ExifAssembler implements StructuredAssemblerInterface
 {
     public function __construct(private ValueFactory $valueFactory = new ValueFactory())
     {
