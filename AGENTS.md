@@ -68,7 +68,7 @@
 * **Tests:** `composer ci:test:php:unit`
 * **Coverage:** `composer ci:test:php:unit:coverage` (Ziel ≥ **90 %**)
 * **Static:** `composer ci:test:php:phpstan`
-* **CPD (Dupes):** `composer ci:test:php:cpd`
+* **CPD (Dupes):** `composer ci:test:php:cpd` or `npx jscpd --config .build/.jscpd.json`
 * **CGL/Style:** `composer ci:cgl` (Änderungen vollständig übernehmen)
 
 **Git-Flow (ohne Diffs):**
@@ -253,7 +253,7 @@ Liste geänderte/neu referenzierte EXIF-Kapitel (Version/§) im Abschnitt „Ref
 
 * [ ] `composer ci:test:php:unit:coverage` **grün** (≥ 90 %)
 * [ ] `composer ci:test:php:phpstan` **grün** (mind. geänderte Dateien)
-* [ ] `composer ci:test:php:cpd` **grün**, keine Duplikate
+* [ ] `composer ci:test:php:cpd` or `npx jscpd --config .build/.jscpd.json` **grün**, keine Duplikate
 * [ ] `composer ci:cgl` ausgeführt, Format-Änderungen übernommen
 
 **Coding**
