@@ -404,35 +404,12 @@ final class ExifCoverageTest extends TestCase
             return [];
         }
 
-        $sectionAliases = [
-            'IFD0'                 => 'IFD0',
-            'Preview'              => 'PreviewIFD',
-            'Pointer'              => 'IFD0',
-            'EXIF sub IFD'         => 'ExifIFD',
-            'Opto-Electric'        => 'ExifIFD',
-            'DNG colour profile'   => 'ExifIFD',
-            'GPS sub IFD'          => 'GPSIFD',
-            'Interoperability IFD' => 'InteropIFD',
-        ];
-
-        $currentSection = 'IFD0';
-        $inDoc          = false;
-        $docBuffer      = '';
-        $metadata       = [];
+        $inDoc     = false;
+        $docBuffer = '';
+        $metadata  = [];
 
         foreach ($lines as $line) {
             $trim = trim($line);
-
-            if (!$inDoc && str_starts_with($trim, '//')) {
-                foreach ($sectionAliases as $needle => $alias) {
-                    if (stripos($trim, $needle) !== false) {
-                        $currentSection = $alias;
-                        break;
-                    }
-                }
-
-                continue;
-            }
 
             if (str_starts_with($trim, '/**')) {
                 $inDoc     = true;
@@ -455,35 +432,67 @@ final class ExifCoverageTest extends TestCase
                 $commentText   = $docBuffer . ' ' . $inlineComment;
                 $docBuffer     = '';
 
-                $versionMatches     = [];
-                $versionMatchCount  = preg_match_all('/EXIF\s+([0-9]+(?:\.[0-9]+)?)/i', $commentText, $versionMatches);
-                $versions           = ($versionMatchCount === false || $versionMatchCount === 0) ? [] : $versionMatches[1];
-                $normalizedVersions = [];
-                foreach ($versions as $version) {
-                    $clean = rtrim($version, '.');
-                    if (str_contains($clean, '.')) {
-                        $clean = rtrim(rtrim($clean, '0'), '.');
-                    }
-
-                    if (!str_contains($clean, '.')) {
-                        $clean .= '.0';
-                    }
-
-                    $normalizedVersions[$clean] = true;
-                }
-
-                $versionList = array_keys($normalizedVersions);
-                sort($versionList, SORT_NUMERIC);
-                $minVersion = $versionList[0] ?? '1.0';
-
                 $metadata[$name] = [
-                    'ifd' => $currentSection,
-                    'min' => $minVersion,
+                    'ifd' => $this->inferIfdFromComment($commentText),
+                    'min' => $this->extractMinimumVersion($commentText),
                 ];
             }
         }
 
         return $metadata;
+    }
+
+    private function inferIfdFromComment(string $commentText): string
+    {
+        $normalized = strtolower($commentText);
+
+        if (str_contains($commentText, '§4.6.12') || str_contains($normalized, 'preview ifd') || str_contains($normalized, 'preview image')) {
+            return 'PreviewIFD';
+        }
+
+        if (str_contains($commentText, '§4.6.6') || str_contains($normalized, 'gps sub ifd')) {
+            return 'GPSIFD';
+        }
+
+        if (str_contains($commentText, '§4.6.7') || str_contains($normalized, 'interoperability ifd')) {
+            return 'InteropIFD';
+        }
+
+        if (str_contains($commentText, '§4.6.3') || str_contains($normalized, 'exif sub ifd') || str_contains($normalized, 'shooting conditions')) {
+            return 'ExifIFD';
+        }
+
+        return 'IFD0';
+    }
+
+    private function extractMinimumVersion(string $commentText): string
+    {
+        $versionMatches    = [];
+        $versionMatchCount = preg_match_all('/EXIF\s+([0-9]+(?:\.[0-9]+)?)/i', $commentText, $versionMatches);
+        $versions          = ($versionMatchCount === false || $versionMatchCount === 0) ? [] : $versionMatches[1];
+
+        if ($versions === []) {
+            return '1.0';
+        }
+
+        $normalizedVersions = [];
+        foreach ($versions as $version) {
+            $clean = rtrim($version, '.');
+            if (str_contains($clean, '.')) {
+                $clean = rtrim(rtrim($clean, '0'), '.');
+            }
+
+            if (!str_contains($clean, '.')) {
+                $clean .= '.0';
+            }
+
+            $normalizedVersions[$clean] = true;
+        }
+
+        $versionList = array_keys($normalizedVersions);
+        sort($versionList, SORT_NUMERIC);
+
+        return $versionList[0];
     }
 
     private function stripQuotes(string $value): string

@@ -75,7 +75,7 @@ CAMERA_FIRMWARE:
   voGetter:
     - raw.cameraFirmware
 CAMERA_FIRMWARE_LEGACY:
-  ifd: GPSIFD
+  ifd: ExifIFD
   type: auto
   minVersion: "2.32"
   voGetter:
@@ -167,7 +167,7 @@ CONTRAST:
   voGetter:
     - raw.contrast
 COPYRIGHT:
-  ifd: PreviewIFD
+  ifd: IFD0
   type: auto
   minVersion: "2.32"
   voGetter:
@@ -369,7 +369,7 @@ IMAGE_EDITING_SOFTWARE:
   voGetter:
     - raw.imageEditingSoftware
 IMAGE_EDITING_SOFTWARE_LEGACY:
-  ifd: GPSIFD
+  ifd: ExifIFD
   type: auto
   minVersion: "2.32"
   voGetter:
@@ -482,14 +482,14 @@ ISO_SPEED_RATINGS_LEGACY:
     - raw.iso
     - raw.isoBestEffort
 JPEG_INTERCHANGE_FORMAT:
-  ifd: IFD0
+  ifd: PreviewIFD
   type: auto
   minVersion: "2.32"
   voGetter:
     - raw.jpegThumbnailOffset
     - raw.jpegInterchangeFormat
 JPEG_INTERCHANGE_FORMAT_LENGTH:
-  ifd: IFD0
+  ifd: PreviewIFD
   type: auto
   minVersion: "2.32"
   voGetter:
@@ -550,7 +550,7 @@ METADATA_EDITING_SOFTWARE:
   voGetter:
     - raw.metadataEditingSoftware
 METADATA_EDITING_SOFTWARE_LEGACY:
-  ifd: GPSIFD
+  ifd: ExifIFD
   type: auto
   minVersion: "2.32"
   voGetter:
@@ -825,7 +825,7 @@ RAW_DEVELOPING_SOFTWARE:
   voGetter:
     - raw.rawDevelopingSoftware
 RAW_DEVELOPING_SOFTWARE_LEGACY:
-  ifd: GPSIFD
+  ifd: ExifIFD
   type: auto
   minVersion: "2.32"
   voGetter:
@@ -845,7 +845,7 @@ RECOMMENDED_EXPOSURE_INDEX:
     - raw.isoBestEffort
     - raw.sensitivityTagPriority
 REFERENCE_BLACK_WHITE:
-  ifd: PreviewIFD
+  ifd: IFD0
   type: auto
   minVersion: "2.32"
   voGetter:
@@ -1148,19 +1148,19 @@ X_RESOLUTION:
   voGetter:
     - raw.xResolution
 YCBCR_COEFFICIENTS:
-  ifd: PreviewIFD
+  ifd: IFD0
   type: auto
   minVersion: "2.32"
   voGetter:
     - raw.ycbcrCoefficients
 YCBCR_POSITIONING:
-  ifd: PreviewIFD
+  ifd: IFD0
   type: auto
   minVersion: "2.32"
   voGetter:
     - raw.ycbcrPositioning
 YCBCR_SUB_SAMPLING:
-  ifd: PreviewIFD
+  ifd: IFD0
   type: auto
   minVersion: "2.32"
   voGetter:
