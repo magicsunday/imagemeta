@@ -11,6 +11,21 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Contracts;
 
+use MagicSunday\ImageMeta\MakerNotes\Registry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+
+/**
+ * Contract for EXIF readers that parse TIFF-structured metadata blobs.
+ */
 interface ExifReaderInterface
 {
+    /**
+     * Parses EXIF payloads encoded as classic TIFF or BigTIFF byte streams.
+     *
+     * @param string        $tiffBlob   Raw EXIF payload starting with the TIFF header.
+     * @param Registry|null $registry   Optional maker-notes registry consulted for vendor data.
+     *
+     * @return ParsedExif Parsed EXIF document representing the decoded directory tree.
+     */
+    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null): ParsedExif;
 }

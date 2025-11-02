@@ -45,6 +45,7 @@ final class XmpParser
             return new XmpDocument([]);
         }
 
+        /** @var array<string, array<int, string>|string> $data */
         $data = [];
         /** @var array<int, array{string, string}> $elementPath */
         $elementPath = [];
@@ -69,14 +70,14 @@ final class XmpParser
 
                     if ($reader->isEmptyElement) {
                         if ($namespace !== self::RDF_NAMESPACE) {
-                            $value = $this->finalizeValue($listBuffers[$depth], $textBuffers[$depth]);
-                            if ($value !== null) {
-                                $this->storeValue(
-                                    $data,
-                                    $this->buildClarkName($namespace, $localName),
-                                    $value,
-                                );
-                            }
+                            $this->storeFinalizedValue(
+                                $data,
+                                $listBuffers,
+                                $textBuffers,
+                                $depth,
+                                $namespace,
+                                $localName,
+                            );
                         }
 
                         unset($elementPath[$depth], $textBuffers[$depth], $listBuffers[$depth]);
@@ -114,14 +115,14 @@ final class XmpParser
                             }
                         }
                     } elseif ($namespace !== self::RDF_NAMESPACE) {
-                        $value = $this->finalizeValue($listBuffers[$depth], $textBuffers[$depth]);
-                        if ($value !== null) {
-                            $this->storeValue(
-                                $data,
-                                $this->buildClarkName($namespace, $localName),
-                                $value,
-                            );
-                        }
+                        $this->storeFinalizedValue(
+                            $data,
+                            $listBuffers,
+                            $textBuffers,
+                            $depth,
+                            $namespace,
+                            $localName,
+                        );
                     }
 
                     unset($elementPath[$depth], $textBuffers[$depth], $listBuffers[$depth]);
@@ -132,6 +133,39 @@ final class XmpParser
         $reader->close();
 
         return new XmpDocument($data);
+    }
+
+    /**
+     * Stores a value derived from buffered list/text information.
+     *
+     * @param array<string, array<int, string>|string> $data
+     * @param array<int, list<string>>                 $listBuffers
+     * @param array<int, string>                       $textBuffers
+     */
+    private function storeFinalizedValue(
+        array &$data,
+        array $listBuffers,
+        array $textBuffers,
+        int $depth,
+        string $namespace,
+        string $localName
+    ): void {
+        /** @var list<string> $items */
+        $items = $listBuffers[$depth] ?? [];
+        /** @var string $text */
+        $text = $textBuffers[$depth] ?? '';
+
+        $value = $this->finalizeValue($items, $text);
+
+        if ($value === null) {
+            return;
+        }
+
+        $this->storeValue(
+            $data,
+            $this->buildClarkName($namespace, $localName),
+            $value,
+        );
     }
 
     /**

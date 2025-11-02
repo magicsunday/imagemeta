@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Core;
 
 use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
+use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
@@ -32,6 +33,7 @@ use const SEEK_SET;
 final class MemoryBuffer implements BinaryReadAccessInterface
 {
     use ReadsBinaryPrimitives;
+    use NormalisesOffsets;
 
     private readonly ByteReader $byteReader;
 
@@ -160,6 +162,11 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     /**
      * Exposes the ByteReader instance for the shared primitive read trait.
      */
+    protected function offsetLimit(): int
+    {
+        return $this->size();
+    }
+
     protected function byteReader(): ByteReader
     {
         return $this->byteReader;
@@ -234,29 +241,4 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         return $intValue;
     }
 
-    private function normaliseRelativeOffset(int|UInt64 $offset, int $base, string $message): int
-    {
-        $delta  = $this->resolveOffsetValue($offset, $message);
-        $target = $base + $delta;
-
-        if ($target < 0 || $target > $this->size()) {
-            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
-        }
-
-        return $target;
-    }
-
-    private function resolveOffsetValue(int|UInt64 $offset, string $message): int
-    {
-        if ($offset instanceof UInt64) {
-            return $offset->toInt($message);
-        }
-
-        return $offset;
-    }
-
-    private function formatOffset(int|UInt64 $offset): string
-    {
-        return $offset instanceof UInt64 ? $offset->toHex() : (string) $offset;
-    }
 }
