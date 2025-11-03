@@ -42,9 +42,11 @@ use function is_int;
 use function is_numeric;
 use function is_string;
 use function preg_match;
+use function preg_split;
 use function sha1;
 use function sort;
 use function str_contains;
+use function strpos;
 use function str_starts_with;
 use function strlen;
 use function strtolower;
@@ -114,8 +116,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
+        $signatureOffset = strpos($raw, 'bplist00');
+        if ($signatureOffset === false) {
+            return null;
+        }
+
+        $payload = substr($raw, $signatureOffset);
+
         try {
-            $value = (new BinaryPlistDecoder())->decode($raw);
+            $value = (new BinaryPlistDecoder())->decode($payload);
         } catch (ParseError) {
             return null;
         }
@@ -462,29 +471,94 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function resolveKeyedArchiveDictionary(array $dictionary): ?array
     {
-        if ($this->isKeyedArchive($dictionary)) {
-            try {
-                $plist = $this->nativeToPlistValue($dictionary);
-                if (!$plist instanceof ApplePlistDictionary) {
-                    return null;
+        $unarchived = $this->unarchiveKeyedArchive($dictionary);
+        if ($unarchived !== null) {
+            return $unarchived;
+        }
+
+        foreach ($dictionary as $value) {
+            if (!is_array($value)) {
+                continue;
+            }
+
+            $candidate = $this->resolveNestedKeyedArchive($value);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return array_is_list($dictionary) ? null : $dictionary;
+    }
+
+    /**
+     * @param array<int|string, mixed> $value
+     *
+     * @return array<int|string, mixed>|null
+     */
+    private function resolveNestedKeyedArchive(array $value): ?array
+    {
+        $unarchived = $this->unarchiveKeyedArchive($value);
+        if ($unarchived !== null) {
+            return $unarchived;
+        }
+
+        if (array_is_list($value)) {
+            foreach ($value as $entry) {
+                if (!is_array($entry)) {
+                    continue;
                 }
 
-                $resolved = (new KeyedArchiveUnarchiver())->unarchive($plist);
-                $native   = $this->plistValueToPhp($resolved);
-
-                return is_array($native) && !array_is_list($native) ? $native : null;
-            } catch (ParseError) {
-                return null;
+                $candidate = $this->resolveNestedKeyedArchive($entry);
+                if ($candidate !== null) {
+                    return $candidate;
+                }
             }
+
+            return null;
+        }
+
+        foreach ($value as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+
+            $candidate = $this->resolveNestedKeyedArchive($entry);
+            if ($candidate !== null) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<int|string, mixed> $dictionary
+     *
+     * @return array<int|string, mixed>|null
+     */
+    private function unarchiveKeyedArchive(array $dictionary): ?array
+    {
+        if ($this->isKeyedArchive($dictionary)) {
+            return $this->unarchiveNormalisedKeyedArchive($dictionary);
         }
 
         $normalised = $this->normaliseKeyedArchive($dictionary);
         if ($normalised === null) {
-            return $dictionary;
+            return null;
         }
 
+        return $this->unarchiveNormalisedKeyedArchive($normalised);
+    }
+
+    /**
+     * @param array<int|string, mixed> $dictionary
+     *
+     * @return array<int|string, mixed>|null
+     */
+    private function unarchiveNormalisedKeyedArchive(array $dictionary): ?array
+    {
         try {
-            $plist = $this->nativeToPlistValue($normalised);
+            $plist = $this->nativeToPlistValue($dictionary);
             if (!$plist instanceof ApplePlistDictionary) {
                 return null;
             }
@@ -919,6 +993,20 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 return (float) $numerator / $denominatorFloat;
             }
 
+            $components = preg_split('/\s+/', $normalized);
+            if ($components !== false && count($components) === 2) {
+                [$numerator, $denominator] = $components;
+
+                if ($numerator !== '' && $denominator !== '' && is_numeric($numerator) && is_numeric($denominator)) {
+                    $denominatorFloat = (float) $denominator;
+                    if ($denominatorFloat === 0.0) {
+                        return null;
+                    }
+
+                    return (float) $numerator / $denominatorFloat;
+                }
+            }
+
             if (!is_numeric($normalized)) {
                 return null;
             }
@@ -1028,11 +1116,20 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         if (is_string($value)) {
             $normalized = trim($value);
-            if ($normalized === '' || !is_numeric($normalized)) {
+            if ($normalized === '') {
                 return null;
             }
 
-            return (float) $normalized;
+            if (is_numeric($normalized)) {
+                return (float) $normalized;
+            }
+
+            $rational = $this->normaliseRationalFloat($normalized);
+            if ($rational !== null) {
+                return $rational;
+            }
+
+            return null;
         }
 
         if (is_array($value)) {

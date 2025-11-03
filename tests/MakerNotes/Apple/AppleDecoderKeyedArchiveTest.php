@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\Value\RunTime;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+use ReflectionMethod;
 
 use function array_is_list;
 use function chr;
@@ -62,6 +63,62 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         self::assertSame(10, $runTime->timescale);
         self::assertSame(50, $runTime->value);
         self::assertSame(3, $runTime->flags);
+
+    }
+
+    #[Test]
+    public function decodeBinaryPropertyListSkipsLeadingPadding(): void
+    {
+        $blob = $this->createKeyedArchiveBlob();
+        $raw  = "\x00\xFF" . $blob;
+
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'decodeBinaryPropertyList');
+
+        /** @var array<int|string, mixed>|bool|float|int|string|null $result */
+        $result = $method->invoke($decoder, $raw);
+
+        self::assertIsArray($result);
+        self::assertArrayHasKey('archiver', $result);
+    }
+
+    #[Test]
+    public function resolveKeyedArchiveDictionaryUnwrapsNestedArchive(): void
+    {
+        $decoder = new AppleDecoder();
+        $method  = new ReflectionMethod(AppleDecoder::class, 'resolveKeyedArchiveDictionary');
+
+        $archive = [
+            'archiver' => 'NSKeyedArchiver',
+            'objects'  => [
+                null,
+                [
+                    '$class'            => ['CF$UID' => 2],
+                    'ContentIdentifier' => ['CF$UID' => 3],
+                ],
+                [
+                    '$classes'  => ['AppleMakerNotesRoot', 'NSObject'],
+                    '$classname' => 'AppleMakerNotesRoot',
+                ],
+                'wrapped-identifier',
+            ],
+            'top' => [
+                'root' => ['CF$UID' => 1],
+            ],
+            'version' => 100000,
+        ];
+
+        $wrapper = [
+            'MakerNote'      => $archive,
+            'PayloadVersion' => 1,
+        ];
+
+        /** @var array<int|string, mixed>|null $result */
+        $result = $method->invoke($decoder, $wrapper);
+
+        self::assertIsArray($result);
+        self::assertArrayHasKey('ContentIdentifier', $result);
+        self::assertSame('wrapped-identifier', $result['ContentIdentifier']);
     }
 
     private function plistNull(): BinaryPlistNullValue
