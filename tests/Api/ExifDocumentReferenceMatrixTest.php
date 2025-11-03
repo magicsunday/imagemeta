@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Api;
 
-use MagicSunday\ImageMeta\Exif\StructuredExif as ApiStructuredExif;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -126,7 +126,7 @@ use PHPUnit\Framework\TestCase;
  * }
  *
  * @method static void assertStructuredMatches(string $fixture, Metadata $metadata, StructuredExpectation $expected)
- * @method static void assertApiMatches(string $fixture, ApiStructuredExif $document, ApiExpectation $expected)
+ * @method static void assertApiMatches(string $fixture, StructuredMetadata $document, ApiExpectation $expected)
  * @method static void assertModelMatches(string $fixture, ?ParsedExif $document, ModelExpectation $expected)
  */
 final class ExifDocumentReferenceMatrixTest extends TestCase
@@ -158,10 +158,8 @@ final class ExifDocumentReferenceMatrixTest extends TestCase
         $expectation = ExifVersionExpectations::get($fixture);
         self::assertModelMatches($fixture, $modelDocument, $expectation['model']);
 
-        $document = new ApiStructuredExif($modelDocument);
+        $structured = $metadata->structured();
 
-        self::assertSame($modelDocument, $document->raw, sprintf('%s: Raw document reference', $fixture));
-
-        self::assertApiMatches($fixture, $document, $expectedApi);
+        self::assertApiMatches($fixture, $structured, $expectedApi);
     }
 }

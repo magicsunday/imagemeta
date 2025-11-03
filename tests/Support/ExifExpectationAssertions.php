@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Support;
 
-use MagicSunday\ImageMeta\Exif\StructuredExif as ApiStructuredExif;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata as ApiStructuredMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif as ModelExifDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
@@ -231,30 +231,31 @@ trait ExifExpectationAssertions
      *     },
      * } $expected
      */
-    private static function assertApiMatches(string $fixture, ApiStructuredExif $document, array $expected): void
+    private static function assertApiMatches(string $fixture, ApiStructuredMetadata $document, array $expected): void
     {
-        Assert::assertTrue($document->hasData, sprintf('%s: Document contains EXIF data', $fixture));
-        Assert::assertSame($expected['iso'], $document->iso, sprintf('%s: ISO value', $fixture));
+        $exposure = $document->exposure;
+        Assert::assertSame($expected['iso'], $exposure->iso, sprintf('%s: ISO value', $fixture));
 
         $expectedOriginal = $expected['dateTimeOriginal'];
-        $actualOriginal   = $document->dateTimeOriginal;
+        $actualOriginal   = $document->temporal->original;
         if ($expectedOriginal === null) {
-            Assert::assertNull($actualOriginal, sprintf('%s: API DateTimeOriginal', $fixture));
+            Assert::assertNull($actualOriginal, sprintf('%s: Structured DateTimeOriginal', $fixture));
         } else {
-            Assert::assertNotNull($actualOriginal, sprintf('%s: API DateTimeOriginal', $fixture));
-            Assert::assertSame($expectedOriginal, $actualOriginal->format(DATE_ATOM), sprintf('%s: API DateTimeOriginal value', $fixture));
+            Assert::assertNotNull($actualOriginal, sprintf('%s: Structured DateTimeOriginal', $fixture));
+            Assert::assertSame($expectedOriginal, $actualOriginal->format(DATE_ATOM), sprintf('%s: Structured DateTimeOriginal value', $fixture));
         }
 
-        Assert::assertSame($expected['userComment'], $document->userComment, sprintf('%s: API UserComment', $fixture));
-        Assert::assertSame($expected['userCommentEncoding'], $document->userCommentEncoding, sprintf('%s: API UserComment encoding', $fixture));
+        $image = $document->image;
+        Assert::assertSame($expected['userComment'], $image->userComment, sprintf('%s: Structured UserComment', $fixture));
+        Assert::assertSame($expected['userCommentEncoding'], $image->userCommentEncoding, sprintf('%s: Structured UserComment encoding', $fixture));
 
         $interop         = $document->interop;
         $expectedInterop = $expected['interop'];
-        Assert::assertSame($expectedInterop['index'], $interop->index, sprintf('%s: API Interop index', $fixture));
-        Assert::assertSame($expectedInterop['version'], $interop->version, sprintf('%s: API Interop version', $fixture));
-        Assert::assertSame($expectedInterop['fileFormat'], $interop->relatedImageFileFormat, sprintf('%s: API Interop file format', $fixture));
-        Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth, sprintf('%s: API Interop width', $fixture));
-        Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength, sprintf('%s: API Interop length', $fixture));
+        Assert::assertSame($expectedInterop['index'], $interop->index, sprintf('%s: Structured Interop index', $fixture));
+        Assert::assertSame($expectedInterop['version'], $interop->version, sprintf('%s: Structured Interop version', $fixture));
+        Assert::assertSame($expectedInterop['fileFormat'], $interop->relatedImageFileFormat, sprintf('%s: Structured Interop file format', $fixture));
+        Assert::assertSame($expectedInterop['width'], $interop->relatedImageWidth, sprintf('%s: Structured Interop width', $fixture));
+        Assert::assertSame($expectedInterop['length'], $interop->relatedImageLength, sprintf('%s: Structured Interop length', $fixture));
 
         self::assertPreviewMatches($fixture, $expected['preview'], $document->preview);
     }

@@ -11,16 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Spec;
 
-use MagicSunday\ImageMeta\Exif\StructuredExif;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
-use ReflectionNamedType;
-use ReflectionType;
-use ReflectionUnionType;
 
 final class ExifCoverageTest extends TestCase
 {
@@ -41,10 +37,9 @@ final class ExifCoverageTest extends TestCase
 
         self::assertSame([], $missingTags, 'All tags referenced by ParsedExif must be present in the coverage map.');
 
-        $allowedIfds          = ['IFD0', 'ExifIFD', 'PreviewIFD', 'GPSIFD', 'InteropIFD'];
-        $structuredReflection = new ReflectionClass(StructuredExif::class);
-        $parsedReflection     = new ReflectionClass(ParsedExif::class);
-        $knownParsedMethods   = array_fill_keys(array_map(static fn (ReflectionMethod $method): string => $method->getName(), $parsedReflection->getMethods()), true);
+        $allowedIfds        = ['IFD0', 'ExifIFD', 'PreviewIFD', 'GPSIFD', 'InteropIFD'];
+        $parsedReflection   = new ReflectionClass(ParsedExif::class);
+        $knownParsedMethods = array_fill_keys(array_map(static fn (ReflectionMethod $method): string => $method->getName(), $parsedReflection->getMethods()), true);
 
         $unknownTypes = [];
         foreach ($map as $tag => $entry) {
@@ -97,7 +92,7 @@ final class ExifCoverageTest extends TestCase
 
             /** @var list<string> $getters */
             foreach ($getters as $getter) {
-                $this->assertValidGetterPath($getter, $structuredReflection, $knownParsedMethods);
+                $this->assertValidGetterPath($getter, $knownParsedMethods);
             }
 
             self::assertTrue(defined(ExifTag::class . '::' . $tag), sprintf('ExifTag constant for %s must exist.', $tag));
@@ -212,96 +207,21 @@ final class ExifCoverageTest extends TestCase
     }
 
     /**
-     * Ensures that a getter path can be resolved via StructuredExif.
+     * Ensures that a getter path references an existing ParsedExif method.
      *
-     * @param ReflectionClass<StructuredExif> $structuredReflection
-     * @param array<string, bool>             $knownParsedMethods
+     * @param array<string, bool> $knownParsedMethods
      */
-    private function assertValidGetterPath(string $path, ReflectionClass $structuredReflection, array $knownParsedMethods): void
+    private function assertValidGetterPath(string $path, array $knownParsedMethods): void
     {
         self::assertNotSame('', $path, 'Getter path must not be empty.');
-        $currentClass = new ReflectionClass($structuredReflection->getName());
-        $segments     = explode('.', $path);
+        self::assertTrue(str_starts_with($path, 'raw.'), sprintf('Getter "%s" must start with "raw.".', $path));
 
-        foreach ($segments as $index => $segment) {
-            if ($currentClass->hasProperty($segment)) {
-                $property = $currentClass->getProperty($segment);
+        $segments = explode('.', $path);
+        array_shift($segments); // drop the "raw" prefix
 
-                if ($index === count($segments) - 1) {
-                    break;
-                }
-
-                $nextClassName = $this->resolveNextClassName($property->getType(), $currentClass->getName());
-
-                if ($nextClassName === ParsedExif::class) {
-                    $currentClass = new ReflectionClass(ParsedExif::class);
-                    continue;
-                }
-
-                if ($nextClassName === null || !class_exists($nextClassName)) {
-                    break;
-                }
-
-                $currentClass = new ReflectionClass($nextClassName);
-                continue;
-            }
-
-            self::assertTrue($currentClass->hasMethod($segment), sprintf('Method "%s" not found on %s for getter "%s".', $segment, $currentClass->getName(), $path));
-            $method = $currentClass->getMethod($segment);
-
-            if ($index === count($segments) - 1) {
-                if ($currentClass->getName() === ParsedExif::class) {
-                    self::assertArrayHasKey($segment, $knownParsedMethods, sprintf('ParsedExif method "%s" referenced by getter "%s" is missing.', $segment, $path));
-                }
-
-                break;
-            }
-
-            $nextClassName = $this->resolveNextClassName($method->getReturnType(), $currentClass->getName());
-
-            if ($nextClassName === ParsedExif::class) {
-                $currentClass = new ReflectionClass(ParsedExif::class);
-                continue;
-            }
-
-            if ($nextClassName === null || !class_exists($nextClassName)) {
-                break;
-            }
-
-            $currentClass = new ReflectionClass($nextClassName);
+        foreach ($segments as $segment) {
+            self::assertArrayHasKey($segment, $knownParsedMethods, sprintf('ParsedExif method "%s" referenced by getter "%s" is missing.', $segment, $path));
         }
-    }
-
-    private function resolveNextClassName(?ReflectionType $type, string $context): ?string
-    {
-        if ($type instanceof ReflectionUnionType) {
-            foreach ($type->getTypes() as $inner) {
-                if ($inner instanceof ReflectionNamedType && !$inner->isBuiltin() && $inner->getName() !== 'null') {
-                    return $inner->getName();
-                }
-            }
-
-            return null;
-        }
-
-        if ($type instanceof ReflectionNamedType) {
-            if ($type->isBuiltin()) {
-                return null;
-            }
-
-            $name = $type->getName();
-            if ($name === 'self') {
-                return $context;
-            }
-
-            if ($name === 'null') {
-                return null;
-            }
-
-            return $name;
-        }
-
-        return null;
     }
 
     /**

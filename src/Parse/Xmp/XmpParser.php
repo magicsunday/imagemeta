@@ -148,7 +148,7 @@ final class XmpParser
         array $textBuffers,
         int $depth,
         string $namespace,
-        string $localName
+        string $localName,
     ): void {
         /** @var list<string> $items */
         $items = $listBuffers[$depth] ?? [];

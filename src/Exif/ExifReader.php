@@ -11,13 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif;
 
-use MagicSunday\ImageMeta\Core\BoundsError;
-use MagicSunday\ImageMeta\Core\ParseError;
-use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Detect\ContainerType;
-use MagicSunday\ImageMeta\Detect\FormatDetector;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 
 /**
@@ -25,6 +20,8 @@ use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
  */
 final readonly class ExifReader
 {
+    private MetadataReader $metadataReader;
+
     /**
      * @param TiffExifReader $tiffReader Optional TIFF EXIF reader reused across calls.
      *
@@ -33,51 +30,19 @@ final readonly class ExifReader
      */
     public function __construct(private TiffExifReader $tiffReader = new TiffExifReader())
     {
+        $this->metadataReader = new MetadataReader($this->tiffReader);
     }
 
     /**
-     * Reads EXIF metadata from JPEG and ISO-BMFF (e.g. HEIC, MOV, MP4) containers while capturing
-     * fallback dimensions and precision whenever the file format exposes them outside of EXIF.
+     * Reads EXIF metadata from JPEG and ISO-BMFF (e.g. HEIC, MOV, MP4) containers and returns the
+     * curated structured aggregate composed from the parsed value objects.
      *
      * @param string $path Absolute or relative path to the media file that should be parsed.
      *
-     * @return StructuredExif Value object providing the parsed EXIF data alongside fallback width,
-     *                        height, and sample precision sourced from the container when the tags
-     *                        are absent inside the metadata.
-     *
-     * @throws ParseError  When container detection or downstream parsers encounter malformed data.
-     * @throws BoundsError When the stream ends before the required structures can be read.
+     * @return StructuredMetadata Immutable aggregate exposing the normalised metadata slices.
      */
-    public function read(string $path): StructuredExif
+    public function read(string $path): StructuredMetadata
     {
-        $stream = Stream::fromPath($path);
-        $type   = FormatDetector::detect($stream);
-
-        $exifBlobs             = [];
-        $fallbackWidth         = null;
-        $fallbackHeight        = null;
-        $fallbackBitsPerSample = null;
-
-        if ($type === ContainerType::JPEG) {
-            $jpeg      = new JpegExtractor($stream);
-            $exifBlobs = $jpeg->extractExifBlobs();
-            // JPEG frames expose dimensions and bit depth, so we capture them as fallbacks
-            // when EXIF data omits these values.
-            $fallbackWidth         = $jpeg->getFrameWidth();
-            $fallbackHeight        = $jpeg->getFrameHeight();
-            $fallbackBitsPerSample = $jpeg->getFrameSamplePrecision();
-        } else {
-            $isoExtractor = new IsoBmffExtractor($stream);
-            [$exifBlobs]  = $isoExtractor->extract();
-            // ISO-BMFF containers can store multiple items with varying characteristics,
-            // therefore we keep the fallback values null and rely on the parsed EXIF data.
-        }
-
-        $document = null;
-        if ($exifBlobs !== []) {
-            $document = $this->tiffReader->parseFromBlob($exifBlobs[0]);
-        }
-
-        return new StructuredExif($document, $fallbackWidth, $fallbackHeight, $fallbackBitsPerSample);
+        return $this->metadataReader->read($path)->structured();
     }
 }
