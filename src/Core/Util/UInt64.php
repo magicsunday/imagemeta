@@ -43,7 +43,7 @@ final readonly class UInt64
     }
 
     /**
-     * Creates an instance from two unsigned 32-bit components.
+     * Creates an instance from two unsigned 32-bit parts.
      */
     public static function fromUInt32(int $hi, int $lo): self
     {
@@ -154,7 +154,7 @@ final readonly class UInt64
     }
 
     /**
-     * Determines whether the value fits into the current platform signed integer range.
+     * Checks if the value fits within the current range of signed integers on the platform.
      *
      * @return bool True when the value can be represented as a signed int.
      */

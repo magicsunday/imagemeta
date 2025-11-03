@@ -37,12 +37,12 @@ use const PATHINFO_EXTENSION;
 /**
  * Coordinates format detection and metadata extraction for supported containers.
  */
-final class MetadataReader
+final readonly class MetadataReader
 {
     public function __construct(
-        private readonly TiffExifReader $tiffReader = new TiffExifReader(),
-        private readonly AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
-        private readonly XmpParser $xmpParser = new XmpParser(),
+        private TiffExifReader $tiffReader = new TiffExifReader(),
+        private AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
+        private XmpParser $xmpParser = new XmpParser(),
     ) {
     }
 

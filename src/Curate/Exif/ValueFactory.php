@@ -922,7 +922,6 @@ final class ValueFactory implements ValueFactoryInterface
                 focalLengthMm: null,
                 focalLengthIn35mm: null,
                 maxApertureFNumber: null,
-                lensSpecification: null,
             );
         }
 
@@ -1984,7 +1983,6 @@ final class ValueFactory implements ValueFactoryInterface
                 $person,
                 $confidences[$index] ?? null,
                 $rotations[$index] ?? null,
-                null,
             );
         }
 

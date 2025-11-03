@@ -2,12 +2,6 @@
 
 MagicSunday/ImageMeta provides a streaming metadata parser for JPEG, HEIC and ISO Base Media File Format containers. It unifies EXIF, XMP and QuickTime sources into a common PHP domain model.
 
-## Milestone M1 Goals
-
-- Establish a single value layer without duplicate wrapper APIs.
-- Ensure `StructuredMetadata` exposes raw value objects alongside derived helpers.
-- Track migration progress in `docs/upgrade/m1-single-value-layer.md`.
-
 ## Structured Metadata API
 
 The library exposes a structured and fully typed metadata aggregate via `Metadata::structured()`. The aggregate wraps immutable value objects that hide any tag or container specifics.
@@ -32,13 +26,13 @@ $meta->standards->exifVersion;
 
 ### Mapping overview
 
-| Field | Primary source | Fallback | Converter |
-| --- | --- | --- | --- |
-| `camera.make` | EXIF `Make` | XMP `tiff:Make` | – |
-| `lens.model` | EXIF `LensModel` | – | – |
-| `exposure.flash` | EXIF `Flash` | XMP `exif:Flash` | `ValueConverters::flashFromShort()` |
-| `temporal.original` | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal` | `ValueConverters::parseOffset()` |
-| `exposure.ev100` | Calculated from exposure values | – | `ValueConverters::calcEv100()` |
+| Field               | Primary source                                 | Fallback                    | Converter                           |
+|---------------------|------------------------------------------------|-----------------------------|-------------------------------------|
+| `camera.make`       | EXIF `Make`                                    | XMP `tiff:Make`             | –                                   |
+| `lens.model`        | EXIF `LensModel`                               | –                           | –                                   |
+| `exposure.flash`    | EXIF `Flash`                                   | XMP `exif:Flash`            | `ValueConverters::flashFromShort()` |
+| `temporal.original` | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal` | `ValueConverters::parseOffset()`    |
+| `exposure.ev100`    | Calculated from exposure values                | –                           | `ValueConverters::calcEv100()`      |
 
 ### Temporal fractional seconds harmonisation
 
@@ -46,7 +40,7 @@ ImageMeta mirrors fractional seconds from `SubSecTimeOriginal` or `SubSecTimeDig
 
 ### GPS metadata coverage
 
-ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decoded data is exposed through
+ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decoded data is exposed through
 `ExifDocument::gps()` and dedicated convenience accessors on `ExifDocument`. The following fields are
 available to consumers:
 
@@ -62,16 +56,16 @@ used directly without consulting tag identifiers.
 
 ### EXIF 3.0 → Value objects
 
-| Value object | Fields | Source tag(s) | Converter/Enum |
-| --- | --- | --- | --- |
-| `Interop` | `index`, `version` | `InteropIndex`, `InteropVersion` | Hex fallback for binary data |
-| `TiffData` | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities` | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities` | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()` |
-| `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal` | `CompositeImage`, `SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage` | `CompositeImage`, rational to float |
-| `Standards` | `exifVersion`, `flashpixVersion` | `ExifVersion`, `FlashpixVersion` | `ValueConverters::toExifVersion()` (defaults FlashPix to `1.00` when missing) |
-| `Lens` | `lensSpecification`, `maxApertureFNumber` | `LensSpecification`, `MaxApertureValue` | `ValueConverters::apexToFNumber()` |
-| `Exposure` | `exposureBiasEv`, `gainControl`, `contrast` | `ExposureBiasValue`, `GainControl`, `Contrast` | `GainControl` enum |
-| `Scene` | `subjectDistanceRange` | `SubjectDistanceRange` | `SubjectDistanceRange` enum |
-| `Device` | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware` | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware` | – |
+| Value object         | Fields                                                                     | Source tag(s)                                                                                | Converter/Enum                                                                |
+|----------------------|----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `Interop`            | `index`, `version`                                                         | `InteropIndex`, `InteropVersion`                                                             | Hex fallback for binary data                                                  |
+| `TiffData`           | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities`  | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities`      | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()`    |
+| `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal`                                     | `CompositeImage`, `SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage` | `CompositeImage`, rational to float                                           |
+| `Standards`          | `exifVersion`, `flashpixVersion`                                           | `ExifVersion`, `FlashpixVersion`                                                             | `ValueConverters::toExifVersion()` (defaults FlashPix to `1.00` when missing) |
+| `Lens`               | `lensSpecification`, `maxApertureFNumber`                                  | `LensSpecification`, `MaxApertureValue`                                                      | `ValueConverters::apexToFNumber()`                                            |
+| `Exposure`           | `exposureBiasEv`, `gainControl`, `contrast`                                | `ExposureBiasValue`, `GainControl`, `Contrast`                                               | `GainControl` enum                                                            |
+| `Scene`              | `subjectDistanceRange`                                                     | `SubjectDistanceRange`                                                                       | `SubjectDistanceRange` enum                                                   |
+| `Device`             | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware` | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware`                   | –                                                                             |
 
 ```php
 $s = $meta->structured();
@@ -87,12 +81,12 @@ The diagonal field of view exposed via `$s->derived->fieldOfViewDiagonalDeg` cor
 
 The expanded temporal aggregate surfaces raw EXIF offset tags alongside a resolved `DateTimeZone` instance. This makes it possible to reconstruct original capture times even when the offset varies between creation, digitisation and modification steps. File level metadata now reports size, extension and cryptographic digests to help consumers correlate assets or detect tampering.
 
-Apple maker note data now includes semantic style parameters, colour temperature and Live Photo flags from both maker notes and QuickTime metadata. GPS coverage has been widened with horizontal positioning error and full destination navigation metrics from EXIF 2.32 table 66.
+Apple maker note data now includes semantic style parameters, colour temperature and Live Photo flags from both maker notes and QuickTime metadata. GPS coverage has been widened with horizontal positioning error and full destination navigation metrics from EXIF 2.32 table 66.
 
 Bit-mask sources such as `SceneFlags`, `ImageProcessingFlags` and `PhotosAppFeatureFlags` are decoded so their individual bits populate the normalised `apple.flags` array:
 
-* `SceneFlags`: bit 0 → `nightMode`, bit 1 → `longExposure`
-* `ImageProcessingFlags`: bit 0 → `hdrEnabled`, bit 1 → `hdrAuto`
-* `PhotosAppFeatureFlags`: bit 0 → `personInPhoto`, bit 1 → `petInPhoto`
+* `SceneFlags`: bit 0 → `nightMode`, bit 1 → `longExposure`
+* `ImageProcessingFlags`: bit 0 → `hdrEnabled`, bit 1 → `hdrAuto`
+* `PhotosAppFeatureFlags`: bit 0 → `personInPhoto`, bit 1 → `petInPhoto`
 
 Explicit boolean keys continue to override the derived values when both representations are present.

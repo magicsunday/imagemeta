@@ -125,7 +125,6 @@ final class CaptureDateResolverTest extends TestCase
             quickTime: null,
             exifDoc: $exifDoc,
             xmpBlobs: [],
-            xmpDoc: null,
         );
 
         $result = CaptureDateResolver::bestCaptureDateTime($metadata);
@@ -175,7 +174,6 @@ final class CaptureDateResolverTest extends TestCase
             quickTime: null,
             exifDoc: new ParsedExif(new Ifd([]), null, $gpsIfd, null, null),
             xmpBlobs: [],
-            xmpDoc: null,
         );
 
         $result = CaptureDateResolver::bestCaptureDateTime($metadata);

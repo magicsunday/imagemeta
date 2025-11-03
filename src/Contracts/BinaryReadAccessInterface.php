@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\ImageMeta\Core\Contracts;
+namespace MagicSunday\ImageMeta\Contracts;
 
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
