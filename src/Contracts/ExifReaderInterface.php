@@ -22,8 +22,8 @@ interface ExifReaderInterface
     /**
      * Parses EXIF payloads encoded as classic TIFF or BigTIFF byte streams.
      *
-     * @param string        $tiffBlob   Raw EXIF payload starting with the TIFF header.
-     * @param Registry|null $registry   Optional maker-notes registry consulted for vendor data.
+     * @param string        $tiffBlob Raw EXIF payload starting with the TIFF header.
+     * @param Registry|null $registry Optional maker-notes registry consulted for vendor data.
      *
      * @return ParsedExif Parsed EXIF document representing the decoded directory tree.
      */

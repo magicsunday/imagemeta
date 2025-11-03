@@ -39,6 +39,13 @@ use const PATHINFO_EXTENSION;
  */
 final class MetadataReader
 {
+    public function __construct(
+        private readonly TiffExifReader $tiffReader = new TiffExifReader(),
+        private readonly AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
+        private readonly XmpParser $xmpParser = new XmpParser(),
+    ) {
+    }
+
     /**
      * Reads metadata from the given file path by delegating to the appropriate parser.
      *
@@ -100,23 +107,21 @@ final class MetadataReader
         $sampling        = $jpeg->getFrameComponentSamplingFactors();
         $subSampling     = $jpeg->getFrameYCbCrSubSampling();
 
-        $appleMerger = new AppleMakerNotesMerger();
-
         $exifDoc    = null;
         $xmpDoc     = null;
         $makerNotes = null;
         // Parse the primary EXIF blob and map vendor-specific maker notes.
         if ($exifBlobs !== []) {
             $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
+            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry);
             $makerNotes = $exifDoc->makerNotes();
         }
 
-        $makerNotes = $appleMerger->merge($makerNotes, null);
+        $makerNotes = $this->appleMerger->merge($makerNotes, null);
 
         // Parse the embedded XMP packet when present.
         if ($xmpBlobs !== []) {
-            $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
+            $xmpDoc = $this->xmpParser->parse($xmpBlobs[0]);
         }
 
         // Assemble the final metadata aggregate with container context.
@@ -167,21 +172,19 @@ final class MetadataReader
     ): Metadata {
         [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
 
-        $appleMerger = new AppleMakerNotesMerger();
-
         $exifDoc    = null;
         $xmpDoc     = null;
         $makerNotes = null;
         if ($exifBlobs !== []) {
             $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = (new TiffExifReader())->parseFromBlob($exifBlobs[0], $registry);
+            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry);
             $makerNotes = $exifDoc->makerNotes();
         }
 
-        $makerNotes = $appleMerger->merge($makerNotes, $qt);
+        $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
 
         if ($xmpBlobs !== []) {
-            $xmpDoc = (new XmpParser())->parse($xmpBlobs[0]);
+            $xmpDoc = $this->xmpParser->parse($xmpBlobs[0]);
         }
 
         return new Metadata(

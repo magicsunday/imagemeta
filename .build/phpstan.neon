@@ -18,5 +18,3 @@ parameters:
     excludePaths:
         - %currentWorkingDirectory%/.build/
 
-    ignoreErrors:
-        - message: '#deprecated class MagicSunday\\ImageMeta\\Exif\\StructuredExif#'

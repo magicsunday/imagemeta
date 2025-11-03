@@ -11,12 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Api;
 
-use MagicSunday\ImageMeta\Exif\StructuredExif as ApiStructuredExif;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif as ModelExifDocument;
+use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -53,27 +54,21 @@ final class ExifDocumentFallbackTest extends TestCase
         ]);
 
         $modelDocument = new ModelExifDocument($ifd0, $exifIfd, null, null, null);
-        $apiDocument   = new ApiStructuredExif($modelDocument);
+        $structured    = $this->createStructured($modelDocument);
 
         $bestEffortOriginal = $modelDocument->dateTimeOriginalBestEffort();
         self::assertNotNull($bestEffortOriginal);
         self::assertSame('2024-05-06T07:08:09+02:00', $bestEffortOriginal->format(DATE_ATOM));
 
-        $apiOriginal = $apiDocument->dateTimeOriginal;
+        $apiOriginal = $structured->temporal->original;
         self::assertNotNull($apiOriginal);
         self::assertSame('2024-05-06T07:08:09+02:00', $apiOriginal->format(DATE_ATOM));
 
-        self::assertSame(400, $apiDocument->iso);
+        self::assertSame(400, $structured->exposure->iso);
 
-        $exposure = $apiDocument->exposure;
-        self::assertSame(400, $exposure->iso);
-
-        $image = $apiDocument->image;
+        $image = $structured->image;
         self::assertSame('Shot with ND filter', $image->userComment);
         self::assertSame('ASCII', $image->userCommentEncoding);
-
-        self::assertSame('Shot with ND filter', $apiDocument->userComment);
-        self::assertSame('ASCII', $apiDocument->userCommentEncoding);
     }
 
     #[Test]
@@ -91,9 +86,9 @@ final class ExifDocumentFallbackTest extends TestCase
             ),
         ]);
 
-        $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
+        $structured = $this->createStructured(new ModelExifDocument($ifd0, $exifIfd, null, null, null));
 
-        $preview = $apiDocument->preview;
+        $preview = $structured->preview;
         self::assertNull($preview->previewCompression);
         self::assertNull($preview->previewScale);
         self::assertFalse($preview->hasPreview);
@@ -141,9 +136,9 @@ final class ExifDocumentFallbackTest extends TestCase
             ExifTag::PREVIEW_IMAGE_MIME_TYPE => new IfdEntry(ExifTag::PREVIEW_IMAGE_MIME_TYPE, 2, 10, 'image/jpeg'),
         ]);
 
-        $apiDocument = new ApiStructuredExif(new ModelExifDocument($ifd0, $exifIfd, null, null, $thumbnailIfd));
+        $structured = $this->createStructured(new ModelExifDocument($ifd0, $exifIfd, null, null, $thumbnailIfd));
 
-        $preview = $apiDocument->preview;
+        $preview = $structured->preview;
 
         self::assertTrue($preview->hasThumbnail);
         self::assertTrue($preview->hasPreview);
@@ -166,6 +161,18 @@ final class ExifDocumentFallbackTest extends TestCase
         self::assertNull($preview->previewStripByteCounts);
         self::assertNull($preview->previewTileOffsets);
         self::assertNull($preview->previewTileByteCounts);
+    }
+
+    private function createStructured(ModelExifDocument $document): StructuredMetadata
+    {
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $document,
+            makerNotes: $document->makerNotes(),
+        );
+
+        return $metadata->structured();
     }
 
     #[Test]
@@ -209,7 +216,7 @@ final class ExifDocumentFallbackTest extends TestCase
             ],
         );
 
-        $preview = (new ApiStructuredExif($document))->preview;
+        $preview = $this->createStructured($document)->preview;
 
         self::assertTrue($preview->hasPreview);
         self::assertSame(1_024, $preview->previewWidth);

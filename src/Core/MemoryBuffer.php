@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core;
 
 use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
-use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 
@@ -240,5 +240,4 @@ final class MemoryBuffer implements BinaryReadAccessInterface
 
         return $intValue;
     }
-
 }

@@ -11,8 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Api;
 
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Exif\ExifReader;
-use MagicSunday\ImageMeta\Exif\StructuredExif;
+use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
@@ -127,7 +128,7 @@ use PHPUnit\Framework\TestCase;
  * }
  *
  * @method static void assertStructuredMatches(string $fixture, Metadata $metadata, StructuredExpectation $expected)
- * @method static void assertApiMatches(string $fixture, StructuredExif $document, ApiExpectation $expected)
+ * @method static void assertApiMatches(string $fixture, StructuredMetadata $document, ApiExpectation $expected)
  * @method static void assertModelMatches(string $fixture, ?ParsedExif $document, ModelExpectation $expected)
  */
 final class ExifReaderTest extends TestCase
@@ -142,7 +143,6 @@ final class ExifReaderTest extends TestCase
 
         $document = $reader->read($path);
 
-        self::assertTrue($document->hasData);
         self::assertSame('Canon', $document->camera->make);
         self::assertSame('Canon PowerShot SX130 IS', $document->camera->model);
 
@@ -198,6 +198,7 @@ final class ExifReaderTest extends TestCase
         $path    = ExifVersionExpectations::path($fixture);
 
         $document = $reader->read($path);
+        $metadata = (new MetadataReader())->read($path);
 
         /**
          * @var array{
@@ -208,7 +209,7 @@ final class ExifReaderTest extends TestCase
          */
         $expectation = ExifVersionExpectations::get($fixture);
 
-        self::assertModelMatches($fixture, $document->raw, $expectation['model']);
+        self::assertModelMatches($fixture, $metadata->exifDoc, $expectation['model']);
         self::assertApiMatches($fixture, $document, $expectation['api']);
     }
 
@@ -230,7 +231,6 @@ final class ExifReaderTest extends TestCase
         try {
             $document = $reader->read($path);
 
-            self::assertFalse($document->hasData);
             self::assertNull($document->camera->make);
             self::assertNull($document->lens->focalLengthMm);
             self::assertNull($document->gps->latitude);

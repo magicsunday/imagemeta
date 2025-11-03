@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core;
 
 use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
-use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 
 use function fopen;
@@ -176,5 +176,4 @@ final class Stream implements BinaryReadAccessInterface
         fseek($this->fh, $target);
         $this->pos = $target;
     }
-
 }

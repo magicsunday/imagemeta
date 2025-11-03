@@ -110,10 +110,10 @@ foreach ($files as $file) {
             ],
         ],
         'api' => [
-            'iso' => $api->iso,
-            'dateTimeOriginal' => $api->dateTimeOriginal?->format(DATE_ATOM),
-            'userComment' => $api->userComment,
-            'userCommentEncoding' => $api->userCommentEncoding,
+            'iso' => $api->exposure->iso,
+            'dateTimeOriginal' => $api->temporal->original?->format(DATE_ATOM),
+            'userComment' => $api->image->userComment,
+            'userCommentEncoding' => $api->image->userCommentEncoding,
             'interop' => [
                 'index' => $api->interop->index,
                 'version' => $api->interop->version,
