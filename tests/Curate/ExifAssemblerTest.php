@@ -2249,6 +2249,82 @@ final class ExifAssemblerTest extends TestCase
         self::assertEqualsWithDelta(1.5, $structured->gps->horizontalPositioningError, 1e-6);
     }
 
+    #[Test]
+    public function populatesGpsFromXmpWhenExifMissing(): void
+    {
+        $nsExif = 'http://ns.adobe.com/exif/1.0/';
+
+        $xmp = new XmpDocument([
+            '{' . $nsExif . '}GPSLatitudeRef' => 's',
+            '{' . $nsExif . '}GPSLatitude' => '51 30 0',
+            '{' . $nsExif . '}GPSLongitudeRef' => 'E',
+            '{' . $nsExif . '}GPSLongitude' => '8 30 0',
+            '{' . $nsExif . '}GPSAltitudeRef' => '0',
+            '{' . $nsExif . '}GPSAltitude' => '150.5',
+            '{' . $nsExif . '}GPSSpeedRef' => 'k',
+            '{' . $nsExif . '}GPSSpeed' => '120',
+            '{' . $nsExif . '}GPSTrackRef' => 'T',
+            '{' . $nsExif . '}GPSTrack' => '123.45',
+            '{' . $nsExif . '}GPSImgDirectionRef' => 'm',
+            '{' . $nsExif . '}GPSImgDirection' => '250',
+            '{' . $nsExif . '}GPSDestDistanceRef' => 'k',
+            '{' . $nsExif . '}GPSDestDistance' => '42',
+            '{' . $nsExif . '}GPSDateStamp' => '2024-05-06',
+            '{' . $nsExif . '}GPSTimeStamp' => '12:34:56.789',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: ['primary-xmp'],
+            xmpDoc: $xmp,
+            makerNotes: null,
+            iccProfile: null,
+            iccSegments: [],
+            flashPixStreams: [],
+            mpfDocument: null,
+        );
+
+        $gps = (new ExifAssembler())->assemble($metadata)->gps;
+
+        self::assertSame('S', $gps->latitudeRef);
+        self::assertSame('E', $gps->longitudeRef);
+        self::assertNotNull($gps->latitudeSigned);
+        self::assertEqualsWithDelta(-51.5, $gps->latitudeSigned, 1e-6);
+        self::assertNotNull($gps->longitudeSigned);
+        self::assertEqualsWithDelta(8.5, $gps->longitudeSigned, 1e-6);
+
+        $latitudeCoordinate = $this->assertGpsCoordinate($gps->latitudeCoordinate);
+        self::assertSame('S', $latitudeCoordinate->reference);
+        self::assertEqualsWithDelta(-51.5, $latitudeCoordinate->signed, 1e-6);
+
+        $longitudeCoordinate = $this->assertGpsCoordinate($gps->longitudeCoordinate);
+        self::assertSame('E', $longitudeCoordinate->reference);
+        self::assertEqualsWithDelta(8.5, $longitudeCoordinate->signed, 1e-6);
+
+        self::assertSame('K', $gps->speedRef);
+        self::assertSame('k', $gps->speedOriginalRef);
+        self::assertNotNull($gps->speedMs);
+        self::assertEqualsWithDelta(33.3333333, $gps->speedMs, 1e-6);
+        self::assertNotNull($gps->speedOriginal);
+        self::assertEqualsWithDelta(120.0, $gps->speedOriginal, 1e-6);
+
+        self::assertSame('K', $gps->destinationDistanceRef);
+        self::assertSame('k', $gps->destinationDistanceOriginalRef);
+        self::assertNotNull($gps->destinationDistanceMetres);
+        self::assertEqualsWithDelta(42000.0, $gps->destinationDistanceMetres, 1e-6);
+        self::assertNotNull($gps->destinationDistanceOriginal);
+        self::assertEqualsWithDelta(42.0, $gps->destinationDistanceOriginal, 1e-6);
+
+        self::assertSame('2024-05-06', $gps->date);
+        self::assertSame('12:34:56.789', $gps->time);
+
+        $timestamp = $gps->timestamp;
+        self::assertInstanceOf(DateTimeImmutable::class, $timestamp);
+        self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
+    }
+
     /**
      * Verifies that empty metadata still instantiates every value object with null/default state.
      */
@@ -2579,11 +2655,17 @@ final class ExifAssemblerTest extends TestCase
                 new MpfEntry(0x00000002, 1024, 16384, 1, 0),
             ],
             attributes: new MpfAttributes(
-                imageUidList: null,
+                imageUidList: '00112233445566778899AABBCCDDEEFF',
                 totalFrames: 3,
                 individualImageNumber: 1,
-                panoramaAngle: null,
-                panoramaAxis: null,
+                panoramaAngle: [
+                    ['numerator' => 90, 'denominator' => 1],
+                    ['numerator' => 45, 'denominator' => 1],
+                ],
+                panoramaAxis: [
+                    ['numerator' => 1, 'denominator' => 1],
+                    ['numerator' => 0, 'denominator' => 1],
+                ],
                 additionalTags: [],
             ),
         );
@@ -2609,6 +2691,21 @@ final class ExifAssemblerTest extends TestCase
         self::assertCount(2, $multiPicture->entries);
         self::assertSame(3, $multiPicture->totalFrames);
         self::assertSame(1, $multiPicture->individualImageNumber);
+        self::assertSame('00112233445566778899AABBCCDDEEFF', $multiPicture->imageUidList);
+        self::assertSame(
+            [
+                ['numerator' => 90, 'denominator' => 1],
+                ['numerator' => 45, 'denominator' => 1],
+            ],
+            $multiPicture->panoramaAngle,
+        );
+        self::assertSame(
+            [
+                ['numerator' => 1, 'denominator' => 1],
+                ['numerator' => 0, 'denominator' => 1],
+            ],
+            $multiPicture->panoramaAxis,
+        );
         self::assertSame(0x10000001, $multiPicture->entries[0]->attributes);
         self::assertSame(8192, $multiPicture->entries[0]->dataOffset);
         self::assertSame(1, $multiPicture->entries[1]->dependentImage1);

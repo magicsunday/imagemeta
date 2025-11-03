@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
+require_once __DIR__ . '/AppleDecoderKeyedArchiveTest.php';
+
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
@@ -54,6 +57,60 @@ final class BinaryPlistDecoderTest extends TestCase
         $uid = $result->get('Uid');
         self::assertInstanceOf(ApplePlistScalar::class, $uid);
         self::assertSame('9223372036854775808', $uid->value());
+    }
+
+    #[Test]
+    public function decodeParsesNestedCollections(): void
+    {
+        $encoder = new BinaryPlistEncoder();
+
+        $plist = $encoder->encode(
+            new BinaryPlistDictionaryValue([
+                'Flag'    => new BinaryPlistBoolValue(true),
+                'Name'    => new BinaryPlistStringValue('Alpha'),
+                'Numbers' => new BinaryPlistArrayValue([
+                    new BinaryPlistIntValue(1),
+                    new BinaryPlistFloatValue(2.5),
+                ]),
+                'Nested'  => new BinaryPlistDictionaryValue([
+                    'Inner' => new BinaryPlistStringValue('Value'),
+                ]),
+            ])
+        );
+
+        $decoder = new BinaryPlistDecoder();
+        $result  = $decoder->decode($plist);
+
+        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+
+        $flag = $result->get('Flag');
+        self::assertInstanceOf(ApplePlistScalar::class, $flag);
+        self::assertTrue($flag->isBool());
+        self::assertTrue($flag->value());
+
+        $name = $result->get('Name');
+        self::assertInstanceOf(ApplePlistScalar::class, $name);
+        self::assertSame('Alpha', $name->value());
+
+        $numbers = $result->get('Numbers');
+        self::assertInstanceOf(ApplePlistArray::class, $numbers);
+        self::assertSame(2, $numbers->count());
+
+        $firstNumber = $numbers->get(0);
+        self::assertInstanceOf(ApplePlistScalar::class, $firstNumber);
+        self::assertTrue($firstNumber->isInt());
+        self::assertSame(1, $firstNumber->value());
+
+        $secondNumber = $numbers->get(1);
+        self::assertInstanceOf(ApplePlistScalar::class, $secondNumber);
+        self::assertTrue($secondNumber->isFloat());
+        self::assertEqualsWithDelta(2.5, $secondNumber->asFloat(), 0.000001);
+
+        $nested = $result->get('Nested');
+        self::assertInstanceOf(ApplePlistDictionary::class, $nested);
+        $inner = $nested->get('Inner');
+        self::assertInstanceOf(ApplePlistScalar::class, $inner);
+        self::assertSame('Value', $inner->value());
     }
 
     private function createBinaryPlistWithUid(string $uidBytes): string

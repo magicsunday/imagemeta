@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function file_put_contents;
 use function fopen;
 use function fwrite;
 use function implode;
@@ -28,6 +29,9 @@ use function str_pad;
 use function str_repeat;
 use function strlen;
 use function substr;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
 
 /**
  * Exercises the JPEG extractor using synthetic marker segments.
@@ -374,6 +378,37 @@ final class JpegExtractorTest extends TestCase
         $extractor = $this->createExtractor($jpeg);
 
         self::assertSame([$iptcOne, $iptcTwo], $extractor->getIptcPayloads());
+    }
+
+    #[Test]
+    public function extractsAppSegmentsFromFilesystemStream(): void
+    {
+        $exifPayload = 'filesystem-exif';
+        $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Filesystem</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload),
+        );
+
+        $path = tempnam(sys_get_temp_dir(), 'imagemeta-jpeg-');
+        if ($path === false) {
+            self::fail('Unable to allocate temporary path for JPEG extractor regression test.');
+        }
+
+        if (file_put_contents($path, $jpeg) === false) {
+            self::fail('Unable to write JPEG payload to temporary path.');
+        }
+
+        try {
+            $stream    = Stream::fromPath($path);
+            $extractor = new JpegExtractor($stream);
+
+            self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+            self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
+        } finally {
+            @unlink($path);
+        }
     }
 
     /**
