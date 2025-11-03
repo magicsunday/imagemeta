@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
-use MagicSunday\ImageMeta\Core\Contracts\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Contracts\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
