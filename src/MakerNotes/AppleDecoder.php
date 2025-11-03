@@ -68,14 +68,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     public function decode(string $raw, string $make, ?string $model): MakerNotesRecord
     {
         $appleData = $this->parseAppleData($raw);
-        $metadata  = new MakerNotesRecord(
+
+        return new MakerNotesRecord(
             'Apple',
             strlen($raw),
             sha1($raw),
             $appleData
         );
-
-        return $metadata;
     }
 
     /**
