@@ -129,7 +129,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $value = $result->get('Date');
         self::assertInstanceOf(ApplePlistScalar::class, $value);
         self::assertSame(
-            $date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\\TH:i:s.uP'),
+            $date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\\TH:i:sp'),
             $value->value()
         );
     }
@@ -147,7 +147,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $value = $result->get('Date');
         self::assertInstanceOf(ApplePlistScalar::class, $value);
         self::assertSame(
-            $date->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),
+            $date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:sp'),
             $value->value()
         );
     }

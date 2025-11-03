@@ -61,6 +61,8 @@ final class BinaryPlistDecoder
 
     private const int MARKER_TYPE_ARRAY = 10;
 
+    private const int MARKER_TYPE_SET = 11;
+
     private const int MARKER_TYPE_DICTIONARY = 13;
 
     private const int MARKER_SIMPLE_NULL = 0;
@@ -68,6 +70,14 @@ final class BinaryPlistDecoder
     private const int MARKER_SIMPLE_FALSE = 8;
 
     private const int MARKER_SIMPLE_TRUE = 9;
+
+    private const int MARKER_SIMPLE_URL = 12;
+
+    private const int MARKER_SIMPLE_BASE_URL = 13;
+
+    private const int MARKER_SIMPLE_UIID = 14;
+
+    private const int MARKER_SIMPLE_FILL = 15;
 
     private const int MARKER_INFO_EXTENDED = 0x0F;
 
@@ -197,6 +207,7 @@ final class BinaryPlistDecoder
             self::MARKER_TYPE_UTF8       => $this->wrapScalar($this->parseUtf8($offset, $info)),
             self::MARKER_TYPE_UID        => $this->wrapScalar($this->parseUid($offset, $info)),
             self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
+            self::MARKER_TYPE_SET        => $this->parseSet($offset, $info),
             self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
             default                      => throw new ParseError('Unsupported property list object type.'),
         };
@@ -215,10 +226,18 @@ final class BinaryPlistDecoder
     private function parseSimple(int $info): ApplePlistScalar
     {
         $value = match ($info) {
-            self::MARKER_SIMPLE_NULL  => null,
-            self::MARKER_SIMPLE_FALSE => false,
-            self::MARKER_SIMPLE_TRUE  => true,
-            default                   => throw new ParseError('Unsupported simple property list object.'),
+            // treat fill byte defensively as null
+            self::MARKER_SIMPLE_NULL,
+            self::MARKER_SIMPLE_FILL     => null,
+            self::MARKER_SIMPLE_FALSE    => false,
+            self::MARKER_SIMPLE_TRUE     => true,
+            // TODO
+            self::MARKER_SIMPLE_URL      => 'url',
+            // TODO
+            self::MARKER_SIMPLE_BASE_URL => 'base-url',
+            // TODO
+            self::MARKER_SIMPLE_UIID     => 'uiid',
+            default                      => throw new ParseError('Unsupported simple property list object.'),
         };
 
         return new ApplePlistScalar($value);
@@ -227,6 +246,7 @@ final class BinaryPlistDecoder
     private function parseInteger(int $offset, int $info): int
     {
         $size = 1 << $info;
+
         if ($size === 0) {
             throw new ParseError('Integer object without payload.');
         }
@@ -237,6 +257,7 @@ final class BinaryPlistDecoder
     private function parseReal(int $offset, int $info): float
     {
         $size = 1 << $info;
+
         if ($size === 4) {
             $bytes = substr($this->data, $offset + 1, 4);
             if (strlen($bytes) !== 4) {
@@ -300,6 +321,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Failed to decode date payload.');
         }
 
+        // Seconds since 2001-01-01T00:00:00Z
         $totalSeconds = 978307200 + (float) $seconds;
 
         $timestamp = DateTimeImmutable::createFromFormat(
@@ -307,19 +329,18 @@ final class BinaryPlistDecoder
             sprintf('%.6F', $totalSeconds),
             new DateTimeZone('UTC')
         );
+
         if (!$timestamp instanceof DateTimeImmutable) {
             throw new ParseError('Failed to decode date payload.');
         }
 
-        $formatted = $timestamp->format('Y-m-d\TH:i:s.uP');
-        $timezone  = substr($formatted, -6);
-        $main      = substr($formatted, 0, -6);
+        return $timestamp->format('Y-m-d\TH:i:sp');
+    }
 
-        if (str_ends_with($main, '.000000')) {
-            $main = substr($main, 0, -7);
-        }
-
-        return $main . $timezone;
+    private function parseSet(int $offset, int $info): ApplePlistArray
+    {
+        // Treat Set like Array for practical purposes
+        return $this->parseArray($offset, $info);
     }
 
     private function parseData(int $offset, int $info): string
@@ -327,6 +348,7 @@ final class BinaryPlistDecoder
         [$size, $header] = $this->readLength($offset, $info);
 
         $payload = substr($this->data, $offset + $header, $size);
+
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete data payload.');
         }
@@ -339,6 +361,7 @@ final class BinaryPlistDecoder
         [$size, $header] = $this->readLength($offset, $info);
 
         $payload = substr($this->data, $offset + $header, $size);
+
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete ASCII string payload.');
         }
@@ -352,6 +375,7 @@ final class BinaryPlistDecoder
 
         $byteLength = $size * 2;
         $payload    = substr($this->data, $offset + $header, $byteLength);
+
         if (strlen($payload) !== $byteLength) {
             throw new ParseError('Incomplete Unicode string payload.');
         }
@@ -369,11 +393,13 @@ final class BinaryPlistDecoder
         [$size, $header] = $this->readLength($offset, $info);
 
         $payload = substr($this->data, $offset + $header, $size);
+
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete UTF-8 string payload.');
         }
 
         $decoded = iconv('UTF-8', 'UTF-8', $payload);
+
         if ($decoded === false) {
             throw new ParseError('Failed to decode UTF-8 string payload.');
         }
@@ -397,6 +423,7 @@ final class BinaryPlistDecoder
         }
 
         $payloadOffset = $offset + $header;
+
         if ($payloadOffset + $size > $this->length) {
             throw new ParseError('Incomplete UID payload.');
         }
@@ -412,6 +439,7 @@ final class BinaryPlistDecoder
         }
 
         $payload = substr($this->data, $payloadOffset, $size);
+
         if (strlen($payload) !== $size) {
             throw new ParseError('Incomplete UID payload.');
         }
