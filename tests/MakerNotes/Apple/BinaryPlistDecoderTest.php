@@ -72,7 +72,7 @@ final class BinaryPlistDecoderTest extends TestCase
                     new BinaryPlistIntValue(1),
                     new BinaryPlistFloatValue(2.5),
                 ]),
-                'Nested'  => new BinaryPlistDictionaryValue([
+                'Nested' => new BinaryPlistDictionaryValue([
                     'Inner' => new BinaryPlistStringValue('Value'),
                 ]),
             ])

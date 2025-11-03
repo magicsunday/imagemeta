@@ -2255,22 +2255,22 @@ final class ExifAssemblerTest extends TestCase
         $nsExif = 'http://ns.adobe.com/exif/1.0/';
 
         $xmp = new XmpDocument([
-            '{' . $nsExif . '}GPSLatitudeRef' => 's',
-            '{' . $nsExif . '}GPSLatitude' => '51 30 0',
-            '{' . $nsExif . '}GPSLongitudeRef' => 'E',
-            '{' . $nsExif . '}GPSLongitude' => '8 30 0',
-            '{' . $nsExif . '}GPSAltitudeRef' => '0',
-            '{' . $nsExif . '}GPSAltitude' => '150.5',
-            '{' . $nsExif . '}GPSSpeedRef' => 'k',
-            '{' . $nsExif . '}GPSSpeed' => '120',
-            '{' . $nsExif . '}GPSTrackRef' => 'T',
-            '{' . $nsExif . '}GPSTrack' => '123.45',
+            '{' . $nsExif . '}GPSLatitudeRef'     => 's',
+            '{' . $nsExif . '}GPSLatitude'        => '51 30 0',
+            '{' . $nsExif . '}GPSLongitudeRef'    => 'E',
+            '{' . $nsExif . '}GPSLongitude'       => '8 30 0',
+            '{' . $nsExif . '}GPSAltitudeRef'     => '0',
+            '{' . $nsExif . '}GPSAltitude'        => '150.5',
+            '{' . $nsExif . '}GPSSpeedRef'        => 'k',
+            '{' . $nsExif . '}GPSSpeed'           => '120',
+            '{' . $nsExif . '}GPSTrackRef'        => 'T',
+            '{' . $nsExif . '}GPSTrack'           => '123.45',
             '{' . $nsExif . '}GPSImgDirectionRef' => 'm',
-            '{' . $nsExif . '}GPSImgDirection' => '250',
+            '{' . $nsExif . '}GPSImgDirection'    => '250',
             '{' . $nsExif . '}GPSDestDistanceRef' => 'k',
-            '{' . $nsExif . '}GPSDestDistance' => '42',
-            '{' . $nsExif . '}GPSDateStamp' => '2024-05-06',
-            '{' . $nsExif . '}GPSTimeStamp' => '12:34:56.789',
+            '{' . $nsExif . '}GPSDestDistance'    => '42',
+            '{' . $nsExif . '}GPSDateStamp'       => '2024-05-06',
+            '{' . $nsExif . '}GPSTimeStamp'       => '12:34:56.789',
         ]);
 
         $metadata = new Metadata(
@@ -2283,7 +2283,6 @@ final class ExifAssemblerTest extends TestCase
             iccProfile: null,
             iccSegments: [],
             flashPixStreams: [],
-            mpfDocument: null,
         );
 
         $gps = (new ExifAssembler())->assemble($metadata)->gps;

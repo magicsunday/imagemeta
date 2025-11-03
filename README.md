@@ -74,15 +74,15 @@ The structured aggregate described above exposes typed value objects while keepi
 
 ### Mapping overview
 
-| Field | Primary source | Fallback | Converter |
-|-------|----------------|----------|-----------|
-| `camera.make` | EXIF `Make` | XMP `tiff:Make` | – |
-| `lens.model` | EXIF `LensModel` | – | – |
-| `exposure.flash` | EXIF `Flash` | XMP `exif:Flash` | `ValueConverters::flashFromShort()` |
-| `temporal.original` | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal` | `ValueConverters::parseOffset()` |
-| `gps.speedMs` | EXIF `GPSSpeed` + `GPSSpeedRef` | XMP `exif:GPSSpeed` / `exif:GPSSpeedRef` | `ValueConverters::gpsSpeedToMs()` |
-| `gps.destinationDistanceMetres` | EXIF `GPSDestDistance` + `GPSDestDistanceRef` | XMP `exif:GPSDestDistance` | `ValueConverters::gpsDistanceToMetres()` |
-| `multiPicture.entries` | MP Index IFD entries | – | `Curate\Exif\ValueFactory` |
+| Field                           | Primary source                                 | Fallback                                 | Converter                                |
+|---------------------------------|------------------------------------------------|------------------------------------------|------------------------------------------|
+| `camera.make`                   | EXIF `Make`                                    | XMP `tiff:Make`                          | –                                        |
+| `lens.model`                    | EXIF `LensModel`                               | –                                        | –                                        |
+| `exposure.flash`                | EXIF `Flash`                                   | XMP `exif:Flash`                         | `ValueConverters::flashFromShort()`      |
+| `temporal.original`             | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal`              | `ValueConverters::parseOffset()`         |
+| `gps.speedMs`                   | EXIF `GPSSpeed` + `GPSSpeedRef`                | XMP `exif:GPSSpeed` / `exif:GPSSpeedRef` | `ValueConverters::gpsSpeedToMs()`        |
+| `gps.destinationDistanceMetres` | EXIF `GPSDestDistance` + `GPSDestDistanceRef`  | XMP `exif:GPSDestDistance`               | `ValueConverters::gpsDistanceToMetres()` |
+| `multiPicture.entries`          | MP Index IFD entries                           | –                                        | `Curate\Exif\ValueFactory`               |
 
 ### Temporal fractional seconds harmonisation
 
@@ -100,18 +100,18 @@ All fields are trimmed and converted into PHP primitives (floats, ints, strings 
 
 ### EXIF 3.0 → Value objects
 
-| Value object | Fields | Source tag(s) | Converter/Enum |
-|--------------|--------|---------------|----------------|
-| `Interop` | `index`, `version` | `InteropIndex`, `InteropVersion` | Hex fallback for binary data |
-| `TiffData` | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities` | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities` | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()` |
-| `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal` | `CompositeImage`, `SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage` | `CompositeImage`, rational to float |
-| `Standards` | `exifVersion`, `flashpixVersion` | `ExifVersion`, `FlashpixVersion` | `ValueConverters::toExifVersion()` (FlashPix defaults to `1.00`) |
-| `Lens` | `lensSpecification`, `maxApertureFNumber` | `LensSpecification`, `MaxApertureValue` | `ValueConverters::apexToFNumber()` |
-| `Exposure` | `exposureBiasEv`, `gainControl`, `contrast` | `ExposureBiasValue`, `GainControl`, `Contrast` | `GainControl` enum |
-| `Scene` | `subjectDistanceRange` | `SubjectDistanceRange` | `SubjectDistanceRange` enum |
-| `Device` | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware` | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware` | – |
-| `Gps` | `latitude`, `longitude`, `altitude`, `speed*`, `track*`, `timestamp`, navigation metadata | GPS IFD (`GPS*`) with XMP `exif:GPS*` fallbacks | `ValueConverters::gpsFromIfd()`, harmonisation in `Curate\Exif\ValueFactory` |
-| `MultiPicture` | `version`, `imageCount`, `entries`, `totalFrames`, `individualImageNumber`, `imageUidList`, `panoramaAngle`, `panoramaAxis` | MP Index IFD, MP Attribute IFD | `Curate\Exif\ValueFactory::resolveMultiPicture()` |
+| Value object         | Fields                                                                                                                      | Source tag(s)                                                                                | Converter/Enum                                                               |
+|----------------------|-----------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|------------------------------------------------------------------------------|
+| `Interop`            | `index`, `version`                                                                                                          | `InteropIndex`, `InteropVersion`                                                             | Hex fallback for binary data                                                 |
+| `TiffData`           | `compression`, `photometric`, `ycbcrSubSampling`, `primaryChromaticities`                                                   | `Compression`, `PhotometricInterpretation`, `YCbCrSubSampling`, `PrimaryChromaticities`      | `Compression`, `Photometric`, `ValueConverters::toPrimaryChromaticities()`   |
+| `CompositeImageInfo` | `type`, `counts`, `exposureTimesTotal`                                                                                      | `CompositeImage`, `SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage` | `CompositeImage`, rational to float                                          |
+| `Standards`          | `exifVersion`, `flashpixVersion`                                                                                            | `ExifVersion`, `FlashpixVersion`                                                             | `ValueConverters::toExifVersion()` (FlashPix defaults to `1.00`)             |
+| `Lens`               | `lensSpecification`, `maxApertureFNumber`                                                                                   | `LensSpecification`, `MaxApertureValue`                                                      | `ValueConverters::apexToFNumber()`                                           |
+| `Exposure`           | `exposureBiasEv`, `gainControl`, `contrast`                                                                                 | `ExposureBiasValue`, `GainControl`, `Contrast`                                               | `GainControl` enum                                                           |
+| `Scene`              | `subjectDistanceRange`                                                                                                      | `SubjectDistanceRange`                                                                       | `SubjectDistanceRange` enum                                                  |
+| `Device`             | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware`                                                  | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware`                   | –                                                                            |
+| `Gps`                | `latitude`, `longitude`, `altitude`, `speed*`, `track*`, `timestamp`, navigation metadata                                   | GPS IFD (`GPS*`) with XMP `exif:GPS*` fallbacks                                              | `ValueConverters::gpsFromIfd()`, harmonisation in `Curate\Exif\ValueFactory` |
+| `MultiPicture`       | `version`, `imageCount`, `entries`, `totalFrames`, `individualImageNumber`, `imageUidList`, `panoramaAngle`, `panoramaAxis` | MP Index IFD, MP Attribute IFD                                                               | `Curate\Exif\ValueFactory::resolveMultiPicture()`                            |
 
 ```php
 $s = $meta->structured();
