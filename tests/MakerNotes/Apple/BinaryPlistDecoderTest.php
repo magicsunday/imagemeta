@@ -13,6 +13,9 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 require_once __DIR__ . '/AppleDecoderKeyedArchiveTest.php';
 
+use DateTimeImmutable;
+use DateTimeZone;
+use const DATE_ATOM;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
@@ -111,6 +114,124 @@ final class BinaryPlistDecoderTest extends TestCase
         $inner = $nested->get('Inner');
         self::assertInstanceOf(ApplePlistScalar::class, $inner);
         self::assertSame('Value', $inner->value());
+    }
+
+    #[Test]
+    public function decodeParsesDateValues(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+        $date    = new DateTimeImmutable('2024-05-18 10:20:30.123456', new DateTimeZone('UTC'));
+        $plist   = $this->createBinaryPlistWithDate($date);
+
+        $result = $decoder->decode($plist);
+
+        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+        $value = $result->get('Date');
+        self::assertInstanceOf(ApplePlistScalar::class, $value);
+        self::assertSame(
+            $date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\\TH:i:s.uP'),
+            $value->value()
+        );
+    }
+
+    #[Test]
+    public function decodeNormalisesDateWithoutFraction(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+        $date    = new DateTimeImmutable('2024-05-18 10:20:30', new DateTimeZone('UTC'));
+        $plist   = $this->createBinaryPlistWithDate($date);
+
+        $result = $decoder->decode($plist);
+
+        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+        $value = $result->get('Date');
+        self::assertInstanceOf(ApplePlistScalar::class, $value);
+        self::assertSame(
+            $date->setTimezone(new DateTimeZone('UTC'))->format(DATE_ATOM),
+            $value->value()
+        );
+    }
+
+    #[Test]
+    public function decodeParsesUtf8Strings(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+        $utf8    = 'Grüße';
+        $plist   = $this->createBinaryPlistWithUtf8($utf8);
+
+        $result = $decoder->decode($plist);
+
+        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+        $value = $result->get('Utf8');
+        self::assertInstanceOf(ApplePlistScalar::class, $value);
+        self::assertSame($utf8, $value->value());
+    }
+
+    private function createBinaryPlistWithDate(DateTimeImmutable $date): string
+    {
+        $header = 'bplist00';
+
+        $key       = 'Date';
+        $keyMarker = chr(0x50 | strlen($key));
+        $keyObject = $keyMarker . $key;
+
+        $utcDate   = $date->setTimezone(new DateTimeZone('UTC'));
+        $reference = new DateTimeImmutable('2001-01-01 00:00:00', new DateTimeZone('UTC'));
+        $seconds   = (float) $utcDate->format('U.u') - (float) $reference->format('U.u');
+        $dateObject = chr(0x30 | 0x03) . pack('E', $seconds);
+
+        $dictionaryObject = "\xD1\x00\x01";
+
+        $offsetKey        = strlen($header);
+        $offsetDate       = $offsetKey + strlen($keyObject);
+        $offsetDictionary = $offsetDate + strlen($dateObject);
+        $offsetTableStart = $offsetDictionary + strlen($dictionaryObject);
+
+        $offsetTable = pack('C*', $offsetKey, $offsetDate, $offsetDictionary);
+
+        $trailer = str_repeat("\x00", 6)
+            . "\x01"
+            . "\x01"
+            . $this->packUint64(3)
+            . $this->packUint64(2)
+            . $this->packUint64($offsetTableStart);
+
+        return $header . $keyObject . $dateObject . $dictionaryObject . $offsetTable . $trailer;
+    }
+
+    private function createBinaryPlistWithUtf8(string $value): string
+    {
+        $header = 'bplist00';
+
+        $key       = 'Utf8';
+        $keyMarker = chr(0x50 | strlen($key));
+        $keyObject = $keyMarker . $key;
+
+        $length = strlen($value);
+        if ($length > 0x0F) {
+            self::fail('Test fixture generator does not support UTF-8 payloads larger than 15 bytes.');
+        }
+
+        $valueMarker = chr(0x70 | $length);
+        $valueObject = $valueMarker . $value;
+
+        $dictionaryObject = "\xD1\x00\x01";
+
+        $offsetKey        = strlen($header);
+        $offsetValue      = $offsetKey + strlen($keyObject);
+        $offsetDictionary = $offsetValue + strlen($valueObject);
+        $offsetTableStart = $offsetDictionary + strlen($dictionaryObject);
+
+        $offsetTable = pack('C*', $offsetKey, $offsetValue, $offsetDictionary);
+
+        $trailer = str_repeat("\x00", 6)
+            . "\x01"
+            . "\x01"
+            . $this->packUint64(3)
+            . $this->packUint64(2)
+            . $this->packUint64($offsetTableStart);
+
+        return $header . $keyObject . $valueObject . $dictionaryObject . $offsetTable . $trailer;
     }
 
     private function createBinaryPlistWithUid(string $uidBytes): string

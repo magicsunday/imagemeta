@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
 
@@ -26,6 +28,7 @@ use function ord;
 use function sprintf;
 use function strlen;
 use function strpos;
+use function str_ends_with;
 use function substr;
 
 /**
@@ -44,11 +47,15 @@ final class BinaryPlistDecoder
 
     private const int MARKER_TYPE_REAL = 2;
 
+    private const int MARKER_TYPE_DATE = 3;
+
     private const int MARKER_TYPE_DATA = 4;
 
     private const int MARKER_TYPE_ASCII = 5;
 
     private const int MARKER_TYPE_UNICODE = 6;
+
+    private const int MARKER_TYPE_UTF8 = 7;
 
     private const int MARKER_TYPE_UID = 8;
 
@@ -183,9 +190,11 @@ final class BinaryPlistDecoder
             self::MARKER_TYPE_SIMPLE     => $this->parseSimple($info),
             self::MARKER_TYPE_INTEGER    => $this->wrapScalar($this->parseInteger($offset, $info)),
             self::MARKER_TYPE_REAL       => $this->wrapScalar($this->parseReal($offset, $info)),
+            self::MARKER_TYPE_DATE       => $this->wrapScalar($this->parseDate($offset, $info)),
             self::MARKER_TYPE_DATA       => $this->wrapScalar($this->parseData($offset, $info)),
             self::MARKER_TYPE_ASCII      => $this->wrapScalar($this->parseAscii($offset, $info)),
             self::MARKER_TYPE_UNICODE    => $this->wrapScalar($this->parseUnicode($offset, $info)),
+            self::MARKER_TYPE_UTF8       => $this->wrapScalar($this->parseUtf8($offset, $info)),
             self::MARKER_TYPE_UID        => $this->wrapScalar($this->parseUid($offset, $info)),
             self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
             self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
@@ -269,6 +278,50 @@ final class BinaryPlistDecoder
         throw new ParseError('Unsupported floating point width.');
     }
 
+    private function parseDate(int $offset, int $info): string
+    {
+        $size = 1 << $info;
+        if ($size !== 8) {
+            throw new ParseError('Date objects must use eight byte payloads.');
+        }
+
+        $payload = substr($this->data, $offset + 1, $size);
+        if (strlen($payload) !== $size) {
+            throw new ParseError('Incomplete date payload.');
+        }
+
+        $value = unpack('Eseconds', $payload);
+        if ($value === false || !array_key_exists('seconds', $value)) {
+            throw new ParseError('Failed to decode date payload.');
+        }
+
+        $seconds = $value['seconds'];
+        if (!is_float($seconds) && !is_int($seconds)) {
+            throw new ParseError('Failed to decode date payload.');
+        }
+
+        $totalSeconds = 978307200 + (float) $seconds;
+
+        $timestamp = DateTimeImmutable::createFromFormat(
+            'U.u',
+            sprintf('%.6F', $totalSeconds),
+            new DateTimeZone('UTC')
+        );
+        if (!$timestamp instanceof DateTimeImmutable) {
+            throw new ParseError('Failed to decode date payload.');
+        }
+
+        $formatted = $timestamp->format('Y-m-d\TH:i:s.uP');
+        $timezone  = substr($formatted, -6);
+        $main      = substr($formatted, 0, -6);
+
+        if (str_ends_with($main, '.000000')) {
+            $main = substr($main, 0, -7);
+        }
+
+        return $main . $timezone;
+    }
+
     private function parseData(int $offset, int $info): string
     {
         [$size, $header] = $this->readLength($offset, $info);
@@ -306,6 +359,23 @@ final class BinaryPlistDecoder
         $decoded = iconv('UTF-16BE', 'UTF-8', $payload);
         if ($decoded === false) {
             throw new ParseError('Failed to decode Unicode string payload.');
+        }
+
+        return $decoded;
+    }
+
+    private function parseUtf8(int $offset, int $info): string
+    {
+        [$size, $header] = $this->readLength($offset, $info);
+
+        $payload = substr($this->data, $offset + $header, $size);
+        if (strlen($payload) !== $size) {
+            throw new ParseError('Incomplete UTF-8 string payload.');
+        }
+
+        $decoded = iconv('UTF-8', 'UTF-8', $payload);
+        if ($decoded === false) {
+            throw new ParseError('Failed to decode UTF-8 string payload.');
         }
 
         return $decoded;
