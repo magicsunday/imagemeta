@@ -286,7 +286,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @return array<int, array<int|string, mixed>|bool|float|int|string|null>
+     * Parses an array from Apple's legacy text format.
+     *
+     * @param string $raw    Raw text-format payload.
+     * @param int    $offset Current parsing offset (modified by reference).
+     * @param int    $length Total payload length.
+     *
+     * @return array<int, array<int|string, mixed>|bool|float|int|string|null> Parsed array values.
+     *
+     * @throws ParseError If array syntax is invalid.
      *
      * @phpstan-return array<int, array<int|string, mixed>|bool|float|int|string|null>
      */
@@ -430,7 +438,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, mixed> $dictionary
+     * Checks if a dictionary represents an NSKeyedArchive structure.
+     *
+     * @param array<int|string, mixed> $dictionary Dictionary to check.
+     *
+     * @return bool True if dictionary is a keyed archive.
      */
     private function isKeyedArchive(array $dictionary): bool
     {
@@ -452,7 +464,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, mixed> $value
+     * Recursively checks if a value contains UID references.
+     *
+     * @param array<int|string, mixed> $value Value to inspect.
+     *
+     * @return bool True if value or nested values contain CF$UID keys.
      */
     private function containsUidReference(array $value): bool
     {

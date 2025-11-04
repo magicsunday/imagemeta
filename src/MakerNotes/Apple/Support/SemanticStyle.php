@@ -130,7 +130,11 @@ final class SemanticStyle
     }
 
     /**
-     * @param SemanticStyleDictionary $semantic
+     * Normalizes semantic style entries from dictionary or list format.
+     *
+     * @param SemanticStyleDictionary $semantic Raw semantic style data.
+     *
+     * @return SemanticStyleEntries|null Normalized entries or null if invalid.
      *
      * @phpstan-param SemanticStyleDictionary $semantic
      *
@@ -174,7 +178,11 @@ final class SemanticStyle
     }
 
     /**
-     * @param SemanticStyleValue $entry
+     * Extracts a scalar value from a semantic style entry.
+     *
+     * @param SemanticStyleValue $entry Entry value which may be scalar or wrapped.
+     *
+     * @return bool|float|int|string|null Extracted scalar value or null.
      *
      * @phpstan-param SemanticStyleValue $entry
      */
@@ -240,10 +248,12 @@ final class SemanticStyle
     }
 
     /**
-     * @param SemanticStyleEntries $entries
-     * @param int                  ...$indexes
+     * Retrieves an entry from semantic style entries by index priority.
      *
-     * @return SemanticStyleScalar
+     * @param SemanticStyleEntries $entries  Normalized semantic style entries.
+     * @param int                  ...$indexes Priority-ordered indexes to search.
+     *
+     * @return SemanticStyleScalar Scalar value at first matching index or null.
      */
     private static function entry(array $entries, int ...$indexes): string|int|float|bool|null
     {
