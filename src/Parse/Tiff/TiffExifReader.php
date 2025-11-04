@@ -201,7 +201,7 @@ final class TiffExifReader implements ExifReaderInterface
         $this->interopVisitedOffsets = [];
 
         // byte order
-        // EXIF 3.0 §4.5.1 follows TIFF 6.0 §8 (Image File Directory) in defining the
+        // EXIF 3.0 §4.5.1 follows TIFF 6.0 §2.1 (Image File Header) in defining the
         // "II"/"MM" byte-order signatures used for byte-order detection.
         $boSig    = $this->buf->read(2);
         $this->bo = match ($boSig) {
@@ -780,9 +780,10 @@ final class TiffExifReader implements ExifReaderInterface
     /**
      * Converts raw bytes into PHP scalar values based on the TIFF type.
      *
-     * EXIF 3.0 §4.5.2 Table 3 (mirroring TIFF 6.0 §2.2) defines the numeric
-     * representations mapped to PHP scalars in this helper, consistent with EXIF 2.32 §4.5.2
-     * and the EXIF 2.1 §2.6.2 type definitions.
+     * TIFF 6.0 §2.2 defines the field type encodings (BYTE through DOUBLE) mapped
+     * to PHP scalars in this helper. EXIF 3.0 §4.5.2 Table 3 mirrors these definitions
+     * with additional context for EXIF usage, consistent with EXIF 2.32 §4.5.2 and
+     * EXIF 2.1 §2.6.2 type definitions.
      *
      * @param int    $type  TIFF field type code.
      * @param int    $count Number of values represented.
@@ -1336,6 +1337,9 @@ final class TiffExifReader implements ExifReaderInterface
 
     /**
      * Returns the number of bytes used per component for a TIFF field type.
+     *
+     * TIFF 6.0 §2.2 defines the byte sizes for each field type. BigTIFF extends
+     * this with 64-bit types (LONG8, SLONG8, IFD8).
      *
      * @param int $type TIFF field type code.
      *
