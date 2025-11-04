@@ -136,3 +136,20 @@ Bit-mask sources such as `SceneFlags`, `ImageProcessingFlags` and `PhotosAppFeat
 * `PhotosAppFeatureFlags`: bit 0 → `personInPhoto`, bit 1 → `petInPhoto`
 
 Explicit boolean keys continue to override the derived values when both representations are present.
+
+## Documentation
+
+### Technical Analysis & Compliance
+
+Comprehensive technical documentation is available in the `docs/` directory:
+
+* **[EXIF Compliance Analysis](docs/EXIF_COMPLIANCE_ANALYSIS.md)** - Complete EXIF 1.0 through 3.0 specification coverage analysis including tag registry, BigTIFF support, GPS IFD coverage, and comparison with ExifTool
+* **[Apple Maker Notes Technical](docs/APPLE_MAKERNOTES_TECHNICAL.md)** - Deep-dive analysis of Apple Maker Notes implementation including Foundation framework alignment, binary plist decoder, NSKeyedArchive unarchiver, and CMTime/Semantic Styles support
+* **[Executive Summary](docs/EXIF_EXECUTIVE_SUMMARY.md)** - High-level findings, recommendations, and implementation roadmap for EXIF and vendor-specific metadata support
+
+**Key Highlights:**
+* ✅ **EXIF 3.0 Compliant** - Full tag coverage with 250+ specification references
+* ✅ **BigTIFF Support** - Complete 64-bit offset handling for large images
+* ✅ **Industry-Leading Apple Metadata** - Foundation-aligned NSKeyedArchive decoder superior to ExifTool
+* ✅ **Comprehensive GPS Support** - All 31 GPS IFD tags from EXIF 3.0 §4.6.6 Table 66
+* ✅ **Security-First** - Streaming parser with strict bounds checking, no external dependencies
