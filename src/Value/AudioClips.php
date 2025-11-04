@@ -19,6 +19,8 @@ use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 final readonly class AudioClips
 {
     /**
+     * Creates an audio clips collection value object.
+     *
      * @param list<AudioClip> $clips
      */
     public function __construct(public array $clips)

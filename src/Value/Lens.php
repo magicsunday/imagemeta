@@ -22,6 +22,8 @@ final readonly class Lens
     public ?array $lensSpecification;
 
     /**
+     * Creates a lens metadata value object.
+     *
      * @param string|null                                 $lensMake           Lens manufacturer.
      * @param string|null                                 $lensModel          Lens model description.
      * @param string|null                                 $lensSerialNumber   Serial number reported by the lens.
