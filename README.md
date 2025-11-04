@@ -1,5 +1,10 @@
 # MagicSunday/ImageMeta
 
+[![CI](https://github.com/magicsunday/imagemeta/actions/workflows/ci.yml/badge.svg)](https://github.com/magicsunday/imagemeta/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/magicsunday/imagemeta/branch/main/graph/badge.svg)](https://codecov.io/gh/magicsunday/imagemeta)
+[![License](https://img.shields.io/github/license/magicsunday/imagemeta)](LICENSE)
+[![PHP Version](https://img.shields.io/badge/php-%5E8.4-blue)](composer.json)
+
 MagicSunday/ImageMeta provides a streaming metadata parser for JPEG, HEIC and ISO Base Media File Format containers. It unifies EXIF, XMP and QuickTime sources into a common PHP domain model.
 
 ## Requirements
