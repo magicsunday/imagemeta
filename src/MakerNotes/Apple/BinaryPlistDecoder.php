@@ -226,17 +226,18 @@ final class BinaryPlistDecoder
     private function parseSimple(int $info): ApplePlistScalar
     {
         $value = match ($info) {
-            // treat fill byte defensively as null
+            // Treat fill byte defensively as null
             self::MARKER_SIMPLE_NULL,
             self::MARKER_SIMPLE_FILL     => null,
             self::MARKER_SIMPLE_FALSE    => false,
             self::MARKER_SIMPLE_TRUE     => true,
-            // TODO
-            self::MARKER_SIMPLE_URL      => 'url',
-            // TODO
-            self::MARKER_SIMPLE_BASE_URL => 'base-url',
-            // TODO
-            self::MARKER_SIMPLE_UIID     => 'uiid',
+            // According to CoreFoundation's binary plist format, these simple markers
+            // represent URL, base-URL, and UUID objects. We don't model these complex
+            // Foundation types here, so we decode them to null to avoid hard failures
+            // when such markers appear in maker notes.
+            self::MARKER_SIMPLE_URL,
+            self::MARKER_SIMPLE_BASE_URL,
+            self::MARKER_SIMPLE_UIID     => null,
             default                      => throw new ParseError('Unsupported simple property list object.'),
         };
 
