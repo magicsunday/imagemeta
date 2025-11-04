@@ -10,6 +10,10 @@ on:
       - main
       - develop
 
+env:
+  PHP_VERSION: '8.4'
+  PHP_EXTENSIONS: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+
 jobs:
   lint:
     name: PHP Lint
@@ -21,8 +25,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
           coverage: none
 
       - name: Install dependencies
@@ -41,8 +45,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
           coverage: none
 
       - name: Install dependencies
@@ -61,8 +65,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
           coverage: none
 
       - name: Install dependencies
@@ -81,8 +85,8 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
           coverage: none
 
       - name: Install dependencies
@@ -101,10 +105,11 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
           coverage: none
 
+      # Node.js is required for jscpd (JavaScript-based copy-paste detector)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -126,17 +131,14 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
-          extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
           coverage: xdebug
 
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: Run tests
-        run: composer ci:test:php:unit
-
-      - name: Generate coverage report
+      - name: Run tests with coverage
         run: XDEBUG_MODE=coverage phpunit --configuration .build/phpunit.xml --coverage-clover .build/coverage/clover.xml
 
       - name: Upload coverage to Codecov
