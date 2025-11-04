@@ -1,5 +1,13 @@
 # MagicSunday/ImageMeta
 
+![EXIF 2.1](https://img.shields.io/badge/EXIF-2.1-blue)
+![EXIF 2.2](https://img.shields.io/badge/EXIF-2.2-blue)
+![EXIF 2.21](https://img.shields.io/badge/EXIF-2.21-blue)
+![EXIF 2.3](https://img.shields.io/badge/EXIF-2.3-blue)
+![EXIF 2.31](https://img.shields.io/badge/EXIF-2.31-blue)
+![EXIF 2.32](https://img.shields.io/badge/EXIF-2.32-blue)
+![EXIF 3.0](https://img.shields.io/badge/EXIF-3.0-blue)
+
 MagicSunday/ImageMeta provides a streaming metadata parser for JPEG, HEIC and ISO Base Media File Format containers. It unifies EXIF, XMP and QuickTime sources into a common PHP domain model.
 
 ## Requirements
