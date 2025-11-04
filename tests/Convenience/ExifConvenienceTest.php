@@ -26,7 +26,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MagicSunday\ImageMeta\Convenience\ExifConvenience
+ * Tests for ExifConvenience.
  */
 #[CoversClass(ExifConvenience::class)]
 final class ExifConvenienceTest extends TestCase

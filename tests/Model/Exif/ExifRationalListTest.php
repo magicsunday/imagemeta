@@ -15,6 +15,7 @@ use InvalidArgumentException;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +26,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifRational::class)]
 final class ExifRationalListTest extends TestCase
 {
-    public function testAcceptsListOfExifRationalValues(): void
+    #[Test]
+    public function acceptsListOfExifRationalValues(): void
     {
         $values = [
             new ExifRational(1, 2),
@@ -37,7 +39,8 @@ final class ExifRationalListTest extends TestCase
         self::assertSame($values, $list->toArray());
     }
 
-    public function testRejectsNonListInput(): void
+    #[Test]
+    public function rejectsNonListInput(): void
     {
         $values = [
             'first' => new ExifRational(1, 2),
@@ -50,7 +53,8 @@ final class ExifRationalListTest extends TestCase
         new ExifRationalList($values);
     }
 
-    public function testRejectsNonExifRationalElements(): void
+    #[Test]
+    public function rejectsNonExifRationalElements(): void
     {
         $values = [
             new ExifRational(1, 2),

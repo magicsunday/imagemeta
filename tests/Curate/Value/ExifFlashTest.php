@@ -15,12 +15,11 @@ use MagicSunday\ImageMeta\Value\Enum\FlashFunction;
 use MagicSunday\ImageMeta\Value\Enum\FlashMode;
 use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 use MagicSunday\ImageMeta\Value\ExifFlash;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \MagicSunday\ImageMeta\Value\ExifFlash
- */
+#[CoversClass(ExifFlash::class)]
 final class ExifFlashTest extends TestCase
 {
     /**

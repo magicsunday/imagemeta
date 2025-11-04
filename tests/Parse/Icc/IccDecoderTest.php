@@ -26,14 +26,14 @@ use function substr;
 use function substr_replace;
 
 /**
- * @covers \MagicSunday\ImageMeta\Parse\Icc\IccDecoder
+ * ICC decoder tests.
  */
 #[CoversClass(IccDecoder::class)]
 #[UsesClass(IccRenderingIntent::class)]
 final class IccDecoderTest extends TestCase
 {
     #[Test]
-    public function testDecodeExtractsHeaderFields(): void
+    public function decodeExtractsHeaderFields(): void
     {
         $profile = IccFixtures::minimalProfile();
 
@@ -49,7 +49,7 @@ final class IccDecoderTest extends TestCase
     }
 
     #[Test]
-    public function testDecodeReassemblesSegments(): void
+    public function decodeReassemblesSegments(): void
     {
         $profile = IccFixtures::minimalProfile();
 
@@ -71,7 +71,7 @@ final class IccDecoderTest extends TestCase
     }
 
     #[Test]
-    public function testDecodeReturnsNullForTruncatedData(): void
+    public function decodeReturnsNullForTruncatedData(): void
     {
         $decoder = new IccDecoder();
 
@@ -80,7 +80,7 @@ final class IccDecoderTest extends TestCase
     }
 
     #[Test]
-    public function testDecodeHandlesOutOfOrderSegments(): void
+    public function decodeHandlesOutOfOrderSegments(): void
     {
         $profile = IccFixtures::minimalProfile();
 
@@ -99,7 +99,7 @@ final class IccDecoderTest extends TestCase
     }
 
     #[Test]
-    public function testDecodeRejectsIncompleteSegmentSequences(): void
+    public function decodeRejectsIncompleteSegmentSequences(): void
     {
         $profile = IccFixtures::minimalProfile();
 
@@ -115,7 +115,7 @@ final class IccDecoderTest extends TestCase
     }
 
     #[Test]
-    public function testDecodeExtractsLegacyVersionEncoding(): void
+    public function decodeExtractsLegacyVersionEncoding(): void
     {
         $profile = IccFixtures::minimalProfile();
         $profile = substr_replace($profile, chr(0x02), 8, 1);

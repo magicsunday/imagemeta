@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -35,9 +36,8 @@ use function unlink;
 
 /**
  * Exercises the JPEG extractor using synthetic marker segments.
- *
- * @covers \MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor
  */
+#[CoversClass(JpegExtractor::class)]
 final class JpegExtractorTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
@@ -128,7 +128,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures multiple EXIF segments larger than 64KB are collected as-is.
      */
     #[Test]
-    public function testLargeExifOver64KBIsHandled(): void
+    public function largeExifOver64KbIsHandled(): void
     {
         $firstBlob  = str_repeat('A', 40_000);
         $secondBlob = str_repeat('B', 30_000);
@@ -146,7 +146,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures duplicate XMP APP1 segments are ignored while keeping order stable.
      */
     #[Test]
-    public function testDuplicateXmpSegmentsAreDeduplicated(): void
+    public function duplicateXmpSegmentsAreDeduplicated(): void
     {
         $xmpOne   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
         $xmpTwo   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Two</x:xmpmeta>';
@@ -170,7 +170,7 @@ final class JpegExtractorTest extends TestCase
      * Confirms ICC profile fragments are reordered and merged into a single profile.
      */
     #[Test]
-    public function testIccProfileSegmentsAreMerged(): void
+    public function iccProfileSegmentsAreMerged(): void
     {
         $iccPart1        = 'icc-part-one';
         $iccPart2        = 'icc-part-two';
@@ -189,7 +189,7 @@ final class JpegExtractorTest extends TestCase
      * Confirms FlashPix APP2 segments are reordered and merged per stream identifier.
      */
     #[Test]
-    public function testFlashPixSegmentsAreMerged(): void
+    public function flashPixSegmentsAreMerged(): void
     {
         $streamId = 3;
         $partOne  = 'flashpix-part-one';
@@ -209,7 +209,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures multiple FlashPix streams are merged independently and keyed by identifier.
      */
     #[Test]
-    public function testFlashPixMultipleStreamsAreHandled(): void
+    public function flashPixMultipleStreamsAreHandled(): void
     {
         $streamOne  = self::segment(self::MARKER_APP2, $this->fpxrPayload(1, 1, 1, 'stream-one'));
         $streamTwoA = self::segment(self::MARKER_APP2, $this->fpxrPayload(2, 1, 3, 'alpha-'));
@@ -230,7 +230,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures EXIF audio APP2 segments are decoded and exposed with metadata.
      */
     #[Test]
-    public function testAudioSegmentsAreCollected(): void
+    public function audioSegmentsAreCollected(): void
     {
         $muLawData    = str_repeat("\x01\x02", 4);
         $pcmData      = pack('n*', 0x0102, 0x0304, 0x0506, 0x0708);
@@ -264,7 +264,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures unsupported sampling rates raise parse errors for audio APP2 segments.
      */
     #[Test]
-    public function testAudioSegmentWithUnsupportedSampleRateThrows(): void
+    public function audioSegmentWithUnsupportedSampleRateThrows(): void
     {
         $payload = self::segment(self::MARKER_APP2, $this->audioPayload(0, 1, 12_000, 16, str_repeat("\x00", 4)));
         $jpeg    = $this->jpeg($payload);
@@ -280,7 +280,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures μ-law APP2 segments only accept 8 kHz sampling rate.
      */
     #[Test]
-    public function testMuLawAudioSegmentWithNonEightKilohertzSampleRateThrows(): void
+    public function muLawAudioSegmentWithNonEightKilohertzSampleRateThrows(): void
     {
         $payload = self::segment(self::MARKER_APP2, $this->audioPayload(1, 1, 11_025, 8, str_repeat("\x00", 8)));
         $jpeg    = $this->jpeg($payload);
@@ -296,7 +296,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures MPF APP2 payloads are buffered across segments and decoded.
      */
     #[Test]
-    public function testMpfSegmentsAreBufferedAndParsed(): void
+    public function mpfSegmentsAreBufferedAndParsed(): void
     {
         $mpfBody = $this->buildMpfPayload();
         $split   = 24;
@@ -336,7 +336,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures MPF segments missing payload raise a parse error.
      */
     #[Test]
-    public function testMpfSegmentWithoutPayloadThrowsParseError(): void
+    public function mpfSegmentWithoutPayloadThrowsParseError(): void
     {
         $segment = self::segment(self::MARKER_APP2, self::MPF_SIGNATURE);
         $jpeg    = $this->jpeg($segment);
@@ -352,7 +352,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures inconsistent FlashPix sequence counts discard accumulated fragments.
      */
     #[Test]
-    public function testFlashPixInvalidSequenceDiscardsStream(): void
+    public function flashPixInvalidSequenceDiscardsStream(): void
     {
         $segment1 = self::segment(self::MARKER_APP2, $this->fpxrPayload(5, 1, 2, 'first'));
         $segment2 = self::segment(self::MARKER_APP2, $this->fpxrPayload(5, 2, 3, 'second'));
@@ -368,7 +368,7 @@ final class JpegExtractorTest extends TestCase
      * Ensures APP13 segments with the Photoshop signature are stored verbatim.
      */
     #[Test]
-    public function testIptcIsCollectedRaw(): void
+    public function iptcIsCollectedRaw(): void
     {
         $iptcOne = self::IPTC_SIGNATURE . 'payload-one';
         $iptcTwo = self::IPTC_SIGNATURE . 'payload-two';
@@ -467,15 +467,15 @@ final class JpegExtractorTest extends TestCase
         yield 'flashpix-short-header' => [$shortFlashPix, '/FlashPix segment/i'];
     }
 
-    #[Test]
-    #[DataProvider('provideInvalidSegments')]
     /**
      * Ensures invalid segment lengths and truncated payloads raise ParseError.
      *
      * @param string $jpeg           Binary JPEG fixture provided by the data set.
      * @param string $messagePattern Regular expression expected in the error message.
      */
-    public function testInvalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
+    #[Test]
+    #[DataProvider('provideInvalidSegments')]
+    public function invalidLengthsAndUnexpectedEoiThrowParseError(string $jpeg, string $messagePattern): void
     {
         $extractor = $this->createExtractor($jpeg);
 
@@ -489,7 +489,7 @@ final class JpegExtractorTest extends TestCase
      * Verifies scanning stops at SOS and ignores restart markers during search.
      */
     #[Test]
-    public function testStopsAtSosIgnoresRestartMarkers(): void
+    public function stopsAtSosIgnoresRestartMarkers(): void
     {
         $primaryExif = 'primary-before-sos';
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';

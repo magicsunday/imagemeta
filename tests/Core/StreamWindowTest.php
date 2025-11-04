@@ -31,7 +31,7 @@ final class StreamWindowTest extends TestCase
      * Verifies that the window reports its configured length and initial cursor position.
      */
     #[Test]
-    public function testSizeReportsConfiguredLengthAndCursorStartsAtZero(): void
+    public function sizeReportsConfiguredLengthAndCursorStartsAtZero(): void
     {
         $window = new StreamWindow($this->createStream('0123456789'), 2, 5);
 
@@ -44,7 +44,7 @@ final class StreamWindowTest extends TestCase
      * positions.
      */
     #[Test]
-    public function testSeekMovesCursorWithinWindowBounds(): void
+    public function seekMovesCursorWithinWindowBounds(): void
     {
         $window = new StreamWindow($this->createStream('abcdefghij'), 1, 6);
 
@@ -59,7 +59,7 @@ final class StreamWindowTest extends TestCase
      * Attempts to seek beyond the window size to confirm a BoundsError is thrown.
      */
     #[Test]
-    public function testSeekThrowsBoundsErrorOutsideWindow(): void
+    public function seekThrowsBoundsErrorOutsideWindow(): void
     {
         $window = new StreamWindow($this->createStream('abcdefghij'), 0, 4);
 
@@ -71,7 +71,7 @@ final class StreamWindowTest extends TestCase
      * Reads bytes through the window and checks both the returned data and cursor advancement.
      */
     #[Test]
-    public function testReadReturnsRequestedBytesAndAdvancesCursor(): void
+    public function readReturnsRequestedBytesAndAdvancesCursor(): void
     {
         $window = new StreamWindow($this->createStream('MagicSunday'), 5, 6);
 
@@ -83,7 +83,7 @@ final class StreamWindowTest extends TestCase
      * Ensures that read requests crossing the end of the window trigger a BoundsError.
      */
     #[Test]
-    public function testReadThrowsBoundsErrorWhenRequestCrossesEnd(): void
+    public function readThrowsBoundsErrorWhenRequestCrossesEnd(): void
     {
         $window = new StreamWindow($this->createStream('Meta'), 1, 2);
 
@@ -96,7 +96,7 @@ final class StreamWindowTest extends TestCase
      * advance the cursor appropriately.
      */
     #[Test]
-    public function testUnsignedIntegerHelpersReadSequentially(): void
+    public function unsignedIntegerHelpersReadSequentially(): void
     {
         $payload = pack('C', 0xAA)
             . pack('n', 0xBEEF)
@@ -116,7 +116,7 @@ final class StreamWindowTest extends TestCase
      * Confirms that insufficient remaining bytes cause the integer helper to raise a BoundsError.
      */
     #[Test]
-    public function testUnsignedIntegerHelpersThrowBoundsErrorOnShortData(): void
+    public function unsignedIntegerHelpersThrowBoundsErrorOnShortData(): void
     {
         $payload = pack('C', 0x01) . pack('n', 0x0203);
         $window  = new StreamWindow($this->createStream($payload), 0, strlen($payload));

@@ -12,13 +12,15 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MagicSunday\ImageMeta\Core\ExifCapabilities
+ * Capabilities mapping tests.
  */
+#[CoversClass(ExifCapabilities::class)]
 final class ExifCapabilitiesTest extends TestCase
 {
     #[Test]

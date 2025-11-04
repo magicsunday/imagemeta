@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Core;
 use MagicSunday\ImageMeta\Core\BitMask;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(BitMask::class)]
@@ -48,7 +49,8 @@ final class BitMaskTest extends TestCase
     }
 
     #[DataProvider('bitMaskValueProvider')]
-    public function testBitMaskConstantsMatchExpectedHexValues(string $constant, string $hex): void
+    #[Test]
+    public function bitMaskConstantsMatchExpectedHexValues(string $constant, string $hex): void
     {
         self::assertSame(
             $this->fromHex($hex),
@@ -85,7 +87,8 @@ final class BitMaskTest extends TestCase
 
     /** @param array<int, string> $bits */
     #[DataProvider('bitCombinationProvider')]
-    public function testBitCombinationsMatchExpectedMasks(string $expected, array $bits): void
+    #[Test]
+    public function bitCombinationsMatchExpectedMasks(string $expected, array $bits): void
     {
         $mask = $this->combineMasks($bits);
 
@@ -105,7 +108,8 @@ final class BitMaskTest extends TestCase
     }
 
     #[DataProvider('shiftedMaskProvider')]
-    public function testShiftedMasksMatchExpectedValue(string $source, int $shift, string $expected): void
+    #[Test]
+    public function shiftedMasksMatchExpectedValue(string $source, int $shift, string $expected): void
     {
         $shifted = $this->bitMaskValue($source) << $shift;
 
@@ -128,7 +132,8 @@ final class BitMaskTest extends TestCase
     }
 
     #[DataProvider('incrementedMaskProvider')]
-    public function testIncrementedMasksMatchExpectedValue(string $source, string $expected): void
+    #[Test]
+    public function incrementedMasksMatchExpectedValue(string $source, string $expected): void
     {
         $incremented = $this->bitMaskValue($source) + 1;
 
@@ -151,14 +156,16 @@ final class BitMaskTest extends TestCase
     }
 
     #[DataProvider('halvedMaskProvider')]
-    public function testHalvedMasksMatchExpectedValue(string $source, string $expected): void
+    #[Test]
+    public function halvedMasksMatchExpectedValue(string $source, string $expected): void
     {
         $halved = intdiv($this->bitMaskValue($source), 2);
 
         self::assertSame($halved, $this->bitMaskValue($expected));
     }
 
-    public function testInt31MaxIsSignBit32MinusOne(): void
+    #[Test]
+    public function int31MaxIsSignBit32MinusOne(): void
     {
         $decremented = $this->bitMaskValue('SIGN_BIT_32') - 1;
 

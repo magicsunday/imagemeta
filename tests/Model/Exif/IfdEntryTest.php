@@ -25,7 +25,7 @@ final class IfdEntryTest extends TestCase
      * Ensures the constructor assigns the provided scalar values to the exposed properties.
      */
     #[Test]
-    public function testConstructorAssignsScalarValues(): void
+    public function constructorAssignsScalarValues(): void
     {
         $entry = new IfdEntry(0x010F, 2, 1, 'MagicSunday');
 
@@ -39,7 +39,7 @@ final class IfdEntryTest extends TestCase
      * Verifies that complex values such as arrays are exposed unchanged.
      */
     #[Test]
-    public function testConstructorPreservesArrayValues(): void
+    public function constructorPreservesArrayValues(): void
     {
         $value = new ExifNumericList([1, 2, 3]);
 

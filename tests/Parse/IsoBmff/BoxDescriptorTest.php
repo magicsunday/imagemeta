@@ -30,7 +30,7 @@ use function strlen;
 final class BoxDescriptorTest extends TestCase
 {
     #[Test]
-    public function testConstructorAssignsValuesVerbatim(): void
+    public function constructorAssignsValuesVerbatim(): void
     {
         $window = $this->createWindow('0123456789abcdef', 4, 8);
 
@@ -54,7 +54,7 @@ final class BoxDescriptorTest extends TestCase
     }
 
     #[Test]
-    public function testDescriptorsDoNotShareStateAccidentally(): void
+    public function descriptorsDoNotShareStateAccidentally(): void
     {
         $windowA = $this->createWindow('abcdefghij', 2, 4);
         $windowB = $this->createWindow('abcdefghij', 5, 3);

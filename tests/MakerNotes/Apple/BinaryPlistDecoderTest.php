@@ -11,271 +11,380 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
-require_once __DIR__ . '/AppleDecoderKeyedArchiveTest.php';
-
-use DateTimeImmutable;
-use DateTimeZone;
-use const DATE_ATOM;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
-use function intdiv;
+use function count;
+use function iconv;
+use function implode;
 use function pack;
 use function str_repeat;
 use function strlen;
 
-/**
- * @covers \MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder
- */
+#[CoversClass(BinaryPlistDecoder::class)]
 final class BinaryPlistDecoderTest extends TestCase
 {
     #[Test]
-    public function decodeRecognisesUidValues(): void
+    public function decodeThrowsOnEmptyPayload(): void
     {
         $decoder = new BinaryPlistDecoder();
-        $plist   = $this->createBinaryPlistWithUid("\x01");
-
-        $result = $decoder->decode($plist);
-
-        self::assertInstanceOf(ApplePlistDictionary::class, $result);
-        $uid = $result->get('Uid');
-        self::assertInstanceOf(ApplePlistScalar::class, $uid);
-        self::assertSame(1, $uid->value());
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('must not be empty');
+        $decoder->decode('');
     }
 
     #[Test]
-    public function decodeReturnsStringForLargeUidValues(): void
+    public function decodeThrowsOnUnsupportedFormat(): void
     {
         $decoder = new BinaryPlistDecoder();
-        $plist   = $this->createBinaryPlistWithUid(chr(0x80) . str_repeat("\x00", 7));
-
-        $result = $decoder->decode($plist);
-
-        self::assertInstanceOf(ApplePlistDictionary::class, $result);
-        $uid = $result->get('Uid');
-        self::assertInstanceOf(ApplePlistScalar::class, $uid);
-        self::assertSame('9223372036854775808', $uid->value());
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Unsupported property list format');
+        $decoder->decode('not-a-plist');
     }
 
     #[Test]
-    public function decodeParsesNestedCollections(): void
+    public function decodeAsciiString(): void
     {
-        $encoder = new BinaryPlistEncoder();
-
-        $plist = $encoder->encode(
-            new BinaryPlistDictionaryValue([
-                'Flag'    => new BinaryPlistBoolValue(true),
-                'Name'    => new BinaryPlistStringValue('Alpha'),
-                'Numbers' => new BinaryPlistArrayValue([
-                    new BinaryPlistIntValue(1),
-                    new BinaryPlistFloatValue(2.5),
-                ]),
-                'Nested' => new BinaryPlistDictionaryValue([
-                    'Inner' => new BinaryPlistStringValue('Value'),
-                ]),
-            ])
-        );
-
         $decoder = new BinaryPlistDecoder();
-        $result  = $decoder->decode($plist);
 
-        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+        // Single ASCII string "Hi" (type=5, len=2) → marker 0x52 + payload
+        $object  = chr(0x50 | 0x02) . 'Hi';
+        $payload = $this->buildPlistWithSingleObject($object);
 
-        $flag = $result->get('Flag');
-        self::assertInstanceOf(ApplePlistScalar::class, $flag);
-        self::assertTrue($flag->isBool());
-        self::assertTrue($flag->value());
-
-        $name = $result->get('Name');
-        self::assertInstanceOf(ApplePlistScalar::class, $name);
-        self::assertSame('Alpha', $name->value());
-
-        $numbers = $result->get('Numbers');
-        self::assertInstanceOf(ApplePlistArray::class, $numbers);
-        self::assertSame(2, $numbers->count());
-
-        $firstNumber = $numbers->get(0);
-        self::assertInstanceOf(ApplePlistScalar::class, $firstNumber);
-        self::assertTrue($firstNumber->isInt());
-        self::assertSame(1, $firstNumber->value());
-
-        $secondNumber = $numbers->get(1);
-        self::assertInstanceOf(ApplePlistScalar::class, $secondNumber);
-        self::assertTrue($secondNumber->isFloat());
-        self::assertEqualsWithDelta(2.5, $secondNumber->asFloat(), 0.000001);
-
-        $nested = $result->get('Nested');
-        self::assertInstanceOf(ApplePlistDictionary::class, $nested);
-        $inner = $nested->get('Inner');
-        self::assertInstanceOf(ApplePlistScalar::class, $inner);
-        self::assertSame('Value', $inner->value());
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame('Hi', $result->value());
     }
 
     #[Test]
-    public function decodeParsesDateValues(): void
+    public function decodeInteger(): void
     {
         $decoder = new BinaryPlistDecoder();
-        $date    = new DateTimeImmutable('2024-05-18 10:20:30.123456', new DateTimeZone('UTC'));
-        $plist   = $this->createBinaryPlistWithDate($date);
 
-        $result = $decoder->decode($plist);
+        // Integer 42 with 1-byte payload: marker 0x10 + payload 0x2A
+        $object  = chr(0x10) . chr(0x2A);
+        $payload = $this->buildPlistWithSingleObject($object);
 
-        self::assertInstanceOf(ApplePlistDictionary::class, $result);
-        $value = $result->get('Date');
-        self::assertInstanceOf(ApplePlistScalar::class, $value);
-        self::assertSame(
-            $date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\\TH:i:sp'),
-            $value->value()
-        );
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame(42, $result->value());
     }
 
     #[Test]
-    public function decodeNormalisesDateWithoutFraction(): void
+    public function decodeDateEpoch(): void
     {
         $decoder = new BinaryPlistDecoder();
-        $date    = new DateTimeImmutable('2024-05-18 10:20:30', new DateTimeZone('UTC'));
-        $plist   = $this->createBinaryPlistWithDate($date);
 
-        $result = $decoder->decode($plist);
+        // Date mit 8-Byte double Sekunden seit 2001-01-01, hier 0.0
+        $object  = chr(0x30 | 0x03) . pack('E', 0.0); // marker 0x33
+        $payload = $this->buildPlistWithSingleObject($object);
 
-        self::assertInstanceOf(ApplePlistDictionary::class, $result);
-        $value = $result->get('Date');
-        self::assertInstanceOf(ApplePlistScalar::class, $value);
-        self::assertSame(
-            $date->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d\TH:i:sp'),
-            $value->value()
-        );
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        // Keine Mikrosekunden in der Ausgabe bei .000000
+        self::assertSame('2001-01-01T00:00:00+00:00', $result->value());
     }
 
     #[Test]
-    public function decodeParsesUtf8Strings(): void
+    public function decodeDateNonZeroSeconds(): void
     {
         $decoder = new BinaryPlistDecoder();
-        $utf8    = 'Grüße';
-        $plist   = $this->createBinaryPlistWithUtf8($utf8);
 
-        $result = $decoder->decode($plist);
+        // +60.0 Sekunden nach 2001-01-01T00:00:00Z -> 00:01:00 (ohne Mikrosekunden)
+        $object  = chr(0x30 | 0x03) . pack('E', 60.0);
+        $payload = $this->buildPlistWithSingleObject($object);
 
-        self::assertInstanceOf(ApplePlistDictionary::class, $result);
-        $value = $result->get('Utf8');
-        self::assertInstanceOf(ApplePlistScalar::class, $value);
-        self::assertSame($utf8, $value->value());
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame('2001-01-01T00:01:00+00:00', $result->value());
     }
 
-    private function createBinaryPlistWithDate(DateTimeImmutable $date): string
+    #[Test]
+    public function decodeDateNegativeSeconds(): void
     {
-        $header = 'bplist00';
+        $decoder = new BinaryPlistDecoder();
 
-        $key       = 'Date';
-        $keyMarker = chr(0x50 | strlen($key));
-        $keyObject = $keyMarker . $key;
+        // -60.0 Sekunden relativ zu 2001-01-01T00:00:00Z => 2000-12-31T23:59:00Z
+        $object  = chr(0x30 | 0x03) . pack('E', -60.0);
+        $payload = $this->buildPlistWithSingleObject($object);
 
-        $utcDate   = $date->setTimezone(new DateTimeZone('UTC'));
-        $reference = new DateTimeImmutable('2001-01-01 00:00:00', new DateTimeZone('UTC'));
-        $seconds   = (float) $utcDate->format('U.u') - (float) $reference->format('U.u');
-        $dateObject = chr(0x30 | 0x03) . pack('E', $seconds);
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame('2000-12-31T23:59:00+00:00', $result->value());
+    }
 
-        $dictionaryObject = "\xD1\x00\x01";
+    #[Test]
+    public function decodeDateSubSecondAfterEpoch(): void
+    {
+        $decoder = new BinaryPlistDecoder();
 
-        $offsetKey        = strlen($header);
-        $offsetDate       = $offsetKey + strlen($keyObject);
-        $offsetDictionary = $offsetDate + strlen($dateObject);
-        $offsetTableStart = $offsetDictionary + strlen($dictionaryObject);
+        // +0.5 Sekunden nach 2001-01-01T00:00:00Z -> 00:00:00.500000 (Mikrosekunden bleiben erhalten)
+        $object  = chr(0x30 | 0x03) . pack('E', 0.5);
+        $payload = $this->buildPlistWithSingleObject($object);
 
-        $offsetTable = pack('C*', $offsetKey, $offsetDate, $offsetDictionary);
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame('2001-01-01T00:00:00.500000+00:00', $result->value());
+    }
 
+    #[Test]
+    public function decodeDateSubSecondBeforeEpoch(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        // -0.5 Sekunden vor 2001-01-01T00:00:00Z -> 2000-12-31T23:59:59.500000 (Mikrosekunden bleiben erhalten)
+        $object  = chr(0x30 | 0x03) . pack('E', -0.5);
+        $payload = $this->buildPlistWithSingleObject($object);
+
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame('2000-12-31T23:59:59.500000+00:00', $result->value());
+    }
+
+    #[Test]
+    public function decodeUnicodeString(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        // Unicode string "Ä" (U+00C4) in UTF-16BE => 0x00 0xC4, length (chars) = 1
+        $utf16   = iconv('UTF-8', 'UTF-16BE', 'Ä');
+        $object  = chr(0x60 | 0x01) . $utf16;
+        $payload = $this->buildPlistWithSingleObject($object);
+
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame('Ä', $result->value());
+    }
+
+    #[Test]
+    public function decodeUidLargerThanPhpIntSize(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        // 9-byte UID: 0x01 00 00 00 00 00 00 00 00  => 2^64 = 18446744073709551616
+        $uidBytes = "\x01" . str_repeat("\x00", 8);
+        $marker   = 0x80 | (9 - 1); // size-1 in info nibble
+        $object   = chr($marker) . $uidBytes;
+
+        $payload = $this->buildPlistWithSingleObject($object);
+        $result  = $decoder->decode($payload);
+
+        self::assertInstanceOf(ApplePlistScalar::class, $result);
+        self::assertSame('18446744073709551616', $result->value());
+    }
+
+    #[Test]
+    public function decodeArrayOfValues(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        // Objects:
+        // 0: Array [ ref 1, ref 2 ]
+        // 1: Integer 1
+        // 2: ASCII "Hi"
+        $int1  = chr(0x10) . chr(0x01);
+        $ascii = chr(0x50 | 0x02) . 'Hi';
+        $array = $this->buildArrayObject([1, 2], 1); // objectRefSize=1
+
+        $payload = $this->buildPlistWithObjects([$array, $int1, $ascii], 0);
+
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistArray::class, $result);
+
+        $values = $result->values();
+        self::assertCount(2, $values);
+
+        self::assertInstanceOf(ApplePlistScalar::class, $values[0]);
+        self::assertSame(1, $values[0]->value());
+
+        self::assertInstanceOf(ApplePlistScalar::class, $values[1]);
+        self::assertSame('Hi', $values[1]->value());
+    }
+
+    #[Test]
+    public function decodeDictionaryWithTwoEntries(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        // Objects:
+        // 0: Dict { "A": 1, "B": 2 }
+        // 1: Key "A"
+        // 2: Key "B"
+        // 3: Int 1
+        // 4: Int 2
+        $keyA = chr(0x50 | 0x01) . 'A';
+        $keyB = chr(0x50 | 0x01) . 'B';
+        $int1 = chr(0x10) . chr(0x01);
+        $int2 = chr(0x10) . chr(0x02);
+        $dict = $this->buildDictionaryObject([1, 2], [3, 4], 1); // objectRefSize=1
+
+        $payload = $this->buildPlistWithObjects([$dict, $keyA, $keyB, $int1, $int2], 0);
+
+        $result = $decoder->decode($payload);
+        self::assertInstanceOf(ApplePlistDictionary::class, $result);
+
+        $map = $result->entries();
+        self::assertArrayHasKey('A', $map);
+        self::assertArrayHasKey('B', $map);
+
+        self::assertInstanceOf(ApplePlistScalar::class, $map['A']);
+        self::assertSame(1, $map['A']->value());
+
+        self::assertInstanceOf(ApplePlistScalar::class, $map['B']);
+        self::assertSame(2, $map['B']->value());
+    }
+
+    // -------------------------
+    // Helpers to build test plists
+    // -------------------------
+
+    /**
+     * Build a minimal valid binary plist with exactly one object as top-level.
+     * The single offset table entry points to the object right after the header.
+     *
+     * Layout:
+     *   [0..7]   header ("bplist00")
+     *   [8..x]   single object bytes
+     *   [x+1]    offset table (1 byte)
+     *   [tail]   32-byte trailer
+     *
+     * @param string $objectBytes The serialized object bytes.
+     *
+     * @return string
+     */
+    private function buildPlistWithSingleObject(string $objectBytes): string
+    {
+        $header        = 'bplist00';
+        $objectOffset  = strlen($header);                  // always 8
+        $offsetTblPos  = $objectOffset + strlen($objectBytes);
+        $offsetIntSize = 1;                                 // 1 byte offsets
+        $objectRefSize = 1;                                 // 1 byte refs
+        $numObjects    = 1;
+        $topObjectIdx  = 0;
+
+        // Offset table with one entry: start of object (8)
+        $offsetTable = chr($objectOffset);
+
+        // Trailer (32 bytes)
         $trailer = str_repeat("\x00", 6)
-            . "\x01"
-            . "\x01"
-            . $this->packUint64(3)
-            . $this->packUint64(2)
-            . $this->packUint64($offsetTableStart);
+            . chr($offsetIntSize)
+            . chr($objectRefSize)
+            . $this->packUint64BE($numObjects)
+            . $this->packUint64BE($topObjectIdx)
+            . $this->packUint64BE($offsetTblPos);
 
-        return $header . $keyObject . $dateObject . $dictionaryObject . $offsetTable . $trailer;
+        return $header . $objectBytes . $offsetTable . $trailer;
     }
 
-    private function createBinaryPlistWithUtf8(string $value): string
+    /**
+     * Build a plist with multiple objects; offsets are computed sequentially.
+     *
+     * @param array<int,string> $objects  Object bytes in object-index order.
+     * @param int               $topIndex Index of the top-level object.
+     *
+     * @return string
+     */
+    private function buildPlistWithObjects(array $objects, int $topIndex): string
     {
         $header = 'bplist00';
 
-        $key       = 'Utf8';
-        $keyMarker = chr(0x50 | strlen($key));
-        $keyObject = $keyMarker . $key;
-
-        $length = strlen($value);
-        if ($length > 0x0F) {
-            self::fail('Test fixture generator does not support UTF-8 payloads larger than 15 bytes.');
+        $offsets = [];
+        $cursor  = strlen($header);
+        foreach ($objects as $bytes) {
+            $offsets[] = $cursor;
+            $cursor += strlen($bytes);
         }
 
-        $valueMarker = chr(0x70 | $length);
-        $valueObject = $valueMarker . $value;
+        $offsetTableStart = $cursor;
 
-        $dictionaryObject = "\xD1\x00\x01";
+        // We only need 1-byte offsets for these tiny payloads.
+        $offsetIntSize = 1;
+        $objectRefSize = 1;
+        $numObjects    = count($objects);
 
-        $offsetKey        = strlen($header);
-        $offsetValue      = $offsetKey + strlen($keyObject);
-        $offsetDictionary = $offsetValue + strlen($valueObject);
-        $offsetTableStart = $offsetDictionary + strlen($dictionaryObject);
-
-        $offsetTable = pack('C*', $offsetKey, $offsetValue, $offsetDictionary);
-
-        $trailer = str_repeat("\x00", 6)
-            . "\x01"
-            . "\x01"
-            . $this->packUint64(3)
-            . $this->packUint64(2)
-            . $this->packUint64($offsetTableStart);
-
-        return $header . $keyObject . $valueObject . $dictionaryObject . $offsetTable . $trailer;
-    }
-
-    private function createBinaryPlistWithUid(string $uidBytes): string
-    {
-        $header = 'bplist00';
-
-        $key       = 'Uid';
-        $keyMarker = chr(0x50 | strlen($key));
-        $keyObject = $keyMarker . $key;
-
-        $uidLength = strlen($uidBytes);
-        self::assertGreaterThan(0, $uidLength);
-
-        if ($uidLength > 0x0F) {
-            self::fail('Test fixture generator does not support UID payloads larger than 15 bytes.');
+        $offsetTable = '';
+        foreach ($offsets as $off) {
+            // Tests are designed to keep offsets < 256
+            $offsetTable .= chr($off);
         }
 
-        $uidMarker = chr(0x80 | ($uidLength - 1));
-        $uidObject = $uidMarker . $uidBytes;
-
-        $dictionaryObject = "\xD1\x00\x01";
-
-        $offsetKey        = strlen($header);
-        $offsetUid        = $offsetKey + strlen($keyObject);
-        $offsetDictionary = $offsetUid + strlen($uidObject);
-        $offsetTableStart = $offsetDictionary + strlen($dictionaryObject);
-
-        $offsetTable = pack('C*', $offsetKey, $offsetUid, $offsetDictionary);
-
         $trailer = str_repeat("\x00", 6)
-            . "\x01"
-            . "\x01"
-            . $this->packUint64(3)
-            . $this->packUint64(2)
-            . $this->packUint64($offsetTableStart);
+            . chr($offsetIntSize)
+            . chr($objectRefSize)
+            . $this->packUint64BE($numObjects)
+            . $this->packUint64BE($topIndex)
+            . $this->packUint64BE($offsetTableStart);
 
-        return $header . $keyObject . $uidObject . $dictionaryObject . $offsetTable . $trailer;
+        return $header . implode('', $objects) . $offsetTable . $trailer;
     }
 
-    private function packUint64(int $value): string
+    /**
+     * Build an Array object with inline count (<= 15) and 1-byte references.
+     *
+     * @param list<int> $refIndices    Object indices referenced by the array.
+     * @param int       $objectRefSize Expected size of each reference in bytes (tests use 1).
+     *
+     * @return string
+     */
+    private function buildArrayObject(array $refIndices, int $objectRefSize = 1): string
     {
-        $high = intdiv($value, 0x100000000);
-        $low  = $value % 0x100000000;
+        $count  = count($refIndices);
+        $marker = 0xA0 | $count;
+        $bytes  = chr($marker);
 
-        return pack('N2', $high, $low);
+        foreach ($refIndices as $idx) {
+            $bytes .= chr($idx); // objectRefSize == 1 in tests
+        }
+
+        return $bytes;
+    }
+
+    /**
+     * Build a Dictionary object with inline count (<= 15) and 1-byte references.
+     * Layout after marker: [keyRefs...][valueRefs...].
+     *
+     * @param list<int> $keyRefIndices
+     * @param list<int> $valueRefIndices
+     * @param int       $objectRefSize
+     *
+     * @return string
+     */
+    private function buildDictionaryObject(array $keyRefIndices, array $valueRefIndices, int $objectRefSize = 1): string
+    {
+        $count  = count($keyRefIndices);
+        $marker = 0xD0 | $count;
+        $bytes  = chr($marker);
+
+        foreach ($keyRefIndices as $idx) {
+            $bytes .= chr($idx);
+        }
+
+        foreach ($valueRefIndices as $idx) {
+            $bytes .= chr($idx);
+        }
+
+        return $bytes;
+    }
+
+    /**
+     * Pack an unsigned 64-bit integer (big-endian) using portable formats.
+     *
+     * @param int $value
+     *
+     * @return string
+     */
+    private function packUint64BE(int $value): string
+    {
+        $high = ($value >> 32) & 0xFFFFFFFF;
+        $low  = $value & 0xFFFFFFFF;
+
+        return pack('NN', $high, $low);
     }
 }

@@ -27,7 +27,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MagicSunday\ImageMeta\Convenience\CaptureDateResolver
+ * Tests for CaptureDateResolver.
  */
 #[CoversClass(CaptureDateResolver::class)]
 #[UsesClass(Metadata::class)]

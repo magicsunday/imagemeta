@@ -26,26 +26,28 @@ use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \MagicSunday\ImageMeta\Value\Enum\Compression
- * @covers \MagicSunday\ImageMeta\Value\Enum\Photometric
- * @covers \MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration
- * @covers \MagicSunday\ImageMeta\Value\Enum\ResolutionUnit
- * @covers \MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning
- * @covers \MagicSunday\ImageMeta\Value\Enum\ExposureMode
- * @covers \MagicSunday\ImageMeta\Value\Enum\GainControl
- * @covers \MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange
- * @covers \MagicSunday\ImageMeta\Value\Enum\FileSource
- * @covers \MagicSunday\ImageMeta\Value\Enum\SensingMethod
- * @covers \MagicSunday\ImageMeta\Value\Enum\CompositeImage
- * @covers \MagicSunday\ImageMeta\Value\Enum\LightSource
- * @covers \MagicSunday\ImageMeta\Value\Enum\Orientation
- * @covers \MagicSunday\ImageMeta\Value\Enum\MeteringMode
- * @covers \MagicSunday\ImageMeta\Value\Enum\SceneCaptureType
+ * Enum mapping tests.
  */
+#[CoversClass(Compression::class)]
+#[CoversClass(Photometric::class)]
+#[CoversClass(PlanarConfiguration::class)]
+#[CoversClass(ResolutionUnit::class)]
+#[CoversClass(YCbCrPositioning::class)]
+#[CoversClass(ExposureMode::class)]
+#[CoversClass(GainControl::class)]
+#[CoversClass(SubjectDistanceRange::class)]
+#[CoversClass(FileSource::class)]
+#[CoversClass(SensingMethod::class)]
+#[CoversClass(CompositeImage::class)]
+#[CoversClass(LightSource::class)]
+#[CoversClass(Orientation::class)]
+#[CoversClass(MeteringMode::class)]
+#[CoversClass(SceneCaptureType::class)]
 final class EnumMappingTest extends TestCase
 {
     /**

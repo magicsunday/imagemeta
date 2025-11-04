@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -20,9 +21,8 @@ use function strlen;
 
 /**
  * Validates the Sony maker notes decoder implementation.
- *
- * @covers \MagicSunday\ImageMeta\MakerNotes\SonyDecoder
  */
+#[CoversClass(SonyDecoder::class)]
 final class SonyDecoderTest extends TestCase
 {
     /**

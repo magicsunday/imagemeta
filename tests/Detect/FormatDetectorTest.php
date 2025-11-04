@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -26,9 +27,8 @@ use function strlen;
 
 /**
  * Validates format detection based on common signature bytes.
- *
- * @covers \MagicSunday\ImageMeta\Detect\FormatDetector
  */
+#[CoversClass(FormatDetector::class)]
 final class FormatDetectorTest extends TestCase
 {
     /**

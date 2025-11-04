@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
@@ -21,7 +22,8 @@ use ReflectionClass;
  */
 final class SemanticStyleTest extends TestCase
 {
-    public function testFromQuickTimeParsesModernStructure(): void
+    #[Test]
+    public function fromQuickTimeParsesModernStructure(): void
     {
         $meta = $this->quickTimeMeta([
             '_0' => 'Vivid',
@@ -32,7 +34,8 @@ final class SemanticStyleTest extends TestCase
         self::assertSame(['Vivid', 0.15, 0.25], SemanticStyle::fromQuickTime($meta));
     }
 
-    public function testFromDictionaryParsesLegacyStructure(): void
+    #[Test]
+    public function fromDictionaryParsesLegacyStructure(): void
     {
         $dictionary = [
             'SemanticStyle' => [
@@ -47,14 +50,16 @@ final class SemanticStyleTest extends TestCase
         self::assertSame(['Warm', 0.5, 0.75], SemanticStyle::fromDictionary($dictionary));
     }
 
-    public function testFromValueNormalisesDeeplyNestedStructure(): void
+    #[Test]
+    public function fromValueNormalisesDeeplyNestedStructure(): void
     {
         $payload = $this->nestedSemanticStylePayload();
 
         self::assertSame(['Cinematic', 0.45, 0.67], SemanticStyle::fromValue($payload));
     }
 
-    public function testFromValueReturnsNullWhenNoComponents(): void
+    #[Test]
+    public function fromValueReturnsNullWhenNoComponents(): void
     {
         self::assertNull(SemanticStyle::fromValue(['values' => []]));
     }

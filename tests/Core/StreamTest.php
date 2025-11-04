@@ -30,7 +30,7 @@ final class StreamTest extends TestCase
      * Ensures sequential big-endian integer reads advance the cursor as expected.
      */
     #[Test]
-    public function testReadsUnsignedIntegersSequentially(): void
+    public function readsUnsignedIntegersSequentially(): void
     {
         $payload = pack('n', 0xBEEF)
             . pack('N', 0x10203040)
@@ -51,7 +51,7 @@ final class StreamTest extends TestCase
      * Verifies chunked reads return the requested bytes and update the position.
      */
     #[Test]
-    public function testReadReturnsRequestedBytesAndAdvancesCursor(): void
+    public function readReturnsRequestedBytesAndAdvancesCursor(): void
     {
         $payload = 'MagicSunday';
 
@@ -71,7 +71,7 @@ final class StreamTest extends TestCase
      * Checks that requesting bytes past the end raises a BoundsError exception.
      */
     #[Test]
-    public function testReadThrowsBoundsErrorWhenRequestCrossesEnd(): void
+    public function readThrowsBoundsErrorWhenRequestCrossesEnd(): void
     {
         $payload = 'Image';
 
@@ -87,7 +87,7 @@ final class StreamTest extends TestCase
      * Asserts seeking beyond the declared length triggers a BoundsError exception.
      */
     #[Test]
-    public function testSeekThrowsBoundsErrorWhenOffsetIsOutsideStream(): void
+    public function seekThrowsBoundsErrorWhenOffsetIsOutsideStream(): void
     {
         $payload = 'Meta';
 

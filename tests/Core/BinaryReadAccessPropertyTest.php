@@ -35,7 +35,7 @@ final class BinaryReadAccessPropertyTest extends TestCase
     use CreatesTempStream;
 
     #[Test]
-    public function testMemoryBufferAndStreamBehaveIdenticallyForRandomPayloads(): void
+    public function memoryBufferAndStreamBehaveIdenticallyForRandomPayloads(): void
     {
         for ($iteration = 0; $iteration < 25; ++$iteration) {
             $length  = random_int(64, 256);
@@ -52,7 +52,7 @@ final class BinaryReadAccessPropertyTest extends TestCase
     }
 
     #[Test]
-    public function testStreamWindowMatchesBufferViewForRandomSlices(): void
+    public function streamWindowMatchesBufferViewForRandomSlices(): void
     {
         for ($iteration = 0; $iteration < 25; ++$iteration) {
             $length  = random_int(128, 256);

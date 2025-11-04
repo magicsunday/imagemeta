@@ -33,7 +33,7 @@ final class ParseErrorTest extends TestCase
      * Declares a stream size larger than the written payload to force a short read ParseError.
      */
     #[Test]
-    public function testStreamReadThrowsParseErrorOnShortRead(): void
+    public function streamReadThrowsParseErrorOnShortRead(): void
     {
         $stream = new Stream($this->createTempStream('A'), 2);
 
@@ -47,7 +47,7 @@ final class ParseErrorTest extends TestCase
      * Attempts to open a non-existent file path using Stream::fromPath to verify the error message.
      */
     #[Test]
-    public function testStreamFromPathThrowsParseErrorWhenFileMissing(): void
+    public function streamFromPathThrowsParseErrorWhenFileMissing(): void
     {
         $path = sys_get_temp_dir() . '/imagemeta-missing-' . uniqid('', true);
 

@@ -30,7 +30,7 @@ final class BoundsErrorTest extends TestCase
      * Attempts to read beyond the declared stream length to ensure the guard throws a descriptive BoundsError.
      */
     #[Test]
-    public function testStreamReadBeyondEndReportsContextInBoundsError(): void
+    public function streamReadBeyondEndReportsContextInBoundsError(): void
     {
         $payload = 'meta';
 
@@ -48,7 +48,7 @@ final class BoundsErrorTest extends TestCase
      * Seeks outside the memory buffer to verify the resulting BoundsError contains the attempted offset.
      */
     #[Test]
-    public function testMemoryBufferSeekOutsideRangeReportsAttemptedOffset(): void
+    public function memoryBufferSeekOutsideRangeReportsAttemptedOffset(): void
     {
         $buffer = new MemoryBuffer('guard');
 

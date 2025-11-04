@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Value\File as FileValue;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\Rights;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -42,9 +43,8 @@ use function unlink;
 
 /**
  * Integration coverage for the convenience metadata reader.
- *
- * @covers \MagicSunday\ImageMeta\MetadataReader
  */
+#[CoversClass(MetadataReader::class)]
 final class MetadataReaderTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
@@ -57,7 +57,7 @@ final class MetadataReaderTest extends TestCase
      * Ensures JPEG detection extracts EXIF and XMP payloads with parsed documents.
      */
     #[Test]
-    public function testReadJpegPopulatesMetadata(): void
+    public function readJpegPopulatesMetadata(): void
     {
         $makerNote = 'synthetic-nikon-maker-note';
         $tiff      = $this->littleEndianTiffWithMakerNote('Nikon Corporation', 'Z 9', $makerNote);
@@ -139,7 +139,7 @@ final class MetadataReaderTest extends TestCase
      * Ensures optional digest calculation provides SHA-1 and MD5 for JPEG payloads.
      */
     #[Test]
-    public function testReadJpegWithDigestsPopulatesChecksums(): void
+    public function readJpegWithDigestsPopulatesChecksums(): void
     {
         $makerNote = 'digest-maker-note';
         $tiff      = $this->littleEndianTiffWithMakerNote('Canon', 'EOS R6', $makerNote);
@@ -171,7 +171,7 @@ final class MetadataReaderTest extends TestCase
      * Ensures the structured image aggregate falls back to the SOF precision when EXIF lacks the tag.
      */
     #[Test]
-    public function testStructuredImageBitsPerSampleFallbacksToFramePrecision(): void
+    public function structuredImageBitsPerSampleFallbacksToFramePrecision(): void
     {
         $sofPayload = $this->buildBaselineStartOfFramePayload(8, 672, 448);
 
@@ -200,7 +200,7 @@ final class MetadataReaderTest extends TestCase
      * Ensures ISO BMFF detection populates EXIF/XMP blobs and QuickTime metadata.
      */
     #[Test]
-    public function testReadIsoBmffPopulatesMetadata(): void
+    public function readIsoBmffPopulatesMetadata(): void
     {
         $makerNote = 'synthetic-sony-maker-note';
         $tiff      = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote);
@@ -239,7 +239,7 @@ final class MetadataReaderTest extends TestCase
     }
 
     #[Test]
-    public function testDeduplicatesXmpPacketsByHash(): void
+    public function deduplicatesXmpPacketsByHash(): void
     {
         $xmp = '<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" /></x:xmpmeta>';
 

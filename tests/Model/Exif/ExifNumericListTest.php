@@ -15,6 +15,7 @@ use InvalidArgumentException;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
@@ -25,7 +26,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(UInt64::class)]
 final class ExifNumericListTest extends TestCase
 {
-    public function testAcceptsListOfNumericValues(): void
+    #[Test]
+    public function acceptsListOfNumericValues(): void
     {
         $values = [
             1,
@@ -38,7 +40,8 @@ final class ExifNumericListTest extends TestCase
         self::assertSame($values, $list->toArray());
     }
 
-    public function testRejectsNonListInput(): void
+    #[Test]
+    public function rejectsNonListInput(): void
     {
         $values = [
             'first' => 1,
@@ -51,7 +54,8 @@ final class ExifNumericListTest extends TestCase
         new ExifNumericList($values);
     }
 
-    public function testRejectsUnsupportedComponents(): void
+    #[Test]
+    public function rejectsUnsupportedComponents(): void
     {
         $values = [
             1,

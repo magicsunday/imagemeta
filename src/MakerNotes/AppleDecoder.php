@@ -46,9 +46,9 @@ use function preg_split;
 use function sha1;
 use function sort;
 use function str_contains;
-use function strpos;
 use function str_starts_with;
 use function strlen;
+use function strpos;
 use function strtolower;
 use function substr;
 use function trim;
@@ -592,12 +592,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         if ($value instanceof ApplePlistDictionary) {
-            $result = array_map(
+            return array_map(
                 $this->plistValueToPhp(...),
                 $value->entries()
             );
-
-            return $result;
         }
 
         throw new ParseError('Unsupported property list value.');
@@ -1124,11 +1122,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
 
             $rational = $this->normaliseRationalFloat($normalized);
-            if ($rational !== null) {
-                return $rational;
-            }
 
-            return null;
+            return $rational;
         }
 
         if (is_array($value)) {

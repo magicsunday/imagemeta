@@ -31,7 +31,7 @@ final class XmpDocumentTest extends TestCase
      * Verifies parser-sourced documents expose their values through accessors.
      */
     #[Test]
-    public function testDocumentAccessorsWithRdfFragment(): void
+    public function documentAccessorsWithRdfFragment(): void
     {
         $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -64,7 +64,7 @@ XML;
      * Checks parser-generated documents return the expected accessor values.
      */
     #[Test]
-    public function testDocumentAccessorsWithParserData(): void
+    public function documentAccessorsWithParserData(): void
     {
         $xml = <<<XML
 <x:xmpmeta xmlns:x="adobe:ns:meta/"
@@ -99,7 +99,7 @@ XML;
      * Ensures external entity bag entries are ignored to avoid unsafe values.
      */
     #[Test]
-    public function testExternalEntityBagIsIgnored(): void
+    public function externalEntityBagIsIgnored(): void
     {
         $xml = <<<XML
 <!DOCTYPE rdf:RDF [
@@ -132,7 +132,7 @@ XML;
      * Multiple occurrences of identical properties are returned as ordered lists.
      */
     #[Test]
-    public function testDocumentMergesRepeatedValues(): void
+    public function documentMergesRepeatedValues(): void
     {
         $xml = <<<XML
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

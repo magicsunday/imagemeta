@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Curate;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -58,6 +60,7 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\GpsCoordinate;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use MagicSunday\ImageMeta\Value\RunTime;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -67,10 +70,11 @@ use function pack;
 use function str_repeat;
 
 /**
- * @covers \MagicSunday\ImageMeta\Curate\ExifAssembler
- * @covers \MagicSunday\ImageMeta\Curate\StructuredMetadata
- * @covers \MagicSunday\ImageMeta\Curate\Exif\ValueFactory
+ * Curates EXIF and related metadata into structured value objects.
  */
+#[CoversClass(ExifAssembler::class)]
+#[CoversClass(StructuredMetadata::class)]
+#[CoversClass(ValueFactory::class)]
 final class ExifAssemblerTest extends TestCase
 {
     /**

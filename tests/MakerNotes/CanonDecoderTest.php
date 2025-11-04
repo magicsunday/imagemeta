@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -20,9 +21,8 @@ use function strlen;
 
 /**
  * Validates the Canon maker notes decoder implementation.
- *
- * @covers \MagicSunday\ImageMeta\MakerNotes\CanonDecoder
  */
+#[CoversClass(CanonDecoder::class)]
 final class CanonDecoderTest extends TestCase
 {
     /**

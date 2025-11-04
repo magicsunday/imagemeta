@@ -13,11 +13,13 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 final class QuickTimeLookupTest extends TestCase
 {
-    public function testStringReturnsFirstNonEmptyCandidate(): void
+    #[Test]
+    public function stringReturnsFirstNonEmptyCandidate(): void
     {
         $meta = new QuickTimeMeta([
             'Primary'   => '',
@@ -29,7 +31,8 @@ final class QuickTimeLookupTest extends TestCase
         self::assertSame('value', $lookup->string('Primary', 'Secondary'));
     }
 
-    public function testStringReturnsNullWhenCandidatesAreEmpty(): void
+    #[Test]
+    public function stringReturnsNullWhenCandidatesAreEmpty(): void
     {
         $meta = new QuickTimeMeta([
             'Primary'   => '',
@@ -41,7 +44,8 @@ final class QuickTimeLookupTest extends TestCase
         self::assertNull($lookup->string('Primary', 'Secondary'));
     }
 
-    public function testFloatFallsBackToNumericString(): void
+    #[Test]
+    public function floatFallsBackToNumericString(): void
     {
         $meta = new QuickTimeMeta([
             'First'  => 'not-a-number',
@@ -53,14 +57,16 @@ final class QuickTimeLookupTest extends TestCase
         self::assertSame(42.5, $lookup->float('First', 'Second'));
     }
 
-    public function testIntReturnsNullWhenMissing(): void
+    #[Test]
+    public function intReturnsNullWhenMissing(): void
     {
         $lookup = new QuickTimeLookup(null);
 
         self::assertNull($lookup->int('Missing'));
     }
 
-    public function testBoolReturnsFirstResolvableValue(): void
+    #[Test]
+    public function boolReturnsFirstResolvableValue(): void
     {
         $meta = new QuickTimeMeta([
             'Primary'   => 'false',

@@ -14,13 +14,15 @@ namespace MagicSunday\ImageMeta\Tests\Spec;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 use ReflectionMethod;
 
 final class ExifCoverageTest extends TestCase
 {
-    public function testCoverageMapMatchesImplementation(): void
+    #[Test]
+    public function coverageMapMatchesImplementation(): void
     {
         $map = $this->loadCoverageMap(__DIR__ . '/../../resources/exif-map.yaml');
         self::assertNotSame([], $map, 'Coverage map must not be empty.');

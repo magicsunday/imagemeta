@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\Value\RunTime;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -27,9 +28,8 @@ use function strlen;
 
 /**
  * Validates the Apple maker notes decoder implementation.
- *
- * @covers \MagicSunday\ImageMeta\MakerNotes\AppleDecoder
  */
+#[CoversClass(AppleDecoder::class)]
 final class AppleDecoderTest extends TestCase
 {
     /**

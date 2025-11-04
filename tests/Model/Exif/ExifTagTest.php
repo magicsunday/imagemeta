@@ -13,19 +13,18 @@ namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
-/**
- * @covers \MagicSunday\ImageMeta\Model\Exif\ExifTag
- */
 #[CoversClass(ExifTag::class)]
 final class ExifTagTest extends TestCase
 {
     /**
      * Ensures the constant map matches the EXIF 3.0 tag registry with legacy additions.
      */
-    public function testConstantsMatchExif30(): void
+    #[Test]
+    public function constantsMatchExif30(): void
     {
         $expected = [
             // GPS sub IFD
@@ -292,7 +291,8 @@ final class ExifTagTest extends TestCase
     /**
      * Ensures the legacy HostComputer tag remains available for EXIF 2.x images.
      */
-    public function testHostComputerConstantIsRetained(): void
+    #[Test]
+    public function hostComputerConstantIsRetained(): void
     {
         $constants = (new ReflectionClass(ExifTag::class))->getConstants();
 
@@ -302,7 +302,8 @@ final class ExifTagTest extends TestCase
     /**
      * Ensures the TIFF subfile type identifiers match the registry values.
      */
-    public function testSubfileTypeConstantsMatchSpecification(): void
+    #[Test]
+    public function subfileTypeConstantsMatchSpecification(): void
     {
         $constants = (new ReflectionClass(ExifTag::class))->getConstants();
 
@@ -313,7 +314,8 @@ final class ExifTagTest extends TestCase
     /**
      * Ensures the ModifyDate alias shares the DateTime identifier.
      */
-    public function testModifyDateAliasMatchesDateTime(): void
+    #[Test]
+    public function modifyDateAliasMatchesDateTime(): void
     {
         $constants = (new ReflectionClass(ExifTag::class))->getConstants();
 
@@ -326,7 +328,8 @@ final class ExifTagTest extends TestCase
     /**
      * Ensures the ISO Speed Ratings alias shares the PhotographicSensitivity identifier.
      */
-    public function testIsoSpeedRatingsLegacyAliasMatchesPhotographicSensitivity(): void
+    #[Test]
+    public function isoSpeedRatingsLegacyAliasMatchesPhotographicSensitivity(): void
     {
         $constants = (new ReflectionClass(ExifTag::class))->getConstants();
 

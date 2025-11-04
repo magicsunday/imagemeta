@@ -78,7 +78,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
          * subsequent reads advance it as expected.
          */
         #[Test]
-        public function testSeekMovesCursorWithinBounds(): void
+        public function seekMovesCursorWithinBounds(): void
         {
             $buffer = new MemoryBuffer('abcdef');
 
@@ -92,7 +92,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
          * Attempts to seek beyond the available bytes to ensure a BoundsError is raised.
          */
         #[Test]
-        public function testSeekThrowsBoundsErrorOutsideBuffer(): void
+        public function seekThrowsBoundsErrorOutsideBuffer(): void
         {
             $buffer = new MemoryBuffer('abc');
 
@@ -105,7 +105,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
          * requested byte count.
          */
         #[Test]
-        public function testReadReturnsRequestedBytes(): void
+        public function readReturnsRequestedBytes(): void
         {
             $buffer = new MemoryBuffer('MagicSunday');
 
@@ -119,7 +119,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
          * Ensures that reading past the end of the buffer throws a BoundsError.
          */
         #[Test]
-        public function testReadThrowsBoundsErrorWhenLengthTooLarge(): void
+        public function readThrowsBoundsErrorWhenLengthTooLarge(): void
         {
             $buffer = new MemoryBuffer('meta');
 
@@ -134,7 +134,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
          * ParseError as expected for truncated data.
          */
         #[Test]
-        public function testReadThrowsParseErrorOnShortRead(): void
+        public function readThrowsParseErrorOnShortRead(): void
         {
             $buffer = new MemoryBuffer('buffer');
 
@@ -149,7 +149,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
          * packed payload and advance the cursor correctly.
          */
         #[Test]
-        public function testReadUnsignedIntegersRespectEndianness(): void
+        public function readUnsignedIntegersRespectEndianness(): void
         {
             $payload = pack('C', 0x7F)
                 . pack('v', 0x3412)

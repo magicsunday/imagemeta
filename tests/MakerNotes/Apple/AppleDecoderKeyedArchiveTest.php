@@ -63,7 +63,6 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         self::assertSame(10, $runTime->timescale);
         self::assertSame(50, $runTime->value);
         self::assertSame(3, $runTime->flags);
-
     }
 
     #[Test]
@@ -97,7 +96,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
                     'ContentIdentifier' => ['CF$UID' => 3],
                 ],
                 [
-                    '$classes'  => ['AppleMakerNotesRoot', 'NSObject'],
+                    '$classes'   => ['AppleMakerNotesRoot', 'NSObject'],
                     '$classname' => 'AppleMakerNotesRoot',
                 ],
                 'wrapped-identifier',

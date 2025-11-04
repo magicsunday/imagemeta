@@ -25,7 +25,7 @@ final class IfdTest extends TestCase
      * Ensures the constructor exposes the provided entries and optional next IFD offset.
      */
     #[Test]
-    public function testConstructorStoresEntriesAndNextOffset(): void
+    public function constructorStoresEntriesAndNextOffset(): void
     {
         $entry = new IfdEntry(0x010F, 2, 1, 'MagicSunday');
         $ifd   = new Ifd([$entry->tag => $entry], 256);
@@ -38,7 +38,7 @@ final class IfdTest extends TestCase
      * Verifies that the next IFD offset defaults to null when it is omitted.
      */
     #[Test]
-    public function testConstructorDefaultsNextOffsetToNull(): void
+    public function constructorDefaultsNextOffsetToNull(): void
     {
         $entry = new IfdEntry(0x0110, 2, 1, 'Camera Model');
         $ifd   = new Ifd([$entry->tag => $entry]);
@@ -51,7 +51,7 @@ final class IfdTest extends TestCase
      * Ensures that get() returns the entry associated with a known tag identifier.
      */
     #[Test]
-    public function testGetReturnsEntryForKnownTag(): void
+    public function getReturnsEntryForKnownTag(): void
     {
         $cameraEntry = new IfdEntry(0x0110, 2, 1, 'Camera Model');
         $artistEntry = new IfdEntry(0x013B, 2, 1, 'MagicSunday');
@@ -68,7 +68,7 @@ final class IfdTest extends TestCase
      * Ensures that get() returns null when the tag identifier is not present in the directory.
      */
     #[Test]
-    public function testGetReturnsNullForUnknownTag(): void
+    public function getReturnsNullForUnknownTag(): void
     {
         $cameraEntry = new IfdEntry(0x0110, 2, 1, 'Camera Model');
         $ifd         = new Ifd([$cameraEntry->tag => $cameraEntry]);
