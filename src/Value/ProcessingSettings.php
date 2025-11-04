@@ -21,6 +21,8 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 final readonly class ProcessingSettings
 {
     /**
+     * Creates a processing settings metadata value object.
+     *
      * @param Sharpness|null  $sharpness                Sharpness adjustment level.
      * @param Contrast|null   $contrast                 Contrast adjustment level.
      * @param Saturation|null $saturation               Saturation adjustment level.

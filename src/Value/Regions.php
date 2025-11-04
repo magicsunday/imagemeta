@@ -19,6 +19,8 @@ use MagicSunday\ImageMeta\Value\Regions\Region;
 final readonly class Regions
 {
     /**
+     * Creates a regions collection value object.
+     *
      * @param list<Region> $items List of annotated regions.
      */
     public function __construct(public array $items)
