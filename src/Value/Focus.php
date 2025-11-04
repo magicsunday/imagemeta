@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Focus
 {
     /**
+     * Creates a focus metadata value object.
+     *
      * @param float|null  $subjectDistanceM Focus distance to the subject in metres.
      * @param int|null    $subjectAreaX     Normalised subject area rectangle origin (X).
      * @param int|null    $subjectAreaY     Normalised subject area rectangle origin (Y).

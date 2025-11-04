@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class MultiPictureEntry
 {
     /**
+     * Creates a multi-picture format entry value object.
+     *
      * @param int $attributes      Attribute bit field as defined by MPF.
      * @param int $imageSize       Size of the image data in bytes.
      * @param int $dataOffset      Offset to the image data from the file start.

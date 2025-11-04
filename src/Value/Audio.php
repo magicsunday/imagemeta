@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Audio
 {
     /**
+     * Creates an audio metadata value object.
+     *
      * @param int|null    $channels   Number of audio channels.
      * @param int|null    $sampleRate Sample rate in Hertz.
      * @param string|null $codec      Codec identifier used for the audio stream.

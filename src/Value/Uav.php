@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Uav
 {
     /**
+     * Creates a UAV (drone) metadata value object.
+     *
      * @param string|null $manufacturer Drone manufacturer name.
      * @param string|null $model        Drone model name.
      * @param float|null  $flightYaw    Flight yaw angle in degrees.

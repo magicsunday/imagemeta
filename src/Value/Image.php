@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Value\Enum\Orientation;
 final readonly class Image
 {
     /**
+     * Creates an image metadata value object.
+     *
      * @param int|null         $width                   Final image width in pixels.
      * @param int|null         $height                  Final image height in pixels.
      * @param Orientation|null $orientation             Image orientation when stored on disk; non-standard values yield

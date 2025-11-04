@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class FlashPix
 {
     /**
+     * Creates a FlashPix extension streams value object.
+     *
      * @param array<int, string> $streams Concatenated FlashPix extension streams keyed by stream identifier.
      */
     public function __construct(public array $streams)

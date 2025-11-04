@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class RunTime
 {
     /**
+     * Creates a CoreMedia runtime value object.
+     *
      * @param int|null $epoch     Timeline epoch of the runtime value.
      * @param int|null $timescale Timescale used to interpret the runtime value.
      * @param int|null $value     Raw runtime value expressed in timescale units.

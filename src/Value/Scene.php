@@ -22,6 +22,8 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 final readonly class Scene
 {
     /**
+     * Creates a scene information value object.
+     *
      * @param SceneCaptureType|null     $type                 Scene capture type classification.
      * @param SceneType|null            $sceneType            Scene type classification (e.g. direct capture).
      * @param LightSource|null          $light                Dominant light source as reported by the camera.
