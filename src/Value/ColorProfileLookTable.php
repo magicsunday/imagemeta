@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ColorProfileLookTable
 {
     /**
+     * Creates a color profile look table value object.
+     *
      * @param int|null                                       $hueDivisions        Number of hue divisions encoded in the table.
      * @param int|null                                       $saturationDivisions Number of saturation divisions encoded in the table.
      * @param int|null                                       $valueDivisions      Number of value divisions encoded in the table.

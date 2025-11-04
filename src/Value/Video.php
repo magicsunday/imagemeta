@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Video
 {
     /**
+     * Creates a video metadata value object.
+     *
      * @param float|null  $durationSec      Duration in seconds.
      * @param float|null  $frameRate        Frame rate in frames per second.
      * @param int|null    $width            Encoded width in pixels.

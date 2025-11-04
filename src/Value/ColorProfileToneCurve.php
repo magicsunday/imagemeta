@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ColorProfileToneCurve
 {
     /**
+     * Creates a color profile tone curve value object.
+     *
      * @param list<array{0: float, 1: float}> $points Normalised tone curve points (input, output).
      */
     public function __construct(public array $points)

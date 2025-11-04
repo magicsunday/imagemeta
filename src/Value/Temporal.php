@@ -20,6 +20,8 @@ use DateTimeZone;
 final readonly class Temporal
 {
     /**
+     * Creates a temporal metadata value object.
+     *
      * @param DateTimeImmutable|null $create                Creation timestamp.
      * @param DateTimeImmutable|null $modify                Modification timestamp.
      * @param DateTimeImmutable|null $original              Original capture timestamp.
