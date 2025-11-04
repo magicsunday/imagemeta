@@ -33,8 +33,4 @@ final readonly class RelatedAssets
         public ?string $relatedSoundFile,
     ) {
     }
-
-    /**
-     * Indicates whether this asset is the selected burst frame.
-     */
 }

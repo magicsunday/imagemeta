@@ -33,8 +33,4 @@ final readonly class Integrity
         public ?bool $makerNotesSafe = null,
     ) {
     }
-
-    /**
-     * Indicates whether editing history is present.
-     */
 }
