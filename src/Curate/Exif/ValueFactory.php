@@ -2008,9 +2008,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param array{w: float, h: float}|null $dimensions
+     * Extracts Apple face region entries from XMP document.
      *
-     * @return list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}>
+     * @param XmpDocument                    $document   XMP document to extract from.
+     * @param array{w: float, h: float}|null $dimensions Image dimensions for normalization.
+     *
+     * @return list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> List of Apple face entries.
      */
     private function appleFaceEntries(XmpDocument $document, ?array $dimensions): array
     {
@@ -2081,9 +2084,11 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
+     * Converts Apple face entries to Region value objects.
      *
-     * @return list<Region>
+     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries Apple face entries.
+     *
+     * @return list<Region> List of Region value objects.
      */
     private function regionsFromAppleEntries(array $entries): array
     {
@@ -2110,10 +2115,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param array<int, Region> $regions
-     * @param array<int, Region> $supplemental
+     * Applies Apple supplemental metadata to existing regions.
      *
-     * @return array<int, Region>
+     * @param array<int, Region> $regions      Existing regions.
+     * @param array<int, Region> $supplemental Supplemental regions to merge.
+     *
+     * @return array<int, Region> Updated regions with supplemental data applied.
      */
     private function applyAppleSupplementalMetadata(array $regions, array $supplemental): array
     {
@@ -2134,10 +2141,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries
-     * @param list<Region>                                                                                                                                                      $mwgRegions
+     * Creates supplemental regions from Apple entries matched to MWG regions.
      *
-     * @return array<int, Region>
+     * @param list<array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null}> $entries    Apple face entries.
+     * @param list<Region>                                                                                                                                                      $mwgRegions MWG region list for matching.
+     *
+     * @return array<int, Region> Supplemental regions indexed by MWG region position.
      */
     private function supplementalRegionsFromAppleEntries(array $entries, array $mwgRegions): array
     {
@@ -2207,8 +2216,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param list<Region>                                                                                                                                                $mwgRegions
-     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     * Matches an Apple face entry to an MWG region by geometry.
+     *
+     * @param list<Region>                                                                                                                                                $mwgRegions MWG region list.
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry      Apple face entry to match.
+     *
+     * @return int|null Index of matching MWG region or null if no match.
      */
     private function matchAppleEntryToMwgRegion(array $mwgRegions, array $entry): ?int
     {
@@ -2233,9 +2246,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param list<int> $indices
+     * Removes a matched index from a list of indices.
      *
-     * @return list<int>
+     * @param list<int> $indices List of indices.
+     * @param int       $match   Index to remove.
+     *
+     * @return list<int> Updated list without the matched index.
      */
     private function removeMatchedIndex(array $indices, int $match): array
     {
@@ -2250,7 +2266,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     * Creates a supplemental region with Apple-specific metadata.
+     *
+     * @param Region                                                                                                                                                      $baseRegion Base region to supplement.
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry      Apple face entry data.
+     *
+     * @return Region Enhanced region with supplemental metadata.
      */
     private function createSupplementalRegion(Region $baseRegion, array $entry): Region
     {
@@ -2268,7 +2289,11 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry
+     * Checks if an Apple face entry contains supplemental metadata.
+     *
+     * @param array{geometry: array{x: float, y: float, w: float, h: float}|null, person: string|null, confidence: float|null, rotation: float|null, faceId: string|null} $entry Apple face entry.
+     *
+     * @return bool True if entry has supplemental metadata.
      */
     private function hasSupplementalMetadata(array $entry): bool
     {
@@ -2351,7 +2376,11 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @return array{0: float, 1: float}
+     * Calculates the center point of a region.
+     *
+     * @param Region $region Region to calculate center for.
+     *
+     * @return array{0: float, 1: float} Center coordinates [x, y].
      */
     private function regionCenter(Region $region): array
     {
@@ -2362,7 +2391,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param list<string> $values
+     * Retrieves a string value at a specific index from a list.
+     *
+     * @param list<string> $values List of string values.
+     * @param int          $index  Index to retrieve.
+     *
+     * @return string|null String value at index or null if not found.
      */
     private function stringAt(array $values, int $index): ?string
     {
@@ -2403,8 +2437,12 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param list<float|null> $confidenceLevels
-     * @param list<float|null> $confidences
+     * Calculates a normalized confidence scale from confidence levels.
+     *
+     * @param list<float|null> $confidenceLevels Raw confidence level values.
+     * @param list<float|null> $confidences      Confidence percentage values.
+     *
+     * @return float Normalized confidence scale value.
      */
     private function confidenceScale(array $confidenceLevels, array $confidences): float
     {
@@ -2437,9 +2475,15 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @param array{w: float, h: float}|null $dimensions
+     * Creates a normalized bounding box from center and dimensions.
      *
-     * @return array{x: float, y: float, w: float, h: float}|null
+     * @param float                          $centerX    Center X coordinate.
+     * @param float                          $centerY    Center Y coordinate.
+     * @param float                          $width      Box width.
+     * @param float                          $height     Box height.
+     * @param array{w: float, h: float}|null $dimensions Image dimensions for normalization.
+     *
+     * @return array{x: float, y: float, w: float, h: float}|null Normalized bounding box or null if invalid.
      */
     private function normalisedBox(float $centerX, float $centerY, float $width, float $height, ?array $dimensions): ?array
     {
@@ -2503,7 +2547,13 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @return list<string>
+     * Extracts a list of string values from XMP document.
+     *
+     * @param XmpDocument $document   XMP document to extract from.
+     * @param string      $namespace  XML namespace URI.
+     * @param string      $localName  Local element name.
+     *
+     * @return list<string> List of string values.
      */
     private function stringValues(XmpDocument $document, string $namespace, string $localName): array
     {
@@ -2527,7 +2577,13 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @return list<float|null>
+     * Extracts a list of float values from XMP document.
+     *
+     * @param XmpDocument $document   XMP document to extract from.
+     * @param string      $namespace  XML namespace URI.
+     * @param string      $localName  Local element name.
+     *
+     * @return list<float|null> List of float values with nulls for invalid entries.
      */
     private function floatValues(XmpDocument $document, string $namespace, string $localName): array
     {
@@ -2547,7 +2603,11 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * @return array{w: float, h: float}|null
+     * Extracts applied image dimensions from XMP document.
+     *
+     * @param XmpDocument $document XMP document to extract from.
+     *
+     * @return array{w: float, h: float}|null Image dimensions or null if not found.
      */
     private function appliedDimensions(XmpDocument $document): ?array
     {
