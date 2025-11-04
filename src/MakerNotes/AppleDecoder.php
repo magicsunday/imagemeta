@@ -1474,7 +1474,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, mixed> $dictionary
+     * Extracts focus distance range from dictionary.
+     *
+     * @param array<int|string, mixed> $dictionary Dictionary containing focus distance data.
+     *
+     * @return list<float>|null Focus distance range [near, far] or null if not found.
      *
      * @phpstan-param array<int|string, mixed> $dictionary
      *
@@ -1513,7 +1517,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, mixed> $dictionary
+     * Extracts maker note version string from dictionary.
+     *
+     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param string                   $key        Key to look up.
+     *
+     * @return string|null Version string if found, null otherwise.
      *
      * @phpstan-param array<int|string, mixed> $dictionary
      */
@@ -1576,7 +1585,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, mixed> $dictionary
+     * Extracts a string or numeric value from dictionary using prioritized keys.
+     *
+     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param string                   ...$keys    Priority-ordered keys to check.
+     *
+     * @return string|null String representation of value if found, null otherwise.
      *
      * @phpstan-param array<int|string, mixed> $dictionary
      */
@@ -1605,8 +1619,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, mixed> $dictionary
-     * @param array<int, string>       $map
+     * Extracts an enumerated string value from dictionary using a mapping table.
+     *
+     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param array<int, string>       $map        Mapping from numeric codes to string labels.
+     * @param string                   ...$keys    Priority-ordered keys to check.
+     *
+     * @return string|null Enumerated string value if found, null otherwise.
      */
     private function enumeratedStringValue(array $dictionary, array $map, string ...$keys): ?string
     {
@@ -1647,7 +1666,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param array<int|string, mixed> $dictionary
+     * Extracts boolean flags from dictionary.
+     *
+     * @param array<int|string, mixed> $dictionary Dictionary containing flag data.
+     *
+     * @return array<string, bool> Dictionary of flag names to boolean values.
      *
      * @phpstan-param array<int|string, mixed> $dictionary
      *
@@ -1843,7 +1866,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * @param string|int|float|bool|array<int|string, mixed>|null $value
+     * Normalizes a value to boolean representation.
+     *
+     * @param string|int|float|bool|array<int|string, mixed>|null $value Raw value to normalize.
+     *
+     * @return bool|null Boolean value or null if invalid.
      *
      * @phpstan-param string|int|float|bool|null|array<int|string, mixed> $value
      */
