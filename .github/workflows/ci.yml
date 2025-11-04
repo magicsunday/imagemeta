@@ -138,6 +138,9 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
 
+      - name: Create coverage directory
+        run: mkdir -p .build/coverage
+
       # Run tests with clover coverage for Codecov (composer scripts generate HTML coverage only)
       - name: Run tests with coverage
         run: XDEBUG_MODE=coverage phpunit --configuration .build/phpunit.xml --coverage-clover .build/coverage/clover.xml
