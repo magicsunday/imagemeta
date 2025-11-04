@@ -19,6 +19,8 @@ use DateTimeImmutable;
 final readonly class Capture
 {
     /**
+     * Creates a capture conditions metadata value object.
+     *
      * @param DateTimeImmutable|null $dateTime                Capture timestamp.
      * @param float|null             $temperatureC            Recorded temperature in Celsius.
      * @param float|null             $humidityPercent         Relative humidity percentage.

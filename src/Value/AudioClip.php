@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class AudioClip
 {
     /**
+     * Creates an audio clip value object.
+     *
      * @param string $format     Audio encoding identifier (e.g. PCM, MU_LAW_PCM, IMA_ADPCM).
      * @param int    $channels   Channel count for the clip.
      * @param int    $sampleRate Sample rate in Hertz.
