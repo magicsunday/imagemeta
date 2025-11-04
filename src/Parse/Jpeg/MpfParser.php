@@ -431,10 +431,12 @@ final class MpfParser
     }
 
     /**
-     * @param MpfDirectory     $entries
-     * @param array<int, true> $known
+     * Filters additional MPF tags from directory entries.
      *
-     * @return MpfDirectory
+     * @param MpfDirectory     $entries Known MPF directory entries.
+     * @param array<int, true> $known   Map of known tag IDs.
+     *
+     * @return MpfDirectory Filtered directory with additional tags.
      */
     private function filterAdditionalTags(array $entries, array $known): array
     {
@@ -448,9 +450,11 @@ final class MpfParser
     }
 
     /**
-     * @param MpfValue|null $value
+     * Extracts a list of rational values from MPF value.
      *
-     * @return list<MpfRational>|null
+     * @param MpfValue|null $value MPF value to extract from.
+     *
+     * @return list<MpfRational>|null List of rational values or null if invalid.
      */
     private function rationalListValue(int|string|array|null $value): ?array
     {
@@ -470,7 +474,11 @@ final class MpfParser
     }
 
     /**
-     * @param array<int|string, MpfValue> $value
+     * Type guard checking if value is an MPF rational structure.
+     *
+     * @param array<int|string, MpfValue> $value Value to check.
+     *
+     * @return bool True if value is MPF rational.
      *
      * @phpstan-assert-if-true MpfRational $value
      */
@@ -484,7 +492,11 @@ final class MpfParser
     }
 
     /**
-     * @param array<int|string, MpfValue> $value
+     * Type guard checking if value is a list of MPF rational structures.
+     *
+     * @param array<int|string, MpfValue> $value Value to check.
+     *
+     * @return bool True if value is list of MPF rationals.
      *
      * @phpstan-assert-if-true list<MpfRational> $value
      */
