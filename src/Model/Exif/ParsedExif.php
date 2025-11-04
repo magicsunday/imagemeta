@@ -3030,12 +3030,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns a string value from the given IFD if present.
-     *
-     * @return string|null
-     */
-
-    /**
      * Returns the artist tag value when present.
      */
     public function artist(): ?string

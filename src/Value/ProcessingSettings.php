@@ -43,8 +43,4 @@ final readonly class ProcessingSettings
         public ?string $processingSoftware,
     ) {
     }
-
-    /**
-     * Indicates whether a custom rendering was applied in-camera.
-     */
 }

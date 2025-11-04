@@ -188,9 +188,6 @@ final readonly class XmpDocument
     {
         return array_find(
             $this->data,
-            /**
-             * @param string|array<int, string> $value
-             */
             fn (array|string $value, string $key): bool => $this->matchesLocalName($key, $localName)
         );
     }

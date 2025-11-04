@@ -1554,20 +1554,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     }
 
     /**
-     * Extracts semantic style values from Apple's compact semantic style array.
-     *
-     * Apple stores semantic style metadata as an ordered collection where index 0 / `_0`
-     * contains the preset name. Legacy payloads store the warmth adjustment at index 1 / `_1`
-     * and tone at index 2 / `_2`. Modern payloads use index 2 / `_2` for warmth and index 3 / `_3`
-     * for tone.
-     *
-     * @param array<int|string, mixed> $dictionary
-     *
-     * @phpstan-param array<int|string, mixed> $dictionary
-     *
-     * @return array{0:?string,1:?float,2:?float}|null
-     */
-    /**
      * @param array<int|string, mixed> $dictionary
      *
      * @phpstan-param array<int|string, mixed> $dictionary

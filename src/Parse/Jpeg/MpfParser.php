@@ -370,8 +370,7 @@ final class MpfParser
      *
      * EXIF 3.0 §4.6.4 defines the optional MP Attribute IFD, retaining the
      * same tag semantics documented in EXIF 2.32 §4.6.4.
-     */
-    /**
+     *
      * @param MpfDirectory $entries
      */
     private function buildAttributes(array $entries): MpfAttributes

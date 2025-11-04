@@ -35,16 +35,4 @@ final readonly class FlashInfo
         public bool $redEyeReduction = false,
     ) {
     }
-
-    /**
-     * Indicates whether the flash fired.
-     */
-
-    /**
-     * Indicates whether the camera features a flash function.
-     */
-
-    /**
-     * Indicates whether red-eye reduction support is reported.
-     */
 }

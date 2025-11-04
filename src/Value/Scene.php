@@ -40,12 +40,4 @@ final readonly class Scene
         public ?SubjectDistanceRange $subjectDistanceRange,
     ) {
     }
-
-    /**
-     * Indicates whether HDR scene processing was applied.
-     */
-
-    /**
-     * Indicates whether night mode or low light processing was used.
-     */
 }

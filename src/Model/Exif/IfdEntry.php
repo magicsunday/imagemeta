@@ -76,9 +76,6 @@ final readonly class IfdEntry
             return $value;
         }
 
-        /**
-         * @var array<int, int|float|array<int, int|float>> $arrayValue
-         */
         $arrayValue = array_values($value);
 
         if ($type === 5 || $type === 10) {
