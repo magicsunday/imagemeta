@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Author
 {
     /**
+     * Creates an author/creator metadata value object.
+     *
      * @param string|null $artist       Artist or photographer name.
      * @param string|null $ownerName    Camera owner name.
      * @param string|null $creator      Creator attribution as declared in XMP.

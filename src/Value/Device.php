@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Device
 {
     /**
+     * Creates a device metadata value object.
+     *
      * @param string|null $software                Software version or build identifier.
      * @param string|null $rawDevelopingSoftware   Raw developing software identifier.
      * @param string|null $imageEditingSoftware    Image editing software identifier.

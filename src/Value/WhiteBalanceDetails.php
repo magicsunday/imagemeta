@@ -19,6 +19,8 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 final readonly class WhiteBalanceDetails
 {
     /**
+     * Creates a white balance details metadata value object.
+     *
      * @param WhiteBalance|null $mode   Selected white balance mode.
      * @param int|null          $kelvin Colour temperature in Kelvin.
      * @param float|null        $rgGain Red/green channel gain ratio.

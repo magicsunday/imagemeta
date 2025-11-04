@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ColorProfile
 {
     /**
+     * Creates an ICC color profile metadata value object.
+     *
      * @param string|null                $profileName                 Human readable profile description.
      * @param string|null                $profileVersion              Profile version string.
      * @param string|null                $pcs                         Profile connection space.

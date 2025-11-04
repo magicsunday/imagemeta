@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Value\Enum\Compression;
 final readonly class Preview
 {
     /**
+     * Creates a preview/thumbnail metadata value object.
+     *
      * @param bool|null        $hasThumbnail             Whether an embedded thumbnail exists.
      * @param bool|null        $hasPreview               Whether an embedded preview image exists.
      * @param int|null         $previewWidth             Width of the preview image in pixels.

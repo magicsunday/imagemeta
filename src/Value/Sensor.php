@@ -19,6 +19,8 @@ use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 final readonly class Sensor
 {
     /**
+     * Creates a sensor characteristics metadata value object.
+     *
      * @param float|null                                                                                                                                                   $pixelPitchUm             Pixel pitch in micrometres.
      * @param int|null                                                                                                                                                     $cfaWidth                 Width of the repeating CFA pattern.
      * @param int|null                                                                                                                                                     $cfaHeight                Height of the repeating CFA pattern.

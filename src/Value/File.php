@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class File
 {
     /**
+     * Creates a file metadata value object.
+     *
      * @param string|null $mimeType   Detected mime type of the original file.
      * @param int|null    $fileSize   File size in bytes when known.
      * @param string|null $extension  File extension derived from the container.

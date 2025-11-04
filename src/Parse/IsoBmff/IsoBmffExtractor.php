@@ -790,9 +790,12 @@ final readonly class IsoBmffExtractor
     }
 
     /**
-     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos
+     * Gathers item IDs from item info structures, separated by primary status.
      *
-     * @return array{0: list<int>, 1: list<int>}
+     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos Item information structures.
+     * @param int|null                                                                            $primaryItemId Primary item ID if known.
+     *
+     * @return array{0: list<int>, 1: list<int>} Tuple of [primary item IDs, other item IDs].
      */
     private function gatherItemIds(array $itemInfos, ?int $primaryItemId): array
     {
@@ -826,11 +829,13 @@ final readonly class IsoBmffExtractor
     }
 
     /**
-     * @param list<int>                                                                                                                     $itemIds
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
-     * @param (callable(string):string)|null                                                                                                $transform
+     * Resolves queued item IDs to their payload data.
      *
-     * @return list<string>
+     * @param list<int>                                                                                                                     $itemIds   Item IDs to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations Item location metadata.
+     * @param (callable(string):string)|null                                                                                                $transform Optional transform function.
+     *
+     * @return list<string> List of resolved item payloads.
      */
     private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform): array
     {
@@ -868,11 +873,13 @@ final readonly class IsoBmffExtractor
     }
 
     /**
-     * @param QuickTimeKeyMap          $existing
-     * @param list<array<int, string>> $keysMaps
-     * @param list<BoxDescriptor>      $ilstBoxes
+     * Merges QuickTime key mappings from multiple sources.
      *
-     * @return QuickTimeKeyMap
+     * @param QuickTimeKeyMap          $existing  Existing key mappings.
+     * @param list<array<int, string>> $keysMaps  Key map data from 'keys' boxes.
+     * @param list<BoxDescriptor>      $ilstBoxes Item list box descriptors.
+     *
+     * @return QuickTimeKeyMap Merged key mappings.
      */
     private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes): array
     {

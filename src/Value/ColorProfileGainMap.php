@@ -19,6 +19,8 @@ use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 final readonly class ColorProfileGainMap
 {
     /**
+     * Creates a color profile gain map value object.
+     *
      * @param DngProfileGainTableTag $tag    Enumerated gain table tag represented by this payload.
      * @param list<float>            $values Normalised per-pixel gain factors stored in scan-line order.
      */

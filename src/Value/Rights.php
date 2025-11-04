@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Rights
 {
     /**
+     * Creates a copyright and licensing metadata value object.
+     *
      * @param string|null $copyright              Copyright notice text.
      * @param string|null $usageTerms             Usage terms or rights expression.
      * @param string|null $licenseUrl             URL to the applicable licence.

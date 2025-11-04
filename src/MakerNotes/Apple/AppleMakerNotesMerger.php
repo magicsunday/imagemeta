@@ -294,7 +294,12 @@ final class AppleMakerNotesMerger
     }
 
     /**
-     * @return list<float>|null
+     * Extracts a list of float values from QuickTime metadata.
+     *
+     * @param QuickTimeLookup $lookup QuickTime metadata lookup instance.
+     * @param string          ...$keys One or more keys to search for.
+     *
+     * @return list<float>|null List of float values if found, null otherwise.
      */
     private function quickTimeFloatList(QuickTimeLookup $lookup, string ...$keys): ?array
     {
@@ -329,7 +334,11 @@ final class AppleMakerNotesMerger
     }
 
     /**
-     * @return list<float>|null
+     * Extracts focus distance range from QuickTime metadata.
+     *
+     * @param QuickTimeLookup $lookup QuickTime metadata lookup instance.
+     *
+     * @return list<float>|null Focus distance range [near, far] if available, null otherwise.
      */
     private function quickTimeFocusDistanceRange(QuickTimeLookup $lookup): ?array
     {
@@ -376,7 +385,12 @@ final class AppleMakerNotesMerger
     }
 
     /**
-     * @param array<int, string> $map
+     * Normalizes an enumerated value using a mapping table.
+     *
+     * @param string|null        $value Raw enumerated value.
+     * @param array<int, string> $map   Mapping from numeric codes to string labels.
+     *
+     * @return string|null Normalized value or null if input is null.
      */
     private function normalizeEnumerated(?string $value, array $map): ?string
     {
@@ -399,7 +413,13 @@ final class AppleMakerNotesMerger
     }
 
     /**
-     * @param array<int, string> $map
+     * Extracts an enumerated value from QuickTime metadata.
+     *
+     * @param QuickTimeLookup    $lookup QuickTime metadata lookup instance.
+     * @param array<int, string> $map    Mapping from numeric codes to string labels.
+     * @param string             ...$keys One or more keys to search for.
+     *
+     * @return string|null Enumerated value if found, null otherwise.
      */
     private function quickTimeEnumerated(QuickTimeLookup $lookup, array $map, string ...$keys): ?string
     {
@@ -425,7 +445,11 @@ final class AppleMakerNotesMerger
     }
 
     /**
-     * @return array<string, bool>
+     * Extracts boolean flags from QuickTime metadata.
+     *
+     * @param QuickTimeMeta|null $quickTime QuickTime metadata instance.
+     *
+     * @return array<string, bool> Dictionary of flag names to boolean values.
      */
     private function quickTimeFlags(?QuickTimeMeta $quickTime): array
     {

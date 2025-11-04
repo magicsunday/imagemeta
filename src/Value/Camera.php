@@ -20,6 +20,8 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 final readonly class Camera
 {
     /**
+     * Creates a camera metadata value object.
+     *
      * @param string|null        $make          Camera manufacturer.
      * @param string|null        $model         Camera model name.
      * @param string|null        $ownerName     Camera owner name.

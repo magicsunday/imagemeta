@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Motion
 {
     /**
+     * Creates a motion sensor data value object.
+     *
      * @param float|null $rollDeg  Roll angle in degrees.
      * @param float|null $pitchDeg Pitch angle in degrees.
      * @param float|null $yawDeg   Yaw angle in degrees.

@@ -19,6 +19,8 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 final readonly class Xmp
 {
     /**
+     * Creates an XMP metadata value object.
+     *
      * @param XmpDocument|null $document Parsed XMP document.
      */
     public function __construct(public ?XmpDocument $document)

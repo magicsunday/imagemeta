@@ -26,6 +26,8 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 final readonly class Exposure
 {
     /**
+     * Creates an exposure settings metadata value object.
+     *
      * @param int|null             $iso              ISO sensitivity.
      * @param float|null           $exposureTimeSec  Exposure time in seconds.
      * @param float|null           $fNumber          Aperture (f-number).

@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class ColorProfileHueSatMap
 {
     /**
+     * Creates a color profile hue/saturation map value object.
+     *
      * @param int|null         $hueDivisions        Number of hue slices stored in the map.
      * @param int|null         $saturationDivisions Number of saturation slices stored in the map.
      * @param int|null         $valueDivisions      Number of value/lightness slices stored in the map.

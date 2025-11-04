@@ -34,6 +34,8 @@ final readonly class Gps
     public ?GpsCoordinate $destinationLongitudeCoordinate;
 
     /**
+     * Creates a GPS location and navigation metadata value object.
+     *
      * @param float|null             $latitude                       Latitude in decimal degrees.
      * @param float|null             $longitude                      Longitude in decimal degrees.
      * @param string|null            $latitudeRef                    Latitude hemisphere reference (N/S).

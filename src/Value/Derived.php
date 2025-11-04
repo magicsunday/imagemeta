@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Derived
 {
     /**
+     * Creates a derived metrics value object.
+     *
      * @param float|null $ev100                    Exposure value normalised to ISO 100.
      * @param float|null $hyperfocalDistanceMetres Hyperfocal distance in metres.
      * @param float|null $circleOfConfusionMm      Circle of confusion in millimetres used for depth calculations.

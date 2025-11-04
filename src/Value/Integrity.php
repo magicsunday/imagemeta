@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Integrity
 {
     /**
+     * Creates an asset integrity metadata value object.
+     *
      * @param string|null $originalFileName    Original file name when available.
      * @param string|null $originalDigest      Digest identifying the original asset.
      * @param bool|null   $edited              Indicates whether editing history is present.
@@ -33,8 +35,4 @@ final readonly class Integrity
         public ?bool $makerNotesSafe = null,
     ) {
     }
-
-    /**
-     * Indicates whether editing history is present.
-     */
 }

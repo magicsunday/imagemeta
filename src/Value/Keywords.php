@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Keywords
 {
     /**
+     * Creates a keywords metadata value object.
+     *
      * @param list<string>      $flat         Flat keyword list.
      * @param list<string>|null $hierarchical Optional hierarchical keywords.
      */

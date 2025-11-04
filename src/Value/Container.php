@@ -17,6 +17,8 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Container
 {
     /**
+     * Creates a container format metadata value object.
+     *
      * @param string|null $format     Primary container format description.
      * @param string|null $encoder    Encoder or muxer responsible for the file.
      * @param int|null    $bitrate    Average bitrate of the container in bits per second.

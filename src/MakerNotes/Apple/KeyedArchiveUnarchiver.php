@@ -154,6 +154,14 @@ final class KeyedArchiveUnarchiver
     }
 
     /**
+     * Resolves a UID reference to its corresponding plist value.
+     *
+     * @param int $uid Object UID to resolve.
+     *
+     * @return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar Resolved plist value.
+     *
+     * @throws ParseError If UID is invalid or creates circular reference.
+     *
      * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
      */
     private function resolveUid(int $uid): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
@@ -184,6 +192,14 @@ final class KeyedArchiveUnarchiver
     }
 
     /**
+     * Resolves a keyed archive dictionary structure.
+     *
+     * @param ApplePlistDictionary $dictionary Dictionary containing NS.keys and NS.objects.
+     *
+     * @return ApplePlistDictionary Resolved dictionary with string keys.
+     *
+     * @throws ParseError If dictionary structure is invalid.
+     *
      * @phpstan-return ApplePlistDictionary
      */
     private function resolveDictionary(ApplePlistDictionary $dictionary): ApplePlistDictionary
@@ -227,6 +243,14 @@ final class KeyedArchiveUnarchiver
     }
 
     /**
+     * Resolves a keyed archive array structure.
+     *
+     * @param ApplePlistDictionary $array Dictionary containing NS.objects array.
+     *
+     * @return ApplePlistArray Resolved array of plist values.
+     *
+     * @throws ParseError If array structure is invalid.
+     *
      * @phpstan-return ApplePlistArray
      */
     private function resolveArray(ApplePlistDictionary $array): ApplePlistArray

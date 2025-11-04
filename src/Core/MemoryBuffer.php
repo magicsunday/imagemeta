@@ -202,7 +202,13 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     }
 
     /**
-     * @return positive-int
+     * Normalizes a length value to a positive integer with bounds checking.
+     *
+     * @param int|UInt64 $length Length value to normalize.
+     *
+     * @return positive-int Validated positive integer length.
+     *
+     * @throws BoundsError If the length is zero, negative, or exceeds bounds.
      */
     private function normaliseLength(int|UInt64 $length): int
     {

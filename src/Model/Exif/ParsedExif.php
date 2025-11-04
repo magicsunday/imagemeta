@@ -2984,7 +2984,9 @@ final readonly class ParsedExif
     }
 
     /**
-     * @return list<Ifd>
+     * Returns IFDs that should be used as profile computation sources.
+     *
+     * @return list<Ifd> List of source IFDs in priority order.
      */
     private function profileSourceIfds(): array
     {
@@ -3008,7 +3010,9 @@ final readonly class ParsedExif
     }
 
     /**
-     * @return list<Ifd>
+     * Returns IFDs containing profile-related metadata.
+     *
+     * @return list<Ifd> List of IFDs with profile data.
      */
     private function profileIfds(): array
     {
@@ -3028,12 +3032,6 @@ final readonly class ParsedExif
 
         return $candidates;
     }
-
-    /**
-     * Returns a string value from the given IFD if present.
-     *
-     * @return string|null
-     */
 
     /**
      * Returns the artist tag value when present.
@@ -3673,7 +3671,12 @@ final readonly class ParsedExif
     }
 
     /**
-     * @return array<int, int|float|string>|int|string|null
+     * Extracts components configuration input from IFD.
+     *
+     * @param Ifd|null $ifd IFD to search.
+     * @param int      $tag Tag number to retrieve.
+     *
+     * @return array<int, int|float|string>|int|string|null Components input value or null if not found.
      */
     private function componentsInput(?Ifd $ifd, int $tag): array|int|string|null
     {
@@ -3729,9 +3732,11 @@ final readonly class ParsedExif
     }
 
     /**
-     * @param int|float|string|null $value
+     * Converts a scalar components configuration value to normalized form.
      *
-     * @return int|string|null
+     * @param int|float|string|null $value Scalar value to normalize.
+     *
+     * @return int|string|null Normalized component value or null.
      */
     private function componentsInputFromScalar(int|float|string|null $value): int|string|null
     {

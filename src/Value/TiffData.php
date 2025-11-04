@@ -23,6 +23,8 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 final readonly class TiffData
 {
     /**
+     * Creates a TIFF image structure metadata value object.
+     *
      * @param int|null                                                    $samplesPerPixel             Number of samples per pixel.
      * @param int|null                                                    $bitsPerSample               Bits per sample reported for the image.
      * @param int|null                                                    $rowsPerStrip                Number of rows per TIFF strip.

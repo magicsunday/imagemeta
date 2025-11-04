@@ -21,6 +21,8 @@ use MagicSunday\ImageMeta\Value\Enum\FlashReturn;
 final readonly class FlashInfo
 {
     /**
+     * Creates a flash information metadata value object.
+     *
      * @param bool               $fired            Whether the flash fired.
      * @param FlashMode|null     $mode             Selected flash mode.
      * @param FlashReturn|null   $returnDetection  Detected return light status.
@@ -35,16 +37,4 @@ final readonly class FlashInfo
         public bool $redEyeReduction = false,
     ) {
     }
-
-    /**
-     * Indicates whether the flash fired.
-     */
-
-    /**
-     * Indicates whether the camera features a flash function.
-     */
-
-    /**
-     * Indicates whether red-eye reduction support is reported.
-     */
 }
