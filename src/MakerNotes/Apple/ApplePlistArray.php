@@ -26,7 +26,9 @@ final class ApplePlistArray implements ApplePlistValue
     }
 
     /**
-     * @return list<ApplePlistValue>
+     * Returns the array values stored in this plist array.
+     *
+     * @return list<ApplePlistValue> List of plist values.
      */
     public function values(): array
     {

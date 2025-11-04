@@ -43,7 +43,9 @@ final class ApplePlistDictionary implements ApplePlistValue
     }
 
     /**
-     * @return array<string, ApplePlistValue>
+     * Returns all key-value entries in this plist dictionary.
+     *
+     * @return array<string, ApplePlistValue> Dictionary entries.
      */
     public function entries(): array
     {
