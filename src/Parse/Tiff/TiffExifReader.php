@@ -61,8 +61,9 @@ use function substr;
  * EXIF 3.0 §4.5 outlines the TIFF header layout, data type handling and IFD
  * traversal rules honoured by this reader; EXIF 2.32 §4.5 documents the legacy
  * behaviour retained for older images, EXIF 2.1 §2.5.1 and §2.6.2 describe the
- * original TIFF header and directory traversal rules, while TIFF 6.0 §8 provides
- * the baseline directory semantics shared by both formats.
+ * original TIFF header and directory traversal rules. TIFF 6.0 §2.1 defines the
+ * file structure and byte order, §2.2 defines field types, and §8 provides the
+ * baseline directory semantics shared by both formats.
  */
 final class TiffExifReader implements ExifReaderInterface
 {
@@ -1044,6 +1045,10 @@ final class TiffExifReader implements ExifReaderInterface
     /**
      * Reads the 4- or 8-byte value/offset field for a directory entry.
      *
+     * TIFF 6.0 §8 specifies that values fitting within 4 bytes are stored inline in the
+     * directory entry for classic TIFF. BigTIFF extends this to 8 bytes or the configured
+     * offset size.
+     *
      * @param int $type  TIFF field type code.
      * @param int $count Number of values represented.
      *
@@ -1147,6 +1152,10 @@ final class TiffExifReader implements ExifReaderInterface
 
     /**
      * Extracts the raw bytes addressed by a directory entry.
+     *
+     * TIFF 6.0 §8 defines that values ≤4 bytes are stored inline in the value/offset
+     * field of directory entries for classic TIFF. For larger values, the field contains
+     * a file offset to the actual data. BigTIFF extends the inline threshold to 8 bytes.
      *
      * @param int               $type          TIFF field type code.
      * @param int               $count         Number of values represented.
