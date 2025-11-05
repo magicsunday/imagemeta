@@ -152,7 +152,6 @@ final class XmpParser
     ): void {
         /** @var list<string> $items */
         $items = $listBuffers[$depth] ?? [];
-        /** @var string $text */
         $text = $textBuffers[$depth] ?? '';
 
         $value = $this->finalizeValue($items, $text);

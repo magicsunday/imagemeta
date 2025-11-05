@@ -440,13 +440,11 @@ final class MpfParser
      */
     private function filterAdditionalTags(array $entries, array $known): array
     {
-        $additional = array_filter(
+        return array_filter(
             $entries,
-            fn ($tag): bool => !isset($known[$tag]),
+            static fn ($tag): bool => !isset($known[$tag]),
             ARRAY_FILTER_USE_KEY
         );
-
-        return $additional;
     }
 
     /**

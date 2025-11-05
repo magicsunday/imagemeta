@@ -24,6 +24,7 @@ use function array_keys;
 use function count;
 use function implode;
 use function in_array;
+use function is_array;
 use function ksort;
 use function min;
 use function ord;
@@ -626,7 +627,8 @@ final class JpegExtractor
 
         $sampleRateData   = substr($payload, $signatureLength + 4, 4);
         $sampleRateUnpack = @unpack('Nrate', $sampleRateData);
-        if ($sampleRateUnpack === false || !is_array($sampleRateUnpack) || !isset($sampleRateUnpack['rate'])) {
+
+        if (($sampleRateUnpack === false) || !isset($sampleRateUnpack['rate'])) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset));
         }
 
@@ -636,7 +638,8 @@ final class JpegExtractor
 
         $sampleCountData   = substr($payload, $signatureLength + 9, 4);
         $sampleCountUnpack = @unpack('Ncount', $sampleCountData);
-        if ($sampleCountUnpack === false || !is_array($sampleCountUnpack) || !isset($sampleCountUnpack['count'])) {
+
+        if (($sampleCountUnpack === false) || !isset($sampleCountUnpack['count'])) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset));
         }
 
@@ -737,7 +740,8 @@ final class JpegExtractor
 
         $header   = substr($payload, $signatureLength, 4);
         $unpacked = @unpack('nstream/Csequence/Ccount', $header);
-        if ($unpacked === false || !is_array($unpacked) || !isset($unpacked['stream'], $unpacked['sequence'], $unpacked['count'])) {
+
+        if (($unpacked === false) || !isset($unpacked['stream'], $unpacked['sequence'], $unpacked['count'])) {
             throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset));
         }
 
@@ -836,7 +840,8 @@ final class JpegExtractor
         }
 
         $fields = @unpack('nlines/nsamples', substr($payload, 1, 4));
-        if ($fields === false || !is_array($fields) || !isset($fields['lines'], $fields['samples'])) {
+
+        if (($fields === false) || !isset($fields['lines'], $fields['samples'])) {
             throw new ParseError(sprintf('SOF marker 0x%02X at offset %d has invalid dimensions', $marker, $offset));
         }
 

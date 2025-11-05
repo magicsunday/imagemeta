@@ -1184,9 +1184,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 return (float) $normalized;
             }
 
-            $rational = $this->normaliseRationalFloat($normalized);
-
-            return $rational;
+            return $this->normaliseRationalFloat($normalized);
         }
 
         if (is_array($value)) {
