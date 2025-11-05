@@ -896,7 +896,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function parsesSamplingAndChromaticities(): void
     {
-        self::assertSame([4, 2], ValueConverters::ycbcrSubSamplingToPair('4 2'));
+        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2 2'));
 
         $list = new ExifRationalList([
             new ExifRational(6400, 10000),
@@ -908,6 +908,63 @@ final class ValueConvertersTest extends TestCase
         ]);
 
         self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], ValueConverters::toPrimaryChromaticities($list));
+    }
+
+    /**
+     * Validates legal YCbCr subsampling values per EXIF 3.0 §4.6.5.1.12.
+     *
+     * Legal values are: [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0).
+     * Other values are reserved.
+     */
+    #[Test]
+    public function acceptsLegalYCbCrSubSamplingValues(): void
+    {
+        // EXIF 3.0 §4.6.5.1.12 defines only [2,1] and [2,2] as legal YCbCr subsampling values
+        self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2 1'));
+        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2 2'));
+
+        // Test with different delimiters (comma, semicolon)
+        self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2,1'));
+        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2;2'));
+    }
+
+    /**
+     * Rejects illegal YCbCr subsampling values per EXIF 3.0 §4.6.5.1.12.
+     *
+     * Only [2,1] and [2,2] are defined; all other values are reserved.
+     */
+    #[Test]
+    public function rejectsIllegalYCbCrSubSamplingValues(): void
+    {
+        // Reserved values per EXIF 3.0 §4.6.5.1.12
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 4'));
+
+        // Invalid horizontal/vertical combinations
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 3'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 3'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 3'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('5 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('8 8'));
+
+        // Edge cases
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('0 0'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('0 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 0'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('-1 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 -1'));
+
+        // Invalid formats
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair(''));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair(null));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('invalid'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 2 2'));
     }
 
     #[Test]
