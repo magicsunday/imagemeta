@@ -37,7 +37,7 @@ final class TiffDataTest extends TestCase
             compression: Compression::UNCOMPRESSED,
             photometric: Photometric::RGB,
             planar: null,
-            resolutionUnit: ResolutionUnit::INCH,
+            resolutionUnit: ResolutionUnit::INCHES,
             xResolution: 300.0,
             yResolution: 300.0,
             ycbcrPos: null,

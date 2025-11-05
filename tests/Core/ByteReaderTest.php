@@ -39,7 +39,9 @@ final class ByteReaderTest extends TestCase
 
                 return $result;
             },
-            tell: static fn (): int => $position,
+            tell: static function () use (&$position): int {
+                return $position;
+            },
             seek: static function (int|UInt64 $offset, int $whence = \SEEK_SET) use (&$position): void {
                 if ($offset instanceof UInt64) {
                     $offset = $offset->toInt('seek');

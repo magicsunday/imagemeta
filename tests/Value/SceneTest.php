@@ -52,7 +52,7 @@ final class SceneTest extends TestCase
             faceCount: 3,
             hdrScene: true,
             nightMode: true,
-            subjectDistanceRange: SubjectDistanceRange::CLOSE_VIEW,
+            subjectDistanceRange: SubjectDistanceRange::CLOSE,
         );
 
         self::assertSame(SceneCaptureType::NIGHT_SCENE, $scene->type);
@@ -61,7 +61,7 @@ final class SceneTest extends TestCase
         self::assertSame(3, $scene->faceCount);
         self::assertTrue($scene->hdrScene);
         self::assertTrue($scene->nightMode);
-        self::assertSame(SubjectDistanceRange::CLOSE_VIEW, $scene->subjectDistanceRange);
+        self::assertSame(SubjectDistanceRange::CLOSE, $scene->subjectDistanceRange);
     }
 
     #[Test]
