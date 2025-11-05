@@ -23,23 +23,10 @@ use PHPUnit\Framework\TestCase;
 final class EndianTest extends TestCase
 {
     #[Test]
-    public function littleEndianHasCorrectValue(): void
+    public function enumCasesAreDifferent(): void
     {
-        $value = Endian::Little->value;
-        
-        self::assertIsString($value);
-        self::assertSame(2, strlen($value));
-        self::assertNotSame(Endian::Big->value, $value);
-    }
-
-    #[Test]
-    public function bigEndianHasCorrectValue(): void
-    {
-        $value = Endian::Big->value;
-        
-        self::assertIsString($value);
-        self::assertSame(2, strlen($value));
-        self::assertNotSame(Endian::Little->value, $value);
+        self::assertNotSame(Endian::Little, Endian::Big);
+        self::assertNotSame(Endian::Little->value, Endian::Big->value);
     }
 
     #[Test]
@@ -48,7 +35,6 @@ final class EndianTest extends TestCase
         $little = Endian::from('II');
         $big = Endian::from('MM');
         
-        self::assertNotSame($little, $big);
         self::assertSame(Endian::Little, $little);
         self::assertSame(Endian::Big, $big);
     }
