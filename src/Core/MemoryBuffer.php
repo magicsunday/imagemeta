@@ -133,7 +133,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      */
     public function readU16LE(): int
     {
-        return $this->byteReader->unpackInt('v', 2);
+        return $this->byteReader->readU16LE();
     }
 
     /**
@@ -143,7 +143,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      */
     public function readU32LE(): int
     {
-        return $this->byteReader->unpackInt('V', 4);
+        return $this->byteReader->readU32LE();
     }
 
     /**
@@ -153,10 +153,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
      */
     public function readU64LE(): UInt64
     {
-        $lo = $this->readU32LE();
-        $hi = $this->readU32LE();
-
-        return Unpack::combineUint32($hi, $lo);
+        return $this->byteReader->readU64LE();
     }
 
     /**
