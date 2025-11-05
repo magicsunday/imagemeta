@@ -23,19 +23,64 @@ use PHPUnit\Framework\TestCase;
 final class EndianTest extends TestCase
 {
     #[Test]
-    public function enumCasesAreDifferent(): void
+    public function fromReturnsLittleEndianForII(): void
     {
-        self::assertNotSame(Endian::Little, Endian::Big);
-        self::assertNotSame(Endian::Little->value, Endian::Big->value);
+        $result = Endian::from('II');
+        
+        self::assertSame('II', $result->value);
+        self::assertSame('Little', $result->name);
     }
 
     #[Test]
-    public function canConstructFromValue(): void
+    public function fromReturnsBigEndianForMM(): void
     {
-        $little = Endian::from('II');
-        $big = Endian::from('MM');
+        $result = Endian::from('MM');
         
-        self::assertSame(Endian::Little, $little);
-        self::assertSame(Endian::Big, $big);
+        self::assertSame('MM', $result->value);
+        self::assertSame('Big', $result->name);
+    }
+
+    #[Test]
+    public function fromThrowsValueErrorForInvalidValue(): void
+    {
+        $this->expectException(\ValueError::class);
+        
+        Endian::from('XX');
+    }
+
+    #[Test]
+    public function tryFromReturnsLittleEndianForII(): void
+    {
+        $result = Endian::tryFrom('II');
+        
+        self::assertInstanceOf(Endian::class, $result);
+        self::assertSame('II', $result->value);
+    }
+
+    #[Test]
+    public function tryFromReturnsBigEndianForMM(): void
+    {
+        $result = Endian::tryFrom('MM');
+        
+        self::assertInstanceOf(Endian::class, $result);
+        self::assertSame('MM', $result->value);
+    }
+
+    #[Test]
+    public function tryFromReturnsNullForInvalidValue(): void
+    {
+        $result = Endian::tryFrom('XX');
+        
+        self::assertNull($result);
+    }
+
+    #[Test]
+    public function casesReturnsAllEnumCases(): void
+    {
+        $cases = Endian::cases();
+        
+        self::assertCount(2, $cases);
+        self::assertContains(Endian::Little, $cases);
+        self::assertContains(Endian::Big, $cases);
     }
 }
