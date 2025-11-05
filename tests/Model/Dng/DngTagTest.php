@@ -253,4 +253,44 @@ final class DngTagTest extends TestCase
     {
         self::assertSame(0xC7B5, DngTag::DEFAULT_USER_CROP);
     }
+
+    /**
+     * Tests that DNG 1.5 depth tags are defined.
+     */
+    public function testDng15DepthTags(): void
+    {
+        self::assertSame(0xC7E9, DngTag::DEPTH_FORMAT);
+        self::assertSame(0xC7EA, DngTag::DEPTH_NEAR);
+        self::assertSame(0xC7EB, DngTag::DEPTH_FAR);
+        self::assertSame(0xC7EC, DngTag::DEPTH_UNITS);
+        self::assertSame(0xC7ED, DngTag::DEPTH_MEASURE_TYPE);
+        self::assertSame(0xC7EE, DngTag::ENHANCE_PARAMS);
+    }
+
+    /**
+     * Tests that DNG 1.6 semantic and profile tags are defined.
+     */
+    public function testDng16Tags(): void
+    {
+        self::assertSame(0xCD2D, DngTag::PROFILE_GAIN_TABLE_MAP);
+        self::assertSame(0xCD2E, DngTag::SEMANTIC_NAME);
+        self::assertSame(0xCD30, DngTag::SEMANTIC_INSTANCE_ID);
+        self::assertSame(0xCD38, DngTag::MASK_SUB_AREA);
+        self::assertSame(0xCD3F, DngTag::RGB_TABLES);
+    }
+
+    /**
+     * Tests that DNG 1.7 illuminant tags are defined.
+     */
+    public function testDng17Tags(): void
+    {
+        self::assertSame(0xCD31, DngTag::CALIBRATION_ILLUMINANT_3);
+        self::assertSame(0xCD32, DngTag::CAMERA_CALIBRATION_3);
+        self::assertSame(0xCD33, DngTag::COLOR_MATRIX_3);
+        self::assertSame(0xCD34, DngTag::FORWARD_MATRIX_3);
+        self::assertSame(0xCD35, DngTag::ILLUMINANT_DATA_1);
+        self::assertSame(0xCD36, DngTag::ILLUMINANT_DATA_2);
+        self::assertSame(0xCD37, DngTag::ILLUMINANT_DATA_3);
+    }
 }
+
