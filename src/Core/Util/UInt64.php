@@ -196,53 +196,6 @@ final readonly class UInt64
     }
 
     /**
-     * Converts the value to a decimal string representation.
-     */
-    public function toString(): string
-    {
-        if ($this->hi === 0) {
-            return (string) $this->lo;
-        }
-
-        // For values that fit in signed int, use native conversion
-        if ($this->fitsSignedInt()) {
-            return (string) (($this->hi * self::UINT32_BASE) + $this->lo);
-        }
-
-        // For large values, use string arithmetic
-        $result = (string) $this->hi;
-        for ($i = 0; $i < 32; ++$i) {
-            $result = bcmul($result, '2', 0);
-        }
-
-        return bcadd($result, (string) $this->lo, 0);
-    }
-
-    /**
-     * Alias for addSmall(). Adds an unsigned integer value.
-     */
-    public function addUnsigned(int $value): self
-    {
-        return $this->addSmall($value);
-    }
-
-    /**
-     * Checks if this value is less than another UInt64.
-     */
-    public function lessThan(self $other): bool
-    {
-        return $this->compare($other) < 0;
-    }
-
-    /**
-     * Checks if this value is greater than another UInt64.
-     */
-    public function greaterThan(self $other): bool
-    {
-        return $this->compare($other) > 0;
-    }
-
-    /**
      * Ensures that the given value is within the unsigned 32-bit range.
      *
      * @param int $value Value to validate.

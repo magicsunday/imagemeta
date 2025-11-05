@@ -93,14 +93,14 @@ final class UInt64Test extends TestCase
     {
         $value = new UInt64(0, 12345);
 
-        self::assertSame('12345', $value->toString());
+        self::assertSame('12345', (string) $value->low());
     }
 
     #[Test]
     public function addsUnsignedInteger(): void
     {
         $value = new UInt64(0, 100);
-        $result = $value->addUnsigned(50);
+        $result = $value->addSmall(50);
 
         self::assertSame(0, $result->high());
         self::assertSame(150, $result->low());
@@ -110,7 +110,7 @@ final class UInt64Test extends TestCase
     public function handlesOverflowInAddition(): void
     {
         $value = new UInt64(0, 0xFFFFFFFF);
-        $result = $value->addUnsigned(2);
+        $result = $value->addSmall(2);
 
         self::assertSame(1, $result->high());
         self::assertSame(1, $result->low());
@@ -123,13 +123,13 @@ final class UInt64Test extends TestCase
         $larger = new UInt64(0, 200);
         $equal = new UInt64(0, 100);
 
-        self::assertTrue($smaller->lessThan($larger));
-        self::assertFalse($larger->lessThan($smaller));
-        self::assertFalse($smaller->lessThan($equal));
+        self::assertTrue($smaller->compare($larger) < 0);
+        self::assertFalse($larger->compare($smaller) < 0);
+        self::assertFalse($smaller->compare($equal) < 0);
 
-        self::assertTrue($larger->greaterThan($smaller));
-        self::assertFalse($smaller->greaterThan($larger));
-        self::assertFalse($smaller->greaterThan($equal));
+        self::assertTrue($larger->compare($smaller) > 0);
+        self::assertFalse($smaller->compare($larger) > 0);
+        self::assertFalse($smaller->compare($equal) > 0);
     }
 
     #[Test]
@@ -138,7 +138,7 @@ final class UInt64Test extends TestCase
         $smaller = new UInt64(1, 0xFFFFFFFF);
         $larger = new UInt64(2, 0);
 
-        self::assertTrue($smaller->lessThan($larger));
-        self::assertTrue($larger->greaterThan($smaller));
+        self::assertTrue($smaller->compare($larger) < 0);
+        self::assertTrue($larger->compare($smaller) > 0);
     }
 }
