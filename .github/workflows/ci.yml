@@ -99,7 +99,27 @@ jobs:
                 if: ${{ always() && steps.tests.conclusion == 'success' }}
                 run: |
                     mkdir -p .build/coverage
-                    XDEBUG_MODE=coverage .build/bin/phpunit --configuration .build/phpunit.xml --coverage-cobertura .build/coverage/cobertura.xml --coverage-html .build/coverage/html --coverage-text
+                    XDEBUG_MODE=coverage .build/bin/phpunit --configuration .build/phpunit.xml --coverage-cobertura .build/coverage/cobertura.xml --coverage-html .build/coverage/html --coverage-text | tee .build/coverage/coverage.txt
+
+            -   id: extract-coverage
+                name: Extract coverage percentage
+                if: ${{ always() && steps.coverage.conclusion == 'success' }}
+                run: |
+                    COVERAGE=$(grep -oP 'Lines:\s+\K[\d.]+(?=%)' .build/coverage/coverage.txt | head -1)
+                    echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
+                    echo "Coverage: $COVERAGE%"
+
+            -   id: create-coverage-badge
+                name: Create coverage badge
+                if: ${{ always() && steps.extract-coverage.conclusion == 'success' && github.ref == 'refs/heads/main' }}
+                uses: schneegans/dynamic-badges-action@v1.7.0
+                with:
+                    auth: ${{ secrets.GIST_SECRET }}
+                    gistID: ${{ secrets.GIST_ID }}
+                    filename: imagemeta-coverage.json
+                    label: coverage
+                    message: ${{ env.COVERAGE }}%
+                    color: ${{ env.COVERAGE > 90 && 'brightgreen' || env.COVERAGE > 80 && 'green' || env.COVERAGE > 70 && 'yellowgreen' || env.COVERAGE > 60 && 'yellow' || env.COVERAGE > 50 && 'orange' || 'red' }}
 
             -   id: upload-coverage-artifact
                 name: Upload coverage HTML report
@@ -122,5 +142,5 @@ jobs:
                     echo "" >> $GITHUB_STEP_SUMMARY
                     echo "### Coverage details:" >> $GITHUB_STEP_SUMMARY
                     echo '```' >> $GITHUB_STEP_SUMMARY
-                    XDEBUG_MODE=coverage .build/bin/phpunit --configuration .build/phpunit.xml --coverage-text | grep -A 10 "Code Coverage Report:" >> $GITHUB_STEP_SUMMARY || true
+                    grep -A 10 "Code Coverage Report:" .build/coverage/coverage.txt >> $GITHUB_STEP_SUMMARY || true
                     echo '```' >> $GITHUB_STEP_SUMMARY
