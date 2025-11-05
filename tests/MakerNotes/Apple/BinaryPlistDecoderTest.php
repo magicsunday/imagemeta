@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -29,6 +30,7 @@ use function str_repeat;
 use function strlen;
 
 #[CoversClass(BinaryPlistDecoder::class)]
+#[UsesClass(ApplePlistScalar::class)]
 final class BinaryPlistDecoderTest extends TestCase
 {
     #[Test]

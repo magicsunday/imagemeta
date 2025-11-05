@@ -25,10 +25,14 @@ namespace MagicSunday\ImageMeta\Core {
 
 namespace MagicSunday\ImageMeta\Tests\Core {
     use MagicSunday\ImageMeta\Core\BoundsError;
+    use MagicSunday\ImageMeta\Core\ByteReader;
     use MagicSunday\ImageMeta\Core\MemoryBuffer;
     use MagicSunday\ImageMeta\Core\ParseError;
+    use MagicSunday\ImageMeta\Core\Util\UInt64;
+    use MagicSunday\ImageMeta\Core\Util\Unpack;
     use PHPUnit\Framework\Attributes\After;
-use PHPUnit\Framework\Attributes\CoversClass;
+    use PHPUnit\Framework\Attributes\CoversClass;
+    use PHPUnit\Framework\Attributes\UsesClass;
     use PHPUnit\Framework\Attributes\Test;
     use PHPUnit\Framework\TestCase;
 
@@ -36,7 +40,10 @@ use PHPUnit\Framework\Attributes\CoversClass;
      * Unit tests for the bounds-checked in-memory buffer abstraction.
      */
     #[CoversClass(MemoryBuffer::class)]
-final class MemoryBufferTest extends TestCase
+    #[UsesClass(ByteReader::class)]
+    #[UsesClass(UInt64::class)]
+    #[UsesClass(Unpack::class)]
+    final class MemoryBufferTest extends TestCase
     {
         private static bool $forceShortRead = false;
 

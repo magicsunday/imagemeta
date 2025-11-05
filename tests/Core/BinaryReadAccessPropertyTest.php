@@ -12,12 +12,15 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Contracts\BinaryReadAccessInterface;
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function random_bytes;
@@ -32,6 +35,11 @@ use const SEEK_SET;
  * Property-based regression tests that ensure the binary access implementations stay aligned.
  */
 #[CoversClass(MemoryBuffer::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(StreamWindow::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
 final class BinaryReadAccessPropertyTest extends TestCase
 {
     use CreatesTempStream;

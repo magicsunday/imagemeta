@@ -13,10 +13,18 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 
 use LogicException;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
+use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
+use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Value\RunTime;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
@@ -35,6 +43,15 @@ use function str_repeat;
 use function strlen;
 
 #[CoversClass(AppleDecoder::class)]
+#[UsesClass(AppleMakerNotes::class)]
+#[UsesClass(ApplePlistArray::class)]
+#[UsesClass(ApplePlistDictionary::class)]
+#[UsesClass(ApplePlistScalar::class)]
+#[UsesClass(BinaryPlistDecoder::class)]
+#[UsesClass(KeyedArchiveUnarchiver::class)]
+#[UsesClass(SemanticStyle::class)]
+#[UsesClass(MakerNotesRecord::class)]
+#[UsesClass(RunTime::class)]
 final class AppleDecoderKeyedArchiveTest extends TestCase
 {
     #[Test]

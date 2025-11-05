@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -24,6 +25,7 @@ use function chr;
  * Tests for the Unpack utility class.
  */
 #[CoversClass(Unpack::class)]
+#[UsesClass(UInt64::class)]
 final class UnpackTest extends TestCase
 {
     #[Test]

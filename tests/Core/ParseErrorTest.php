@@ -11,10 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Core;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function restore_error_handler;
@@ -27,6 +30,9 @@ use function uniqid;
  * Tests covering the ParseError exception raised by stream guard failures.
  */
 #[CoversClass(ParseError::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(NormalisesOffsets::class)]
 final class ParseErrorTest extends TestCase
 {
     use CreatesTempStream;
