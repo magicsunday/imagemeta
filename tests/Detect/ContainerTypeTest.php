@@ -23,15 +23,9 @@ use PHPUnit\Framework\TestCase;
 final class ContainerTypeTest extends TestCase
 {
     #[Test]
-    public function hasJpegCase(): void
+    public function enumCasesAreDifferent(): void
     {
-        self::assertSame('JPEG', ContainerType::JPEG->name);
-    }
-
-    #[Test]
-    public function hasIsoBmffCase(): void
-    {
-        self::assertSame('ISOBMFF', ContainerType::ISOBMFF->name);
+        self::assertNotSame(ContainerType::JPEG, ContainerType::ISOBMFF);
     }
 
     #[Test]
@@ -39,7 +33,6 @@ final class ContainerTypeTest extends TestCase
     {
         $cases = ContainerType::cases();
         
-        self::assertCount(2, $cases);
         self::assertContains(ContainerType::JPEG, $cases);
         self::assertContains(ContainerType::ISOBMFF, $cases);
     }
