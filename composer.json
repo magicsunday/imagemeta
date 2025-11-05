@@ -17,10 +17,13 @@
         "discard-changes": true,
         "sort-packages": true,
         "optimize-autoloader": true,
-        "platform-check": false
+        "platform-check": false,
+        "platform": {
+            "php": "8.3.6"
+        }
     },
     "require": {
-        "php": "^8.4",
+        "php": "^8.3",
         "ext-ctype": "*",
         "ext-date": "*",
         "ext-fileinfo": "*",
