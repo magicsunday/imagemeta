@@ -28,8 +28,8 @@ use function substr_replace;
 /**
  * ICC decoder tests.
  */
-#[CoversClass(IccDecoder::class)]
 #[UsesClass(IccRenderingIntent::class)]
+#[CoversClass(IccDecoder::class)]
 final class IccDecoderTest extends TestCase
 {
     #[Test]

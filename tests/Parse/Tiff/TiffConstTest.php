@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -20,6 +21,7 @@ use ReflectionClass;
 /**
  * Ensures TIFF shared constants keep their specification-backed numeric values.
  */
+#[CoversClass(TiffConst::class)]
 final class TiffConstTest extends TestCase
 {
     /**

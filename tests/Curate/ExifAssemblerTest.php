@@ -72,9 +72,9 @@ use function str_repeat;
 /**
  * Curates EXIF and related metadata into structured value objects.
  */
-#[CoversClass(ExifAssembler::class)]
 #[CoversClass(StructuredMetadata::class)]
 #[CoversClass(ValueFactory::class)]
+#[CoversClass(ExifAssembler::class)]
 final class ExifAssemblerTest extends TestCase
 {
     /**

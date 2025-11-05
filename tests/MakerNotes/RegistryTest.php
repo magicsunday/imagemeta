@@ -19,14 +19,14 @@ use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the maker notes registry behaviour.
- *
- * @covers \MagicSunday\ImageMeta\MakerNotes\Registry
- */
+ * */
+#[CoversClass(Registry::class)]
 final class RegistryTest extends TestCase
 {
     /**

@@ -35,22 +35,15 @@ use PHPUnit\Framework\TestCase;
 /**
  * Enum mapping tests.
  */
-#[CoversClass(Compression::class)]
 #[CoversClass(Photometric::class)]
-#[CoversClass(PlanarConfiguration::class)]
 #[CoversClass(ResolutionUnit::class)]
-#[CoversClass(YCbCrPositioning::class)]
 #[CoversClass(ExposureMode::class)]
-#[CoversClass(GainControl::class)]
 #[CoversClass(SubjectDistanceRange::class)]
-#[CoversClass(FileSource::class)]
 #[CoversClass(SensingMethod::class)]
-#[CoversClass(CompositeImage::class)]
 #[CoversClass(LightSource::class)]
-#[CoversClass(Orientation::class)]
 #[CoversClass(MeteringMode::class)]
-#[CoversClass(SceneCaptureType::class)]
 #[UsesClass(EnumFromIntStringNullable::class)]
+#[CoversClass(Compression::class)]
 final class EnumMappingTest extends TestCase
 {
     /**

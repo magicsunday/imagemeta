@@ -29,8 +29,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Exposure::class)]
 #[UsesClass(FlashInfo::class)]
+#[CoversClass(Exposure::class)]
 final class ExposureTest extends TestCase
 {
     #[Test]

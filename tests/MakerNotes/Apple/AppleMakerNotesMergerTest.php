@@ -16,13 +16,12 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function str_repeat;
 
-/**
- * @covers \MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger
- */
+#[CoversClass(AppleMakerNotesMerger::class)]
 final class AppleMakerNotesMergerTest extends TestCase
 {
     #[Test]

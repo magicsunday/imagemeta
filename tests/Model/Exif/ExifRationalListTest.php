@@ -19,11 +19,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \MagicSunday\ImageMeta\Model\Exif\ExifRationalList
- */
-#[CoversClass(ExifRationalList::class)]
 #[UsesClass(ExifRational::class)]
+#[CoversClass(ExifRationalList::class)]
 final class ExifRationalListTest extends TestCase
 {
     #[Test]

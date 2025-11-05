@@ -19,11 +19,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \MagicSunday\ImageMeta\Model\Exif\ExifNumericList
- */
-#[CoversClass(ExifNumericList::class)]
 #[UsesClass(UInt64::class)]
+#[CoversClass(ExifNumericList::class)]
 final class ExifNumericListTest extends TestCase
 {
     #[Test]

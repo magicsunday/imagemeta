@@ -15,6 +15,7 @@ use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function strlen;
@@ -22,6 +23,7 @@ use function strlen;
 /**
  * Dedicated unit tests asserting that guard rails raise informative BoundsError messages.
  */
+#[CoversClass(BoundsError::class)]
 final class BoundsErrorTest extends TestCase
 {
     use CreatesTempStream;

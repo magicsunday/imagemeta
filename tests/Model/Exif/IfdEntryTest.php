@@ -14,11 +14,13 @@ namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for the {@see IfdEntry} model.
  */
+#[CoversClass(IfdEntry::class)]
 final class IfdEntryTest extends TestCase
 {
     /**

@@ -13,8 +13,10 @@ namespace MagicSunday\ImageMeta\Tests\Acceptance;
 
 use MagicSunday\ImageMeta\MetadataReader;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+#[CoversClass(MetadataReader::class)]
 final class ExifFallbacksTest extends TestCase
 {
     private const string SAMPLE = __DIR__ . '/../../test-images/Images/gps_exif_example.jpg';

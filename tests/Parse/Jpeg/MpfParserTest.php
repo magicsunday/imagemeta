@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function is_string;
@@ -24,9 +25,7 @@ use function pack;
 use function str_repeat;
 use function strlen;
 
-/**
- * @covers \MagicSunday\ImageMeta\Parse\Jpeg\MpfParser
- */
+#[CoversClass(MpfParser::class)]
 final class MpfParserTest extends TestCase
 {
     private const int TAG_MPF_VERSION = 0xB000;

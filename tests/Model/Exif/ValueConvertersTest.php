@@ -34,10 +34,6 @@ use PHPUnit\Framework\TestCase;
 use function pack;
 use function substr;
 
-/**
- * @covers \MagicSunday\ImageMeta\Model\Exif\ValueConverters
- */
-#[CoversClass(ValueConverters::class)]
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifRationalList::class)]
 #[UsesClass(Ifd::class)]
@@ -45,6 +41,7 @@ use function substr;
 #[UsesClass(FlashInfo::class)]
 #[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifFlash::class)]
+#[CoversClass(ValueConverters::class)]
 final class ValueConvertersTest extends TestCase
 {
     /**

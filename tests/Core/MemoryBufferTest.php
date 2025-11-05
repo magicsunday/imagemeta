@@ -28,13 +28,15 @@ namespace MagicSunday\ImageMeta\Tests\Core {
     use MagicSunday\ImageMeta\Core\MemoryBuffer;
     use MagicSunday\ImageMeta\Core\ParseError;
     use PHPUnit\Framework\Attributes\After;
+use PHPUnit\Framework\Attributes\CoversClass;
     use PHPUnit\Framework\Attributes\Test;
     use PHPUnit\Framework\TestCase;
 
     /**
      * Unit tests for the bounds-checked in-memory buffer abstraction.
      */
-    final class MemoryBufferTest extends TestCase
+    #[CoversClass(MemoryBuffer::class)]
+final class MemoryBufferTest extends TestCase
     {
         private static bool $forceShortRead = false;
 

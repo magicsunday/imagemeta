@@ -16,10 +16,12 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function file_get_contents;
 
+#[CoversClass(BinaryPlistDecoder::class)]
 final class BinaryPlistDecoderFixtureTest extends TestCase
 {
     private function loadFixture(): string

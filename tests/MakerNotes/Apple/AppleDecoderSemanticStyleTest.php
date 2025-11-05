@@ -14,12 +14,11 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
-/**
- * @covers \MagicSunday\ImageMeta\MakerNotes\AppleDecoder
- */
+#[CoversClass(AppleDecoder::class)]
 final class AppleDecoderSemanticStyleTest extends TestCase
 {
     #[Test]
