@@ -30,6 +30,7 @@ use function strlen;
 #[CoversClass(BoundsError::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
+#[UsesClass(MemoryBuffer::class)]
 #[UsesTrait(NormalisesOffsets::class)]
 final class BoundsErrorTest extends TestCase
 {
