@@ -241,4 +241,24 @@ final class XmpParser
             ? sprintf('{%s}%s', $namespaceUri, $localName)
             : $localName;
     }
+
+    /**
+     * Identifies the RDF container type from an XMP element name.
+     *
+     * XMP specification §5.7.2 defines Alt (alternative), Bag (unordered), and Seq (ordered)
+     * as the standard RDF container types used in XMP metadata.
+     *
+     * @param string $localName Element local name to check (e.g., "Alt", "Bag", "Seq").
+     *
+     * @return \MagicSunday\ImageMeta\Value\Enum\XmpContainer|null Returns the container type if recognized, null otherwise.
+     */
+    public static function identifyContainerType(string $localName): ?\MagicSunday\ImageMeta\Value\Enum\XmpContainer
+    {
+        return match ($localName) {
+            'Alt' => \MagicSunday\ImageMeta\Value\Enum\XmpContainer::Alt,
+            'Bag' => \MagicSunday\ImageMeta\Value\Enum\XmpContainer::Bag,
+            'Seq' => \MagicSunday\ImageMeta\Value\Enum\XmpContainer::Seq,
+            default => null,
+        };
+    }
 }
