@@ -46,6 +46,7 @@ use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\GpsCoordinate;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
@@ -131,6 +132,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Video::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
+#[UsesClass(GpsCoordinate::class)]
 final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';

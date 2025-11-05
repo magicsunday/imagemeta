@@ -12,12 +12,18 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
+use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
+use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
+use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -50,6 +56,12 @@ use function unlink;
 #[UsesTrait(NormalisesOffsets::class)]
 #[UsesTrait(ReadsBinaryPrimitives::class)]
 #[CoversClass(JpegExtractor::class)]
+#[UsesClass(JpegAudioStream::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(MpfAttributes::class)]
+#[UsesClass(MpfDocument::class)]
+#[UsesClass(MpfEntry::class)]
+#[UsesClass(MpfParser::class)]
 final class JpegExtractorTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";

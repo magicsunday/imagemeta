@@ -37,6 +37,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -45,6 +46,10 @@ use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\ColorProfileGainMap;
+use MagicSunday\ImageMeta\Value\ColorProfileHueSatMap;
+use MagicSunday\ImageMeta\Value\ColorProfileLookTable;
+use MagicSunday\ImageMeta\Value\ColorProfileToneCurve;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
@@ -58,6 +63,7 @@ use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
@@ -75,6 +81,7 @@ use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
+use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
 use MagicSunday\ImageMeta\Value\Gps;
@@ -86,9 +93,11 @@ use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
+use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\Regions\Region;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -105,6 +114,7 @@ use MagicSunday\ImageMeta\Value\Xmp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
@@ -165,6 +175,27 @@ use function str_repeat;
 #[CoversClass(Video::class)]
 #[CoversClass(WhiteBalanceDetails::class)]
 #[CoversClass(Xmp::class)]
+#[UsesClass(MakerNotesRecord::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(ExifRational::class)]
+#[UsesClass(ExifRationalList::class)]
+#[UsesClass(QuickTimeMeta::class)]
+#[UsesClass(XmpDocument::class)]
+#[UsesClass(FlashInfo::class)]
+#[UsesClass(IccDecoder::class)]
+#[UsesClass(IccRenderingIntent::class)]
+#[UsesClass(MpfAttributes::class)]
+#[UsesClass(MpfDocument::class)]
+#[UsesClass(MpfEntry::class)]
+#[UsesClass(MultiPictureEntry::class)]
+#[UsesClass(Region::class)]
+#[UsesClass(RegionType::class)]
+#[UsesClass(ColorProfileGainMap::class)]
+#[UsesClass(ColorProfileHueSatMap::class)]
+#[UsesClass(ColorProfileLookTable::class)]
+#[UsesClass(ColorProfileToneCurve::class)]
+#[UsesClass(DngProfileGainTableTag::class)]
+#[UsesClass(GpsCoordinate::class)]
 final class ExifAssemblerTest extends TestCase
 {
     /**
