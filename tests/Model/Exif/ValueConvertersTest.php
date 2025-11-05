@@ -849,7 +849,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function normalisesExifVersionAndFlash(): void
     {
-        // Valid EXIF versions per EXIF 3.0 §4.6.4 Table 4
+        // Valid EXIF versions (tag defined in EXIF 3.0 §4.6.6.1.1)
         self::assertSame('1.00', ValueConverters::toExifVersion('0100'));
         self::assertSame('1.00', ValueConverters::toExifVersion("0100\0\0"));
         self::assertSame('2.00', ValueConverters::toExifVersion('0200'));
