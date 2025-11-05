@@ -11,12 +11,38 @@ declare(strict_types=1);
 
 namespace MagicSunday\imagemeta\tests;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\StreamWindow;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
+use MagicSunday\ImageMeta\Detect\FormatDetector;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
+use MagicSunday\ImageMeta\MakerNotes\Registry;
+use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
+use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
@@ -27,6 +53,7 @@ use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\Rights;
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
@@ -44,6 +71,37 @@ use function unlink;
 /**
  * Integration coverage for the convenience metadata reader.
  */
+#[CoversClass(MetadataReader::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(StreamWindow::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(ExifAssembler::class)]
+#[UsesClass(FormatDetector::class)]
+#[UsesClass(AppleMakerNotes::class)]
+#[UsesClass(AppleMakerNotesMerger::class)]
+#[UsesClass(QuickTimeLookup::class)]
+#[UsesClass(SemanticStyle::class)]
+#[UsesClass(MakerNotesRecord::class)]
+#[UsesClass(Registry::class)]
+#[UsesClass(RegistryFactory::class)]
+#[UsesClass(SonyDecoder::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(ParsedExif::class)]
+#[UsesClass(ValueConverters::class)]
+#[UsesClass(Metadata::class)]
+#[UsesClass(QuickTimeMeta::class)]
+#[UsesClass(StructuredMetadataCache::class)]
+#[UsesClass(XmpDocument::class)]
+#[UsesClass(BoxDescriptor::class)]
+#[UsesClass(IsoBmffExtractor::class)]
+#[UsesClass(JpegExtractor::class)]
+#[UsesClass(TiffExifReader::class)]
+#[UsesClass(XmpParser::class)]
 #[CoversNothing]
 final class MetadataReaderTest extends TestCase
 {
