@@ -12,6 +12,11 @@ declare(strict_types=1);
 namespace MagicSunday\imagemeta\tests\Model;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
@@ -21,6 +26,43 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClips;
+use MagicSunday\ImageMeta\Value\Author;
+use MagicSunday\ImageMeta\Value\Camera;
+use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\CompositeImageInfo;
+use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\ExifFlash;
+use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\File;
+use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Value\Focus;
+use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\Image;
+use MagicSunday\ImageMeta\Value\Integrity;
+use MagicSunday\ImageMeta\Value\Interop;
+use MagicSunday\ImageMeta\Value\Keywords;
+use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\Motion;
+use MagicSunday\ImageMeta\Value\MultiPicture;
+use MagicSunday\ImageMeta\Value\Preview;
+use MagicSunday\ImageMeta\Value\ProcessingSettings;
+use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\RelatedAssets;
+use MagicSunday\ImageMeta\Value\Rights;
+use MagicSunday\ImageMeta\Value\Scene;
+use MagicSunday\ImageMeta\Value\Sensor;
+use MagicSunday\ImageMeta\Value\Standards;
+use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\Uav;
+use MagicSunday\ImageMeta\Value\Video;
+use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
+use MagicSunday\ImageMeta\Value\Xmp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -38,6 +80,48 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(XmpParser::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesClass(ValueFactory::class)]
+#[UsesClass(StructuredMetadata::class)]
+#[UsesClass(EnumFromIntStringNullable::class)]
+#[UsesClass(AppleMakerNotes::class)]
+#[UsesClass(QuickTimeLookup::class)]
+#[UsesClass(Audio::class)]
+#[UsesClass(AudioClips::class)]
+#[UsesClass(Author::class)]
+#[UsesClass(Camera::class)]
+#[UsesClass(Capture::class)]
+#[UsesClass(ColorProfile::class)]
+#[UsesClass(CompositeImageInfo::class)]
+#[UsesClass(Container::class)]
+#[UsesClass(Derived::class)]
+#[UsesClass(Device::class)]
+#[UsesClass(ExifFlash::class)]
+#[UsesClass(Exposure::class)]
+#[UsesClass(File::class)]
+#[UsesClass(FlashPix::class)]
+#[UsesClass(Focus::class)]
+#[UsesClass(Gps::class)]
+#[UsesClass(Image::class)]
+#[UsesClass(Integrity::class)]
+#[UsesClass(Interop::class)]
+#[UsesClass(Keywords::class)]
+#[UsesClass(Lens::class)]
+#[UsesClass(Motion::class)]
+#[UsesClass(MultiPicture::class)]
+#[UsesClass(Preview::class)]
+#[UsesClass(ProcessingSettings::class)]
+#[UsesClass(Regions::class)]
+#[UsesClass(RelatedAssets::class)]
+#[UsesClass(Rights::class)]
+#[UsesClass(Scene::class)]
+#[UsesClass(Sensor::class)]
+#[UsesClass(Standards::class)]
+#[UsesClass(Temporal::class)]
+#[UsesClass(TiffData::class)]
+#[UsesClass(Uav::class)]
+#[UsesClass(Video::class)]
+#[UsesClass(WhiteBalanceDetails::class)]
+#[UsesClass(Xmp::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Curate\ExifAssembler::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Model\StructuredMetadataCache::class)]
 #[CoversClass(Metadata::class)]

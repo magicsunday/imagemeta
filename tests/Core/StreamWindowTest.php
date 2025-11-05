@@ -12,10 +12,12 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function pack;
@@ -25,6 +27,8 @@ use function strlen;
  * Unit tests covering the stream window cursor, bounds checks, and integer helpers.
  */
 #[CoversClass(StreamWindow::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Stream::class)]
 final class StreamWindowTest extends TestCase
 {
     use CreatesTempStream;
