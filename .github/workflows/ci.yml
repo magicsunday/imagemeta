@@ -31,7 +31,6 @@ jobs:
                     php-version: ${{ matrix.php }}
                     extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
                     tools: composer:v2
-                    coverage: xdebug
 
             -   name: Validate composer.json and composer.lock
                 run: composer validate
@@ -93,18 +92,3 @@ jobs:
                 if: ${{ always() && steps.install.conclusion == 'success' }}
                 run: |
                     composer ci:test:php:unit
-
-            -   id: coverage
-                name: Generate Coverage
-                if: ${{ always() && steps.tests.conclusion == 'success' }}
-                run: |
-                    mkdir -p .build/coverage
-                    XDEBUG_MODE=coverage .build/bin/phpunit --configuration .build/phpunit.xml --coverage-clover .build/coverage/clover.xml
-
-            -   id: upload-coverage
-                name: Upload coverage to Codecov
-                if: ${{ always() && steps.coverage.conclusion == 'success' }}
-                uses: codecov/codecov-action@v4
-                with:
-                    files: .build/coverage/clover.xml
-                    fail_ci_if_error: false
