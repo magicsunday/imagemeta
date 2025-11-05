@@ -42,13 +42,13 @@ use function unlink;
 /**
  * Exercises the JPEG extractor using synthetic marker segments.
  */
-#[CoversClass(JpegExtractor::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(ParseError::class)]
 #[UsesClass(NormalisesOffsets::class)]
 #[UsesClass(ReadsBinaryPrimitives::class)]
+#[CoversClass(JpegExtractor::class)]
 final class JpegExtractorTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";

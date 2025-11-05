@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -49,6 +50,7 @@ use function unpack;
 /**
  * Exercises the TIFF EXIF reader with synthetic Classic TIFF and BigTIFF payloads.
  */
+#[CoversClass(TiffExifReader::class)]
 final class TiffExifReaderTest extends TestCase
 {
     private const int CUSTOM_SIGNED_LONG8_TAG = 0xC7A1;

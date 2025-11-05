@@ -15,7 +15,9 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\MetadataReader;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function str_repeat;
@@ -23,6 +25,7 @@ use function str_repeat;
 /**
  * Verifies that maker note metadata propagates through the model layer.
  */
+#[CoversClass(MetadataReader::class)]
 final class MakerNotesPropagationTest extends TestCase
 {
     /**

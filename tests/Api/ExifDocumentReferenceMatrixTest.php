@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
 use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -129,6 +130,7 @@ use PHPUnit\Framework\TestCase;
  * @method static void assertApiMatches(string $fixture, StructuredMetadata $document, ApiExpectation $expected)
  * @method static void assertModelMatches(string $fixture, ?ParsedExif $document, ModelExpectation $expected)
  */
+#[CoversClass(MetadataReader::class)]
 final class ExifDocumentReferenceMatrixTest extends TestCase
 {
     use ExifExpectationAssertions;

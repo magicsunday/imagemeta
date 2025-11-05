@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Core;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function restore_error_handler;
@@ -25,6 +26,7 @@ use function uniqid;
 /**
  * Tests covering the ParseError exception raised by stream guard failures.
  */
+#[CoversClass(ParseError::class)]
 final class ParseErrorTest extends TestCase
 {
     use CreatesTempStream;

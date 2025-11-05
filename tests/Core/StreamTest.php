@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Stream;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -22,6 +23,7 @@ use function strlen;
 /**
  * Unit tests verifying the behaviour of the bounds-checked stream wrapper.
  */
+#[CoversClass(Stream::class)]
 final class StreamTest extends TestCase
 {
     use CreatesTempStream;

@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 use function random_bytes;
@@ -30,6 +31,7 @@ use const SEEK_SET;
 /**
  * Property-based regression tests that ensure the binary access implementations stay aligned.
  */
+#[CoversClass(MemoryBuffer::class)]
 final class BinaryReadAccessPropertyTest extends TestCase
 {
     use CreatesTempStream;

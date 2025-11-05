@@ -29,7 +29,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for CaptureDateResolver.
  */
-#[CoversClass(CaptureDateResolver::class)]
 #[UsesClass(Metadata::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(Ifd::class)]
@@ -38,6 +37,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifRationalList::class)]
 #[UsesClass(ExifTag::class)]
+#[CoversClass(CaptureDateResolver::class)]
 final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';

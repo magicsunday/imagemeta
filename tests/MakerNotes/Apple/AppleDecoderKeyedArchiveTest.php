@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\Value\RunTime;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
@@ -33,9 +34,7 @@ use function pack;
 use function str_repeat;
 use function strlen;
 
-/**
- * @covers \MagicSunday\ImageMeta\MakerNotes\AppleDecoder
- */
+#[CoversClass(AppleDecoder::class)]
 final class AppleDecoderKeyedArchiveTest extends TestCase
 {
     #[Test]

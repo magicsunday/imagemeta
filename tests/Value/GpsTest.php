@@ -20,8 +20,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Gps::class)]
 #[UsesClass(GpsCoordinate::class)]
+#[CoversClass(Gps::class)]
 final class GpsTest extends TestCase
 {
     #[Test]

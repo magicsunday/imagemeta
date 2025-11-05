@@ -13,14 +13,14 @@ namespace MagicSunday\imagemeta\tests\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Validates the lightweight streaming XMP parser implementation.
- *
- * @covers \MagicSunday\ImageMeta\Parse\Xmp\XmpParser
- */
+ * */
+#[CoversClass(XmpParser::class)]
 final class XmpParserTest extends TestCase
 {
     private const string XMP_NS = 'http://ns.adobe.com/xap/1.0/';

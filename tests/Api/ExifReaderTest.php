@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -131,6 +132,7 @@ use PHPUnit\Framework\TestCase;
  * @method static void assertApiMatches(string $fixture, StructuredMetadata $document, ApiExpectation $expected)
  * @method static void assertModelMatches(string $fixture, ?ParsedExif $document, ModelExpectation $expected)
  */
+#[CoversClass(ExifReader::class)]
 final class ExifReaderTest extends TestCase
 {
     use ExifExpectationAssertions;

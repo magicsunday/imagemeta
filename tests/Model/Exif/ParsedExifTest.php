@@ -52,10 +52,6 @@ use function str_pad;
 use function strlen;
 use function substr;
 
-/**
- * @covers \MagicSunday\ImageMeta\Model\Exif\ParsedExif
- */
-#[CoversClass(ParsedExif::class)]
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifRationalList::class)]
 #[UsesClass(Ifd::class)]
@@ -69,6 +65,7 @@ use function substr;
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(Unpack::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
+#[CoversClass(ParsedExif::class)]
 final class ParsedExifTest extends TestCase
 {
     private const string ISO_8601_MILLISECONDS = 'Y-m-d\TH:i:s.vP';

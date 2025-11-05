@@ -20,8 +20,10 @@ use MagicSunday\ImageMeta\Model\Exif\ParsedExif as ModelExifDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
+#[CoversClass(StructuredMetadata::class)]
 final class ExifDocumentFallbackTest extends TestCase
 {
     #[Test]

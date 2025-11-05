@@ -28,10 +28,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Test case for the aggregated metadata container model.
- *
- * @covers \MagicSunday\ImageMeta\Model\Metadata
- */
-#[CoversClass(Metadata::class)]
+ * */
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
@@ -41,6 +38,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(XmpParser::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ValueConverters::class)]
+#[CoversClass(Metadata::class)]
 final class MetadataTest extends TestCase
 {
     /**

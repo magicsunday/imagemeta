@@ -13,13 +13,13 @@ namespace MagicSunday\imagemeta\tests\Model;
 
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Test case for the QuickTime metadata container model.
- *
- * @covers \MagicSunday\ImageMeta\Model\QuickTimeMeta
- */
+ * */
+#[CoversClass(QuickTimeMeta::class)]
 final class QuickTimeMetaTest extends TestCase
 {
     /**
