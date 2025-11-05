@@ -30,6 +30,8 @@ use function str_repeat;
 use function strlen;
 
 #[CoversClass(BinaryPlistDecoder::class)]
+#[UsesClass(ApplePlistArray::class)]
+#[UsesClass(ApplePlistDictionary::class)]
 #[UsesClass(ApplePlistScalar::class)]
 final class BinaryPlistDecoderTest extends TestCase
 {
