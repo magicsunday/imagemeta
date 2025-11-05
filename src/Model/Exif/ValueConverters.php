@@ -508,6 +508,9 @@ final readonly class ValueConverters
      * Converts a textual YCbCr subsampling representation into integer pairs as
      * described in EXIF 2.32 §4.6.2 / EXIF 3.0 §4.6.2 (image data structure).
      *
+     * TIFF 6.0 §21 and EXIF 3.0 §4.6.2 define the legal YCbCr subsampling values
+     * as [2,1], [2,2], [4,1], [4,2], and [4,4]. Other combinations are rejected.
+     *
      * @return array{0:int,1:int}|null
      */
     public static function ycbcrSubSamplingToPair(?string $val): ?array
@@ -528,7 +531,25 @@ final readonly class ValueConverters
             return null;
         }
 
-        return [(int) $parts[0], (int) $parts[1]];
+        $horizontal = (int) $parts[0];
+        $vertical   = (int) $parts[1];
+
+        // TIFF 6.0 §21 and EXIF 3.0 §4.6.2: legal values are [2,1], [2,2], [4,1], [4,2], [4,4]
+        $legalValues = [
+            [2, 1],
+            [2, 2],
+            [4, 1],
+            [4, 2],
+            [4, 4],
+        ];
+
+        foreach ($legalValues as $legal) {
+            if ($horizontal === $legal[0] && $vertical === $legal[1]) {
+                return [$horizontal, $vertical];
+            }
+        }
+
+        return null;
     }
 
     /**

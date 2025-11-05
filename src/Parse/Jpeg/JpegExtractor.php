@@ -861,6 +861,10 @@ final class JpegExtractor
     /**
      * Derives YCbCr subsampling factors from component sampling values.
      *
+     * TIFF 6.0 §21 and EXIF 3.0 §4.6.2 define legal YCbCr subsampling values
+     * as [2,1], [2,2], [4,1], [4,2], and [4,4]. Derived values outside this
+     * set are rejected.
+     *
      * @param array<int, array{horizontal:int, vertical:int}> $components
      *
      * @return array{0:int,1:int}|null
@@ -901,9 +905,24 @@ final class JpegExtractor
             return null;
         }
 
-        return [
-            (int) ($luma['horizontal'] / $horizontal),
-            (int) ($luma['vertical'] / $vertical),
+        $derivedH = (int) ($luma['horizontal'] / $horizontal);
+        $derivedV = (int) ($luma['vertical'] / $vertical);
+
+        // TIFF 6.0 §21 and EXIF 3.0 §4.6.2: validate legal subsampling values
+        $legalValues = [
+            [2, 1],
+            [2, 2],
+            [4, 1],
+            [4, 2],
+            [4, 4],
         ];
+
+        foreach ($legalValues as $legal) {
+            if ($derivedH === $legal[0] && $derivedV === $legal[1]) {
+                return [$derivedH, $derivedV];
+            }
+        }
+
+        return null;
     }
 }

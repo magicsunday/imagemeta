@@ -910,6 +910,58 @@ final class ValueConvertersTest extends TestCase
         self::assertSame([0.64, 0.33, 0.3, 0.6, 0.15, 0.6], ValueConverters::toPrimaryChromaticities($list));
     }
 
+    /**
+     * Validates legal YCbCr subsampling values per TIFF 6.0 §21 and EXIF 3.0 §4.6.2.
+     *
+     * Legal values are: [2,1], [2,2], [4,1], [4,2], [4,4].
+     */
+    #[Test]
+    public function acceptsLegalYCbCrSubSamplingValues(): void
+    {
+        // TIFF 6.0 §21 and EXIF 3.0 §4.6.2 define legal YCbCr subsampling values
+        self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2 1'));
+        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2 2'));
+        self::assertSame([4, 1], ValueConverters::ycbcrSubSamplingToPair('4 1'));
+        self::assertSame([4, 2], ValueConverters::ycbcrSubSamplingToPair('4 2'));
+        self::assertSame([4, 4], ValueConverters::ycbcrSubSamplingToPair('4 4'));
+
+        // Test with different delimiters (comma, semicolon)
+        self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2,1'));
+        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2;2'));
+    }
+
+    /**
+     * Rejects illegal YCbCr subsampling values per TIFF 6.0 §21 and EXIF 3.0 §4.6.2.
+     */
+    #[Test]
+    public function rejectsIllegalYCbCrSubSamplingValues(): void
+    {
+        // Invalid horizontal/vertical combinations
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 3'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('3 3'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 3'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('5 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('8 8'));
+
+        // Edge cases
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('0 0'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('0 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 0'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('-1 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 -1'));
+
+        // Invalid formats
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair(''));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair(null));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('invalid'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 2 2'));
+    }
+
     #[Test]
     public function serialisesMatrices(): void
     {
