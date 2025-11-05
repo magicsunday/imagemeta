@@ -35,6 +35,9 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(XmpDocument::class)]
+#[UsesClass(ExifRational::class)]
+#[UsesClass(ExifRationalList::class)]
+#[UsesClass(ExifTag::class)]
 final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';

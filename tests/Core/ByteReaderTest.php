@@ -101,7 +101,6 @@ final class ByteReaderTest extends TestCase
 
         $result = $reader->readU64BE();
 
-        self::assertInstanceOf(UInt64::class, $result);
         self::assertSame(0x00000001, $result->high());
         self::assertSame(0x23456789, $result->low());
     }
@@ -115,7 +114,8 @@ final class ByteReaderTest extends TestCase
 
         $result = $reader->readU64LE();
 
-        self::assertInstanceOf(UInt64::class, $result);
+        self::assertSame(0x23456789, $result->high());
+        self::assertSame(0x00000001, $result->low());
     }
 
     #[Test]

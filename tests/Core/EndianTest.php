@@ -26,18 +26,23 @@ final class EndianTest extends TestCase
     public function littleEndianHasCorrectValue(): void
     {
         self::assertSame('II', Endian::Little->value);
+        self::assertNotSame('MM', Endian::Little->value);
     }
 
     #[Test]
     public function bigEndianHasCorrectValue(): void
     {
         self::assertSame('MM', Endian::Big->value);
+        self::assertNotSame('II', Endian::Big->value);
     }
 
     #[Test]
     public function canConstructFromValue(): void
     {
-        self::assertSame(Endian::Little, Endian::from('II'));
-        self::assertSame(Endian::Big, Endian::from('MM'));
+        $little = Endian::from('II');
+        $big = Endian::from('MM');
+        
+        self::assertSame('II', $little->value);
+        self::assertSame('MM', $big->value);
     }
 }

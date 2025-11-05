@@ -26,8 +26,10 @@ use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -48,6 +50,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Orientation::class)]
 #[CoversClass(MeteringMode::class)]
 #[CoversClass(SceneCaptureType::class)]
+#[UsesClass(EnumFromIntStringNullable::class)]
 final class EnumMappingTest extends TestCase
 {
     /**

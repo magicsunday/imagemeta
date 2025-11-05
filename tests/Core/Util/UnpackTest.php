@@ -60,7 +60,6 @@ final class UnpackTest extends TestCase
     {
         $result = Unpack::combineUint32(0x12345678, 0x9ABCDEF0);
         
-        self::assertInstanceOf(UInt64::class, $result);
         self::assertSame(0x12345678, $result->high());
         self::assertSame(0x9ABCDEF0, $result->low());
     }
