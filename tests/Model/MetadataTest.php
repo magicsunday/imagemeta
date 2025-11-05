@@ -122,6 +122,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Video::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
+#[UsesClass(\MagicSunday\ImageMeta\Curate\ExifAssembler::class)]
+#[UsesClass(\MagicSunday\ImageMeta\Model\StructuredMetadataCache::class)]
 #[CoversClass(Metadata::class)]
 final class MetadataTest extends TestCase
 {
