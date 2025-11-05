@@ -34,7 +34,7 @@ final class TiffDataTest extends TestCase
             rowsPerStrip: 64,
             tileWidth: null,
             tileLength: null,
-            compression: Compression::NONE,
+            compression: Compression::UNCOMPRESSED,
             photometric: Photometric::RGB,
             planar: null,
             resolutionUnit: ResolutionUnit::INCH,

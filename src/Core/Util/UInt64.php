@@ -196,6 +196,30 @@ final readonly class UInt64
     }
 
     /**
+     * Alias for toHex(). Converts the value to a hexadecimal string.
+     */
+    public function toString(): string
+    {
+        return $this->toHex();
+    }
+
+    /**
+     * Alias for addSmall(). Adds an unsigned integer value.
+     */
+    public function addUnsigned(int $value): self
+    {
+        return $this->addSmall($value);
+    }
+
+    /**
+     * Checks if this value is less than another UInt64.
+     */
+    public function lessThan(self $other): bool
+    {
+        return $this->compare($other) < 0;
+    }
+
+    /**
      * Ensures that the given value is within the unsigned 32-bit range.
      *
      * @param int $value Value to validate.

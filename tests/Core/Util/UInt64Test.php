@@ -83,7 +83,7 @@ final class UInt64Test extends TestCase
         $value = new UInt64(0xFFFFFFFF, 0xFFFFFFFF);
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('UInt64 value exceeds PHP_INT_MAX');
+        $this->expectExceptionMessage('test exceeds supported integer range.');
 
         $value->toInt('test');
     }

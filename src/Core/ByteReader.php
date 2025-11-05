@@ -68,11 +68,27 @@ final readonly class ByteReader
     }
 
     /**
+     * Reads an unsigned 16-bit little-endian integer.
+     */
+    public function readU16LE(): int
+    {
+        return $this->unpackInt('v', 2);
+    }
+
+    /**
      * Reads an unsigned 32-bit big-endian integer.
      */
     public function readU32BE(): int
     {
         return $this->unpackInt('N', 4);
+    }
+
+    /**
+     * Reads an unsigned 32-bit little-endian integer.
+     */
+    public function readU32LE(): int
+    {
+        return $this->unpackInt('V', 4);
     }
 
     /**
@@ -82,6 +98,17 @@ final readonly class ByteReader
     {
         $hi = $this->readU32BE();
         $lo = $this->readU32BE();
+
+        return Unpack::combineUint32($hi, $lo);
+    }
+
+    /**
+     * Reads an unsigned 64-bit little-endian integer.
+     */
+    public function readU64LE(): UInt64
+    {
+        $lo = $this->readU32LE();
+        $hi = $this->readU32LE();
 
         return Unpack::combineUint32($hi, $lo);
     }
@@ -105,10 +132,26 @@ final readonly class ByteReader
     }
 
     /**
+     * Alias for getPosition(). Returns the current cursor position.
+     */
+    public function tell(): int
+    {
+        return $this->getPosition();
+    }
+
+    /**
      * Moves the cursor of the underlying data source.
      */
     public function setPosition(int|UInt64 $offset, int $whence = SEEK_SET): void
     {
         ($this->seek)($offset, $whence);
+    }
+
+    /**
+     * Alias for setPosition(). Moves the cursor of the underlying data source.
+     */
+    public function seek(int|UInt64 $offset, int $whence = SEEK_SET): void
+    {
+        $this->setPosition($offset, $whence);
     }
 }
