@@ -1631,6 +1631,30 @@ final readonly class ExifTag
     public const int RELATED_IMAGE_LENGTH = 0x1002;
 
     /**
+     * TIFF predictor for differencing compression schemes.
+     *
+     * TIFF 6.0 §14 describes the Predictor tag as a mathematical operator applied
+     * before compression to improve LZW compression ratios. Valid values are:
+     * 1 = No prediction (default), 2 = Horizontal differencing.
+     *
+     * Used in conjunction with LZW or other lossless compression schemes to encode
+     * the difference between adjacent pixels rather than absolute values.
+     */
+    public const int PREDICTOR = 0x013D;
+
+    /**
+     * Embedded ICC color profile binary payload.
+     *
+     * TIFF 6.0 §20 (ICC Profile Tag) and ICC.1:2001-04 specify tag 0x8773 as the
+     * container for ICC color profile data embedded directly within TIFF/EXIF files.
+     * The value is the raw ICC profile binary stream conforming to ICC.1 specification.
+     *
+     * Enables color-managed workflows by providing device-independent color space
+     * transformation instructions alongside the image data.
+     */
+    public const int ICC_PROFILE = 0x8773;
+
+    /**
      * Prevent instantiation of this constants-only utility class.
      */
     private function __construct()
