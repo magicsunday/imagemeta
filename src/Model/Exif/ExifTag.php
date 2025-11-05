@@ -1495,12 +1495,14 @@ final readonly class ExifTag
     /**
      * Defines the hue/saturation/value grid dimensions used by the look table.
      * EXIF 3.0 §4.6.3 Tables 35–41; EXIF 2.32 §4.6.3 Tables 35–41.
+     * Note: Adobe DNG Specification v1.4 places this tag at 0xC725 (DNG_PROFILE_LOOK_TABLE_DIMS).
      */
     public const int PROFILE_LOOK_TABLE_DIMS = 0xC6FA;
 
     /**
      * Profile look table entries encoded as triplets of IEEE-754 floats.
      * EXIF 3.0 §4.6.3 Tables 35–41; EXIF 2.32 §4.6.3 Tables 35–41.
+     * Note: Adobe DNG Specification v1.4 places this tag at 0xC726 (DNG_PROFILE_LOOK_TABLE_DATA).
      */
     public const int PROFILE_LOOK_TABLE_DATA = 0xC6FB;
 
