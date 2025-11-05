@@ -21,6 +21,7 @@ final readonly class ExifTag
 {
     /**
      * TIFF 6.0 subfile type bitfield describing the purpose of the image data.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1.
      */
     public const int NEW_SUBFILE_TYPE = 0x00FE;
@@ -39,6 +40,7 @@ final readonly class ExifTag
 
     /**
      * Width of the image in pixels.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -46,6 +48,7 @@ final readonly class ExifTag
 
     /**
      * Height of the image in pixels.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -53,6 +56,7 @@ final readonly class ExifTag
 
     /**
      * Number of bits for each colour component.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -60,6 +64,7 @@ final readonly class ExifTag
 
     /**
      * Compression scheme applied to the image data.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -67,6 +72,7 @@ final readonly class ExifTag
 
     /**
      * Colour space interpretation of the pixel data.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -83,6 +89,7 @@ final readonly class ExifTag
 
     /**
      * Free-form text describing the image contents.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -143,6 +150,7 @@ final readonly class ExifTag
 
     /**
      * Manufacturer name of the recording equipment.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -150,6 +158,7 @@ final readonly class ExifTag
 
     /**
      * Model name or identifier of the recording equipment.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -157,6 +166,7 @@ final readonly class ExifTag
 
     /**
      * Orientation of the image as displayed.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -164,6 +174,7 @@ final readonly class ExifTag
 
     /**
      * Offsets to image strips within the file.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -171,6 +182,7 @@ final readonly class ExifTag
 
     /**
      * Number of colour components per pixel.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -178,6 +190,7 @@ final readonly class ExifTag
 
     /**
      * Number of rows stored in each strip.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -185,6 +198,7 @@ final readonly class ExifTag
 
     /**
      * Total bytes used by each strip.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -192,6 +206,7 @@ final readonly class ExifTag
 
     /**
      * Width of each image tile in pixels.
+     * Extended TIFF tag (TIFF 6.0 extension).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -199,6 +214,7 @@ final readonly class ExifTag
 
     /**
      * Height of each image tile in pixels.
+     * Extended TIFF tag (TIFF 6.0 extension).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -206,6 +222,7 @@ final readonly class ExifTag
 
     /**
      * Offsets to tiled image data blocks.
+     * Extended TIFF tag (TIFF 6.0 extension).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -213,6 +230,7 @@ final readonly class ExifTag
 
     /**
      * Total bytes used by each tile.
+     * Extended TIFF tag (TIFF 6.0 extension).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -220,6 +238,7 @@ final readonly class ExifTag
 
     /**
      * Horizontal pixel density expressed as a rational value.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -227,6 +246,7 @@ final readonly class ExifTag
 
     /**
      * Vertical pixel density expressed as a rational value.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -234,6 +254,7 @@ final readonly class ExifTag
 
     /**
      * Arrangement of colour components across pixel planes.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -241,6 +262,7 @@ final readonly class ExifTag
 
     /**
      * Unit used for X and Y resolution values.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -248,6 +270,7 @@ final readonly class ExifTag
 
     /**
      * Transfer function curve for colour components.
+     * Extended TIFF tag (TIFF 6.0 extension).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -255,6 +278,7 @@ final readonly class ExifTag
 
     /**
      * Software used to create the image.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -262,6 +286,7 @@ final readonly class ExifTag
 
     /**
      * Legacy EXIF 2.x identifier retained for backwards compatibility.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 renames the tag to ModifyDate, exposed via the MODIFY_DATE alias.
      * EXIF 2.32 §4.6.2 Table 2 (DateTime) / EXIF 3.0 §4.6.2 Table 2 (ModifyDate).
@@ -270,12 +295,14 @@ final readonly class ExifTag
 
     /**
      * Preferred alias that matches the EXIF 3.0 ModifyDate tag name.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      * EXIF 3.0 §4.6.2 Table 2; aligns with EXIF 2.32 §4.6.2 Table 2 DateTime guidance.
      */
     public const int MODIFY_DATE = 0x0132;
 
     /**
      * Artist or photographer responsible for the image.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -317,6 +344,7 @@ final readonly class ExifTag
 
     /**
      * Chromaticity of the image white point.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -324,6 +352,7 @@ final readonly class ExifTag
 
     /**
      * Chromaticity coordinates of the primary colours.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -331,6 +360,7 @@ final readonly class ExifTag
 
     /**
      * Offset to the JPEG-encoded preview image.
+     * Extended TIFF tag (TIFF 6.0 extension).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -338,6 +368,7 @@ final readonly class ExifTag
 
     /**
      * Length of the JPEG-encoded preview image in bytes.
+     * Extended TIFF tag (TIFF 6.0 extension).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -429,6 +460,7 @@ final readonly class ExifTag
 
     /**
      * YCbCr transformation coefficients.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -436,6 +468,7 @@ final readonly class ExifTag
 
     /**
      * Sub-sampling factors for the YCbCr components.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -443,6 +476,7 @@ final readonly class ExifTag
 
     /**
      * Reference location for YCbCr samples.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -450,6 +484,7 @@ final readonly class ExifTag
 
     /**
      * Reference black and white levels for each colour channel.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
@@ -457,6 +492,7 @@ final readonly class ExifTag
 
     /**
      * Copyright notice associated with the image.
+     * Baseline TIFF tag (TIFF 6.0 §8).
      *
      * EXIF 3.0 §4.6.2 Table 1; EXIF 2.32 §4.6.2 Table 1
      */
