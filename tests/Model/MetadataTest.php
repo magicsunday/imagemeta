@@ -38,6 +38,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(XmpParser::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesClass(\MagicSunday\ImageMeta\Curate\ExifAssembler::class)]
+#[UsesClass(\MagicSunday\ImageMeta\Model\StructuredMetadataCache::class)]
 #[CoversClass(Metadata::class)]
 final class MetadataTest extends TestCase
 {
