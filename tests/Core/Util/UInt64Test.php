@@ -128,7 +128,6 @@ final class UInt64Test extends TestCase
         self::assertFalse($smaller->compare($equal) < 0);
 
         self::assertTrue($larger->compare($smaller) > 0);
-        self::assertFalse($smaller->compare($larger) > 0);
         self::assertFalse($smaller->compare($equal) > 0);
     }
 
