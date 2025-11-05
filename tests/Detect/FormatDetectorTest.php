@@ -11,12 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\imagemeta\tests\Detect;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -29,6 +32,9 @@ use function strlen;
  * Validates format detection based on common signature bytes.
  */
 #[CoversClass(FormatDetector::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(NormalisesOffsets::class)]
 final class FormatDetectorTest extends TestCase
 {
     /**

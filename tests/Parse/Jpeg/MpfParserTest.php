@@ -11,13 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function is_string;
@@ -26,6 +31,13 @@ use function str_repeat;
 use function strlen;
 
 #[CoversClass(MpfParser::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(ReadsBinaryPrimitives::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(MpfAttributes::class)]
+#[UsesClass(MpfDocument::class)]
+#[UsesClass(MpfEntry::class)]
 final class MpfParserTest extends TestCase
 {
     private const int TAG_MPF_VERSION = 0xB000;

@@ -15,12 +15,14 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Integration-level tests for XmpDocument accessors fed by different parsers.
  */
 #[CoversClass(XmpDocument::class)]
+#[UsesClass(XmpParser::class)]
 final class XmpDocumentTest extends TestCase
 {
     private const string DC_NAMESPACE = 'http://purl.org/dc/elements/1.1/';

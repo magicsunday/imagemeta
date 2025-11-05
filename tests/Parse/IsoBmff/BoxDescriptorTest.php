@@ -11,11 +11,13 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\IsoBmff;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function fopen;
@@ -27,6 +29,9 @@ use function strlen;
  * Exercises the ISO BMFF box descriptor value object.
  * */
 #[CoversClass(BoxDescriptor::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(StreamWindow::class)]
 final class BoxDescriptorTest extends TestCase
 {
     #[Test]

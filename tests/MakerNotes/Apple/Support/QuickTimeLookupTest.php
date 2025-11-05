@@ -15,9 +15,11 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(QuickTimeLookup::class)]
+#[UsesClass(QuickTimeMeta::class)]
 final class QuickTimeLookupTest extends TestCase
 {
     #[Test]
