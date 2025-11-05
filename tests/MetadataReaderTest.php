@@ -25,7 +25,7 @@ use MagicSunday\ImageMeta\Value\File as FileValue;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\Rights;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -44,7 +44,7 @@ use function unlink;
 /**
  * Integration coverage for the convenience metadata reader.
  */
-#[CoversClass(MetadataReader::class)]
+#[CoversNothing]
 final class MetadataReaderTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";

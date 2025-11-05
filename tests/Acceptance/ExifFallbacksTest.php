@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Acceptance;
 
 use MagicSunday\ImageMeta\MetadataReader;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;

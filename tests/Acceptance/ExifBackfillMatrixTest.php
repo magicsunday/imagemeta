@@ -14,8 +14,8 @@ namespace MagicSunday\ImageMeta\Tests\Acceptance;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
 use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
+use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -137,7 +137,7 @@ use PHPUnit\Framework\TestCase;
  *     tiffEpStandardString: string|null,
  * }
  */
-#[CoversClass(MetadataReader::class)]
+#[CoversNothing]
 final class ExifBackfillMatrixTest extends TestCase
 {
     use ExifExpectationAssertions;
