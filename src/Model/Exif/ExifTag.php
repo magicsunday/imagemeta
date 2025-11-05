@@ -1565,10 +1565,10 @@ final readonly class ExifTag
     public const int PREVIEW_COLOR_SPACE = 0xC71A;
 
     /**
-     * Preview date and time.
+     * DNG preview date and time for processing settings.
      * Adobe DNG Specification v1.4 §2.
      */
-    public const int PREVIEW_DATE_TIME = 0xC71B;
+    public const int DNG_PREVIEW_DATE_TIME = 0xC71B;
 
     /**
      * Raw image digest for integrity verification.
@@ -1595,16 +1595,18 @@ final readonly class ExifTag
     public const int ROW_INTERLEAVE_FACTOR = 0xC71F;
 
     /**
-     * Profile look table dimensions.
+     * DNG profile look table dimensions (corrected location).
      * Adobe DNG Specification v1.4 §2.
+     * Note: Supersedes the 0xC6FA location with correct DNG SDK mapping.
      */
-    public const int PROFILE_LOOK_TABLE_DIMS = 0xC725;
+    public const int DNG_PROFILE_LOOK_TABLE_DIMS = 0xC725;
 
     /**
-     * Profile look table data.
+     * DNG profile look table data (corrected location).
      * Adobe DNG Specification v1.4 §2.
+     * Note: Supersedes the 0xC6FB location with correct DNG SDK mapping.
      */
-    public const int PROFILE_LOOK_TABLE_DATA = 0xC726;
+    public const int DNG_PROFILE_LOOK_TABLE_DATA = 0xC726;
 
     /**
      * Opcode list 1 for image processing operations.
