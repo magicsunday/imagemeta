@@ -467,6 +467,66 @@ final class JpegExtractorTest extends TestCase
     }
 
     /**
+     * Validates derived YCbCr subsampling values against legal values per
+     * EXIF 3.0 §4.6.5.1.12.
+     *
+     * Legal values are: [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0).
+     * Other values are reserved.
+     */
+    #[Test]
+    public function derivedYCbCrSubSamplingRejectsIllegalValues(): void
+    {
+        // Test illegal subsampling: [3,2] should be rejected
+        // Luma: 3H×2V, Chroma: 1H×1V → 3/1=3, 2/1=2 → [3,2] is illegal
+        $framePayloadIllegal = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x32\x00" // Component 1 (Y):  3H×2V
+            . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
+            . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
+
+        $jpegIllegal  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadIllegal));
+        $extractorIllegal = $this->createExtractor($jpegIllegal);
+
+        // Should return null for illegal subsampling values
+        self::assertNull($extractorIllegal->getFrameYCbCrSubSampling());
+
+        // Test reserved subsampling: [4,1] should be rejected per EXIF 3.0 §4.6.5.1.12
+        // Luma: 4H×1V, Chroma: 1H×1V → 4/1=4, 1/1=1 → [4,1] is reserved
+        $framePayloadReserved41 = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x41\x00" // Component 1 (Y):  4H×1V
+            . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
+            . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
+
+        $jpegReserved41  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved41));
+        $extractorReserved41 = $this->createExtractor($jpegReserved41);
+
+        self::assertNull($extractorReserved41->getFrameYCbCrSubSampling());
+
+        // Test reserved subsampling: [4,4] should be rejected per EXIF 3.0 §4.6.5.1.12
+        // Luma: 4H×4V, Chroma: 1H×1V → 4/1=4, 4/1=4 → [4,4] is reserved
+        $framePayloadReserved44 = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x44\x00" // Component 1 (Y):  4H×4V
+            . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
+            . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
+
+        $jpegReserved44  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved44));
+        $extractorReserved44 = $this->createExtractor($jpegReserved44);
+
+        self::assertNull($extractorReserved44->getFrameYCbCrSubSampling());
+
+        // Test legal subsampling: [2,1]
+        // Luma: 2H×1V, Chroma: 1H×1V → 2/1=2, 1/1=1 → [2,1] is legal (YCbCr4:2:2)
+        $framePayloadLegal21 = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x21\x00" // Component 1 (Y):  2H×1V
+            . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
+            . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
+
+        $jpegLegal21  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadLegal21));
+        $extractorLegal21 = $this->createExtractor($jpegLegal21);
+
+        self::assertSame([2, 1], $extractorLegal21->getFrameYCbCrSubSampling());
+    }
+
+    /**
      * @return iterable<string, array{0:int}>
      */
     public static function provideSofMarkers(): iterable
