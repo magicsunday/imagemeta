@@ -147,7 +147,7 @@ final class TiffExifReader implements ExifReaderInterface
 
     private const string UNICODE_REPLACEMENT = "\u{FFFD}";
 
-    private MemoryBuffer $buf;
+    private MemoryBuffer $buffer;
 
     private Endian $bo;
 
@@ -190,10 +190,10 @@ final class TiffExifReader implements ExifReaderInterface
      */
     public function parseFromBlob(string $tiffBlob, ?Registry $makerNotesRegistry = null): ParsedExif
     {
-        $this->buf = new MemoryBuffer($tiffBlob);
-        $this->buf->seek(0);
+        $this->buffer = new MemoryBuffer($tiffBlob);
+        $this->buffer->seek(0);
 
-        $this->blobSize = UInt64::fromInt($this->buf->size());
+        $this->blobSize = UInt64::fromInt($this->buffer->size());
 
         $this->makerNoteRaw          = null;
         $this->subIfds               = [];
@@ -204,7 +204,7 @@ final class TiffExifReader implements ExifReaderInterface
         // byte order
         // EXIF 3.0 §4.5.1 follows TIFF 6.0 §2.1 (Image File Header) in defining the
         // "II"/"MM" byte-order signatures used for byte-order detection.
-        $boSig    = $this->buf->read(2);
+        $boSig    = $this->buffer->read(2);
         $this->bo = match ($boSig) {
             'II'    => Endian::Little,
             'MM'    => Endian::Big,
@@ -366,7 +366,7 @@ final class TiffExifReader implements ExifReaderInterface
             return $this->ifdCache[$offsetInt];
         }
 
-        $this->buf->seek($offsetInt);
+        $this->buffer->seek($offsetInt);
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
         // (BigTIFF) directory entries and the unsigned entry count preceding them.
@@ -654,7 +654,7 @@ final class TiffExifReader implements ExifReaderInterface
             return;
         }
 
-        $returnPos = $this->buf->tell();
+        $returnPos = $this->buffer->tell();
 
         foreach ($offsets as $offset) {
             if ($offset <= 0) {
@@ -670,7 +670,7 @@ final class TiffExifReader implements ExifReaderInterface
             $this->subIfds[$offset] = $this->readIfd($offset);
         }
 
-        $this->buf->seek($returnPos);
+        $this->buffer->seek($returnPos);
     }
 
     /**
@@ -1065,7 +1065,7 @@ final class TiffExifReader implements ExifReaderInterface
         $inlineValueBytes = $componentSize * $count;
 
         if ($inlineValueBytes <= $inlineThreshold) {
-            $rawField    = $this->buf->read($inlineThreshold);
+            $rawField    = $this->buffer->read($inlineThreshold);
             $inlineBytes = $inlineValueBytes === $inlineThreshold
                 ? $rawField
                 : substr($rawField, 0, $inlineValueBytes);
@@ -1137,7 +1137,7 @@ final class TiffExifReader implements ExifReaderInterface
             throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
         }
 
-        $size = $this->buf->size();
+        $size = $this->buffer->size();
 
         if ($length > $size) {
             throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length));
@@ -1207,10 +1207,10 @@ final class TiffExifReader implements ExifReaderInterface
         }
 
         $offset  = $this->ensureOffset($valueOrOffset, sprintf('Value offset for TIFF type %d', $type), $dataSize);
-        $current = $this->buf->tell();
-        $this->buf->seek($offset);
-        $bytes = $this->buf->read($dataSize);
-        $this->buf->seek($current);
+        $current = $this->buffer->tell();
+        $this->buffer->seek($offset);
+        $bytes = $this->buffer->read($dataSize);
+        $this->buffer->seek($current);
 
         return [$bytes, $offset];
     }
@@ -1392,7 +1392,7 @@ final class TiffExifReader implements ExifReaderInterface
      */
     private function readU16(): int
     {
-        return $this->bo === Endian::Little ? $this->buf->readU16LE() : $this->buf->readU16BE();
+        return $this->bo === Endian::Little ? $this->buffer->readU16LE() : $this->buffer->readU16BE();
     }
 
     /**
@@ -1402,7 +1402,7 @@ final class TiffExifReader implements ExifReaderInterface
      */
     private function readU32(): int
     {
-        return $this->bo === Endian::Little ? $this->buf->readU32LE() : $this->buf->readU32BE();
+        return $this->bo === Endian::Little ? $this->buffer->readU32LE() : $this->buffer->readU32BE();
     }
 
     /**
@@ -1412,7 +1412,7 @@ final class TiffExifReader implements ExifReaderInterface
      */
     private function readU64(): UInt64
     {
-        return $this->bo === Endian::Little ? $this->buf->readU64LE() : $this->buf->readU64BE();
+        return $this->bo === Endian::Little ? $this->buffer->readU64LE() : $this->buffer->readU64BE();
     }
 
     /**
@@ -1710,7 +1710,7 @@ final class TiffExifReader implements ExifReaderInterface
             throw new ParseError('Unsupported BigTIFF offset size.');
         }
 
-        $raw    = $this->buf->read(16);
+        $raw    = $this->buffer->read(16);
         $little = $this->bo === Endian::Little;
 
         $lowBytes  = $little ? substr($raw, 0, 8) : substr($raw, 8, 8);
@@ -1838,7 +1838,7 @@ final class TiffExifReader implements ExifReaderInterface
     private function ensureDecimalOffset(string $offset, string $context, int $length): int
     {
         $normalised = $this->normaliseDecimalString($offset);
-        $size       = $this->buf->size();
+        $size       = $this->buffer->size();
 
         if ($this->compareDecimalStringToInt($normalised, $size) > 0) {
             throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));

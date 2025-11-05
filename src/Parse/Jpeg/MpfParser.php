@@ -251,12 +251,12 @@ final class MpfParser
         }
 
         $values = [];
-        $buf    = new MemoryBuffer($data);
+        $buffer = new MemoryBuffer($data);
 
         switch ($type) {
             case self::TYPE_BYTE:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $values[] = $buf->readU8();
+                    $values[] = $buffer->readU8();
                 }
 
                 break;
@@ -267,21 +267,21 @@ final class MpfParser
 
             case self::TYPE_SHORT:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $values[] = $endian === Endian::Little ? $buf->readU16LE() : $buf->readU16BE();
+                    $values[] = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
                 }
 
                 break;
 
             case self::TYPE_LONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $values[] = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
+                    $values[] = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
                 }
 
                 break;
 
             case self::TYPE_SLONG:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $unsigned = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
+                    $unsigned = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
                     $values[] = $this->toSigned32($unsigned);
                 }
 
@@ -290,8 +290,8 @@ final class MpfParser
             case self::TYPE_RATIONAL:
             case self::TYPE_SRATIONAL:
                 for ($i = 0; $i < $componentCount; ++$i) {
-                    $numerator   = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
-                    $denominator = $endian === Endian::Little ? $buf->readU32LE() : $buf->readU32BE();
+                    $numerator   = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
+                    $denominator = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
                     if ($type === self::TYPE_SRATIONAL) {
                         $numerator   = $this->toSigned32($numerator);
                         $denominator = $this->toSigned32($denominator);
