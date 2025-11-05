@@ -12,19 +12,23 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Api;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
+use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif as ModelExifDocument;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClip;
@@ -79,18 +83,22 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[UsesClass(ExifCapabilities::class)]
+#[UsesClass(UInt64::class)]
 #[UsesClass(ExifAssembler::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(EnumFromIntStringNullable::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
+#[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifRational::class)]
+#[UsesClass(ExifRationalList::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ModelExifDocument::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(Metadata::class)]
+#[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(Audio::class)]
 #[UsesClass(AudioClip::class)]
