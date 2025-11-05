@@ -108,6 +108,21 @@ jobs:
                     COVERAGE=$(grep -oP 'Lines:\s+\K[\d.]+(?=%)' .build/coverage/coverage.txt | head -1)
                     echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
                     echo "Coverage: $COVERAGE%"
+                    
+                    # Determine badge color based on coverage percentage
+                    if (( $(echo "$COVERAGE > 90" | bc -l) )); then
+                        echo "COVERAGE_COLOR=brightgreen" >> $GITHUB_ENV
+                    elif (( $(echo "$COVERAGE > 80" | bc -l) )); then
+                        echo "COVERAGE_COLOR=green" >> $GITHUB_ENV
+                    elif (( $(echo "$COVERAGE > 70" | bc -l) )); then
+                        echo "COVERAGE_COLOR=yellowgreen" >> $GITHUB_ENV
+                    elif (( $(echo "$COVERAGE > 60" | bc -l) )); then
+                        echo "COVERAGE_COLOR=yellow" >> $GITHUB_ENV
+                    elif (( $(echo "$COVERAGE > 50" | bc -l) )); then
+                        echo "COVERAGE_COLOR=orange" >> $GITHUB_ENV
+                    else
+                        echo "COVERAGE_COLOR=red" >> $GITHUB_ENV
+                    fi
 
             -   id: create-coverage-badge
                 name: Create coverage badge
@@ -119,7 +134,7 @@ jobs:
                     filename: imagemeta-coverage.json
                     label: coverage
                     message: ${{ env.COVERAGE }}%
-                    color: ${{ env.COVERAGE > 90 && 'brightgreen' || env.COVERAGE > 80 && 'green' || env.COVERAGE > 70 && 'yellowgreen' || env.COVERAGE > 60 && 'yellow' || env.COVERAGE > 50 && 'orange' || 'red' }}
+                    color: ${{ env.COVERAGE_COLOR }}
 
             -   id: upload-coverage-artifact
                 name: Upload coverage HTML report

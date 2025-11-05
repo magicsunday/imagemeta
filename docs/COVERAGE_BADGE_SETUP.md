@@ -34,12 +34,19 @@ Das Coverage-Badge wird automatisch von der GitHub Actions CI aktualisiert und z
 
 ### 4. README.md aktualisieren
 
-Ersetze in der README.md die Platzhalter:
+Ersetze in der README.md die Platzhalter in Zeile 4:
 ```markdown
 [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/magicsunday/GIST_ID/raw/imagemeta-coverage.json)](https://github.com/magicsunday/imagemeta/actions/workflows/ci.yml)
 ```
 
-Ersetze `GIST_ID` mit deiner tatsächlichen Gist ID.
+**Ersetze `GIST_ID` mit deiner tatsächlichen Gist ID.**
+
+Beispiel: Wenn deine Gist ID `abc123def456` ist, sollte die Zeile so aussehen:
+```markdown
+[![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/magicsunday/abc123def456/raw/imagemeta-coverage.json)](https://github.com/magicsunday/imagemeta/actions/workflows/ci.yml)
+```
+
+**Hinweis:** Der Platzhalter `GIST_ID` muss **manuell** ersetzt werden, da er im Workflow-Code nicht verwendet wird. Das Badge funktioniert erst nach dieser Anpassung.
 
 ## Funktionsweise
 
