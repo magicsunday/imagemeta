@@ -12,13 +12,18 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Curate;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
@@ -41,6 +46,7 @@ use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
 use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClip;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
@@ -196,6 +202,15 @@ use function str_repeat;
 #[UsesClass(ColorProfileToneCurve::class)]
 #[UsesClass(DngProfileGainTableTag::class)]
 #[UsesClass(GpsCoordinate::class)]
+#[UsesClass(RunTime::class)]
+#[UsesClass(AudioClip::class)]
+#[UsesClass(JpegAudioStream::class)]
+#[UsesClass(SemanticStyle::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(TiffExifReader::class)]
 final class ExifAssemblerTest extends TestCase
 {
     /**
