@@ -1585,7 +1585,10 @@ final class TiffExifReader implements ExifReaderInterface
 
         $hiComplement = (~$hi) & BitMask::UINT32_MAX;
         $loComplement = (~$lo) & BitMask::UINT32_MAX;
-        $magnitude    = Unpack::combineUint32($hiComplement, $loComplement)->addSmall(1)->toInt('Signed 64-bit integer magnitude');
+
+        $magnitude = Unpack::combineUint32($hiComplement, $loComplement)
+            ->addSmall(1)
+            ->toInt('Signed 64-bit integer magnitude');
 
         return -$magnitude;
     }
