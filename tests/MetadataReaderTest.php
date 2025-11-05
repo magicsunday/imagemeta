@@ -16,8 +16,6 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
-use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
-use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
@@ -79,8 +77,6 @@ use function unlink;
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(Stream::class)]
 #[UsesClass(StreamWindow::class)]
-#[UsesClass(NormalisesOffsets::class)]
-#[UsesClass(ReadsBinaryPrimitives::class)]
 #[UsesClass(UInt64::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(ExifAssembler::class)]
