@@ -896,7 +896,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function parsesSamplingAndChromaticities(): void
     {
-        self::assertSame([4, 2], ValueConverters::ycbcrSubSamplingToPair('4 2'));
+        self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2 2'));
 
         $list = new ExifRationalList([
             new ExifRational(6400, 10000),
@@ -911,19 +911,17 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Validates legal YCbCr subsampling values per TIFF 6.0 §21 and EXIF 3.0 §4.6.2.
+     * Validates legal YCbCr subsampling values per EXIF 3.0 §4.6.5.1.12.
      *
-     * Legal values are: [2,1], [2,2], [4,1], [4,2], [4,4].
+     * Legal values are: [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0).
+     * Other values are reserved.
      */
     #[Test]
     public function acceptsLegalYCbCrSubSamplingValues(): void
     {
-        // TIFF 6.0 §21 and EXIF 3.0 §4.6.2 define legal YCbCr subsampling values
+        // EXIF 3.0 §4.6.5.1.12 defines only [2,1] and [2,2] as legal YCbCr subsampling values
         self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2 1'));
         self::assertSame([2, 2], ValueConverters::ycbcrSubSamplingToPair('2 2'));
-        self::assertSame([4, 1], ValueConverters::ycbcrSubSamplingToPair('4 1'));
-        self::assertSame([4, 2], ValueConverters::ycbcrSubSamplingToPair('4 2'));
-        self::assertSame([4, 4], ValueConverters::ycbcrSubSamplingToPair('4 4'));
 
         // Test with different delimiters (comma, semicolon)
         self::assertSame([2, 1], ValueConverters::ycbcrSubSamplingToPair('2,1'));
@@ -931,11 +929,18 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Rejects illegal YCbCr subsampling values per TIFF 6.0 §21 and EXIF 3.0 §4.6.2.
+     * Rejects illegal YCbCr subsampling values per EXIF 3.0 §4.6.5.1.12.
+     *
+     * Only [2,1] and [2,2] are defined; all other values are reserved.
      */
     #[Test]
     public function rejectsIllegalYCbCrSubSamplingValues(): void
     {
+        // Reserved values per EXIF 3.0 §4.6.5.1.12
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 1'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 2'));
+        self::assertNull(ValueConverters::ycbcrSubSamplingToPair('4 4'));
+
         // Invalid horizontal/vertical combinations
         self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 1'));
         self::assertNull(ValueConverters::ycbcrSubSamplingToPair('1 2'));
