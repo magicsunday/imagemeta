@@ -99,12 +99,28 @@ jobs:
                 if: ${{ always() && steps.tests.conclusion == 'success' }}
                 run: |
                     mkdir -p .build/coverage
-                    XDEBUG_MODE=coverage .build/bin/phpunit --configuration .build/phpunit.xml --coverage-clover .build/coverage/clover.xml
+                    XDEBUG_MODE=coverage .build/bin/phpunit --configuration .build/phpunit.xml --coverage-cobertura .build/coverage/cobertura.xml --coverage-html .build/coverage/html --coverage-text
 
-            -   id: upload-coverage
-                name: Upload coverage to Codecov
+            -   id: upload-coverage-artifact
+                name: Upload coverage HTML report
                 if: ${{ always() && steps.coverage.conclusion == 'success' }}
-                uses: codecov/codecov-action@v4
+                uses: actions/upload-artifact@v4
                 with:
-                    files: .build/coverage/clover.xml
-                    fail_ci_if_error: false
+                    name: coverage-report
+                    path: .build/coverage/html
+                    retention-days: 30
+
+            -   id: coverage-summary
+                name: Add coverage summary to job
+                if: ${{ always() && steps.coverage.conclusion == 'success' }}
+                run: |
+                    echo "## Code Coverage Summary" >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "Coverage report has been generated and uploaded as an artifact." >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "You can download the full HTML coverage report from the workflow artifacts." >> $GITHUB_STEP_SUMMARY
+                    echo "" >> $GITHUB_STEP_SUMMARY
+                    echo "### Coverage details:" >> $GITHUB_STEP_SUMMARY
+                    echo '```' >> $GITHUB_STEP_SUMMARY
+                    XDEBUG_MODE=coverage .build/bin/phpunit --configuration .build/phpunit.xml --coverage-text | grep -A 10 "Code Coverage Report:" >> $GITHUB_STEP_SUMMARY || true
+                    echo '```' >> $GITHUB_STEP_SUMMARY
