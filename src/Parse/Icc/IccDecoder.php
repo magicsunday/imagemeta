@@ -422,7 +422,7 @@ final class IccDecoder
     {
         $bytes = substr($bytes . "\0\0\0\0", 0, 4);
 
-        $unpacked = unpack('Nvalue', $bytes);
+        $unpacked = @unpack('Nvalue', $bytes);
         if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
             return 0;
         }

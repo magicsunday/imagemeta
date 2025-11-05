@@ -338,7 +338,7 @@ final class BinaryPlistDecoder
                 throw new ParseError('Incomplete real payload.');
             }
 
-            $value = unpack('Gfloat', $bytes);
+            $value = @unpack('Gfloat', $bytes);
             if ($value === false || !array_key_exists('float', $value)) {
                 throw new ParseError('Failed to decode floating point value.');
             }
@@ -357,7 +357,7 @@ final class BinaryPlistDecoder
                 throw new ParseError('Incomplete double payload.');
             }
 
-            $value = unpack('Efloat', $bytes);
+            $value = @unpack('Efloat', $bytes);
             if ($value === false || !array_key_exists('float', $value)) {
                 throw new ParseError('Failed to decode floating point value.');
             }
@@ -395,7 +395,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Incomplete date payload.');
         }
 
-        $value = unpack('Eseconds', $payload);
+        $value = @unpack('Eseconds', $payload);
         if ($value === false || !array_key_exists('seconds', $value)) {
             throw new ParseError('Failed to decode date payload.');
         }
@@ -731,11 +731,11 @@ final class BinaryPlistDecoder
             /** @var ApplePlistScalar $key */
             $key = $keys[$idx];
             $keyValue = $key->value();
-            
+
             if (!is_string($keyValue)) {
                 throw new ParseError('Dictionary key must be a string value.');
             }
-            
+
             $entries[$keyValue] = $values[$idx];
         }
 
@@ -821,7 +821,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Failed to read 64-bit integer.');
         }
 
-        $parts = unpack('Nhigh/Nlow', $slice);
+        $parts = @unpack('Nhigh/Nlow', $slice);
         if ($parts === false || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
             throw new ParseError('Failed to unpack 64-bit integer.');
         }

@@ -625,7 +625,7 @@ final class JpegExtractor
         $channels        = ord($payload[$signatureLength + 3]);
 
         $sampleRateData   = substr($payload, $signatureLength + 4, 4);
-        $sampleRateUnpack = unpack('Nrate', $sampleRateData);
+        $sampleRateUnpack = @unpack('Nrate', $sampleRateData);
         if ($sampleRateUnpack === false) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset));
         }
@@ -635,7 +635,7 @@ final class JpegExtractor
         $bitDepth   = ord($payload[$signatureLength + 8]);
 
         $sampleCountData   = substr($payload, $signatureLength + 9, 4);
-        $sampleCountUnpack = unpack('Ncount', $sampleCountData);
+        $sampleCountUnpack = @unpack('Ncount', $sampleCountData);
         if ($sampleCountUnpack === false) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset));
         }
@@ -736,7 +736,7 @@ final class JpegExtractor
         }
 
         $header   = substr($payload, $signatureLength, 4);
-        $unpacked = unpack('nstream/Csequence/Ccount', $header);
+        $unpacked = @unpack('nstream/Csequence/Ccount', $header);
         if ($unpacked === false) {
             throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset));
         }
@@ -836,7 +836,7 @@ final class JpegExtractor
         }
 
         /** @var array{lines:int,samples:int} $fields */
-        $fields = unpack('nlines/nsamples', substr($payload, 1, 4));
+        $fields = @unpack('nlines/nsamples', substr($payload, 1, 4));
 
         if ($this->frameLines === null) {
             $this->frameLines = $fields['lines'];

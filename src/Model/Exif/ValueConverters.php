@@ -1041,7 +1041,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        $header = unpack('ncolumns/nrows', substr($payload, 0, 4));
+        $header = @unpack('ncolumns/nrows', substr($payload, 0, 4));
         if (!is_array($header)) {
             return null;
         }
@@ -1704,7 +1704,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        $countData = unpack('ncount', $countBytes);
+        $countData = @unpack('ncount', $countBytes);
         if (!is_array($countData)) {
             return null;
         }
@@ -1736,7 +1736,7 @@ final readonly class ValueConverters
                 return null;
             }
 
-            $entry = unpack('nid/Nvalue', $entryData);
+            $entry = @unpack('nid/Nvalue', $entryData);
             if (!is_array($entry) || !isset($entry['id'], $entry['value'])) {
                 return null;
             }
@@ -1804,7 +1804,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        $value = unpack('N', substr($payload, $offset, 4));
+        $value = @unpack('N', substr($payload, $offset, 4));
         if (!is_array($value)) {
             return null;
         }
