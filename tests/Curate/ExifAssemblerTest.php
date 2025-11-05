@@ -12,10 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Curate;
 
 use DateTimeImmutable;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\AppleDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
@@ -25,12 +28,14 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
@@ -57,9 +62,46 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClips;
+use MagicSunday\ImageMeta\Value\Author;
+use MagicSunday\ImageMeta\Value\Camera;
+use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\CompositeImageInfo;
+use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\ExifFlash;
+use MagicSunday\ImageMeta\Value\Exposure;
+use MagicSunday\ImageMeta\Value\File;
+use MagicSunday\ImageMeta\Value\FlashPix;
+use MagicSunday\ImageMeta\Value\Focus;
+use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\GpsCoordinate;
+use MagicSunday\ImageMeta\Value\Image;
+use MagicSunday\ImageMeta\Value\Integrity;
+use MagicSunday\ImageMeta\Value\Interop;
+use MagicSunday\ImageMeta\Value\Keywords;
+use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\Motion;
+use MagicSunday\ImageMeta\Value\MultiPicture;
+use MagicSunday\ImageMeta\Value\Preview;
+use MagicSunday\ImageMeta\Value\ProcessingSettings;
+use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
+use MagicSunday\ImageMeta\Value\RelatedAssets;
+use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\RunTime;
+use MagicSunday\ImageMeta\Value\Scene;
+use MagicSunday\ImageMeta\Value\Sensor;
+use MagicSunday\ImageMeta\Value\Standards;
+use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\Uav;
+use MagicSunday\ImageMeta\Value\Video;
+use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
+use MagicSunday\ImageMeta\Value\Xmp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -75,6 +117,53 @@ use function str_repeat;
 #[CoversClass(StructuredMetadata::class)]
 #[CoversClass(ValueFactory::class)]
 #[CoversClass(ExifAssembler::class)]
+#[CoversClass(ExifCapabilities::class)]
+#[CoversClass(EnumFromIntStringNullable::class)]
+#[CoversClass(AppleMakerNotes::class)]
+#[CoversClass(QuickTimeLookup::class)]
+#[CoversClass(Ifd::class)]
+#[CoversClass(IfdEntry::class)]
+#[CoversClass(ParsedExif::class)]
+#[CoversClass(ValueConverters::class)]
+#[CoversClass(Metadata::class)]
+#[CoversClass(StructuredMetadataCache::class)]
+#[CoversClass(Audio::class)]
+#[CoversClass(AudioClips::class)]
+#[CoversClass(Author::class)]
+#[CoversClass(Camera::class)]
+#[CoversClass(Capture::class)]
+#[CoversClass(ColorProfile::class)]
+#[CoversClass(CompositeImageInfo::class)]
+#[CoversClass(Container::class)]
+#[CoversClass(Derived::class)]
+#[CoversClass(Device::class)]
+#[CoversClass(ExifFlash::class)]
+#[CoversClass(Exposure::class)]
+#[CoversClass(File::class)]
+#[CoversClass(FlashPix::class)]
+#[CoversClass(Focus::class)]
+#[CoversClass(Gps::class)]
+#[CoversClass(Image::class)]
+#[CoversClass(Integrity::class)]
+#[CoversClass(Interop::class)]
+#[CoversClass(Keywords::class)]
+#[CoversClass(Lens::class)]
+#[CoversClass(Motion::class)]
+#[CoversClass(MultiPicture::class)]
+#[CoversClass(Preview::class)]
+#[CoversClass(ProcessingSettings::class)]
+#[CoversClass(Regions::class)]
+#[CoversClass(RelatedAssets::class)]
+#[CoversClass(Rights::class)]
+#[CoversClass(Scene::class)]
+#[CoversClass(Sensor::class)]
+#[CoversClass(Standards::class)]
+#[CoversClass(Temporal::class)]
+#[CoversClass(TiffData::class)]
+#[CoversClass(Uav::class)]
+#[CoversClass(Video::class)]
+#[CoversClass(WhiteBalanceDetails::class)]
+#[CoversClass(Xmp::class)]
 final class ExifAssemblerTest extends TestCase
 {
     /**
