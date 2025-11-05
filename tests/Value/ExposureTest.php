@@ -26,9 +26,11 @@ use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Exposure::class)]
+#[UsesClass(FlashInfo::class)]
 final class ExposureTest extends TestCase
 {
     #[Test]

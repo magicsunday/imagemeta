@@ -47,21 +47,21 @@ final class SceneTest extends TestCase
     {
         $scene = new Scene(
             type: SceneCaptureType::NIGHT_SCENE,
-            sceneType: SceneType::DIRECTLY_PHOTOGRAPHED,
+            sceneType: SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE,
             light: LightSource::DAYLIGHT,
             faceCount: 3,
             hdrScene: true,
             nightMode: true,
-            subjectDistanceRange: SubjectDistanceRange::CLOSE_VIEW,
+            subjectDistanceRange: SubjectDistanceRange::CLOSE,
         );
 
         self::assertSame(SceneCaptureType::NIGHT_SCENE, $scene->type);
-        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED, $scene->sceneType);
+        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $scene->sceneType);
         self::assertSame(LightSource::DAYLIGHT, $scene->light);
         self::assertSame(3, $scene->faceCount);
         self::assertTrue($scene->hdrScene);
         self::assertTrue($scene->nightMode);
-        self::assertSame(SubjectDistanceRange::CLOSE_VIEW, $scene->subjectDistanceRange);
+        self::assertSame(SubjectDistanceRange::CLOSE, $scene->subjectDistanceRange);
     }
 
     #[Test]

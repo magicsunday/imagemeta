@@ -39,7 +39,9 @@ final class ByteReaderTest extends TestCase
 
                 return $result;
             },
-            tell: static fn (): int => $position,
+            tell: static function () use (&$position): int {
+                return $position;
+            },
             seek: static function (int|UInt64 $offset, int $whence = \SEEK_SET) use (&$position): void {
                 if ($offset instanceof UInt64) {
                     $offset = $offset->toInt('seek');
@@ -99,9 +101,8 @@ final class ByteReaderTest extends TestCase
 
         $result = $reader->readU64BE();
 
-        self::assertInstanceOf(UInt64::class, $result);
-        self::assertSame(0x01234567, $result->high());
-        self::assertSame(0x89000000, $result->low() & 0xFF000000);
+        self::assertSame(0x00000001, $result->high());
+        self::assertSame(0x23456789, $result->low());
     }
 
     #[Test]
@@ -113,7 +114,8 @@ final class ByteReaderTest extends TestCase
 
         $result = $reader->readU64LE();
 
-        self::assertInstanceOf(UInt64::class, $result);
+        self::assertSame(0x00000001, $result->high());
+        self::assertSame(0x23456789, $result->low());
     }
 
     #[Test]

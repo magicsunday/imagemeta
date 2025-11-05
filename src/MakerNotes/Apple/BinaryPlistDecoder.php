@@ -725,12 +725,18 @@ final class BinaryPlistDecoder
             throw new ParseError('Dictionary keys must be strings.');
         }
 
-        /** @var BinaryPlistDictionary $entries */
+        /** @var array<string, ApplePlistValue> $entries */
         $entries = [];
         for ($idx = 0; $idx < $count; ++$idx) {
             /** @var ApplePlistScalar $key */
-            $key                    = $keys[$idx];
-            $entries[$key->value()] = $values[$idx];
+            $key = $keys[$idx];
+            $keyValue = $key->value();
+            
+            if (!is_string($keyValue)) {
+                throw new ParseError('Dictionary key must be a string value.');
+            }
+            
+            $entries[$keyValue] = $values[$idx];
         }
 
         return new ApplePlistDictionary($entries);

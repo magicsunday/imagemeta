@@ -13,10 +13,15 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
+use MagicSunday\ImageMeta\Core\ByteReader;
+use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
+use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
@@ -38,6 +43,12 @@ use function unlink;
  * Exercises the JPEG extractor using synthetic marker segments.
  */
 #[CoversClass(JpegExtractor::class)]
+#[UsesClass(Stream::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(ParseError::class)]
+#[UsesClass(NormalisesOffsets::class)]
+#[UsesClass(ReadsBinaryPrimitives::class)]
 final class JpegExtractorTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";

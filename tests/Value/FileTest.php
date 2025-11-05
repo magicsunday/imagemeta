@@ -27,13 +27,15 @@ final class FileTest extends TestCase
     {
         $file = new File(
             mimeType: 'image/jpeg',
+            fileSize: 1024,
             extension: 'jpg',
-            size: 1024,
+            digestSha1: null,
+            digestMd5: null,
         );
 
         self::assertSame('image/jpeg', $file->mimeType);
         self::assertSame('jpg', $file->extension);
-        self::assertSame(1024, $file->size);
+        self::assertSame(1024, $file->fileSize);
     }
 
     #[Test]
@@ -41,13 +43,15 @@ final class FileTest extends TestCase
     {
         $file = new File(
             mimeType: null,
+            fileSize: null,
             extension: null,
-            size: null,
+            digestSha1: null,
+            digestMd5: null,
         );
 
         self::assertNull($file->mimeType);
         self::assertNull($file->extension);
-        self::assertNull($file->size);
+        self::assertNull($file->fileSize);
     }
 
     #[Test]
@@ -55,8 +59,10 @@ final class FileTest extends TestCase
     {
         $file = new File(
             mimeType: 'image/heic',
+            fileSize: 2048,
             extension: 'heic',
-            size: 2048,
+            digestSha1: null,
+            digestMd5: null,
         );
 
         self::assertSame('image/heic', $file->mimeType);

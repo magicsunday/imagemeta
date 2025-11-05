@@ -14,11 +14,14 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\GpsCoordinate;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(Gps::class)]
+#[UsesClass(GpsCoordinate::class)]
 final class GpsTest extends TestCase
 {
     #[Test]

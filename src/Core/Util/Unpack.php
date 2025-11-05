@@ -75,7 +75,7 @@ final class Unpack
     public static function uint64(string $bytes, bool $littleEndian, string $context): UInt64
     {
         $format = $littleEndian ? 'V2' : 'N2';
-        $parts  = unpack($format, $bytes);
+        $parts  = @unpack($format, $bytes);
 
         if ($parts === false || !isset($parts[1], $parts[2])) {
             throw new ParseError('Failed to unpack ' . $context . '.');
@@ -110,7 +110,7 @@ final class Unpack
      */
     private static function numeric(string $format, string $bytes, string $context): int|float
     {
-        $result = unpack($format, $bytes);
+        $result = @unpack($format, $bytes);
 
         if ($result === false || !isset($result[1])) {
             throw new ParseError('Failed to unpack ' . $context . '.');

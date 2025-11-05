@@ -50,7 +50,7 @@ final class ProcessingSettingsTest extends TestCase
     {
         $settings = new ProcessingSettings(
             sharpness: Sharpness::HARD,
-            contrast: Contrast::HIGH,
+            contrast: Contrast::HARD,
             saturation: Saturation::HIGH,
             pictureStyle: 'Vivid',
             noiseReduction: 0.5,
@@ -61,7 +61,7 @@ final class ProcessingSettingsTest extends TestCase
         );
 
         self::assertSame(Sharpness::HARD, $settings->sharpness);
-        self::assertSame(Contrast::HIGH, $settings->contrast);
+        self::assertSame(Contrast::HARD, $settings->contrast);
         self::assertSame(Saturation::HIGH, $settings->saturation);
         self::assertSame('Vivid', $settings->pictureStyle);
         self::assertSame(0.5, $settings->noiseReduction);

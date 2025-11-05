@@ -79,6 +79,7 @@ final readonly class IfdEntry
         $arrayValue = array_values($value);
 
         if ($type === 5 || $type === 10) {
+            /** @var array<int, int|float|array<int, int|float>> $arrayValue */
             $rationals = $this->normaliseRationalList($arrayValue);
 
             if (count($rationals) === 1) {
@@ -88,6 +89,7 @@ final readonly class IfdEntry
             return new ExifRationalList($rationals);
         }
 
+        /** @var array<int, int|float|array<int, int|float>> $arrayValue */
         $numericValues = $this->normaliseNumericList($arrayValue);
 
         if ($count === 1 && count($numericValues) === 1) {

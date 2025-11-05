@@ -51,7 +51,7 @@ final class CompositeImageInfoTest extends TestCase
     public function constructsWithExposureTimes(): void
     {
         $info = new CompositeImageInfo(
-            type: CompositeImage::COMPOSITE_CREATED_BY_EDITING,
+            type: CompositeImage::GENERAL_COMPOSITE,
             counts: [3, 3],
             exposureTimesTotal: [0.01, 0.1, 1.0],
         );

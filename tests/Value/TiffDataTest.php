@@ -34,10 +34,10 @@ final class TiffDataTest extends TestCase
             rowsPerStrip: 64,
             tileWidth: null,
             tileLength: null,
-            compression: Compression::NONE,
+            compression: Compression::UNCOMPRESSED,
             photometric: Photometric::RGB,
             planar: null,
-            resolutionUnit: ResolutionUnit::INCH,
+            resolutionUnit: ResolutionUnit::INCHES,
             xResolution: 300.0,
             yResolution: 300.0,
             ycbcrPos: null,
@@ -59,9 +59,9 @@ final class TiffDataTest extends TestCase
         self::assertSame(3, $tiff->samplesPerPixel);
         self::assertSame(8, $tiff->bitsPerSample);
         self::assertSame(64, $tiff->rowsPerStrip);
-        self::assertSame(Compression::NONE, $tiff->compression);
+        self::assertSame(Compression::UNCOMPRESSED, $tiff->compression);
         self::assertSame(Photometric::RGB, $tiff->photometric);
-        self::assertSame(ResolutionUnit::INCH, $tiff->resolutionUnit);
+        self::assertSame(ResolutionUnit::INCHES, $tiff->resolutionUnit);
         self::assertSame(300.0, $tiff->xResolution);
         self::assertSame(300.0, $tiff->yResolution);
     }
