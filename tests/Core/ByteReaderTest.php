@@ -13,8 +13,10 @@ namespace MagicSunday\ImageMeta\Tests\Core;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
@@ -23,6 +25,8 @@ use function chr;
  * Tests for the ByteReader component.
  */
 #[CoversClass(ByteReader::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
 final class ByteReaderTest extends TestCase
 {
     /**

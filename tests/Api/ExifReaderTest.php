@@ -28,6 +28,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
+use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\CanonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
@@ -219,6 +220,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleMakerNotesMerger::class)]
 #[UsesClass(QuickTimeLookup::class)]
+#[UsesClass(SemanticStyle::class)]
 #[UsesClass(CanonDecoder::class)]
 #[UsesClass(MakerNotesRecord::class)]
 #[UsesClass(Registry::class)]
