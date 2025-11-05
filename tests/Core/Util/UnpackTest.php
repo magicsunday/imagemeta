@@ -15,8 +15,8 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
@@ -32,9 +32,9 @@ final class UnpackTest extends TestCase
     public function unpacksIntegerValue(): void
     {
         $bytes = chr(0x12) . chr(0x34);
-        
+
         $result = Unpack::int('n', $bytes, 'test');
-        
+
         self::assertSame(0x1234, $result);
     }
 
@@ -42,9 +42,9 @@ final class UnpackTest extends TestCase
     public function unpacksFloatValue(): void
     {
         $bytes = pack('f', 3.14);
-        
+
         $result = Unpack::float('f', $bytes, 'test');
-        
+
         self::assertEqualsWithDelta(3.14, $result, 0.01);
     }
 
@@ -53,7 +53,7 @@ final class UnpackTest extends TestCase
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Failed to unpack test');
-        
+
         Unpack::int('invalid', '', 'test');
     }
 
@@ -61,7 +61,7 @@ final class UnpackTest extends TestCase
     public function combinesTwoUint32Values(): void
     {
         $result = Unpack::combineUint32(0x12345678, 0x9ABCDEF0);
-        
+
         self::assertSame(0x12345678, $result->high());
         self::assertSame(0x9ABCDEF0, $result->low());
     }
@@ -70,9 +70,9 @@ final class UnpackTest extends TestCase
     public function unpacksUint64BigEndian(): void
     {
         $bytes = pack('N', 0x12345678) . pack('N', 0x9ABCDEF0);
-        
+
         $result = Unpack::uint64($bytes, false, 'test');
-        
+
         self::assertSame(0x12345678, $result->high());
         self::assertSame(0x9ABCDEF0, $result->low());
     }
@@ -81,9 +81,9 @@ final class UnpackTest extends TestCase
     public function unpacksUint64LittleEndian(): void
     {
         $bytes = pack('V', 0x9ABCDEF0) . pack('V', 0x12345678);
-        
+
         $result = Unpack::uint64($bytes, true, 'test');
-        
+
         self::assertSame(0x12345678, $result->high());
         self::assertSame(0x9ABCDEF0, $result->low());
     }
@@ -93,7 +93,7 @@ final class UnpackTest extends TestCase
     {
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Failed to unpack test');
-        
+
         Unpack::uint64('short', false, 'test');
     }
 }

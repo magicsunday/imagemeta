@@ -12,11 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Acceptance;
 
 use MagicSunday\ImageMeta\MetadataReader;
-use PHPUnit\Framework\Attributes\CoversNothing;
-use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 #[CoversClass(MetadataReader::class)]
@@ -24,15 +23,15 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(\MagicSunday\ImageMeta\Core\ExifCapabilities::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Core\MemoryBuffer::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Core\Stream::class)]
-#[UsesClass(\MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets::class)]
-#[UsesClass(\MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives::class)]
+#[UsesTrait(\MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets::class)]
+#[UsesTrait(\MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Core\Util\UInt64::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Core\Util\Unpack::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Curate\ExifAssembler::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Curate\Exif\ValueFactory::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Curate\StructuredMetadata::class)]
 #[UsesClass(\MagicSunday\ImageMeta\Detect\FormatDetector::class)]
-#[UsesClass(\MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable::class)]
+#[UsesTrait(\MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable::class)]
 #[UsesClass(\MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes::class)]
 #[UsesClass(\MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger::class)]
 #[UsesClass(\MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup::class)]

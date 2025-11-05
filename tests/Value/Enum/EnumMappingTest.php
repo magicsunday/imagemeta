@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 
+use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
@@ -26,10 +27,9 @@ use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -42,7 +42,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SensingMethod::class)]
 #[CoversClass(LightSource::class)]
 #[CoversClass(MeteringMode::class)]
-#[UsesClass(EnumFromIntStringNullable::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 #[CoversClass(Compression::class)]
 final class EnumMappingTest extends TestCase
 {

@@ -2549,9 +2549,9 @@ final class ValueFactory implements ValueFactoryInterface
     /**
      * Extracts a list of string values from XMP document.
      *
-     * @param XmpDocument $document   XMP document to extract from.
-     * @param string      $namespace  XML namespace URI.
-     * @param string      $localName  Local element name.
+     * @param XmpDocument $document  XMP document to extract from.
+     * @param string      $namespace XML namespace URI.
+     * @param string      $localName Local element name.
      *
      * @return list<string> List of string values.
      */
@@ -2579,9 +2579,9 @@ final class ValueFactory implements ValueFactoryInterface
     /**
      * Extracts a list of float values from XMP document.
      *
-     * @param XmpDocument $document   XMP document to extract from.
-     * @param string      $namespace  XML namespace URI.
-     * @param string      $localName  Local element name.
+     * @param XmpDocument $document  XMP document to extract from.
+     * @param string      $namespace XML namespace URI.
+     * @param string      $localName Local element name.
      *
      * @return list<float|null> List of float values with nulls for invalid entries.
      */

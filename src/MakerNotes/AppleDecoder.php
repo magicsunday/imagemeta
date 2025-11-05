@@ -294,9 +294,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @return array<int, array<int|string, mixed>|bool|float|int|string|null> Parsed array values.
      *
-     * @throws ParseError If array syntax is invalid.
-     *
      * @phpstan-return array<int, array<int|string, mixed>|bool|float|int|string|null>
+     *
+     * @throws ParseError If array syntax is invalid.
      */
     private function parseArray(string $raw, int &$offset, int $length): array
     {
@@ -728,9 +728,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param array<int|string, mixed> $dictionary Decoded maker notes dictionary.
      *
-     * @return AppleMakerNotes|null Apple maker notes object or null if invalid.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return AppleMakerNotes|null Apple maker notes object or null if invalid.
      */
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
@@ -920,9 +920,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary containing runtime data.
      * @param string                   $key        Key to look up.
      *
-     * @return RunTime|null RunTime value object or null if not found.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return RunTime|null RunTime value object or null if not found.
      */
     private function runTimeValue(array $dictionary, string $key): ?RunTime
     {
@@ -954,9 +954,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return bool|null Boolean value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return bool|null Boolean value if found, null otherwise.
      */
     private function boolDictionaryValue(array $dictionary, string ...$keys): ?bool
     {
@@ -982,9 +982,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return float|null Rational float value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return float|null Rational float value if found, null otherwise.
      */
     private function rationalFloatValue(array $dictionary, string ...$keys): ?float
     {
@@ -1132,12 +1132,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a numeric component from an array using prioritized keys.
      *
-     * @param array<int|string, mixed> $value Array containing numeric components.
+     * @param array<int|string, mixed> $value   Array containing numeric components.
      * @param string                   ...$keys Priority-ordered keys to check.
      *
-     * @return float|null Numeric component value or null if not found.
-     *
      * @phpstan-param array<int|string, mixed> $value
+     *
+     * @return float|null Numeric component value or null if not found.
      */
     private function numericComponentFromArray(array $value, string ...$keys): ?float
     {
@@ -1200,9 +1200,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return string|int|null String or integer value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return string|int|null String or integer value if found, null otherwise.
      */
     private function stringOrIntValue(array $dictionary, string ...$keys): string|int|null
     {
@@ -1249,9 +1249,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return string|int|null Identifier value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return string|int|null Identifier value if found, null otherwise.
      */
     private function identifierValue(array $dictionary, string ...$keys): string|int|null
     {
@@ -1330,9 +1330,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   $key        Key to look up.
      *
-     * @return string|null String value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return string|null String value if found, null otherwise.
      */
     private function stringValue(array $dictionary, string $key): ?string
     {
@@ -1356,9 +1356,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return float|null Float value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return float|null Float value if found, null otherwise.
      */
     private function floatValue(array $dictionary, string ...$keys): ?float
     {
@@ -1386,9 +1386,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return int|null Integer value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return int|null Integer value if found, null otherwise.
      */
     private function intValue(array $dictionary, string ...$keys): ?int
     {
@@ -1416,10 +1416,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return list<float>|null List of float values if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
      *
+     * @return list<float>|null List of float values if found, null otherwise.
      * @return list<float>|null
      */
     private function floatList(array $dictionary, string ...$keys): ?array
@@ -1476,10 +1475,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param array<int|string, mixed> $dictionary Dictionary containing focus distance data.
      *
-     * @return list<float>|null Focus distance range [near, far] or null if not found.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
      *
+     * @return list<float>|null Focus distance range [near, far] or null if not found.
      * @return list<float>|null
      */
     private function focusDistanceRangeValue(array $dictionary): ?array
@@ -1520,9 +1518,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   $key        Key to look up.
      *
-     * @return string|null Version string if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return string|null Version string if found, null otherwise.
      */
     private function makerNoteVersionValue(array $dictionary, string $key): ?string
     {
@@ -1588,9 +1586,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, mixed> $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @return string|null String representation of value if found, null otherwise.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
+     *
+     * @return string|null String representation of value if found, null otherwise.
      */
     private function stringOrNumericValue(array $dictionary, string ...$keys): ?string
     {
@@ -1668,10 +1666,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param array<int|string, mixed> $dictionary Dictionary containing flag data.
      *
-     * @return array<string, bool> Dictionary of flag names to boolean values.
-     *
      * @phpstan-param array<int|string, mixed> $dictionary
      *
+     * @return array<string, bool> Dictionary of flag names to boolean values.
      * @return array<string, bool>
      */
     private function extractFlags(array $dictionary): array
@@ -1868,9 +1865,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param string|int|float|bool|array<int|string, mixed>|null $value Raw value to normalize.
      *
-     * @return bool|null Boolean value or null if invalid.
-     *
      * @phpstan-param string|int|float|bool|null|array<int|string, mixed> $value
+     *
+     * @return bool|null Boolean value or null if invalid.
      */
     private function boolValue(string|int|float|bool|array|null $value): ?bool
     {

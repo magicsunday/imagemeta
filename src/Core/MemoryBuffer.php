@@ -15,7 +15,6 @@ use MagicSunday\ImageMeta\Contracts\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Core\Util\Unpack;
 
 use function strlen;
 

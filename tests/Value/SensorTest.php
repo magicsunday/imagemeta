@@ -52,7 +52,7 @@ final class SensorTest extends TestCase
     public function constructsWithCFAPattern(): void
     {
         $cfaPattern = [0, 1, 1, 2]; // Bayer RGGB pattern
-        
+
         $sensor = new Sensor(
             pixelPitchUm: null,
             cfaWidth: 2,

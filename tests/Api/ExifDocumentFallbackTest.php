@@ -13,8 +13,8 @@ namespace MagicSunday\ImageMeta\Tests\Api;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
@@ -77,16 +77,17 @@ use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(UInt64::class)]
 #[UsesClass(ExifAssembler::class)]
 #[UsesClass(ValueFactory::class)]
-#[UsesClass(EnumFromIntStringNullable::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(ExifNumericList::class)]

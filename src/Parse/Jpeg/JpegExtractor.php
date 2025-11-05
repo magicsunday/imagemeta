@@ -24,7 +24,6 @@ use function array_keys;
 use function count;
 use function implode;
 use function in_array;
-use function is_array;
 use function ksort;
 use function min;
 use function ord;

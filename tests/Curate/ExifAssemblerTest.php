@@ -39,6 +39,16 @@ use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
+use MagicSunday\ImageMeta\Value\Audio;
+use MagicSunday\ImageMeta\Value\AudioClips;
+use MagicSunday\ImageMeta\Value\Author;
+use MagicSunday\ImageMeta\Value\Camera;
+use MagicSunday\ImageMeta\Value\Capture;
+use MagicSunday\ImageMeta\Value\ColorProfile;
+use MagicSunday\ImageMeta\Value\CompositeImageInfo;
+use MagicSunday\ImageMeta\Value\Container;
+use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
@@ -62,16 +72,6 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
-use MagicSunday\ImageMeta\Value\Audio;
-use MagicSunday\ImageMeta\Value\AudioClips;
-use MagicSunday\ImageMeta\Value\Author;
-use MagicSunday\ImageMeta\Value\Camera;
-use MagicSunday\ImageMeta\Value\Capture;
-use MagicSunday\ImageMeta\Value\ColorProfile;
-use MagicSunday\ImageMeta\Value\CompositeImageInfo;
-use MagicSunday\ImageMeta\Value\Container;
-use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
@@ -105,6 +105,7 @@ use MagicSunday\ImageMeta\Value\Xmp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
@@ -118,7 +119,7 @@ use function str_repeat;
 #[CoversClass(ValueFactory::class)]
 #[CoversClass(ExifAssembler::class)]
 #[CoversClass(ExifCapabilities::class)]
-#[CoversClass(EnumFromIntStringNullable::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 #[CoversClass(AppleMakerNotes::class)]
 #[CoversClass(QuickTimeLookup::class)]
 #[CoversClass(Ifd::class)]

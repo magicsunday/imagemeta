@@ -729,7 +729,7 @@ final class BinaryPlistDecoder
         $entries = [];
         for ($idx = 0; $idx < $count; ++$idx) {
             /** @var ApplePlistScalar $key */
-            $key = $keys[$idx];
+            $key      = $keys[$idx];
             $keyValue = $key->value();
 
             if (!is_string($keyValue)) {

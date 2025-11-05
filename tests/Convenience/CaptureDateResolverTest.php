@@ -14,8 +14,8 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
@@ -70,6 +70,7 @@ use MagicSunday\ImageMeta\Value\Xmp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -88,7 +89,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifAssembler::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(StructuredMetadata::class)]
-#[UsesClass(EnumFromIntStringNullable::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(ValueConverters::class)]

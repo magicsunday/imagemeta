@@ -20,9 +20,10 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfAttributes;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Mpf\MpfEntry;
 use MagicSunday\ImageMeta\Parse\Jpeg\MpfParser;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function is_string;
@@ -33,7 +34,7 @@ use function strlen;
 #[CoversClass(MpfParser::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(MemoryBuffer::class)]
-#[UsesClass(ReadsBinaryPrimitives::class)]
+#[UsesTrait(ReadsBinaryPrimitives::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(MpfAttributes::class)]
 #[UsesClass(MpfDocument::class)]

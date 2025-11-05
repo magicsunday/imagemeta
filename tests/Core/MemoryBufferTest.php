@@ -32,8 +32,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
     use MagicSunday\ImageMeta\Core\Util\Unpack;
     use PHPUnit\Framework\Attributes\After;
     use PHPUnit\Framework\Attributes\CoversClass;
-    use PHPUnit\Framework\Attributes\UsesClass;
     use PHPUnit\Framework\Attributes\Test;
+    use PHPUnit\Framework\Attributes\UsesClass;
     use PHPUnit\Framework\TestCase;
 
     /**

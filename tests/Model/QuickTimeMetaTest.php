@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\imagemeta\tests\Model;
 
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**

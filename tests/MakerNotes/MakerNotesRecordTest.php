@@ -13,8 +13,8 @@ namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use InvalidArgumentException;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 

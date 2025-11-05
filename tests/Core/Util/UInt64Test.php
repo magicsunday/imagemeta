@@ -70,7 +70,7 @@ final class UInt64Test extends TestCase
     #[Test]
     public function detectsZeroValue(): void
     {
-        $zero = new UInt64(0, 0);
+        $zero    = new UInt64(0, 0);
         $nonZero = new UInt64(0, 1);
 
         self::assertTrue($zero->isZero());
@@ -99,7 +99,7 @@ final class UInt64Test extends TestCase
     #[Test]
     public function addsUnsignedInteger(): void
     {
-        $value = new UInt64(0, 100);
+        $value  = new UInt64(0, 100);
         $result = $value->addSmall(50);
 
         self::assertSame(0, $result->high());
@@ -109,7 +109,7 @@ final class UInt64Test extends TestCase
     #[Test]
     public function handlesOverflowInAddition(): void
     {
-        $value = new UInt64(0, 0xFFFFFFFF);
+        $value  = new UInt64(0, 0xFFFFFFFF);
         $result = $value->addSmall(2);
 
         self::assertSame(1, $result->high());
@@ -120,8 +120,8 @@ final class UInt64Test extends TestCase
     public function comparesWithOtherUInt64(): void
     {
         $smaller = new UInt64(0, 100);
-        $larger = new UInt64(0, 200);
-        $equal = new UInt64(0, 100);
+        $larger  = new UInt64(0, 200);
+        $equal   = new UInt64(0, 100);
 
         self::assertTrue($smaller->compare($larger) < 0);
         self::assertFalse($larger->compare($smaller) < 0);
@@ -135,7 +135,7 @@ final class UInt64Test extends TestCase
     public function comparesHighPartFirst(): void
     {
         $smaller = new UInt64(1, 0xFFFFFFFF);
-        $larger = new UInt64(2, 0);
+        $larger  = new UInt64(2, 0);
 
         self::assertTrue($smaller->compare($larger) < 0);
         self::assertTrue($larger->compare($smaller) > 0);

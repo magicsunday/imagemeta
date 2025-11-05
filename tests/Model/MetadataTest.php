@@ -66,6 +66,7 @@ use MagicSunday\ImageMeta\Value\Xmp;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -82,7 +83,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(StructuredMetadata::class)]
-#[UsesClass(EnumFromIntStringNullable::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(Audio::class)]

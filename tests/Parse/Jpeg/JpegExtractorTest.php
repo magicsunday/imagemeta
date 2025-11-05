@@ -11,9 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Jpeg;
 
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
-use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
@@ -22,6 +22,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
@@ -46,8 +47,8 @@ use function unlink;
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(ParseError::class)]
-#[UsesClass(NormalisesOffsets::class)]
-#[UsesClass(ReadsBinaryPrimitives::class)]
+#[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(ReadsBinaryPrimitives::class)]
 #[CoversClass(JpegExtractor::class)]
 final class JpegExtractorTest extends TestCase
 {

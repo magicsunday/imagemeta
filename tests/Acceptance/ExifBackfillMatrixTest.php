@@ -19,8 +19,8 @@ use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
-use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
@@ -84,10 +84,10 @@ use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -213,15 +213,15 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(Stream::class)]
-#[UsesClass(NormalisesOffsets::class)]
-#[UsesClass(ReadsBinaryPrimitives::class)]
+#[UsesTrait(NormalisesOffsets::class)]
+#[UsesTrait(ReadsBinaryPrimitives::class)]
 #[UsesClass(UInt64::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(ExifAssembler::class)]
 #[UsesClass(ValueFactory::class)]
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(FormatDetector::class)]
-#[UsesClass(EnumFromIntStringNullable::class)]
+#[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleMakerNotesMerger::class)]
 #[UsesClass(QuickTimeLookup::class)]
@@ -278,7 +278,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Video::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
-#[CoversNothing]
 final class ExifBackfillMatrixTest extends TestCase
 {
     use ExifExpectationAssertions;

@@ -792,8 +792,8 @@ final readonly class IsoBmffExtractor
     /**
      * Gathers item IDs from item info structures, separated by primary status.
      *
-     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos Item information structures.
-     * @param int|null                                                                            $primaryItemId Primary item ID if known.
+     * @param array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos     Item information structures.
+     * @param int|null                                                                           $primaryItemId Primary item ID if known.
      *
      * @return array{0: list<int>, 1: list<int>} Tuple of [primary item IDs, other item IDs].
      */

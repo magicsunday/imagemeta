@@ -296,7 +296,7 @@ final class AppleMakerNotesMerger
     /**
      * Extracts a list of float values from QuickTime metadata.
      *
-     * @param QuickTimeLookup $lookup QuickTime metadata lookup instance.
+     * @param QuickTimeLookup $lookup  QuickTime metadata lookup instance.
      * @param string          ...$keys One or more keys to search for.
      *
      * @return list<float>|null List of float values if found, null otherwise.
@@ -415,8 +415,8 @@ final class AppleMakerNotesMerger
     /**
      * Extracts an enumerated value from QuickTime metadata.
      *
-     * @param QuickTimeLookup    $lookup QuickTime metadata lookup instance.
-     * @param array<int, string> $map    Mapping from numeric codes to string labels.
+     * @param QuickTimeLookup    $lookup  QuickTime metadata lookup instance.
+     * @param array<int, string> $map     Mapping from numeric codes to string labels.
      * @param string             ...$keys One or more keys to search for.
      *
      * @return string|null Enumerated value if found, null otherwise.

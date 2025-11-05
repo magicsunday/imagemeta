@@ -27,7 +27,7 @@ final class CaptureTest extends TestCase
     public function constructsWithDateTime(): void
     {
         $dateTime = new DateTimeImmutable('2024-01-15 14:30:00');
-        
+
         $capture = new Capture(
             dateTime: $dateTime,
             temperatureC: null,

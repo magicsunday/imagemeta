@@ -28,7 +28,7 @@ final class TemporalTest extends TestCase
     public function constructsWithOriginalDateTime(): void
     {
         $dateTime = new DateTimeImmutable('2024-01-15 10:30:00');
-        
+
         $temporal = new Temporal(
             create: null,
             modify: null,
@@ -50,9 +50,9 @@ final class TemporalTest extends TestCase
     #[Test]
     public function constructsWithAllDateTimeFields(): void
     {
-        $create = new DateTimeImmutable('2024-01-15 10:29:00');
+        $create   = new DateTimeImmutable('2024-01-15 10:29:00');
         $original = new DateTimeImmutable('2024-01-15 10:30:00');
-        $modify = new DateTimeImmutable('2024-01-15 11:00:00');
+        $modify   = new DateTimeImmutable('2024-01-15 11:00:00');
         $timeZone = new DateTimeZone('Europe/Berlin');
 
         $temporal = new Temporal(

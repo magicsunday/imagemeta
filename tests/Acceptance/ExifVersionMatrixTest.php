@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Tests\Acceptance;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Tests\Support\ExifExpectationAssertions;
 use MagicSunday\ImageMeta\Tests\Support\ExifVersionExpectations;
-use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -22,7 +21,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * @phpstan-import-type StructuredExpectation from ExifBackfillMatrixTest
  */
-#[CoversNothing]
 final class ExifVersionMatrixTest extends TestCase
 {
     use ExifExpectationAssertions;

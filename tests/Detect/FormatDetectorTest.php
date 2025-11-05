@@ -19,8 +19,9 @@ use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
-use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
+use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function fopen;
@@ -34,7 +35,7 @@ use function strlen;
 #[CoversClass(FormatDetector::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
-#[UsesClass(NormalisesOffsets::class)]
+#[UsesTrait(NormalisesOffsets::class)]
 final class FormatDetectorTest extends TestCase
 {
     /**
