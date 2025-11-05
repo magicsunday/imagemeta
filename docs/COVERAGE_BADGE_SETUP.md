@@ -82,10 +82,19 @@ Beispiel: Wenn deine Gist ID `abc123def456` ist, sollte die Zeile so aussehen:
 
 ## Alternative ohne Gist (einfacher, aber weniger dynamisch)
 
-Falls du keine Gists verwenden möchtest, kannst du ein statisches Badge verwenden:
+Falls du keine Gists verwenden möchtest oder das Setup noch nicht abgeschlossen hast, kannst du ein statisches Badge verwenden:
 
 ```markdown
 [![Coverage](https://img.shields.io/badge/coverage-check%20artifacts-blue)](https://github.com/magicsunday/imagemeta/actions/workflows/ci.yml)
 ```
 
 Dieses zeigt einen statischen Badge mit einem Link zu den GitHub Actions, wo die Coverage-Berichte heruntergeladen werden können.
+
+**Hinweis zum GIST_ID Platzhalter im README:**
+Der Platzhalter `GIST_ID` in der README.md ist bewusst so belassen, da:
+- Er als Erinnerung dient, die Einrichtung abzuschließen
+- Die tatsächliche Gist ID repository-spezifisch ist
+- Ein nicht-funktionierendes Badge besser ist als ein Badge mit falschen Daten
+- Die alternative statische Badge-Lösung (siehe oben) sofort funktioniert
+
+Nach Abschluss der Einrichtung sollte der Platzhalter durch die echte Gist ID ersetzt werden.

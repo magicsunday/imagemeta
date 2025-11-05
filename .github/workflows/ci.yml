@@ -106,19 +106,29 @@ jobs:
                 if: ${{ always() && steps.coverage.conclusion == 'success' }}
                 run: |
                     COVERAGE=$(grep -oP 'Lines:\s+\K[\d.]+(?=%)' .build/coverage/coverage.txt | head -1)
+                    
+                    # Validate coverage value
+                    if [ -z "$COVERAGE" ]; then
+                        echo "Warning: Could not extract coverage percentage, defaulting to 0"
+                        COVERAGE="0"
+                    fi
+                    
                     echo "COVERAGE=$COVERAGE" >> $GITHUB_ENV
                     echo "Coverage: $COVERAGE%"
                     
                     # Determine badge color based on coverage percentage
-                    if (( $(echo "$COVERAGE > 90" | bc -l) )); then
+                    # Using bash arithmetic for compatibility (avoiding bc dependency)
+                    COVERAGE_INT=$(echo "$COVERAGE" | cut -d. -f1)
+                    
+                    if [ "$COVERAGE_INT" -gt 90 ]; then
                         echo "COVERAGE_COLOR=brightgreen" >> $GITHUB_ENV
-                    elif (( $(echo "$COVERAGE > 80" | bc -l) )); then
+                    elif [ "$COVERAGE_INT" -gt 80 ]; then
                         echo "COVERAGE_COLOR=green" >> $GITHUB_ENV
-                    elif (( $(echo "$COVERAGE > 70" | bc -l) )); then
+                    elif [ "$COVERAGE_INT" -gt 70 ]; then
                         echo "COVERAGE_COLOR=yellowgreen" >> $GITHUB_ENV
-                    elif (( $(echo "$COVERAGE > 60" | bc -l) )); then
+                    elif [ "$COVERAGE_INT" -gt 60 ]; then
                         echo "COVERAGE_COLOR=yellow" >> $GITHUB_ENV
-                    elif (( $(echo "$COVERAGE > 50" | bc -l) )); then
+                    elif [ "$COVERAGE_INT" -gt 50 ]; then
                         echo "COVERAGE_COLOR=orange" >> $GITHUB_ENV
                     else
                         echo "COVERAGE_COLOR=red" >> $GITHUB_ENV
