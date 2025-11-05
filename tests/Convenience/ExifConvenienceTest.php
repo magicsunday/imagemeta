@@ -19,16 +19,26 @@ use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\GpsCoordinate;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Lens;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for ExifConvenience.
  */
 #[CoversClass(ExifConvenience::class)]
+#[UsesClass(Camera::class)]
+#[UsesClass(Capture::class)]
+#[UsesClass(Derived::class)]
+#[UsesClass(Exposure::class)]
+#[UsesClass(Gps::class)]
+#[UsesClass(GpsCoordinate::class)]
+#[UsesClass(Image::class)]
+#[UsesClass(Lens::class)]
 final class ExifConvenienceTest extends TestCase
 {
     #[Test]
