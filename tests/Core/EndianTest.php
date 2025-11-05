@@ -25,15 +25,21 @@ final class EndianTest extends TestCase
     #[Test]
     public function littleEndianHasCorrectValue(): void
     {
-        self::assertSame('II', Endian::Little->value);
-        self::assertNotSame('MM', Endian::Little->value);
+        $value = Endian::Little->value;
+        
+        self::assertIsString($value);
+        self::assertSame(2, strlen($value));
+        self::assertNotSame(Endian::Big->value, $value);
     }
 
     #[Test]
     public function bigEndianHasCorrectValue(): void
     {
-        self::assertSame('MM', Endian::Big->value);
-        self::assertNotSame('II', Endian::Big->value);
+        $value = Endian::Big->value;
+        
+        self::assertIsString($value);
+        self::assertSame(2, strlen($value));
+        self::assertNotSame(Endian::Little->value, $value);
     }
 
     #[Test]
@@ -42,7 +48,8 @@ final class EndianTest extends TestCase
         $little = Endian::from('II');
         $big = Endian::from('MM');
         
-        self::assertSame('II', $little->value);
-        self::assertSame('MM', $big->value);
+        self::assertNotSame($little, $big);
+        self::assertSame(Endian::Little, $little);
+        self::assertSame(Endian::Big, $big);
     }
 }
