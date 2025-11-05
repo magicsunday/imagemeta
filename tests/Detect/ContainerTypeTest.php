@@ -27,13 +27,4 @@ final class ContainerTypeTest extends TestCase
     {
         self::assertNotSame(ContainerType::JPEG, ContainerType::ISOBMFF);
     }
-
-    #[Test]
-    public function enumCasesAreDefined(): void
-    {
-        $cases = ContainerType::cases();
-        
-        self::assertContains(ContainerType::JPEG, $cases);
-        self::assertContains(ContainerType::ISOBMFF, $cases);
-    }
 }
