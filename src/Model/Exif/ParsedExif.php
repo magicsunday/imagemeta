@@ -3228,6 +3228,28 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the TIFF predictor value for differencing compression schemes.
+     *
+     * TIFF 6.0 §14 defines the Predictor tag as a mathematical operator applied before
+     * compression. Valid values: 1 = No prediction (default), 2 = Horizontal differencing.
+     */
+    public function predictor(): ?int
+    {
+        return $this->int($this->ifd0, ExifTag::PREDICTOR);
+    }
+
+    /**
+     * Returns the embedded ICC color profile binary data when present.
+     *
+     * TIFF 6.0 §20 and ICC.1:2001-04 specify the ICC profile tag (0x8773) as containing
+     * the raw ICC profile binary stream for color-managed workflows.
+     */
+    public function iccProfile(): ?string
+    {
+        return $this->rawString($this->ifd0, ExifTag::ICC_PROFILE);
+    }
+
+    /**
      * Returns the JPEG interchange format offset for legacy thumbnails.
      */
     public function jpegInterchangeFormat(): ?int

@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
 use function array_key_exists;
 use function array_unique;
@@ -938,7 +939,7 @@ final readonly class IsoBmffExtractor
         // EXIF 3.0 Annex A.2.4 and EXIF 2.32 Annex A.2.4 confine Exif item data to
         // self-contained payloads (`construction_method = 0`, `data_reference_index = 0`),
         // so we discard references that require external resolution.
-        if ($location['constructionMethod'] !== 0) {
+        if ($location['constructionMethod'] !== ConstructionMethod::FileOffset->value) {
             return null;
         }
 
