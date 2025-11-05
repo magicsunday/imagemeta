@@ -31,7 +31,6 @@ final class IntegrityTest extends TestCase
             edited: null,
             historyLastSoftware: null,
             imageHistory: null,
-            makerNotesSafe: null,
         );
 
         self::assertSame('IMG_1234.JPG', $integrity->originalFileName);
@@ -66,7 +65,6 @@ final class IntegrityTest extends TestCase
             edited: null,
             historyLastSoftware: null,
             imageHistory: null,
-            makerNotesSafe: null,
         );
 
         self::assertNull($integrity->originalFileName);

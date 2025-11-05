@@ -56,9 +56,6 @@ final class InteropTest extends TestCase
         $interop = new Interop(
             index: null,
             version: null,
-            relatedImageFileFormat: null,
-            relatedImageWidth: null,
-            relatedImageLength: null,
         );
 
         self::assertNull($interop->index);

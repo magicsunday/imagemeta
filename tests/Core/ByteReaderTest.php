@@ -52,6 +52,7 @@ final class ByteReaderTest extends TestCase
                 if ($offset instanceof UInt64) {
                     $offset = $offset->toInt('seek');
                 }
+
                 $position = $offset;
             },
             context: 'test',

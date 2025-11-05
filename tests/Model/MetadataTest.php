@@ -13,6 +13,7 @@ namespace MagicSunday\imagemeta\tests\Model;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
@@ -24,6 +25,7 @@ use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -123,8 +125,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Video::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
-#[UsesClass(\MagicSunday\ImageMeta\Curate\ExifAssembler::class)]
-#[UsesClass(\MagicSunday\ImageMeta\Model\StructuredMetadataCache::class)]
+#[UsesClass(ExifAssembler::class)]
+#[UsesClass(StructuredMetadataCache::class)]
 #[CoversClass(Metadata::class)]
 final class MetadataTest extends TestCase
 {
