@@ -19,6 +19,7 @@ use JsonException;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use Throwable;
@@ -2083,23 +2084,24 @@ final readonly class ValueConverters
         $encoding = null;
 
         $prefixes = [
-            "ASCII\0\0\0"   => 'ASCII',
-            "UNICODE\0"     => 'UNICODE',
-            "JIS\0\0\0\0\0" => 'JIS',
+            "ASCII\0\0\0"   => CharacterEncoding::ASCII,
+            "UNICODE\0"     => CharacterEncoding::UTF16LE, // UNICODE prefix indicates UTF-16
+            "JIS\0\0\0\0\0" => CharacterEncoding::JIS,
         ];
 
-        foreach ($prefixes as $prefix => $label) {
+        foreach ($prefixes as $prefix => $encodingEnum) {
             if (str_starts_with($payload, $prefix)) {
                 $payload  = substr($payload, strlen($prefix));
-                $encoding = $label;
+                $encoding = $encodingEnum;
                 break;
             }
         }
 
         return match ($encoding) {
-            'UNICODE' => self::decodeUndefinedUnicode($payload),
-            'JIS'     => self::decodeUndefinedJis($payload),
-            default   => self::sanitizeString($payload),
+            CharacterEncoding::UTF16LE => self::decodeUndefinedUnicode($payload),
+            CharacterEncoding::JIS     => self::decodeUndefinedJis($payload),
+            null                       => self::sanitizeString($payload),
+            default                    => self::sanitizeString($payload), // ASCII or UNDEFINED
         };
     }
 
