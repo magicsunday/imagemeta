@@ -38,7 +38,6 @@ final class ExifCapabilitiesTest extends TestCase
         yield 'null defaults to 2.2' => ['2.2', null];
         yield 'empty string defaults to 2.2' => ['2.2', ''];
         yield 'decimal 1.0 maps to 1.0' => ['1.0', '1.0'];
-        yield 'decimal 1.1 maps to 1.1' => ['1.1', '1.1'];
         yield 'numeric 0200 maps to 2.0' => ['2.0', '0200'];
         yield 'decimal 2.0 maps to 2.0' => ['2.0', '2.0'];
         yield 'decimal 2.00 maps to 2.0' => ['2.0', '2.00'];
@@ -56,6 +55,8 @@ final class ExifCapabilitiesTest extends TestCase
         yield 'decimal 2.32 maps to 2.32' => ['2.32', '2.32'];
         yield 'numeric 0300 maps to 3.0' => ['3.0', '0300'];
         yield 'decimal 3.0 maps to 3.0' => ['3.0', '3.0'];
+        yield 'version 1.1 is unknown (not in EXIF 3.0 §4.6.4 Table 4)' => ['unknown', '1.1'];
+        yield 'numeric 0110 is unknown (not in EXIF 3.0 §4.6.4 Table 4)' => ['unknown', '0110'];
         yield 'unknown when digits do not match revision' => ['unknown', '9999'];
         yield 'unknown when format malformed' => ['unknown', 'abc'];
     }
