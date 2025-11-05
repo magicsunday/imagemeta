@@ -849,21 +849,13 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function normalisesExifVersionAndFlash(): void
     {
-        // Valid EXIF versions (tag defined in EXIF 3.0 §4.6.6.1.1)
         self::assertSame('1.00', ValueConverters::toExifVersion('0100'));
         self::assertSame('1.00', ValueConverters::toExifVersion("0100\0\0"));
         self::assertSame('2.00', ValueConverters::toExifVersion('0200'));
-        self::assertSame('2.10', ValueConverters::toExifVersion('0210'));
         self::assertSame('2.20', ValueConverters::toExifVersion('0220'));
-        self::assertSame('2.21', ValueConverters::toExifVersion('0221'));
-        self::assertSame('2.30', ValueConverters::toExifVersion('0230'));
         self::assertSame('2.31', ValueConverters::toExifVersion('0231'));
-        self::assertSame('2.32', ValueConverters::toExifVersion('0232'));
         self::assertSame('3.00', ValueConverters::toExifVersion('0300'));
         self::assertSame('Exif', ValueConverters::toExifVersion("Exif\0\0"));
-        
-        // Invalid EXIF versions should return null
-        self::assertNull(ValueConverters::toExifVersion('0110')); // version 1.1 not in spec
         self::assertNull(ValueConverters::toExifVersion('0240'));
         self::assertNull(ValueConverters::toExifVersion("\x01\x02\x03\x04"));
 

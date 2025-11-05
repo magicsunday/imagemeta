@@ -532,12 +532,8 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises a raw EXIF version byte string into a dotted decimal representation.
-     *
-     * The ExifVersion tag is defined in EXIF 3.0 §4.6.6.1.1, with the version format
-     * described in EXIF 3.0 §4.2 (Format Version).
-     *
-     * Valid versions: 1.0, 2.0, 2.1, 2.2, 2.21, 2.3, 2.31, 2.32, 3.0
+     * Normalises a raw EXIF version byte string into a dotted decimal representation
+     * per EXIF 2.32 §4.6.8 / EXIF 3.0 §4.6.8 (other tags).
      */
     public static function toExifVersion(?string $bytes): ?string
     {
@@ -551,17 +547,17 @@ final readonly class ValueConverters
         }
 
         if (ctype_digit($trimmed) && strlen($trimmed) === 4) {
-            // Known EXIF versions
             $known = [
-                '0100', // 1.0
-                '0200', // 2.0
-                '0210', // 2.1
-                '0220', // 2.2
-                '0221', // 2.21
-                '0230', // 2.3
-                '0231', // 2.31
-                '0232', // 2.32
-                '0300', // 3.0
+                '0100',
+                '0110',
+                '0200',
+                '0210',
+                '0220',
+                '0221',
+                '0230',
+                '0231',
+                '0232',
+                '0300',
             ];
 
             if (in_array($trimmed, $known, true)) {
