@@ -33,6 +33,7 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\MetadataReader;
+use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
@@ -223,6 +224,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Registry::class)]
 #[UsesClass(RegistryFactory::class)]
 #[UsesClass(MetadataReader::class)]
+#[UsesClass(ExifNumericList::class)]
 #[UsesClass(ExifRational::class)]
 #[UsesClass(ExifRationalList::class)]
 #[UsesClass(Ifd::class)]
