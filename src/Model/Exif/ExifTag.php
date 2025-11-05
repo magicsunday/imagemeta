@@ -35,7 +35,6 @@ final readonly class ExifTag
 
     /**
  * EXIF 3.0 tag recording the software responsible for final image processing.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; mapped from EXIF 2.32 §4.6.2 Table 1 guidance.
  */
@@ -44,7 +43,6 @@ final readonly class ExifTag
     /**
  * Width of the image in pixels.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -53,7 +51,6 @@ final readonly class ExifTag
     /**
  * Height of the image in pixels.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -62,7 +59,6 @@ final readonly class ExifTag
     /**
  * Number of bits for each colour component.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -71,7 +67,6 @@ final readonly class ExifTag
     /**
  * Compression scheme applied to the image data.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -80,7 +75,6 @@ final readonly class ExifTag
     /**
  * Colour space interpretation of the pixel data.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -97,7 +91,6 @@ final readonly class ExifTag
     /**
  * Free-form text describing the image contents.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -112,7 +105,6 @@ final readonly class ExifTag
 
     /**
  * Modern EXIF 3.0 title string for the image.
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -165,7 +157,6 @@ final readonly class ExifTag
     /**
  * Manufacturer name of the recording equipment.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -174,7 +165,6 @@ final readonly class ExifTag
     /**
  * Model name or identifier of the recording equipment.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -183,7 +173,6 @@ final readonly class ExifTag
     /**
  * Orientation of the image as displayed.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -192,7 +181,6 @@ final readonly class ExifTag
     /**
  * Offsets to image strips within the file.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -201,7 +189,6 @@ final readonly class ExifTag
     /**
  * Number of colour components per pixel.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -210,7 +197,6 @@ final readonly class ExifTag
     /**
  * Number of rows stored in each strip.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -219,7 +205,6 @@ final readonly class ExifTag
     /**
  * Total bytes used by each strip.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -260,7 +245,6 @@ final readonly class ExifTag
     /**
  * Horizontal pixel density expressed as a rational value.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -269,7 +253,6 @@ final readonly class ExifTag
     /**
  * Vertical pixel density expressed as a rational value.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -278,7 +261,6 @@ final readonly class ExifTag
     /**
  * Arrangement of colour components across pixel planes.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -287,7 +269,6 @@ final readonly class ExifTag
     /**
  * Unit used for X and Y resolution values.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -313,7 +294,6 @@ final readonly class ExifTag
  * Legacy EXIF 2.x identifier retained for backwards compatibility.
  * Baseline TIFF tag (TIFF 6.0 §8).
  * EXIF 3.0 renames the tag to ModifyDate, exposed via the MODIFY_DATE alias.
- * First introduced in EXIF 2.1.
  *
  * EXIF 2.32 §4.6.2 Table 2 (DateTime) / EXIF 3.0 p. 46-47 (ModifyDate).
  */
@@ -322,7 +302,6 @@ final readonly class ExifTag
     /**
  * Preferred alias that matches the EXIF 3.0 ModifyDate tag name.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 46-47; aligns with EXIF 2.32 §4.6.2 Table 2 DateTime guidance.
  */
@@ -346,7 +325,6 @@ final readonly class ExifTag
 
     /**
  * Name of the credited photographer.
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 46-47; EXIF 2.32 §4.6.2 Table 2
  */
@@ -361,7 +339,6 @@ final readonly class ExifTag
 
     /**
  * Name of the credited image editor.
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 46-47; EXIF 2.32 §4.6.2 Table 2
  */
@@ -377,7 +354,6 @@ final readonly class ExifTag
     /**
  * Chromaticity of the image white point.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -386,7 +362,6 @@ final readonly class ExifTag
     /**
  * Chromaticity coordinates of the primary colours.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -395,7 +370,6 @@ final readonly class ExifTag
     /**
  * Offset to the JPEG-encoded preview image.
  * Extended TIFF tag (TIFF 6.0 extension).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -404,7 +378,6 @@ final readonly class ExifTag
     /**
  * Length of the JPEG-encoded preview image in bytes.
  * Extended TIFF tag (TIFF 6.0 extension).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -529,7 +502,6 @@ final readonly class ExifTag
     /**
  * Copyright notice associated with the image.
  * Baseline TIFF tag (TIFF 6.0 §8).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 42-45; EXIF 2.32 §4.6.2 Table 1
  */
@@ -537,7 +509,6 @@ final readonly class ExifTag
 
     /**
  * Offset to the Exif-specific IFD block.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 46-47; EXIF 2.32 §4.6.2 Table 2
  */
@@ -545,7 +516,6 @@ final readonly class ExifTag
 
     /**
  * Offset to the GPS IFD block.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 46-47; EXIF 2.32 §4.6.2 Table 2
  */
@@ -553,7 +523,6 @@ final readonly class ExifTag
 
     /**
  * Offset to the interoperability IFD block.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 46-47; EXIF 2.32 §4.6.2 Table 2
  */
@@ -589,7 +558,6 @@ final readonly class ExifTag
 
     /**
  * Exposure duration expressed in seconds.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -597,7 +565,6 @@ final readonly class ExifTag
 
     /**
  * F-number of the lens at the time of capture.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -605,7 +572,6 @@ final readonly class ExifTag
 
     /**
  * Program mode setting for exposure control.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -613,7 +579,6 @@ final readonly class ExifTag
 
     /**
  * Description of the spectral sensitivity of the camera.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -623,7 +588,6 @@ final readonly class ExifTag
  * Legacy EXIF 2.x identifier retained for backwards compatibility.
  * EXIF 3.0 renames the tag to PhotographicSensitivity, exposed via the
  * PHOTOGRAPHIC_SENSITIVITY alias.
- * First introduced in EXIF 2.1.
  *
  * EXIF 2.32 §4.6.3 Table 13 (ISOSpeedRatings) / EXIF 3.0 §4.6.3 Table 13 (PhotographicSensitivity).
  */
@@ -631,7 +595,6 @@ final readonly class ExifTag
 
     /**
  * Current photographic sensitivity expressed as ISO speed.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -639,7 +602,6 @@ final readonly class ExifTag
 
     /**
  * Opto-electronic conversion function parameters.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -647,7 +609,6 @@ final readonly class ExifTag
 
     /**
  * Indicator describing interlaced scan type.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -669,7 +630,6 @@ final readonly class ExifTag
 
     /**
  * Type of sensitivity value recorded in ISO tags.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -677,7 +637,6 @@ final readonly class ExifTag
 
     /**
  * Standard output sensitivity of the camera.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -685,7 +644,6 @@ final readonly class ExifTag
 
     /**
  * Recommended exposure index for the scene.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -693,7 +651,6 @@ final readonly class ExifTag
 
     /**
  * Calculated ISO speed value.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -701,7 +658,6 @@ final readonly class ExifTag
 
     /**
  * Latitude component of the ISO speed range (YYY value).
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -709,7 +665,6 @@ final readonly class ExifTag
 
     /**
  * Latitude component of the ISO speed range (ZZZ value).
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -717,7 +672,6 @@ final readonly class ExifTag
 
     /**
  * EXIF version information recorded in ASCII.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -725,7 +679,6 @@ final readonly class ExifTag
 
     /**
  * Original capture date and time.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -733,7 +686,6 @@ final readonly class ExifTag
 
     /**
  * Digitisation date and time of the original capture.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -741,7 +693,6 @@ final readonly class ExifTag
 
     /**
  * Time-zone offset applied to ModifyDate.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -749,7 +700,6 @@ final readonly class ExifTag
 
     /**
  * Time-zone offset applied to DateTimeOriginal.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -757,7 +707,6 @@ final readonly class ExifTag
 
     /**
  * Time-zone offset applied to DateTimeDigitized.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -765,7 +714,6 @@ final readonly class ExifTag
 
     /**
  * Arrangement of colour components in a compressed stream.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -773,7 +721,6 @@ final readonly class ExifTag
 
     /**
  * Compression rate expressed as bits per pixel.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -781,7 +728,6 @@ final readonly class ExifTag
 
     /**
  * APEX shutter speed value.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -789,7 +735,6 @@ final readonly class ExifTag
 
     /**
  * APEX aperture value.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -797,7 +742,6 @@ final readonly class ExifTag
 
     /**
  * APEX brightness value of the scene.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -805,7 +749,6 @@ final readonly class ExifTag
 
     /**
  * APEX exposure bias applied to the capture.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -813,7 +756,6 @@ final readonly class ExifTag
 
     /**
  * Smallest available lens aperture value.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -821,7 +763,6 @@ final readonly class ExifTag
 
     /**
  * Subject distance from the camera in metres.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -829,7 +770,6 @@ final readonly class ExifTag
 
     /**
  * Metering mode used to determine exposure.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -837,7 +777,6 @@ final readonly class ExifTag
 
     /**
  * Type of light source illuminating the scene.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -845,7 +784,6 @@ final readonly class ExifTag
 
     /**
  * Status and return light information for the flash.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -853,7 +791,6 @@ final readonly class ExifTag
 
     /**
  * Actual lens focal length in millimetres.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -861,7 +798,6 @@ final readonly class ExifTag
 
     /**
  * Area of interest covered by the exposure metering.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -869,7 +805,6 @@ final readonly class ExifTag
 
     /**
  * Maker-specific notes recorded by the camera.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -877,7 +812,6 @@ final readonly class ExifTag
 
     /**
  * Free-form comments entered by the camera user.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -885,7 +819,6 @@ final readonly class ExifTag
 
     /**
  * Fractional seconds for the ModifyDate timestamp.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -893,7 +826,6 @@ final readonly class ExifTag
 
     /**
  * Fractional seconds for the DateTimeOriginal timestamp.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -901,7 +833,6 @@ final readonly class ExifTag
 
     /**
  * Fractional seconds for the DateTimeDigitized timestamp.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -909,7 +840,6 @@ final readonly class ExifTag
 
     /**
  * FlashPix format version used for the metadata.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -917,7 +847,6 @@ final readonly class ExifTag
 
     /**
  * Colour space handling for the image data.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -925,7 +854,6 @@ final readonly class ExifTag
 
     /**
  * Valid pixel width of the primary image.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -933,7 +861,6 @@ final readonly class ExifTag
 
     /**
  * Valid pixel height of the primary image.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -941,7 +868,6 @@ final readonly class ExifTag
 
     /**
  * Reference to an audio clip related to the image.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -949,7 +875,6 @@ final readonly class ExifTag
 
     /**
  * Source of the image data, such as digital camera or scanner.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -957,7 +882,6 @@ final readonly class ExifTag
 
     /**
  * Scene type indicator for the image source.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -965,7 +889,6 @@ final readonly class ExifTag
 
     /**
  * Rendering mode applied during image processing.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -973,7 +896,6 @@ final readonly class ExifTag
 
     /**
  * Exposure mode setting used by the camera.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -981,7 +903,6 @@ final readonly class ExifTag
 
     /**
  * White balance setting applied during capture.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -989,7 +910,6 @@ final readonly class ExifTag
 
     /**
  * Ratio between the focal length and a reference value.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -997,7 +917,6 @@ final readonly class ExifTag
 
     /**
  * Equivalent focal length expressed for 35mm film.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1005,7 +924,6 @@ final readonly class ExifTag
 
     /**
  * Scene capture type classification.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1013,7 +931,6 @@ final readonly class ExifTag
 
     /**
  * Overall image gain control setting.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1021,7 +938,6 @@ final readonly class ExifTag
 
     /**
  * Contrast setting applied to the image.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1029,7 +945,6 @@ final readonly class ExifTag
 
     /**
  * Saturation setting applied to the image.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1037,7 +952,6 @@ final readonly class ExifTag
 
     /**
  * Sharpness setting applied to the image.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1045,7 +959,6 @@ final readonly class ExifTag
 
     /**
  * Distance range classification for the subject.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1053,7 +966,6 @@ final readonly class ExifTag
 
     /**
  * Globally unique identifier assigned to the image.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1061,7 +973,6 @@ final readonly class ExifTag
 
     /**
  * Name of the camera owner.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1069,7 +980,6 @@ final readonly class ExifTag
 
     /**
  * Serial number assigned to the camera body.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1084,7 +994,6 @@ final readonly class ExifTag
 
     /**
  * Detailed lens specification range values.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1092,7 +1001,6 @@ final readonly class ExifTag
 
     /**
  * Lens manufacturer name.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1100,7 +1008,6 @@ final readonly class ExifTag
 
     /**
  * Lens model designation.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1108,7 +1015,6 @@ final readonly class ExifTag
 
     /**
  * Lens serial number value.
- * First introduced in EXIF 2.3.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1118,7 +1024,6 @@ final readonly class ExifTag
  * Legacy EXIF 2.x tag that stored the dedicated camera firmware version.
  * The identifier was reassigned to IMAGE_TITLE in EXIF 3.0 and therefore
  * remains available only for backwards compatibility lookups.
- * First introduced in EXIF 3.0.
  *
  * EXIF 2.32 §4.6.3 Table 18 (FirmwareVersion) / EXIF 3.0 p. 42-45 (ImageTitle).
  */
@@ -1126,7 +1031,6 @@ final readonly class ExifTag
 
     /**
  * Firmware name or version reported by the camera.
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1135,7 +1039,6 @@ final readonly class ExifTag
     /**
  * Legacy EXIF 2.x tag that stored the raw developing software version.
  * EXIF 3.0 reassigned this identifier to CAMERA_FIRMWARE.
- * First introduced in EXIF 3.0.
  *
  * EXIF 2.32 §4.6.3 Table 18 (RawDataUniqueID) / EXIF 3.0 §4.6.3 Table 18 (CameraFirmware).
  */
@@ -1143,7 +1046,6 @@ final readonly class ExifTag
 
     /**
  * Raw developing software name or version.
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1152,7 +1054,6 @@ final readonly class ExifTag
     /**
  * Legacy EXIF 2.x tag that stored the image editing software version.
  * EXIF 3.0 reassigned this identifier to IMAGE_EDITING_SOFTWARE.
- * First introduced in EXIF 3.0.
  *
  * EXIF 2.32 §4.6.3 Table 18 (Software).
  */
@@ -1160,7 +1061,6 @@ final readonly class ExifTag
 
     /**
  * Image editing software name or version.
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1169,7 +1069,6 @@ final readonly class ExifTag
     /**
  * Legacy EXIF 2.x tag that stored the metadata editing software version.
  * EXIF 3.0 reassigned this identifier to METADATA_EDITING_SOFTWARE.
- * First introduced in EXIF 3.0.
  *
  * EXIF 2.32 §4.6.3 Table 18 (MetadataEditing).
  */
@@ -1177,7 +1076,6 @@ final readonly class ExifTag
 
     /**
  * Metadata editing software name or version.
- * First introduced in EXIF 3.0.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1185,7 +1083,6 @@ final readonly class ExifTag
 
     /**
  * Classification flag indicating a composite image.
- * First introduced in EXIF 2.32.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1193,7 +1090,6 @@ final readonly class ExifTag
 
     /**
  * Number of source images merged into the composite.
- * First introduced in EXIF 2.32.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1201,7 +1097,6 @@ final readonly class ExifTag
 
     /**
  * Exposure times of the source images used in the composite.
- * First introduced in EXIF 2.32.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1209,7 +1104,6 @@ final readonly class ExifTag
 
     /**
  * Applied gamma correction value.
- * First introduced in EXIF 2.21.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1217,7 +1111,6 @@ final readonly class ExifTag
 
     /**
  * Strobe energy used for the capture.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1225,7 +1118,6 @@ final readonly class ExifTag
 
     /**
  * Spatial frequency response information.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1240,7 +1132,6 @@ final readonly class ExifTag
 
     /**
  * Horizontal focal plane resolution.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1248,7 +1139,6 @@ final readonly class ExifTag
 
     /**
  * Vertical focal plane resolution.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1256,7 +1146,6 @@ final readonly class ExifTag
 
     /**
  * Unit for the focal plane resolution values.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1285,7 +1174,6 @@ final readonly class ExifTag
 
     /**
  * Location of the subject within the frame.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1293,7 +1181,6 @@ final readonly class ExifTag
 
     /**
  * Exposure index recommended by the camera.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1308,7 +1195,6 @@ final readonly class ExifTag
 
     /**
  * Sensor sensing method employed by the camera.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1316,7 +1202,6 @@ final readonly class ExifTag
 
     /**
  * Colour filter array pattern description.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1324,7 +1209,6 @@ final readonly class ExifTag
 
     /**
  * Description of the device settings used for capture.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 52-70; EXIF 2.32 §4.6.3 Tables 4–26
  */
@@ -1402,7 +1286,6 @@ final readonly class ExifTag
 
     /**
  * Version of the GPS IFD specification.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1410,7 +1293,6 @@ final readonly class ExifTag
 
     /**
  * Reference for latitude hemisphere.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1418,7 +1300,6 @@ final readonly class ExifTag
 
     /**
  * Latitude expressed as degrees, minutes and seconds.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1426,7 +1307,6 @@ final readonly class ExifTag
 
     /**
  * Reference for longitude hemisphere.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1434,7 +1314,6 @@ final readonly class ExifTag
 
     /**
  * Longitude expressed as degrees, minutes and seconds.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1442,7 +1321,6 @@ final readonly class ExifTag
 
     /**
  * Reference for altitude measurement (above/below sea level).
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1450,7 +1328,6 @@ final readonly class ExifTag
 
     /**
  * Altitude of the image capture location.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1458,7 +1335,6 @@ final readonly class ExifTag
 
     /**
  * UTC time recorded for the GPS measurement.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1466,7 +1342,6 @@ final readonly class ExifTag
 
     /**
  * Satellites used to acquire the GPS fix.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1474,7 +1349,6 @@ final readonly class ExifTag
 
     /**
  * Status of the GPS receiver at capture time.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1482,7 +1356,6 @@ final readonly class ExifTag
 
     /**
  * GPS measurement mode employed.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1490,7 +1363,6 @@ final readonly class ExifTag
 
     /**
  * Dilution of precision for GPS measurements.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1498,7 +1370,6 @@ final readonly class ExifTag
 
     /**
  * Reference unit for ground speed.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1506,7 +1377,6 @@ final readonly class ExifTag
 
     /**
  * Ground speed of the GPS receiver.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1521,7 +1391,6 @@ final readonly class ExifTag
 
     /**
  * Movement direction of the GPS receiver.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1529,7 +1398,6 @@ final readonly class ExifTag
 
     /**
  * Reference for camera pointing direction.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1537,7 +1405,6 @@ final readonly class ExifTag
 
     /**
  * Camera pointing direction.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1552,7 +1419,6 @@ final readonly class ExifTag
 
     /**
  * Reference for destination latitude hemisphere.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1560,7 +1426,6 @@ final readonly class ExifTag
 
     /**
  * Destination latitude of the GPS navigation data.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1575,7 +1440,6 @@ final readonly class ExifTag
 
     /**
  * Destination longitude of the GPS navigation data.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1590,7 +1454,6 @@ final readonly class ExifTag
 
     /**
  * Destination bearing for the recorded navigation data.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1598,7 +1461,6 @@ final readonly class ExifTag
 
     /**
  * Reference for destination distance measurement.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1620,7 +1482,6 @@ final readonly class ExifTag
 
     /**
  * Name of the GPS area information.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1628,7 +1489,6 @@ final readonly class ExifTag
 
     /**
  * Date stamp recorded by the GPS receiver.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1643,7 +1503,6 @@ final readonly class ExifTag
 
     /**
  * Estimated horizontal positioning error.
- * First introduced in EXIF 2.2.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1651,7 +1510,6 @@ final readonly class ExifTag
 
     /**
  * Ambient temperature measured by the GPS unit.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1659,7 +1517,6 @@ final readonly class ExifTag
 
     /**
  * Relative humidity measured by the GPS unit.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1667,7 +1524,6 @@ final readonly class ExifTag
 
     /**
  * Atmospheric pressure measured by the GPS unit.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1675,7 +1531,6 @@ final readonly class ExifTag
 
     /**
  * Water depth below the recording equipment.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1683,7 +1538,6 @@ final readonly class ExifTag
 
     /**
  * Linear acceleration experienced during capture.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1691,7 +1545,6 @@ final readonly class ExifTag
 
     /**
  * Camera elevation angle relative to the horizon.
- * First introduced in EXIF 2.31.
  *
  * EXIF 3.0 p. 90-100; EXIF 2.32 §4.6.6 Table 66
  */
@@ -1787,7 +1640,6 @@ final readonly class ExifTag
 
     /**
  * Index describing the rules for interoperability data.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 102; EXIF 2.32 §4.6.7 Table 67
  */
@@ -1795,7 +1647,6 @@ final readonly class ExifTag
 
     /**
  * Interoperability version information.
- * First introduced in EXIF 2.1.
  *
  * EXIF 3.0 p. 102; EXIF 2.32 §4.6.7 Table 67
  */
