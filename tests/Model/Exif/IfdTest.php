@@ -15,12 +15,14 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Unit tests for the {@see Ifd} model.
  */
 #[CoversClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
 final class IfdTest extends TestCase
 {
     /**

@@ -12,8 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ExifCapabilities;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
@@ -22,11 +27,14 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
@@ -51,6 +59,20 @@ use function unpack;
  * Exercises the TIFF EXIF reader with synthetic Classic TIFF and BigTIFF payloads.
  */
 #[CoversClass(TiffExifReader::class)]
+#[UsesClass(ByteReader::class)]
+#[UsesClass(ExifCapabilities::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(ExifNumericList::class)]
+#[UsesClass(ExifRational::class)]
+#[UsesClass(ExifRationalList::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(ParsedExif::class)]
+#[UsesClass(ValueConverters::class)]
+#[UsesClass(MakerNotesRecord::class)]
+#[UsesClass(Registry::class)]
 final class TiffExifReaderTest extends TestCase
 {
     private const int CUSTOM_SIGNED_LONG8_TAG = 0xC7A1;
