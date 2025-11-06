@@ -148,3 +148,36 @@ Bit-mask sources such as `SceneFlags`, `ImageProcessingFlags` and `PhotosAppFeat
 * `PhotosAppFeatureFlags`: bit 0 → `personInPhoto`, bit 1 → `petInPhoto`
 
 Explicit boolean keys continue to override the derived values when both representations are present.
+
+## EXIF/TIFF Compliance
+
+This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 specifications through automated analysis.
+
+### Compliance Summary
+
+| Metric | Count | Percentage |
+|--------|------:|:----------:|
+| Total Specification Tags | 163 | 100% |
+| ✅ Implemented | 144 | 88.3% |
+| ⚠️ Partial | 19 | 11.7% |
+| ❌ Missing | 0 | 0.0% |
+| ➕ Extra (not in spec) | 62 | - |
+| **Overall Coverage** | **144/163** | **88.3%** |
+
+*Last updated: 2025-11-06 06:55:01 UTC*
+
+### Coverage by Category
+
+| Category | Implemented | Partial | Missing | Total | Coverage |
+|----------|------------:|--------:|--------:|------:|---------:|
+| TIFF 6.0 Baseline | 33 | 7 | 0 | 40 | 82.5% |
+| EXIF Tags | 76 | 10 | 0 | 86 | 88.4% |
+| GPS Tags | 32 | 0 | 0 | 32 | 100.0% |
+| Interoperability | 3 | 2 | 0 | 5 | 60.0% |
+
+**Where to find implementation gaps**:
+- **Detailed list**: [TAGS_TO_IMPLEMENT.md](docs/TAGS_TO_IMPLEMENT.md) - All 19 partial tags with implementation guidance
+- **System guide**: [COMPLIANCE.md](docs/COMPLIANCE.md) - How the compliance system works
+- **Raw data**: [compliance-report.json](docs/compliance-report.json) - Machine-readable report
+
+The compliance report is automatically generated on every CI run and available as a downloadable artifact.
