@@ -330,31 +330,37 @@ final class ValueFactory implements ValueFactoryInterface
         $thumbnailStripCounts   = $exifDocument?->thumbnailStripByteCounts();
         $thumbnailTileOffsets   = $exifDocument?->thumbnailTileOffsets();
         $thumbnailTileCounts    = $exifDocument?->thumbnailTileByteCounts();
+        $thumbnailTileWidth     = $exifDocument?->thumbnailTileWidth();
+        $thumbnailTileLength    = $exifDocument?->thumbnailTileLength();
 
         $preview = new Preview(
-            $exifDocument?->hasThumbnail(),
-            $exifDocument?->hasPreviewImage(),
-            $exifDocument?->previewImageWidth(),
-            $exifDocument?->previewImageHeight(),
-            $previewColorSpace,
-            $exifDocument?->previewImageBitDepth(),
-            $previewCompressionEnum,
-            $exifDocument?->previewImageScale(),
-            $exifDocument?->previewImageEncoding(),
-            $exifDocument?->previewImageMimeType(),
-            $exifDocument?->previewImageOffset(),
-            $exifDocument?->previewImageLength(),
-            $exifDocument?->thumbnailJpegInterchangeFormat(),
-            $exifDocument?->thumbnailJpegInterchangeFormatLength(),
-            $thumbnailCompression,
-            $thumbnailStripOffsets,
-            $thumbnailStripCounts,
-            $thumbnailTileOffsets,
-            $thumbnailTileCounts,
-            $previewStripOffsets,
-            $previewStripByteCounts,
-            $previewTileOffsets,
-            $previewTileByteCounts,
+            // Thumbnail parameters (IFD1)
+            hasThumbnail: $exifDocument?->hasThumbnail(),
+            thumbnailOffset: $exifDocument?->thumbnailJpegInterchangeFormat(),
+            thumbnailLength: $exifDocument?->thumbnailJpegInterchangeFormatLength(),
+            thumbnailCompression: $thumbnailCompression,
+            thumbnailTileWidth: $thumbnailTileWidth,
+            thumbnailTileLength: $thumbnailTileLength,
+            thumbnailTileOffsets: $thumbnailTileOffsets,
+            thumbnailTileByteCounts: $thumbnailTileCounts,
+            thumbnailStripOffsets: $thumbnailStripOffsets,
+            thumbnailStripByteCounts: $thumbnailStripCounts,
+            // Preview parameters (EXIF 3.0)
+            hasPreview: $exifDocument?->hasPreviewImage(),
+            previewOffset: $exifDocument?->previewImageOffset(),
+            previewLength: $exifDocument?->previewImageLength(),
+            previewWidth: $exifDocument?->previewImageWidth(),
+            previewHeight: $exifDocument?->previewImageHeight(),
+            previewColorSpace: $previewColorSpace,
+            previewBitDepth: $exifDocument?->previewImageBitDepth(),
+            previewCompression: $previewCompressionEnum,
+            previewScale: $exifDocument?->previewImageScale(),
+            previewEncoding: $exifDocument?->previewImageEncoding(),
+            previewMimeType: $exifDocument?->previewImageMimeType(),
+            previewTileOffsets: $previewTileOffsets,
+            previewTileByteCounts: $previewTileByteCounts,
+            previewStripOffsets: $previewStripOffsets,
+            previewStripByteCounts: $previewStripByteCounts,
         );
 
         $video = new Video(
