@@ -158,22 +158,22 @@ This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 s
 | Metric | Count | Percentage |
 |--------|------:|:----------:|
 | Total Specification Tags | 163 | 100% |
-| ✅ Implemented | 105 | 64.4% |
-| ⚠️ Partial | 58 | 35.6% |
+| ✅ Implemented | 144 | 88.3% |
+| ⚠️ Partial | 19 | 11.7% |
 | ❌ Missing | 0 | 0.0% |
 | ➕ Extra (not in spec) | 62 | - |
-| **Overall Coverage** | **105/163** | **64.4%** |
+| **Overall Coverage** | **144/163** | **88.3%** |
 
-*Last updated: 2025-11-06 06:28:20 UTC*
+*Last updated: 2025-11-06 06:55:01 UTC*
 
 ### Coverage by Category
 
 | Category | Implemented | Partial | Missing | Total | Coverage |
 |----------|------------:|--------:|--------:|------:|---------:|
-| TIFF 6.0 Baseline | 28 | 12 | 0 | 40 | 70.0% |
-| EXIF Tags | 72 | 14 | 0 | 86 | 83.7% |
-| GPS Tags | 0 | 32 | 0 | 32 | 0.0% |
-| Interoperability | 5 | 0 | 0 | 5 | 100.0% |
+| TIFF 6.0 Baseline | 33 | 7 | 0 | 40 | 82.5% |
+| EXIF Tags | 76 | 10 | 0 | 86 | 88.4% |
+| GPS Tags | 32 | 0 | 0 | 32 | 100.0% |
+| Interoperability | 3 | 2 | 0 | 5 | 60.0% |
 
 For detailed compliance information, see [COMPLIANCE.md](docs/COMPLIANCE.md) or review the [compliance report](docs/compliance-report.json).
 

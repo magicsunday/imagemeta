@@ -29,10 +29,12 @@ Each tag includes:
 
 PHP script that:
 1. Loads specification tags from `resources/exif-spec-tags.yaml`
-2. Parses implementation from `src/Model/Exif/ExifTag.php` (constants)
-3. Checks mapping in `resources/exif-map.yaml` (VO getters)
+2. Parses implementation from `src/Model/Exif/ExifTag.php` (constant definitions)
+3. Scans `src/Model/Exif/ParsedExif.php` for public getter methods (actual implementation)
 4. Determines status for each tag
 5. Generates compliance reports in JSON and YAML formats
+
+**Note**: The analyzer directly scans the `ParsedExif` class for public getter methods rather than relying on `exif-map.yaml`, as the latter is not automatically generated and may not be up-to-date.
 
 ### 3. Compliance Reports
 
@@ -47,9 +49,9 @@ Generated reports (`docs/compliance-report.json` and `docs/compliance-report.yam
 - Coverage percentage
 
 #### Tag Status Categories
-- **implemented**: Constant defined in ExifTag.php, mapping exists in exif-map.yaml, and VO getter methods mapped
-- **partial**: Some components present but incomplete (e.g., constant defined but no mapping)
-- **missing**: No implementation found
+- **implemented**: Constant defined in ExifTag.php AND public getter method exists in ParsedExif
+- **partial**: Either constant OR getter method exists, but not both
+- **missing**: Neither constant nor getter method found
 - **extra**: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 specifications
 
 #### Per-Tag Details
@@ -60,8 +62,8 @@ For each tag:
 - Required/deprecated status
 - Implementation status
 - Constant defined (yes/no)
-- Mapping exists (yes/no)
-- VO getter methods
+- Getter method exists (yes/no)
+- Getter method names (from ParsedExif)
 - Implementation notes
 
 ## Usage
@@ -87,14 +89,14 @@ The script:
 **JSON Report** (`docs/compliance-report.json`):
 ```json
 {
-  "generated": "2025-11-06T06:28:20+00:00",
+  "generated": "2025-11-06T06:55:01+00:00",
   "summary": {
     "total_spec_tags": 163,
-    "implemented": 105,
-    "partial": 58,
+    "implemented": 144,
+    "partial": 19,
     "missing": 0,
     "extra": 62,
-    "coverage_percent": 64.42
+    "coverage_percent": 88.34
   },
   "categories": {
     "tiff_tags": { ... },
@@ -141,23 +143,23 @@ Added to `.github/workflows/ci.yml`:
 
 As of the latest run:
 - **Total Spec Tags**: 163
-- **Implemented**: 105 (64.42%)
-- **Partial**: 58
+- **Implemented**: 144 (88.34%)
+- **Partial**: 19
 - **Missing**: 0
 - **Extra**: 62
 
 ### Key Categories
 
-#### TIFF 6.0 Baseline Tags
+#### TIFF 6.0 Baseline Tags (82.5%)
 Core TIFF tags for image dimensions, compression, color space, resolution, and orientation.
 
-#### EXIF 2.32/3.0 Tags
+#### EXIF 2.32/3.0 Tags (88.4%)
 Photography metadata including exposure, camera settings, lens information, and timestamps.
 
-#### GPS Tags
-Geolocation data including latitude, longitude, altitude, and direction.
+#### GPS Tags (100%)
+Geolocation data including latitude, longitude, altitude, and direction. All GPS tags are now fully implemented via the `gps()` method in ParsedExif.
 
-#### Interoperability Tags
+#### Interoperability Tags (60%)
 Cross-device compatibility information.
 
 #### Preview IFD Tags (EXIF 3.0)
@@ -177,10 +179,11 @@ The library implements 62 additional tags not in the core EXIF 3.0/2.32/TIFF 6.0
 To improve compliance coverage:
 
 1. **Add missing constants** to `src/Model/Exif/ExifTag.php`
-2. **Update mapping** in `resources/exif-map.yaml`
-3. **Implement VO getters** in model classes
-4. **Add tests** for new tag support
-5. **Re-run analyzer** to verify improvement
+2. **Implement getter methods** in `src/Model/Exif/ParsedExif.php`
+3. **Add tests** for new tag support
+4. **Re-run analyzer** to verify improvement
+
+**Note**: The analyzer scans ParsedExif directly for public getter methods, not `exif-map.yaml`. Focus on implementing actual functionality in ParsedExif.
 
 ## Future Enhancements
 
@@ -208,16 +211,20 @@ When adding support for new EXIF/TIFF tags:
 
 1. Verify tag is in `resources/exif-spec-tags.yaml` (add if missing)
 2. Add constant to `src/Model/Exif/ExifTag.php`
-3. Add mapping to `resources/exif-map.yaml`
-4. Implement VO getter methods
-5. Add unit tests
-6. Run compliance analyzer
-7. Update this documentation if needed
+3. Implement public getter method in `src/Model/Exif/ParsedExif.php`
+4. Add unit tests
+5. Run compliance analyzer
+6. Update this documentation if needed
 
 ## Changelog
 
-### 2025-11-06
+### 2025-11-06 (Update 2)
+- **Changed analyzer to scan ParsedExif.php directly** instead of relying on exif-map.yaml
+- Coverage improved from 64.42% to 88.34%
+- GPS tags now show 100% coverage (via `gps()` method)
+
+### 2025-11-06 (Initial)
 - Initial compliance analyzer implementation
 - Added EXIF 3.0/2.32 and TIFF 6.0 tag specifications
-- Generated baseline compliance report (64.42% coverage)
+- Generated baseline compliance report
 - Integrated into CI pipeline

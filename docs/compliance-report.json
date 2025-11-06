@@ -1,12 +1,12 @@
 {
-    "generated": "2025-11-06T06:37:00+00:00",
+    "generated": "2025-11-06T06:57:49+00:00",
     "summary": {
         "total_spec_tags": 163,
-        "implemented": 105,
-        "partial": 58,
+        "implemented": 144,
+        "partial": 19,
         "missing": 0,
         "extra": 62,
-        "coverage_percent": 64.42
+        "coverage_percent": 88.34
     },
     "categories": {
         "tiff_tags": {
@@ -19,11 +19,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "255": {
@@ -35,11 +34,10 @@
                 "deprecated": true,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped",
+                    "No getter method in ParsedExif",
                     "Tag is deprecated in specification"
                 ]
             },
@@ -52,9 +50,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.imageWidth"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageWidth",
+                    "previewImageWidth",
+                    "relatedImageWidth"
                 ],
                 "notes": []
             },
@@ -65,14 +65,14 @@
                 "source": "TIFF 6.0",
                 "required": true,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewImageLength",
+                    "relatedImageLength"
+                ],
+                "notes": []
             },
             "258": {
                 "tag_id": "0x0102",
@@ -83,9 +83,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.bitsPerSample"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "bitsPerSample"
                 ],
                 "notes": []
             },
@@ -98,9 +98,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.compression"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewImageCompression",
+                    "thumbnailCompression",
+                    "compression"
                 ],
                 "notes": []
             },
@@ -113,9 +115,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.photometric"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "photometric"
                 ],
                 "notes": []
             },
@@ -128,9 +130,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.documentName"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "documentName"
                 ],
                 "notes": []
             },
@@ -143,10 +145,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.imageTitle",
-                    "raw.imageDescription"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageDescription"
                 ],
                 "notes": []
             },
@@ -159,9 +160,13 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.cameraMake"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "makerNotes",
+                    "makerNoteSafety",
+                    "cameraMake",
+                    "aircraftMake",
+                    "lensMake"
                 ],
                 "notes": []
             },
@@ -174,9 +179,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.cameraModel"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "cameraModel",
+                    "aircraftModel",
+                    "lensModel"
                 ],
                 "notes": []
             },
@@ -189,9 +196,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.stripOffsets"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "stripOffsets",
+                    "previewImageStripOffsets",
+                    "thumbnailStripOffsets"
                 ],
                 "notes": []
             },
@@ -204,9 +213,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.orientation"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "orientation"
                 ],
                 "notes": []
             },
@@ -219,9 +228,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.samplesPerPixel"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "samplesPerPixel"
                 ],
                 "notes": []
             },
@@ -234,9 +243,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.rowsPerStrip"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "rowsPerStrip"
                 ],
                 "notes": []
             },
@@ -249,9 +258,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.stripByteCounts"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "stripByteCounts",
+                    "previewImageStripByteCounts",
+                    "thumbnailStripByteCounts"
                 ],
                 "notes": []
             },
@@ -262,14 +273,13 @@
                 "source": "TIFF 6.0",
                 "required": "conditional",
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalPlaneXResolution"
+                ],
+                "notes": []
             },
             "283": {
                 "tag_id": "0x011B",
@@ -278,14 +288,13 @@
                 "source": "TIFF 6.0",
                 "required": "conditional",
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalPlaneYResolution"
+                ],
+                "notes": []
             },
             "284": {
                 "tag_id": "0x011C",
@@ -296,9 +305,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.planarConfiguration"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "planarConfiguration"
                 ],
                 "notes": []
             },
@@ -311,9 +320,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.resolutionUnit"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalPlaneResolutionUnit",
+                    "resolutionUnit"
                 ],
                 "notes": []
             },
@@ -326,9 +336,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.transferFunction"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "transferFunction"
                 ],
                 "notes": []
             },
@@ -341,9 +351,16 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.processingSoftware"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "processingSoftware",
+                    "software",
+                    "rawDevelopingSoftware",
+                    "rawDevelopingSoftwareVersion",
+                    "imageEditingSoftware",
+                    "imageEditingSoftwareVersion",
+                    "metadataEditingSoftware",
+                    "metadataEditingSoftwareVersion"
                 ],
                 "notes": []
             },
@@ -354,14 +371,24 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewDateTimeRaw",
+                    "previewDateTimeDigitizedRaw",
+                    "previewDateTime",
+                    "previewDateTimeDigitized",
+                    "dateTimeOriginalRaw",
+                    "dateTimeOriginal",
+                    "dateTimeOriginalBestEffort",
+                    "dateTimeDigitizedRaw",
+                    "dateTimeRaw",
+                    "captureDateTime",
+                    "dateTimeDigitized",
+                    "dateTime"
+                ],
+                "notes": []
             },
             "315": {
                 "tag_id": "0x013B",
@@ -372,10 +399,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.photographer",
-                    "raw.artist"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "artist"
                 ],
                 "notes": []
             },
@@ -388,9 +414,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hostComputer"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "hostComputer"
                 ],
                 "notes": []
             },
@@ -403,9 +429,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.whitePoint"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "whitePoint"
                 ],
                 "notes": []
             },
@@ -418,9 +444,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.primaryChromaticities"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "primaryChromaticities"
                 ],
                 "notes": []
             },
@@ -433,9 +459,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.tileWidth"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "tileWidth"
                 ],
                 "notes": []
             },
@@ -448,9 +474,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.tileLength"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "tileLength"
                 ],
                 "notes": []
             },
@@ -463,9 +489,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.tileOffsets"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "tileOffsets",
+                    "previewImageTileOffsets",
+                    "thumbnailTileOffsets"
                 ],
                 "notes": []
             },
@@ -478,9 +506,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.tileByteCounts"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "tileByteCounts",
+                    "previewImageTileByteCounts",
+                    "thumbnailTileByteCounts"
                 ],
                 "notes": []
             },
@@ -491,14 +521,13 @@
                 "source": "TIFF Tech Note 1",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subIfds"
+                ],
+                "notes": []
             },
             "513": {
                 "tag_id": "0x0201",
@@ -509,11 +538,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "514": {
@@ -525,11 +553,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "529": {
@@ -541,11 +568,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "530": {
@@ -557,11 +583,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "531": {
@@ -573,11 +598,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "532": {
@@ -589,9 +613,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.referenceBlackWhite"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "referenceBlackWhite"
                 ],
                 "notes": []
             },
@@ -604,9 +628,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.copyright"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "copyright"
                 ],
                 "notes": []
             },
@@ -619,9 +643,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.processingSoftware"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "processingSoftware",
+                    "software"
                 ],
                 "notes": []
             }
@@ -636,9 +661,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.exposureTime"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exposureTime",
+                    "sourceExposureTimesOfCompositeImage"
                 ],
                 "notes": []
             },
@@ -651,11 +677,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "34850": {
@@ -667,9 +692,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.exposureProgram"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exposureProgram"
                 ],
                 "notes": []
             },
@@ -682,9 +707,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.spectralSensitivity"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "spectralSensitivity"
                 ],
                 "notes": []
             },
@@ -695,14 +720,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.iso",
-                    "raw.isoBestEffort"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "34856": {
                 "tag_id": "0x8828",
@@ -713,9 +737,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.oecfPayload"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "oecf",
+                    "oecfPayload"
                 ],
                 "notes": []
             },
@@ -726,13 +751,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.iso"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "34865": {
                 "tag_id": "0x8831",
@@ -741,15 +766,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.iso",
-                    "raw.isoBestEffort",
-                    "raw.sensitivityTagPriority"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "34866": {
                 "tag_id": "0x8832",
@@ -760,11 +783,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.iso",
-                    "raw.isoBestEffort",
-                    "raw.sensitivityTagPriority"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exposureIndex"
                 ],
                 "notes": []
             },
@@ -775,14 +796,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "iso"
+                ],
+                "notes": []
             },
             "34868": {
                 "tag_id": "0x8834",
@@ -791,14 +811,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "iso"
+                ],
+                "notes": []
             },
             "34869": {
                 "tag_id": "0x8835",
@@ -807,14 +826,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "iso"
+                ],
+                "notes": []
             },
             "36864": {
                 "tag_id": "0x9000",
@@ -825,9 +843,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.__construct"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exifVersion"
                 ],
                 "notes": []
             },
@@ -838,14 +856,16 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "dateTimeOriginalRaw",
+                    "dateTimeOriginal",
+                    "dateTimeOriginalBestEffort",
+                    "dateTime"
+                ],
+                "notes": []
             },
             "36868": {
                 "tag_id": "0x9004",
@@ -854,14 +874,17 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewDateTimeDigitizedRaw",
+                    "previewDateTimeDigitized",
+                    "dateTimeDigitizedRaw",
+                    "dateTimeDigitized",
+                    "dateTime"
+                ],
+                "notes": []
             },
             "36880": {
                 "tag_id": "0x9010",
@@ -872,10 +895,14 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.offsetTime",
-                    "raw.offsetTimeRaw"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "offsetTimeOriginal",
+                    "offsetTimeDigitized",
+                    "offsetTime",
+                    "offsetTimeOriginalRaw",
+                    "offsetTimeDigitizedRaw",
+                    "offsetTimeRaw"
                 ],
                 "notes": []
             },
@@ -888,10 +915,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.offsetTimeOriginal",
-                    "raw.offsetTimeOriginalRaw"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "offsetTimeOriginal",
+                    "offsetTime",
+                    "offsetTimeOriginalRaw"
                 ],
                 "notes": []
             },
@@ -904,10 +932,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.offsetTimeDigitized",
-                    "raw.offsetTimeDigitizedRaw"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "offsetTimeDigitized",
+                    "offsetTime",
+                    "offsetTimeDigitizedRaw"
                 ],
                 "notes": []
             },
@@ -920,11 +949,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.componentsConfiguration",
-                    "raw.componentsConfigurationLabels",
-                    "raw.componentsConfigurationDescription"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "componentsConfiguration",
+                    "componentsConfigurationLabels",
+                    "componentsConfigurationDescription"
                 ],
                 "notes": []
             },
@@ -937,9 +966,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.compressedBitsPerPixel"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "compressedBitsPerPixel"
                 ],
                 "notes": []
             },
@@ -952,10 +981,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.shutterSpeedValue",
-                    "raw.shutterSpeedSeconds"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "shutterSpeedValue"
                 ],
                 "notes": []
             },
@@ -968,9 +996,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.apertureValue"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "apertureValue"
                 ],
                 "notes": []
             },
@@ -983,9 +1011,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.brightnessValue"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "brightnessValue"
                 ],
                 "notes": []
             },
@@ -998,9 +1026,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.exposureBias"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exposureBias"
                 ],
                 "notes": []
             },
@@ -1013,9 +1041,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.maxApertureApex"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "apertureValue"
                 ],
                 "notes": []
             },
@@ -1028,9 +1056,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.subjectDistance"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subjectDistanceRange",
+                    "subjectDistance"
                 ],
                 "notes": []
             },
@@ -1043,9 +1072,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.meteringMode"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "meteringMode"
                 ],
                 "notes": []
             },
@@ -1058,9 +1087,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.lightSource"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "lightSource"
                 ],
                 "notes": []
             },
@@ -1073,9 +1102,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.flash"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "flashpixVersion",
+                    "flash",
+                    "flashEnergy"
                 ],
                 "notes": []
             },
@@ -1088,9 +1119,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.focalLengthMm"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalLengthMm",
+                    "focalLength35Mm"
                 ],
                 "notes": []
             },
@@ -1103,9 +1135,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.subjectArea"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subjectArea"
                 ],
                 "notes": []
             },
@@ -1116,14 +1148,14 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "makerNotes",
+                    "makerNoteSafety"
+                ],
+                "notes": []
             },
             "37510": {
                 "tag_id": "0x9286",
@@ -1134,9 +1166,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.rawUserComment"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "userComment",
+                    "userCommentEncoding",
+                    "userCommentEncodingBestEffort"
                 ],
                 "notes": []
             },
@@ -1149,9 +1183,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.subSecTime"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subSecTimeOriginal",
+                    "subSecTimeDigitized",
+                    "subSecTime"
                 ],
                 "notes": []
             },
@@ -1164,9 +1200,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.subSecTimeOriginal"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subSecTimeOriginal",
+                    "subSecTime"
                 ],
                 "notes": []
             },
@@ -1179,9 +1216,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.subSecTimeDigitized"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subSecTimeDigitized",
+                    "subSecTime"
                 ],
                 "notes": []
             },
@@ -1194,9 +1232,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.flashpixVersion"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "flashpixVersion",
+                    "flash"
                 ],
                 "notes": []
             },
@@ -1209,9 +1248,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.colorSpace"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "colorSpace",
+                    "previewColorSpace"
                 ],
                 "notes": []
             },
@@ -1224,11 +1264,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "40963": {
@@ -1240,11 +1279,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "40964": {
@@ -1256,9 +1294,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.relatedSoundFile"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "relatedSoundFile"
                 ],
                 "notes": []
             },
@@ -1271,9 +1309,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.flashEnergy"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "flash",
+                    "flashEnergy"
                 ],
                 "notes": []
             },
@@ -1284,14 +1323,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalPlaneXResolution"
+                ],
+                "notes": []
             },
             "41487": {
                 "tag_id": "0xA20F",
@@ -1300,14 +1338,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalPlaneYResolution"
+                ],
+                "notes": []
             },
             "41488": {
                 "tag_id": "0xA210",
@@ -1318,9 +1355,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.focalPlaneResolutionUnit"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalPlaneResolutionUnit",
+                    "resolutionUnit"
                 ],
                 "notes": []
             },
@@ -1333,9 +1371,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.subjectLocation"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subjectLocation"
                 ],
                 "notes": []
             },
@@ -1348,11 +1386,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.iso",
-                    "raw.isoBestEffort",
-                    "raw.exposureIndex"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exposureIndex"
                 ],
                 "notes": []
             },
@@ -1365,9 +1401,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.sensingMethod"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "sensingMethod"
                 ],
                 "notes": []
             },
@@ -1380,9 +1416,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.fileSource"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "fileSource"
                 ],
                 "notes": []
             },
@@ -1395,9 +1431,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.sceneType"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "sceneType"
                 ],
                 "notes": []
             },
@@ -1410,11 +1446,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "41985": {
@@ -1426,9 +1461,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.customRendered"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "customRendered"
                 ],
                 "notes": []
             },
@@ -1441,9 +1476,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.exposureMode"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exposureMode"
                 ],
                 "notes": []
             },
@@ -1456,9 +1491,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.whiteBalance"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "whiteBalance"
                 ],
                 "notes": []
             },
@@ -1471,9 +1506,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.digitalZoomRatio"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "digitalZoomRatio"
                 ],
                 "notes": []
             },
@@ -1486,11 +1521,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "41990": {
@@ -1502,9 +1536,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.sceneCaptureType"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "sceneCaptureType"
                 ],
                 "notes": []
             },
@@ -1517,9 +1551,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.gainControl"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gainControl"
                 ],
                 "notes": []
             },
@@ -1532,9 +1566,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.contrast"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "contrast"
                 ],
                 "notes": []
             },
@@ -1547,9 +1581,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.saturation"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "saturation"
                 ],
                 "notes": []
             },
@@ -1562,9 +1596,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.sharpness"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "sharpness"
                 ],
                 "notes": []
             },
@@ -1577,9 +1611,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.subjectDistanceRange"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "subjectDistanceRange",
+                    "subjectDistance"
                 ],
                 "notes": []
             },
@@ -1592,9 +1627,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.imageUniqueId"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageUniqueId"
                 ],
                 "notes": []
             },
@@ -1607,9 +1642,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.ownerName"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "ownerName"
                 ],
                 "notes": []
             },
@@ -1622,9 +1657,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.bodySerialNumber"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "bodySerialNumber"
                 ],
                 "notes": []
             },
@@ -1637,9 +1672,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.lensSpecification"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "lensSpecification"
                 ],
                 "notes": []
             },
@@ -1652,9 +1687,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.lensMake"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "lensMake"
                 ],
                 "notes": []
             },
@@ -1667,9 +1702,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.lensModel"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "lensModel"
                 ],
                 "notes": []
             },
@@ -1682,9 +1717,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.lensSerialNumber"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "lensSerialNumber"
                 ],
                 "notes": []
             },
@@ -1697,10 +1732,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.imageTitle",
-                    "raw.documentName"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageTitle"
                 ],
                 "notes": []
             },
@@ -1713,9 +1747,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.photographer"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "photographer"
                 ],
                 "notes": []
             },
@@ -1728,9 +1762,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.imageEditor"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageEditor"
                 ],
                 "notes": []
             },
@@ -1743,9 +1777,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.compositeImage"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "compositeImage",
+                    "sourceImageNumberOfCompositeImage",
+                    "sourceExposureTimesOfCompositeImage"
                 ],
                 "notes": []
             },
@@ -1758,9 +1794,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.sourceImageNumberOfCompositeImage"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageNumber",
+                    "compositeImage",
+                    "sourceImageNumberOfCompositeImage"
                 ],
                 "notes": []
             },
@@ -1773,9 +1811,11 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.sourceExposureTimesOfCompositeImage"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "exposureTime",
+                    "compositeImage",
+                    "sourceExposureTimesOfCompositeImage"
                 ],
                 "notes": []
             },
@@ -1786,14 +1826,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.resolvePreviewContext"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "50460": {
                 "tag_id": "0xC51C",
@@ -1804,10 +1843,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.resolvePreviewContext"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewImageLength"
                 ],
                 "notes": []
             },
@@ -1820,10 +1858,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.previewImageEncoding"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewImageEncoding"
                 ],
                 "notes": []
             },
@@ -1836,11 +1873,10 @@
                 "deprecated": false,
                 "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
+                    "No getter method in ParsedExif"
                 ]
             },
             "50463": {
@@ -1852,10 +1888,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.previewImageWidth"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageWidth",
+                    "previewImageWidth"
                 ],
                 "notes": []
             },
@@ -1868,10 +1904,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.previewImageHeight"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageHeight",
+                    "previewImageHeight"
                 ],
                 "notes": []
             },
@@ -1884,10 +1920,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.previewColorSpace"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "colorSpace"
                 ],
                 "notes": []
             },
@@ -1900,10 +1935,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.previewImageBitDepth"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewImageBitDepth"
                 ],
                 "notes": []
             },
@@ -1916,9 +1950,13 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.previewDateTimeRaw"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewDateTimeRaw",
+                    "previewDateTimeDigitizedRaw",
+                    "previewDateTime",
+                    "previewDateTimeDigitized",
+                    "dateTime"
                 ],
                 "notes": []
             },
@@ -1931,9 +1969,13 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.previewDateTimeDigitizedRaw"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewDateTimeDigitizedRaw",
+                    "previewDateTime",
+                    "previewDateTimeDigitized",
+                    "dateTimeDigitized",
+                    "dateTime"
                 ],
                 "notes": []
             },
@@ -1946,10 +1988,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.hasPreviewImage",
-                    "raw.previewImageScale"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "previewImageScale"
                 ],
                 "notes": []
             }
@@ -1962,14 +2003,13 @@
                 "source": "EXIF 2.32",
                 "required": true,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0001",
@@ -1978,14 +2018,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0002",
@@ -1994,14 +2033,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0003",
@@ -2010,14 +2048,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0004",
@@ -2026,14 +2063,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0005",
@@ -2042,14 +2078,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0006",
@@ -2058,14 +2093,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0007",
@@ -2074,14 +2108,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0008",
@@ -2090,14 +2123,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0009",
@@ -2106,14 +2138,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x000A",
@@ -2122,14 +2153,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x000B",
@@ -2138,14 +2168,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x000C",
@@ -2154,14 +2183,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x000D",
@@ -2170,14 +2198,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x000E",
@@ -2186,14 +2213,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x000F",
@@ -2202,14 +2228,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0010",
@@ -2218,14 +2243,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0011",
@@ -2234,14 +2258,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0012",
@@ -2250,14 +2273,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0013",
@@ -2266,14 +2288,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0014",
@@ -2282,14 +2303,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0015",
@@ -2298,14 +2318,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0016",
@@ -2314,14 +2333,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0017",
@@ -2330,14 +2348,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0018",
@@ -2346,14 +2363,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x0019",
@@ -2362,14 +2378,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x001A",
@@ -2378,14 +2393,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x001B",
@@ -2394,14 +2408,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x001C",
@@ -2410,14 +2423,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x001D",
@@ -2426,14 +2438,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x001E",
@@ -2442,14 +2453,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             },
             {
                 "tag_id": "0x001F",
@@ -2458,14 +2468,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": false,
-                "vo_getter": [],
-                "notes": [
-                    "Missing entry in exif-map.yaml",
-                    "No VO getter methods mapped"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "gps"
+                ],
+                "notes": []
             }
         ],
         "interop_tags": {
@@ -2476,13 +2485,13 @@
                 "source": "EXIF 2.32",
                 "required": true,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.interopIndex"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "2": {
                 "tag_id": "0x0002",
@@ -2491,13 +2500,13 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.interopVersion"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "4096": {
                 "tag_id": "0x1000",
@@ -2508,9 +2517,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.relatedImageFileFormat"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "relatedImageFileFormat"
                 ],
                 "notes": []
             },
@@ -2523,9 +2532,10 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.relatedImageWidth"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageWidth",
+                    "relatedImageWidth"
                 ],
                 "notes": []
             },
@@ -2538,9 +2548,9 @@
                 "deprecated": false,
                 "status": "implemented",
                 "constant_defined": true,
-                "mapping_exists": true,
-                "vo_getter": [
-                    "raw.relatedImageLength"
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "relatedImageLength"
                 ],
                 "notes": []
             }

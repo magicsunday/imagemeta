@@ -1,12 +1,12 @@
 ---
-generated: "2025-11-06T06:37:00+00:00"
+generated: "2025-11-06T06:57:49+00:00"
 summary:
   total_spec_tags: 163
-  implemented: 105
-  partial: 58
+  implemented: 144
+  partial: 19
   missing: 0
   extra: 62
-  coverage_percent: 64.42
+  coverage_percent: 88.34
 categories:
   tiff_tags:
     254:
@@ -18,11 +18,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     255:
       tag_id: "0x00FF"
       name: SubfileType
@@ -32,11 +31,10 @@ categories:
       deprecated: true
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
       - Tag is deprecated in specification
     256:
       tag_id: "0x0100"
@@ -47,9 +45,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.imageWidth
+      getter_method_exists: true
+      getter_methods:
+      - imageWidth
+      - previewImageWidth
+      - relatedImageWidth
       notes: []
     257:
       tag_id: "0x0101"
@@ -58,13 +58,13 @@ categories:
       source: TIFF 6.0
       required: true
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - previewImageLength
+      - relatedImageLength
+      notes: []
     258:
       tag_id: "0x0102"
       name: BitsPerSample
@@ -74,9 +74,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.bitsPerSample
+      getter_method_exists: true
+      getter_methods:
+      - bitsPerSample
       notes: []
     259:
       tag_id: "0x0103"
@@ -87,9 +87,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.compression
+      getter_method_exists: true
+      getter_methods:
+      - previewImageCompression
+      - thumbnailCompression
+      - compression
       notes: []
     262:
       tag_id: "0x0106"
@@ -100,9 +102,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.photometric
+      getter_method_exists: true
+      getter_methods:
+      - photometric
       notes: []
     269:
       tag_id: "0x010D"
@@ -113,9 +115,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.documentName
+      getter_method_exists: true
+      getter_methods:
+      - documentName
       notes: []
     270:
       tag_id: "0x010E"
@@ -126,10 +128,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.imageTitle
-      - raw.imageDescription
+      getter_method_exists: true
+      getter_methods:
+      - imageDescription
       notes: []
     271:
       tag_id: "0x010F"
@@ -140,9 +141,13 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.cameraMake
+      getter_method_exists: true
+      getter_methods:
+      - makerNotes
+      - makerNoteSafety
+      - cameraMake
+      - aircraftMake
+      - lensMake
       notes: []
     272:
       tag_id: "0x0110"
@@ -153,9 +158,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.cameraModel
+      getter_method_exists: true
+      getter_methods:
+      - cameraModel
+      - aircraftModel
+      - lensModel
       notes: []
     273:
       tag_id: "0x0111"
@@ -166,9 +173,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.stripOffsets
+      getter_method_exists: true
+      getter_methods:
+      - stripOffsets
+      - previewImageStripOffsets
+      - thumbnailStripOffsets
       notes: []
     274:
       tag_id: "0x0112"
@@ -179,9 +188,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.orientation
+      getter_method_exists: true
+      getter_methods:
+      - orientation
       notes: []
     277:
       tag_id: "0x0115"
@@ -192,9 +201,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.samplesPerPixel
+      getter_method_exists: true
+      getter_methods:
+      - samplesPerPixel
       notes: []
     278:
       tag_id: "0x0116"
@@ -205,9 +214,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.rowsPerStrip
+      getter_method_exists: true
+      getter_methods:
+      - rowsPerStrip
       notes: []
     279:
       tag_id: "0x0117"
@@ -218,9 +227,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.stripByteCounts
+      getter_method_exists: true
+      getter_methods:
+      - stripByteCounts
+      - previewImageStripByteCounts
+      - thumbnailStripByteCounts
       notes: []
     282:
       tag_id: "0x011A"
@@ -229,13 +240,12 @@ categories:
       source: TIFF 6.0
       required: conditional
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneXResolution
+      notes: []
     283:
       tag_id: "0x011B"
       name: YResolution
@@ -243,13 +253,12 @@ categories:
       source: TIFF 6.0
       required: conditional
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneYResolution
+      notes: []
     284:
       tag_id: "0x011C"
       name: PlanarConfiguration
@@ -259,9 +268,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.planarConfiguration
+      getter_method_exists: true
+      getter_methods:
+      - planarConfiguration
       notes: []
     296:
       tag_id: "0x0128"
@@ -272,9 +281,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.resolutionUnit
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneResolutionUnit
+      - resolutionUnit
       notes: []
     301:
       tag_id: "0x012D"
@@ -285,9 +295,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.transferFunction
+      getter_method_exists: true
+      getter_methods:
+      - transferFunction
       notes: []
     305:
       tag_id: "0x0131"
@@ -298,9 +308,16 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.processingSoftware
+      getter_method_exists: true
+      getter_methods:
+      - processingSoftware
+      - software
+      - rawDevelopingSoftware
+      - rawDevelopingSoftwareVersion
+      - imageEditingSoftware
+      - imageEditingSoftwareVersion
+      - metadataEditingSoftware
+      - metadataEditingSoftwareVersion
       notes: []
     306:
       tag_id: "0x0132"
@@ -309,13 +326,23 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - previewDateTimeRaw
+      - previewDateTimeDigitizedRaw
+      - previewDateTime
+      - previewDateTimeDigitized
+      - dateTimeOriginalRaw
+      - dateTimeOriginal
+      - dateTimeOriginalBestEffort
+      - dateTimeDigitizedRaw
+      - dateTimeRaw
+      - captureDateTime
+      - dateTimeDigitized
+      - dateTime
+      notes: []
     315:
       tag_id: "0x013B"
       name: Artist
@@ -325,10 +352,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.photographer
-      - raw.artist
+      getter_method_exists: true
+      getter_methods:
+      - artist
       notes: []
     316:
       tag_id: "0x013C"
@@ -339,9 +365,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hostComputer
+      getter_method_exists: true
+      getter_methods:
+      - hostComputer
       notes: []
     318:
       tag_id: "0x013E"
@@ -352,9 +378,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.whitePoint
+      getter_method_exists: true
+      getter_methods:
+      - whitePoint
       notes: []
     319:
       tag_id: "0x013F"
@@ -365,9 +391,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.primaryChromaticities
+      getter_method_exists: true
+      getter_methods:
+      - primaryChromaticities
       notes: []
     322:
       tag_id: "0x0142"
@@ -378,9 +404,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.tileWidth
+      getter_method_exists: true
+      getter_methods:
+      - tileWidth
       notes: []
     323:
       tag_id: "0x0143"
@@ -391,9 +417,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.tileLength
+      getter_method_exists: true
+      getter_methods:
+      - tileLength
       notes: []
     324:
       tag_id: "0x0144"
@@ -404,9 +430,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.tileOffsets
+      getter_method_exists: true
+      getter_methods:
+      - tileOffsets
+      - previewImageTileOffsets
+      - thumbnailTileOffsets
       notes: []
     325:
       tag_id: "0x0145"
@@ -417,9 +445,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.tileByteCounts
+      getter_method_exists: true
+      getter_methods:
+      - tileByteCounts
+      - previewImageTileByteCounts
+      - thumbnailTileByteCounts
       notes: []
     330:
       tag_id: "0x014A"
@@ -428,13 +458,12 @@ categories:
       source: TIFF Tech Note 1
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - subIfds
+      notes: []
     513:
       tag_id: "0x0201"
       name: JPEGInterchangeFormat
@@ -444,11 +473,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     514:
       tag_id: "0x0202"
       name: JPEGInterchangeFormatLength
@@ -458,11 +486,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     529:
       tag_id: "0x0211"
       name: YCbCrCoefficients
@@ -472,11 +499,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     530:
       tag_id: "0x0212"
       name: YCbCrSubSampling
@@ -486,11 +512,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     531:
       tag_id: "0x0213"
       name: YCbCrPositioning
@@ -500,11 +525,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     532:
       tag_id: "0x0214"
       name: ReferenceBlackWhite
@@ -514,9 +538,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.referenceBlackWhite
+      getter_method_exists: true
+      getter_methods:
+      - referenceBlackWhite
       notes: []
     33432:
       tag_id: "0x8298"
@@ -527,9 +551,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.copyright
+      getter_method_exists: true
+      getter_methods:
+      - copyright
       notes: []
     11:
       tag_id: "0x000B"
@@ -540,9 +564,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.processingSoftware
+      getter_method_exists: true
+      getter_methods:
+      - processingSoftware
+      - software
       notes: []
   exif_tags:
     33434:
@@ -554,9 +579,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.exposureTime
+      getter_method_exists: true
+      getter_methods:
+      - exposureTime
+      - sourceExposureTimesOfCompositeImage
       notes: []
     33437:
       tag_id: "0x829D"
@@ -567,11 +593,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     34850:
       tag_id: "0x8822"
       name: ExposureProgram
@@ -581,9 +606,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.exposureProgram
+      getter_method_exists: true
+      getter_methods:
+      - exposureProgram
       notes: []
     34852:
       tag_id: "0x8824"
@@ -594,9 +619,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.spectralSensitivity
+      getter_method_exists: true
+      getter_methods:
+      - spectralSensitivity
       notes: []
     34855:
       tag_id: "0x8827"
@@ -605,13 +630,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.iso
-      - raw.isoBestEffort
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     34856:
       tag_id: "0x8828"
       name: OECF
@@ -621,9 +645,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.oecfPayload
+      getter_method_exists: true
+      getter_methods:
+      - oecf
+      - oecfPayload
       notes: []
     34864:
       tag_id: "0x8830"
@@ -632,12 +657,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.iso
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     34865:
       tag_id: "0x8831"
       name: StandardOutputSensitivity
@@ -645,14 +670,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.iso
-      - raw.isoBestEffort
-      - raw.sensitivityTagPriority
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     34866:
       tag_id: "0x8832"
       name: RecommendedExposureIndex
@@ -662,11 +685,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.iso
-      - raw.isoBestEffort
-      - raw.sensitivityTagPriority
+      getter_method_exists: true
+      getter_methods:
+      - exposureIndex
       notes: []
     34867:
       tag_id: "0x8833"
@@ -675,13 +696,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - iso
+      notes: []
     34868:
       tag_id: "0x8834"
       name: ISOSpeedLatitudeyyy
@@ -689,13 +709,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - iso
+      notes: []
     34869:
       tag_id: "0x8835"
       name: ISOSpeedLatitudezzz
@@ -703,13 +722,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - iso
+      notes: []
     36864:
       tag_id: "0x9000"
       name: ExifVersion
@@ -719,9 +737,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.__construct
+      getter_method_exists: true
+      getter_methods:
+      - exifVersion
       notes: []
     36867:
       tag_id: "0x9003"
@@ -730,13 +748,15 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - dateTimeOriginalRaw
+      - dateTimeOriginal
+      - dateTimeOriginalBestEffort
+      - dateTime
+      notes: []
     36868:
       tag_id: "0x9004"
       name: DateTimeDigitized
@@ -744,13 +764,16 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - previewDateTimeDigitizedRaw
+      - previewDateTimeDigitized
+      - dateTimeDigitizedRaw
+      - dateTimeDigitized
+      - dateTime
+      notes: []
     36880:
       tag_id: "0x9010"
       name: OffsetTime
@@ -760,10 +783,14 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.offsetTime
-      - raw.offsetTimeRaw
+      getter_method_exists: true
+      getter_methods:
+      - offsetTimeOriginal
+      - offsetTimeDigitized
+      - offsetTime
+      - offsetTimeOriginalRaw
+      - offsetTimeDigitizedRaw
+      - offsetTimeRaw
       notes: []
     36881:
       tag_id: "0x9011"
@@ -774,10 +801,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.offsetTimeOriginal
-      - raw.offsetTimeOriginalRaw
+      getter_method_exists: true
+      getter_methods:
+      - offsetTimeOriginal
+      - offsetTime
+      - offsetTimeOriginalRaw
       notes: []
     36882:
       tag_id: "0x9012"
@@ -788,10 +816,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.offsetTimeDigitized
-      - raw.offsetTimeDigitizedRaw
+      getter_method_exists: true
+      getter_methods:
+      - offsetTimeDigitized
+      - offsetTime
+      - offsetTimeDigitizedRaw
       notes: []
     37121:
       tag_id: "0x9101"
@@ -802,11 +831,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.componentsConfiguration
-      - raw.componentsConfigurationLabels
-      - raw.componentsConfigurationDescription
+      getter_method_exists: true
+      getter_methods:
+      - componentsConfiguration
+      - componentsConfigurationLabels
+      - componentsConfigurationDescription
       notes: []
     37122:
       tag_id: "0x9102"
@@ -817,9 +846,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.compressedBitsPerPixel
+      getter_method_exists: true
+      getter_methods:
+      - compressedBitsPerPixel
       notes: []
     37377:
       tag_id: "0x9201"
@@ -830,10 +859,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.shutterSpeedValue
-      - raw.shutterSpeedSeconds
+      getter_method_exists: true
+      getter_methods:
+      - shutterSpeedValue
       notes: []
     37378:
       tag_id: "0x9202"
@@ -844,9 +872,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.apertureValue
+      getter_method_exists: true
+      getter_methods:
+      - apertureValue
       notes: []
     37379:
       tag_id: "0x9203"
@@ -857,9 +885,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.brightnessValue
+      getter_method_exists: true
+      getter_methods:
+      - brightnessValue
       notes: []
     37380:
       tag_id: "0x9204"
@@ -870,9 +898,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.exposureBias
+      getter_method_exists: true
+      getter_methods:
+      - exposureBias
       notes: []
     37381:
       tag_id: "0x9205"
@@ -883,9 +911,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.maxApertureApex
+      getter_method_exists: true
+      getter_methods:
+      - apertureValue
       notes: []
     37382:
       tag_id: "0x9206"
@@ -896,9 +924,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.subjectDistance
+      getter_method_exists: true
+      getter_methods:
+      - subjectDistanceRange
+      - subjectDistance
       notes: []
     37383:
       tag_id: "0x9207"
@@ -909,9 +938,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.meteringMode
+      getter_method_exists: true
+      getter_methods:
+      - meteringMode
       notes: []
     37384:
       tag_id: "0x9208"
@@ -922,9 +951,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.lightSource
+      getter_method_exists: true
+      getter_methods:
+      - lightSource
       notes: []
     37385:
       tag_id: "0x9209"
@@ -935,9 +964,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.flash
+      getter_method_exists: true
+      getter_methods:
+      - flashpixVersion
+      - flash
+      - flashEnergy
       notes: []
     37386:
       tag_id: "0x920A"
@@ -948,9 +979,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.focalLengthMm
+      getter_method_exists: true
+      getter_methods:
+      - focalLengthMm
+      - focalLength35Mm
       notes: []
     37396:
       tag_id: "0x9214"
@@ -961,9 +993,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.subjectArea
+      getter_method_exists: true
+      getter_methods:
+      - subjectArea
       notes: []
     37500:
       tag_id: "0x927C"
@@ -972,13 +1004,13 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - makerNotes
+      - makerNoteSafety
+      notes: []
     37510:
       tag_id: "0x9286"
       name: UserComment
@@ -988,9 +1020,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.rawUserComment
+      getter_method_exists: true
+      getter_methods:
+      - userComment
+      - userCommentEncoding
+      - userCommentEncodingBestEffort
       notes: []
     37520:
       tag_id: "0x9290"
@@ -1001,9 +1035,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.subSecTime
+      getter_method_exists: true
+      getter_methods:
+      - subSecTimeOriginal
+      - subSecTimeDigitized
+      - subSecTime
       notes: []
     37521:
       tag_id: "0x9291"
@@ -1014,9 +1050,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.subSecTimeOriginal
+      getter_method_exists: true
+      getter_methods:
+      - subSecTimeOriginal
+      - subSecTime
       notes: []
     37522:
       tag_id: "0x9292"
@@ -1027,9 +1064,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.subSecTimeDigitized
+      getter_method_exists: true
+      getter_methods:
+      - subSecTimeDigitized
+      - subSecTime
       notes: []
     40960:
       tag_id: "0xA000"
@@ -1040,9 +1078,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.flashpixVersion
+      getter_method_exists: true
+      getter_methods:
+      - flashpixVersion
+      - flash
       notes: []
     40961:
       tag_id: "0xA001"
@@ -1053,9 +1092,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.colorSpace
+      getter_method_exists: true
+      getter_methods:
+      - colorSpace
+      - previewColorSpace
       notes: []
     40962:
       tag_id: "0xA002"
@@ -1066,11 +1106,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     40963:
       tag_id: "0xA003"
       name: PixelYDimension
@@ -1080,11 +1119,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     40964:
       tag_id: "0xA004"
       name: RelatedSoundFile
@@ -1094,9 +1132,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.relatedSoundFile
+      getter_method_exists: true
+      getter_methods:
+      - relatedSoundFile
       notes: []
     41483:
       tag_id: "0xA20B"
@@ -1107,9 +1145,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.flashEnergy
+      getter_method_exists: true
+      getter_methods:
+      - flash
+      - flashEnergy
       notes: []
     41486:
       tag_id: "0xA20E"
@@ -1118,13 +1157,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneXResolution
+      notes: []
     41487:
       tag_id: "0xA20F"
       name: FocalPlaneYResolution
@@ -1132,13 +1170,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
-      notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneYResolution
+      notes: []
     41488:
       tag_id: "0xA210"
       name: FocalPlaneResolutionUnit
@@ -1148,9 +1185,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.focalPlaneResolutionUnit
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneResolutionUnit
+      - resolutionUnit
       notes: []
     41492:
       tag_id: "0xA214"
@@ -1161,9 +1199,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.subjectLocation
+      getter_method_exists: true
+      getter_methods:
+      - subjectLocation
       notes: []
     41493:
       tag_id: "0xA215"
@@ -1174,11 +1212,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.iso
-      - raw.isoBestEffort
-      - raw.exposureIndex
+      getter_method_exists: true
+      getter_methods:
+      - exposureIndex
       notes: []
     41495:
       tag_id: "0xA217"
@@ -1189,9 +1225,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.sensingMethod
+      getter_method_exists: true
+      getter_methods:
+      - sensingMethod
       notes: []
     41728:
       tag_id: "0xA300"
@@ -1202,9 +1238,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.fileSource
+      getter_method_exists: true
+      getter_methods:
+      - fileSource
       notes: []
     41729:
       tag_id: "0xA301"
@@ -1215,9 +1251,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.sceneType
+      getter_method_exists: true
+      getter_methods:
+      - sceneType
       notes: []
     41730:
       tag_id: "0xA302"
@@ -1228,11 +1264,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     41985:
       tag_id: "0xA401"
       name: CustomRendered
@@ -1242,9 +1277,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.customRendered
+      getter_method_exists: true
+      getter_methods:
+      - customRendered
       notes: []
     41986:
       tag_id: "0xA402"
@@ -1255,9 +1290,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.exposureMode
+      getter_method_exists: true
+      getter_methods:
+      - exposureMode
       notes: []
     41987:
       tag_id: "0xA403"
@@ -1268,9 +1303,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.whiteBalance
+      getter_method_exists: true
+      getter_methods:
+      - whiteBalance
       notes: []
     41988:
       tag_id: "0xA404"
@@ -1281,9 +1316,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.digitalZoomRatio
+      getter_method_exists: true
+      getter_methods:
+      - digitalZoomRatio
       notes: []
     41989:
       tag_id: "0xA405"
@@ -1294,11 +1329,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     41990:
       tag_id: "0xA406"
       name: SceneCaptureType
@@ -1308,9 +1342,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.sceneCaptureType
+      getter_method_exists: true
+      getter_methods:
+      - sceneCaptureType
       notes: []
     41991:
       tag_id: "0xA407"
@@ -1321,9 +1355,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.gainControl
+      getter_method_exists: true
+      getter_methods:
+      - gainControl
       notes: []
     41992:
       tag_id: "0xA408"
@@ -1334,9 +1368,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.contrast
+      getter_method_exists: true
+      getter_methods:
+      - contrast
       notes: []
     41993:
       tag_id: "0xA409"
@@ -1347,9 +1381,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.saturation
+      getter_method_exists: true
+      getter_methods:
+      - saturation
       notes: []
     41994:
       tag_id: "0xA40A"
@@ -1360,9 +1394,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.sharpness
+      getter_method_exists: true
+      getter_methods:
+      - sharpness
       notes: []
     41996:
       tag_id: "0xA40C"
@@ -1373,9 +1407,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.subjectDistanceRange
+      getter_method_exists: true
+      getter_methods:
+      - subjectDistanceRange
+      - subjectDistance
       notes: []
     42016:
       tag_id: "0xA420"
@@ -1386,9 +1421,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.imageUniqueId
+      getter_method_exists: true
+      getter_methods:
+      - imageUniqueId
       notes: []
     42032:
       tag_id: "0xA430"
@@ -1399,9 +1434,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.ownerName
+      getter_method_exists: true
+      getter_methods:
+      - ownerName
       notes: []
     42033:
       tag_id: "0xA431"
@@ -1412,9 +1447,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.bodySerialNumber
+      getter_method_exists: true
+      getter_methods:
+      - bodySerialNumber
       notes: []
     42034:
       tag_id: "0xA432"
@@ -1425,9 +1460,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.lensSpecification
+      getter_method_exists: true
+      getter_methods:
+      - lensSpecification
       notes: []
     42035:
       tag_id: "0xA433"
@@ -1438,9 +1473,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.lensMake
+      getter_method_exists: true
+      getter_methods:
+      - lensMake
       notes: []
     42036:
       tag_id: "0xA434"
@@ -1451,9 +1486,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.lensModel
+      getter_method_exists: true
+      getter_methods:
+      - lensModel
       notes: []
     42037:
       tag_id: "0xA435"
@@ -1464,9 +1499,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.lensSerialNumber
+      getter_method_exists: true
+      getter_methods:
+      - lensSerialNumber
       notes: []
     42038:
       tag_id: "0xA436"
@@ -1477,10 +1512,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.imageTitle
-      - raw.documentName
+      getter_method_exists: true
+      getter_methods:
+      - imageTitle
       notes: []
     42039:
       tag_id: "0xA437"
@@ -1491,9 +1525,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.photographer
+      getter_method_exists: true
+      getter_methods:
+      - photographer
       notes: []
     42040:
       tag_id: "0xA438"
@@ -1504,9 +1538,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.imageEditor
+      getter_method_exists: true
+      getter_methods:
+      - imageEditor
       notes: []
     42080:
       tag_id: "0xA460"
@@ -1517,9 +1551,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.compositeImage
+      getter_method_exists: true
+      getter_methods:
+      - compositeImage
+      - sourceImageNumberOfCompositeImage
+      - sourceExposureTimesOfCompositeImage
       notes: []
     42081:
       tag_id: "0xA461"
@@ -1530,9 +1566,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.sourceImageNumberOfCompositeImage
+      getter_method_exists: true
+      getter_methods:
+      - imageNumber
+      - compositeImage
+      - sourceImageNumberOfCompositeImage
       notes: []
     42082:
       tag_id: "0xA462"
@@ -1543,9 +1581,11 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.sourceExposureTimesOfCompositeImage
+      getter_method_exists: true
+      getter_methods:
+      - exposureTime
+      - compositeImage
+      - sourceExposureTimesOfCompositeImage
       notes: []
     50459:
       tag_id: "0xC51B"
@@ -1554,13 +1594,12 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.resolvePreviewContext
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     50460:
       tag_id: "0xC51C"
       name: PreviewImageLength
@@ -1570,10 +1609,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.resolvePreviewContext
+      getter_method_exists: true
+      getter_methods:
+      - previewImageLength
       notes: []
     50461:
       tag_id: "0xC51D"
@@ -1584,10 +1622,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.previewImageEncoding
+      getter_method_exists: true
+      getter_methods:
+      - previewImageEncoding
       notes: []
     50462:
       tag_id: "0xC51E"
@@ -1598,11 +1635,10 @@ categories:
       deprecated: false
       status: partial
       constant_defined: true
-      mapping_exists: false
-      vo_getter: []
+      getter_method_exists: false
+      getter_methods: []
       notes:
-      - Missing entry in exif-map.yaml
-      - No VO getter methods mapped
+      - No getter method in ParsedExif
     50463:
       tag_id: "0xC51F"
       name: PreviewImageWidth
@@ -1612,10 +1648,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.previewImageWidth
+      getter_method_exists: true
+      getter_methods:
+      - imageWidth
+      - previewImageWidth
       notes: []
     50464:
       tag_id: "0xC520"
@@ -1626,10 +1662,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.previewImageHeight
+      getter_method_exists: true
+      getter_methods:
+      - imageHeight
+      - previewImageHeight
       notes: []
     50465:
       tag_id: "0xC521"
@@ -1640,10 +1676,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.previewColorSpace
+      getter_method_exists: true
+      getter_methods:
+      - colorSpace
       notes: []
     50466:
       tag_id: "0xC522"
@@ -1654,10 +1689,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.previewImageBitDepth
+      getter_method_exists: true
+      getter_methods:
+      - previewImageBitDepth
       notes: []
     50467:
       tag_id: "0xC523"
@@ -1668,9 +1702,13 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.previewDateTimeRaw
+      getter_method_exists: true
+      getter_methods:
+      - previewDateTimeRaw
+      - previewDateTimeDigitizedRaw
+      - previewDateTime
+      - previewDateTimeDigitized
+      - dateTime
       notes: []
     50468:
       tag_id: "0xC524"
@@ -1681,9 +1719,13 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.previewDateTimeDigitizedRaw
+      getter_method_exists: true
+      getter_methods:
+      - previewDateTimeDigitizedRaw
+      - previewDateTime
+      - previewDateTimeDigitized
+      - dateTimeDigitized
+      - dateTime
       notes: []
     50735:
       tag_id: "0xC62F"
@@ -1694,10 +1736,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.hasPreviewImage
-      - raw.previewImageScale
+      getter_method_exists: true
+      getter_methods:
+      - previewImageScale
       notes: []
   gps_tags:
   - tag_id: "0x0000"
@@ -1706,416 +1747,384 @@ categories:
     source: EXIF 2.32
     required: true
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0001"
     name: GPSLatitudeRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0002"
     name: GPSLatitude
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0003"
     name: GPSLongitudeRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0004"
     name: GPSLongitude
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0005"
     name: GPSAltitudeRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0006"
     name: GPSAltitude
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0007"
     name: GPSTimeStamp
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0008"
     name: GPSSatellites
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0009"
     name: GPSStatus
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x000A"
     name: GPSMeasureMode
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x000B"
     name: GPSDOP
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x000C"
     name: GPSSpeedRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x000D"
     name: GPSSpeed
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x000E"
     name: GPSTrackRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x000F"
     name: GPSTrack
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0010"
     name: GPSImgDirectionRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0011"
     name: GPSImgDirection
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0012"
     name: GPSMapDatum
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0013"
     name: GPSDestLatitudeRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0014"
     name: GPSDestLatitude
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0015"
     name: GPSDestLongitudeRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0016"
     name: GPSDestLongitude
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0017"
     name: GPSDestBearingRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0018"
     name: GPSDestBearing
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x0019"
     name: GPSDestDistanceRef
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x001A"
     name: GPSDestDistance
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x001B"
     name: GPSProcessingMethod
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x001C"
     name: GPSAreaInformation
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x001D"
     name: GPSDateStamp
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x001E"
     name: GPSDifferential
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   - tag_id: "0x001F"
     name: GPSHPositioningError
     ifd: GPSIFD
     source: EXIF 2.32
     required: false
     deprecated: false
-    status: partial
+    status: implemented
     constant_defined: true
-    mapping_exists: false
-    vo_getter: []
-    notes:
-    - Missing entry in exif-map.yaml
-    - No VO getter methods mapped
+    getter_method_exists: true
+    getter_methods:
+    - gps
+    notes: []
   interop_tags:
     1:
       tag_id: "0x0001"
@@ -2124,12 +2133,12 @@ categories:
       source: EXIF 2.32
       required: true
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.interopIndex
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     2:
       tag_id: "0x0002"
       name: InteroperabilityVersion
@@ -2137,12 +2146,12 @@ categories:
       source: EXIF 2.32
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.interopVersion
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     4096:
       tag_id: "0x1000"
       name: RelatedImageFileFormat
@@ -2152,9 +2161,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.relatedImageFileFormat
+      getter_method_exists: true
+      getter_methods:
+      - relatedImageFileFormat
       notes: []
     4097:
       tag_id: "0x1001"
@@ -2165,9 +2174,10 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.relatedImageWidth
+      getter_method_exists: true
+      getter_methods:
+      - imageWidth
+      - relatedImageWidth
       notes: []
     4098:
       tag_id: "0x1002"
@@ -2178,9 +2188,9 @@ categories:
       deprecated: false
       status: implemented
       constant_defined: true
-      mapping_exists: true
-      vo_getter:
-      - raw.relatedImageLength
+      getter_method_exists: true
+      getter_methods:
+      - relatedImageLength
       notes: []
 extra_tags:
 - tag_id: "0x9C9B"

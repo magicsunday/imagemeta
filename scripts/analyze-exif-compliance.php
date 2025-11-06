@@ -38,14 +38,14 @@ foreach ($autoloadPaths as $autoloadPath) {
 final class ComplianceAnalyzer
 {
     private const string SPEC_FILE = __DIR__ . '/../resources/exif-spec-tags.yaml';
-    private const string IMPL_MAP_FILE = __DIR__ . '/../resources/exif-map.yaml';
     private const string EXIF_TAG_CLASS = __DIR__ . '/../src/Model/Exif/ExifTag.php';
+    private const string PARSED_EXIF_CLASS = __DIR__ . '/../src/Model/Exif/ParsedExif.php';
     private const string OUTPUT_JSON = __DIR__ . '/../docs/compliance-report.json';
     private const string OUTPUT_YAML = __DIR__ . '/../docs/compliance-report.yaml';
 
     private array $specTags = [];
-    private array $implMap = [];
     private array $exifConstants = [];
+    private array $parsedExifMethods = [];
     private array $complianceReport = [];
 
     public function __construct()
@@ -81,17 +81,14 @@ final class ComplianceAnalyzer
      */
     private function loadImplementation(): void
     {
-        // Load exif-map.yaml
-        if (file_exists(self::IMPL_MAP_FILE)) {
-            $content = file_get_contents(self::IMPL_MAP_FILE);
-            if ($content !== false) {
-                $this->implMap = yaml_parse($content) ?: [];
-            }
-        }
-
         // Parse ExifTag.php for constants
         if (file_exists(self::EXIF_TAG_CLASS)) {
             $this->parseExifTagConstants();
+        }
+
+        // Parse ParsedExif.php for public getter methods
+        if (file_exists(self::PARSED_EXIF_CLASS)) {
+            $this->parseParsedExifMethods();
         }
     }
 
@@ -116,6 +113,37 @@ final class ComplianceAnalyzer
             $hex = $match[2];
             $tagId = hexdec($hex);
             $this->exifConstants[$tagId] = $name;
+        }
+    }
+
+    /**
+     * Extract public getter methods from ParsedExif.php.
+     *
+     * This identifies which tags have actual implementation via getter methods.
+     */
+    private function parseParsedExifMethods(): void
+    {
+        $content = file_get_contents(self::PARSED_EXIF_CLASS);
+        if ($content === false) {
+            return;
+        }
+
+        // Match: public function methodName(): type
+        $pattern = '/public\s+function\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(/';
+        if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER) === false) {
+            return;
+        }
+
+        foreach ($matches as $match) {
+            $methodName = $match[1];
+            // Skip constructor and special methods
+            if ($methodName === '__construct') {
+                continue;
+            }
+
+            // Convert method name to tag-like format (e.g., cameraMake -> CAMERA_MAKE)
+            $tagLike = $this->camelToSnake($methodName);
+            $this->parsedExifMethods[$tagLike] = $methodName;
         }
     }
 
@@ -174,8 +202,8 @@ final class ComplianceAnalyzer
                 'deprecated' => $specInfo['deprecated'] ?? false,
                 'status' => $status['status'],
                 'constant_defined' => $status['constant_defined'],
-                'mapping_exists' => $status['mapping_exists'],
-                'vo_getter' => $status['vo_getter'],
+                'getter_method_exists' => $status['getter_method_exists'],
+                'getter_methods' => $status['getter_methods'],
                 'notes' => $status['notes'],
             ];
         }
@@ -186,36 +214,45 @@ final class ComplianceAnalyzer
     /**
      * Determine implementation status of a tag.
      *
-     * @return array{status: string, constant_defined: bool, mapping_exists: bool, vo_getter: array<string>, notes: array<string>}
+     * @return array{status: string, constant_defined: bool, getter_method_exists: bool, getter_methods: array<string>, notes: array<string>}
      */
     private function determineTagStatus(int $tagId, string $tagName, array $specInfo): array
     {
         $constantDefined = isset($this->exifConstants[$tagId]);
-        $mappingExists = false;
-        $voGetter = [];
+        $getterMethodExists = false;
+        $getterMethods = [];
         $notes = [];
 
-        // Check if tag is in exif-map.yaml
+        // Check if tag has a corresponding getter method in ParsedExif
         $tagNameUpper = strtoupper($this->camelToSnake($tagName));
-        if (isset($this->implMap[$tagNameUpper])) {
-            $mappingExists = true;
-            $voGetter = $this->implMap[$tagNameUpper]['voGetter'] ?? [];
+        
+        // Look for exact match or related methods
+        $relatedMethods = [];
+        foreach ($this->parsedExifMethods as $methodTagName => $methodName) {
+            // Check for exact match or partial match
+            if ($methodTagName === $tagNameUpper || 
+                str_contains($methodTagName, $tagNameUpper) ||
+                str_contains($tagNameUpper, $methodTagName)) {
+                $relatedMethods[] = $methodName;
+            }
+        }
+
+        if (!empty($relatedMethods)) {
+            $getterMethodExists = true;
+            $getterMethods = $relatedMethods;
         }
 
         // Determine overall status
         $status = 'missing';
-        if ($constantDefined && $mappingExists && !empty($voGetter)) {
+        if ($constantDefined && $getterMethodExists) {
             $status = 'implemented';
-        } elseif ($constantDefined || $mappingExists) {
+        } elseif ($constantDefined || $getterMethodExists) {
             $status = 'partial';
             if (!$constantDefined) {
                 $notes[] = 'Missing constant in ExifTag.php';
             }
-            if (!$mappingExists) {
-                $notes[] = 'Missing entry in exif-map.yaml';
-            }
-            if (empty($voGetter)) {
-                $notes[] = 'No VO getter methods mapped';
+            if (!$getterMethodExists) {
+                $notes[] = 'No getter method in ParsedExif';
             }
         }
 
@@ -227,8 +264,8 @@ final class ComplianceAnalyzer
         return [
             'status' => $status,
             'constant_defined' => $constantDefined,
-            'mapping_exists' => $mappingExists,
-            'vo_getter' => $voGetter,
+            'getter_method_exists' => $getterMethodExists,
+            'getter_methods' => $getterMethods,
             'notes' => $notes,
         ];
     }
