@@ -383,7 +383,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::RELATED_IMAGE_LENGTH      => new IfdEntry(ExifTag::RELATED_IMAGE_LENGTH, 4, 1, 3000),
         ]);
 
-        $exifDocument = new ParsedExif($ifd0, $exifIfd, $ifd1, $interopIfd, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, $interopIfd, $ifd1);
 
         $xmpDocument = new XmpDocument([
             '{http://purl.org/dc/elements/1.1/}creator'                                                => ['Jane Doe'],
@@ -629,7 +629,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $exifDocument = new ParsedExif($ifd0, $exifIfd, $ifd1, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, $ifd1);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -677,7 +677,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $metadata   = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, $ifd1, null, null));
+        $metadata   = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, null, null, $ifd1));
         $structured = (new ExifAssembler())->assemble($metadata);
         $temporal   = $structured->temporal;
         $preview    = $structured->preview;

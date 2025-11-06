@@ -366,7 +366,7 @@ final class ParsedExifTest extends TestCase
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:10:25 18:40:00'),
         ]);
 
-        $document = new ParsedExif($ifd0, $exifIfd, $ifd1, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, null, null, $ifd1);
 
         self::assertTrue($document->hasThumbnail());
         self::assertSame(32_768, $document->previewImageOffset());
@@ -995,7 +995,7 @@ final class ParsedExifTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
         ]);
 
-        $doc = new ParsedExif($ifd0, null, $thumbnailIfd, null, null);
+        $doc = new ParsedExif($ifd0, null, null, null, $thumbnailIfd);
 
         self::assertSame([64, 128], $doc->stripOffsets());
         self::assertSame([256, 512], $doc->stripByteCounts());

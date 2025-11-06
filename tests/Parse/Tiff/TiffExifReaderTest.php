@@ -1075,7 +1075,7 @@ final class TiffExifReaderTest extends TestCase
         $xpKeywordsBytes = self::packUtf16LeString([0x65C5, 0x003B, 0x6D77]);
         $xpSubjectBytes  = self::packUtf16LeString([0x0050, 0x0072, 0x006F, 0x006A, 0x0065, 0x0063, 0x0074, 0x0020, 0x2728]);
 
-        $ifd0EntryCount = 20;
+        $ifd0EntryCount = 18;
         $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
         $baseOffset     = strlen($header) + $ifd0Length;
 
@@ -1107,6 +1107,8 @@ final class TiffExifReaderTest extends TestCase
         $gpsLatOffset = $gpsIfdOffset + $gpsIfdLength;
         $gpsLonOffset = $gpsLatOffset + strlen($gpsLatData);
         $gpsAltOffset = $gpsLonOffset + strlen($gpsLonData);
+        
+        $ifd1Offset = $gpsAltOffset + strlen($gpsAltData);
 
         $ifd0Entries = [
             self::packClassicEntry(ExifTag::MAKE, 2, strlen($makeString), $makeOffset),
@@ -1118,8 +1120,6 @@ final class TiffExifReaderTest extends TestCase
             self::packClassicEntry(ExifTag::TILE_OFFSETS, 4, 1, self::CLASSIC_TILE_OFFSETS[0]),
             self::packClassicEntry(ExifTag::TILE_BYTE_COUNTS, 4, 1, self::CLASSIC_TILE_BYTE_COUNTS[0]),
             self::packClassicEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, $transferFunctionOffset),
-            self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 2048),
-            self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4096),
             self::packClassicEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, $referenceBlackWhiteOffset),
             self::packClassicEntry(ExifTag::COPYRIGHT, 2, strlen($copyrightString), $copyrightOffset),
             self::packClassicEntry(ExifTag::XP_TITLE, 1, strlen($xpTitleBytes), $xpTitleOffset),
@@ -1130,7 +1130,7 @@ final class TiffExifReaderTest extends TestCase
             self::packClassicEntry(ExifTag::EXIF_IFD_POINTER, 4, 1, $exifIfdOffset),
             self::packClassicEntry(ExifTag::GPS_IFD_POINTER, 4, 1, $gpsIfdOffset),
         ];
-        $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', 0);
+        $ifd0 = pack('v', count($ifd0Entries)) . implode('', $ifd0Entries) . pack('V', $ifd1Offset);
 
         $blob = $header . $ifd0;
         $blob .= $makeString;
@@ -1169,6 +1169,13 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $gpsLatData;
         $blob .= $gpsLonData;
         $blob .= $gpsAltData;
+        
+        // IFD1 (Thumbnail IFD) with JPEG thumbnail data
+        $ifd1Entries = [
+            self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 2048),
+            self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4096),
+        ];
+        $blob .= pack('v', count($ifd1Entries)) . implode('', $ifd1Entries) . pack('V', 0);
 
         return $blob;
     }
