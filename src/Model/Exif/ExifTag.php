@@ -16,23 +16,57 @@ namespace MagicSunday\ImageMeta\Model\Exif;
  *
  * EXIF 3.0 §4.6 catalogues the tag registry for the primary, Exif, GPS and
  * interoperability IFDs referenced by this enumeration.
+ *
+ * NOTE: This class contains both EXIF 3.0 standard tags AND non-EXIF tags for
+ * backwards compatibility. Non-EXIF tags have been separated into dedicated classes:
+ *
+ * @see \MagicSunday\ImageMeta\Model\Tiff\TiffTag for TIFF 6.0 baseline tags
+ * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag for Windows XP proprietary tags
+ * @see \MagicSunday\ImageMeta\Model\Dng\DngTag for Adobe DNG RAW format tags
+ * @see \MagicSunday\ImageMeta\Model\Legacy\LegacyTag for deprecated/renamed tags
+ * @see docs/EXIF_TAG_SOURCES_ANALYSIS.md for complete tag source documentation
  */
 final readonly class ExifTag
 {
+    // ========================================================================
+    // NON-EXIF TAGS - Re-exported for backwards compatibility
+    // ========================================================================
+    //
+    // The following sections contain tags from TIFF 6.0, Microsoft XP, Adobe DNG,
+    // and legacy specifications. These are NOT part of EXIF 3.0 §H.6 Tables 64-67.
+    //
+    // They are kept here for backwards compatibility with existing code.
+    // New code should import from the dedicated source classes listed above.
+    // ========================================================================
+
+    // ------------------------------------------------------------------------
+    // TIFF 6.0 Baseline Tags (from TiffTag)
+    // ------------------------------------------------------------------------
+
     /**
      * TIFF 6.0 subfile type bitfield describing the purpose of the image data.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Tiff\TiffTag::NEW_SUBFILE_TYPE
      */
     public const int NEW_SUBFILE_TYPE = 0x00FE;
 
     /**
      * Legacy TIFF 5.0 subfile type value describing the image purpose.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Tiff\TiffTag::SUBFILE_TYPE
      */
     public const int SUBFILE_TYPE = 0x00FF;
 
     /**
-     * EXIF 3.0 tag recording the software responsible for final image processing.
+     * TIFF/EP extension tag recording processing software information.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Tiff\TiffTag::PROCESSING_SOFTWARE
      */
     public const int PROCESSING_SOFTWARE = 0x000B;
+
+    // ------------------------------------------------------------------------
+    // EXIF 3.0 Standard Tags (Tables 64-67)
+    // ------------------------------------------------------------------------
 
     /**
      * Width of the image in pixels.
@@ -79,33 +113,53 @@ final readonly class ExifTag
      */
     public const int IMAGE_TITLE = 0xA436;
 
+    // ------------------------------------------------------------------------
+    // Microsoft Windows XP Proprietary Tags (from MicrosoftXpTag)
+    // ------------------------------------------------------------------------
+
     /**
      * Microsoft XPTitle property encoded as UTF-16LE.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag::XP_TITLE
      */
     public const int XP_TITLE = 0x9C9B;
 
     /**
      * Microsoft XPComment property encoded as UTF-16LE.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag::XP_COMMENT
      */
     public const int XP_COMMENT = 0x9C9C;
 
     /**
      * Microsoft XPAuthor property encoded as UTF-16LE.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag::XP_AUTHOR
      */
     public const int XP_AUTHOR = 0x9C9D;
 
     /**
      * Microsoft XPKeywords property encoded as UTF-16LE.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag::XP_KEYWORDS
      */
     public const int XP_KEYWORDS = 0x9C9E;
 
     /**
      * Microsoft XPSubject property encoded as UTF-16LE.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag::XP_SUBJECT
      */
     public const int XP_SUBJECT = 0x9C9F;
 
+    // ------------------------------------------------------------------------
+    // Legacy Tags for Backwards Compatibility (from LegacyTag)
+    // ------------------------------------------------------------------------
+
     /**
      * Legacy EXIF 2.x tag that stored the document name within IFD0.
+     *
+     * @see \MagicSunday\ImageMeta\Model\Legacy\LegacyTag::IMAGE_TITLE_LEGACY
      */
     public const int IMAGE_TITLE_LEGACY = 0x0320;
 
