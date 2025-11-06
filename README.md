@@ -175,6 +175,9 @@ This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 s
 | GPS Tags | 32 | 0 | 0 | 32 | 100.0% |
 | Interoperability | 3 | 2 | 0 | 5 | 60.0% |
 
-For detailed compliance information, see [COMPLIANCE.md](docs/COMPLIANCE.md) or review the [compliance report](docs/compliance-report.json).
+**Where to find implementation gaps**:
+- **Detailed list**: [TAGS_TO_IMPLEMENT.md](docs/TAGS_TO_IMPLEMENT.md) - All 19 partial tags with implementation guidance
+- **System guide**: [COMPLIANCE.md](docs/COMPLIANCE.md) - How the compliance system works
+- **Raw data**: [compliance-report.json](docs/compliance-report.json) - Machine-readable report
 
 The compliance report is automatically generated on every CI run and available as a downloadable artifact.

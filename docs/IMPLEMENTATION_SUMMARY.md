@@ -31,34 +31,38 @@ A PHP script that:
 1. Loads specification tags from `resources/exif-spec-tags.yaml`
 2. Parses implementation from:
    - `src/Model/Exif/ExifTag.php` (constant definitions)
-   - `resources/exif-map.yaml` (VO getter mappings)
+   - `src/Model/Exif/ParsedExif.php` (public getter methods - actual implementation)
 3. Determines status for each tag (implemented/partial/missing)
 4. Generates compliance reports in JSON and YAML formats
 5. Calculates coverage statistics
 6. Exits with appropriate code for CI integration
 
 **Status Definitions**:
-- **implemented**: Constant defined + mapping exists + VO getters mapped
-- **partial**: Some components present but incomplete
-- **missing**: No implementation found
+- **implemented**: Constant defined + public getter method exists in ParsedExif
+- **partial**: Either constant OR getter method exists, but not both
+- **missing**: Neither constant nor getter method found
 - **extra**: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 specs
+
+**Note**: The analyzer scans `ParsedExif.php` directly rather than relying on `exif-map.yaml` (which is not auto-maintained).
 
 ### 3. Compliance Reports
 
 Generated reports (`docs/compliance-report.json` and `docs/compliance-report.yaml`):
 
-**Current Status**:
+**Current Status** (Updated 2025-11-06):
 - Total Spec Tags: 163
-- Implemented: 105 (64.42%)
-- Partial: 58 (35.6%)
+- Implemented: 144 (88.34%)
+- Partial: 19 (11.7%)
 - Missing: 0 (0%)
 - Extra (not in spec): 62
 
 **Category Breakdown**:
-- TIFF 6.0 Baseline: 70.0% (28/40)
-- EXIF Tags: 83.7% (72/86)
-- GPS Tags: 0% (0/32) - All GPS tags are marked as partial
-- Interoperability: 100% (5/5)
+- TIFF 6.0 Baseline: 82.5% (33/40) - 7 partial
+- EXIF Tags: 88.4% (76/86) - 10 partial
+- GPS Tags: 100% (32/32) - 0 partial ✓
+- Interoperability: 60% (3/5) - 2 partial
+
+**Detailed Gap Analysis**: See `docs/TAGS_TO_IMPLEMENT.md` for complete list of partial tags and implementation guidance.
 
 ### 4. CI Integration (`.github/workflows/ci.yml`)
 
@@ -156,33 +160,33 @@ PHPUnit tests validating:
 For each specification tag, the analyzer checks:
 
 1. **Constant defined?** - Is there a `public const int TAG_NAME = 0xXXXX` in `ExifTag.php`?
-2. **Mapping exists?** - Is the tag in `exif-map.yaml`?
-3. **VO getters?** - Are there VO getter methods mapped?
+2. **Getter method exists?** - Is there a public getter method in `ParsedExif.php`?
 
 Based on these checks:
-- All three ✓ → **implemented**
-- Some ✓ → **partial** (with notes about what's missing)
+- Both ✓ → **implemented**
+- One ✓ → **partial** (with notes about what's missing)
 - None ✓ → **missing**
 
 ## Key Findings
 
 ### Strengths
-- ✅ **Excellent EXIF tag coverage**: 83.7% of EXIF tags implemented
-- ✅ **Perfect Interoperability support**: 100% coverage
-- ✅ **Solid TIFF baseline**: 70% coverage
+- ✅ **Excellent EXIF tag coverage**: 88.4% of EXIF tags implemented
+- ✅ **Perfect GPS support**: 100% coverage via unified `gps()` method
+- ✅ **Strong TIFF baseline**: 82.5% coverage
 - ✅ **62 extra tags**: Support beyond specifications (DNG, vendor-specific)
 
-### Gaps
-- ⚠️ **GPS tags**: 0% fully implemented, all marked as partial
-  - Constants defined
-  - But missing in exif-map.yaml or no VO getters
-- ⚠️ **Partial implementations**: 58 tags need completion
+### Gaps (19 partial tags - see `docs/TAGS_TO_IMPLEMENT.md`)
+- **TIFF**: 7 partial tags (YCbCr related, JPEG thumbnail aliases)
+- **EXIF**: 10 partial tags (FNumber, sensitivity tags, pixel dimensions, preview tags)
+- **Interop**: 2 partial tags (likely just need method name mapping)
+
+**Note**: Many "partial" tags likely already have getter methods with different names (e.g., `PixelXDimension` → `imageWidth()`). See `TAGS_TO_IMPLEMENT.md` for mapping suggestions.
 
 ### Recommendations
 
-1. **GPS Coverage**: Add GPS tag mappings to `exif-map.yaml` and implement VO getters
-2. **Complete partials**: Review 58 partial tags and complete implementation
-3. **Threshold tuning**: Current 50% threshold for CI is low; consider raising to 70-80% once gaps are addressed
+1. **Review partial tags**: See `docs/TAGS_TO_IMPLEMENT.md` for detailed list
+2. **Add missing getter methods**: Many tags just need method aliases or new getters
+3. **Threshold tuning**: Current 50% threshold for CI is conservative; can raise to 85%+ once gaps are addressed
 4. **Test coverage**: Add tests for newly supported tags
 
 ## Usage Examples

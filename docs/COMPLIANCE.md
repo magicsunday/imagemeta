@@ -176,14 +176,18 @@ The library implements 62 additional tags not in the core EXIF 3.0/2.32/TIFF 6.0
 
 ## Improving Coverage
 
-To improve compliance coverage:
+To improve compliance coverage, see **[TAGS_TO_IMPLEMENT.md](TAGS_TO_IMPLEMENT.md)** for a complete list of the 19 partial tags that need getter methods.
 
-1. **Add missing constants** to `src/Model/Exif/ExifTag.php`
+**Quick steps**:
+
+1. **Add missing constants** to `src/Model/Exif/ExifTag.php` (if needed)
 2. **Implement getter methods** in `src/Model/Exif/ParsedExif.php`
 3. **Add tests** for new tag support
-4. **Re-run analyzer** to verify improvement
+4. **Re-run analyzer** to verify improvement: `composer ci:compliance`
 
 **Note**: The analyzer scans ParsedExif directly for public getter methods, not `exif-map.yaml`. Focus on implementing actual functionality in ParsedExif.
+
+Many "partial" tags may already have getter methods with different names - check TAGS_TO_IMPLEMENT.md for suggestions on which existing methods might just need aliases.
 
 ## Future Enhancements
 
