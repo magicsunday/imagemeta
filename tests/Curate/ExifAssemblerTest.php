@@ -245,6 +245,8 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::TILE_OFFSETS                   => new IfdEntry(ExifTag::TILE_OFFSETS, 4, 3, new ExifNumericList([4096, 8192, 12288])),
             ExifTag::TILE_BYTE_COUNTS               => new IfdEntry(ExifTag::TILE_BYTE_COUNTS, 4, 3, new ExifNumericList([1024, 2048, 2048])),
             ExifTag::TRANSFER_FUNCTION              => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, new ExifNumericList([0, 32768, 65535])),
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 24576),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
             ExifTag::REFERENCE_BLACK_WHITE          => new IfdEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, [[0, 1], [255, 1], [0, 1], [255, 1], [0, 1], [255, 1]]),
             ExifTag::COPYRIGHT                      => new IfdEntry(ExifTag::COPYRIGHT, 2, 13, 'Jane Doe 2024'),
             ExifTag::MAKE                           => new IfdEntry(ExifTag::MAKE, 2, 5, 'Canon'),
@@ -604,7 +606,10 @@ final class ExifAssemblerTest extends TestCase
     #[Test]
     public function previewMetadataOmitsInvalidCompressionAndScale(): void
     {
-        $ifd0 = new Ifd([]);
+        $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
 
         // IFD1 contains thumbnail data according to EXIF spec
         $ifd1 = new Ifd([
@@ -639,7 +644,10 @@ final class ExifAssemblerTest extends TestCase
     #[Test]
     public function structuredMetadataUsesFallbackExposureTemporalAndUserCommentEncoding(): void
     {
-        $ifd0 = new Ifd([]);
+        $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
 
         // IFD1 contains thumbnail data according to EXIF spec
         $ifd1 = new Ifd([

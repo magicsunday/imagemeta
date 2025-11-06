@@ -340,6 +340,12 @@ final class ParsedExifTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4_096),
         ]);
 
+        // IFD1 contains thumbnail data
+        $ifd1 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 122_880),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 4_096),
+        ]);
+
         $exifIfd = new Ifd([
             ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 32_768),
             ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 16_384),
@@ -360,7 +366,7 @@ final class ParsedExifTest extends TestCase
             ExifTag::PREVIEW_DATE_TIME_DIGITIZED => new IfdEntry(ExifTag::PREVIEW_DATE_TIME_DIGITIZED, 2, 19, '2024:10:25 18:40:00'),
         ]);
 
-        $document = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $document = new ParsedExif($ifd0, $exifIfd, $ifd1, null, null);
 
         self::assertTrue($document->hasThumbnail());
         self::assertSame(32_768, $document->previewImageOffset());
@@ -925,6 +931,34 @@ final class ParsedExifTest extends TestCase
         ]);
 
         $ifd0 = new Ifd([
+            ExifTag::STRIP_OFFSETS => new IfdEntry(
+                ExifTag::STRIP_OFFSETS,
+                4,
+                2,
+                new ExifNumericList([64, 128]),
+            ),
+            ExifTag::STRIP_BYTE_COUNTS => new IfdEntry(
+                ExifTag::STRIP_BYTE_COUNTS,
+                4,
+                2,
+                new ExifNumericList([256, 512]),
+            ),
+            ExifTag::TILE_WIDTH   => new IfdEntry(ExifTag::TILE_WIDTH, 4, 1, 320),
+            ExifTag::TILE_LENGTH  => new IfdEntry(ExifTag::TILE_LENGTH, 4, 1, 640),
+            ExifTag::TILE_OFFSETS => new IfdEntry(
+                ExifTag::TILE_OFFSETS,
+                4,
+                3,
+                new ExifNumericList([1024, 2048, 3072]),
+            ),
+            ExifTag::TILE_BYTE_COUNTS => new IfdEntry(
+                ExifTag::TILE_BYTE_COUNTS,
+                4,
+                3,
+                new ExifNumericList([4096, 4096, 8192]),
+            ),
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 4096),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
             ExifTag::TRANSFER_FUNCTION     => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, $transferFunction),
             ExifTag::REFERENCE_BLACK_WHITE => new IfdEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, $referenceBlackWhite),
             ExifTag::COPYRIGHT             => new IfdEntry(ExifTag::COPYRIGHT, 2, 9, "Jane Doe\0"),
@@ -961,7 +995,7 @@ final class ParsedExifTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
         ]);
 
-        $doc = new ParsedExif($ifd0, null, null, null, $thumbnailIfd);
+        $doc = new ParsedExif($ifd0, null, $thumbnailIfd, null, null);
 
         self::assertSame([64, 128], $doc->stripOffsets());
         self::assertSame([256, 512], $doc->stripByteCounts());
