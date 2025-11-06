@@ -24,19 +24,19 @@ final readonly class Video
      * @param int|null    $width            Encoded width in pixels.
      * @param int|null    $height           Encoded height in pixels.
      * @param string|null $codec            Codec identifier used for the video track.
-     * @param bool|null   $hdr              Indicates HDR mastering.
+     * @param bool        $hdr              Indicates HDR mastering.
      * @param string|null $transferFunction Transfer function identifier (PQ/HLG/...).
      * @param string|null $colorPrimaries   Colour primaries name as reported by the container.
      */
     public function __construct(
-        public ?float $durationSec,
-        public ?float $frameRate,
-        public ?int $width,
-        public ?int $height,
-        public ?string $codec,
-        public ?bool $hdr,
-        public ?string $transferFunction,
-        public ?string $colorPrimaries,
+        public ?float $durationSec = null,
+        public ?float $frameRate = null,
+        public ?int $width = null,
+        public ?int $height = null,
+        public ?string $codec = null,
+        public bool $hdr = false,
+        public ?string $transferFunction = null,
+        public ?string $colorPrimaries = null,
     ) {
     }
 }

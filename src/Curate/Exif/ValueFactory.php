@@ -330,31 +330,37 @@ final class ValueFactory implements ValueFactoryInterface
         $thumbnailStripCounts   = $exifDocument?->thumbnailStripByteCounts();
         $thumbnailTileOffsets   = $exifDocument?->thumbnailTileOffsets();
         $thumbnailTileCounts    = $exifDocument?->thumbnailTileByteCounts();
+        $thumbnailTileWidth     = $exifDocument?->thumbnailTileWidth();
+        $thumbnailTileLength    = $exifDocument?->thumbnailTileLength();
 
         $preview = new Preview(
-            $exifDocument?->hasThumbnail(),
-            $exifDocument?->hasPreviewImage(),
-            $exifDocument?->previewImageWidth(),
-            $exifDocument?->previewImageHeight(),
-            $previewColorSpace,
-            $exifDocument?->previewImageBitDepth(),
-            $previewCompressionEnum,
-            $exifDocument?->previewImageScale(),
-            $exifDocument?->previewImageEncoding(),
-            $exifDocument?->previewImageMimeType(),
-            $exifDocument?->previewImageOffset(),
-            $exifDocument?->previewImageLength(),
-            $exifDocument?->jpegThumbnailOffset(),
-            $exifDocument?->jpegThumbnailLength(),
-            $thumbnailCompression,
-            $thumbnailStripOffsets,
-            $thumbnailStripCounts,
-            $thumbnailTileOffsets,
-            $thumbnailTileCounts,
-            $previewStripOffsets,
-            $previewStripByteCounts,
-            $previewTileOffsets,
-            $previewTileByteCounts,
+            // Thumbnail parameters (IFD1)
+            hasThumbnail: $exifDocument?->hasThumbnail() ?? false,
+            thumbnailOffset: $exifDocument?->thumbnailJpegInterchangeFormat(),
+            thumbnailLength: $exifDocument?->thumbnailJpegInterchangeFormatLength(),
+            thumbnailCompression: $thumbnailCompression,
+            thumbnailTileWidth: $thumbnailTileWidth,
+            thumbnailTileLength: $thumbnailTileLength,
+            thumbnailTileOffsets: $thumbnailTileOffsets,
+            thumbnailTileByteCounts: $thumbnailTileCounts,
+            thumbnailStripOffsets: $thumbnailStripOffsets,
+            thumbnailStripByteCounts: $thumbnailStripCounts,
+            // Preview parameters (EXIF 3.0)
+            hasPreview: $exifDocument?->hasPreviewImage() ?? false,
+            previewOffset: $exifDocument?->previewImageOffset(),
+            previewLength: $exifDocument?->previewImageLength(),
+            previewWidth: $exifDocument?->previewImageWidth(),
+            previewHeight: $exifDocument?->previewImageHeight(),
+            previewColorSpace: $previewColorSpace,
+            previewBitDepth: $exifDocument?->previewImageBitDepth(),
+            previewCompression: $previewCompressionEnum,
+            previewScale: $exifDocument?->previewImageScale(),
+            previewEncoding: $exifDocument?->previewImageEncoding(),
+            previewMimeType: $exifDocument?->previewImageMimeType(),
+            previewTileOffsets: $previewTileOffsets,
+            previewTileByteCounts: $previewTileByteCounts,
+            previewStripOffsets: $previewStripOffsets,
+            previewStripByteCounts: $previewStripByteCounts,
         );
 
         $video = new Video(
@@ -365,7 +371,7 @@ final class ValueFactory implements ValueFactoryInterface
             codec: $quickTimeLookup->string(QuickTimeMeta::COMPRESSOR_NAME_KEY,
                 QuickTimeMeta::VIDEO_CODEC_KEY,
             ),
-            hdr: $quickTimeLookup->bool('com.apple.quicktime.hdrFormat'),
+            hdr: $quickTimeLookup->bool('com.apple.quicktime.hdrFormat') ?? false,
             transferFunction: $quickTimeLookup->string('com.apple.quicktime.transferFunction'),
             colorPrimaries: $quickTimeLookup->string('com.apple.quicktime.colorPrimaries'),
         );
@@ -569,7 +575,7 @@ final class ValueFactory implements ValueFactoryInterface
         $related      = new RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
             burstId: $quickTimeLookup->string('BurstUUID'),
-            isPrimaryInBurst: $quickTimeLookup->bool('BurstSelected'),
+            isPrimaryInBurst: $quickTimeLookup->bool('BurstSelected') ?? false,
             panoramaId: $panoramaFlag === true ? 'panorama' : null,
             depthDataId: $quickTimeLookup->string('DepthData'),
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
@@ -586,7 +592,7 @@ final class ValueFactory implements ValueFactoryInterface
             cfaWidth: $exifDocument?->cfaRepeatPatternWidth(),
             cfaHeight: $exifDocument?->cfaRepeatPatternHeight(),
             sensorType: null,
-            ibis: null,
+            ibis: false,
             cfaPattern: $exifDocument?->cfaPattern(),
             spectralSensitivity: $exifDocument?->spectralSensitivity(),
             oecf: $exifDocument?->oecf(),

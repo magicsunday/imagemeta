@@ -49,8 +49,8 @@ trait ExifExpectationAssertions
      *         length: int|null,
      *     },
      *     preview: array{
-     *         hasThumbnail: bool|null,
-     *         hasPreview: bool|null,
+     *         hasThumbnail: bool,
+     *         hasPreview: bool,
      *         previewOffset: int|null,
      *         previewLength: int|null,
      *         previewWidth: int|null,
@@ -202,8 +202,8 @@ trait ExifExpectationAssertions
      *         length: int|null,
      *     },
      *     preview: array{
-     *         hasThumbnail: bool|null,
-     *         hasPreview: bool|null,
+     *         hasThumbnail: bool,
+     *         hasPreview: bool,
      *         previewOffset: int|null,
      *         previewLength: int|null,
      *         previewWidth: int|null,
@@ -282,8 +282,8 @@ trait ExifExpectationAssertions
 
     /**
      * @param array{
-     *     hasThumbnail: bool|null,
-     *     hasPreview: bool|null,
+     *     hasThumbnail: bool,
+     *     hasPreview: bool,
      *     previewOffset: int|null,
      *     previewLength: int|null,
      *     previewWidth: int|null,
