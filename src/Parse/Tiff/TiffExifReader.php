@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
+use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
@@ -30,6 +31,8 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function array_any;
 use function array_slice;
@@ -73,11 +76,11 @@ final class TiffExifReader implements ExifReaderInterface
      * @var list<int>
      */
     private const array UTF16LE_STRING_TAGS = [
-        ExifTag::XP_TITLE,
-        ExifTag::XP_COMMENT,
-        ExifTag::XP_AUTHOR,
-        ExifTag::XP_KEYWORDS,
-        ExifTag::XP_SUBJECT,
+        MicrosoftXpTag::XP_TITLE,
+        MicrosoftXpTag::XP_COMMENT,
+        MicrosoftXpTag::XP_AUTHOR,
+        MicrosoftXpTag::XP_KEYWORDS,
+        MicrosoftXpTag::XP_SUBJECT,
     ];
 
     /**
@@ -92,8 +95,8 @@ final class TiffExifReader implements ExifReaderInterface
     private const array COUNTED_IMAGE_DATA_TAGS = [
         ExifTag::STRIP_OFFSETS,
         ExifTag::STRIP_BYTE_COUNTS,
-        ExifTag::TILE_OFFSETS,
-        ExifTag::TILE_BYTE_COUNTS,
+        TiffTag::TILE_OFFSETS,
+        TiffTag::TILE_BYTE_COUNTS,
     ];
 
     /**
@@ -110,9 +113,9 @@ final class TiffExifReader implements ExifReaderInterface
         ExifTag::EXIF_IFD_POINTER,
         ExifTag::GPS_IFD_POINTER,
         ExifTag::INTEROPERABILITY_IFD_POINTER,
-        ExifTag::SUB_IFDS,
+        TiffTag::SUB_IFDS,
         ExifTag::JPEG_INTERCHANGE_FORMAT,
-        ExifTag::PREVIEW_IMAGE_START,
+        DngTag::PREVIEW_IMAGE_START,
     ];
 
     private const int UTF16_HIGH_SURROGATE_START = 0xD800;
@@ -435,7 +438,7 @@ final class TiffExifReader implements ExifReaderInterface
 
         $entry = new IfdEntry($tag, $type, $cnt, $value);
 
-        if ($tag === ExifTag::SUB_IFDS) {
+        if ($tag === TiffTag::SUB_IFDS) {
             $this->collectSubIfds($entry);
         }
 
@@ -558,7 +561,7 @@ final class TiffExifReader implements ExifReaderInterface
             };
 
             if ($value instanceof UInt64) {
-                $value = ($tag === ExifTag::STRIP_OFFSETS || $tag === ExifTag::TILE_OFFSETS)
+                $value = ($tag === ExifTag::STRIP_OFFSETS || $tag === TiffTag::TILE_OFFSETS)
                     ? $this->ensureOffset($value, sprintf('IFD tag 0x%04X', $tag))
                     : $value->toInt(sprintf('IFD tag 0x%04X', $tag));
             }
