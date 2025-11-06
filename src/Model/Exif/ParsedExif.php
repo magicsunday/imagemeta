@@ -635,16 +635,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the tile width defined for the thumbnail image data (IFD1).
-     *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
-     */
-    public function thumbnailTileWidth(): ?int
-    {
-        return $this->int($this->ifd1, ExifTag::TILE_WIDTH);
-    }
-
-    /**
      * Returns the tile length defined for the primary image data (IFD0).
      *
      * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
@@ -653,16 +643,6 @@ final readonly class ParsedExif
     public function tileLength(): ?int
     {
         return $this->int($this->ifd0, ExifTag::TILE_LENGTH);
-    }
-
-    /**
-     * Returns the tile length defined for the thumbnail image data (IFD1).
-     *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
-     */
-    public function thumbnailTileLength(): ?int
-    {
-        return $this->int($this->ifd1, ExifTag::TILE_LENGTH);
     }
 
     /**
@@ -728,12 +708,30 @@ final readonly class ParsedExif
     }
 
     /**
+     * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
+     *
+     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
+     * both offset and length to be populated for a valid embedded thumbnail.
+     */
+    public function hasThumbnail(): bool
+    {
+        $offset = $this->thumbnailJpegInterchangeFormat();
+        $length = $this->thumbnailJpegInterchangeFormatLength();
+
+        if ($offset === null || $length === null) {
+            return false;
+        }
+
+        return $length > 0;
+    }
+
+    /**
      * Returns the JPEG thumbnail offset from the dedicated thumbnail IFD (IFD1).
      *
      * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 document JPEGInterchangeFormat as
      * the byte offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
      */
-    public function jpegThumbnailOffset(): ?int
+    public function thumbnailJpegInterchangeFormat(): ?int
     {
         return $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT);
     }
@@ -744,31 +742,88 @@ final readonly class ParsedExif
      * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
      * as the size in bytes of the JPEG thumbnail stream in IFD1.
      */
-    public function jpegThumbnailLength(): ?int
+    public function thumbnailJpegInterchangeFormatLength(): ?int
     {
         return $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
     }
 
     /**
-     * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
+     * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
-     * both offset and length to be populated for a valid embedded thumbnail.
+     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 map the Compression tag in the
+     * thumbnail IFD to the embedded preview codec.
      */
-    public function hasThumbnail(): ?bool
+    public function thumbnailCompression(): ?Compression
     {
-        $offset = $this->jpegThumbnailOffset();
-        $length = $this->jpegThumbnailLength();
+        return Compression::fromExifValue($this->enumValue($this->ifd1, ExifTag::COMPRESSION));
+    }
 
-        if ($offset === null && $length === null) {
-            return null;
-        }
+    /**
+     * Returns the tile width defined for the thumbnail image data (IFD1).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     */
+    public function thumbnailTileWidth(): ?int
+    {
+        return $this->int($this->ifd1, ExifTag::TILE_WIDTH);
+    }
 
-        if ($offset === null || $length === null) {
-            return false;
-        }
+    /**
+     * Returns the tile length defined for the thumbnail image data (IFD1).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     */
+    public function thumbnailTileLength(): ?int
+    {
+        return $this->int($this->ifd1, ExifTag::TILE_LENGTH);
+    }
 
-        return $length > 0;
+    /**
+     * Returns the tile offsets for the thumbnail image when stored using TIFF tiles.
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailTileOffsets(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::TILE_OFFSETS);
+    }
+
+    /**
+     * Returns the tile byte counts for the thumbnail image when stored using TIFF tiles.
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailTileByteCounts(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::TILE_BYTE_COUNTS);
+    }
+
+    /**
+     * Returns the strip offsets for the thumbnail image when stored using TIFF strips.
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailStripOffsets(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
+    }
+
+    /**
+     * Returns the strip byte counts for the thumbnail image when stored using TIFF strips.
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     *
+     * @return list<int>|null
+     */
+    public function thumbnailStripByteCounts(): ?array
+    {
+        return $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
     }
 
     /**
@@ -1129,61 +1184,6 @@ final readonly class ParsedExif
     public function previewDateTimeDigitizedRaw(): ?string
     {
         return $this->rawString($this->exifIfd, ExifTag::PREVIEW_DATE_TIME_DIGITIZED);
-    }
-
-    /**
-     * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
-     *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 map the Compression tag in the
-     * thumbnail IFD to the embedded preview codec.
-     */
-    public function thumbnailCompression(): ?Compression
-    {
-        $value = $this->enumValue($this->ifd1, ExifTag::COMPRESSION);
-
-        return Compression::fromExifValue($value);
-    }
-
-    /**
-     * Returns the strip offsets for the thumbnail image when stored using TIFF strips.
-     *
-     * EXIF 3.0 §4.6.4 keeps the strip model from EXIF 2.32 §4.6.4 for thumbnails.
-     *
-     * @return list<int>|null
-     */
-    public function thumbnailStripOffsets(): ?array
-    {
-        return $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
-    }
-
-    /**
-     * Returns the strip byte counts for the thumbnail image when stored using TIFF strips.
-     *
-     * @return list<int>|null
-     */
-    public function thumbnailStripByteCounts(): ?array
-    {
-        return $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
-    }
-
-    /**
-     * Returns the tile offsets for the thumbnail image when stored using TIFF tiles.
-     *
-     * @return list<int>|null
-     */
-    public function thumbnailTileOffsets(): ?array
-    {
-        return $this->numericList($this->ifd1, ExifTag::TILE_OFFSETS);
-    }
-
-    /**
-     * Returns the tile byte counts for the thumbnail image when stored using TIFF tiles.
-     *
-     * @return list<int>|null
-     */
-    public function thumbnailTileByteCounts(): ?array
-    {
-        return $this->numericList($this->ifd1, ExifTag::TILE_BYTE_COUNTS);
     }
 
     /**
