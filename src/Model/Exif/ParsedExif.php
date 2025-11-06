@@ -17,6 +17,9 @@ use Exception;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
+use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -565,7 +568,7 @@ final readonly class ParsedExif
      */
     public function xpTitle(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::XP_TITLE);
+        return $this->str($this->ifd0, MicrosoftXpTag::XP_TITLE);
     }
 
     /**
@@ -573,7 +576,7 @@ final readonly class ParsedExif
      */
     public function xpComment(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::XP_COMMENT);
+        return $this->str($this->ifd0, MicrosoftXpTag::XP_COMMENT);
     }
 
     /**
@@ -581,7 +584,7 @@ final readonly class ParsedExif
      */
     public function xpAuthor(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::XP_AUTHOR);
+        return $this->str($this->ifd0, MicrosoftXpTag::XP_AUTHOR);
     }
 
     /**
@@ -589,7 +592,7 @@ final readonly class ParsedExif
      */
     public function xpSubject(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::XP_SUBJECT);
+        return $this->str($this->ifd0, MicrosoftXpTag::XP_SUBJECT);
     }
 
     /**
@@ -599,7 +602,7 @@ final readonly class ParsedExif
      */
     public function xpKeywords(): ?array
     {
-        $raw = $this->str($this->ifd0, ExifTag::XP_KEYWORDS);
+        $raw = $this->str($this->ifd0, MicrosoftXpTag::XP_KEYWORDS);
 
         if ($raw === null) {
             return null;
@@ -628,9 +631,9 @@ final readonly class ParsedExif
      */
     public function tileWidth(): ?int
     {
-        $width = $this->int($this->ifd0, ExifTag::TILE_WIDTH);
+        $width = $this->int($this->ifd0, TiffTag::TILE_WIDTH);
 
-        return $width ?? $this->int($this->ifd1, ExifTag::TILE_WIDTH);
+        return $width ?? $this->int($this->ifd1, TiffTag::TILE_WIDTH);
     }
 
     /**
@@ -638,9 +641,9 @@ final readonly class ParsedExif
      */
     public function tileLength(): ?int
     {
-        $length = $this->int($this->ifd0, ExifTag::TILE_LENGTH);
+        $length = $this->int($this->ifd0, TiffTag::TILE_LENGTH);
 
-        return $length ?? $this->int($this->ifd1, ExifTag::TILE_LENGTH);
+        return $length ?? $this->int($this->ifd1, TiffTag::TILE_LENGTH);
     }
 
     /**
@@ -650,9 +653,9 @@ final readonly class ParsedExif
      */
     public function tileOffsets(): ?array
     {
-        $offsets = $this->numericList($this->ifd0, ExifTag::TILE_OFFSETS);
+        $offsets = $this->numericList($this->ifd0, TiffTag::TILE_OFFSETS);
 
-        return $offsets ?? $this->numericList($this->ifd1, ExifTag::TILE_OFFSETS);
+        return $offsets ?? $this->numericList($this->ifd1, TiffTag::TILE_OFFSETS);
     }
 
     /**
@@ -662,9 +665,9 @@ final readonly class ParsedExif
      */
     public function tileByteCounts(): ?array
     {
-        $counts = $this->numericList($this->ifd0, ExifTag::TILE_BYTE_COUNTS);
+        $counts = $this->numericList($this->ifd0, TiffTag::TILE_BYTE_COUNTS);
 
-        return $counts ?? $this->numericList($this->ifd1, ExifTag::TILE_BYTE_COUNTS);
+        return $counts ?? $this->numericList($this->ifd1, TiffTag::TILE_BYTE_COUNTS);
     }
 
     /**
@@ -796,21 +799,21 @@ final readonly class ParsedExif
 
         if (array_any(
             $this->previewCandidateIfds(),
-            static fn (Ifd $ifd): bool => $ifd->get(ExifTag::PREVIEW_IMAGE_START) instanceof IfdEntry
-                || $ifd->get(ExifTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry,
+            static fn (Ifd $ifd): bool => $ifd->get(DngTag::PREVIEW_IMAGE_START) instanceof IfdEntry
+                || $ifd->get(DngTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry,
         )) {
             return false;
         }
 
         $otherPreviewTags = [
-            ExifTag::PREVIEW_IMAGE_COMPRESSION,
-            ExifTag::PREVIEW_IMAGE_SCALE,
-            ExifTag::PREVIEW_IMAGE_WIDTH,
-            ExifTag::PREVIEW_IMAGE_HEIGHT,
-            ExifTag::PREVIEW_IMAGE_ENCODING,
-            ExifTag::PREVIEW_IMAGE_MIME_TYPE,
-            ExifTag::PREVIEW_IMAGE_BIT_DEPTH,
-            ExifTag::PREVIEW_IMAGE_COLOR_SPACE,
+            DngTag::PREVIEW_IMAGE_COMPRESSION,
+            DngTag::PREVIEW_IMAGE_SCALE,
+            DngTag::PREVIEW_IMAGE_WIDTH,
+            DngTag::PREVIEW_IMAGE_HEIGHT,
+            DngTag::PREVIEW_IMAGE_ENCODING,
+            DngTag::PREVIEW_IMAGE_MIME_TYPE,
+            DngTag::PREVIEW_IMAGE_BIT_DEPTH,
+            DngTag::PREVIEW_IMAGE_COLOR_SPACE,
         ];
 
         if (array_any(
