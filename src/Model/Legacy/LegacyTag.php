@@ -206,6 +206,62 @@ final readonly class LegacyTag
     public const int PREVIEW_IMAGE_SCALE = 0xC526;
 
     /**
+     * Camera yaw angle relative to true north (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int CAMERA_YAW_DEGREE = 0x9406;
+
+    /**
+     * Camera pitch angle relative to the ground plane (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int CAMERA_PITCH_DEGREE = 0x9407;
+
+    /**
+     * Camera roll angle relative to the horizon (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int CAMERA_ROLL_DEGREE = 0x9408;
+
+    /**
+     * Gimbal yaw angle reported by the aircraft (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int GIMBAL_YAW_DEGREE = 0x9409;
+
+    /**
+     * Gimbal pitch angle reported by the aircraft (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int GIMBAL_PITCH_DEGREE = 0x940A;
+
+    /**
+     * Gimbal roll angle reported by the aircraft (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int GIMBAL_ROLL_DEGREE = 0x940B;
+
+    /**
+     * Aircraft manufacturer name (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int AIRCRAFT_MAKE = 0x940C;
+
+    /**
+     * Aircraft model identifier (drone/aircraft metadata).
+     *
+     * Vendor extension not in EXIF 3.0 specification. Found in DJI and other drone files.
+     */
+    public const int AIRCRAFT_MODEL = 0x940D;
+
+    /**
      * Prevent instantiation of this constants-only utility class.
      */
     private function __construct()

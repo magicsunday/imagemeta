@@ -566,46 +566,6 @@ final readonly class ExifTag
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
     /**
-     * Camera yaw angle relative to true north.
-     */
-    public const int CAMERA_YAW_DEGREE = 0x9406;
-
-    /**
-     * Camera pitch angle relative to the ground plane.
-     */
-    public const int CAMERA_PITCH_DEGREE = 0x9407;
-
-    /**
-     * Camera roll angle relative to the horizon.
-     */
-    public const int CAMERA_ROLL_DEGREE = 0x9408;
-
-    /**
-     * Legacy identifiers retained for backwards compatibility with pre-EXIF 3.0 metadata.
-     */
-    public const int GIMBAL_YAW_DEGREE = 0x9409;
-
-    /**
-     * Gimbal pitch angle reported by the aircraft.
-     */
-    public const int GIMBAL_PITCH_DEGREE = 0x940A;
-
-    /**
-     * Gimbal roll angle reported by the aircraft.
-     */
-    public const int GIMBAL_ROLL_DEGREE = 0x940B;
-
-    /**
-     * Aircraft manufacturer name.
-     */
-    public const int AIRCRAFT_MAKE = 0x940C;
-
-    /**
-     * Aircraft model identifier.
-     */
-    public const int AIRCRAFT_MODEL = 0x940D;
-
-    /**
      * FlashPix format version used for the metadata.
      */
     public const int FLASHPIX_VERSION = 0xA000;

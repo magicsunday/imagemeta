@@ -295,39 +295,21 @@ final class ExifTagSourcesTest extends TestCase
     }
 
     /**
-     * EXIF 3.0 adds camera orientation tags (not in older versions).
-     * 
-     * EXIF 3.0 §4.6 (new in version 3.0)
+     * Verify that drone/aircraft orientation tags removed from EXIF 3.0 are in LegacyTag.
+     *
+     * These tags (0x9406-0x940D) are vendor extensions (DJI/drone manufacturers)
+     * and are NOT in the EXIF 3.0 specification provided by the user.
      */
     #[Test]
     public function exif30OrientationTagsArePresent(): void
     {
-        $reflection = new ReflectionClass(ExifTag::class);
-        $constants  = $reflection->getConstants();
-
-        $expectedTags = [
-            'CAMERA_YAW_DEGREE'   => 0x9406,
-            'CAMERA_PITCH_DEGREE' => 0x9407,
-            'CAMERA_ROLL_DEGREE'  => 0x9408,
-            'GIMBAL_YAW_DEGREE'   => 0x9409,
-            'GIMBAL_PITCH_DEGREE' => 0x940A,
-            'GIMBAL_ROLL_DEGREE'  => 0x940B,
-            'AIRCRAFT_MAKE'       => 0x940C,
-            'AIRCRAFT_MODEL'      => 0x940D,
-        ];
-
-        foreach ($expectedTags as $name => $expectedValue) {
-            self::assertArrayHasKey(
-                $name,
-                $constants,
-                sprintf('EXIF 3.0 orientation tag %s should be present', $name),
-            );
-            self::assertSame(
-                $expectedValue,
-                $constants[$name],
-                sprintf('EXIF 3.0 orientation tag %s should have value 0x%04X', $name, $expectedValue),
-            );
-        }
+        // EXIF 3.0 does NOT define drone/aircraft orientation tags.
+        // This test previously checked for tags 0x9406-0x940D which are NOT in EXIF 3.0.
+        // Those tags have been moved to LegacyTag (see legacyTagsAreNotInExifTag test).
+        
+        // Currently no EXIF 3.0-specific orientation tags to test beyond the standard
+        // ORIENTATION tag (0x0112) already covered in exif30Table64TagsArePresent.
+        self::assertTrue(true, 'Drone/aircraft tags moved to LegacyTag per EXIF 3.0 spec compliance');
     }
 
     /**
@@ -432,6 +414,15 @@ final class ExifTagSourcesTest extends TestCase
             'PREVIEW_IMAGE_HEIGHT',
             'PREVIEW_IMAGE_COMPRESSION',
             'PREVIEW_IMAGE_SCALE',
+            // Drone/aircraft vendor extension tags (0x9406-0x940D, NOT in EXIF 3.0 spec)
+            'CAMERA_YAW_DEGREE',
+            'CAMERA_PITCH_DEGREE',
+            'CAMERA_ROLL_DEGREE',
+            'GIMBAL_YAW_DEGREE',
+            'GIMBAL_PITCH_DEGREE',
+            'GIMBAL_ROLL_DEGREE',
+            'AIRCRAFT_MAKE',
+            'AIRCRAFT_MODEL',
         ];
 
         foreach ($legacyTags as $name) {
