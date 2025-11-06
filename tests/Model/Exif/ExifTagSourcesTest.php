@@ -331,121 +331,113 @@ final class ExifTagSourcesTest extends TestCase
     }
 
     /**
-     * Microsoft XP tags are proprietary Windows extensions.
+     * Microsoft XP tags should NOT be in ExifTag (moved to MicrosoftXpTag).
      */
     #[Test]
-    public function microsoftXpTagsAreIdentifiable(): void
+    public function microsoftXpTagsAreNotInExifTag(): void
     {
         $reflection = new ReflectionClass(ExifTag::class);
         $constants  = $reflection->getConstants();
 
         $microsoftXpTags = [
-            'XP_TITLE'    => 0x9C9B,
-            'XP_COMMENT'  => 0x9C9C,
-            'XP_AUTHOR'   => 0x9C9D,
-            'XP_KEYWORDS' => 0x9C9E,
-            'XP_SUBJECT'  => 0x9C9F,
+            'XP_TITLE',
+            'XP_COMMENT',
+            'XP_AUTHOR',
+            'XP_KEYWORDS',
+            'XP_SUBJECT',
         ];
 
-        foreach ($microsoftXpTags as $name => $expectedValue) {
-            self::assertArrayHasKey(
+        foreach ($microsoftXpTags as $name) {
+            self::assertArrayNotHasKey(
                 $name,
                 $constants,
-                sprintf('Microsoft XP tag %s should be present for compatibility', $name),
-            );
-            self::assertSame(
-                $expectedValue,
-                $constants[$name],
-                sprintf('Microsoft XP tag %s should have value 0x%04X', $name, $expectedValue),
+                sprintf('Microsoft XP tag %s should NOT be in ExifTag (moved to MicrosoftXpTag)', $name),
             );
         }
     }
 
     /**
-     * TIFF 6.0 baseline tags that are not in EXIF 3.0 tables.
+     * TIFF 6.0 baseline tags should NOT be in ExifTag (moved to TiffTag).
      */
     #[Test]
-    public function tiff60TagsAreIdentifiable(): void
+    public function tiff60TagsAreNotInExifTag(): void
     {
         $reflection = new ReflectionClass(ExifTag::class);
         $constants  = $reflection->getConstants();
 
         $tiffTags = [
-            'NEW_SUBFILE_TYPE' => 0x00FE,
-            'SUBFILE_TYPE'     => 0x00FF,
-            'PREDICTOR'        => 0x013D,
-            'ICC_PROFILE'      => 0x8773,
+            'NEW_SUBFILE_TYPE',
+            'SUBFILE_TYPE',
+            'PREDICTOR',
+            'ICC_PROFILE',
+            'TILE_WIDTH',
+            'TILE_LENGTH',
+            'TILE_OFFSETS',
+            'TILE_BYTE_COUNTS',
         ];
 
-        foreach ($tiffTags as $name => $expectedValue) {
-            self::assertArrayHasKey(
+        foreach ($tiffTags as $name) {
+            self::assertArrayNotHasKey(
                 $name,
                 $constants,
-                sprintf('TIFF 6.0 tag %s should be present', $name),
-            );
-            self::assertSame(
-                $expectedValue,
-                $constants[$name],
-                sprintf('TIFF 6.0 tag %s should have value 0x%04X', $name, $expectedValue),
+                sprintf('TIFF 6.0 tag %s should NOT be in ExifTag (moved to TiffTag)', $name),
             );
         }
     }
 
     /**
-     * Adobe DNG tags should be identifiable (though they belong in DngTag.php).
+     * Adobe DNG tags should NOT be in ExifTag (moved to DngTag).
      */
     #[Test]
-    public function dngTagsAreMinimalInExifTag(): void
+    public function dngTagsAreNotInExifTag(): void
     {
         $reflection = new ReflectionClass(ExifTag::class);
         $constants  = $reflection->getConstants();
 
-        // These DNG tags appear in ExifTag.php but should ideally be in DngTag.php
-        $dngTagsInExifTag = [
-            'CAMERA_CALIBRATION_SIGNATURE'  => 0xC6F3,
-            'PROFILE_CALIBRATION_SIGNATURE' => 0xC6F4,
-            'CAMERA_SERIAL_NUMBER'          => 0xC62F,
+        // These DNG tags were in ExifTag.php but have been moved to DngTag.php
+        $dngTags = [
+            'CAMERA_CALIBRATION_SIGNATURE',
+            'PROFILE_CALIBRATION_SIGNATURE',
+            'CAMERA_SERIAL_NUMBER',
+            'PREVIEW_IMAGE_START',
+            'PREVIEW_IMAGE_LENGTH',
+            'PREVIEW_IMAGE_WIDTH',
+            'PREVIEW_IMAGE_HEIGHT',
         ];
 
-        foreach ($dngTagsInExifTag as $name => $expectedValue) {
-            self::assertArrayHasKey(
+        foreach ($dngTags as $name) {
+            self::assertArrayNotHasKey(
                 $name,
                 $constants,
-                sprintf('DNG tag %s is present in ExifTag (consider moving to DngTag)', $name),
+                sprintf('DNG tag %s should NOT be in ExifTag (moved to DngTag)', $name),
             );
-            self::assertSame(
-                $expectedValue,
-                $constants[$name],
-                sprintf('DNG tag %s should have value 0x%04X', $name, $expectedValue),
-            );
+        }
         }
     }
 
     /**
-     * Legacy tags maintain backwards compatibility.
+     * Legacy tags should NOT be in ExifTag (moved to LegacyTag).
      */
     #[Test]
-    public function legacyTagsAreRetainedForCompatibility(): void
+    public function legacyTagsAreNotInExifTag(): void
     {
         $reflection = new ReflectionClass(ExifTag::class);
         $constants  = $reflection->getConstants();
 
-        // Legacy tags that are aliases or deprecated
+        // Legacy tags that were removed from ExifTag
         $legacyTags = [
-            'ISO_SPEED_RATINGS_LEGACY' => 0x8827, // Same as PHOTOGRAPHIC_SENSITIVITY
-            'HOST_COMPUTER'            => 0x013C, // Removed from EXIF 3.0
+            'ISO_SPEED_RATINGS_LEGACY',
+            'HOST_COMPUTER',
+            'IMAGE_TITLE_LEGACY',
+            'PHOTOGRAPHER_LEGACY',
+            'IMAGE_EDITOR_LEGACY',
         ];
 
-        foreach ($legacyTags as $name => $expectedValue) {
-            self::assertArrayHasKey(
+        foreach ($legacyTags as $name) {
+            self::assertArrayNotHasKey(
                 $name,
                 $constants,
-                sprintf('Legacy tag %s should be present for backwards compatibility', $name),
-            );
-            self::assertSame(
-                $expectedValue,
-                $constants[$name],
-                sprintf('Legacy tag %s should have value 0x%04X', $name, $expectedValue),
+                sprintf('Legacy tag %s should NOT be in ExifTag (moved to LegacyTag)', $name),
             );
         }
     }
