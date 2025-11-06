@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\Legacy\LegacyTag;
 use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
@@ -115,7 +116,7 @@ final class TiffExifReader implements ExifReaderInterface
         ExifTag::INTEROPERABILITY_IFD_POINTER,
         TiffTag::SUB_IFDS,
         ExifTag::JPEG_INTERCHANGE_FORMAT,
-        DngTag::PREVIEW_IMAGE_START,
+        LegacyTag::PREVIEW_IMAGE_START,
     ];
 
     private const int UTF16_HIGH_SURROGATE_START = 0xD800;

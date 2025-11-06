@@ -135,6 +135,77 @@ final readonly class LegacyTag
     public const int METADATA_EDITING_SOFTWARE_LEGACY = 0xE932;
 
     /**
+     * Byte offset to the embedded preview image data.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     * Found in some camera files. Access via numeric ID if needed.
+     */
+    public const int PREVIEW_IMAGE_START = 0xC51B;
+
+    /**
+     * Length of the embedded preview image data in bytes.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_LENGTH = 0xC51C;
+
+    /**
+     * Encoding scheme for the embedded preview image.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_ENCODING = 0xC51D;
+
+    /**
+     * MIME type describing the embedded preview image format.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_MIME_TYPE = 0xC51E;
+
+    /**
+     * Width of the embedded preview image in pixels.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_WIDTH = 0xC51F;
+
+    /**
+     * Height of the embedded preview image in pixels.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_HEIGHT = 0xC520;
+
+    /**
+     * Colour space of the embedded preview image.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_COLOR_SPACE = 0xC521;
+
+    /**
+     * Bit depth of the embedded preview image.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_BIT_DEPTH = 0xC522;
+
+    /**
+     * Compression method used for the preview image.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_COMPRESSION = 0xC525;
+
+    /**
+     * Scaling factor applied to derive the preview image.
+     *
+     * Non-standard tag not in EXIF 3.0, TIFF 6.0, or DNG 1.7 specifications.
+     */
+    public const int PREVIEW_IMAGE_SCALE = 0xC526;
+
+    /**
      * Prevent instantiation of this constants-only utility class.
      */
     private function __construct()

@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Legacy\LegacyTag;
 use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
@@ -799,21 +800,21 @@ final readonly class ParsedExif
 
         if (array_any(
             $this->previewCandidateIfds(),
-            static fn (Ifd $ifd): bool => $ifd->get(DngTag::PREVIEW_IMAGE_START) instanceof IfdEntry
-                || $ifd->get(DngTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry,
+            static fn (Ifd $ifd): bool => $ifd->get(LegacyTag::PREVIEW_IMAGE_START) instanceof IfdEntry
+                || $ifd->get(LegacyTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry,
         )) {
             return false;
         }
 
         $otherPreviewTags = [
-            DngTag::PREVIEW_IMAGE_COMPRESSION,
-            DngTag::PREVIEW_IMAGE_SCALE,
-            DngTag::PREVIEW_IMAGE_WIDTH,
-            DngTag::PREVIEW_IMAGE_HEIGHT,
-            DngTag::PREVIEW_IMAGE_ENCODING,
-            DngTag::PREVIEW_IMAGE_MIME_TYPE,
-            DngTag::PREVIEW_IMAGE_BIT_DEPTH,
-            DngTag::PREVIEW_IMAGE_COLOR_SPACE,
+            LegacyTag::PREVIEW_IMAGE_COMPRESSION,
+            LegacyTag::PREVIEW_IMAGE_SCALE,
+            LegacyTag::PREVIEW_IMAGE_WIDTH,
+            LegacyTag::PREVIEW_IMAGE_HEIGHT,
+            LegacyTag::PREVIEW_IMAGE_ENCODING,
+            LegacyTag::PREVIEW_IMAGE_MIME_TYPE,
+            LegacyTag::PREVIEW_IMAGE_BIT_DEPTH,
+            LegacyTag::PREVIEW_IMAGE_COLOR_SPACE,
         ];
 
         if (array_any(

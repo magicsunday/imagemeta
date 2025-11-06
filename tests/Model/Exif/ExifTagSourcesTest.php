@@ -399,10 +399,6 @@ final class ExifTagSourcesTest extends TestCase
             'CAMERA_CALIBRATION_SIGNATURE',
             'PROFILE_CALIBRATION_SIGNATURE',
             'CAMERA_SERIAL_NUMBER',
-            'PREVIEW_IMAGE_START',
-            'PREVIEW_IMAGE_LENGTH',
-            'PREVIEW_IMAGE_WIDTH',
-            'PREVIEW_IMAGE_HEIGHT',
         ];
 
         foreach ($dngTags as $name) {
@@ -411,7 +407,6 @@ final class ExifTagSourcesTest extends TestCase
                 $constants,
                 sprintf('DNG tag %s should NOT be in ExifTag (moved to DngTag)', $name),
             );
-        }
         }
     }
 
@@ -431,6 +426,12 @@ final class ExifTagSourcesTest extends TestCase
             'IMAGE_TITLE_LEGACY',
             'PHOTOGRAPHER_LEGACY',
             'IMAGE_EDITOR_LEGACY',
+            'PREVIEW_IMAGE_START',
+            'PREVIEW_IMAGE_LENGTH',
+            'PREVIEW_IMAGE_WIDTH',
+            'PREVIEW_IMAGE_HEIGHT',
+            'PREVIEW_IMAGE_COMPRESSION',
+            'PREVIEW_IMAGE_SCALE',
         ];
 
         foreach ($legacyTags as $name) {
