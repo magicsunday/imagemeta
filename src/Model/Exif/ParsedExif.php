@@ -624,71 +624,97 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the tile width defined for the primary or thumbnail image data.
+     * Returns the tile width defined for the primary image data (IFD0).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     * For thumbnail tile width, use thumbnailTileWidth().
      */
     public function tileWidth(): ?int
     {
-        $width = $this->int($this->ifd0, ExifTag::TILE_WIDTH);
-
-        return $width ?? $this->int($this->ifd1, ExifTag::TILE_WIDTH);
+        return $this->int($this->ifd0, ExifTag::TILE_WIDTH);
     }
 
     /**
-     * Returns the tile length defined for the primary or thumbnail image data.
+     * Returns the tile width defined for the thumbnail image data (IFD1).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     */
+    public function thumbnailTileWidth(): ?int
+    {
+        return $this->int($this->ifd1, ExifTag::TILE_WIDTH);
+    }
+
+    /**
+     * Returns the tile length defined for the primary image data (IFD0).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     * For thumbnail tile length, use thumbnailTileLength().
      */
     public function tileLength(): ?int
     {
-        $length = $this->int($this->ifd0, ExifTag::TILE_LENGTH);
-
-        return $length ?? $this->int($this->ifd1, ExifTag::TILE_LENGTH);
+        return $this->int($this->ifd0, ExifTag::TILE_LENGTH);
     }
 
     /**
-     * Returns the tile offsets defined for the primary or thumbnail image data.
+     * Returns the tile length defined for the thumbnail image data (IFD1).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     */
+    public function thumbnailTileLength(): ?int
+    {
+        return $this->int($this->ifd1, ExifTag::TILE_LENGTH);
+    }
+
+    /**
+     * Returns the tile offsets defined for the primary image data (IFD0).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     * For thumbnail tile offsets, use thumbnailTileOffsets().
      *
      * @return list<int>|null
      */
     public function tileOffsets(): ?array
     {
-        $offsets = $this->numericList($this->ifd0, ExifTag::TILE_OFFSETS);
-
-        return $offsets ?? $this->numericList($this->ifd1, ExifTag::TILE_OFFSETS);
+        return $this->numericList($this->ifd0, ExifTag::TILE_OFFSETS);
     }
 
     /**
-     * Returns the tile byte counts defined for the primary or thumbnail image data.
+     * Returns the tile byte counts defined for the primary image data (IFD0).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     * For thumbnail tile byte counts, use thumbnailTileByteCounts().
      *
      * @return list<int>|null
      */
     public function tileByteCounts(): ?array
     {
-        $counts = $this->numericList($this->ifd0, ExifTag::TILE_BYTE_COUNTS);
-
-        return $counts ?? $this->numericList($this->ifd1, ExifTag::TILE_BYTE_COUNTS);
+        return $this->numericList($this->ifd0, ExifTag::TILE_BYTE_COUNTS);
     }
 
     /**
-     * Returns the strip offsets defined for the primary or thumbnail image data.
+     * Returns the strip offsets defined for the primary image data (IFD0).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     * For thumbnail strip offsets, use thumbnailStripOffsets().
      *
      * @return list<int>|null
      */
     public function stripOffsets(): ?array
     {
-        $offsets = $this->numericList($this->ifd0, ExifTag::STRIP_OFFSETS);
-
-        return $offsets ?? $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
+        return $this->numericList($this->ifd0, ExifTag::STRIP_OFFSETS);
     }
 
     /**
-     * Returns the strip byte counts for the primary or thumbnail image data.
+     * Returns the strip byte counts for the primary image data (IFD0).
+     *
+     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     * For thumbnail strip byte counts, use thumbnailStripByteCounts().
      *
      * @return list<int>|null
      */
     public function stripByteCounts(): ?array
     {
-        $counts = $this->numericList($this->ifd0, ExifTag::STRIP_BYTE_COUNTS);
-
-        return $counts ?? $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
+        return $this->numericList($this->ifd0, ExifTag::STRIP_BYTE_COUNTS);
     }
 
     /**
@@ -702,29 +728,25 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the JPEG thumbnail offset, preferring the dedicated thumbnail IFD when present.
+     * Returns the JPEG thumbnail offset from the dedicated thumbnail IFD (IFD1).
      *
      * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 document JPEGInterchangeFormat as
-     * the byte offset to embedded JPEG thumbnails stored in the first IFD.
+     * the byte offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
      */
     public function jpegThumbnailOffset(): ?int
     {
-        $offset = $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT);
-
-        return $offset ?? $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT);
+        return $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT);
     }
 
     /**
-     * Returns the JPEG thumbnail byte length, preferring the dedicated thumbnail IFD when present.
+     * Returns the JPEG thumbnail byte length from the dedicated thumbnail IFD (IFD1).
      *
      * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
-     * as the size in bytes of the JPEG thumbnail stream.
+     * as the size in bytes of the JPEG thumbnail stream in IFD1.
      */
     public function jpegThumbnailLength(): ?int
     {
-        $length = $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
-
-        return $length ?? $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+        return $this->int($this->ifd1, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
     }
 
     /**
