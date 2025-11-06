@@ -29,7 +29,7 @@ jobs:
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php }}
-                    extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader
+                    extensions: ctype, date, fileinfo, hash, iconv, json, pcre, xmlreader, yaml
                     tools: composer:v2
 
             -   name: Validate composer.json and composer.lock
@@ -92,3 +92,19 @@ jobs:
                 if: ${{ always() && steps.install.conclusion == 'success' }}
                 run: |
                     composer ci:test:php:unit
+
+            -   id: compliance
+                name: EXIF/TIFF Compliance Analysis
+                if: ${{ always() && steps.install.conclusion == 'success' }}
+                run: |
+                    php scripts/analyze-exif-compliance.php 50
+
+            -   name: Upload Compliance Report
+                uses: actions/upload-artifact@v4
+                if: always()
+                with:
+                    name: compliance-report-php-${{ matrix.php }}
+                    path: |
+                        docs/compliance-report.json
+                        docs/compliance-report.yaml
+                    retention-days: 30
