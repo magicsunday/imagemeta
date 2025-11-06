@@ -23,7 +23,7 @@ final readonly class Preview
      * Creates a preview/thumbnail metadata value object.
      *
      * Thumbnail parameters (IFD1):
-     * @param bool|null        $hasThumbnail             Whether an embedded thumbnail exists.
+     * @param bool             $hasThumbnail             Whether an embedded thumbnail exists.
      * @param int|null         $thumbnailOffset          Byte offset to the legacy thumbnail (IFD1) payload.
      * @param int|null         $thumbnailLength          Byte length of the legacy thumbnail payload.
      * @param Compression|null $thumbnailCompression     Compression applied to the legacy thumbnail.
@@ -35,7 +35,7 @@ final readonly class Preview
      * @param list<int>|null   $thumbnailStripByteCounts Strip byte counts describing the legacy thumbnail payload.
      *
      * Preview parameters (EXIF 3.0):
-     * @param bool|null        $hasPreview               Whether an embedded preview image exists.
+     * @param bool             $hasPreview               Whether an embedded preview image exists.
      * @param int|null         $previewOffset            Byte offset to the preview image inside the file.
      * @param int|null         $previewLength            Byte length of the preview image data.
      * @param int|null         $previewWidth             Width of the preview image in pixels.
@@ -53,7 +53,7 @@ final readonly class Preview
      */
     public function __construct(
         // Thumbnail parameters (IFD1)
-        public ?bool $hasThumbnail,
+        public bool $hasThumbnail,
         public ?int $thumbnailOffset = null,
         public ?int $thumbnailLength = null,
         public ?Compression $thumbnailCompression = null,
@@ -64,7 +64,7 @@ final readonly class Preview
         public ?array $thumbnailStripOffsets = null,
         public ?array $thumbnailStripByteCounts = null,
         // Preview parameters (EXIF 3.0)
-        public ?bool $hasPreview = null,
+        public bool $hasPreview = false,
         public ?int $previewOffset = null,
         public ?int $previewLength = null,
         public ?int $previewWidth = null,

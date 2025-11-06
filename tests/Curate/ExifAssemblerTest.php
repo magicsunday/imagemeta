@@ -1876,7 +1876,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertNull($structured->video->durationSec);
         self::assertNull($structured->video->frameRate);
         self::assertNull($structured->video->codec);
-        self::assertNull($structured->video->hdr);
+        self::assertFalse($structured->video->hdr);
         self::assertNull($structured->video->transferFunction);
         self::assertNull($structured->video->colorPrimaries);
     }

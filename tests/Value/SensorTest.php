@@ -102,7 +102,7 @@ final class SensorTest extends TestCase
             cfaWidth: null,
             cfaHeight: null,
             sensorType: null,
-            ibis: null,
+            ibis: false,
             cfaPattern: null,
             spectralSensitivity: null,
             oecf: null,
@@ -115,7 +115,7 @@ final class SensorTest extends TestCase
         self::assertNull($sensor->pixelPitchUm);
         self::assertNull($sensor->cfaWidth);
         self::assertNull($sensor->sensorType);
-        self::assertNull($sensor->ibis);
+        self::assertFalse($sensor->ibis);
         self::assertNull($sensor->cfaPattern);
         self::assertNull($sensor->focalPlaneXResolution);
     }

@@ -25,7 +25,7 @@ final readonly class Sensor
      * @param int|null                                                                                                                                                     $cfaWidth                 Width of the repeating CFA pattern.
      * @param int|null                                                                                                                                                     $cfaHeight                Height of the repeating CFA pattern.
      * @param string|null                                                                                                                                                  $sensorType               Sensor technology (e.g. CCD or CMOS).
-     * @param bool|null                                                                                                                                                    $ibis                     Indicates in-body image stabilisation support.
+     * @param bool                                                                                                                                                         $ibis                     Indicates in-body image stabilisation support.
      * @param list<int>|null                                                                                                                                               $cfaPattern               Colour filter array pattern definition.
      * @param string|null                                                                                                                                                  $spectralSensitivity      Spectral sensitivity description.
      * @param array{payload:string, matrix:(array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null)}|null $oecf                     Opto-electronic conversion function payload and decoded matrix.
@@ -35,18 +35,18 @@ final readonly class Sensor
      * @param ResolutionUnit|null                                                                                                                                          $focalPlaneResolutionUnit Focal plane resolution unit.
      */
     public function __construct(
-        public ?float $pixelPitchUm,
-        public ?int $cfaWidth,
-        public ?int $cfaHeight,
-        public ?string $sensorType,
-        public ?bool $ibis,
-        public ?array $cfaPattern,
-        public ?string $spectralSensitivity,
-        public ?array $oecf,
-        public ?array $spatialFrequencyResponse,
-        public ?float $focalPlaneXResolution,
-        public ?float $focalPlaneYResolution,
-        public ?ResolutionUnit $focalPlaneResolutionUnit,
+        public ?float $pixelPitchUm = null,
+        public ?int $cfaWidth = null,
+        public ?int $cfaHeight = null,
+        public ?string $sensorType = null,
+        public bool $ibis = false,
+        public ?array $cfaPattern = null,
+        public ?string $spectralSensitivity = null,
+        public ?array $oecf = null,
+        public ?array $spatialFrequencyResponse = null,
+        public ?float $focalPlaneXResolution = null,
+        public ?float $focalPlaneYResolution = null,
+        public ?ResolutionUnit $focalPlaneResolutionUnit = null,
     ) {
     }
 }

@@ -71,7 +71,7 @@ final class VideoTest extends TestCase
             width: null,
             height: null,
             codec: null,
-            hdr: null,
+            hdr: false,
             transferFunction: null,
             colorPrimaries: null,
         );
@@ -80,6 +80,6 @@ final class VideoTest extends TestCase
         self::assertNull($video->frameRate);
         self::assertNull($video->width);
         self::assertNull($video->codec);
-        self::assertNull($video->hdr);
+        self::assertFalse($video->hdr);
     }
 }
