@@ -31,7 +31,7 @@ final class VideoTest extends TestCase
             width: 1920,
             height: 1080,
             codec: null,
-            hdr: null,
+            hdr: false,
             transferFunction: null,
             colorPrimaries: null,
         );

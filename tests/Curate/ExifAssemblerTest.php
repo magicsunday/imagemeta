@@ -2910,6 +2910,11 @@ final class ExifAssemblerTest extends TestCase
                         continue;
                     }
 
+                    // Allow false for boolean fields (hasThumbnail, hasPreview, etc.)
+                    if (is_bool($nestedValue) && ($nestedValue === false)) {
+                        continue;
+                    }
+
                     self::fail(sprintf('%s::%s::%s expected null/empty, got %s', $name, $field, $nestedField, var_export($nestedValue, true)));
                 }
 
@@ -2921,6 +2926,11 @@ final class ExifAssemblerTest extends TestCase
             }
 
             if (($name === 'standards') && ($field === 'profile') && ($fieldValue === '2.2')) {
+                continue;
+            }
+
+            // Allow false for boolean fields (ibis, hdr, isPrimaryInBurst, etc.)
+            if (is_bool($fieldValue) && ($fieldValue === false)) {
                 continue;
             }
 
