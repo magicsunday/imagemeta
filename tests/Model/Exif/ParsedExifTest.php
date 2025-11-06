@@ -970,8 +970,8 @@ final class ParsedExifTest extends TestCase
         self::assertSame([1024, 2048, 3072], $doc->tileOffsets());
         self::assertSame([4096, 4096, 8192], $doc->tileByteCounts());
         self::assertSame([0, 32768, 65535], $doc->transferFunction());
-        self::assertSame(4096, $doc->jpegThumbnailOffset());
-        self::assertSame(8192, $doc->jpegThumbnailLength());
+        self::assertSame(4096, $doc->thumbnailJpegInterchangeFormat());
+        self::assertSame(8192, $doc->thumbnailJpegInterchangeFormatLength());
         self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $doc->referenceBlackWhite());
         self::assertSame('Jane Doe', $doc->copyright());
     }

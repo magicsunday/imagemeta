@@ -236,8 +236,8 @@ final class TiffExifReaderTest extends TestCase
         self::assertSame(self::CLASSIC_TILE_OFFSETS, $document->tileOffsets());
         self::assertSame(self::CLASSIC_TILE_BYTE_COUNTS, $document->tileByteCounts());
         self::assertSame([0, 32768, 65535], $document->transferFunction());
-        self::assertSame(2048, $document->jpegThumbnailOffset());
-        self::assertSame(4096, $document->jpegThumbnailLength());
+        self::assertSame(2048, $document->thumbnailJpegInterchangeFormat());
+        self::assertSame(4096, $document->thumbnailJpegInterchangeFormatLength());
         self::assertSame([0.0, 255.0, 0.0, 255.0, 0.0, 255.0], $document->referenceBlackWhite());
         self::assertSame('Jane Doe', $document->copyright());
         self::assertSame("Sunrise \u{1F305}", $document->xpTitle());
