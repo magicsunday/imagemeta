@@ -26,3 +26,5 @@ composer.lock
 coverage-report/
 coverage-report-xdebug/
 phpunit-*.xml
+
+test-images/
