@@ -827,44 +827,12 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the preview image offset stored in the EXIF 3.0 preview tags.
-     *
-     * EXIF 3.0 §4.6.12 introduces PreviewImageStart as the byte offset to the optional
-     * high-quality preview, extending the thumbnail handling defined in EXIF 2.32.
-     */
-    public function previewImageOffset(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $context['offset'];
-    }
-
-    /**
-     * Returns the preview image byte length stored in the EXIF 3.0 preview tags.
-     *
-     * EXIF 3.0 §4.6.12 defines PreviewImageLength as the byte size of the preview payload
-     * adjacent to PreviewImageStart.
-     */
-    public function previewImageLength(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $context['length'];
-    }
-
-    /**
      * Indicates whether an EXIF 3.0 preview image is referenced.
      *
      * EXIF 3.0 §4.6.12 requires both PreviewImageStart and PreviewImageLength to be
      * populated for a valid preview entry.
      */
-    public function hasPreviewImage(): ?bool
+    public function hasPreviewImage(): bool
     {
         $context = $this->previewContext;
         if ($context !== null) {
@@ -900,7 +868,39 @@ final readonly class ParsedExif
             return false;
         }
 
-        return null;
+        return false;
+    }
+
+    /**
+     * Returns the preview image offset stored in the EXIF 3.0 preview tags.
+     *
+     * EXIF 3.0 §4.6.12 introduces PreviewImageStart as the byte offset to the optional
+     * high-quality preview, extending the thumbnail handling defined in EXIF 2.32.
+     */
+    public function previewImageOffset(): ?int
+    {
+        $context = $this->previewContext;
+        if ($context === null) {
+            return null;
+        }
+
+        return $context['offset'];
+    }
+
+    /**
+     * Returns the preview image byte length stored in the EXIF 3.0 preview tags.
+     *
+     * EXIF 3.0 §4.6.12 defines PreviewImageLength as the byte size of the preview payload
+     * adjacent to PreviewImageStart.
+     */
+    public function previewImageLength(): ?int
+    {
+        $context = $this->previewContext;
+        if ($context === null) {
+            return null;
+        }
+
+        return $context['length'];
     }
 
     /**
