@@ -1,0 +1,1339 @@
+# Official EXIF and TIFF tag specifications
+# Sources: EXIF 3.0, EXIF 2.32, TIFF 6.0
+# This file serves as the reference for compliance analysis
+
+tiff_tags:
+  # TIFF 6.0 Baseline Tags
+  0x00FE:
+    name: NewSubfileType
+    type: LONG
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    required: false
+    description: Subfile type indicator
+
+  0x00FF:
+    name: SubfileType
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 5.0
+    deprecated: true
+    description: Legacy subfile type
+
+  0x0100:
+    name: ImageWidth
+    type: SHORT|LONG
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    required: true
+    description: Image width in pixels
+
+  0x0101:
+    name: ImageLength
+    type: SHORT|LONG
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    required: true
+    description: Image height in pixels
+
+  0x0102:
+    name: BitsPerSample
+    type: SHORT
+    count: SamplesPerPixel
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 1
+    description: Bits per color component
+
+  0x0103:
+    name: Compression
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 1
+    description: Compression scheme
+
+  0x0106:
+    name: PhotometricInterpretation
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    required: true
+    description: Color space of image data
+
+  0x010D:
+    name: DocumentName
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Name of document from which image was scanned
+
+  0x010E:
+    name: ImageDescription
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Image title or description
+
+  0x010F:
+    name: Make
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Manufacturer of recording equipment
+
+  0x0110:
+    name: Model
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Model name or number of equipment
+
+  0x0111:
+    name: StripOffsets
+    type: SHORT|LONG
+    count: StripsPerImage
+    ifd: IFD0
+    source: TIFF 6.0
+    required: conditional
+    description: Byte offsets to strips
+
+  0x0112:
+    name: Orientation
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 1
+    description: Image orientation
+
+  0x0115:
+    name: SamplesPerPixel
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 1
+    description: Number of components per pixel
+
+  0x0116:
+    name: RowsPerStrip
+    type: SHORT|LONG
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 2^32-1
+    description: Number of rows per strip
+
+  0x0117:
+    name: StripByteCounts
+    type: SHORT|LONG
+    count: StripsPerImage
+    ifd: IFD0
+    source: TIFF 6.0
+    required: conditional
+    description: Bytes per compressed strip
+
+  0x011A:
+    name: XResolution
+    type: RATIONAL
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    required: conditional
+    description: Horizontal resolution
+
+  0x011B:
+    name: YResolution
+    type: RATIONAL
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    required: conditional
+    description: Vertical resolution
+
+  0x011C:
+    name: PlanarConfiguration
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 1
+    description: Pixel component organization
+
+  0x0128:
+    name: ResolutionUnit
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 2
+    description: Unit for XResolution and YResolution
+
+  0x012D:
+    name: TransferFunction
+    type: SHORT
+    count: 3*256
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Transfer function for image
+
+  0x0131:
+    name: Software
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Software used to create image
+
+  0x0132:
+    name: DateTime
+    type: ASCII
+    count: 20
+    ifd: IFD0
+    source: TIFF 6.0
+    description: File change date and time
+
+  0x013B:
+    name: Artist
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Person who created the image
+
+  0x013C:
+    name: HostComputer
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Computer/OS used to create image
+
+  0x013E:
+    name: WhitePoint
+    type: RATIONAL
+    count: 2
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Chromaticity of white point
+
+  0x013F:
+    name: PrimaryChromaticities
+    type: RATIONAL
+    count: 6
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Chromaticities of primaries
+
+  0x0142:
+    name: TileWidth
+    type: SHORT|LONG
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Tile width in pixels
+
+  0x0143:
+    name: TileLength
+    type: SHORT|LONG
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Tile height in pixels
+
+  0x0144:
+    name: TileOffsets
+    type: LONG
+    count: TilesPerImage
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Offsets to data tiles
+
+  0x0145:
+    name: TileByteCounts
+    type: SHORT|LONG
+    count: TilesPerImage
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Byte counts for tiles
+
+  0x014A:
+    name: SubIFDs
+    type: IFD
+    count: any
+    ifd: IFD0
+    source: TIFF Tech Note 1
+    description: Offset to child IFDs
+
+  0x0201:
+    name: JPEGInterchangeFormat
+    type: LONG
+    count: 1
+    ifd: IFD1
+    source: TIFF 6.0
+    description: Offset to JPEG SOI marker
+
+  0x0202:
+    name: JPEGInterchangeFormatLength
+    type: LONG
+    count: 1
+    ifd: IFD1
+    source: TIFF 6.0
+    description: Bytes of JPEG data
+
+  0x0211:
+    name: YCbCrCoefficients
+    type: RATIONAL
+    count: 3
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Matrix coefficients for RGB to YCbCr
+
+  0x0212:
+    name: YCbCrSubSampling
+    type: SHORT
+    count: 2
+    ifd: IFD0
+    source: TIFF 6.0
+    default: [2, 2]
+    description: Subsampling ratio of Y to Cb/Cr
+
+  0x0213:
+    name: YCbCrPositioning
+    type: SHORT
+    count: 1
+    ifd: IFD0
+    source: TIFF 6.0
+    default: 1
+    description: Positioning of subsampled chrominance
+
+  0x0214:
+    name: ReferenceBlackWhite
+    type: RATIONAL
+    count: 6
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Pair of headroom and footroom values
+
+  0x8298:
+    name: Copyright
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: TIFF 6.0
+    description: Copyright notice
+
+  0x000B:
+    name: ProcessingSoftware
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: EXIF 3.0
+    description: Software used for image processing
+
+exif_tags:
+  # EXIF 2.32 / 3.0 Tags
+  0x829A:
+    name: ExposureTime
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Exposure time in seconds
+
+  0x829D:
+    name: FNumber
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: F number
+
+  0x8822:
+    name: ExposureProgram
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Exposure program mode
+
+  0x8824:
+    name: SpectralSensitivity
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Spectral sensitivity of sensor
+
+  0x8827:
+    name: PhotographicSensitivity
+    type: SHORT
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: ISO speed rating
+
+  0x8828:
+    name: OECF
+    type: UNDEFINED
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Opto-Electric Conversion Function
+
+  0x8830:
+    name: SensitivityType
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Type of sensitivity value
+
+  0x8831:
+    name: StandardOutputSensitivity
+    type: LONG
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Standard output sensitivity
+
+  0x8832:
+    name: RecommendedExposureIndex
+    type: LONG
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Recommended exposure index
+
+  0x8833:
+    name: ISOSpeed
+    type: LONG
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: ISO speed value
+
+  0x8834:
+    name: ISOSpeedLatitudeyyy
+    type: LONG
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: ISO speed latitude yyy
+
+  0x8835:
+    name: ISOSpeedLatitudezzz
+    type: LONG
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: ISO speed latitude zzz
+
+  0x9000:
+    name: ExifVersion
+    type: UNDEFINED
+    count: 4
+    ifd: ExifIFD
+    source: EXIF 2.32
+    required: true
+    description: EXIF version
+
+  0x9003:
+    name: DateTimeOriginal
+    type: ASCII
+    count: 20
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Date/time of original image
+
+  0x9004:
+    name: DateTimeDigitized
+    type: ASCII
+    count: 20
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Date/time of digitization
+
+  0x9010:
+    name: OffsetTime
+    type: ASCII
+    count: 7
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Offset from UTC for DateTime
+
+  0x9011:
+    name: OffsetTimeOriginal
+    type: ASCII
+    count: 7
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Offset from UTC for DateTimeOriginal
+
+  0x9012:
+    name: OffsetTimeDigitized
+    type: ASCII
+    count: 7
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Offset from UTC for DateTimeDigitized
+
+  0x9101:
+    name: ComponentsConfiguration
+    type: UNDEFINED
+    count: 4
+    ifd: ExifIFD
+    source: EXIF 2.32
+    required: true
+    description: Meaning of each component
+
+  0x9102:
+    name: CompressedBitsPerPixel
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Compression mode
+
+  0x9201:
+    name: ShutterSpeedValue
+    type: SRATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Shutter speed (APEX)
+
+  0x9202:
+    name: ApertureValue
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Aperture value (APEX)
+
+  0x9203:
+    name: BrightnessValue
+    type: SRATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Brightness (APEX)
+
+  0x9204:
+    name: ExposureBiasValue
+    type: SRATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Exposure bias (APEX)
+
+  0x9205:
+    name: MaxApertureValue
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Maximum lens aperture (APEX)
+
+  0x9206:
+    name: SubjectDistance
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Distance to subject in meters
+
+  0x9207:
+    name: MeteringMode
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Metering mode
+
+  0x9208:
+    name: LightSource
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Light source
+
+  0x9209:
+    name: Flash
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Flash status
+
+  0x920A:
+    name: FocalLength
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Lens focal length in mm
+
+  0x9214:
+    name: SubjectArea
+    type: SHORT
+    count: 2-4
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Subject location and area
+
+  0x927C:
+    name: MakerNote
+    type: UNDEFINED
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Manufacturer notes
+
+  0x9286:
+    name: UserComment
+    type: UNDEFINED
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: User comments
+
+  0x9290:
+    name: SubSecTime
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: DateTime subseconds
+
+  0x9291:
+    name: SubSecTimeOriginal
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: DateTimeOriginal subseconds
+
+  0x9292:
+    name: SubSecTimeDigitized
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: DateTimeDigitized subseconds
+
+  0xA000:
+    name: FlashpixVersion
+    type: UNDEFINED
+    count: 4
+    ifd: ExifIFD
+    source: EXIF 2.32
+    required: true
+    description: Supported Flashpix version
+
+  0xA001:
+    name: ColorSpace
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    required: true
+    description: Color space information
+
+  0xA002:
+    name: PixelXDimension
+    type: SHORT|LONG
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Valid image width
+
+  0xA003:
+    name: PixelYDimension
+    type: SHORT|LONG
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Valid image height
+
+  0xA004:
+    name: RelatedSoundFile
+    type: ASCII
+    count: 13
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Related audio file
+
+  0xA20B:
+    name: FlashEnergy
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Flash energy in BCPS
+
+  0xA20E:
+    name: FocalPlaneXResolution
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Focal plane X resolution
+
+  0xA20F:
+    name: FocalPlaneYResolution
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Focal plane Y resolution
+
+  0xA210:
+    name: FocalPlaneResolutionUnit
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Focal plane resolution unit
+
+  0xA214:
+    name: SubjectLocation
+    type: SHORT
+    count: 2
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Subject location
+
+  0xA215:
+    name: ExposureIndex
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Exposure index
+
+  0xA217:
+    name: SensingMethod
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Image sensor type
+
+  0xA300:
+    name: FileSource
+    type: UNDEFINED
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: File source
+
+  0xA301:
+    name: SceneType
+    type: UNDEFINED
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Scene type
+
+  0xA302:
+    name: CFAPattern
+    type: UNDEFINED
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: CFA pattern
+
+  0xA401:
+    name: CustomRendered
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Custom image processing
+
+  0xA402:
+    name: ExposureMode
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Exposure mode
+
+  0xA403:
+    name: WhiteBalance
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: White balance mode
+
+  0xA404:
+    name: DigitalZoomRatio
+    type: RATIONAL
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Digital zoom ratio
+
+  0xA405:
+    name: FocalLengthIn35mmFilm
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Focal length in 35mm
+
+  0xA406:
+    name: SceneCaptureType
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Scene capture type
+
+  0xA407:
+    name: GainControl
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Gain control
+
+  0xA408:
+    name: Contrast
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Contrast processing
+
+  0xA409:
+    name: Saturation
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Saturation processing
+
+  0xA40A:
+    name: Sharpness
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Sharpness processing
+
+  0xA40C:
+    name: SubjectDistanceRange
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Subject distance range
+
+  0xA420:
+    name: ImageUniqueID
+    type: ASCII
+    count: 33
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Unique image identifier
+
+  0xA430:
+    name: CameraOwnerName
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Camera owner name
+
+  0xA431:
+    name: BodySerialNumber
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Camera body serial number
+
+  0xA432:
+    name: LensSpecification
+    type: RATIONAL
+    count: 4
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Lens specification
+
+  0xA433:
+    name: LensMake
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Lens manufacturer
+
+  0xA434:
+    name: LensModel
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Lens model
+
+  0xA435:
+    name: LensSerialNumber
+    type: ASCII
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Lens serial number
+
+  0xA436:
+    name: ImageTitle
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: EXIF 3.0
+    description: Image title
+
+  0xA437:
+    name: Photographer
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: EXIF 3.0
+    description: Photographer name
+
+  0xA438:
+    name: ImageEditor
+    type: ASCII
+    count: any
+    ifd: IFD0
+    source: EXIF 3.0
+    description: Image editor name
+
+  0xA460:
+    name: CompositeImage
+    type: SHORT
+    count: 1
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Composite image indicator
+
+  0xA461:
+    name: SourceImageNumberOfCompositeImage
+    type: SHORT
+    count: 2
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Source image number
+
+  0xA462:
+    name: SourceExposureTimesOfCompositeImage
+    type: UNDEFINED
+    count: any
+    ifd: ExifIFD
+    source: EXIF 2.32
+    description: Source exposure times
+
+  0xC51B:
+    name: PreviewImageStart
+    type: LONG|IFD
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image start offset
+
+  0xC51C:
+    name: PreviewImageLength
+    type: LONG
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image length
+
+  0xC51D:
+    name: PreviewImageEncoding
+    type: SHORT
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image encoding
+
+  0xC51E:
+    name: PreviewImageMIMEType
+    type: ASCII
+    count: any
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image MIME type
+
+  0xC51F:
+    name: PreviewImageWidth
+    type: LONG
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image width
+
+  0xC520:
+    name: PreviewImageHeight
+    type: LONG
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image height
+
+  0xC521:
+    name: PreviewImageColorSpace
+    type: SHORT
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image color space
+
+  0xC522:
+    name: PreviewImageBitDepth
+    type: SHORT
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image bit depth
+
+  0xC523:
+    name: PreviewDateTime
+    type: ASCII
+    count: 20
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview date/time
+
+  0xC524:
+    name: PreviewDateTimeDigitized
+    type: ASCII
+    count: 20
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview digitized date/time
+
+  0xC62F:
+    name: PreviewImageScale
+    type: RATIONAL
+    count: 1
+    ifd: PreviewIFD
+    source: EXIF 3.0
+    description: Preview image scale
+
+gps_tags:
+  # GPS IFD Tags (EXIF 2.32 / 3.0)
+  0x0000:
+    name: GPSVersionID
+    type: BYTE
+    count: 4
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: true
+    description: GPS tag version
+
+  0x0001:
+    name: GPSLatitudeRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: North or South latitude
+
+  0x0002:
+    name: GPSLatitude
+    type: RATIONAL
+    count: 3
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Latitude
+
+  0x0003:
+    name: GPSLongitudeRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: East or West longitude
+
+  0x0004:
+    name: GPSLongitude
+    type: RATIONAL
+    count: 3
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Longitude
+
+  0x0005:
+    name: GPSAltitudeRef
+    type: BYTE
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Altitude reference
+
+  0x0006:
+    name: GPSAltitude
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Altitude
+
+  0x0007:
+    name: GPSTimeStamp
+    type: RATIONAL
+    count: 3
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS time (atomic clock)
+
+  0x0008:
+    name: GPSSatellites
+    type: ASCII
+    count: any
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS satellites used
+
+  0x0009:
+    name: GPSStatus
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS receiver status
+
+  0x000A:
+    name: GPSMeasureMode
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS measurement mode
+
+  0x000B:
+    name: GPSDOP
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS DOP
+
+  0x000C:
+    name: GPSSpeedRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Speed unit
+
+  0x000D:
+    name: GPSSpeed
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS receiver speed
+
+  0x000E:
+    name: GPSTrackRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Direction reference
+
+  0x000F:
+    name: GPSTrack
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Direction of movement
+
+  0x0010:
+    name: GPSImgDirectionRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Image direction reference
+
+  0x0011:
+    name: GPSImgDirection
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Image direction
+
+  0x0012:
+    name: GPSMapDatum
+    type: ASCII
+    count: any
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Geodetic survey data
+
+  0x0013:
+    name: GPSDestLatitudeRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination latitude ref
+
+  0x0014:
+    name: GPSDestLatitude
+    type: RATIONAL
+    count: 3
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination latitude
+
+  0x0015:
+    name: GPSDestLongitudeRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination longitude ref
+
+  0x0016:
+    name: GPSDestLongitude
+    type: RATIONAL
+    count: 3
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination longitude
+
+  0x0017:
+    name: GPSDestBearingRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination bearing ref
+
+  0x0018:
+    name: GPSDestBearing
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination bearing
+
+  0x0019:
+    name: GPSDestDistanceRef
+    type: ASCII
+    count: 2
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination distance ref
+
+  0x001A:
+    name: GPSDestDistance
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Destination distance
+
+  0x001B:
+    name: GPSProcessingMethod
+    type: UNDEFINED
+    count: any
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS processing method
+
+  0x001C:
+    name: GPSAreaInformation
+    type: UNDEFINED
+    count: any
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS area information
+
+  0x001D:
+    name: GPSDateStamp
+    type: ASCII
+    count: 11
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS date
+
+  0x001E:
+    name: GPSDifferential
+    type: SHORT
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: GPS differential correction
+
+  0x001F:
+    name: GPSHPositioningError
+    type: RATIONAL
+    count: 1
+    ifd: GPSIFD
+    source: EXIF 2.32
+    description: Horizontal positioning error
+
+interop_tags:
+  # Interoperability IFD Tags
+  0x0001:
+    name: InteroperabilityIndex
+    type: ASCII
+    count: any
+    ifd: InteropIFD
+    source: EXIF 2.32
+    required: true
+    description: Interoperability identification
+
+  0x0002:
+    name: InteroperabilityVersion
+    type: UNDEFINED
+    count: 4
+    ifd: InteropIFD
+    source: EXIF 2.32
+    description: Interoperability version
+
+  0x1000:
+    name: RelatedImageFileFormat
+    type: ASCII
+    count: any
+    ifd: InteropIFD
+    source: EXIF 2.32
+    description: Related image file format
+
+  0x1001:
+    name: RelatedImageWidth
+    type: SHORT|LONG
+    count: 1
+    ifd: InteropIFD
+    source: EXIF 2.32
+    description: Related image width
+
+  0x1002:
+    name: RelatedImageLength
+    type: SHORT|LONG
+    count: 1
+    ifd: InteropIFD
+    source: EXIF 2.32
+    description: Related image height

@@ -1,0 +1,2372 @@
+---
+generated: "2025-11-06T06:28:20+00:00"
+summary:
+  total_spec_tags: 163
+  implemented: 105
+  partial: 58
+  missing: 0
+  extra: 62
+  coverage_percent: 64.42
+categories:
+  tiff_tags:
+    254:
+      tag_id: "0x00FE"
+      name: NewSubfileType
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    255:
+      tag_id: "0x00FF"
+      name: SubfileType
+      ifd: IFD0
+      source: TIFF 5.0
+      required: false
+      deprecated: true
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+      - Tag is deprecated in specification
+    256:
+      tag_id: "0x0100"
+      name: ImageWidth
+      ifd: IFD0
+      source: TIFF 6.0
+      required: true
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.imageWidth
+      notes: []
+    257:
+      tag_id: "0x0101"
+      name: ImageLength
+      ifd: IFD0
+      source: TIFF 6.0
+      required: true
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    258:
+      tag_id: "0x0102"
+      name: BitsPerSample
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.bitsPerSample
+      notes: []
+    259:
+      tag_id: "0x0103"
+      name: Compression
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.compression
+      notes: []
+    262:
+      tag_id: "0x0106"
+      name: PhotometricInterpretation
+      ifd: IFD0
+      source: TIFF 6.0
+      required: true
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.photometric
+      notes: []
+    269:
+      tag_id: "0x010D"
+      name: DocumentName
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.documentName
+      notes: []
+    270:
+      tag_id: "0x010E"
+      name: ImageDescription
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.imageTitle
+      - raw.imageDescription
+      notes: []
+    271:
+      tag_id: "0x010F"
+      name: Make
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.cameraMake
+      notes: []
+    272:
+      tag_id: "0x0110"
+      name: Model
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.cameraModel
+      notes: []
+    273:
+      tag_id: "0x0111"
+      name: StripOffsets
+      ifd: IFD0
+      source: TIFF 6.0
+      required: conditional
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.stripOffsets
+      notes: []
+    274:
+      tag_id: "0x0112"
+      name: Orientation
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.orientation
+      notes: []
+    277:
+      tag_id: "0x0115"
+      name: SamplesPerPixel
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.samplesPerPixel
+      notes: []
+    278:
+      tag_id: "0x0116"
+      name: RowsPerStrip
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.rowsPerStrip
+      notes: []
+    279:
+      tag_id: "0x0117"
+      name: StripByteCounts
+      ifd: IFD0
+      source: TIFF 6.0
+      required: conditional
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.stripByteCounts
+      notes: []
+    282:
+      tag_id: "0x011A"
+      name: XResolution
+      ifd: IFD0
+      source: TIFF 6.0
+      required: conditional
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    283:
+      tag_id: "0x011B"
+      name: YResolution
+      ifd: IFD0
+      source: TIFF 6.0
+      required: conditional
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    284:
+      tag_id: "0x011C"
+      name: PlanarConfiguration
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.planarConfiguration
+      notes: []
+    296:
+      tag_id: "0x0128"
+      name: ResolutionUnit
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.resolutionUnit
+      notes: []
+    301:
+      tag_id: "0x012D"
+      name: TransferFunction
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.transferFunction
+      notes: []
+    305:
+      tag_id: "0x0131"
+      name: Software
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.processingSoftware
+      notes: []
+    306:
+      tag_id: "0x0132"
+      name: DateTime
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    315:
+      tag_id: "0x013B"
+      name: Artist
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.photographer
+      - raw.artist
+      notes: []
+    316:
+      tag_id: "0x013C"
+      name: HostComputer
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hostComputer
+      notes: []
+    318:
+      tag_id: "0x013E"
+      name: WhitePoint
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.whitePoint
+      notes: []
+    319:
+      tag_id: "0x013F"
+      name: PrimaryChromaticities
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.primaryChromaticities
+      notes: []
+    322:
+      tag_id: "0x0142"
+      name: TileWidth
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.tileWidth
+      notes: []
+    323:
+      tag_id: "0x0143"
+      name: TileLength
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.tileLength
+      notes: []
+    324:
+      tag_id: "0x0144"
+      name: TileOffsets
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.tileOffsets
+      notes: []
+    325:
+      tag_id: "0x0145"
+      name: TileByteCounts
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.tileByteCounts
+      notes: []
+    330:
+      tag_id: "0x014A"
+      name: SubIFDs
+      ifd: IFD0
+      source: TIFF Tech Note 1
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    513:
+      tag_id: "0x0201"
+      name: JPEGInterchangeFormat
+      ifd: IFD1
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    514:
+      tag_id: "0x0202"
+      name: JPEGInterchangeFormatLength
+      ifd: IFD1
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    529:
+      tag_id: "0x0211"
+      name: YCbCrCoefficients
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    530:
+      tag_id: "0x0212"
+      name: YCbCrSubSampling
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    531:
+      tag_id: "0x0213"
+      name: YCbCrPositioning
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    532:
+      tag_id: "0x0214"
+      name: ReferenceBlackWhite
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.referenceBlackWhite
+      notes: []
+    33432:
+      tag_id: "0x8298"
+      name: Copyright
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.copyright
+      notes: []
+    11:
+      tag_id: "0x000B"
+      name: ProcessingSoftware
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.processingSoftware
+      notes: []
+  exif_tags:
+    33434:
+      tag_id: "0x829A"
+      name: ExposureTime
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.exposureTime
+      notes: []
+    33437:
+      tag_id: "0x829D"
+      name: FNumber
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    34850:
+      tag_id: "0x8822"
+      name: ExposureProgram
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.exposureProgram
+      notes: []
+    34852:
+      tag_id: "0x8824"
+      name: SpectralSensitivity
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.spectralSensitivity
+      notes: []
+    34855:
+      tag_id: "0x8827"
+      name: PhotographicSensitivity
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.iso
+      - raw.isoBestEffort
+      notes: []
+    34856:
+      tag_id: "0x8828"
+      name: OECF
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.oecfPayload
+      notes: []
+    34864:
+      tag_id: "0x8830"
+      name: SensitivityType
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.iso
+      notes: []
+    34865:
+      tag_id: "0x8831"
+      name: StandardOutputSensitivity
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.iso
+      - raw.isoBestEffort
+      - raw.sensitivityTagPriority
+      notes: []
+    34866:
+      tag_id: "0x8832"
+      name: RecommendedExposureIndex
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.iso
+      - raw.isoBestEffort
+      - raw.sensitivityTagPriority
+      notes: []
+    34867:
+      tag_id: "0x8833"
+      name: ISOSpeed
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    34868:
+      tag_id: "0x8834"
+      name: ISOSpeedLatitudeyyy
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    34869:
+      tag_id: "0x8835"
+      name: ISOSpeedLatitudezzz
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    36864:
+      tag_id: "0x9000"
+      name: ExifVersion
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: true
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.__construct
+      notes: []
+    36867:
+      tag_id: "0x9003"
+      name: DateTimeOriginal
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    36868:
+      tag_id: "0x9004"
+      name: DateTimeDigitized
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    36880:
+      tag_id: "0x9010"
+      name: OffsetTime
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.offsetTime
+      - raw.offsetTimeRaw
+      notes: []
+    36881:
+      tag_id: "0x9011"
+      name: OffsetTimeOriginal
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.offsetTimeOriginal
+      - raw.offsetTimeOriginalRaw
+      notes: []
+    36882:
+      tag_id: "0x9012"
+      name: OffsetTimeDigitized
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.offsetTimeDigitized
+      - raw.offsetTimeDigitizedRaw
+      notes: []
+    37121:
+      tag_id: "0x9101"
+      name: ComponentsConfiguration
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: true
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.componentsConfiguration
+      - raw.componentsConfigurationLabels
+      - raw.componentsConfigurationDescription
+      notes: []
+    37122:
+      tag_id: "0x9102"
+      name: CompressedBitsPerPixel
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.compressedBitsPerPixel
+      notes: []
+    37377:
+      tag_id: "0x9201"
+      name: ShutterSpeedValue
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.shutterSpeedValue
+      - raw.shutterSpeedSeconds
+      notes: []
+    37378:
+      tag_id: "0x9202"
+      name: ApertureValue
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.apertureValue
+      notes: []
+    37379:
+      tag_id: "0x9203"
+      name: BrightnessValue
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.brightnessValue
+      notes: []
+    37380:
+      tag_id: "0x9204"
+      name: ExposureBiasValue
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.exposureBias
+      notes: []
+    37381:
+      tag_id: "0x9205"
+      name: MaxApertureValue
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.maxApertureApex
+      notes: []
+    37382:
+      tag_id: "0x9206"
+      name: SubjectDistance
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.subjectDistance
+      notes: []
+    37383:
+      tag_id: "0x9207"
+      name: MeteringMode
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.meteringMode
+      notes: []
+    37384:
+      tag_id: "0x9208"
+      name: LightSource
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.lightSource
+      notes: []
+    37385:
+      tag_id: "0x9209"
+      name: Flash
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.flash
+      notes: []
+    37386:
+      tag_id: "0x920A"
+      name: FocalLength
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.focalLengthMm
+      notes: []
+    37396:
+      tag_id: "0x9214"
+      name: SubjectArea
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.subjectArea
+      notes: []
+    37500:
+      tag_id: "0x927C"
+      name: MakerNote
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    37510:
+      tag_id: "0x9286"
+      name: UserComment
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.rawUserComment
+      notes: []
+    37520:
+      tag_id: "0x9290"
+      name: SubSecTime
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.subSecTime
+      notes: []
+    37521:
+      tag_id: "0x9291"
+      name: SubSecTimeOriginal
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.subSecTimeOriginal
+      notes: []
+    37522:
+      tag_id: "0x9292"
+      name: SubSecTimeDigitized
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.subSecTimeDigitized
+      notes: []
+    40960:
+      tag_id: "0xA000"
+      name: FlashpixVersion
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: true
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.flashpixVersion
+      notes: []
+    40961:
+      tag_id: "0xA001"
+      name: ColorSpace
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: true
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.colorSpace
+      notes: []
+    40962:
+      tag_id: "0xA002"
+      name: PixelXDimension
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    40963:
+      tag_id: "0xA003"
+      name: PixelYDimension
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    40964:
+      tag_id: "0xA004"
+      name: RelatedSoundFile
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.relatedSoundFile
+      notes: []
+    41483:
+      tag_id: "0xA20B"
+      name: FlashEnergy
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.flashEnergy
+      notes: []
+    41486:
+      tag_id: "0xA20E"
+      name: FocalPlaneXResolution
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    41487:
+      tag_id: "0xA20F"
+      name: FocalPlaneYResolution
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    41488:
+      tag_id: "0xA210"
+      name: FocalPlaneResolutionUnit
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.focalPlaneResolutionUnit
+      notes: []
+    41492:
+      tag_id: "0xA214"
+      name: SubjectLocation
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.subjectLocation
+      notes: []
+    41493:
+      tag_id: "0xA215"
+      name: ExposureIndex
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.iso
+      - raw.isoBestEffort
+      - raw.exposureIndex
+      notes: []
+    41495:
+      tag_id: "0xA217"
+      name: SensingMethod
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.sensingMethod
+      notes: []
+    41728:
+      tag_id: "0xA300"
+      name: FileSource
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.fileSource
+      notes: []
+    41729:
+      tag_id: "0xA301"
+      name: SceneType
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.sceneType
+      notes: []
+    41730:
+      tag_id: "0xA302"
+      name: CFAPattern
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    41985:
+      tag_id: "0xA401"
+      name: CustomRendered
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.customRendered
+      notes: []
+    41986:
+      tag_id: "0xA402"
+      name: ExposureMode
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.exposureMode
+      notes: []
+    41987:
+      tag_id: "0xA403"
+      name: WhiteBalance
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.whiteBalance
+      notes: []
+    41988:
+      tag_id: "0xA404"
+      name: DigitalZoomRatio
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.digitalZoomRatio
+      notes: []
+    41989:
+      tag_id: "0xA405"
+      name: FocalLengthIn35mmFilm
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    41990:
+      tag_id: "0xA406"
+      name: SceneCaptureType
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.sceneCaptureType
+      notes: []
+    41991:
+      tag_id: "0xA407"
+      name: GainControl
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.gainControl
+      notes: []
+    41992:
+      tag_id: "0xA408"
+      name: Contrast
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.contrast
+      notes: []
+    41993:
+      tag_id: "0xA409"
+      name: Saturation
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.saturation
+      notes: []
+    41994:
+      tag_id: "0xA40A"
+      name: Sharpness
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.sharpness
+      notes: []
+    41996:
+      tag_id: "0xA40C"
+      name: SubjectDistanceRange
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.subjectDistanceRange
+      notes: []
+    42016:
+      tag_id: "0xA420"
+      name: ImageUniqueID
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.imageUniqueId
+      notes: []
+    42032:
+      tag_id: "0xA430"
+      name: CameraOwnerName
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.ownerName
+      notes: []
+    42033:
+      tag_id: "0xA431"
+      name: BodySerialNumber
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.bodySerialNumber
+      notes: []
+    42034:
+      tag_id: "0xA432"
+      name: LensSpecification
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.lensSpecification
+      notes: []
+    42035:
+      tag_id: "0xA433"
+      name: LensMake
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.lensMake
+      notes: []
+    42036:
+      tag_id: "0xA434"
+      name: LensModel
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.lensModel
+      notes: []
+    42037:
+      tag_id: "0xA435"
+      name: LensSerialNumber
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.lensSerialNumber
+      notes: []
+    42038:
+      tag_id: "0xA436"
+      name: ImageTitle
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.imageTitle
+      - raw.documentName
+      notes: []
+    42039:
+      tag_id: "0xA437"
+      name: Photographer
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.photographer
+      notes: []
+    42040:
+      tag_id: "0xA438"
+      name: ImageEditor
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.imageEditor
+      notes: []
+    42080:
+      tag_id: "0xA460"
+      name: CompositeImage
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.compositeImage
+      notes: []
+    42081:
+      tag_id: "0xA461"
+      name: SourceImageNumberOfCompositeImage
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.sourceImageNumberOfCompositeImage
+      notes: []
+    42082:
+      tag_id: "0xA462"
+      name: SourceExposureTimesOfCompositeImage
+      ifd: ExifIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.sourceExposureTimesOfCompositeImage
+      notes: []
+    50459:
+      tag_id: "0xC51B"
+      name: PreviewImageStart
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.resolvePreviewContext
+      notes: []
+    50460:
+      tag_id: "0xC51C"
+      name: PreviewImageLength
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.resolvePreviewContext
+      notes: []
+    50461:
+      tag_id: "0xC51D"
+      name: PreviewImageEncoding
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.previewImageEncoding
+      notes: []
+    50462:
+      tag_id: "0xC51E"
+      name: PreviewImageMIMEType
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: partial
+      constant_defined: true
+      mapping_exists: false
+      vo_getter: []
+      notes:
+      - Missing entry in exif-map.yaml
+      - No VO getter methods mapped
+    50463:
+      tag_id: "0xC51F"
+      name: PreviewImageWidth
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.previewImageWidth
+      notes: []
+    50464:
+      tag_id: "0xC520"
+      name: PreviewImageHeight
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.previewImageHeight
+      notes: []
+    50465:
+      tag_id: "0xC521"
+      name: PreviewImageColorSpace
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.previewColorSpace
+      notes: []
+    50466:
+      tag_id: "0xC522"
+      name: PreviewImageBitDepth
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.previewImageBitDepth
+      notes: []
+    50467:
+      tag_id: "0xC523"
+      name: PreviewDateTime
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.previewDateTimeRaw
+      notes: []
+    50468:
+      tag_id: "0xC524"
+      name: PreviewDateTimeDigitized
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.previewDateTimeDigitizedRaw
+      notes: []
+    50735:
+      tag_id: "0xC62F"
+      name: PreviewImageScale
+      ifd: PreviewIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.hasPreviewImage
+      - raw.previewImageScale
+      notes: []
+  gps_tags:
+  - tag_id: "0x0000"
+    name: GPSVersionID
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: true
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0001"
+    name: GPSLatitudeRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0002"
+    name: GPSLatitude
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0003"
+    name: GPSLongitudeRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0004"
+    name: GPSLongitude
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0005"
+    name: GPSAltitudeRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0006"
+    name: GPSAltitude
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0007"
+    name: GPSTimeStamp
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0008"
+    name: GPSSatellites
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0009"
+    name: GPSStatus
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x000A"
+    name: GPSMeasureMode
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x000B"
+    name: GPSDOP
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x000C"
+    name: GPSSpeedRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x000D"
+    name: GPSSpeed
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x000E"
+    name: GPSTrackRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x000F"
+    name: GPSTrack
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0010"
+    name: GPSImgDirectionRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0011"
+    name: GPSImgDirection
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0012"
+    name: GPSMapDatum
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0013"
+    name: GPSDestLatitudeRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0014"
+    name: GPSDestLatitude
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0015"
+    name: GPSDestLongitudeRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0016"
+    name: GPSDestLongitude
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0017"
+    name: GPSDestBearingRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0018"
+    name: GPSDestBearing
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x0019"
+    name: GPSDestDistanceRef
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x001A"
+    name: GPSDestDistance
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x001B"
+    name: GPSProcessingMethod
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x001C"
+    name: GPSAreaInformation
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x001D"
+    name: GPSDateStamp
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x001E"
+    name: GPSDifferential
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  - tag_id: "0x001F"
+    name: GPSHPositioningError
+    ifd: GPSIFD
+    source: EXIF 2.32
+    required: false
+    deprecated: false
+    status: partial
+    constant_defined: true
+    mapping_exists: false
+    vo_getter: []
+    notes:
+    - Missing entry in exif-map.yaml
+    - No VO getter methods mapped
+  interop_tags:
+    1:
+      tag_id: "0x0001"
+      name: InteroperabilityIndex
+      ifd: InteropIFD
+      source: EXIF 2.32
+      required: true
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.interopIndex
+      notes: []
+    2:
+      tag_id: "0x0002"
+      name: InteroperabilityVersion
+      ifd: InteropIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.interopVersion
+      notes: []
+    4096:
+      tag_id: "0x1000"
+      name: RelatedImageFileFormat
+      ifd: InteropIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.relatedImageFileFormat
+      notes: []
+    4097:
+      tag_id: "0x1001"
+      name: RelatedImageWidth
+      ifd: InteropIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.relatedImageWidth
+      notes: []
+    4098:
+      tag_id: "0x1002"
+      name: RelatedImageLength
+      ifd: InteropIFD
+      source: EXIF 2.32
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      mapping_exists: true
+      vo_getter:
+      - raw.relatedImageLength
+      notes: []
+extra_tags:
+- tag_id: "0x9C9B"
+  constant_name: XP_TITLE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9C9C"
+  constant_name: XP_COMMENT
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9C9D"
+  constant_name: XP_AUTHOR
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9C9E"
+  constant_name: XP_KEYWORDS
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9C9F"
+  constant_name: XP_SUBJECT
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x0320"
+  constant_name: IMAGE_TITLE_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xE92D"
+  constant_name: PHOTOGRAPHER_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xE92E"
+  constant_name: IMAGE_EDITOR_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC525"
+  constant_name: PREVIEW_IMAGE_COMPRESSION
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC526"
+  constant_name: PREVIEW_IMAGE_SCALE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x8769"
+  constant_name: EXIF_IFD_POINTER
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x8825"
+  constant_name: GPS_IFD_POINTER
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA005"
+  constant_name: INTEROPERABILITY_IFD_POINTER
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x828D"
+  constant_name: CFA_REPEAT_PATTERN_DIM
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x828F"
+  constant_name: BATTERY_LEVEL
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC4A5"
+  constant_name: PRINT_IMAGE_MATCHING
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC635"
+  constant_name: MAKER_NOTE_SAFETY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x8829"
+  constant_name: INTERLACE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x882A"
+  constant_name: TIME_ZONE_OFFSET
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x882B"
+  constant_name: SELF_TIMER_MODE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA439"
+  constant_name: RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA43A"
+  constant_name: RAW_DEVELOPING_SOFTWARE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA43B"
+  constant_name: IMAGE_EDITING_SOFTWARE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA43C"
+  constant_name: METADATA_EDITING_SOFTWARE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA500"
+  constant_name: GAMMA
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA20C"
+  constant_name: SPATIAL_FREQUENCY_RESPONSE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA20D"
+  constant_name: NOISE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA211"
+  constant_name: IMAGE_NUMBER
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA212"
+  constant_name: SECURITY_CLASSIFICATION
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA213"
+  constant_name: IMAGE_HISTORY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA216"
+  constant_name: TIFF_EP_STANDARD_ID
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xA40B"
+  constant_name: DEVICE_SETTING_DESCRIPTION
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6F3"
+  constant_name: CAMERA_CALIBRATION_SIGNATURE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6F4"
+  constant_name: PROFILE_CALIBRATION_SIGNATURE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6F5"
+  constant_name: PROFILE_HUE_SAT_MAP_ENCODINGS
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6F6"
+  constant_name: PROFILE_HUE_SAT_MAP_DIMS
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6F7"
+  constant_name: PROFILE_HUE_SAT_MAP_DATA_1
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6F8"
+  constant_name: PROFILE_HUE_SAT_MAP_DATA_2
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6F9"
+  constant_name: PROFILE_HUE_SAT_MAP_DATA_3
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6FA"
+  constant_name: PROFILE_LOOK_TABLE_DIMS
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6FB"
+  constant_name: PROFILE_LOOK_TABLE_DATA
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xC6FC"
+  constant_name: PROFILE_TONE_CURVE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9400"
+  constant_name: TEMPERATURE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9401"
+  constant_name: HUMIDITY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9402"
+  constant_name: PRESSURE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9403"
+  constant_name: WATER_DEPTH
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9404"
+  constant_name: ACCELERATION
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9405"
+  constant_name: CAMERA_ELEVATION_ANGLE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9406"
+  constant_name: CAMERA_YAW_DEGREE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9407"
+  constant_name: CAMERA_PITCH_DEGREE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9408"
+  constant_name: CAMERA_ROLL_DEGREE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x9409"
+  constant_name: GIMBAL_YAW_DEGREE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x940A"
+  constant_name: GIMBAL_PITCH_DEGREE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x940B"
+  constant_name: GIMBAL_ROLL_DEGREE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x940C"
+  constant_name: AIRCRAFT_MAKE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x940D"
+  constant_name: AIRCRAFT_MODEL
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xE92F"
+  constant_name: CAMERA_FIRMWARE_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xE930"
+  constant_name: RAW_DEVELOPING_SOFTWARE_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xE931"
+  constant_name: IMAGE_EDITING_SOFTWARE_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0xE932"
+  constant_name: METADATA_EDITING_SOFTWARE_LEGACY
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x013D"
+  constant_name: PREDICTOR
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+- tag_id: "0x8773"
+  constant_name: ICC_PROFILE
+  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
+...
