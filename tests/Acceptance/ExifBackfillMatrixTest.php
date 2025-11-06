@@ -117,8 +117,8 @@ use PHPUnit\Framework\TestCase;
  *         length: int|null,
  *     },
  *     preview: array{
- *         hasThumbnail: bool|null,
- *         hasPreview: bool|null,
+ *         hasThumbnail: bool,
+ *         hasPreview: bool,
  *         previewOffset: int|null,
  *         previewLength: int|null,
  *         previewWidth: int|null,
@@ -172,8 +172,8 @@ use PHPUnit\Framework\TestCase;
  *         length: int|null,
  *     },
  *     preview: array{
- *         hasThumbnail: bool|null,
- *         hasPreview: bool|null,
+ *         hasThumbnail: bool,
+ *         hasPreview: bool,
  *         previewOffset: int|null,
  *         previewLength: int|null,
  *         previewWidth: int|null,
