@@ -81,8 +81,6 @@ final readonly class ParsedExif
 
     private string $exifProfile;
 
-    private bool $exifThreeOrNewer;
-
     /**
      * @param Ifd                   $ifd0           Root IFD of the TIFF structure.
      * @param Ifd|null              $exifIfd        Sub IFD containing EXIF-specific tags.
@@ -107,7 +105,6 @@ final readonly class ParsedExif
         $this->exifVersionMissingOrEmpty = $rawVersion === null || trim($rawVersion) === '';
         $this->exifVersion               = ValueConverters::toExifVersion($rawVersion);
         $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
-        $this->exifThreeOrNewer          = (float) $this->exifProfile >= 3.0;
     }
 
     /**
@@ -387,10 +384,6 @@ final readonly class ParsedExif
      */
     public function hostComputer(): ?string
     {
-        if ($this->exifThreeOrNewer) {
-            return null;
-        }
-
         return $this->str($this->ifd0, TiffTag::HOST_COMPUTER);
     }
 
@@ -1394,11 +1387,7 @@ final readonly class ParsedExif
      */
     public function cameraFirmware(): ?string
     {
-        if ($this->exifThreeOrNewer) {
-            return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
-        }
-
-        return null;
+        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
     }
 
     /**
@@ -1414,11 +1403,7 @@ final readonly class ParsedExif
      */
     public function imageEditingSoftware(): ?string
     {
-        if ($this->exifThreeOrNewer) {
-            return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
-        }
-
-        return null;
+        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
     }
 
     /**
@@ -1426,11 +1411,7 @@ final readonly class ParsedExif
      */
     public function metadataEditingSoftware(): ?string
     {
-        if ($this->exifThreeOrNewer) {
-            return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
-        }
-
-        return null;
+        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
     }
 
     /**
@@ -1441,6 +1422,7 @@ final readonly class ParsedExif
     public function dateTimeOriginalRaw(): ?string
     {
         $value = $this->str($this->exifIfd, ExifTag::DATETIME_ORIGINAL);
+
         if ($value !== null) {
             return $value;
         }
