@@ -44,6 +44,56 @@ final class ComplianceAnalyzer
     private const string OUTPUT_JSON = __DIR__ . '/../docs/compliance-report.json';
     private const string OUTPUT_YAML = __DIR__ . '/../docs/compliance-report.yaml';
 
+    /**
+     * Maps EXIF/TIFF tag names to their corresponding getter method names in ParsedExif.
+     * This handles cases where the method name differs from the tag name for better API design.
+     */
+    private const array TAG_TO_METHOD_MAP = [
+        // Image dimensions - use friendly names
+        'ImageLength' => ['imageHeight'],
+        'PixelXDimension' => ['imageWidth'],
+        'PixelYDimension' => ['imageHeight'],
+        
+        // ISO/Sensitivity - consolidated into iso()
+        'PhotographicSensitivity' => ['iso', 'isoBestEffort'],
+        'ISOSpeed' => ['iso', 'isoBestEffort'],
+        'SensitivityType' => ['iso'],  // Used internally by iso()
+        'StandardOutputSensitivity' => ['iso'],  // Used internally by iso()
+        'RecommendedExposureIndex' => ['iso'],  // Used internally by iso()
+        
+        // Camera settings
+        'FNumber' => ['fNumber'],
+        
+        // Focal length - friendly name
+        'FocalLengthIn35mmFilm' => ['focalLength35Mm'],
+        
+        // JPEG/Thumbnail - shortened names
+        'JPEGInterchangeFormat' => ['jpegInterchangeFormat'],
+        'JPEGInterchangeFormatLength' => ['jpegInterchangeFormatLength'],
+        'JPEGInterchangeFormatLngth' => ['jpegInterchangeFormatLength'],  // TIFF 6.0 typo
+        
+        // YCbCr - shortened names
+        'YCbCrCoefficients' => ['ycbcrCoefficients'],
+        'YCbCrSubSampling' => ['ycbcrSubSampling'],
+        'YCbCrPositioning' => ['ycbcrPositioning'],
+        
+        // IFD Pointers - structural, not exposed as getters
+        'ExifIFDPointer' => [],  // Access via $exifIfd property
+        'GPSInfoIFDPointer' => [],  // Access via $gpsIfd property
+        'InteroperabilityIFDPointer' => [],  // Access via $interopIfd property
+        
+        // InteropIFD tags
+        'InteroperabilityIndex' => ['interopIndex'],
+        
+        // CFA Pattern
+        'CFAPattern' => ['cfaPattern', 'cfaPatternColors'],
+        
+        // Software/Processing tags
+        'RAWDevelopingSoftware' => ['rawDevelopingSoftware'],
+        'ImageEditingSoftware' => ['imageEditingSoftware'],
+        'MetadataEditingSoftware' => ['metadataEditingSoftware'],
+    ];
+
     private array $specTags = [];
     private array $exifConstants = [];
     private array $tiffConstants = [];
@@ -260,23 +310,47 @@ final class ComplianceAnalyzer
         $getterMethods = [];
         $notes = [];
 
-        // Check if tag has a corresponding getter method in ParsedExif
-        $tagNameUpper = strtoupper($this->camelToSnake($tagName));
-        
-        // Look for exact match or related methods
-        $relatedMethods = [];
-        foreach ($this->parsedExifMethods as $methodTagName => $methodName) {
-            // Check for exact match or partial match
-            if ($methodTagName === $tagNameUpper || 
-                str_contains($methodTagName, $tagNameUpper) ||
-                str_contains($tagNameUpper, $methodTagName)) {
-                $relatedMethods[] = $methodName;
+        // Check if tag has a known mapping to getter methods
+        if (isset(self::TAG_TO_METHOD_MAP[$tagName])) {
+            $mappedMethods = self::TAG_TO_METHOD_MAP[$tagName];
+            if (!empty($mappedMethods)) {
+                // Verify the mapped methods actually exist
+                $tagNameUpper = strtoupper($this->camelToSnake($tagName));
+                foreach ($mappedMethods as $methodName) {
+                    $methodNameUpper = strtoupper($this->camelToSnake($methodName));
+                    if (isset($this->parsedExifMethods[$methodNameUpper])) {
+                        $getterMethods[] = $methodName;
+                    }
+                }
+                if (!empty($getterMethods)) {
+                    $getterMethodExists = true;
+                }
+            } else {
+                // Empty array means this is a structural tag (IFD pointer) - not exposed as getter
+                $notes[] = 'Structural tag (IFD pointer) - not exposed as getter method';
+                $getterMethodExists = true;  // Consider it "handled" even without a getter
             }
         }
 
-        if (!empty($relatedMethods)) {
-            $getterMethodExists = true;
-            $getterMethods = $relatedMethods;
+        // If not in mapping, try automatic detection
+        if (!$getterMethodExists) {
+            $tagNameUpper = strtoupper($this->camelToSnake($tagName));
+            
+            // Look for exact match or related methods
+            $relatedMethods = [];
+            foreach ($this->parsedExifMethods as $methodTagName => $methodName) {
+                // Check for exact match or partial match
+                if ($methodTagName === $tagNameUpper || 
+                    str_contains($methodTagName, $tagNameUpper) ||
+                    str_contains($tagNameUpper, $methodTagName)) {
+                    $relatedMethods[] = $methodName;
+                }
+            }
+
+            if (!empty($relatedMethods)) {
+                $getterMethodExists = true;
+                $getterMethods = $relatedMethods;
+            }
         }
 
         // Determine overall status

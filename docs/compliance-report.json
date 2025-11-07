@@ -1,12 +1,12 @@
 {
-    "generated": "2025-11-07T18:17:55+00:00",
+    "generated": "2025-11-07T18:25:51+00:00",
     "summary": {
         "total_spec_tags": 227,
-        "implemented": 168,
-        "partial": 59,
+        "implemented": 191,
+        "partial": 36,
         "missing": 0,
         "extra": 0,
-        "coverage_percent": 74.01
+        "coverage_percent": 84.14
     },
     "categories": {
         "tiff_tags": {
@@ -63,13 +63,13 @@
                 "source": "TIFF 6.0",
                 "required": true,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageHeight"
+                ],
+                "notes": []
             },
             "258": {
                 "tag_id": "0x0102",
@@ -953,13 +953,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "jpegInterchangeFormat"
+                ],
+                "notes": []
             },
             "514": {
                 "tag_id": "0x0202",
@@ -968,13 +968,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "jpegInterchangeFormatLength"
+                ],
+                "notes": []
             },
             "515": {
                 "tag_id": "0x0203",
@@ -1073,13 +1073,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "ycbcrCoefficients"
+                ],
+                "notes": []
             },
             "530": {
                 "tag_id": "0x0212",
@@ -1088,13 +1088,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "ycbcrSubSampling"
+                ],
+                "notes": []
             },
             "531": {
                 "tag_id": "0x0213",
@@ -1103,13 +1103,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "ycbcrPositioning"
+                ],
+                "notes": []
             },
             "532": {
                 "tag_id": "0x0214",
@@ -1165,13 +1165,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageHeight"
+                ],
+                "notes": []
             },
             "258": {
                 "tag_id": "0x0102",
@@ -1511,13 +1511,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "jpegInterchangeFormat"
+                ],
+                "notes": []
             },
             "514": {
                 "tag_id": "0x0202",
@@ -1526,13 +1526,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "jpegInterchangeFormatLength"
+                ],
+                "notes": []
             },
             "529": {
                 "tag_id": "0x0211",
@@ -1541,13 +1541,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "ycbcrCoefficients"
+                ],
+                "notes": []
             },
             "530": {
                 "tag_id": "0x0212",
@@ -1556,13 +1556,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "ycbcrSubSampling"
+                ],
+                "notes": []
             },
             "531": {
                 "tag_id": "0x0213",
@@ -1571,13 +1571,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "ycbcrPositioning"
+                ],
+                "notes": []
             },
             "532": {
                 "tag_id": "0x0214",
@@ -1616,12 +1616,12 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
+                "getter_method_exists": true,
                 "getter_methods": [],
                 "notes": [
-                    "No getter method in ParsedExif"
+                    "Structural tag (IFD pointer) - not exposed as getter method"
                 ]
             },
             "34853": {
@@ -1634,10 +1634,10 @@
                 "status": "implemented",
                 "constant_defined": true,
                 "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
-                "notes": []
+                "getter_methods": [],
+                "notes": [
+                    "Structural tag (IFD pointer) - not exposed as getter method"
+                ]
             },
             "33434": {
                 "tag_id": "0x829A",
@@ -1662,13 +1662,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "fNumber"
+                ],
+                "notes": []
             },
             "34850": {
                 "tag_id": "0x8822",
@@ -1707,13 +1707,14 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "iso",
+                    "isoBestEffort"
+                ],
+                "notes": []
             },
             "34856": {
                 "tag_id": "0x8828",
@@ -1738,13 +1739,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "iso"
+                ],
+                "notes": []
             },
             "34865": {
                 "tag_id": "0x8831",
@@ -1753,13 +1754,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "iso"
+                ],
+                "notes": []
             },
             "34866": {
                 "tag_id": "0x8832",
@@ -1772,7 +1773,7 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "exposureIndex"
+                    "iso"
                 ],
                 "notes": []
             },
@@ -1787,7 +1788,8 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "iso"
+                    "iso",
+                    "isoBestEffort"
                 ],
                 "notes": []
             },
@@ -2331,13 +2333,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageWidth"
+                ],
+                "notes": []
             },
             "40963": {
                 "tag_id": "0xA003",
@@ -2346,13 +2348,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "imageHeight"
+                ],
+                "notes": []
             },
             "40964": {
                 "tag_id": "0xA004",
@@ -2376,12 +2378,12 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
+                "getter_method_exists": true,
                 "getter_methods": [],
                 "notes": [
-                    "No getter method in ParsedExif"
+                    "Structural tag (IFD pointer) - not exposed as getter method"
                 ]
             },
             "41483": {
@@ -2543,13 +2545,14 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "cfaPattern",
+                    "cfaPatternColors"
+                ],
+                "notes": []
             },
             "41985": {
                 "tag_id": "0xA401",
@@ -2618,13 +2621,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "focalLength35Mm"
+                ],
+                "notes": []
             },
             "41990": {
                 "tag_id": "0xA406",
@@ -2904,13 +2907,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
+                "status": "implemented",
                 "constant_defined": true,
-                "getter_method_exists": false,
-                "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "getter_method_exists": true,
+                "getter_methods": [
+                    "rawDevelopingSoftware"
+                ],
+                "notes": []
             },
             "42043": {
                 "tag_id": "0xA43B",
