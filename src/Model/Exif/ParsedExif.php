@@ -2286,10 +2286,6 @@ final readonly class ParsedExif
             return SubjectArea::fromComponents($components);
         }
 
-        if (is_int($value) || is_float($value)) {
-            return SubjectArea::fromComponents([(int) $value]);
-        }
-
         return null;
     }
 
