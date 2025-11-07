@@ -27,22 +27,18 @@ final readonly class ProcessingSettings
      * @param Contrast|null   $contrast                 Contrast adjustment level.
      * @param Saturation|null $saturation               Saturation adjustment level.
      * @param string|null     $pictureStyle             Vendor specific picture style identifier.
-     * @param float|null      $noiseReduction           Noise reduction strength as reported by the camera.
      * @param int|null        $clarity                  Clarity adjustment level.
      * @param int|null        $customRendered           Indicates whether a custom rendering was applied in-camera.
      * @param string|null     $deviceSettingDescription Binary device setting description payload.
-     * @param string|null     $processingSoftware       Final processing software recorded by the camera.
      */
     public function __construct(
         public ?Sharpness $sharpness,
         public ?Contrast $contrast,
         public ?Saturation $saturation,
         public ?string $pictureStyle,
-        public ?float $noiseReduction,
         public ?int $clarity,
         public ?int $customRendered,
         public ?string $deviceSettingDescription,
-        public ?string $processingSoftware,
     ) {
     }
 }

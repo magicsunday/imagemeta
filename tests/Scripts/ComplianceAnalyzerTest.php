@@ -21,8 +21,11 @@ use PHPUnit\Framework\TestCase;
 final class ComplianceAnalyzerTest extends TestCase
 {
     private const string SCRIPT_PATH = __DIR__ . '/../../scripts/analyze-exif-compliance.php';
+
     private const string SPEC_FILE = __DIR__ . '/../../resources/exif-spec-tags.yaml';
+
     private const string REPORT_JSON = __DIR__ . '/../../docs/compliance-report.json';
+
     private const string REPORT_YAML = __DIR__ . '/../../docs/compliance-report.yaml';
 
     /**
@@ -58,7 +61,7 @@ final class ComplianceAnalyzerTest extends TestCase
     public function testAnalyzerGeneratesValidReports(): void
     {
         // Run the analyzer
-        $output = [];
+        $output   = [];
         $exitCode = 0;
         exec('php ' . escapeshellarg(self::SCRIPT_PATH) . ' 0 2>&1', $output, $exitCode);
 
@@ -129,20 +132,20 @@ final class ComplianceAnalyzerTest extends TestCase
             $tags = $spec[$category];
 
             foreach ($tags as $tagId => $tagInfo) {
-                $this->assertArrayHasKey('name', $tagInfo, "Tag {$tagId} must have a name");
-                $this->assertArrayHasKey('type', $tagInfo, "Tag {$tagId} must have a type");
-                $this->assertArrayHasKey('ifd', $tagInfo, "Tag {$tagId} must specify IFD");
-                $this->assertArrayHasKey('source', $tagInfo, "Tag {$tagId} must specify source");
+                $this->assertArrayHasKey('name', $tagInfo, sprintf('Tag %s must have a name', $tagId));
+                $this->assertArrayHasKey('type', $tagInfo, sprintf('Tag %s must have a type', $tagId));
+                $this->assertArrayHasKey('ifd', $tagInfo, sprintf('Tag %s must specify IFD', $tagId));
+                $this->assertArrayHasKey('source', $tagInfo, sprintf('Tag %s must specify source', $tagId));
 
                 // Validate tag name is not empty
-                $this->assertNotEmpty($tagInfo['name'], "Tag {$tagId} name cannot be empty");
+                $this->assertNotEmpty($tagInfo['name'], sprintf('Tag %s name cannot be empty', $tagId));
 
                 // Validate IFD is one of the known values
                 $validIfds = ['IFD0', 'IFD1', 'ExifIFD', 'GPSIFD', 'InteropIFD', 'PreviewIFD'];
                 $this->assertContains(
                     $tagInfo['ifd'],
                     $validIfds,
-                    "Tag {$tagId} has invalid IFD: {$tagInfo['ifd']}"
+                    sprintf('Tag %s has invalid IFD: %s', $tagId, $tagInfo['ifd'])
                 );
             }
         }
@@ -159,18 +162,17 @@ final class ComplianceAnalyzerTest extends TestCase
         $report = json_decode($jsonContent, true);
         $this->assertIsArray($report);
 
-        $summary = $report['summary'];
-        $total = $summary['total_spec_tags'];
+        $summary     = $report['summary'];
+        $total       = $summary['total_spec_tags'];
         $implemented = $summary['implemented'];
-        $coverage = $summary['coverage_percent'];
+        $coverage    = $summary['coverage_percent'];
 
         if ($total > 0) {
             $expectedCoverage = round(($implemented / $total) * 100, 2);
             $this->assertEquals(
                 $expectedCoverage,
                 $coverage,
-                'Coverage percentage should match calculation',
-                0.01
+                'Coverage percentage should match calculation'
             );
         } else {
             $this->assertEquals(0.0, $coverage, 'Coverage should be 0 when no tags exist');
@@ -189,9 +191,9 @@ final class ComplianceAnalyzerTest extends TestCase
         $this->assertIsArray($report);
 
         $totalFromSummary = $report['summary']['total_spec_tags'];
-        $categoriesTotal = 0;
+        $categoriesTotal  = 0;
 
-        foreach ($report['categories'] as $categoryName => $tags) {
+        foreach ($report['categories'] as $tags) {
             $categoriesTotal += count($tags);
         }
 

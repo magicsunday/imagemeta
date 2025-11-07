@@ -72,7 +72,6 @@ use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
-use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
@@ -81,8 +80,8 @@ use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\Thumbnail;
 use MagicSunday\ImageMeta\Value\TiffData;
-use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
@@ -139,7 +138,6 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Motion::class)]
 #[UsesClass(MultiPicture::class)]
 #[UsesClass(ParsedExif::class)]
-#[UsesClass(Preview::class)]
 #[UsesClass(ProcessingSettings::class)]
 #[UsesClass(QuickTimeLookup::class)]
 #[UsesClass(Regions::class)]
@@ -154,10 +152,10 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(Temporal::class)]
+#[UsesClass(Thumbnail::class)]
 #[UsesClass(TiffData::class)]
 #[UsesClass(TiffExifReader::class)]
 #[UsesClass(UInt64::class)]
-#[UsesClass(Uav::class)]
 #[UsesClass(Unpack::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]

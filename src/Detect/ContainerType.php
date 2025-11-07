@@ -18,6 +18,7 @@ enum ContainerType
 {
     /** JPEG file interchange format. */
     case JPEG;
+
     /** ISO Base Media File Format such as HEIC, AVIF, MP4, or MOV. */
     case ISOBMFF;
 }

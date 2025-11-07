@@ -18,10 +18,9 @@ namespace MagicSunday\ImageMeta\Model\Exif;
  * Exif IFD, GPS IFD and Interoperability IFD referenced by this enumeration.
  *
  * Non-EXIF tags have been moved to dedicated classes:
+ *
  * @see \MagicSunday\ImageMeta\Model\Tiff\TiffTag for TIFF 6.0 baseline tags
- * @see \MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag for Windows XP proprietary tags
  * @see \MagicSunday\ImageMeta\Model\Dng\DngTag for Adobe DNG RAW format tags
- * @see \MagicSunday\ImageMeta\Model\Legacy\LegacyTag for deprecated/renamed tags
  */
 final readonly class ExifTag
 {

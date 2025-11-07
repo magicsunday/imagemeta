@@ -18,6 +18,7 @@ namespace MagicSunday\ImageMeta\Model\Tiff;
  * Tags that appear in both TIFF 6.0 AND EXIF 3.0 are kept in ExifTag.php to avoid duplication.
  *
  * Source: TIFF 6.0 Specification Final—June 3, 1992, Appendix A: TIFF Tags Sorted by Number
+ *
  * @see docs/TIFF6.pdf
  * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag for shared TIFF/EXIF tags
  */

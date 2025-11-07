@@ -19,18 +19,10 @@ final readonly class Interop
     /**
      * Creates an interoperability metadata value object.
      *
-     * @param string|null $index                  Interoperability index identifier such as "R98".
-     * @param string|null $version                Interoperability version string such as "0100".
-     * @param string|null $relatedImageFileFormat Declared file format for the related image asset.
-     * @param int|null    $relatedImageWidth      Pixel width of the related image asset.
-     * @param int|null    $relatedImageLength     Pixel length of the related image asset.
+     * @param string|null $index Interoperability index identifier such as "R98".
      */
     public function __construct(
         public ?string $index,
-        public ?string $version,
-        public ?string $relatedImageFileFormat = null,
-        public ?int $relatedImageWidth = null,
-        public ?int $relatedImageLength = null,
     ) {
     }
 }

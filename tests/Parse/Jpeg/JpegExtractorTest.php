@@ -483,7 +483,7 @@ final class JpegExtractorTest extends TestCase
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegIllegal  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadIllegal));
+        $jpegIllegal      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadIllegal));
         $extractorIllegal = $this->createExtractor($jpegIllegal);
 
         // Should return null for illegal subsampling values
@@ -496,7 +496,7 @@ final class JpegExtractorTest extends TestCase
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegReserved41  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved41));
+        $jpegReserved41      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved41));
         $extractorReserved41 = $this->createExtractor($jpegReserved41);
 
         self::assertNull($extractorReserved41->getFrameYCbCrSubSampling());
@@ -508,7 +508,7 @@ final class JpegExtractorTest extends TestCase
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegReserved44  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved44));
+        $jpegReserved44      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadReserved44));
         $extractorReserved44 = $this->createExtractor($jpegReserved44);
 
         self::assertNull($extractorReserved44->getFrameYCbCrSubSampling());
@@ -520,7 +520,7 @@ final class JpegExtractorTest extends TestCase
             . "\x02\x11\x01" // Component 2 (Cb): 1H×1V
             . "\x03\x11\x01"; // Component 3 (Cr): 1H×1V
 
-        $jpegLegal21  = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadLegal21));
+        $jpegLegal21      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayloadLegal21));
         $extractorLegal21 = $this->createExtractor($jpegLegal21);
 
         self::assertSame([2, 1], $extractorLegal21->getFrameYCbCrSubSampling());

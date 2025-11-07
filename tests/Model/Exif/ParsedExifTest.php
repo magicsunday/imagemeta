@@ -959,9 +959,9 @@ final class ParsedExifTest extends TestCase
             ),
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 4096),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
-            ExifTag::TRANSFER_FUNCTION     => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, $transferFunction),
-            ExifTag::REFERENCE_BLACK_WHITE => new IfdEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, $referenceBlackWhite),
-            ExifTag::COPYRIGHT             => new IfdEntry(ExifTag::COPYRIGHT, 2, 9, "Jane Doe\0"),
+            ExifTag::TRANSFER_FUNCTION              => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 3, $transferFunction),
+            ExifTag::REFERENCE_BLACK_WHITE          => new IfdEntry(ExifTag::REFERENCE_BLACK_WHITE, 5, 6, $referenceBlackWhite),
+            ExifTag::COPYRIGHT                      => new IfdEntry(ExifTag::COPYRIGHT, 2, 9, "Jane Doe\0"),
         ]);
 
         $thumbnailIfd = new Ifd([

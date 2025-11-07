@@ -293,4 +293,3 @@ final class DngTagTest extends TestCase
         self::assertSame(0xCD37, DngTag::ILLUMINANT_DATA_3);
     }
 }
-

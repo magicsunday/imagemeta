@@ -34,7 +34,6 @@ use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
-use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
@@ -43,8 +42,8 @@ use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\Thumbnail;
 use MagicSunday\ImageMeta\Value\TiffData;
-use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
@@ -55,42 +54,41 @@ use MagicSunday\ImageMeta\Value\Xmp;
 final readonly class StructuredMetadata
 {
     public function __construct(
-        public File $file,
-        public Container $container,
-        public Integrity $integrity,
-        public Camera $camera,
-        public Device $device,
-        public Lens $lens,
-        public Derived $derived,
-        public Image $image,
-        public Preview $preview,
-        public Video $video,
         public Audio $audio,
         public AudioClips $embeddedAudio,
+        public Author $author,
+        public Camera $camera,
+        public Capture $capture,
         public ColorProfile $colorProfile,
         public CompositeImageInfo $composite,
-        public MultiPicture $multiPicture,
+        public Container $container,
+        public Derived $derived,
+        public Device $device,
         public Exposure $exposure,
-        public Capture $capture,
-        public Scene $scene,
-        public Temporal $temporal,
-        public Regions $regions,
-        public Keywords $keywords,
-        public Gps $gps,
-        public Sensor $sensor,
-        public Focus $focus,
-        public Motion $motion,
-        public Uav $uav,
-        public ProcessingSettings $processing,
-        public WhiteBalanceDetails $whiteBalance,
-        public Interop $interop,
-        public TiffData $tiff,
-        public Standards $standards,
+        public File $file,
         public FlashPix $flashPix,
-        public Xmp $xmp,
-        public Rights $rights,
-        public Author $author,
+        public Focus $focus,
+        public Gps $gps,
+        public Image $image,
+        public Integrity $integrity,
+        public Interop $interop,
+        public Keywords $keywords,
+        public Lens $lens,
+        public Motion $motion,
+        public MultiPicture $multiPicture,
+        public ProcessingSettings $processing,
+        public Regions $regions,
         public RelatedAssets $related,
+        public Rights $rights,
+        public Scene $scene,
+        public Sensor $sensor,
+        public Standards $standards,
+        public Temporal $temporal,
+        public Thumbnail $thumbnail,
+        public TiffData $tiff,
+        public Video $video,
+        public WhiteBalanceDetails $whiteBalance,
+        public Xmp $xmp,
         public ?AppleMakerNotes $makerNotesApple,
     ) {
     }

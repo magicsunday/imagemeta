@@ -913,10 +913,16 @@ final class JpegExtractor
             [2, 2],
         ];
 
-        foreach ($legalValues as $legal) {
-            if ($derivedH === $legal[0] && $derivedV === $legal[1]) {
-                return [$derivedH, $derivedV];
-            }
+        $result = array_any(
+            $legalValues,
+            fn ($legal): bool => $derivedH === $legal[0] && $derivedV === $legal[1]
+        );
+
+        if ($result) {
+            return [
+                $derivedH,
+                $derivedV,
+            ];
         }
 
         return null;

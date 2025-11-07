@@ -22,18 +22,17 @@ final readonly class Temporal
     /**
      * Creates a temporal metadata value object.
      *
-     * @param DateTimeImmutable|null $create                Creation timestamp.
-     * @param DateTimeImmutable|null $modify                Modification timestamp.
-     * @param DateTimeImmutable|null $original              Original capture timestamp.
-     * @param DateTimeZone|null      $tz                    Time zone derived from the metadata.
-     * @param string|null            $tzSource              Identifier of the metadata source providing the timezone.
-     * @param string|null            $offsetTime            OffsetTime tag value.
-     * @param string|null            $offsetTimeOriginal    OffsetTimeOriginal tag value.
-     * @param string|null            $offsetTimeDigitized   OffsetTimeDigitized tag value.
-     * @param string|null            $subSecTime            SubSecTime value from EXIF.
-     * @param string|null            $subSecTimeOriginal    SubSecTimeOriginal value from EXIF.
-     * @param string|null            $subSecTimeDigitized   SubSecTimeDigitized value from EXIF.
-     * @param list<int>|null         $timeZoneOffsetMinutes TimeZoneOffset values expressed in minutes.
+     * @param DateTimeImmutable|null $create              Creation timestamp.
+     * @param DateTimeImmutable|null $modify              Modification timestamp.
+     * @param DateTimeImmutable|null $original            Original capture timestamp.
+     * @param DateTimeZone|null      $tz                  Time zone derived from the metadata.
+     * @param string|null            $tzSource            Identifier of the metadata source providing the timezone.
+     * @param string|null            $offsetTime          OffsetTime tag value.
+     * @param string|null            $offsetTimeOriginal  OffsetTimeOriginal tag value.
+     * @param string|null            $offsetTimeDigitized OffsetTimeDigitized tag value.
+     * @param string|null            $subSecTime          SubSecTime value from EXIF.
+     * @param string|null            $subSecTimeOriginal  SubSecTimeOriginal value from EXIF.
+     * @param string|null            $subSecTimeDigitized SubSecTimeDigitized value from EXIF.
      */
     public function __construct(
         public ?DateTimeImmutable $create,
@@ -47,7 +46,6 @@ final readonly class Temporal
         public ?string $subSecTime,
         public ?string $subSecTimeOriginal,
         public ?string $subSecTimeDigitized,
-        public ?array $timeZoneOffsetMinutes,
     ) {
     }
 }

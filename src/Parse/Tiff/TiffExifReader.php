@@ -22,7 +22,6 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
-use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
@@ -30,17 +29,12 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function array_any;
 use function array_slice;
-use function array_values;
 use function chr;
 use function count;
-use function function_exists;
-use function iconv;
 use function in_array;
 use function intdiv;
 use function is_finite;
@@ -48,7 +42,6 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function ltrim;
-use function mb_convert_encoding;
 use function ord;
 use function pack;
 use function rtrim;
@@ -70,19 +63,6 @@ use function substr;
  */
 final class TiffExifReader implements ExifReaderInterface
 {
-    /**
-     * XP metadata tags stored as UTF-16LE byte sequences.
-     *
-     * @var list<int>
-     */
-    private const array UTF16LE_STRING_TAGS = [
-        MicrosoftXpTag::XP_TITLE,
-        MicrosoftXpTag::XP_COMMENT,
-        MicrosoftXpTag::XP_AUTHOR,
-        MicrosoftXpTag::XP_KEYWORDS,
-        MicrosoftXpTag::XP_SUBJECT,
-    ];
-
     /**
      * Tag identifiers that store counted image data such as strips or tiles.
      *
@@ -115,37 +95,9 @@ final class TiffExifReader implements ExifReaderInterface
         ExifTag::JPEG_INTERCHANGE_FORMAT,
     ];
 
-    private const int UTF16_HIGH_SURROGATE_START = 0xD800;
-
-    private const int UTF16_HIGH_SURROGATE_END = 0xDBFF;
-
-    private const int UTF16_LOW_SURROGATE_START = 0xDC00;
-
-    private const int UTF16_LOW_SURROGATE_END = 0xDFFF;
-
-    private const int UTF16_SUPPLEMENTARY_OFFSET = 0x10000;
-
-    private const int UTF8_SINGLE_BYTE_MAX = 0x7F;
-
-    private const int UTF8_TWO_BYTE_MAX = 0x7FF;
-
-    private const int UTF8_THREE_BYTE_MAX = 0xFFFF;
-
-    private const int UTF8_MAX_CODE_POINT = 0x10FFFF;
-
-    private const int UTF8_TWO_BYTE_PREFIX = 0xC0;
-
-    private const int UTF8_THREE_BYTE_PREFIX = 0xE0;
-
-    private const int UTF8_FOUR_BYTE_PREFIX = 0xF0;
-
     private const int ASCII_PRINTABLE_MIN = 0x20;
 
     private const int ASCII_PRINTABLE_MAX = 0x7E;
-
-    private const int UTF8_CONTINUATION_PREFIX = 0x80;
-
-    private const string UNICODE_REPLACEMENT = "\u{FFFD}";
 
     private MemoryBuffer $buffer;
 
@@ -178,12 +130,12 @@ final class TiffExifReader implements ExifReaderInterface
      * chaining strategy applied while decoding embedded EXIF payloads; EXIF 2.32 §4.5
      * and EXIF 2.1 §2.5.1/§2.6.2 outline the same traversal rules for legacy files.
      *
-     * @param string        $tiffBlob           Raw TIFF data including headers.
-     * @param Registry|null $makerNotesRegistry Optional registry used to decode manufacturer-specific maker notes.
+     * @param string        $tiffBlob Raw TIFF data including headers.
+     * @param Registry|null $registry Optional registry used to decode manufacturer-specific maker notes.
      *
      * @return ParsedExif
      */
-    public function parseFromBlob(string $tiffBlob, ?Registry $makerNotesRegistry = null): ParsedExif
+    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null): ParsedExif
     {
         $this->buffer = new MemoryBuffer($tiffBlob);
         $this->buffer->seek(0);
@@ -231,10 +183,9 @@ final class TiffExifReader implements ExifReaderInterface
         }
 
         // follow pointers
-        $exifIfd    = null;
-        $gpsIfd     = null;
-        $interopIfd = null;
-        $ifd1       = null;
+        $exifIfd = null;
+        $gpsIfd  = null;
+        $ifd1    = null;
 
         $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
         if ($exifPointer instanceof IfdEntry) {
@@ -273,7 +224,7 @@ final class TiffExifReader implements ExifReaderInterface
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
         }
 
-        $makerNotes = $this->resolveMakerNotes($makerNotesRegistry, $ifd0, $exifIfd);
+        $makerNotes = $this->resolveMakerNotes($registry, $ifd0, $exifIfd);
 
         return new ParsedExif(
             $ifd0,
@@ -396,6 +347,7 @@ final class TiffExifReader implements ExifReaderInterface
         $tag  = $this->readU16();
         $type = $this->readU16();
         $cnt  = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
+
         if ($this->bigTiff) {
             // BigTIFF stores the inline value/offset field as an 8- or 16-byte
             // quantity (EXIF 3.0 §4.5.2 BigTIFF note) with inline payloads padded
@@ -408,11 +360,7 @@ final class TiffExifReader implements ExifReaderInterface
 
         [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff, $inlineBytes);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
-        $value      = $this->convertUInt64Values($tag, $type, $cnt, $rawBytes, $value);
-
-        if (in_array($tag, self::UTF16LE_STRING_TAGS, true)) {
-            $value = $this->decodeUtf16LeString($rawBytes);
-        }
+        $value      = $this->convertUInt64Values($tag, $value);
 
         if ($tag === ExifTag::MAKER_NOTE) {
             $this->makerNoteRaw = $rawBytes;
@@ -554,14 +502,9 @@ final class TiffExifReader implements ExifReaderInterface
 
     /**
      * Converts decoded UInt64 values into integers when possible, preserving oversize pointer offsets.
-     *
-     * @param string $rawBytes Raw bytes backing the decoded value.
      */
     private function convertUInt64Values(
         int $tag,
-        int $type,
-        int $count,
-        string $rawBytes,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value,
     ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 {
         if ($value instanceof UInt64) {
@@ -679,10 +622,6 @@ final class TiffExifReader implements ExifReaderInterface
     {
         $interopTags = [
             ExifTag::INTEROPERABILITY_INDEX,
-            ExifTag::INTEROPERABILITY_VERSION,
-            ExifTag::RELATED_IMAGE_FILE_FORMAT,
-            ExifTag::RELATED_IMAGE_WIDTH,
-            ExifTag::RELATED_IMAGE_LENGTH,
         ];
 
         return array_any($interopTags, fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry);
@@ -779,155 +718,6 @@ final class TiffExifReader implements ExifReaderInterface
         }
 
         return $count === 1 ? $vals[0] : new ExifNumericList($vals);
-    }
-
-    /**
-     * Decodes a UTF-16LE encoded XP string into UTF-8.
-     *
-     * EXIF 3.0 §4.6.3 enumerates the XP metadata tags transported as UTF-16LE
-     * character data inside the primary IFD.
-     */
-    private function decodeUtf16LeString(string $bytes): string
-    {
-        if ($bytes === '') {
-            return '';
-        }
-
-        $trimmed = $this->trimUtf16LeNullTerminators($bytes);
-
-        if ($trimmed === '') {
-            return '';
-        }
-
-        if ((strlen($trimmed) & 1) === 1) {
-            $trimmed = substr($trimmed, 0, -1);
-        }
-
-        if ($trimmed === '') {
-            return '';
-        }
-
-        if (str_starts_with($trimmed, "\xFF\xFE")) {
-            $trimmed = substr($trimmed, 2);
-        }
-
-        if ($trimmed === '') {
-            return '';
-        }
-
-        if (function_exists('mb_convert_encoding')) {
-            $converted = mb_convert_encoding($trimmed, 'UTF-8', 'UTF-16LE');
-            if ($converted !== '') {
-                return $converted;
-            }
-        }
-
-        if (function_exists('iconv')) {
-            $converted = iconv('UTF-16LE', 'UTF-8//IGNORE', $trimmed);
-            if (is_string($converted) && $converted !== '') {
-                return $converted;
-            }
-        }
-
-        return $this->decodeUtf16LeManually($trimmed);
-    }
-
-    /**
-     * Removes trailing UTF-16LE NULL terminators from a byte sequence.
-     */
-    private function trimUtf16LeNullTerminators(string $bytes): string
-    {
-        $length      = strlen($bytes);
-        $initialSize = $length;
-
-        while ($length >= 2 && $bytes[$length - 1] === "\0" && $bytes[$length - 2] === "\0") {
-            $length -= 2;
-        }
-
-        if ($length <= 0) {
-            return '';
-        }
-
-        if ($length === $initialSize) {
-            return $bytes;
-        }
-
-        return substr($bytes, 0, $length);
-    }
-
-    /**
-     * Converts a UTF-16LE encoded byte sequence into UTF-8 without extensions.
-     */
-    private function decodeUtf16LeManually(string $bytes): string
-    {
-        $length = strlen($bytes);
-
-        if ($length === 0) {
-            return '';
-        }
-
-        $result = '';
-
-        for ($i = 0; $i + 1 < $length; $i += 2) {
-            $unit = ord($bytes[$i]) | (ord($bytes[$i + 1]) << 8);
-
-            if ($unit >= self::UTF16_HIGH_SURROGATE_START && $unit <= self::UTF16_HIGH_SURROGATE_END) {
-                if ($i + 3 >= $length) {
-                    $result .= self::UNICODE_REPLACEMENT;
-                    break;
-                }
-
-                $low = ord($bytes[$i + 2]) | (ord($bytes[$i + 3]) << 8);
-
-                if ($low < self::UTF16_LOW_SURROGATE_START || $low > self::UTF16_LOW_SURROGATE_END) {
-                    $result .= self::UNICODE_REPLACEMENT;
-                    continue;
-                }
-
-                $codePoint = self::UTF16_SUPPLEMENTARY_OFFSET + (($unit - self::UTF16_HIGH_SURROGATE_START) << 10) + ($low - self::UTF16_LOW_SURROGATE_START);
-                $i += 2;
-            } elseif ($unit >= self::UTF16_LOW_SURROGATE_START && $unit <= self::UTF16_LOW_SURROGATE_END) {
-                $result .= self::UNICODE_REPLACEMENT;
-                continue;
-            } else {
-                $codePoint = $unit;
-            }
-
-            $result .= $this->codePointToUtf8($codePoint);
-        }
-
-        return $result;
-    }
-
-    /**
-     * Encodes a Unicode code point into UTF-8.
-     */
-    private function codePointToUtf8(int $codePoint): string
-    {
-        if ($codePoint <= self::UTF8_SINGLE_BYTE_MAX) {
-            return chr($codePoint);
-        }
-
-        if ($codePoint <= self::UTF8_TWO_BYTE_MAX) {
-            return chr(self::UTF8_TWO_BYTE_PREFIX | ($codePoint >> 6))
-                . chr(self::UTF8_CONTINUATION_PREFIX | ($codePoint & BitMask::SIX_BIT_MASK));
-        }
-
-        if ($codePoint <= self::UTF8_THREE_BYTE_MAX) {
-            return chr(self::UTF8_THREE_BYTE_PREFIX | ($codePoint >> 12))
-                . chr(self::UTF8_CONTINUATION_PREFIX | (($codePoint >> 6) & BitMask::SIX_BIT_MASK))
-                . chr(self::UTF8_CONTINUATION_PREFIX | ($codePoint & BitMask::SIX_BIT_MASK));
-        }
-
-        $codePoint = min(
-            $codePoint,
-            self::UTF8_MAX_CODE_POINT
-        );
-
-        return chr(self::UTF8_FOUR_BYTE_PREFIX | ($codePoint >> 18))
-            . chr(self::UTF8_CONTINUATION_PREFIX | (($codePoint >> 12) & BitMask::SIX_BIT_MASK))
-            . chr(self::UTF8_CONTINUATION_PREFIX | (($codePoint >> 6) & BitMask::SIX_BIT_MASK))
-            . chr(self::UTF8_CONTINUATION_PREFIX | ($codePoint & BitMask::SIX_BIT_MASK));
     }
 
     /**
@@ -1138,98 +928,53 @@ final class TiffExifReader implements ExifReaderInterface
             return null;
         }
 
-        $safety = $this->makerNoteSafety($exifIfd);
-
         if (!$registry instanceof Registry || !$exifIfd instanceof Ifd) {
-            return $this->makerNotesDigest($safety);
+            return $this->makerNotesDigest();
         }
 
         $make = $this->stringFromIfd($ifd0, ExifTag::MAKE);
+
         if ($make === null || $make === '') {
-            return $this->makerNotesDigest($safety);
+            return $this->makerNotesDigest();
         }
 
         $decoder = $registry->find($make);
+
         if (!$decoder instanceof MakerNotesDecoderInterface) {
-            return $this->makerNotesDigest($safety);
+            return $this->makerNotesDigest();
         }
 
-        $model = $this->stringFromIfd($ifd0, ExifTag::MODEL);
-
+        $model    = $this->stringFromIfd($ifd0, ExifTag::MODEL);
         $metadata = $decoder->decode($this->makerNoteRaw, $make, $model);
 
-        return $this->applyMakerNoteSafety($metadata, $safety);
+        return $this->applyMakerNoteSafety($metadata);
     }
 
     /**
      * Creates a digest metadata instance for unknown maker notes.
      */
-    private function makerNotesDigest(?bool $isSafe): MakerNotesRecord
+    private function makerNotesDigest(): MakerNotesRecord
     {
         $raw = $this->makerNoteRaw ?? '';
 
-        return new MakerNotesRecord('Unknown', strlen($raw), sha1($raw), null, $isSafe);
+        return new MakerNotesRecord(
+            'Unknown',
+            strlen($raw),
+            sha1($raw)
+        );
     }
 
     /**
      * Applies the maker note safety flag to the provided metadata instance.
      */
-    private function applyMakerNoteSafety(MakerNotesRecord $metadata, ?bool $isSafe): MakerNotesRecord
+    private function applyMakerNoteSafety(MakerNotesRecord $metadata): MakerNotesRecord
     {
-        if ($metadata->isSafe === $isSafe) {
-            return $metadata;
-        }
-
         return new MakerNotesRecord(
             $metadata->vendor,
             $metadata->length,
             $metadata->sha1,
             $metadata->apple,
-            $isSafe,
         );
-    }
-
-    /**
-     * Converts the maker note safety numeric flag into a boolean representation.
-     *
-     * EXIF 3.0 §4.6.5 and EXIF 2.32 §4.6.5 describe MakerNoteSafety as the indicator for
-     * whether the maker note contents can be altered without breaking compatibility.
-     */
-    private function makerNoteSafety(?Ifd $exifIfd): ?bool
-    {
-        if (!$exifIfd instanceof Ifd) {
-            return null;
-        }
-
-        $entry = $exifIfd->get(ExifTag::MAKER_NOTE_SAFETY);
-        if (!$entry instanceof IfdEntry) {
-            return null;
-        }
-
-        $value = $entry->value;
-
-        if ($value instanceof UInt64) {
-            $value = $this->normaliseScalarUInt64(ExifTag::MAKER_NOTE_SAFETY, $value);
-        } elseif ($value instanceof ExifNumericList) {
-            $normalised = [];
-            foreach ($value->values as $component) {
-                if ($component instanceof UInt64) {
-                    $normalised[] = $this->normaliseScalarUInt64(ExifTag::MAKER_NOTE_SAFETY, $component);
-
-                    continue;
-                }
-
-                $normalised[] = $component;
-            }
-
-            $value = new ExifNumericList($normalised);
-        }
-
-        if (!is_int($value) && !is_float($value) && !$value instanceof ExifNumericList && !is_string($value)) {
-            return null;
-        }
-
-        return ValueConverters::makerNoteSafety($value);
     }
 
     /**

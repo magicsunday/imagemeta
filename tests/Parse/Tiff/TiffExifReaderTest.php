@@ -1107,7 +1107,7 @@ final class TiffExifReaderTest extends TestCase
         $gpsLatOffset = $gpsIfdOffset + $gpsIfdLength;
         $gpsLonOffset = $gpsLatOffset + strlen($gpsLatData);
         $gpsAltOffset = $gpsLonOffset + strlen($gpsLonData);
-        
+
         $ifd1Offset = $gpsAltOffset + strlen($gpsAltData);
 
         $ifd0Entries = [
@@ -1169,7 +1169,7 @@ final class TiffExifReaderTest extends TestCase
         $blob .= $gpsLatData;
         $blob .= $gpsLonData;
         $blob .= $gpsAltData;
-        
+
         // IFD1 (Thumbnail IFD) with JPEG thumbnail data
         $ifd1Entries = [
             self::packClassicEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 2048),

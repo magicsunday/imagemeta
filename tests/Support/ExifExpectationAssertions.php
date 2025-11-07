@@ -14,7 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Support;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata as ApiStructuredMetadata;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif as ModelExifDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Value\Preview as PreviewValue;
+use MagicSunday\ImageMeta\Value\Thumbnail as PreviewValue;
 use PHPUnit\Framework\Assert;
 
 /**

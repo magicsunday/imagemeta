@@ -30,17 +30,11 @@ use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
-use MagicSunday\ImageMeta\Value\ColorProfileGainMap;
-use MagicSunday\ImageMeta\Value\ColorProfileHueSatMap;
-use MagicSunday\ImageMeta\Value\ColorProfileLookTable;
-use MagicSunday\ImageMeta\Value\ColorProfileToneCurve;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
-use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
@@ -56,7 +50,6 @@ use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\MultiPictureEntry;
-use MagicSunday\ImageMeta\Value\Preview;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\Regions\Region;
@@ -67,15 +60,14 @@ use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\Temporal;
+use MagicSunday\ImageMeta\Value\Thumbnail;
 use MagicSunday\ImageMeta\Value\TiffData;
-use MagicSunday\ImageMeta\Value\Uav;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
 
 use function abs;
 use function array_any;
-use function array_key_exists;
 use function array_map;
 use function array_shift;
 use function array_values;
@@ -116,42 +108,41 @@ final class ValueFactory implements ValueFactoryInterface
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return array{
-     *     file: File,
-     *     container: Container,
-     *     integrity: Integrity,
-     *     camera: Camera,
-     *     device: Device,
-     *     lens: Lens,
-     *     derived: Derived,
-     *     image: Image,
-     *     preview: Preview,
-     *     video: Video,
      *     audio: Audio,
-     *     embeddedAudio: AudioClips,
+     *     author: Author,
+     *     camera: Camera,
+     *     capture: Capture,
      *     colorProfile: ColorProfile,
      *     composite: CompositeImageInfo,
-     *     multiPicture: MultiPicture,
+     *     container: Container,
+     *     derived: Derived,
+     *     device: Device,
+     *     embeddedAudio: AudioClips,
      *     exposure: Exposure,
-     *     capture: Capture,
-     *     scene: Scene,
-     *     temporal: Temporal,
-     *     regions: Regions,
-     *     keywords: Keywords,
-     *     gps: Gps,
-     *     sensor: Sensor,
-     *     focus: Focus,
-     *     motion: Motion,
-     *     uav: Uav,
-     *     processing: ProcessingSettings,
-     *     whiteBalance: WhiteBalanceDetails,
-     *     interop: Interop,
-     *     tiff: TiffData,
-     *     standards: Standards,
+     *     file: File,
      *     flashPix: FlashPix,
-     *     xmp: Xmp,
-     *     rights: Rights,
-     *     author: Author,
+     *     focus: Focus,
+     *     gps: Gps,
+     *     image: Image,
+     *     integrity: Integrity,
+     *     interop: Interop,
+     *     keywords: Keywords,
+     *     lens: Lens,
+     *     motion: Motion,
+     *     multiPicture: MultiPicture,
+     *     processing: ProcessingSettings,
+     *     regions: Regions,
      *     related: RelatedAssets,
+     *     rights: Rights,
+     *     scene: Scene,
+     *     sensor: Sensor,
+     *     standards: Standards,
+     *     temporal: Temporal,
+     *     thumbnail: Thumbnail,
+     *     tiff: TiffData,
+     *     video: Video,
+     *     whiteBalance: WhiteBalanceDetails,
+     *     xmp: Xmp,
      *     makerNotesApple: AppleMakerNotes|null,
      * }
      */
@@ -169,10 +160,6 @@ final class ValueFactory implements ValueFactoryInterface
 
         $interop = new Interop(
             index: $exifDocument?->interopIndex(),
-            version: $exifDocument?->interopVersion(),
-            relatedImageFileFormat: $exifDocument?->relatedImageFileFormat(),
-            relatedImageWidth: $exifDocument?->relatedImageWidth(),
-            relatedImageLength: $exifDocument?->relatedImageLength(),
         );
 
         $bitsPerSample    = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
@@ -239,8 +226,6 @@ final class ValueFactory implements ValueFactoryInterface
             exifVersion: $exifVersion,
             profile: $profile,
             flashpixVersion: $exifDocument?->flashpixVersion(),
-            tiffEpStandardId: $exifDocument?->tiffEpStandardId(),
-            tiffEpStandardString: $exifDocument?->tiffEpStandardIdString(),
         );
 
         $flashPix = new FlashPix($metadata->flashPixStreams);
@@ -284,11 +269,9 @@ final class ValueFactory implements ValueFactoryInterface
             temperatureC: $exifDocument?->temperatureCelsius(),
             humidityPercent: $exifDocument?->humidityPercent(),
             pressureHPa: $exifDocument?->pressureHPa(),
-            batteryLevelPercent: $exifDocument?->batteryLevelPercent(),
             waterDepthM: $exifDocument?->waterDepthMeters(),
             accelerationMs2: $exifDocument?->accelerationMs2(),
             cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
-            selfTimerModeSeconds: $exifDocument?->selfTimerModeSeconds(),
         );
 
         $device = $this->buildDevice($exifDocument, $quickTimeMeta, $xmpDocument);
@@ -319,22 +302,15 @@ final class ValueFactory implements ValueFactoryInterface
             ),
         );
 
-        $previewColorSpace      = ColorSpace::fromExifValue($exifDocument?->previewColorSpace());
-        $previewCompressionEnum = Compression::fromExifValue($exifDocument?->previewImageCompression());
-        $previewStripOffsets    = $exifDocument?->previewImageStripOffsets();
-        $previewStripByteCounts = $exifDocument?->previewImageStripByteCounts();
-        $previewTileOffsets     = $exifDocument?->previewImageTileOffsets();
-        $previewTileByteCounts  = $exifDocument?->previewImageTileByteCounts();
-        $thumbnailCompression   = $exifDocument?->thumbnailCompression();
-        $thumbnailStripOffsets  = $exifDocument?->thumbnailStripOffsets();
-        $thumbnailStripCounts   = $exifDocument?->thumbnailStripByteCounts();
-        $thumbnailTileOffsets   = $exifDocument?->thumbnailTileOffsets();
-        $thumbnailTileCounts    = $exifDocument?->thumbnailTileByteCounts();
-        $thumbnailTileWidth     = $exifDocument?->thumbnailTileWidth();
-        $thumbnailTileLength    = $exifDocument?->thumbnailTileLength();
+        $thumbnailCompression  = $exifDocument?->thumbnailCompression();
+        $thumbnailStripOffsets = $exifDocument?->thumbnailStripOffsets();
+        $thumbnailStripCounts  = $exifDocument?->thumbnailStripByteCounts();
+        $thumbnailTileOffsets  = $exifDocument?->thumbnailTileOffsets();
+        $thumbnailTileCounts   = $exifDocument?->thumbnailTileByteCounts();
+        $thumbnailTileWidth    = $exifDocument?->thumbnailTileWidth();
+        $thumbnailTileLength   = $exifDocument?->thumbnailTileLength();
 
-        $preview = new Preview(
-            // Thumbnail parameters (IFD1)
+        $thumbnail = new Thumbnail(
             hasThumbnail: $exifDocument?->hasThumbnail() ?? false,
             thumbnailOffset: $exifDocument?->thumbnailJpegInterchangeFormat(),
             thumbnailLength: $exifDocument?->thumbnailJpegInterchangeFormatLength(),
@@ -345,22 +321,6 @@ final class ValueFactory implements ValueFactoryInterface
             thumbnailTileByteCounts: $thumbnailTileCounts,
             thumbnailStripOffsets: $thumbnailStripOffsets,
             thumbnailStripByteCounts: $thumbnailStripCounts,
-            // Preview parameters (EXIF 3.0)
-            hasPreview: $exifDocument?->hasPreviewImage() ?? false,
-            previewOffset: $exifDocument?->previewImageOffset(),
-            previewLength: $exifDocument?->previewImageLength(),
-            previewWidth: $exifDocument?->previewImageWidth(),
-            previewHeight: $exifDocument?->previewImageHeight(),
-            previewColorSpace: $previewColorSpace,
-            previewBitDepth: $exifDocument?->previewImageBitDepth(),
-            previewCompression: $previewCompressionEnum,
-            previewScale: $exifDocument?->previewImageScale(),
-            previewEncoding: $exifDocument?->previewImageEncoding(),
-            previewMimeType: $exifDocument?->previewImageMimeType(),
-            previewTileOffsets: $previewTileOffsets,
-            previewTileByteCounts: $previewTileByteCounts,
-            previewStripOffsets: $previewStripOffsets,
-            previewStripByteCounts: $previewStripByteCounts,
         );
 
         $video = new Video(
@@ -392,57 +352,6 @@ final class ValueFactory implements ValueFactoryInterface
             $iccData = (new IccDecoder())->decode($metadata->iccProfile, $metadata->iccSegments);
         }
 
-        $hueSatMap     = null;
-        $hueSatMapData = $exifDocument?->profileHueSatMap();
-        if (is_array($hueSatMapData)) {
-            $dimensions = $hueSatMapData['dimensions'] ?? null;
-            $hueSatMap  = new ColorProfileHueSatMap(
-                $dimensions[0] ?? null,
-                $dimensions[1] ?? null,
-                $dimensions[2] ?? null,
-                $hueSatMapData['encodings'] ?? null,
-                $hueSatMapData['map1'] ?? null,
-                $hueSatMapData['map2'] ?? null,
-                $hueSatMapData['map3'] ?? null,
-            );
-        }
-
-        $lookTable     = null;
-        $lookTableData = $exifDocument?->profileLookTable();
-        if (is_array($lookTableData)) {
-            $dimensions = $lookTableData['dimensions'] ?? null;
-            $entries    = null;
-            $data       = $lookTableData['data'] ?? null;
-            if (is_array($data)) {
-                $entries = $this->chunkTripletEntries($data);
-                if ($entries === []) {
-                    $entries = null;
-                }
-            }
-
-            $lookTable = new ColorProfileLookTable(
-                $dimensions[0] ?? null,
-                $dimensions[1] ?? null,
-                $dimensions[2] ?? null,
-                $entries,
-            );
-        }
-
-        $toneCurve     = null;
-        $toneCurveData = $exifDocument?->profileToneCurve();
-        if (is_array($toneCurveData) && $toneCurveData !== []) {
-            $points = $this->chunkPairEntries($toneCurveData);
-            if ($points !== []) {
-                $toneCurve = new ColorProfileToneCurve($points);
-            }
-        }
-
-        $gainMap     = null;
-        $gainMapData = $exifDocument?->profileGainTableMap();
-        if (is_array($gainMapData) && $gainMapData !== []) {
-            $gainMap = new ColorProfileGainMap(DngProfileGainTableTag::GAIN_TABLE_MAP, $gainMapData);
-        }
-
         $colorProfile = new ColorProfile(
             profileName: $iccData['description'] ?? null,
             profileVersion: $iccData['version'] ?? null,
@@ -450,12 +359,6 @@ final class ValueFactory implements ValueFactoryInterface
             renderingIntent: $iccData['renderingIntent'] ?? null,
             gamma: $exifDocument?->gamma(),
             profileId: $iccData['profileId'] ?? null,
-            cameraCalibrationSignature: $exifDocument?->cameraCalibrationSignature(),
-            profileCalibrationSignature: $exifDocument?->profileCalibrationSignature(),
-            hueSatMap: $hueSatMap,
-            lookTable: $lookTable,
-            toneCurve: $toneCurve,
-            gainMap: $gainMap,
         );
 
         $processing = new ProcessingSettings(
@@ -463,11 +366,9 @@ final class ValueFactory implements ValueFactoryInterface
             contrast: $exifDocument?->contrast(),
             saturation: $exifDocument?->saturation(),
             pictureStyle: null,
-            noiseReduction: $exifDocument?->noiseReduction(),
             clarity: null,
             customRendered: $exifDocument?->customRendered()?->value,
             deviceSettingDescription: $exifDocument?->deviceSettingDescription(),
-            processingSoftware: $exifDocument?->processingSoftware(),
         );
 
         $whiteBalanceKelvin = $apple->colorTemperature;
@@ -516,13 +417,6 @@ final class ValueFactory implements ValueFactoryInterface
         $flatKeywords         = $xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'subject') ?? [];
         $hierarchicalKeywords = $xmpDocument?->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject') ?? [];
 
-        if ($flatKeywords === []) {
-            $xpKeywords = $exifDocument?->xpKeywords();
-            if ($xpKeywords !== null) {
-                $flatKeywords = $xpKeywords;
-            }
-        }
-
         $keywords = new Keywords(
             flat: $flatKeywords,
             hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
@@ -533,7 +427,6 @@ final class ValueFactory implements ValueFactoryInterface
             usageTerms: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
             licenseUrl: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
             creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
-            securityClassification: $exifDocument?->securityClassification(),
         );
 
         $author = new Author(
@@ -589,8 +482,6 @@ final class ValueFactory implements ValueFactoryInterface
 
         $sensor = new Sensor(
             pixelPitchUm: null,
-            cfaWidth: $exifDocument?->cfaRepeatPatternWidth(),
-            cfaHeight: $exifDocument?->cfaRepeatPatternHeight(),
             sensorType: null,
             ibis: false,
             cfaPattern: $exifDocument?->cfaPattern(),
@@ -602,60 +493,51 @@ final class ValueFactory implements ValueFactoryInterface
             focalPlaneResolutionUnit: $focalPlaneUnit,
         );
 
-        $uav = $this->buildUav($exifDocument, $quickTimeMeta);
-
-        $hasHistory     = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
-        $makerNotesSafe = $metadata->makerNotes?->isSafe;
-        if ($makerNotesSafe === null) {
-            $makerNotesSafe = $exifDocument?->makerNoteSafety();
-        }
+        $hasHistory = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
 
         $integrity = new Integrity(
             originalFileName: $xmpDocument?->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
             edited: $hasHistory ? true : null,
             historyLastSoftware: null,
-            imageHistory: $exifDocument?->imageHistory(),
-            makerNotesSafe: $makerNotesSafe,
         );
 
         return [
-            'file'            => $file,
-            'container'       => $container,
-            'integrity'       => $integrity,
-            'camera'          => $camera,
-            'device'          => $device,
-            'lens'            => $lens,
-            'derived'         => $derived,
-            'image'           => $image,
-            'preview'         => $preview,
-            'video'           => $video,
             'audio'           => $audio,
-            'embeddedAudio'   => $embeddedAudio,
+            'author'          => $author,
+            'camera'          => $camera,
+            'capture'         => $capture,
             'colorProfile'    => $colorProfile,
             'composite'       => $composite,
-            'multiPicture'    => $multiPicture,
+            'container'       => $container,
+            'derived'         => $derived,
+            'device'          => $device,
+            'embeddedAudio'   => $embeddedAudio,
             'exposure'        => $exposure,
-            'capture'         => $capture,
-            'scene'           => $scene,
-            'temporal'        => $temporal,
-            'regions'         => $regions,
-            'keywords'        => $keywords,
-            'gps'             => $gps,
-            'sensor'          => $sensor,
-            'focus'           => $focus,
-            'motion'          => $motion,
-            'uav'             => $uav,
-            'processing'      => $processing,
-            'whiteBalance'    => $whiteBalanceDetails,
-            'interop'         => $interop,
-            'tiff'            => $tiff,
-            'standards'       => $standards,
+            'file'            => $file,
             'flashPix'        => $flashPix,
-            'xmp'             => $xmp,
-            'rights'          => $rights,
-            'author'          => $author,
+            'focus'           => $focus,
+            'gps'             => $gps,
+            'image'           => $image,
+            'integrity'       => $integrity,
+            'interop'         => $interop,
+            'keywords'        => $keywords,
+            'lens'            => $lens,
+            'motion'          => $motion,
+            'multiPicture'    => $multiPicture,
+            'processing'      => $processing,
+            'regions'         => $regions,
             'related'         => $related,
+            'rights'          => $rights,
+            'scene'           => $scene,
+            'sensor'          => $sensor,
+            'standards'       => $standards,
+            'temporal'        => $temporal,
+            'thumbnail'       => $thumbnail,
+            'tiff'            => $tiff,
+            'video'           => $video,
+            'whiteBalance'    => $whiteBalanceDetails,
+            'xmp'             => $xmp,
             'makerNotesApple' => $apple,
         ];
     }
@@ -674,11 +556,7 @@ final class ValueFactory implements ValueFactoryInterface
         $software = null;
 
         if ($exif instanceof ParsedExif) {
-            $software = $exif->software();
-
-            if ($software === null) {
-                $software = $exif->hostComputer();
-            }
+            $software = $exif->hostComputer();
         }
 
         $lookup = new QuickTimeLookup($quickTime);
@@ -746,15 +624,13 @@ final class ValueFactory implements ValueFactoryInterface
             $subSecTime = $subSecOriginal ?? $subSecTimeDigitized;
         }
 
-        $timeZoneOffsets = $exifDocument?->timeZoneOffsetMinutes();
-
         $tzSource = null;
-        if ($tz instanceof DateTimeZone) {
-            if ($offsetTimeOriginal !== null && ValueConverters::parseOffset($offsetTimeOriginal) instanceof DateTimeZone) {
-                $tzSource = 'OffsetTimeOriginal';
-            } elseif (is_array($timeZoneOffsets) && $timeZoneOffsets !== []) {
-                $tzSource = 'TimeZoneOffset';
-            }
+
+        if (($tz instanceof DateTimeZone)
+            && ($offsetTimeOriginal !== null)
+            && (ValueConverters::parseOffset($offsetTimeOriginal) instanceof DateTimeZone)
+        ) {
+            $tzSource = 'OffsetTimeOriginal';
         }
 
         return new Temporal(
@@ -769,7 +645,6 @@ final class ValueFactory implements ValueFactoryInterface
             subSecTime: $subSecTime,
             subSecTimeOriginal: $subSecOriginal,
             subSecTimeDigitized: $subSecTimeDigitized,
-            timeZoneOffsetMinutes: $timeZoneOffsets,
         );
     }
 
@@ -785,18 +660,10 @@ final class ValueFactory implements ValueFactoryInterface
         }
 
         $original = $document->dateTimeOriginalBestEffort();
-
-        $zoneOffsets = $document->timeZoneOffsetMinutes();
-        $offset      = $document->offsetTimeOriginal();
-        if ($offset === null && is_array($zoneOffsets) && array_key_exists(0, $zoneOffsets)) {
-            $offset = $zoneOffsets[0];
-        }
+        $offset   = $document->offsetTimeOriginal();
 
         if ($offset === null && $this->dateTimeStringEmpty($document->dateTimeOriginalRaw())) {
             $offset = $document->offsetTimeDigitized();
-            if ($offset === null && is_array($zoneOffsets) && array_key_exists(1, $zoneOffsets)) {
-                $offset = $zoneOffsets[1];
-            }
         }
 
         if (
@@ -805,9 +672,6 @@ final class ValueFactory implements ValueFactoryInterface
             && $this->dateTimeStringEmpty($document->dateTimeDigitizedRaw())
         ) {
             $offset = $document->offsetTime();
-            if ($offset === null && is_array($zoneOffsets) && array_key_exists(0, $zoneOffsets)) {
-                $offset = $zoneOffsets[0];
-            }
         }
 
         $offsetString = $this->normaliseOffsetValue($offset);
@@ -876,38 +740,13 @@ final class ValueFactory implements ValueFactoryInterface
      */
     private function buildCamera(?ParsedExif $exifDocument): Camera
     {
-        if (!$exifDocument instanceof ParsedExif) {
-            return new Camera(
-                make: null,
-                model: null,
-                ownerName: null,
-                serialNumber: null,
-                firmware: null,
-                fileSource: null,
-                sensingMethod: null,
-            );
-        }
-
-        $profile = (float) $exifDocument->exifProfile();
-
-        $firmware = $exifDocument->cameraFirmware();
-
-        if ($firmware === null && $profile < 3.0) {
-            $firmware = $exifDocument->cameraFirmwareVersion();
-        }
-
-        if ($firmware === null) {
-            $firmware = $exifDocument->software();
-        }
-
         return new Camera(
-            make: $exifDocument->cameraMake(),
-            model: $exifDocument->cameraModel(),
-            ownerName: $exifDocument->ownerName(),
-            serialNumber: $exifDocument->cameraSerialNumber(),
-            firmware: $firmware,
-            fileSource: $exifDocument->fileSource(),
-            sensingMethod: $exifDocument->sensingMethod(),
+            make: $exifDocument?->cameraMake(),
+            model: $exifDocument?->cameraModel(),
+            ownerName: $exifDocument?->ownerName(),
+            firmware: $exifDocument?->cameraFirmware(),
+            fileSource: $exifDocument?->fileSource(),
+            sensingMethod: $exifDocument?->sensingMethod(),
         );
     }
 
@@ -972,13 +811,11 @@ final class ValueFactory implements ValueFactoryInterface
             bitsPerSample: $bitsPerSample,
             colorSpace: $this->normalizedColorSpace($exifDocument),
             imageUniqueId: $exifDocument?->imageUniqueId(),
-            imageNumber: $exifDocument?->imageNumber(),
             documentName: $exifDocument?->documentName(),
             description: $exifDocument?->imageDescription(),
             title: $exifDocument?->imageTitle(),
             componentsConfiguration: $exifDocument?->componentsConfiguration(),
             compressedBitsPerPixel: $exifDocument?->compressedBitsPerPixel(),
-            interlace: $exifDocument?->interlace(),
             userComment: $exifDocument?->userComment(),
             userCommentEncoding: $exifDocument?->userCommentEncodingBestEffort(),
         );
@@ -1101,10 +938,6 @@ final class ValueFactory implements ValueFactoryInterface
      */
     private function buildMotion(?ParsedExif $exif, AppleMakerNotes $apple): Motion
     {
-        $rollDeg  = $exif?->cameraRollDeg();
-        $pitchDeg = $exif?->cameraPitchDeg();
-        $yawDeg   = $exif?->cameraYawDeg();
-
         $vector = $apple->accelerationVector;
 
         if (!is_array($vector)) {
@@ -1121,62 +954,10 @@ final class ValueFactory implements ValueFactoryInterface
             $accelZ = $vector[2] ?? null;
         }
 
-        return new Motion($rollDeg, $pitchDeg, $yawDeg, $accelX, $accelY, $accelZ, null, null, null);
-    }
-
-    private function buildUav(?ParsedExif $exif, ?QuickTimeMeta $quickTime): Uav
-    {
-        $lookup = new QuickTimeLookup($quickTime);
-
-        $manufacturer = $exif?->aircraftMake();
-        if ($manufacturer === null) {
-            $manufacturer = $lookup->string('com.apple.quicktime.make');
-        }
-
-        $model = $exif?->aircraftModel();
-        if ($model === null) {
-            $model = $lookup->string('com.apple.quicktime.model');
-        }
-
-        $flightYaw = $exif?->flightYawDeg();
-        if ($flightYaw === null) {
-            $flightYaw = $lookup->float('com.apple.quicktime.flightYawDegree');
-        }
-
-        $flightPitch = $exif?->flightPitchDeg();
-        if ($flightPitch === null) {
-            $flightPitch = $lookup->float('com.apple.quicktime.flightPitchDegree');
-        }
-
-        $flightRoll = $exif?->flightRollDeg();
-        if ($flightRoll === null) {
-            $flightRoll = $lookup->float('com.apple.quicktime.flightRollDegree');
-        }
-
-        $gimbalYaw = $exif?->gimbalYawDeg();
-        if ($gimbalYaw === null) {
-            $gimbalYaw = $lookup->float('com.apple.quicktime.gimbalYawDegree');
-        }
-
-        $gimbalPitch = $exif?->gimbalPitchDeg();
-        if ($gimbalPitch === null) {
-            $gimbalPitch = $lookup->float('com.apple.quicktime.gimbalPitchDegree');
-        }
-
-        $gimbalRoll = $exif?->gimbalRollDeg();
-        if ($gimbalRoll === null) {
-            $gimbalRoll = $lookup->float('com.apple.quicktime.gimbalRollDegree');
-        }
-
-        return new Uav(
-            manufacturer: $manufacturer,
-            model: $model,
-            flightYaw: $flightYaw,
-            flightPitch: $flightPitch,
-            flightRoll: $flightRoll,
-            gimbalYaw: $gimbalYaw,
-            gimbalPitch: $gimbalPitch,
-            gimbalRoll: $gimbalRoll,
+        return new Motion(
+            $accelX,
+            $accelY,
+            $accelZ,
         );
     }
 

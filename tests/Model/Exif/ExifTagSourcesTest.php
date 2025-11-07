@@ -19,7 +19,7 @@ use ReflectionClass;
 
 /**
  * Tests tag categorization and verifies EXIF 3.0 specification compliance.
- * 
+ *
  * This test suite validates:
  * - All official EXIF 3.0 tags (Tables 64-67) are present
  * - Non-EXIF tags are identifiable
@@ -30,7 +30,7 @@ final class ExifTagSourcesTest extends TestCase
 {
     /**
      * Official EXIF 3.0 tags from Table 64 (0th IFD TIFF Tags).
-     * 
+     *
      * EXIF 3.0 §H.6 Table 64
      */
     #[Test]
@@ -90,7 +90,7 @@ final class ExifTagSourcesTest extends TestCase
 
     /**
      * Official EXIF 3.0 tags from Table 65 (Exif Private Tags).
-     * 
+     *
      * EXIF 3.0 §H.6 Table 65
      */
     #[Test]
@@ -207,7 +207,7 @@ final class ExifTagSourcesTest extends TestCase
 
     /**
      * Official EXIF 3.0 tags from Table 66 (GPS Info Tags).
-     * 
+     *
      * EXIF 3.0 §H.6 Table 66
      */
     #[Test]
@@ -217,37 +217,37 @@ final class ExifTagSourcesTest extends TestCase
         $constants  = $reflection->getConstants();
 
         $expectedTags = [
-            'GPS_VERSION_ID'         => 0x0000,
-            'GPS_LATITUDE_REF'       => 0x0001,
-            'GPS_LATITUDE'           => 0x0002,
-            'GPS_LONGITUDE_REF'      => 0x0003,
-            'GPS_LONGITUDE'          => 0x0004,
-            'GPS_ALTITUDE_REF'       => 0x0005,
-            'GPS_ALTITUDE'           => 0x0006,
-            'GPS_TIME_STAMP'         => 0x0007,
-            'GPS_SATELLITES'         => 0x0008,
-            'GPS_STATUS'             => 0x0009,
-            'GPS_MEASURE_MODE'       => 0x000A,
-            'GPS_DOP'                => 0x000B,
-            'GPS_SPEED_REF'          => 0x000C,
-            'GPS_SPEED'              => 0x000D,
-            'GPS_TRACK_REF'          => 0x000E,
-            'GPS_TRACK'              => 0x000F,
-            'GPS_IMG_DIRECTION_REF'  => 0x0010,
-            'GPS_IMG_DIRECTION'      => 0x0011,
-            'GPS_MAP_DATUM'          => 0x0012,
-            'GPS_DEST_LATITUDE_REF'  => 0x0013,
-            'GPS_DEST_LATITUDE'      => 0x0014,
-            'GPS_DEST_LONGITUDE_REF' => 0x0015,
-            'GPS_DEST_LONGITUDE'     => 0x0016,
-            'GPS_DEST_BEARING_REF'   => 0x0017,
-            'GPS_DEST_BEARING'       => 0x0018,
-            'GPS_DEST_DISTANCE_REF'  => 0x0019,
-            'GPS_DEST_DISTANCE'      => 0x001A,
-            'GPS_PROCESSING_METHOD'  => 0x001B,
-            'GPS_AREA_INFORMATION'   => 0x001C,
-            'GPS_DATE_STAMP'         => 0x001D,
-            'GPS_DIFFERENTIAL'       => 0x001E,
+            'GPS_VERSION_ID'          => 0x0000,
+            'GPS_LATITUDE_REF'        => 0x0001,
+            'GPS_LATITUDE'            => 0x0002,
+            'GPS_LONGITUDE_REF'       => 0x0003,
+            'GPS_LONGITUDE'           => 0x0004,
+            'GPS_ALTITUDE_REF'        => 0x0005,
+            'GPS_ALTITUDE'            => 0x0006,
+            'GPS_TIME_STAMP'          => 0x0007,
+            'GPS_SATELLITES'          => 0x0008,
+            'GPS_STATUS'              => 0x0009,
+            'GPS_MEASURE_MODE'        => 0x000A,
+            'GPS_DOP'                 => 0x000B,
+            'GPS_SPEED_REF'           => 0x000C,
+            'GPS_SPEED'               => 0x000D,
+            'GPS_TRACK_REF'           => 0x000E,
+            'GPS_TRACK'               => 0x000F,
+            'GPS_IMG_DIRECTION_REF'   => 0x0010,
+            'GPS_IMG_DIRECTION'       => 0x0011,
+            'GPS_MAP_DATUM'           => 0x0012,
+            'GPS_DEST_LATITUDE_REF'   => 0x0013,
+            'GPS_DEST_LATITUDE'       => 0x0014,
+            'GPS_DEST_LONGITUDE_REF'  => 0x0015,
+            'GPS_DEST_LONGITUDE'      => 0x0016,
+            'GPS_DEST_BEARING_REF'    => 0x0017,
+            'GPS_DEST_BEARING'        => 0x0018,
+            'GPS_DEST_DISTANCE_REF'   => 0x0019,
+            'GPS_DEST_DISTANCE'       => 0x001A,
+            'GPS_PROCESSING_METHOD'   => 0x001B,
+            'GPS_AREA_INFORMATION'    => 0x001C,
+            'GPS_DATE_STAMP'          => 0x001D,
+            'GPS_DIFFERENTIAL'        => 0x001E,
             'GPS_H_POSITIONING_ERROR' => 0x001F,
         ];
 
@@ -267,7 +267,7 @@ final class ExifTagSourcesTest extends TestCase
 
     /**
      * Official EXIF 3.0 tags from Table 67 (Interoperability Tags).
-     * 
+     *
      * EXIF 3.0 §H.6 Table 67
      */
     #[Test]
@@ -306,7 +306,7 @@ final class ExifTagSourcesTest extends TestCase
         // EXIF 3.0 does NOT define drone/aircraft orientation tags.
         // This test previously checked for tags 0x9406-0x940D which are NOT in EXIF 3.0.
         // Those tags have been moved to LegacyTag (see legacyTagsAreNotInExifTag test).
-        
+
         // Currently no EXIF 3.0-specific orientation tags to test beyond the standard
         // ORIENTATION tag (0x0112) already covered in exif30Table64TagsArePresent.
         self::assertTrue(true, 'Drone/aircraft tags moved to LegacyTag per EXIF 3.0 spec compliance');
@@ -436,7 +436,7 @@ final class ExifTagSourcesTest extends TestCase
 
     /**
      * Verifies that the DATETIME constant is aliased as MODIFY_DATE.
-     * 
+     *
      * EXIF 3.0 renamed DateTime to ModifyDate for clarity.
      */
     #[Test]

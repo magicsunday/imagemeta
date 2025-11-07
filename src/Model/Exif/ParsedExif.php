@@ -17,9 +17,6 @@ use Exception;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
-use MagicSunday\ImageMeta\Model\Dng\DngTag;
-use MagicSunday\ImageMeta\Model\Legacy\LegacyTag;
-use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
@@ -27,7 +24,6 @@ use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
-use MagicSunday\ImageMeta\Value\Enum\DngProfileGainTableTag;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
@@ -47,14 +43,10 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 
-use function abs;
-use function array_any;
-use function array_key_exists;
 use function array_map;
 use function count;
 use function iconv;
 use function in_array;
-use function intdiv;
 use function is_array;
 use function is_float;
 use function is_int;
@@ -63,11 +55,9 @@ use function is_string;
 use function ord;
 use function preg_match;
 use function preg_replace;
-use function preg_split;
 use function round;
 use function rtrim;
 use function spl_object_id;
-use function sprintf;
 use function sqrt;
 use function str_pad;
 use function str_replace;
@@ -94,18 +84,6 @@ final readonly class ParsedExif
     private bool $exifThreeOrNewer;
 
     /**
-     * @var list<int>|null
-     */
-    private ?array $tiffEpStandardId;
-
-    private ?string $tiffEpStandardIdString;
-
-    /**
-     * @var array{ifd:Ifd, offset:int, length:int}|null
-     */
-    private ?array $previewContext;
-
-    /**
      * @param Ifd                   $ifd0           Root IFD of the TIFF structure.
      * @param Ifd|null              $exifIfd        Sub IFD containing EXIF-specific tags.
      * @param Ifd|null              $gpsIfd         Sub IFD containing GPS-related tags.
@@ -130,13 +108,6 @@ final readonly class ParsedExif
         $this->exifVersion               = ValueConverters::toExifVersion($rawVersion);
         $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
         $this->exifThreeOrNewer          = (float) $this->exifProfile >= 3.0;
-
-        $tiffEpBytes                  = $this->numericList($this->exifIfd, ExifTag::TIFF_EP_STANDARD_ID);
-        $tiffEpStandard               = ValueConverters::tiffEpStandardId($tiffEpBytes);
-        $this->tiffEpStandardId       = $tiffEpStandard['bytes'] ?? null;
-        $this->tiffEpStandardIdString = $tiffEpStandard['string'] ?? null;
-
-        $this->previewContext = $this->resolvePreviewContext();
     }
 
     /**
@@ -145,24 +116,6 @@ final readonly class ParsedExif
     public function makerNotes(): ?MakerNotesRecord
     {
         return $this->makerNotes;
-    }
-
-    /**
-     * Indicates whether the maker note is considered safe to modify according to EXIF tag ExifTag::MAKER_NOTE_SAFETY.
-     *
-     * EXIF 3.0 §4.6.5 (Table 4) and EXIF 2.32 §4.6.5 define MakerNoteSafety as the
-     * vendor-supplied flag denoting whether downstream applications may rewrite the
-     * maker note block without violating interoperability.
-     */
-    public function makerNoteSafety(): ?bool
-    {
-        $value = $this->enumValue($this->exifIfd, ExifTag::MAKER_NOTE_SAFETY);
-
-        if ($value === null) {
-            return null;
-        }
-
-        return ValueConverters::makerNoteSafety($value);
     }
 
     /**
@@ -206,22 +159,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the aircraft manufacturer string if present.
-     */
-    public function aircraftMake(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::AIRCRAFT_MAKE);
-    }
-
-    /**
-     * Returns the aircraft model string if present.
-     */
-    public function aircraftModel(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::AIRCRAFT_MODEL);
-    }
-
-    /**
      * Returns the lens model string if present.
      *
      * @return string|null
@@ -259,16 +196,6 @@ final readonly class ParsedExif
     public function bodySerialNumber(): ?string
     {
         return $this->str($this->exifIfd, ExifTag::BODY_SERIAL_NUMBER);
-    }
-
-    /**
-     * Returns the camera serial number, preferring the EXIF 3.0 tag when available.
-     */
-    public function cameraSerialNumber(): ?string
-    {
-        $serial = $this->str($this->exifIfd, ExifTag::CAMERA_SERIAL_NUMBER);
-
-        return $serial ?? $this->bodySerialNumber();
     }
 
     /**
@@ -418,18 +345,6 @@ final readonly class ParsedExif
 
         $value = $this->str($this->exifIfd, ExifTag::IMAGE_TITLE);
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->xpTitle();
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->str($this->ifd0, ExifTag::IMAGE_TITLE_LEGACY);
-
         return $value ?? $this->str(
             $this->ifd0,
             ExifTag::IMAGE_DESCRIPTION
@@ -442,11 +357,10 @@ final readonly class ParsedExif
     public function documentName(): ?string
     {
         $candidates = [
-            [$this->ifd0, ExifTag::DOCUMENT_NAME],
-            [$this->exifIfd, ExifTag::DOCUMENT_NAME],
+            [$this->ifd0, TiffTag::DOCUMENT_NAME],
+            [$this->exifIfd, TiffTag::DOCUMENT_NAME],
             [$this->ifd0, ExifTag::IMAGE_TITLE],
             [$this->exifIfd, ExifTag::IMAGE_TITLE],
-            [$this->ifd0, ExifTag::IMAGE_TITLE_LEGACY],
         ];
 
         foreach ($candidates as [$ifd, $tag]) {
@@ -457,7 +371,7 @@ final readonly class ParsedExif
             }
         }
 
-        return $this->xpSubject();
+        return null;
     }
 
     /**
@@ -465,35 +379,7 @@ final readonly class ParsedExif
      */
     public function imageDescription(): ?string
     {
-        $value = $this->str($this->ifd0, ExifTag::IMAGE_DESCRIPTION);
-
-        return $value ?? $this->xpComment();
-    }
-
-    /**
-     * Returns the processing software string recorded during final image adjustments,
-     * falling back to the legacy software tag for EXIF 2.x payloads.
-     */
-    public function processingSoftware(): ?string
-    {
-        $value = null;
-
-        if ($this->exifThreeOrNewer) {
-            $value = $this->str($this->ifd0, ExifTag::PROCESSING_SOFTWARE);
-        }
-
-        return $value ?? $this->str(
-            $this->ifd0,
-            ExifTag::SOFTWARE
-        );
-    }
-
-    /**
-     * Mirrors the legacy resolver accessor for the software tag.
-     */
-    public function software(): ?string
-    {
-        return $this->processingSoftware();
+        return $this->str($this->ifd0, ExifTag::IMAGE_DESCRIPTION);
     }
 
     /**
@@ -505,7 +391,7 @@ final readonly class ParsedExif
             return null;
         }
 
-        return $this->str($this->ifd0, ExifTag::HOST_COMPUTER);
+        return $this->str($this->ifd0, TiffTag::HOST_COMPUTER);
     }
 
     /**
@@ -521,18 +407,6 @@ final readonly class ParsedExif
 
         $value = $this->str($this->exifIfd, ExifTag::PHOTOGRAPHER);
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->xpAuthor();
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->str($this->ifd0, ExifTag::PHOTOGRAPHER_LEGACY);
-
         return $value ?? $this->str(
             $this->ifd0,
             ExifTag::ARTIST
@@ -546,85 +420,10 @@ final readonly class ParsedExif
     {
         $value = $this->str($this->ifd0, ExifTag::IMAGE_EDITOR);
 
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITOR);
-
-        if ($value !== null) {
-            return $value;
-        }
-
-        $value = $this->xpAuthor();
-
         return $value ?? $this->str(
-            $this->ifd0,
-            ExifTag::IMAGE_EDITOR_LEGACY
+            $this->exifIfd,
+            ExifTag::IMAGE_EDITOR
         );
-    }
-
-    /**
-     * Returns the decoded Microsoft XPTitle value.
-     */
-    public function xpTitle(): ?string
-    {
-        return $this->str($this->ifd0, MicrosoftXpTag::XP_TITLE);
-    }
-
-    /**
-     * Returns the decoded Microsoft XPComment value.
-     */
-    public function xpComment(): ?string
-    {
-        return $this->str($this->ifd0, MicrosoftXpTag::XP_COMMENT);
-    }
-
-    /**
-     * Returns the decoded Microsoft XPAuthor value.
-     */
-    public function xpAuthor(): ?string
-    {
-        return $this->str($this->ifd0, MicrosoftXpTag::XP_AUTHOR);
-    }
-
-    /**
-     * Returns the decoded Microsoft XPSubject value.
-     */
-    public function xpSubject(): ?string
-    {
-        return $this->str($this->ifd0, MicrosoftXpTag::XP_SUBJECT);
-    }
-
-    /**
-     * Returns the decoded Microsoft XPKeywords value as a list.
-     *
-     * @return list<string>|null
-     */
-    public function xpKeywords(): ?array
-    {
-        $raw = $this->str($this->ifd0, MicrosoftXpTag::XP_KEYWORDS);
-
-        if ($raw === null) {
-            return null;
-        }
-
-        $parts = preg_split('/;+/', $raw, -1, PREG_SPLIT_NO_EMPTY);
-
-        if (!is_array($parts)) {
-            return null;
-        }
-
-        $keywords = [];
-
-        foreach ($parts as $part) {
-            $keyword = trim($part);
-            if ($keyword !== '') {
-                $keywords[] = $keyword;
-            }
-        }
-
-        return $keywords === [] ? null : $keywords;
     }
 
     /**
@@ -769,7 +568,7 @@ final readonly class ParsedExif
      */
     public function thumbnailTileWidth(): ?int
     {
-        return $this->int($this->ifd1, ExifTag::TILE_WIDTH);
+        return $this->int($this->ifd1, TiffTag::TILE_WIDTH);
     }
 
     /**
@@ -779,7 +578,7 @@ final readonly class ParsedExif
      */
     public function thumbnailTileLength(): ?int
     {
-        return $this->int($this->ifd1, ExifTag::TILE_LENGTH);
+        return $this->int($this->ifd1, TiffTag::TILE_LENGTH);
     }
 
     /**
@@ -791,7 +590,7 @@ final readonly class ParsedExif
      */
     public function thumbnailTileOffsets(): ?array
     {
-        return $this->numericList($this->ifd1, ExifTag::TILE_OFFSETS);
+        return $this->numericList($this->ifd1, TiffTag::TILE_OFFSETS);
     }
 
     /**
@@ -803,7 +602,7 @@ final readonly class ParsedExif
      */
     public function thumbnailTileByteCounts(): ?array
     {
-        return $this->numericList($this->ifd1, ExifTag::TILE_BYTE_COUNTS);
+        return $this->numericList($this->ifd1, TiffTag::TILE_BYTE_COUNTS);
     }
 
     /**
@@ -831,382 +630,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Indicates whether an EXIF 3.0 preview image is referenced.
-     *
-     * EXIF 3.0 §4.6.12 requires both PreviewImageStart and PreviewImageLength to be
-     * populated for a valid preview entry.
-     */
-    public function hasPreviewImage(): bool
-    {
-        $context = $this->previewContext;
-        if ($context !== null) {
-            return $context['length'] > 0;
-        }
-
-        if (array_any(
-            $this->previewCandidateIfds(),
-            static fn (Ifd $ifd): bool => $ifd->get(LegacyTag::PREVIEW_IMAGE_START) instanceof IfdEntry
-                || $ifd->get(LegacyTag::PREVIEW_IMAGE_LENGTH) instanceof IfdEntry,
-        )) {
-            return false;
-        }
-
-        $otherPreviewTags = [
-            LegacyTag::PREVIEW_IMAGE_COMPRESSION,
-            LegacyTag::PREVIEW_IMAGE_SCALE,
-            LegacyTag::PREVIEW_IMAGE_WIDTH,
-            LegacyTag::PREVIEW_IMAGE_HEIGHT,
-            LegacyTag::PREVIEW_IMAGE_ENCODING,
-            LegacyTag::PREVIEW_IMAGE_MIME_TYPE,
-            LegacyTag::PREVIEW_IMAGE_BIT_DEPTH,
-            LegacyTag::PREVIEW_IMAGE_COLOR_SPACE,
-        ];
-
-        if (array_any(
-            $this->previewCandidateIfds(),
-            static fn (Ifd $ifd): bool => array_any(
-                $otherPreviewTags,
-                static fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry,
-            ),
-        )) {
-            return false;
-        }
-
-        return false;
-    }
-
-    /**
-     * Returns the preview image offset stored in the EXIF 3.0 preview tags.
-     *
-     * EXIF 3.0 §4.6.12 introduces PreviewImageStart as the byte offset to the optional
-     * high-quality preview, extending the thumbnail handling defined in EXIF 2.32.
-     */
-    public function previewImageOffset(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $context['offset'];
-    }
-
-    /**
-     * Returns the preview image byte length stored in the EXIF 3.0 preview tags.
-     *
-     * EXIF 3.0 §4.6.12 defines PreviewImageLength as the byte size of the preview payload
-     * adjacent to PreviewImageStart.
-     */
-    public function previewImageLength(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $context['length'];
-    }
-
-    /**
-     * @return list<Ifd>
-     *
-     * EXIF 3.0 §4.6.12 permits preview tags inside the Exif IFD or auxiliary SubIFDs, so
-     * the lookup inspects those directories in the order recommended by the spec.
-     */
-    private function previewCandidateIfds(): array
-    {
-        $candidates = [];
-
-        if ($this->exifIfd instanceof Ifd) {
-            $candidates[] = $this->exifIfd;
-        }
-
-        foreach ($this->fallbackIfds(includePrimaryThumbnail: false, includeIfd0: true) as $ifd) {
-            $candidates[] = $ifd;
-        }
-
-        return $candidates;
-    }
-
-    /**
-     * Resolves the EXIF 3.0 preview descriptor from the candidate directories.
-     *
-     * EXIF 3.0 §4.6.12 stores preview metadata within the Exif or auxiliary IFDs, so the
-     * routine walks those directories until it finds a consistent offset/length pair.
-     *
-     * @return array{ifd:Ifd, offset:int, length:int}|null
-     */
-    private function resolvePreviewContext(): ?array
-    {
-        foreach ($this->previewCandidateIfds() as $ifd) {
-            $offset = $this->int($ifd, ExifTag::PREVIEW_IMAGE_START);
-            $length = $this->int($ifd, ExifTag::PREVIEW_IMAGE_LENGTH);
-
-            if ($offset === null && $length === null) {
-                continue;
-            }
-
-            if ($offset === null) {
-                continue;
-            }
-
-            if ($length === null) {
-                continue;
-            }
-
-            if ($offset <= 0) {
-                continue;
-            }
-
-            if ($length <= 0) {
-                continue;
-            }
-
-            return [
-                'ifd'    => $ifd,
-                'offset' => $offset,
-                'length' => $length,
-            ];
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the preview image width in pixels.
-     *
-     * EXIF 3.0 §4.6.12 lists PreviewImageWidth among the supplemental preview tags.
-     */
-    public function previewImageWidth(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_WIDTH);
-    }
-
-    /**
-     * Returns the preview image height in pixels.
-     *
-     * EXIF 3.0 §4.6.12 lists PreviewImageHeight alongside the preview geometry tags.
-     */
-    public function previewImageHeight(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_HEIGHT);
-    }
-
-    /**
-     * Returns the preview image encoding identifier when present.
-     *
-     * EXIF 3.0 §4.6.12 exposes PreviewImageEncoding for vendor-defined encoding hints.
-     */
-    public function previewImageEncoding(): ?string
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->str($context['ifd'], ExifTag::PREVIEW_IMAGE_ENCODING);
-    }
-
-    /**
-     * Returns the preview image MIME type.
-     *
-     * EXIF 3.0 §4.6.12 defines PreviewImageMimeType as the IANA media type identifier.
-     */
-    public function previewImageMimeType(): ?string
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->str($context['ifd'], ExifTag::PREVIEW_IMAGE_MIME_TYPE);
-    }
-
-    /**
-     * Returns the preview image bit depth when provided by the metadata.
-     *
-     * EXIF 3.0 §4.6.12 introduces PreviewImageBitDepth for the preview container.
-     */
-    public function previewImageBitDepth(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_BIT_DEPTH);
-    }
-
-    /**
-     * Returns the preview image compression identifier when provided.
-     *
-     * EXIF 3.0 §4.6.12 documents PreviewImageCompression for codec identification.
-     */
-    public function previewImageCompression(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        $compression = $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_COMPRESSION);
-
-        return $compression !== null && $compression > 0 ? $compression : null;
-    }
-
-    /**
-     * Returns the strip offsets for the preview image when stored without a contiguous payload.
-     *
-     * EXIF 3.0 §4.6.12 allows preview descriptors to omit PreviewImageStart/Length when
-     * the image data follows the TIFF strip/tile model inherited from EXIF 2.32 §4.6.4.
-     *
-     * @return list<int>|null
-     */
-    public function previewImageStripOffsets(): ?array
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->numericList($context['ifd'], ExifTag::STRIP_OFFSETS);
-    }
-
-    /**
-     * Returns the strip byte counts for the preview image when stored without a contiguous payload.
-     *
-     * EXIF 3.0 §4.6.12 reuses the TIFF strip layout from EXIF 2.32 §4.6.4.
-     *
-     * @return list<int>|null
-     */
-    public function previewImageStripByteCounts(): ?array
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->numericList($context['ifd'], ExifTag::STRIP_BYTE_COUNTS);
-    }
-
-    /**
-     * Returns the tile offsets for the preview image when stored in tiles.
-     *
-     * EXIF 3.0 §4.6.12 keeps compatibility with the TIFF tile storage described in
-     * EXIF 2.32 §4.6.4.
-     *
-     * @return list<int>|null
-     */
-    public function previewImageTileOffsets(): ?array
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->numericList($context['ifd'], ExifTag::TILE_OFFSETS);
-    }
-
-    /**
-     * Returns the tile byte counts for the preview image when stored in tiles.
-     *
-     * EXIF 3.0 §4.6.12 allows the TIFF tile model to be reused for previews.
-     *
-     * @return list<int>|null
-     */
-    public function previewImageTileByteCounts(): ?array
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->numericList($context['ifd'], ExifTag::TILE_BYTE_COUNTS);
-    }
-
-    /**
-     * Returns the preview image scale factor when provided.
-     *
-     * EXIF 3.0 §4.6.12 defines PreviewImageScale as the ratio between preview and primary image.
-     */
-    public function previewImageScale(): ?float
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        $scale = $this->rational($context['ifd'], ExifTag::PREVIEW_IMAGE_SCALE);
-
-        if ($scale === null) {
-            return null;
-        }
-
-        return $scale > 0.0 ? $scale : null;
-    }
-
-    /**
-     * Returns the preview image colour space identifier when present.
-     *
-     * EXIF 3.0 §4.6.12 introduces PreviewImageColorSpace to describe the preview gamut.
-     */
-    public function previewColorSpace(): ?int
-    {
-        $context = $this->previewContext;
-        if ($context === null) {
-            return null;
-        }
-
-        return $this->int($context['ifd'], ExifTag::PREVIEW_IMAGE_COLOR_SPACE);
-    }
-
-    /**
-     * Returns the raw preview modification datetime string.
-     *
-     * EXIF 3.0 §4.6.12 specifies PreviewDateTime for auditing preview updates.
-     */
-    public function previewDateTimeRaw(): ?string
-    {
-        return $this->rawString($this->exifIfd, ExifTag::PREVIEW_DATE_TIME);
-    }
-
-    /**
-     * Returns the raw preview digitised datetime string.
-     *
-     * EXIF 3.0 §4.6.12 defines PreviewDateTimeDigitized alongside the modification time.
-     */
-    public function previewDateTimeDigitizedRaw(): ?string
-    {
-        return $this->rawString($this->exifIfd, ExifTag::PREVIEW_DATE_TIME_DIGITIZED);
-    }
-
-    /**
-     * Returns the preview modification datetime as an immutable value.
-     */
-    public function previewDateTime(): ?DateTimeImmutable
-    {
-        return $this->parseExifDateTime($this->previewDateTimeRaw(), null, null);
-    }
-
-    /**
-     * Returns the preview digitised datetime as an immutable value.
-     */
-    public function previewDateTimeDigitized(): ?DateTimeImmutable
-    {
-        return $this->parseExifDateTime($this->previewDateTimeDigitizedRaw(), null, null);
-    }
-
-    /**
      * Returns the reference black and white point values as floating point numbers.
      *
      * @return list<float>|null
@@ -1222,30 +645,6 @@ final readonly class ParsedExif
     public function copyright(): ?string
     {
         return $this->str($this->ifd0, ExifTag::COPYRIGHT);
-    }
-
-    /**
-     * Returns the sequential image number when provided by the camera.
-     */
-    public function imageNumber(): ?int
-    {
-        return $this->int($this->exifIfd, ExifTag::IMAGE_NUMBER);
-    }
-
-    /**
-     * Returns the security classification label recorded in the metadata.
-     */
-    public function securityClassification(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::SECURITY_CLASSIFICATION);
-    }
-
-    /**
-     * Returns the free-form image history string when present.
-     */
-    public function imageHistory(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::IMAGE_HISTORY);
     }
 
     /**
@@ -1280,24 +679,6 @@ final readonly class ParsedExif
         $value = $this->componentsInput($this->exifIfd, ExifTag::COMPONENTS_CONFIGURATION);
 
         return ValueConverters::componentsConfigurationDescription($value);
-    }
-
-    /**
-     * Returns the TIFF/EP standard identifier as a list of bytes.
-     *
-     * @return list<int>|null
-     */
-    public function tiffEpStandardId(): ?array
-    {
-        return $this->tiffEpStandardId;
-    }
-
-    /**
-     * Returns the TIFF/EP standard identifier as a normalised string representation.
-     */
-    public function tiffEpStandardIdString(): ?string
-    {
-        return $this->tiffEpStandardIdString;
     }
 
     /**
@@ -1390,54 +771,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the interoperability version string when present.
-     */
-    public function interopVersion(): ?string
-    {
-        $raw = $this->rawString($this->interopIfd, ExifTag::INTEROPERABILITY_VERSION);
-
-        if ($raw === null) {
-            return null;
-        }
-
-        $trimmed = trim($raw, "\0 ");
-
-        return $trimmed === '' ? null : $trimmed;
-    }
-
-    /**
-     * Returns the related image file format declared in the interoperability IFD.
-     */
-    public function relatedImageFileFormat(): ?string
-    {
-        return $this->str($this->interopIfd, ExifTag::RELATED_IMAGE_FILE_FORMAT);
-    }
-
-    /**
-     * Returns the related image width declared in the interoperability IFD.
-     */
-    public function relatedImageWidth(): ?int
-    {
-        return $this->int($this->interopIfd, ExifTag::RELATED_IMAGE_WIDTH);
-    }
-
-    /**
-     * Returns the related image length declared in the interoperability IFD.
-     */
-    public function relatedImageLength(): ?int
-    {
-        return $this->int($this->interopIfd, ExifTag::RELATED_IMAGE_LENGTH);
-    }
-
-    /**
-     * Returns the interlace flag when recorded.
-     */
-    public function interlace(): ?int
-    {
-        return $this->int($this->exifIfd, ExifTag::INTERLACE);
-    }
-
-    /**
      * Returns the spectral sensitivity description.
      */
     public function spectralSensitivity(): ?string
@@ -1493,10 +826,8 @@ final readonly class ParsedExif
             [$this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY],
             [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
             [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
-            [$this->exifIfd, ExifTag::ISO_SPEED_RATINGS_LEGACY],
             [$this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->ifd0, ExifTag::ISO_SPEED],
-            [$this->ifd0, ExifTag::ISO_SPEED_RATINGS_LEGACY],
         ];
 
         foreach ($candidates as [$ifd, $tag]) {
@@ -1511,7 +842,6 @@ final readonly class ParsedExif
             ExifTag::RECOMMENDED_EXPOSURE_INDEX,
             ExifTag::PHOTOGRAPHIC_SENSITIVITY,
             ExifTag::ISO_SPEED,
-            ExifTag::ISO_SPEED_RATINGS_LEGACY,
             ExifTag::EXPOSURE_INDEX,
         ];
 
@@ -1542,7 +872,6 @@ final readonly class ParsedExif
             ExifTag::RECOMMENDED_EXPOSURE_INDEX,
             ExifTag::ISO_SPEED,
             ExifTag::PHOTOGRAPHIC_SENSITIVITY,
-            ExifTag::ISO_SPEED_RATINGS_LEGACY,
             ExifTag::EXPOSURE_INDEX,
         ];
 
@@ -1551,13 +880,10 @@ final readonly class ParsedExif
             [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
             [$this->exifIfd, ExifTag::ISO_SPEED],
             [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
-            [$this->exifIfd, ExifTag::ISO_SPEED_RATINGS_LEGACY],
             [$this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->ifd0, ExifTag::ISO_SPEED],
-            [$this->ifd0, ExifTag::ISO_SPEED_RATINGS_LEGACY],
             [$this->ifd1, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->ifd1, ExifTag::ISO_SPEED],
-            [$this->ifd1, ExifTag::ISO_SPEED_RATINGS_LEGACY],
             [$this->exifIfd, ExifTag::EXPOSURE_INDEX],
             [$this->ifd0, ExifTag::EXPOSURE_INDEX],
             [$this->ifd1, ExifTag::EXPOSURE_INDEX],
@@ -1585,12 +911,11 @@ final readonly class ParsedExif
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::ISO_SPEED,
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
-                ExifTag::ISO_SPEED_RATINGS_LEGACY,
                 ExifTag::EXPOSURE_INDEX,
             ];
 
             foreach ($this->subsequentIfds as $ifd) {
-                if ($this->ifd1 instanceof Ifd && $ifd === $this->ifd1) {
+                if (($this->ifd1 instanceof Ifd) && ($ifd === $this->ifd1)) {
                     continue;
                 }
 
@@ -1854,154 +1179,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the Epson Print Image Matching parameter block when available.
-     *
-     * @return array{header:string, version:string, parameters:list<array{id:int, value:int}>}|null
-     */
-    public function printImageMatching(): ?array
-    {
-        $payload = $this->rawString($this->exifIfd, ExifTag::PRINT_IMAGE_MATCHING);
-
-        return ValueConverters::decodePrintImageMatching($payload);
-    }
-
-    /**
-     * Returns the DNG camera calibration signature recorded by the capture device.
-     */
-    public function cameraCalibrationSignature(): ?string
-    {
-        $signature = $this->str($this->exifIfd, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
-
-        return $signature ?? $this->str($this->ifd0, ExifTag::CAMERA_CALIBRATION_SIGNATURE);
-    }
-
-    /**
-     * Returns the DNG profile calibration signature when available.
-     */
-    public function profileCalibrationSignature(): ?string
-    {
-        $signature = $this->str($this->exifIfd, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
-
-        return $signature ?? $this->str($this->ifd0, ExifTag::PROFILE_CALIBRATION_SIGNATURE);
-    }
-
-    /**
-     * Returns the hue/saturation/value profile adjustment maps.
-     *
-     * @return array{
-     *     dimensions:list<int>|null,
-     *     encodings:list<int>|null,
-     *     map1:list<float>|null,
-     *     map2:list<float>|null,
-     *     map3:list<float>|null,
-     * }|null
-     */
-    public function profileHueSatMap(): ?array
-    {
-        foreach ($this->profileIfds() as $ifd) {
-            $dimensions = $this->numericList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DIMS);
-            $encodings  = $this->numericList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS);
-            $map1       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_1);
-            $map2       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_2);
-            $map3       = $this->rationalList($ifd, ExifTag::PROFILE_HUE_SAT_MAP_DATA_3);
-
-            if ($dimensions === null && $encodings === null && $map1 === null && $map2 === null && $map3 === null) {
-                continue;
-            }
-
-            return [
-                'dimensions' => $dimensions,
-                'encodings'  => $encodings,
-                'map1'       => $map1,
-                'map2'       => $map2,
-                'map3'       => $map3,
-            ];
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the optional profile look table definition.
-     *
-     * @return array{dimensions:list<int>|null,data:list<float>|null}|null
-     */
-    public function profileLookTable(): ?array
-    {
-        foreach ($this->profileIfds() as $ifd) {
-            $dimensions = $this->numericList($ifd, ExifTag::PROFILE_LOOK_TABLE_DIMS);
-            $data       = $this->rationalList($ifd, ExifTag::PROFILE_LOOK_TABLE_DATA);
-
-            if ($dimensions === null && $data === null) {
-                continue;
-            }
-
-            return [
-                'dimensions' => $dimensions,
-                'data'       => $data,
-            ];
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the optional profile tone curve points.
-     *
-     * @return list<float>|null
-     */
-    public function profileToneCurve(): ?array
-    {
-        foreach ($this->profileIfds() as $ifd) {
-            $values = $this->rationalList($ifd, ExifTag::PROFILE_TONE_CURVE);
-            if ($values === null) {
-                continue;
-            }
-
-            if ($values === []) {
-                continue;
-            }
-
-            return $values;
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the optional profile gain table map payload.
-     *
-     * @return list<float>|null
-     */
-    public function profileGainTableMap(): ?array
-    {
-        $gainTableTag = DngProfileGainTableTag::GAIN_TABLE_MAP;
-
-        foreach ($this->profileIfds() as $ifd) {
-            $values = $this->rationalList($ifd, $gainTableTag->value);
-            if ($values === null) {
-                continue;
-            }
-
-            if ($values === []) {
-                continue;
-            }
-
-            return $values;
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the noise measurement recorded by the camera.
-     */
-    public function noise(): ?float
-    {
-        return $this->rational($this->exifIfd, ExifTag::NOISE);
-    }
-
-    /**
      * Returns the composite image classification when available.
      */
     public function compositeImage(): ?CompositeImage
@@ -2041,31 +1218,6 @@ final readonly class ParsedExif
         }
 
         return $values;
-    }
-
-    /**
-     * Returns the CFA repeat pattern dimensions when valid.
-     *
-     * @return array{width:int, height:int}|null
-     */
-    public function cfaRepeatPatternDim(): ?array
-    {
-        $values = $this->numericList($this->exifIfd, ExifTag::CFA_REPEAT_PATTERN_DIM);
-
-        if ($values === null || count($values) !== 2) {
-            return null;
-        }
-
-        [$width, $height] = $values;
-
-        if ($width <= 0 || $height <= 0) {
-            return null;
-        }
-
-        return [
-            'width'  => $width,
-            'height' => $height,
-        ];
     }
 
     /**
@@ -2163,24 +1315,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the self timer mode in seconds when available.
-     */
-    public function selfTimerModeSeconds(): ?int
-    {
-        return $this->int($this->exifIfd, ExifTag::SELF_TIMER_MODE);
-    }
-
-    /**
-     * Returns the camera battery level as a percentage when provided.
-     */
-    public function batteryLevelPercent(): ?float
-    {
-        $value = $this->normalisedValue($this->exifIfd, ExifTag::BATTERY_LEVEL);
-
-        return ValueConverters::batteryLevelToPercent($value);
-    }
-
-    /**
      * Returns the recorded temperature in Celsius.
      */
     public function temperatureCelsius(): ?float
@@ -2256,107 +1390,15 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the camera yaw in degrees.
-     */
-    public function cameraYawDeg(): ?float
-    {
-        return $this->rationalFromGpsOrExif(ExifTag::CAMERA_YAW_DEGREE);
-    }
-
-    /**
-     * Returns the camera pitch in degrees.
-     */
-    public function cameraPitchDeg(): ?float
-    {
-        return $this->rationalFromGpsOrExif(ExifTag::CAMERA_PITCH_DEGREE);
-    }
-
-    /**
-     * Returns the camera roll in degrees.
-     */
-    public function cameraRollDeg(): ?float
-    {
-        return $this->rationalFromGpsOrExif(ExifTag::CAMERA_ROLL_DEGREE);
-    }
-
-    /**
-     * Returns the aircraft flight yaw in degrees.
-     */
-    public function flightYawDeg(): ?float
-    {
-        return $this->cameraYawDeg();
-    }
-
-    /**
-     * Returns the aircraft flight pitch in degrees.
-     */
-    public function flightPitchDeg(): ?float
-    {
-        return $this->cameraPitchDeg();
-    }
-
-    /**
-     * Returns the aircraft flight roll in degrees.
-     */
-    public function flightRollDeg(): ?float
-    {
-        return $this->cameraRollDeg();
-    }
-
-    /**
-     * Returns the gimbal yaw in degrees.
-     */
-    public function gimbalYawDeg(): ?float
-    {
-        return $this->rationalFromGpsOrExif(ExifTag::GIMBAL_YAW_DEGREE);
-    }
-
-    /**
-     * Returns the gimbal pitch in degrees.
-     */
-    public function gimbalPitchDeg(): ?float
-    {
-        return $this->rationalFromGpsOrExif(ExifTag::GIMBAL_PITCH_DEGREE);
-    }
-
-    /**
-     * Returns the gimbal roll in degrees.
-     */
-    public function gimbalRollDeg(): ?float
-    {
-        return $this->rationalFromGpsOrExif(ExifTag::GIMBAL_ROLL_DEGREE);
-    }
-
-    /**
      * Returns the camera firmware string when present.
      */
     public function cameraFirmware(): ?string
     {
         if ($this->exifThreeOrNewer) {
-            $value = $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
-
-            if ($value !== null) {
-                return $value;
-            }
+            return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE);
         }
 
-        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_LEGACY);
-    }
-
-    /**
-     * Returns the camera firmware version string when legacy tags are provided.
-     *
-     * EXIF 3.0 no longer defines a dedicated firmware version identifier, so
-     * this method only returns data from the legacy tags preserved for
-     * compatibility.
-     */
-    public function cameraFirmwareVersion(): ?string
-    {
-        if ($this->exifThreeOrNewer) {
-            return null;
-        }
-
-        return $this->str($this->exifIfd, ExifTag::CAMERA_FIRMWARE_VERSION_LEGACY);
+        return null;
     }
 
     /**
@@ -2364,24 +1406,7 @@ final readonly class ParsedExif
      */
     public function rawDevelopingSoftware(): ?string
     {
-        $value = $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
-
-        return $value ?? $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_LEGACY);
-    }
-
-    /**
-     * Returns the raw developing software version string when legacy tags are provided.
-     *
-     * EXIF 3.0 reassigned the identifier to CAMERA_FIRMWARE, so only legacy
-     * metadata produces a value.
-     */
-    public function rawDevelopingSoftwareVersion(): ?string
-    {
-        if ($this->exifThreeOrNewer) {
-            return null;
-        }
-
-        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY);
+        return $this->str($this->exifIfd, ExifTag::RAW_DEVELOPING_SOFTWARE);
     }
 
     /**
@@ -2390,29 +1415,10 @@ final readonly class ParsedExif
     public function imageEditingSoftware(): ?string
     {
         if ($this->exifThreeOrNewer) {
-            $value = $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
-
-            if ($value !== null) {
-                return $value;
-            }
+            return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE);
         }
 
-        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_LEGACY);
-    }
-
-    /**
-     * Returns the image editing software version string when legacy tags are provided.
-     *
-     * EXIF 3.0 reassigned the identifier to IMAGE_EDITING_SOFTWARE, so only legacy
-     * metadata produces a value.
-     */
-    public function imageEditingSoftwareVersion(): ?string
-    {
-        if ($this->exifThreeOrNewer) {
-            return null;
-        }
-
-        return $this->str($this->exifIfd, ExifTag::IMAGE_EDITING_SOFTWARE_VERSION_LEGACY);
+        return null;
     }
 
     /**
@@ -2421,29 +1427,10 @@ final readonly class ParsedExif
     public function metadataEditingSoftware(): ?string
     {
         if ($this->exifThreeOrNewer) {
-            $value = $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
-
-            if ($value !== null) {
-                return $value;
-            }
+            return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE);
         }
 
-        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_LEGACY);
-    }
-
-    /**
-     * Returns the metadata editing software version string when legacy tags are provided.
-     *
-     * EXIF 3.0 reassigned the identifier to METADATA_EDITING_SOFTWARE, so only
-     * legacy metadata produces a value.
-     */
-    public function metadataEditingSoftwareVersion(): ?string
-    {
-        if ($this->exifThreeOrNewer) {
-            return null;
-        }
-
-        return $this->str($this->exifIfd, ExifTag::METADATA_EDITING_SOFTWARE_VERSION_LEGACY);
+        return null;
     }
 
     /**
@@ -2566,80 +1553,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the EXIF time zone offset values expressed in minutes from UTC.
-     *
-     * @return list<int>|null
-     */
-    public function timeZoneOffsetMinutes(): ?array
-    {
-        $value = $this->value($this->exifIfd, ExifTag::TIME_ZONE_OFFSET);
-
-        if ($value === null) {
-            return null;
-        }
-
-        if ($value instanceof ExifRationalList) {
-            if ($value->values === []) {
-                return null;
-            }
-
-            $minutes = [];
-
-            foreach ($value->values as $component) {
-                $converted = ValueConverters::offsetToMinutes($component);
-                if ($converted === null) {
-                    return null;
-                }
-
-                $minutes[] = $converted;
-            }
-
-            return $minutes;
-        }
-
-        if ($value instanceof ExifNumericList) {
-            if ($value->values === []) {
-                return null;
-            }
-
-            $minutes = [];
-
-            foreach ($value->values as $component) {
-                if ($component instanceof UInt64) {
-                    if (!$component->fitsSignedInt()) {
-                        return null;
-                    }
-
-                    $component = $component->toInt('EXIF numeric list component');
-                }
-
-                $converted = ValueConverters::offsetToMinutes($component);
-                if ($converted === null) {
-                    return null;
-                }
-
-                $minutes[] = $converted;
-            }
-
-            return $minutes;
-        }
-
-        if ($value instanceof ExifRational) {
-            $converted = ValueConverters::offsetToMinutes($value);
-
-            return $converted === null ? null : [$converted];
-        }
-
-        if (is_int($value) || is_float($value) || is_string($value)) {
-            $converted = ValueConverters::offsetToMinutes($value);
-
-            return $converted === null ? null : [$converted];
-        }
-
-        return null;
-    }
-
-    /**
      * Returns the normalized offset time for DateTimeOriginal.
      */
     public function offsetTimeOriginal(): ?string
@@ -2697,36 +1610,6 @@ final readonly class ParsedExif
         }
 
         return null;
-    }
-
-    /**
-     * Returns the raw offset time for DateTimeOriginal.
-     *
-     * @return string|null
-     */
-    public function offsetTimeOriginalRaw(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::OFFSET_TIME_ORIGINAL);
-    }
-
-    /**
-     * Returns the raw offset time for DateTimeDigitized.
-     *
-     * @return string|null
-     */
-    public function offsetTimeDigitizedRaw(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::OFFSET_TIME_DIGITIZED);
-    }
-
-    /**
-     * Returns the raw offset time for the ModifyDate/DateTime tag.
-     *
-     * @return string|null
-     */
-    public function offsetTimeRaw(): ?string
-    {
-        return $this->str($this->exifIfd, ExifTag::OFFSET_TIME);
     }
 
     /**
@@ -2952,23 +1835,22 @@ final readonly class ParsedExif
         $offsetDigitized = $this->offsetTimeDigitized();
         $offset          = $this->offsetTime();
 
-        $fallbackOriginal  = null;
-        $fallbackDigitized = null;
-        $fallbackModify    = null;
-
-        if ($offsetOriginal === null && $offsetDigitized === null && $offset === null) {
-            $primaryOffset   = $this->derivedOffsetFromTimeZoneOffset();
-            $secondaryOffset = $this->derivedOffsetFromTimeZoneOffset(1);
-
-            $fallbackOriginal  = $primaryOffset;
-            $fallbackDigitized = $secondaryOffset ?? $primaryOffset;
-            $fallbackModify    = $primaryOffset;
-        }
-
         $attempts = [
-            [$this->dateTimeOriginalRaw(), $offsetOriginal ?? $fallbackOriginal, $this->subSecTimeOriginal()],
-            [$this->dateTimeDigitizedRaw(), $offsetDigitized ?? $fallbackDigitized, $this->subSecTimeDigitized()],
-            [$this->dateTimeRaw(), $offset ?? $fallbackModify, $this->subSecTime()],
+            [
+                $this->dateTimeOriginalRaw(),
+                $offsetOriginal,
+                $this->subSecTimeOriginal(),
+            ],
+            [
+                $this->dateTimeDigitizedRaw(),
+                $offsetDigitized,
+                $this->subSecTimeDigitized(),
+            ],
+            [
+                $this->dateTimeRaw(),
+                $offset,
+                $this->subSecTime(),
+            ],
         ];
 
         foreach ($attempts as [$raw, $rawOffset, $subSeconds]) {
@@ -3007,56 +1889,6 @@ final readonly class ParsedExif
             $this->offsetTime(),
             $this->subSecTime(),
         );
-    }
-
-    /**
-     * Returns IFDs that should be used as profile computation sources.
-     *
-     * @return list<Ifd> List of source IFDs in priority order.
-     */
-    private function profileSourceIfds(): array
-    {
-        $sources = [];
-
-        foreach ([$this->exifIfd, $this->ifd0, $this->ifd1] as $ifd) {
-            if ($ifd instanceof Ifd) {
-                $sources[] = $ifd;
-            }
-        }
-
-        foreach ($this->subsequentIfds as $ifd) {
-            $sources[] = $ifd;
-        }
-
-        foreach ($this->subIfds as $ifd) {
-            $sources[] = $ifd;
-        }
-
-        return $sources;
-    }
-
-    /**
-     * Returns IFDs containing profile-related metadata.
-     *
-     * @return list<Ifd> List of IFDs with profile data.
-     */
-    private function profileIfds(): array
-    {
-        $candidates = [];
-
-        $gainTableTag = DngProfileGainTableTag::GAIN_TABLE_MAP;
-
-        foreach ($this->profileSourceIfds() as $ifd) {
-            if ($ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_DIMS) instanceof IfdEntry
-                || $ifd->get(ExifTag::PROFILE_HUE_SAT_MAP_ENCODINGS) instanceof IfdEntry
-                || $ifd->get(ExifTag::PROFILE_LOOK_TABLE_DIMS) instanceof IfdEntry
-                || $ifd->get(ExifTag::PROFILE_TONE_CURVE) instanceof IfdEntry
-                || $ifd->get($gainTableTag->value) instanceof IfdEntry) {
-                $candidates[] = $ifd;
-            }
-        }
-
-        return $candidates;
     }
 
     /**
@@ -3261,18 +2093,7 @@ final readonly class ParsedExif
      */
     public function predictor(): ?int
     {
-        return $this->int($this->ifd0, ExifTag::PREDICTOR);
-    }
-
-    /**
-     * Returns the embedded ICC color profile binary data when present.
-     *
-     * TIFF 6.0 §20 and ICC.1:2001-04 specify the ICC profile tag (0x8773) as containing
-     * the raw ICC profile binary stream for color-managed workflows.
-     */
-    public function iccProfile(): ?string
-    {
-        return $this->rawString($this->ifd0, ExifTag::ICC_PROFILE);
+        return $this->int($this->ifd0, TiffTag::PREDICTOR);
     }
 
     /**
@@ -3484,34 +2305,6 @@ final readonly class ParsedExif
         return null;
     }
 
-    /**
-     * Returns the CFA repeat pattern width in samples.
-     */
-    public function cfaRepeatPatternWidth(): ?int
-    {
-        $dims = $this->cfaRepeatPatternDim();
-
-        return $dims['width'] ?? null;
-    }
-
-    /**
-     * Returns the CFA repeat pattern height in samples.
-     */
-    public function cfaRepeatPatternHeight(): ?int
-    {
-        $dims = $this->cfaRepeatPatternDim();
-
-        return $dims['height'] ?? null;
-    }
-
-    /**
-     * Returns the noise reduction strength encoded by the camera.
-     */
-    public function noiseReduction(): ?float
-    {
-        return $this->noise();
-    }
-
     private function str(?Ifd $ifd, int $tag): ?string
     {
         $value = $this->normalisedValue($ifd, $tag);
@@ -3604,9 +2397,7 @@ final readonly class ParsedExif
             return null;
         }
 
-        $entry = $ifd->get($tag);
-
-        return $entry?->value;
+        return $ifd->get($tag)?->value;
     }
 
     private function normalisedValue(
@@ -4253,26 +3044,6 @@ final readonly class ParsedExif
         }
 
         return $nullCount >= (int) ($length / 4);
-    }
-
-    /**
-     * Derives a canonical offset string from the legacy TimeZoneOffset tag when available.
-     */
-    private function derivedOffsetFromTimeZoneOffset(int $component = 0): ?string
-    {
-        $values = $this->timeZoneOffsetMinutes();
-
-        if ($values === null || !array_key_exists($component, $values)) {
-            return null;
-        }
-
-        $minutes          = $values[$component];
-        $sign             = $minutes < 0 ? '-' : '+';
-        $absolute         = abs($minutes);
-        $hours            = intdiv($absolute, 60);
-        $remainingMinutes = $absolute % 60;
-
-        return sprintf('%s%02d:%02d', $sign, $hours, $remainingMinutes);
     }
 
     /**

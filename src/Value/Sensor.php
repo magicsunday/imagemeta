@@ -22,8 +22,6 @@ final readonly class Sensor
      * Creates a sensor characteristics metadata value object.
      *
      * @param float|null                                                                                                                                                   $pixelPitchUm             Pixel pitch in micrometres.
-     * @param int|null                                                                                                                                                     $cfaWidth                 Width of the repeating CFA pattern.
-     * @param int|null                                                                                                                                                     $cfaHeight                Height of the repeating CFA pattern.
      * @param string|null                                                                                                                                                  $sensorType               Sensor technology (e.g. CCD or CMOS).
      * @param bool                                                                                                                                                         $ibis                     Indicates in-body image stabilisation support.
      * @param list<int>|null                                                                                                                                               $cfaPattern               Colour filter array pattern definition.
@@ -36,8 +34,6 @@ final readonly class Sensor
      */
     public function __construct(
         public ?float $pixelPitchUm = null,
-        public ?int $cfaWidth = null,
-        public ?int $cfaHeight = null,
         public ?string $sensorType = null,
         public bool $ibis = false,
         public ?array $cfaPattern = null,

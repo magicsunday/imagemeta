@@ -25,7 +25,6 @@ final readonly class Camera
      * @param string|null        $make          Camera manufacturer.
      * @param string|null        $model         Camera model name.
      * @param string|null        $ownerName     Camera owner name.
-     * @param string|null        $serialNumber  Serial number reported by metadata.
      * @param string|null        $firmware      Camera firmware version string.
      * @param FileSource|null    $fileSource    Image acquisition source classification.
      * @param SensingMethod|null $sensingMethod Sensor sampling method.
@@ -34,7 +33,6 @@ final readonly class Camera
         public ?string $make,
         public ?string $model,
         public ?string $ownerName,
-        public ?string $serialNumber,
         public ?string $firmware,
         public ?FileSource $fileSource,
         public ?SensingMethod $sensingMethod,

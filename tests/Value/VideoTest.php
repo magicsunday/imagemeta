@@ -32,8 +32,6 @@ final class VideoTest extends TestCase
             height: 1080,
             codec: null,
             hdr: false,
-            transferFunction: null,
-            colorPrimaries: null,
         );
 
         self::assertSame(120.5, $video->durationSec);
@@ -72,8 +70,6 @@ final class VideoTest extends TestCase
             height: null,
             codec: null,
             hdr: false,
-            transferFunction: null,
-            colorPrimaries: null,
         );
 
         self::assertNull($video->durationSec);

@@ -541,10 +541,16 @@ final readonly class ValueConverters
             [2, 2],
         ];
 
-        foreach ($legalValues as $legal) {
-            if ($horizontal === $legal[0] && $vertical === $legal[1]) {
-                return [$horizontal, $vertical];
-            }
+        $result = array_any(
+            $legalValues,
+            fn ($legal): bool => $horizontal === $legal[0] && $vertical === $legal[1]
+        );
+
+        if ($result) {
+            return [
+                $horizontal,
+                $vertical,
+            ];
         }
 
         return null;
@@ -1974,8 +1980,7 @@ final readonly class ValueConverters
     private static function formatGpsVersion(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): array {
-        $raw        = is_string($value) ? $value : null;
-        $normalized = null;
+        $raw = is_string($value) ? $value : null;
 
         if ($value instanceof ExifNumericList) {
             $components = [];
@@ -2348,13 +2353,14 @@ final readonly class ValueConverters
         }
 
         $upper = strtoupper($raw);
+
         if (in_array($upper, ['Z', 'UTC', 'GMT'], true)) {
             return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
         }
 
         if (str_starts_with($upper, 'UTC') || str_starts_with($upper, 'GMT')) {
-            $raw   = trim(substr($raw, 3));
-            $upper = strtoupper($raw);
+            $raw = trim(substr($raw, 3));
+
             if ($raw === '') {
                 return ['sign' => 1, 'hours' => 0, 'minutes' => 0];
             }
@@ -2368,21 +2374,20 @@ final readonly class ValueConverters
         }
 
         $firstChar = $raw[0];
+
         if ($firstChar === '+' || $firstChar === '-') {
             $sign = $firstChar === '-' ? -1 : 1;
             $raw  = substr($raw, 1);
         }
 
         $raw = trim($raw);
+
         if ($raw === '') {
             return null;
         }
 
         $normalized = str_replace([' ', '\t'], '', $raw);
         $normalized = str_replace(',', '.', $normalized);
-
-        $hours   = null;
-        $minutes = null;
 
         if (str_contains($normalized, ':')) {
             $parts = explode(':', $normalized, 3);
@@ -2414,6 +2419,7 @@ final readonly class ValueConverters
                 }
 
                 $length = strlen($normalized);
+
                 if ($length <= 2) {
                     $hours   = (int) $normalized;
                     $minutes = 0;

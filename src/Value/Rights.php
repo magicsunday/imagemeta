@@ -19,18 +19,16 @@ final readonly class Rights
     /**
      * Creates a copyright and licensing metadata value object.
      *
-     * @param string|null $copyright              Copyright notice text.
-     * @param string|null $usageTerms             Usage terms or rights expression.
-     * @param string|null $licenseUrl             URL to the applicable licence.
-     * @param string|null $creditLine             Credit line or byline.
-     * @param string|null $securityClassification Security classification assigned to the asset.
+     * @param string|null $copyright  Copyright notice text.
+     * @param string|null $usageTerms Usage terms or rights expression.
+     * @param string|null $licenseUrl URL to the applicable licence.
+     * @param string|null $creditLine Credit line or byline.
      */
     public function __construct(
         public ?string $copyright,
         public ?string $usageTerms,
         public ?string $licenseUrl,
         public ?string $creditLine,
-        public ?string $securityClassification,
     ) {
     }
 }

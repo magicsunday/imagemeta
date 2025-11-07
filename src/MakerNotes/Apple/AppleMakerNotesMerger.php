@@ -53,12 +53,16 @@ final class AppleMakerNotesMerger
                 $makerNotes->length,
                 $makerNotes->sha1,
                 $apple,
-                $makerNotes->isSafe,
             );
         }
 
         if ($quickTime instanceof QuickTimeMeta) {
-            return new MakerNotesRecord('Apple', 0, str_repeat('0', 40), $apple);
+            return new MakerNotesRecord(
+                'Apple',
+                0,
+                str_repeat('0', 40),
+                $apple
+            );
         }
 
         return $makerNotes;

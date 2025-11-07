@@ -13,12 +13,12 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
-use MagicSunday\ImageMeta\Value\Preview;
+use MagicSunday\ImageMeta\Value\Thumbnail;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
-#[CoversClass(Preview::class)]
+#[CoversClass(Thumbnail::class)]
 final class PreviewTest extends TestCase
 {
     #[Test]
