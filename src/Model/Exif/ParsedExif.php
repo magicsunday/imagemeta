@@ -260,7 +260,7 @@ final readonly class ParsedExif
     {
         $height = $this->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION);
 
-        return $height ?? $this->int($this->ifd0, ExifTag::IMAGE_HEIGHT);
+        return $height ?? $this->int($this->ifd0, ExifTag::IMAGE_LENGTH);
     }
 
     /**

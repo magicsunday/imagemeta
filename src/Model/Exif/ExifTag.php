@@ -190,14 +190,16 @@ final readonly class ExifTag
     public const int GPS_H_POSITIONING_ERROR = 0x001F;
 
     /**
-     * Width of the image in pixels.
+     * The number of columns of image data, equal to the number of pixels per row. In JPEG compressed data, this
+     * tag shall not be used because a JPEG marker is used instead of it.
      */
     public const int IMAGE_WIDTH = 0x0100;
 
     /**
-     * Height of the image in pixels.
+     * The number of rows of image data. In JPEG compressed data, this tag shall not be used because a JPEG
+     * marker is used instead of it.
      */
-    public const int IMAGE_HEIGHT = 0x0101;
+    public const int IMAGE_LENGTH = 0x0101;
 
     /**
      * Number of bits for each colour component.
