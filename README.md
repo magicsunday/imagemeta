@@ -55,7 +55,7 @@ $meta->lens->focalLengthMm;
 $meta->derived->equivalent35mm;
 $meta->exposure->program;
 $meta->gps->latitudeCoordinate?->signed;
-$meta->preview->hasThumbnail;
+$meta->thumbnail->hasThumbnail;
 $meta->interop->relatedImageWidth;
 $meta->standards->exifVersion;
 ```
