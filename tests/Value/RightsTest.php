@@ -30,7 +30,6 @@ final class RightsTest extends TestCase
             usageTerms: null,
             licenseUrl: null,
             creditLine: null,
-            securityClassification: null,
         );
 
         self::assertSame('© 2024 John Doe', $rights->copyright);
@@ -44,14 +43,12 @@ final class RightsTest extends TestCase
             usageTerms: 'Creative Commons BY-SA',
             licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
             creditLine: 'Photo by Jane Smith',
-            securityClassification: 'Public',
         );
 
         self::assertSame('© 2024 Jane Smith', $rights->copyright);
         self::assertSame('Creative Commons BY-SA', $rights->usageTerms);
         self::assertSame('https://creativecommons.org/licenses/by-sa/4.0/', $rights->licenseUrl);
         self::assertSame('Photo by Jane Smith', $rights->creditLine);
-        self::assertSame('Public', $rights->securityClassification);
     }
 
     #[Test]
@@ -62,13 +59,11 @@ final class RightsTest extends TestCase
             usageTerms: null,
             licenseUrl: null,
             creditLine: null,
-            securityClassification: null,
         );
 
         self::assertNull($rights->copyright);
         self::assertNull($rights->usageTerms);
         self::assertNull($rights->licenseUrl);
         self::assertNull($rights->creditLine);
-        self::assertNull($rights->securityClassification);
     }
 }

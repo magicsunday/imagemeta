@@ -29,8 +29,6 @@ final class StandardsTest extends TestCase
             exifVersion: '3.00',
             profile: null,
             flashpixVersion: null,
-            tiffEpStandardId: null,
-            tiffEpStandardString: null,
         );
 
         self::assertSame('3.00', $standards->exifVersion);
@@ -43,15 +41,11 @@ final class StandardsTest extends TestCase
             exifVersion: '2.32',
             profile: 'Baseline',
             flashpixVersion: '1.00',
-            tiffEpStandardId: [1, 0, 0, 0],
-            tiffEpStandardString: 'TIFF/EP-1.0',
         );
 
         self::assertSame('2.32', $standards->exifVersion);
         self::assertSame('Baseline', $standards->profile);
         self::assertSame('1.00', $standards->flashpixVersion);
-        self::assertSame([1, 0, 0, 0], $standards->tiffEpStandardId);
-        self::assertSame('TIFF/EP-1.0', $standards->tiffEpStandardString);
     }
 
     #[Test]
@@ -61,14 +55,10 @@ final class StandardsTest extends TestCase
             exifVersion: null,
             profile: null,
             flashpixVersion: null,
-            tiffEpStandardId: null,
-            tiffEpStandardString: null,
         );
 
         self::assertNull($standards->exifVersion);
         self::assertNull($standards->profile);
         self::assertNull($standards->flashpixVersion);
-        self::assertNull($standards->tiffEpStandardId);
-        self::assertNull($standards->tiffEpStandardString);
     }
 }

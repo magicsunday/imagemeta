@@ -37,13 +37,9 @@ final class SensorTest extends TestCase
             focalPlaneXResolution: null,
             focalPlaneYResolution: null,
             focalPlaneResolutionUnit: null,
-            cfaWidth: 2,
-            cfaHeight: 2,
         );
 
         self::assertSame(3.76, $sensor->pixelPitchUm);
-        self::assertSame(2, $sensor->cfaWidth);
-        self::assertSame(2, $sensor->cfaHeight);
         self::assertSame('CMOS', $sensor->sensorType);
         self::assertTrue($sensor->ibis);
     }
@@ -64,8 +60,6 @@ final class SensorTest extends TestCase
             focalPlaneXResolution: null,
             focalPlaneYResolution: null,
             focalPlaneResolutionUnit: null,
-            cfaWidth: 2,
-            cfaHeight: 2,
         );
 
         self::assertSame($cfaPattern, $sensor->cfaPattern);
@@ -85,8 +79,6 @@ final class SensorTest extends TestCase
             focalPlaneXResolution: 3000.0,
             focalPlaneYResolution: 3000.0,
             focalPlaneResolutionUnit: ResolutionUnit::CENTIMETER,
-            cfaWidth: null,
-            cfaHeight: null,
         );
 
         self::assertSame(3000.0, $sensor->focalPlaneXResolution);
@@ -108,12 +100,9 @@ final class SensorTest extends TestCase
             focalPlaneXResolution: null,
             focalPlaneYResolution: null,
             focalPlaneResolutionUnit: null,
-            cfaWidth: null,
-            cfaHeight: null,
         );
 
         self::assertNull($sensor->pixelPitchUm);
-        self::assertNull($sensor->cfaWidth);
         self::assertNull($sensor->sensorType);
         self::assertFalse($sensor->ibis);
         self::assertNull($sensor->cfaPattern);
