@@ -439,7 +439,7 @@ final class TiffExifReader implements ExifReaderInterface
 
         $entry = new IfdEntry($tag, $type, $cnt, $value);
 
-        if ($tag === TiffTag::SUB_IFDS) {
+        if ($tag === LegacyTag::SUB_IFDS) {
             $this->collectSubIfds($entry);
         }
 

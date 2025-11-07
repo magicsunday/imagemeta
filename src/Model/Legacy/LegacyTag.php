@@ -268,3 +268,115 @@ final readonly class LegacyTag
     {
     }
 }
+
+    // ========================================================================
+    // TIFF/EP and TIFF Extensions (not in TIFF 6.0 Appendix A or EXIF 3.0)
+    // ========================================================================
+
+    /**
+     * TIFF/EP extension tag recording processing software information.
+     *
+     * Used in TIFF/EP (ISO 12234-2) and supported by some RAW formats.
+     * Tag ID: 11 (0x000B)
+     */
+    public const int PROCESSING_SOFTWARE = 0x000B;
+
+    /**
+     * Offset pointer to additional linked IFDs.
+     *
+     * TIFF 6.0 Extensions define SubIFDs for hierarchical image structures
+     * (e.g., thumbnails, reduced-resolution images). Not in TIFF 6.0 Appendix A.
+     * Tag ID: 330 (0x014A)
+     */
+    public const int SUB_IFDS = 0x014A;
+
+    /**
+     * Embedded ICC color profile binary payload.
+     *
+     * TIFF 6.0 §20 (ICC Profile Tag) and ICC.1:2001-04 specify tag 0x8773 as the
+     * container for ICC color profile data embedded directly within TIFF/EXIF files.
+     * Not in TIFF 6.0 Appendix A baseline tags.
+     * Tag ID: 34675 (0x8773)
+     */
+    public const int ICC_PROFILE = 0x8773;
+
+    /**
+     * Charge level remaining in the battery.
+     *
+     * TIFF/EP extension tag. Rarely used in modern EXIF implementations.
+     * Tag ID: 33423 (0x828F)
+     */
+    public const int BATTERY_LEVEL = 0x828F;
+
+    /**
+     * Repetition pattern for the colour filter array.
+     *
+     * TIFF/EP extension for describing CFA patterns in RAW images.
+     * Tag ID: 33421 (0x828D)
+     */
+    public const int CFA_REPEAT_PATTERN_DIM = 0x828D;
+
+    /**
+     * Indicator describing interlaced scan type.
+     *
+     * TIFF/IT extension for interlaced image storage.
+     * Tag ID: 34857 (0x8829)
+     */
+    public const int INTERLACE = 0x8829;
+
+    /**
+     * Time zone offsets for recorded timestamps.
+     *
+     * EXIF private tag, rarely used. Superseded by OffsetTime* tags in EXIF 3.0.
+     * Tag ID: 34858 (0x882A)
+     */
+    public const int TIME_ZONE_OFFSET = 0x882A;
+
+    /**
+     * Self-timer delay used for the exposure.
+     *
+     * EXIF private tag, rarely used in modern implementations.
+     * Tag ID: 34859 (0x882B)
+     */
+    public const int SELF_TIMER_MODE = 0x882B;
+
+    /**
+     * Noise measurement parameters.
+     *
+     * TIFF/EP extension for image quality metrics.
+     * Tag ID: 41485 (0xA20D)
+     */
+    public const int NOISE = 0xA20D;
+
+    /**
+     * Sequential number assigned by the camera.
+     *
+     * TIFF/EP extension tag.
+     * Tag ID: 41489 (0xA211)
+     */
+    public const int IMAGE_NUMBER = 0xA211;
+
+    /**
+     * Security classification of the image.
+     *
+     * TIFF/EP extension for classified or sensitive images.
+     * Tag ID: 41490 (0xA212)
+     */
+    public const int SECURITY_CLASSIFICATION = 0xA212;
+
+    /**
+     * Processing steps applied to the image.
+     *
+     * TIFF/EP extension for documenting image processing history.
+     * Tag ID: 41491 (0xA213)
+     */
+    public const int IMAGE_HISTORY = 0xA213;
+
+    /**
+     * Identifier for the TIFF/EP standard version used.
+     *
+     * TIFF/EP (ISO 12234-2) standard identifier tag.
+     * Tag ID: 41494 (0xA216)
+     */
+    public const int TIFF_EP_STANDARD_ID = 0xA216;
+}
