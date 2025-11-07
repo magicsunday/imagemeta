@@ -25,8 +25,21 @@ final class PreviewTest extends TestCase
     public function exposesPreviewAndThumbnailDetails(): void
     {
         $preview = new Preview(
+            // Thumbnail parameters (IFD1)
             hasThumbnail: true,
+            thumbnailOffset: 512,
+            thumbnailLength: 1024,
+            thumbnailCompression: Compression::JPEG,
+            thumbnailTileWidth: 256,
+            thumbnailTileLength: 256,
+            thumbnailTileOffsets: [512],
+            thumbnailTileByteCounts: [1024],
+            thumbnailStripOffsets: [512],
+            thumbnailStripByteCounts: [1024],
+            // Preview parameters (EXIF 3.0)
             hasPreview: true,
+            previewOffset: 4096,
+            previewLength: 8192,
             previewWidth: 1024,
             previewHeight: 768,
             previewColorSpace: ColorSpace::SRGB,
@@ -35,19 +48,10 @@ final class PreviewTest extends TestCase
             previewScale: 0.5,
             previewEncoding: 'JPEG',
             previewMimeType: 'image/jpeg',
-            previewOffset: 4096,
-            previewLength: 8192,
-            thumbnailOffset: 512,
-            thumbnailLength: 1024,
-            thumbnailCompression: Compression::JPEG,
-            thumbnailStripOffsets: [512],
-            thumbnailStripByteCounts: [1024],
-            thumbnailTileOffsets: [512],
-            thumbnailTileByteCounts: [1024],
-            previewStripOffsets: [4096],
-            previewStripByteCounts: [8192],
             previewTileOffsets: [4096],
             previewTileByteCounts: [8192],
+            previewStripOffsets: [4096],
+            previewStripByteCounts: [8192],
         );
 
         self::assertTrue($preview->hasThumbnail);
@@ -65,6 +69,8 @@ final class PreviewTest extends TestCase
         self::assertSame(512, $preview->thumbnailOffset);
         self::assertSame(1024, $preview->thumbnailLength);
         self::assertSame(Compression::JPEG, $preview->thumbnailCompression);
+        self::assertSame(256, $preview->thumbnailTileWidth);
+        self::assertSame(256, $preview->thumbnailTileLength);
         self::assertSame([512], $preview->thumbnailStripOffsets);
         self::assertSame([1024], $preview->thumbnailStripByteCounts);
         self::assertSame([512], $preview->thumbnailTileOffsets);

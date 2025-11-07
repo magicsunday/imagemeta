@@ -258,6 +258,12 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::ARTIST                         => new IfdEntry(ExifTag::ARTIST, 2, 12, 'Jane Doe'),
         ]);
 
+        // IFD1 contains thumbnail data according to EXIF spec
+        $ifd1 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 24576),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 8192),
+        ]);
+
         $exifIfd = new Ifd([
             ExifTag::IMAGE_TITLE               => new IfdEntry(ExifTag::IMAGE_TITLE, 2, 12, 'Sunset Title'),
             ExifTag::CAMERA_OWNER_NAME         => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 10, 'Jane Owner'),
@@ -377,7 +383,7 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::RELATED_IMAGE_LENGTH      => new IfdEntry(ExifTag::RELATED_IMAGE_LENGTH, 4, 1, 3000),
         ]);
 
-        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, $interopIfd, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, $interopIfd, $ifd1);
 
         $xmpDocument = new XmpDocument([
             '{http://purl.org/dc/elements/1.1/}creator'                                                => ['Jane Doe'],
@@ -605,6 +611,12 @@ final class ExifAssemblerTest extends TestCase
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
         ]);
 
+        // IFD1 contains thumbnail data according to EXIF spec
+        $ifd1 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
+
         $exifIfd = new Ifd([
             ExifTag::PREVIEW_IMAGE_START       => new IfdEntry(ExifTag::PREVIEW_IMAGE_START, 4, 1, 16_384),
             ExifTag::PREVIEW_IMAGE_LENGTH      => new IfdEntry(ExifTag::PREVIEW_IMAGE_LENGTH, 4, 1, 4_096),
@@ -617,7 +629,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, null);
+        $exifDocument = new ParsedExif($ifd0, $exifIfd, null, null, $ifd1);
         $metadata     = new Metadata(['primary'], null, $exifDocument);
 
         $structured = (new ExifAssembler())->assemble($metadata);
@@ -633,6 +645,12 @@ final class ExifAssemblerTest extends TestCase
     public function structuredMetadataUsesFallbackExposureTemporalAndUserCommentEncoding(): void
     {
         $ifd0 = new Ifd([
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
+            ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
+        ]);
+
+        // IFD1 contains thumbnail data according to EXIF spec
+        $ifd1 = new Ifd([
             ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 8_192),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, 4, 1, 2_048),
         ]);
@@ -659,7 +677,7 @@ final class ExifAssemblerTest extends TestCase
             ),
         ]);
 
-        $metadata   = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, null, null, null));
+        $metadata   = new Metadata(['primary'], null, new ParsedExif($ifd0, $exifIfd, null, null, $ifd1));
         $structured = (new ExifAssembler())->assemble($metadata);
         $temporal   = $structured->temporal;
         $preview    = $structured->preview;
@@ -1876,7 +1894,7 @@ final class ExifAssemblerTest extends TestCase
         self::assertNull($structured->video->durationSec);
         self::assertNull($structured->video->frameRate);
         self::assertNull($structured->video->codec);
-        self::assertNull($structured->video->hdr);
+        self::assertFalse($structured->video->hdr);
         self::assertNull($structured->video->transferFunction);
         self::assertNull($structured->video->colorPrimaries);
     }
@@ -2910,6 +2928,11 @@ final class ExifAssemblerTest extends TestCase
                         continue;
                     }
 
+                    // Allow false for boolean fields (hasThumbnail, hasPreview, etc.)
+                    if (is_bool($nestedValue) && ($nestedValue === false)) {
+                        continue;
+                    }
+
                     self::fail(sprintf('%s::%s::%s expected null/empty, got %s', $name, $field, $nestedField, var_export($nestedValue, true)));
                 }
 
@@ -2921,6 +2944,11 @@ final class ExifAssemblerTest extends TestCase
             }
 
             if (($name === 'standards') && ($field === 'profile') && ($fieldValue === '2.2')) {
+                continue;
+            }
+
+            // Allow false for boolean fields (ibis, hdr, isPrimaryInBurst, etc.)
+            if (is_bool($fieldValue) && ($fieldValue === false)) {
                 continue;
             }
 
