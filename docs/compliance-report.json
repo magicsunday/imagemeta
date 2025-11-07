@@ -1,12 +1,12 @@
 {
-    "generated": "2025-11-06T06:57:49+00:00",
+    "generated": "2025-11-07T10:05:13+00:00",
     "summary": {
         "total_spec_tags": 163,
-        "implemented": 144,
-        "partial": 19,
-        "missing": 0,
-        "extra": 62,
-        "coverage_percent": 88.34
+        "implemented": 123,
+        "partial": 30,
+        "missing": 10,
+        "extra": 16,
+        "coverage_percent": 75.46
     },
     "categories": {
         "tiff_tags": {
@@ -17,13 +17,11 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
-                "constant_defined": true,
+                "status": "missing",
+                "constant_defined": false,
                 "getter_method_exists": false,
                 "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "notes": []
             },
             "255": {
                 "tag_id": "0x00FF",
@@ -32,12 +30,11 @@
                 "source": "TIFF 5.0",
                 "required": false,
                 "deprecated": true,
-                "status": "partial",
-                "constant_defined": true,
+                "status": "missing",
+                "constant_defined": false,
                 "getter_method_exists": false,
                 "getter_methods": [],
                 "notes": [
-                    "No getter method in ParsedExif",
                     "Tag is deprecated in specification"
                 ]
             },
@@ -52,9 +49,7 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "imageWidth",
-                    "previewImageWidth",
-                    "relatedImageWidth"
+                    "imageWidth"
                 ],
                 "notes": []
             },
@@ -65,14 +60,13 @@
                 "source": "TIFF 6.0",
                 "required": true,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "previewImageLength",
-                    "relatedImageLength"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "258": {
                 "tag_id": "0x0102",
@@ -100,7 +94,6 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "previewImageCompression",
                     "thumbnailCompression",
                     "compression"
                 ],
@@ -128,13 +121,15 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
                     "documentName"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "270": {
                 "tag_id": "0x010E",
@@ -163,9 +158,7 @@
                 "getter_method_exists": true,
                 "getter_methods": [
                     "makerNotes",
-                    "makerNoteSafety",
                     "cameraMake",
-                    "aircraftMake",
                     "lensMake"
                 ],
                 "notes": []
@@ -182,7 +175,6 @@
                 "getter_method_exists": true,
                 "getter_methods": [
                     "cameraModel",
-                    "aircraftModel",
                     "lensModel"
                 ],
                 "notes": []
@@ -199,7 +191,6 @@
                 "getter_method_exists": true,
                 "getter_methods": [
                     "stripOffsets",
-                    "previewImageStripOffsets",
                     "thumbnailStripOffsets"
                 ],
                 "notes": []
@@ -261,7 +252,6 @@
                 "getter_method_exists": true,
                 "getter_methods": [
                     "stripByteCounts",
-                    "previewImageStripByteCounts",
                     "thumbnailStripByteCounts"
                 ],
                 "notes": []
@@ -353,14 +343,9 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "processingSoftware",
-                    "software",
                     "rawDevelopingSoftware",
-                    "rawDevelopingSoftwareVersion",
                     "imageEditingSoftware",
-                    "imageEditingSoftwareVersion",
-                    "metadataEditingSoftware",
-                    "metadataEditingSoftwareVersion"
+                    "metadataEditingSoftware"
                 ],
                 "notes": []
             },
@@ -375,10 +360,6 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "previewDateTimeRaw",
-                    "previewDateTimeDigitizedRaw",
-                    "previewDateTime",
-                    "previewDateTimeDigitized",
                     "dateTimeOriginalRaw",
                     "dateTimeOriginal",
                     "dateTimeOriginalBestEffort",
@@ -412,13 +393,15 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
                     "hostComputer"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "318": {
                 "tag_id": "0x013E",
@@ -457,13 +440,16 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "tileWidth"
+                    "tileWidth",
+                    "thumbnailTileWidth"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "323": {
                 "tag_id": "0x0143",
@@ -472,13 +458,16 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "tileLength"
+                    "tileLength",
+                    "thumbnailTileLength"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "324": {
                 "tag_id": "0x0144",
@@ -487,15 +476,16 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
                     "tileOffsets",
-                    "previewImageTileOffsets",
                     "thumbnailTileOffsets"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "325": {
                 "tag_id": "0x0145",
@@ -504,15 +494,16 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
                     "tileByteCounts",
-                    "previewImageTileByteCounts",
                     "thumbnailTileByteCounts"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "330": {
                 "tag_id": "0x014A",
@@ -521,13 +512,15 @@
                 "source": "TIFF Tech Note 1",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
                     "subIfds"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "513": {
                 "tag_id": "0x0201",
@@ -641,14 +634,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "processingSoftware",
-                    "software"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             }
         },
         "exif_tags": {
@@ -878,8 +870,6 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "previewDateTimeDigitizedRaw",
-                    "previewDateTimeDigitized",
                     "dateTimeDigitizedRaw",
                     "dateTimeDigitized",
                     "dateTime"
@@ -899,10 +889,7 @@
                 "getter_methods": [
                     "offsetTimeOriginal",
                     "offsetTimeDigitized",
-                    "offsetTime",
-                    "offsetTimeOriginalRaw",
-                    "offsetTimeDigitizedRaw",
-                    "offsetTimeRaw"
+                    "offsetTime"
                 ],
                 "notes": []
             },
@@ -918,8 +905,7 @@
                 "getter_method_exists": true,
                 "getter_methods": [
                     "offsetTimeOriginal",
-                    "offsetTime",
-                    "offsetTimeOriginalRaw"
+                    "offsetTime"
                 ],
                 "notes": []
             },
@@ -935,8 +921,7 @@
                 "getter_method_exists": true,
                 "getter_methods": [
                     "offsetTimeDigitized",
-                    "offsetTime",
-                    "offsetTimeDigitizedRaw"
+                    "offsetTime"
                 ],
                 "notes": []
             },
@@ -1152,8 +1137,7 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "makerNotes",
-                    "makerNoteSafety"
+                    "makerNotes"
                 ],
                 "notes": []
             },
@@ -1250,8 +1234,7 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "colorSpace",
-                    "previewColorSpace"
+                    "colorSpace"
                 ],
                 "notes": []
             },
@@ -1796,7 +1779,6 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "imageNumber",
                     "compositeImage",
                     "sourceImageNumberOfCompositeImage"
                 ],
@@ -1826,13 +1808,11 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
-                "constant_defined": true,
+                "status": "missing",
+                "constant_defined": false,
                 "getter_method_exists": false,
                 "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "notes": []
             },
             "50460": {
                 "tag_id": "0xC51C",
@@ -1841,12 +1821,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "previewImageLength"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "50461": {
@@ -1856,12 +1834,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "previewImageEncoding"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "50462": {
@@ -1871,13 +1847,11 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "partial",
-                "constant_defined": true,
+                "status": "missing",
+                "constant_defined": false,
                 "getter_method_exists": false,
                 "getter_methods": [],
-                "notes": [
-                    "No getter method in ParsedExif"
-                ]
+                "notes": []
             },
             "50463": {
                 "tag_id": "0xC51F",
@@ -1886,14 +1860,15 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "imageWidth",
-                    "previewImageWidth"
+                    "imageWidth"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "50464": {
                 "tag_id": "0xC520",
@@ -1902,14 +1877,15 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "imageHeight",
-                    "previewImageHeight"
+                    "imageHeight"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "50465": {
                 "tag_id": "0xC521",
@@ -1918,13 +1894,15 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
                     "colorSpace"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "50466": {
                 "tag_id": "0xC522",
@@ -1933,12 +1911,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "previewImageBitDepth"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "50467": {
@@ -1948,17 +1924,15 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "previewDateTimeRaw",
-                    "previewDateTimeDigitizedRaw",
-                    "previewDateTime",
-                    "previewDateTimeDigitized",
                     "dateTime"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "50468": {
                 "tag_id": "0xC524",
@@ -1967,17 +1941,16 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "previewDateTimeDigitizedRaw",
-                    "previewDateTime",
-                    "previewDateTimeDigitized",
                     "dateTimeDigitized",
                     "dateTime"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "50735": {
                 "tag_id": "0xC62F",
@@ -1986,12 +1959,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "previewImageScale"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             }
         },
@@ -2515,12 +2486,10 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "relatedImageFileFormat"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "4097": {
@@ -2530,14 +2499,15 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "imageWidth",
-                    "relatedImageWidth"
+                    "imageWidth"
                 ],
-                "notes": []
+                "notes": [
+                    "Missing constant in ExifTag.php"
+                ]
             },
             "4098": {
                 "tag_id": "0x1002",
@@ -2546,67 +2516,15 @@
                 "source": "EXIF 2.32",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "relatedImageLength"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             }
         }
     },
     "extra_tags": [
-        {
-            "tag_id": "0x9C9B",
-            "constant_name": "XP_TITLE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x9C9C",
-            "constant_name": "XP_COMMENT",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x9C9D",
-            "constant_name": "XP_AUTHOR",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x9C9E",
-            "constant_name": "XP_KEYWORDS",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x9C9F",
-            "constant_name": "XP_SUBJECT",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x0320",
-            "constant_name": "IMAGE_TITLE_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xE92D",
-            "constant_name": "PHOTOGRAPHER_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xE92E",
-            "constant_name": "IMAGE_EDITOR_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC525",
-            "constant_name": "PREVIEW_IMAGE_COMPRESSION",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC526",
-            "constant_name": "PREVIEW_IMAGE_SCALE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
         {
             "tag_id": "0x8769",
             "constant_name": "EXIF_IFD_POINTER",
@@ -2615,156 +2533,6 @@
         {
             "tag_id": "0x8825",
             "constant_name": "GPS_IFD_POINTER",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA005",
-            "constant_name": "INTEROPERABILITY_IFD_POINTER",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x828D",
-            "constant_name": "CFA_REPEAT_PATTERN_DIM",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x828F",
-            "constant_name": "BATTERY_LEVEL",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC4A5",
-            "constant_name": "PRINT_IMAGE_MATCHING",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC635",
-            "constant_name": "MAKER_NOTE_SAFETY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x8829",
-            "constant_name": "INTERLACE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x882A",
-            "constant_name": "TIME_ZONE_OFFSET",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x882B",
-            "constant_name": "SELF_TIMER_MODE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA439",
-            "constant_name": "RAW_DEVELOPING_SOFTWARE_VERSION_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA43A",
-            "constant_name": "RAW_DEVELOPING_SOFTWARE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA43B",
-            "constant_name": "IMAGE_EDITING_SOFTWARE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA43C",
-            "constant_name": "METADATA_EDITING_SOFTWARE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA500",
-            "constant_name": "GAMMA",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA20C",
-            "constant_name": "SPATIAL_FREQUENCY_RESPONSE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA20D",
-            "constant_name": "NOISE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA211",
-            "constant_name": "IMAGE_NUMBER",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA212",
-            "constant_name": "SECURITY_CLASSIFICATION",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA213",
-            "constant_name": "IMAGE_HISTORY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA216",
-            "constant_name": "TIFF_EP_STANDARD_ID",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xA40B",
-            "constant_name": "DEVICE_SETTING_DESCRIPTION",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6F3",
-            "constant_name": "CAMERA_CALIBRATION_SIGNATURE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6F4",
-            "constant_name": "PROFILE_CALIBRATION_SIGNATURE",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6F5",
-            "constant_name": "PROFILE_HUE_SAT_MAP_ENCODINGS",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6F6",
-            "constant_name": "PROFILE_HUE_SAT_MAP_DIMS",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6F7",
-            "constant_name": "PROFILE_HUE_SAT_MAP_DATA_1",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6F8",
-            "constant_name": "PROFILE_HUE_SAT_MAP_DATA_2",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6F9",
-            "constant_name": "PROFILE_HUE_SAT_MAP_DATA_3",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6FA",
-            "constant_name": "PROFILE_LOOK_TABLE_DIMS",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6FB",
-            "constant_name": "PROFILE_LOOK_TABLE_DATA",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xC6FC",
-            "constant_name": "PROFILE_TONE_CURVE",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
@@ -2798,73 +2566,43 @@
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x9406",
-            "constant_name": "CAMERA_YAW_DEGREE",
+            "tag_id": "0xA005",
+            "constant_name": "INTEROPERABILITY_IFD_POINTER",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x9407",
-            "constant_name": "CAMERA_PITCH_DEGREE",
+            "tag_id": "0xA20C",
+            "constant_name": "SPATIAL_FREQUENCY_RESPONSE",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x9408",
-            "constant_name": "CAMERA_ROLL_DEGREE",
+            "tag_id": "0xA40B",
+            "constant_name": "DEVICE_SETTING_DESCRIPTION",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x9409",
-            "constant_name": "GIMBAL_YAW_DEGREE",
+            "tag_id": "0xA439",
+            "constant_name": "CAMERA_FIRMWARE",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x940A",
-            "constant_name": "GIMBAL_PITCH_DEGREE",
+            "tag_id": "0xA43A",
+            "constant_name": "RAW_DEVELOPING_SOFTWARE",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x940B",
-            "constant_name": "GIMBAL_ROLL_DEGREE",
+            "tag_id": "0xA43B",
+            "constant_name": "IMAGE_EDITING_SOFTWARE",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x940C",
-            "constant_name": "AIRCRAFT_MAKE",
+            "tag_id": "0xA43C",
+            "constant_name": "METADATA_EDITING_SOFTWARE",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         },
         {
-            "tag_id": "0x940D",
-            "constant_name": "AIRCRAFT_MODEL",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xE92F",
-            "constant_name": "CAMERA_FIRMWARE_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xE930",
-            "constant_name": "RAW_DEVELOPING_SOFTWARE_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xE931",
-            "constant_name": "IMAGE_EDITING_SOFTWARE_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0xE932",
-            "constant_name": "METADATA_EDITING_SOFTWARE_LEGACY",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x013D",
-            "constant_name": "PREDICTOR",
-            "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
-        },
-        {
-            "tag_id": "0x8773",
-            "constant_name": "ICC_PROFILE",
+            "tag_id": "0xA500",
+            "constant_name": "GAMMA",
             "note": "Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec"
         }
     ]

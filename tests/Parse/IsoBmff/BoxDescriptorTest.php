@@ -92,8 +92,7 @@ final class BoxDescriptorTest extends TestCase
             self::fail('Unable to rewind temporary stream handle.');
         }
 
-        $stream = new Stream($handle, strlen($data));
-
-        return $stream->window($offset, $length);
+        return (new Stream($handle, strlen($data)))
+            ->window($offset, $length);
     }
 }

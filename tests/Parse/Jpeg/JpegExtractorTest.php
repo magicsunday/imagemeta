@@ -32,6 +32,7 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function count;
 use function file_put_contents;
 use function fopen;
 use function fwrite;
@@ -684,7 +685,7 @@ final class JpegExtractorTest extends TestCase
         ];
 
         $byteCount = ($typeSizes[$type] ?? 1) * $count;
-        $padded    = str_pad(substr($value, 0, $byteCount), 4, "\0", STR_PAD_RIGHT);
+        $padded    = str_pad(substr($value, 0, $byteCount), 4, "\0");
 
         return $entry . $padded;
     }

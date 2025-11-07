@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core {
     use MagicSunday\ImageMeta\Tests\Core\MemoryBufferTest;
 
-    if (!function_exists(__NAMESPACE__ . '\\substr')) {
+    if (!\function_exists(__NAMESPACE__ . '\\substr')) {
         /**
          * Test hook that allows forcing short-read behaviour for MemoryBuffer::read().
          */
@@ -35,6 +35,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
     use PHPUnit\Framework\Attributes\Test;
     use PHPUnit\Framework\Attributes\UsesClass;
     use PHPUnit\Framework\TestCase;
+
+    use function substr;
 
     /**
      * Unit tests for the bounds-checked in-memory buffer abstraction.
@@ -63,14 +65,14 @@ namespace MagicSunday\ImageMeta\Tests\Core {
             }
 
             if ($length === null) {
-                return \substr($string, $offset);
+                return substr($string, $offset);
             }
 
             if ($length < 0) {
                 $length = 0;
             }
 
-            return \substr($string, $offset, $length);
+            return substr($string, $offset, $length);
         }
 
         /**

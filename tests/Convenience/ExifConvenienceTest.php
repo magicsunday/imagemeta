@@ -45,102 +45,122 @@ final class ExifConvenienceTest extends TestCase
     public function exposureSummaryFormatsValues(): void
     {
         $exposure = new Exposure(
-            iso: 200,
-            exposureTimeSec: 0.5,
-            fNumber: 1.8,
-            exposureBiasEv: null,
-            program: null,
-            meteringMode: null,
-            flash: null,
-            whiteBalance: null,
-            brightnessEv: null,
-            exposureMode: null,
-            gainControl: null,
-            contrast: null,
-            saturation: null,
-            sharpness: null,
+            iso             : 200,
+            exposureTimeSec : 0.5,
+            fNumber         : 1.8,
+            exposureBiasEv  : null,
+            program         : null,
+            meteringMode    : null,
+            flash           : null,
+            whiteBalance    : null,
+            brightnessEv    : null,
+            exposureMode    : null,
+            gainControl     : null,
+            contrast        : null,
+            saturation      : null,
+            sharpness       : null,
             digitalZoomRatio: null,
-            shutterSpeedEv: null,
-            apertureEv: null,
-            isoLatitudeYyy: null,
-            isoLatitudeZzz: null,
-            exposureIndex: null,
-            flashEnergy: null,
+            shutterSpeedEv  : null,
+            apertureEv      : null,
+            isoLatitudeYyy  : null,
+            isoLatitudeZzz  : null,
+            exposureIndex   : null,
+            flashEnergy     : null,
         );
 
-        $lens = new Lens(null, null, null, 50.0, null, null);
+        $lens = new Lens(
+            null,
+            null,
+            null,
+            50.0,
+            null,
+            null
+        );
 
-        $summary = ExifConvenience::exposureSummary($exposure, $lens);
+        $summary = ExifConvenience::exposureSummary(
+            $exposure,
+            $lens
+        );
 
-        self::assertSame('1/2 s · f/1.8 · ISO 200 · 50 mm', $summary);
+        self::assertSame(
+            '1/2 s · f/1.8 · ISO 200 · 50 mm',
+            $summary
+        );
     }
 
     #[Test]
     public function exposureSummaryIncludes35MmEquivalent(): void
     {
         $exposure = new Exposure(
-            iso: null,
-            exposureTimeSec: null,
-            fNumber: null,
-            exposureBiasEv: null,
-            program: null,
-            meteringMode: null,
-            flash: null,
-            whiteBalance: null,
-            brightnessEv: null,
-            exposureMode: null,
-            gainControl: null,
-            contrast: null,
-            saturation: null,
-            sharpness: null,
+            iso             : null,
+            exposureTimeSec : null,
+            fNumber         : null,
+            exposureBiasEv  : null,
+            program         : null,
+            meteringMode    : null,
+            flash           : null,
+            whiteBalance    : null,
+            brightnessEv    : null,
+            exposureMode    : null,
+            gainControl     : null,
+            contrast        : null,
+            saturation      : null,
+            sharpness       : null,
             digitalZoomRatio: null,
-            shutterSpeedEv: null,
-            apertureEv: null,
-            isoLatitudeYyy: null,
-            isoLatitudeZzz: null,
-            exposureIndex: null,
-            flashEnergy: null,
+            shutterSpeedEv  : null,
+            apertureEv      : null,
+            isoLatitudeYyy  : null,
+            isoLatitudeZzz  : null,
+            exposureIndex   : null,
+            flashEnergy     : null,
         );
 
         $derived = new Derived(
-            ev100: null,
+            ev100                   : null,
             hyperfocalDistanceMetres: null,
-            circleOfConfusionMm: null,
-            fieldOfViewDiagonalDeg: null,
+            circleOfConfusionMm     : null,
+            fieldOfViewDiagonalDeg  : null,
             fieldOfViewHorizontalDeg: null,
-            fieldOfViewVerticalDeg: null,
-            equivalent35mm: 75,
-            cropFactor: null,
+            fieldOfViewVerticalDeg  : null,
+            equivalent35mm          : 75,
+            cropFactor              : null,
         );
 
-        self::assertSame('75 mm eq', ExifConvenience::exposureSummary($exposure, null, $derived));
+        self::assertSame(
+            '75 mm eq',
+            ExifConvenience::exposureSummary(
+                $exposure,
+                null,
+                $derived
+            )
+        );
     }
 
     #[Test]
     public function exposureSummaryReturnsNullWhenNoValues(): void
     {
         $exposure = new Exposure(
-            iso: null,
-            exposureTimeSec: null,
-            fNumber: null,
-            exposureBiasEv: null,
-            program: null,
-            meteringMode: null,
-            flash: null,
-            whiteBalance: null,
-            brightnessEv: null,
-            exposureMode: null,
-            gainControl: null,
-            contrast: null,
-            saturation: null,
-            sharpness: null,
+            iso             : null,
+            exposureTimeSec : null,
+            fNumber         : null,
+            exposureBiasEv  : null,
+            program         : null,
+            meteringMode    : null,
+            flash           : null,
+            whiteBalance    : null,
+            brightnessEv    : null,
+            exposureMode    : null,
+            gainControl     : null,
+            contrast        : null,
+            saturation      : null,
+            sharpness       : null,
             digitalZoomRatio: null,
-            shutterSpeedEv: null,
-            apertureEv: null,
-            isoLatitudeYyy: null,
-            isoLatitudeZzz: null,
-            exposureIndex: null,
-            flashEnergy: null,
+            shutterSpeedEv  : null,
+            apertureEv      : null,
+            isoLatitudeYyy  : null,
+            isoLatitudeZzz  : null,
+            exposureIndex   : null,
+            flashEnergy     : null,
         );
 
         self::assertNull(ExifConvenience::exposureSummary($exposure));
@@ -150,17 +170,24 @@ final class ExifConvenienceTest extends TestCase
     public function gpsStringFormatsCoordinates(): void
     {
         $gps = new Gps(
-            latitude: 51.5,
-            longitude: 0.125,
-            latitudeRef: 'N',
+            latitude    : 51.5,
+            longitude   : 0.125,
+            latitudeRef : 'N',
             longitudeRef: 'E',
-            altitude: 45.0,
-            altitudeRef: 0,
+            altitude    : 45.0,
+            altitudeRef : 0,
         );
 
-        $formatted = ExifConvenience::gpsString($gps, precision: 3, includeAltitude: true);
+        $formatted = ExifConvenience::gpsString(
+            $gps,
+            precision      : 3,
+            includeAltitude: true
+        );
 
-        self::assertSame('51.500° N, 0.125° E (45 m)', $formatted);
+        self::assertSame(
+            '51.500° N, 0.125° E (45 m)',
+            $formatted
+        );
     }
 
     #[Test]
@@ -174,15 +201,46 @@ final class ExifConvenienceTest extends TestCase
     #[Test]
     public function imageDimensionsFormatsString(): void
     {
-        $image = new Image(6000, 4000, Orientation::TOP_LEFT, null, null, null, null, null, null, null, null, null, null, null, null);
+        $image = new Image(
+            6000,
+            4000,
+            Orientation::TOP_LEFT,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        );
 
-        self::assertSame('6000×4000 px', ExifConvenience::imageDimensions($image));
+        self::assertSame(
+            '6000×4000 px',
+            ExifConvenience::imageDimensions($image)
+        );
     }
 
     #[Test]
     public function imageDimensionsReturnsNullWhenIncomplete(): void
     {
-        $image = new Image(null, 4000, Orientation::TOP_LEFT, null, null, null, null, null, null, null, null, null, null, null, null);
+        $image = new Image(
+            null,
+            4000,
+            Orientation::TOP_LEFT,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        );
 
         self::assertNull(ExifConvenience::imageDimensions($image));
     }
@@ -198,28 +256,77 @@ final class ExifConvenienceTest extends TestCase
             null,
             null,
             null,
-            null,
-            null,
         );
 
-        self::assertSame('2024-05-01T12:34:56+02:00', ExifConvenience::captureDateTimeString($capture));
+        self::assertSame(
+            '2024-05-01T12:34:56+02:00',
+            ExifConvenience::captureDateTimeString($capture)
+        );
     }
 
     #[Test]
     public function cameraDescriptionAvoidsDuplicateMake(): void
     {
-        $camera = new Camera('Canon', 'Canon EOS R6', null, null, null, null, null);
-        $lens   = new Lens(null, 'RF 24-70mm', null, null, null, null);
+        $camera = new Camera(
+            'Canon',
+            'Canon EOS R6',
+            null,
+            null,
+            null,
+            null,
+        );
+        $lens = new Lens(
+            null,
+            'RF 24-70mm',
+            null,
+            null,
+            null,
+            null
+        );
 
-        self::assertSame('Canon EOS R6 · RF 24-70mm', ExifConvenience::cameraDescription($camera, $lens));
+        self::assertSame(
+            'Canon EOS R6 · RF 24-70mm',
+            ExifConvenience::cameraDescription(
+                $camera,
+                $lens
+            )
+        );
     }
 
     #[Test]
     public function toArrayReturnsNormalisedShape(): void
     {
-        $camera  = new Camera('Canon', 'EOS', null, null, null, null, null);
-        $lens    = new Lens(null, 'EF 50mm', null, 50.0, null, null);
-        $image   = new Image(6000, 4000, Orientation::TOP_LEFT, null, null, null, null, null, null, null, null, null, null, null, null);
+        $camera = new Camera(
+            'Canon',
+            'EOS',
+            null,
+            null,
+            null,
+            null,
+        );
+        $lens = new Lens(
+            null,
+            'EF 50mm',
+            null,
+            50.0,
+            null,
+            null
+        );
+        $image = new Image(
+            6000,
+            4000,
+            Orientation::TOP_LEFT,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+        );
         $capture = new Capture(
             new DateTimeImmutable('2024-05-01T12:34:56+02:00'),
             null,
@@ -228,33 +335,38 @@ final class ExifConvenienceTest extends TestCase
             null,
             null,
             null,
-            null,
-            null,
         );
         $exposure = new Exposure(
-            iso: 200,
-            exposureTimeSec: 0.5,
-            fNumber: 1.8,
-            exposureBiasEv: null,
-            program: null,
-            meteringMode: null,
-            flash: null,
-            whiteBalance: null,
-            brightnessEv: null,
-            exposureMode: null,
-            gainControl: null,
-            contrast: null,
-            saturation: null,
-            sharpness: null,
+            iso             : 200,
+            exposureTimeSec : 0.5,
+            fNumber         : 1.8,
+            exposureBiasEv  : null,
+            program         : null,
+            meteringMode    : null,
+            flash           : null,
+            whiteBalance    : null,
+            brightnessEv    : null,
+            exposureMode    : null,
+            gainControl     : null,
+            contrast        : null,
+            saturation      : null,
+            sharpness       : null,
             digitalZoomRatio: null,
-            shutterSpeedEv: null,
-            apertureEv: null,
-            isoLatitudeYyy: null,
-            isoLatitudeZzz: null,
-            exposureIndex: null,
-            flashEnergy: null,
+            shutterSpeedEv  : null,
+            apertureEv      : null,
+            isoLatitudeYyy  : null,
+            isoLatitudeZzz  : null,
+            exposureIndex   : null,
+            flashEnergy     : null,
         );
-        $gps = new Gps(51.5, 0.125, 'N', 'E', 45.0, 0);
+        $gps = new Gps(
+            51.5,
+            0.125,
+            'N',
+            'E',
+            45.0,
+            0
+        );
 
         $expected = [
             'make'        => 'Canon',
@@ -273,7 +385,14 @@ final class ExifConvenienceTest extends TestCase
 
         self::assertSame(
             $expected,
-            ExifConvenience::toArray($camera, $lens, $image, $capture, $exposure, $gps)
+            ExifConvenience::toArray(
+                $camera,
+                $lens,
+                $image,
+                $capture,
+                $exposure,
+                $gps
+            )
         );
     }
 }

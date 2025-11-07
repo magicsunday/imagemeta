@@ -36,11 +36,6 @@ final class MakerNotesRecordTest extends TestCase
         self::assertSame(123, $metadata->length);
         self::assertSame('0123456789abcdef0123456789abcdef01234567', $metadata->sha1);
         self::assertNull($metadata->apple);
-        self::assertNull($metadata->isSafe);
-
-        $safeMetadata = new MakerNotesRecord('Contoso', 123, '0123456789abcdef0123456789abcdef01234567', null, true);
-
-        self::assertTrue($safeMetadata->isSafe);
     }
 
     /**

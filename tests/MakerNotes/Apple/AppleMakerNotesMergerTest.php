@@ -76,7 +76,6 @@ final class AppleMakerNotesMergerTest extends TestCase
                 afMeasuredDepth: 1.4,
                 afConfidence: 0.7,
             ),
-            false,
         );
 
         $quickTime = new QuickTimeMeta([

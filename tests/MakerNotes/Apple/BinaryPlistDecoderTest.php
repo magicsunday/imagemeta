@@ -195,7 +195,9 @@ final class BinaryPlistDecoderTest extends TestCase
         // 2: ASCII "Hi"
         $int1  = chr(0x10) . chr(0x01);
         $ascii = chr(0x50 | 0x02) . 'Hi';
-        $array = $this->buildArrayObject([1, 2], 1); // objectRefSize=1
+        $array = $this->buildArrayObject(
+            [1, 2]
+        ); // objectRefSize=1
 
         $payload = $this->buildPlistWithObjects([$array, $int1, $ascii], 0);
 
@@ -227,7 +229,16 @@ final class BinaryPlistDecoderTest extends TestCase
         $keyB = chr(0x50 | 0x01) . 'B';
         $int1 = chr(0x10) . chr(0x01);
         $int2 = chr(0x10) . chr(0x02);
-        $dict = $this->buildDictionaryObject([1, 2], [3, 4], 1); // objectRefSize=1
+        $dict = $this->buildDictionaryObject(
+            [
+                1,
+                2,
+            ],
+            [
+                3,
+                4,
+            ]
+        ); // objectRefSize=1
 
         $payload = $this->buildPlistWithObjects([$dict, $keyA, $keyB, $int1, $int2], 0);
 
@@ -332,12 +343,11 @@ final class BinaryPlistDecoderTest extends TestCase
     /**
      * Build an Array object with inline count (<= 15) and 1-byte references.
      *
-     * @param list<int> $refIndices    Object indices referenced by the array.
-     * @param int       $objectRefSize Expected size of each reference in bytes (tests use 1).
+     * @param list<int> $refIndices Object indices referenced by the array.
      *
      * @return string
      */
-    private function buildArrayObject(array $refIndices, int $objectRefSize = 1): string
+    private function buildArrayObject(array $refIndices): string
     {
         $count  = count($refIndices);
         $marker = 0xA0 | $count;
@@ -356,11 +366,10 @@ final class BinaryPlistDecoderTest extends TestCase
      *
      * @param list<int> $keyRefIndices
      * @param list<int> $valueRefIndices
-     * @param int       $objectRefSize
      *
      * @return string
      */
-    private function buildDictionaryObject(array $keyRefIndices, array $valueRefIndices, int $objectRefSize = 1): string
+    private function buildDictionaryObject(array $keyRefIndices, array $valueRefIndices): string
     {
         $count  = count($keyRefIndices);
         $marker = 0xD0 | $count;

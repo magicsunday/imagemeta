@@ -91,6 +91,7 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function count;
 use function file_put_contents;
 use function ltrim;
 use function md5;

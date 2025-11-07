@@ -29,7 +29,6 @@ use function substr;
 
 use const SEEK_CUR;
 use const SEEK_END;
-use const SEEK_SET;
 
 /**
  * Property-based regression tests that ensure the binary access implementations stay aligned.
@@ -97,7 +96,7 @@ final class BinaryReadAccessPropertyTest extends TestCase
      */
     private function consumeReader(BinaryReadAccessInterface $reader): array
     {
-        $reader->seek(UInt64::fromInt(0), SEEK_SET);
+        $reader->seek(UInt64::fromInt(0));
 
         $results   = [];
         $results[] = $reader->read(UInt64::fromInt(3));
@@ -113,7 +112,7 @@ final class BinaryReadAccessPropertyTest extends TestCase
         $reader->seek(-8, SEEK_END);
         $results[] = $reader->read(4);
 
-        $reader->seek(UInt64::fromInt(0), SEEK_SET);
+        $reader->seek(UInt64::fromInt(0));
         $results[] = $reader->tell();
 
         $reader->seek(0, SEEK_END);

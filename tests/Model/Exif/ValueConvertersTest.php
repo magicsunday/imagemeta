@@ -31,7 +31,9 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
 use function pack;
+use function strlen;
 use function substr;
 
 #[UsesClass(ExifRational::class)]
