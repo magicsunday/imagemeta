@@ -383,25 +383,11 @@ final class ValueFactory implements ValueFactoryInterface
             bgGain: null,
         );
 
-        $rect      = null;
-        $focusRect = $exifDocument?->subjectArea();
-        if ($focusRect !== null) {
-            $rect = ValueConverters::subjectAreaToRect($focusRect);
-        }
-
-        if ($rect === null) {
-            $location = $exifDocument?->subjectLocation();
-            $rect     = ($location !== null && count($location) >= 2)
-                ? ['x' => $location[0], 'y' => $location[1], 'w' => null, 'h' => null]
-                : ['x' => null, 'y' => null, 'w' => null, 'h' => null];
-        }
+        $subjectArea = $exifDocument?->subjectArea();
 
         $focus = new Focus(
             subjectDistanceM: $exifDocument?->subjectDistance(),
-            subjectAreaX: $rect['x'],
-            subjectAreaY: $rect['y'],
-            subjectAreaW: $rect['w'],
-            subjectAreaH: $rect['h'],
+            subjectArea: $subjectArea,
             afMode: null,
         );
 
