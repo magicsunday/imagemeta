@@ -83,4 +83,172 @@ final class CaptureTest extends TestCase
         self::assertNull($capture->accelerationMs2);
         self::assertNull($capture->cameraElevationAngleDeg);
     }
+
+    /**
+     * Tests EXIF 3.0 WaterDepth tag (0x9403) with deep underwater values.
+     */
+    #[Test]
+    public function constructsWithDeepWaterDepth(): void
+    {
+        $capture = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: 100.5,
+            accelerationMs2: null,
+            cameraElevationAngleDeg: null,
+        );
+
+        self::assertSame(100.5, $capture->waterDepthM);
+    }
+
+    /**
+     * Tests EXIF 3.0 WaterDepth tag with zero depth (surface level).
+     */
+    #[Test]
+    public function constructsWithZeroWaterDepth(): void
+    {
+        $capture = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: 0.0,
+            accelerationMs2: null,
+            cameraElevationAngleDeg: null,
+        );
+
+        self::assertSame(0.0, $capture->waterDepthM);
+    }
+
+    /**
+     * Tests EXIF 3.0 Acceleration tag (0x9404) with various magnitudes.
+     */
+    #[Test]
+    public function constructsWithVariousAccelerationMagnitudes(): void
+    {
+        // Near gravity
+        $capture1 = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: 9.81,
+            cameraElevationAngleDeg: null,
+        );
+
+        self::assertSame(9.81, $capture1->accelerationMs2);
+
+        // Zero acceleration (free fall or stationary)
+        $capture2 = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: 0.0,
+            cameraElevationAngleDeg: null,
+        );
+
+        self::assertSame(0.0, $capture2->accelerationMs2);
+
+        // High acceleration (vehicle, impact)
+        $capture3 = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: 50.0,
+            cameraElevationAngleDeg: null,
+        );
+
+        self::assertSame(50.0, $capture3->accelerationMs2);
+    }
+
+    /**
+     * Tests EXIF 3.0 CameraElevationAngle tag (0x9405) with various angles.
+     */
+    #[Test]
+    public function constructsWithVariousCameraElevationAngles(): void
+    {
+        // Upward tilt
+        $capture1 = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: null,
+            cameraElevationAngleDeg: 45.0,
+        );
+
+        self::assertSame(45.0, $capture1->cameraElevationAngleDeg);
+
+        // Downward tilt
+        $capture2 = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: null,
+            cameraElevationAngleDeg: -30.0,
+        );
+
+        self::assertSame(-30.0, $capture2->cameraElevationAngleDeg);
+
+        // Level horizon
+        $capture3 = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: null,
+            cameraElevationAngleDeg: 0.0,
+        );
+
+        self::assertSame(0.0, $capture3->cameraElevationAngleDeg);
+
+        // Extreme angles (near vertical)
+        $capture4 = new Capture(
+            dateTime: null,
+            temperatureC: null,
+            humidityPercent: null,
+            pressureHPa: null,
+            waterDepthM: null,
+            accelerationMs2: null,
+            cameraElevationAngleDeg: 89.5,
+        );
+
+        self::assertSame(89.5, $capture4->cameraElevationAngleDeg);
+    }
+
+    /**
+     * Tests all EXIF 3.0 environmental tags together.
+     */
+    #[Test]
+    public function constructsWithAllExif30EnvironmentalTags(): void
+    {
+        $capture = new Capture(
+            dateTime: new DateTimeImmutable('2024-11-07 15:30:00'),
+            temperatureC: 15.5,
+            humidityPercent: 85.0,
+            pressureHPa: 1020.0,
+            waterDepthM: 25.3,
+            accelerationMs2: 10.2,
+            cameraElevationAngleDeg: -15.5,
+        );
+
+        self::assertInstanceOf(DateTimeImmutable::class, $capture->dateTime);
+        self::assertSame(15.5, $capture->temperatureC);
+        self::assertSame(85.0, $capture->humidityPercent);
+        self::assertSame(1020.0, $capture->pressureHPa);
+        self::assertSame(25.3, $capture->waterDepthM);
+        self::assertSame(10.2, $capture->accelerationMs2);
+        self::assertSame(-15.5, $capture->cameraElevationAngleDeg);
+    }
 }

@@ -1147,4 +1147,128 @@ final class ValueConvertersTest extends TestCase
     {
         return pack('N', $numerator) . pack('N', $denominator);
     }
+
+    /**
+     * Tests conversion of EXIF 3.0 acceleration triplets to float vectors.
+     *
+     * EXIF 3.0 §4.6.6 Acceleration (0x9404): SRATIONAL triplet for 3D acceleration vector.
+     */
+    #[Test]
+    public function convertsSrationalTripletToFloatVector(): void
+    {
+        $list = new ExifRationalList([
+            new ExifRational(50, 100),   // 0.5 m/s²
+            new ExifRational(-20, 100),  // -0.2 m/s²
+            new ExifRational(980, 100),  // 9.8 m/s²
+        ]);
+
+        $result = ValueConverters::srationalTripletToFloatVector($list);
+
+        self::assertIsArray($result);
+        self::assertCount(3, $result);
+        self::assertEqualsWithDelta(0.5, $result[0], 0.001);
+        self::assertEqualsWithDelta(-0.2, $result[1], 0.001);
+        self::assertEqualsWithDelta(9.8, $result[2], 0.001);
+    }
+
+    /**
+     * Tests that triplet conversion handles zero acceleration components.
+     */
+    #[Test]
+    public function convertsSrationalTripletWithZeroComponents(): void
+    {
+        $list = new ExifRationalList([
+            new ExifRational(0, 100),
+            new ExifRational(0, 100),
+            new ExifRational(981, 100),  // Near gravity
+        ]);
+
+        $result = ValueConverters::srationalTripletToFloatVector($list);
+
+        self::assertIsArray($result);
+        self::assertEqualsWithDelta(0.0, $result[0], 0.001);
+        self::assertEqualsWithDelta(0.0, $result[1], 0.001);
+        self::assertEqualsWithDelta(9.81, $result[2], 0.001);
+    }
+
+    /**
+     * Tests that triplet conversion rejects lists with wrong component count.
+     */
+    #[Test]
+    public function rejectsSrationalListWithWrongComponentCount(): void
+    {
+        $listWithTwo = new ExifRationalList([
+            new ExifRational(10, 100),
+            new ExifRational(20, 100),
+        ]);
+
+        self::assertNull(ValueConverters::srationalTripletToFloatVector($listWithTwo));
+
+        $listWithFour = new ExifRationalList([
+            new ExifRational(10, 100),
+            new ExifRational(20, 100),
+            new ExifRational(30, 100),
+            new ExifRational(40, 100),
+        ]);
+
+        self::assertNull(ValueConverters::srationalTripletToFloatVector($listWithFour));
+    }
+
+    /**
+     * Tests that triplet conversion rejects lists with zero denominators.
+     */
+    #[Test]
+    public function rejectsSrationalTripletWithZeroDenominator(): void
+    {
+        $list = new ExifRationalList([
+            new ExifRational(50, 100),
+            new ExifRational(20, 0),     // Invalid: division by zero
+            new ExifRational(980, 100),
+        ]);
+
+        $result = ValueConverters::srationalTripletToFloatVector($list);
+
+        self::assertNull($result);
+    }
+
+    /**
+     * Tests conversion with large acceleration values.
+     */
+    #[Test]
+    public function convertsSrationalTripletWithLargeValues(): void
+    {
+        // Example: High-speed collision or extreme motion
+        $list = new ExifRationalList([
+            new ExifRational(500000, 1000),  // 500 m/s²
+            new ExifRational(-200000, 1000), // -200 m/s²
+            new ExifRational(100000, 1000),  // 100 m/s²
+        ]);
+
+        $result = ValueConverters::srationalTripletToFloatVector($list);
+
+        self::assertIsArray($result);
+        self::assertEqualsWithDelta(500.0, $result[0], 0.001);
+        self::assertEqualsWithDelta(-200.0, $result[1], 0.001);
+        self::assertEqualsWithDelta(100.0, $result[2], 0.001);
+    }
+
+    /**
+     * Tests conversion with negative values in all components.
+     */
+    #[Test]
+    public function convertsSrationalTripletWithAllNegativeValues(): void
+    {
+        $list = new ExifRationalList([
+            new ExifRational(-30, 100),
+            new ExifRational(-50, 100),
+            new ExifRational(-20, 100),
+        ]);
+
+        $result = ValueConverters::srationalTripletToFloatVector($list);
+
+        self::assertIsArray($result);
+        self::assertEqualsWithDelta(-0.3, $result[0], 0.001);
+        self::assertEqualsWithDelta(-0.5, $result[1], 0.001);
+        self::assertEqualsWithDelta(-0.2, $result[2], 0.001);
+    }
 }
