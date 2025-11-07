@@ -236,10 +236,16 @@ final readonly class ValueConverters
     /**
      * Converts a SRATIONAL[3] list into a three-element float vector.
      *
+     * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) uses SRATIONAL triplets for 3D vectors.
      * EXIF 3.0 §4.6.8 (GPSLatitude/GPSLongitude) and the legacy EXIF 2.32 §4.6.8 definition
      * require degrees/minutes/seconds triplets encoded as SRATIONAL numerators/denominators.
      *
-     * @return array{0:float,1:float,2:float}|null
+     * This method validates that exactly three components are present and that no denominator
+     * is zero before converting each SRATIONAL to a float.
+     *
+     * @param ExifRationalList $value List containing exactly three SRATIONAL values.
+     *
+     * @return array{0:float,1:float,2:float}|null Three-element float vector, or null if validation fails.
      */
     public static function srationalTripletToFloatVector(ExifRationalList $value): ?array
     {

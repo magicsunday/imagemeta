@@ -1333,6 +1333,11 @@ final readonly class ParsedExif
 
     /**
      * Returns the recorded water depth in metres.
+     *
+     * EXIF 3.0 §4.6.6 Table H.1: WaterDepth (0x9403) records the depth of the camera
+     * below the water surface, stored as RATIONAL in metres.
+     *
+     * @return float|null Water depth in metres, or null if not present.
      */
     public function waterDepthMeters(): ?float
     {
@@ -1342,7 +1347,10 @@ final readonly class ParsedExif
     /**
      * Returns the camera acceleration vector in metres per second squared.
      *
-     * @return array{0:float,1:float,2:float}|null
+     * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) records the 3D acceleration
+     * vector as an SRATIONAL triplet (X, Y, Z components) in m/s².
+     *
+     * @return array{0:float,1:float,2:float}|null Three-component acceleration vector, or null if not present.
      */
     public function accelerationVector(): ?array
     {
@@ -1357,6 +1365,11 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera acceleration in metres per second squared.
+     *
+     * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) as scalar magnitude.
+     * Computes the Euclidean norm of the acceleration vector: sqrt(x² + y² + z²).
+     *
+     * @return float|null Acceleration magnitude in m/s², or null if not present.
      */
     public function accelerationMs2(): ?float
     {
@@ -1376,6 +1389,12 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera elevation angle in degrees.
+     *
+     * EXIF 3.0 §4.6.6 Table H.1: CameraElevationAngle (0x9405) records the camera's
+     * elevation angle relative to the horizon as SRATIONAL in degrees.
+     * Positive values indicate upward tilt, negative values indicate downward tilt.
+     *
+     * @return float|null Elevation angle in degrees, or null if not present.
      */
     public function cameraElevationAngleDeg(): ?float
     {
