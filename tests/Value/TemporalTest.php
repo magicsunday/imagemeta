@@ -41,7 +41,6 @@ final class TemporalTest extends TestCase
             subSecTime: null,
             subSecTimeOriginal: null,
             subSecTimeDigitized: null,
-            timeZoneOffsetMinutes: null,
         );
 
         self::assertSame($dateTime, $temporal->original);
@@ -67,7 +66,6 @@ final class TemporalTest extends TestCase
             subSecTime: '500',
             subSecTimeOriginal: '250',
             subSecTimeDigitized: '750',
-            timeZoneOffsetMinutes: [60, 60, 60],
         );
 
         self::assertSame($create, $temporal->create);
@@ -77,7 +75,6 @@ final class TemporalTest extends TestCase
         self::assertSame('EXIF', $temporal->tzSource);
         self::assertSame('+01:00', $temporal->offsetTimeOriginal);
         self::assertSame('500', $temporal->subSecTime);
-        self::assertSame([60, 60, 60], $temporal->timeZoneOffsetMinutes);
     }
 
     #[Test]
@@ -95,7 +92,6 @@ final class TemporalTest extends TestCase
             subSecTime: null,
             subSecTimeOriginal: null,
             subSecTimeDigitized: null,
-            timeZoneOffsetMinutes: null,
         );
 
         self::assertNull($temporal->create);
@@ -105,6 +101,5 @@ final class TemporalTest extends TestCase
         self::assertNull($temporal->tzSource);
         self::assertNull($temporal->offsetTimeOriginal);
         self::assertNull($temporal->subSecTime);
-        self::assertNull($temporal->timeZoneOffsetMinutes);
     }
 }

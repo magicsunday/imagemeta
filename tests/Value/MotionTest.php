@@ -23,38 +23,12 @@ use PHPUnit\Framework\TestCase;
 final class MotionTest extends TestCase
 {
     #[Test]
-    public function constructsWithAngles(): void
-    {
-        $motion = new Motion(
-            rollDeg: 2.5,
-            pitchDeg: -10.2,
-            yawDeg: 45.5,
-            accelX: null,
-            accelY: null,
-            accelZ: null,
-            gyroX: null,
-            gyroY: null,
-            gyroZ: null,
-        );
-
-        self::assertSame(2.5, $motion->rollDeg);
-        self::assertSame(-10.2, $motion->pitchDeg);
-        self::assertSame(45.5, $motion->yawDeg);
-    }
-
-    #[Test]
     public function constructsWithAcceleration(): void
     {
         $motion = new Motion(
-            rollDeg: null,
-            pitchDeg: null,
-            yawDeg: null,
             accelX: 0.5,
             accelY: -0.2,
             accelZ: 9.8,
-            gyroX: null,
-            gyroY: null,
-            gyroZ: null,
         );
 
         self::assertSame(0.5, $motion->accelX);
@@ -63,42 +37,16 @@ final class MotionTest extends TestCase
     }
 
     #[Test]
-    public function constructsWithGyroscope(): void
-    {
-        $motion = new Motion(
-            rollDeg: null,
-            pitchDeg: null,
-            yawDeg: null,
-            accelX: null,
-            accelY: null,
-            accelZ: null,
-            gyroX: 1.5,
-            gyroY: 2.3,
-            gyroZ: -0.8,
-        );
-
-        self::assertSame(1.5, $motion->gyroX);
-        self::assertSame(2.3, $motion->gyroY);
-        self::assertSame(-0.8, $motion->gyroZ);
-    }
-
-    #[Test]
     public function allowsNullValues(): void
     {
         $motion = new Motion(
-            rollDeg: null,
-            pitchDeg: null,
-            yawDeg: null,
             accelX: null,
             accelY: null,
             accelZ: null,
-            gyroX: null,
-            gyroY: null,
-            gyroZ: null,
         );
 
-        self::assertNull($motion->rollDeg);
         self::assertNull($motion->accelX);
-        self::assertNull($motion->gyroX);
+        self::assertNull($motion->accelY);
+        self::assertNull($motion->accelZ);
     }
 }

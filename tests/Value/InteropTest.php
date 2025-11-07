@@ -27,27 +27,9 @@ final class InteropTest extends TestCase
     {
         $interop = new Interop(
             index: 'R98',
-            version: '0100',
         );
 
         self::assertSame('R98', $interop->index);
-        self::assertSame('0100', $interop->version);
-    }
-
-    #[Test]
-    public function constructsWithRelatedImageInfo(): void
-    {
-        $interop = new Interop(
-            index: 'R98',
-            version: '0100',
-            relatedImageFileFormat: 'JPEG',
-            relatedImageWidth: 1920,
-            relatedImageLength: 1080,
-        );
-
-        self::assertSame('JPEG', $interop->relatedImageFileFormat);
-        self::assertSame(1920, $interop->relatedImageWidth);
-        self::assertSame(1080, $interop->relatedImageLength);
     }
 
     #[Test]
@@ -55,26 +37,8 @@ final class InteropTest extends TestCase
     {
         $interop = new Interop(
             index: null,
-            version: null,
         );
 
         self::assertNull($interop->index);
-        self::assertNull($interop->version);
-        self::assertNull($interop->relatedImageFileFormat);
-        self::assertNull($interop->relatedImageWidth);
-        self::assertNull($interop->relatedImageLength);
-    }
-
-    #[Test]
-    public function usesDefaultNullForOptionalParameters(): void
-    {
-        $interop = new Interop(
-            index: 'R98',
-            version: '0100',
-        );
-
-        self::assertNull($interop->relatedImageFileFormat);
-        self::assertNull($interop->relatedImageWidth);
-        self::assertNull($interop->relatedImageLength);
     }
 }

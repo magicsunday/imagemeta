@@ -33,13 +33,11 @@ final class ImageTest extends TestCase
             bitsPerSample: 14,
             colorSpace: ColorSpace::ADOBE_RGB,
             imageUniqueId: 'unique-id',
-            imageNumber: 42,
             documentName: 'IMG_0042',
             description: 'Sunrise',
             title: 'Sunrise over Mountains',
             componentsConfiguration: $components,
             compressedBitsPerPixel: 3.2,
-            interlace: 1,
             userComment: 'Captured with tripod',
             userCommentEncoding: 'ASCII',
         );
@@ -50,13 +48,11 @@ final class ImageTest extends TestCase
         self::assertSame(14, $image->bitsPerSample);
         self::assertSame(ColorSpace::ADOBE_RGB, $image->colorSpace);
         self::assertSame('unique-id', $image->imageUniqueId);
-        self::assertSame(42, $image->imageNumber);
         self::assertSame('IMG_0042', $image->documentName);
         self::assertSame('Sunrise', $image->description);
         self::assertSame('Sunrise over Mountains', $image->title);
         self::assertSame($components, $image->componentsConfiguration);
         self::assertSame(3.2, $image->compressedBitsPerPixel);
-        self::assertSame(1, $image->interlace);
         self::assertSame('Captured with tripod', $image->userComment);
         self::assertSame('ASCII', $image->userCommentEncoding);
     }

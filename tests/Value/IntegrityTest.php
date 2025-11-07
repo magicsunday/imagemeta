@@ -30,7 +30,6 @@ final class IntegrityTest extends TestCase
             originalDigest: null,
             edited: null,
             historyLastSoftware: null,
-            imageHistory: null,
         );
 
         self::assertSame('IMG_1234.JPG', $integrity->originalFileName);
@@ -44,16 +43,12 @@ final class IntegrityTest extends TestCase
             originalDigest: 'sha256:abc123',
             edited: true,
             historyLastSoftware: 'Adobe Photoshop 2024',
-            imageHistory: 'Adjusted exposure, cropped',
-            makerNotesSafe: false,
         );
 
         self::assertSame('IMG_1234.JPG', $integrity->originalFileName);
         self::assertSame('sha256:abc123', $integrity->originalDigest);
         self::assertTrue($integrity->edited);
         self::assertSame('Adobe Photoshop 2024', $integrity->historyLastSoftware);
-        self::assertSame('Adjusted exposure, cropped', $integrity->imageHistory);
-        self::assertFalse($integrity->makerNotesSafe);
     }
 
     #[Test]
@@ -64,14 +59,11 @@ final class IntegrityTest extends TestCase
             originalDigest: null,
             edited: null,
             historyLastSoftware: null,
-            imageHistory: null,
         );
 
         self::assertNull($integrity->originalFileName);
         self::assertNull($integrity->originalDigest);
         self::assertNull($integrity->edited);
         self::assertNull($integrity->historyLastSoftware);
-        self::assertNull($integrity->imageHistory);
-        self::assertNull($integrity->makerNotesSafe);
     }
 }

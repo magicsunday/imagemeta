@@ -33,11 +33,9 @@ final class CaptureTest extends TestCase
             temperatureC: null,
             humidityPercent: null,
             pressureHPa: null,
-            batteryLevelPercent: null,
             waterDepthM: null,
             accelerationMs2: null,
             cameraElevationAngleDeg: null,
-            selfTimerModeSeconds: null,
         );
 
         self::assertSame($dateTime, $capture->dateTime);
@@ -51,21 +49,17 @@ final class CaptureTest extends TestCase
             temperatureC: 22.5,
             humidityPercent: 65.0,
             pressureHPa: 1013.25,
-            batteryLevelPercent: 85.0,
             waterDepthM: 5.2,
             accelerationMs2: 9.8,
             cameraElevationAngleDeg: 15.5,
-            selfTimerModeSeconds: 10,
         );
 
         self::assertSame(22.5, $capture->temperatureC);
         self::assertSame(65.0, $capture->humidityPercent);
         self::assertSame(1013.25, $capture->pressureHPa);
-        self::assertSame(85.0, $capture->batteryLevelPercent);
         self::assertSame(5.2, $capture->waterDepthM);
         self::assertSame(9.8, $capture->accelerationMs2);
         self::assertSame(15.5, $capture->cameraElevationAngleDeg);
-        self::assertSame(10, $capture->selfTimerModeSeconds);
     }
 
     #[Test]
@@ -76,21 +70,17 @@ final class CaptureTest extends TestCase
             temperatureC: null,
             humidityPercent: null,
             pressureHPa: null,
-            batteryLevelPercent: null,
             waterDepthM: null,
             accelerationMs2: null,
             cameraElevationAngleDeg: null,
-            selfTimerModeSeconds: null,
         );
 
         self::assertNull($capture->dateTime);
         self::assertNull($capture->temperatureC);
         self::assertNull($capture->humidityPercent);
         self::assertNull($capture->pressureHPa);
-        self::assertNull($capture->batteryLevelPercent);
         self::assertNull($capture->waterDepthM);
         self::assertNull($capture->accelerationMs2);
         self::assertNull($capture->cameraElevationAngleDeg);
-        self::assertNull($capture->selfTimerModeSeconds);
     }
 }
