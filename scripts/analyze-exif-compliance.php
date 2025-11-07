@@ -49,14 +49,14 @@ final class ComplianceAnalyzer
      * This handles cases where the method name differs from the tag name for better API design.
      */
     private const array TAG_TO_METHOD_MAP = [
-        // Image dimensions - use friendly names
-        'ImageLength' => ['imageHeight'],
-        'PixelXDimension' => ['imageWidth'],
-        'PixelYDimension' => ['imageHeight'],
+        // Image dimensions - now have both friendly names AND exact tag name aliases
+        'ImageLength' => ['imageHeight', 'imageLength'],
+        'PixelXDimension' => ['imageWidth', 'pixelXDimension'],
+        'PixelYDimension' => ['imageHeight', 'pixelYDimension'],
         
-        // ISO/Sensitivity - consolidated into iso()
-        'PhotographicSensitivity' => ['iso', 'isoBestEffort'],
-        'ISOSpeed' => ['iso', 'isoBestEffort'],
+        // ISO/Sensitivity - consolidated into iso() with exact tag name aliases
+        'PhotographicSensitivity' => ['iso', 'isoBestEffort', 'photographicSensitivity'],
+        'ISOSpeed' => ['iso', 'isoBestEffort', 'iSOSpeed'],
         'SensitivityType' => ['iso'],  // Used internally by iso()
         'StandardOutputSensitivity' => ['iso'],  // Used internally by iso()
         'RecommendedExposureIndex' => ['iso'],  // Used internally by iso()
@@ -64,8 +64,8 @@ final class ComplianceAnalyzer
         // Camera settings
         'FNumber' => ['fNumber'],
         
-        // Focal length - friendly name
-        'FocalLengthIn35mmFilm' => ['focalLength35Mm'],
+        // Focal length - friendly name and exact tag name alias
+        'FocalLengthIn35mmFilm' => ['focalLength35Mm', 'focalLengthIn35mmFilm'],
         
         // JPEG/Thumbnail - shortened names
         'JPEGInterchangeFormat' => ['jpegInterchangeFormat'],

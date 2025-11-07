@@ -1,12 +1,12 @@
 ---
-generated: "2025-11-07T18:25:51+00:00"
+generated: "2025-11-07T18:39:26+00:00"
 summary:
   total_spec_tags: 227
-  implemented: 191
-  partial: 36
+  implemented: 219
+  partial: 8
   missing: 0
   extra: 0
-  coverage_percent: 84.14
+  coverage_percent: 96.48
 categories:
   tiff_tags:
     254:
@@ -16,12 +16,13 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - newSubfileType
+      - subfileType
+      notes: []
     255:
       tag_id: "0x00FF"
       name: SubfileType
@@ -29,12 +30,13 @@ categories:
       source: TIFF 5.0
       required: false
       deprecated: true
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
+      getter_method_exists: true
+      getter_methods:
+      - newSubfileType
+      - subfileType
       notes:
-      - No getter method in ParsedExif
       - Tag is deprecated in specification
     256:
       tag_id: "0x0100"
@@ -61,6 +63,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - imageHeight
+      - imageLength
       notes: []
     258:
       tag_id: "0x0102"
@@ -109,12 +112,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - threshholding
+      notes: []
     264:
       tag_id: "0x0108"
       name: CellWidth
@@ -122,12 +125,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - cellWidth
+      notes: []
     265:
       tag_id: "0x0109"
       name: CellLength
@@ -135,12 +138,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - cellLength
+      notes: []
     266:
       tag_id: "0x010A"
       name: FillOrder
@@ -148,12 +151,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - fillOrder
+      notes: []
     269:
       tag_id: "0x010D"
       name: DocumentName
@@ -283,12 +286,13 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - minSampleValue
+      - sMinSampleValue
+      notes: []
     281:
       tag_id: "0x0119"
       name: MaxSampleValue
@@ -296,12 +300,13 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - maxSampleValue
+      - sMaxSampleValue
+      notes: []
     282:
       tag_id: "0x011A"
       name: XResolution
@@ -348,12 +353,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - pageName
+      notes: []
     286:
       tag_id: "0x011E"
       name: XPosition
@@ -387,12 +392,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - freeOffsets
+      notes: []
     289:
       tag_id: "0x0121"
       name: FreeByteCounts
@@ -400,12 +405,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - freeByteCounts
+      notes: []
     290:
       tag_id: "0x0122"
       name: GrayResponseUnit
@@ -413,12 +418,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - grayResponseUnit
+      notes: []
     291:
       tag_id: "0x0123"
       name: GrayResponseCurve
@@ -426,12 +431,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - grayResponseCurve
+      notes: []
     292:
       tag_id: "0x0124"
       name: T4Options
@@ -439,12 +444,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - t4Options
+      notes: []
     293:
       tag_id: "0x0125"
       name: T6Options
@@ -452,12 +457,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - t6Options
+      notes: []
     296:
       tag_id: "0x0128"
       name: ResolutionUnit
@@ -479,12 +484,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - pageNumber
+      notes: []
     301:
       tag_id: "0x012D"
       name: TransferFunction
@@ -605,12 +610,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - colorMap
+      notes: []
     321:
       tag_id: "0x0141"
       name: HalftoneHints
@@ -618,12 +623,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - halftoneHints
+      notes: []
     322:
       tag_id: "0x0142"
       name: TileWidth
@@ -687,12 +692,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - inkSet
+      notes: []
     333:
       tag_id: "0x014D"
       name: InkNames
@@ -700,12 +705,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - inkNames
+      notes: []
     334:
       tag_id: "0x014E"
       name: NumberOfInks
@@ -713,12 +718,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - numberOfInks
+      notes: []
     336:
       tag_id: "0x0150"
       name: DotRange
@@ -726,12 +731,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - dotRange
+      notes: []
     337:
       tag_id: "0x0151"
       name: TargetPrinter
@@ -739,12 +744,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - targetPrinter
+      notes: []
     338:
       tag_id: "0x0152"
       name: ExtraSamples
@@ -752,12 +757,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - extraSamples
+      notes: []
     339:
       tag_id: "0x0153"
       name: SampleFormat
@@ -765,12 +770,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - sampleFormat
+      notes: []
     340:
       tag_id: "0x0154"
       name: SMinSampleValue
@@ -778,12 +783,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - minSampleValue
+      notes: []
     341:
       tag_id: "0x0155"
       name: SMaxSampleValue
@@ -791,12 +796,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - maxSampleValue
+      notes: []
     342:
       tag_id: "0x0156"
       name: TransferRange
@@ -804,12 +809,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - transferRange
+      notes: []
     512:
       tag_id: "0x0200"
       name: JPEGProc
@@ -1018,6 +1023,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - imageHeight
+      - imageLength
       notes: []
     258:
       tag_id: "0x0102"
@@ -1491,6 +1497,7 @@ categories:
       getter_methods:
       - iso
       - isoBestEffort
+      - photographicSensitivity
       notes: []
     34856:
       tag_id: "0x8828"
@@ -1558,6 +1565,7 @@ categories:
       getter_methods:
       - iso
       - isoBestEffort
+      - iSOSpeed
       notes: []
     34868:
       tag_id: "0x8834"
@@ -1833,6 +1841,7 @@ categories:
       getter_methods:
       - focalLengthMm
       - focalLength35Mm
+      - focalLengthIn35mmFilm
       notes: []
     37396:
       tag_id: "0x9214"
@@ -2036,6 +2045,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - imageWidth
+      - pixelXDimension
       notes: []
     40963:
       tag_id: "0xA003"
@@ -2049,6 +2059,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - imageHeight
+      - pixelYDimension
       notes: []
     40964:
       tag_id: "0xA004"
@@ -2286,6 +2297,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - focalLength35Mm
+      - focalLengthIn35mmFilm
       notes: []
     41990:
       tag_id: "0xA406"

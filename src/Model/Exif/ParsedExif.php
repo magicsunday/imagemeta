@@ -3158,4 +3158,482 @@ final readonly class ParsedExif
 
         return $dt !== false ? $dt : null;
     }
+
+    // ========================================================================
+    // Alias methods with exact EXIF/TIFF tag names
+    // ========================================================================
+    // These methods provide aliases using the exact tag names from the EXIF
+    // and TIFF specifications, allowing access via both the friendly names
+    // and the official specification tag names.
+    // ========================================================================
+
+    /**
+     * Alias for imageHeight() using exact EXIF tag name.
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 8 — Tag 0x0101 ImageLength
+     *
+     * @return int|null Image height in pixels
+     */
+    public function imageLength(): ?int
+    {
+        return $this->imageHeight();
+    }
+
+    /**
+     * Alias for imageWidth() using exact EXIF tag name.
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA002 PixelXDimension
+     *
+     * @return int|null Image width in pixels
+     */
+    public function pixelXDimension(): ?int
+    {
+        return $this->imageWidth();
+    }
+
+    /**
+     * Alias for imageHeight() using exact EXIF tag name.
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA003 PixelYDimension
+     *
+     * @return int|null Image height in pixels
+     */
+    public function pixelYDimension(): ?int
+    {
+        return $this->imageHeight();
+    }
+
+    /**
+     * Alias for iso() using exact EXIF tag name.
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8827 PhotographicSensitivity
+     *
+     * @return int|null ISO sensitivity value
+     */
+    public function photographicSensitivity(): ?int
+    {
+        return $this->iso();
+    }
+
+    /**
+     * Alias for iso() using exact EXIF tag name.
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8833 ISOSpeed
+     *
+     * @return int|null ISO speed value
+     */
+    public function iSOSpeed(): ?int
+    {
+        return $this->iso();
+    }
+
+    /**
+     * Alias for focalLength35Mm() using exact EXIF tag name.
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA405 FocalLengthIn35mmFilm
+     *
+     * @return int|null Focal length in 35mm equivalent
+     */
+    public function focalLengthIn35mmFilm(): ?int
+    {
+        return $this->focalLength35Mm();
+    }
+
+    // ========================================================================
+    // TIFF 6.0 tag getter methods for rarely-used tags
+    // ========================================================================
+    // These methods provide access to rarely-used TIFF 6.0 tags that are
+    // primarily for specialized printing, scanning, and halftone applications.
+    // Most photography use cases will not need these tags.
+    // ========================================================================
+
+    /**
+     * Returns NewSubfileType tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x00FE
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function newSubfileType(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::NEW_SUBFILE_TYPE);
+    }
+
+    /**
+     * Returns SubfileType tag value (deprecated).
+     * TIFF 5.0 (deprecated in TIFF 6.0) — Tag 0x00FF
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function subfileType(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::SUBFILE_TYPE);
+    }
+
+    /**
+     * Returns Threshholding tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0107
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function threshholding(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::THRESHHOLDING);
+    }
+
+    /**
+     * Returns CellWidth tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0108
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function cellWidth(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::CELL_WIDTH);
+    }
+
+    /**
+     * Returns CellLength tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0109
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function cellLength(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::CELL_LENGTH);
+    }
+
+    /**
+     * Returns FillOrder tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x010A
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function fillOrder(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::FILL_ORDER);
+    }
+
+    /**
+     * Returns MinSampleValue tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0118
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function minSampleValue(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::MIN_SAMPLE_VALUE);
+    }
+
+    /**
+     * Returns MaxSampleValue tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0119
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function maxSampleValue(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::MAX_SAMPLE_VALUE);
+    }
+
+    /**
+     * Returns PageName tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011D
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function pageName(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::PAGE_NAME);
+    }
+
+    /**
+     * Returns XPosition tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011E
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function xPosition(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::X_POSITION);
+    }
+
+    /**
+     * Returns YPosition tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011F
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function yPosition(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::Y_POSITION);
+    }
+
+    /**
+     * Returns FreeOffsets tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0120
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function freeOffsets(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::FREE_OFFSETS);
+    }
+
+    /**
+     * Returns FreeByteCounts tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0121
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function freeByteCounts(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::FREE_BYTE_COUNTS);
+    }
+
+    /**
+     * Returns GrayResponseUnit tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function grayResponseUnit(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::GRAY_RESPONSE_UNIT);
+    }
+
+    /**
+     * Returns GrayResponseCurve tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0123
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function grayResponseCurve(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::GRAY_RESPONSE_CURVE);
+    }
+
+    /**
+     * Returns T4Options tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function t4Options(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::T4_OPTIONS);
+    }
+
+    /**
+     * Returns T6Options tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function t6Options(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::T6_OPTIONS);
+    }
+
+    /**
+     * Returns PageNumber tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0129
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function pageNumber(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::PAGE_NUMBER);
+    }
+
+    /**
+     * Returns ColorMap tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0140
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function colorMap(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::COLOR_MAP);
+    }
+
+    /**
+     * Returns HalftoneHints tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0141
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function halftoneHints(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::HALFTONE_HINTS);
+    }
+
+    /**
+     * Returns InkSet tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function inkSet(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::INK_SET);
+    }
+
+    /**
+     * Returns InkNames tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014D
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function inkNames(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::INK_NAMES);
+    }
+
+    /**
+     * Returns NumberOfInks tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function numberOfInks(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::NUMBER_OF_INKS);
+    }
+
+    /**
+     * Returns DotRange tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0150
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function dotRange(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::DOT_RANGE);
+    }
+
+    /**
+     * Returns TargetPrinter tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0151
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function targetPrinter(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::TARGET_PRINTER);
+    }
+
+    /**
+     * Returns ExtraSamples tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0152
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function extraSamples(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::EXTRA_SAMPLES);
+    }
+
+    /**
+     * Returns SampleFormat tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function sampleFormat(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::SAMPLE_FORMAT);
+    }
+
+    /**
+     * Returns SMinSampleValue tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0154
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function sMinSampleValue(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::S_MIN_SAMPLE_VALUE);
+    }
+
+    /**
+     * Returns SMaxSampleValue tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0155
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function sMaxSampleValue(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::S_MAX_SAMPLE_VALUE);
+    }
+
+    /**
+     * Returns TransferRange tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0156
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function transferRange(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::TRANSFER_RANGE);
+    }
+
+    /**
+     * Returns JPEGProc tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0200
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function jpegProc(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::JPEG_PROC);
+    }
+
+    /**
+     * Returns JPEGRestartInterval tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0203
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function jpegRestartInterval(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::JPEG_RESTART_INTERVAL);
+    }
+
+    /**
+     * Returns JPEGPointTransforms tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0206
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function jpegPointTransforms(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::JPEG_POINT_TRANSFORMS);
+    }
+
+    /**
+     * Returns JPEGQTables tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0207
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function jpegQTables(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::JPEG_Q_TABLES);
+    }
+
+    /**
+     * Returns JPEGDCTables tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0208
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function jpegDCTables(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::JPEG_DC_TABLES);
+    }
+
+    /**
+     * Returns JPEGACTables tag value.
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0209
+     *
+     * @return mixed Raw IFD entry value
+     */
+    public function jpegACTables(): mixed
+    {
+        return $this->ifd0->entry(TiffTag::JPEG_AC_TABLES);
+    }
 }
