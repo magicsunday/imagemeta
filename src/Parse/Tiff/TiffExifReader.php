@@ -31,7 +31,6 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Model\Legacy\LegacyTag;
 use MagicSunday\ImageMeta\Model\Microsoft\MicrosoftXpTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
@@ -105,8 +104,7 @@ final class TiffExifReader implements ExifReaderInterface
      *
      * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 list the Exif, GPS and Interoperability IFD
      * pointer fields that chain the directory hierarchy, with EXIF 2.1 §2.6.3 establishing
-     * the original Exif and GPS pointer layout. The SubIFDs and preview offsets are tracked
-     * here as well because EXIF 3.0 §4.6.12 keeps them in the same structure.
+     * the original Exif and GPS pointer layout.
      *
      * @var list<int>
      */
@@ -114,9 +112,7 @@ final class TiffExifReader implements ExifReaderInterface
         ExifTag::EXIF_IFD_POINTER,
         ExifTag::GPS_IFD_POINTER,
         ExifTag::INTEROPERABILITY_IFD_POINTER,
-        TiffTag::SUB_IFDS,
         ExifTag::JPEG_INTERCHANGE_FORMAT,
-        LegacyTag::PREVIEW_IMAGE_START,
     ];
 
     private const int UTF16_HIGH_SURROGATE_START = 0xD800;
@@ -166,11 +162,6 @@ final class TiffExifReader implements ExifReaderInterface
     /**
      * @var array<int, Ifd>
      */
-    private array $subIfds = [];
-
-    /**
-     * @var array<int, Ifd>
-     */
     private array $ifdCache = [];
 
     /**
@@ -200,7 +191,6 @@ final class TiffExifReader implements ExifReaderInterface
         $this->blobSize = UInt64::fromInt($this->buffer->size());
 
         $this->makerNoteRaw          = null;
-        $this->subIfds               = [];
         $this->ifdCache              = [];
         $this->bigTiffOffsetSize     = 8;
         $this->interopVisitedOffsets = [];
@@ -283,10 +273,6 @@ final class TiffExifReader implements ExifReaderInterface
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
         }
 
-        if (!$interopIfd instanceof Ifd && $this->subIfds !== []) {
-            $interopIfd = $this->locateInteropIfd(...array_values($this->subIfds));
-        }
-
         $makerNotes = $this->resolveMakerNotes($makerNotesRegistry, $ifd0, $exifIfd);
 
         return new ParsedExif(
@@ -297,7 +283,6 @@ final class TiffExifReader implements ExifReaderInterface
             $ifd1,
             $makerNotes,
             $additionalIfds,
-            $this->subIfds,
         );
     }
 
@@ -437,13 +422,7 @@ final class TiffExifReader implements ExifReaderInterface
             $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
         }
 
-        $entry = new IfdEntry($tag, $type, $cnt, $value);
-
-        if ($tag === LegacyTag::SUB_IFDS) {
-            $this->collectSubIfds($entry);
-        }
-
-        return [$tag => $entry];
+        return [$tag => new IfdEntry($tag, $type, $cnt, $value)];
     }
 
     /**
@@ -638,46 +617,6 @@ final class TiffExifReader implements ExifReaderInterface
     }
 
     /**
-     * Collects nested image file directories referenced by a SubIFDs entry.
-     *
-     * EXIF 3.0 §4.5.5 reserves the SubIFDs pointer for reduced-resolution and
-     * auxiliary images that must be parsed as additional IFD chains, matching the
-     * TIFF 6.0 §8 definition of tag 0x014A.
-     */
-    private function collectSubIfds(IfdEntry $entry): void
-    {
-        if (
-            !in_array($entry->type, [TiffConst::TYPE_IFD, TiffConst::TYPE_IFD8, TiffConst::TYPE_LONG], true)
-        ) {
-            return;
-        }
-
-        $offsets = $this->subIfdOffsets($entry);
-
-        if ($offsets === []) {
-            return;
-        }
-
-        $returnPos = $this->buffer->tell();
-
-        foreach ($offsets as $offset) {
-            if ($offset <= 0) {
-                continue;
-            }
-
-            if (isset($this->subIfds[$offset])) {
-                continue;
-            }
-
-            // SubIFDs provide auxiliary/reduced-resolution images (EXIF 3.0 §4.5.5
-            // and EXIF 2.32 §4.5.5) and correspond to the TIFF 6.0 §8 SubIFD tag.
-            $this->subIfds[$offset] = $this->readIfd($offset);
-        }
-
-        $this->buffer->seek($returnPos);
-    }
-
-    /**
      * Attempts to resolve an interoperability IFD from the provided directories.
      *
      * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 specify that the Interoperability IFD is
@@ -747,39 +686,6 @@ final class TiffExifReader implements ExifReaderInterface
         ];
 
         return array_any($interopTags, fn (int $tag): bool => $ifd->get($tag) instanceof IfdEntry);
-    }
-
-    /**
-     * Normalises the offsets described by a SubIFDs entry.
-     *
-     * @return list<int>
-     */
-    private function subIfdOffsets(IfdEntry $entry): array
-    {
-        $value = $entry->value;
-
-        if ($value instanceof ExifNumericList) {
-            $offsets = [];
-            foreach ($value->values as $component) {
-                if ($component instanceof UInt64) {
-                    $offsetEntry = new IfdEntry($entry->tag, $entry->type, 1, $component);
-                    $offsets[]   = $this->pointerOffset($offsetEntry);
-
-                    continue;
-                }
-
-                $offsetEntry = new IfdEntry($entry->tag, $entry->type, 1, $component);
-                $offsets[]   = $this->pointerOffset($offsetEntry);
-            }
-
-            return $offsets;
-        }
-
-        if (is_int($value) || is_float($value)) {
-            return [$this->pointerOffset($entry)];
-        }
-
-        return [];
     }
 
     /**
