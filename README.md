@@ -110,6 +110,16 @@ ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decode
 
 All fields are trimmed and converted into PHP primitives (floats, ints, strings or `DateTimeImmutable`) so they can be used directly without consulting tag identifiers.
 
+### EXIF 3.0 environmental and sensor data
+
+EXIF 3.0 introduces environmental and sensor tags for underwater photography, motion tracking, and camera orientation. ImageMeta fully implements these tags through the `Capture` and `Motion` value objects:
+
+* **WaterDepth** (0x9403): Records the depth of the camera below the water surface in metres, accessible via `$s->capture->waterDepthM`.
+* **Acceleration** (0x9404): Captures the 3D acceleration vector in metres per second squared. The scalar magnitude is available through `$s->capture->accelerationMs2`, while individual axis components (X, Y, Z) are exposed via `$s->motion->accelX`, `$s->motion->accelY`, and `$s->motion->accelZ`.
+* **CameraElevationAngle** (0x9405): Records the camera's elevation angle relative to the horizon in degrees, accessible via `$s->capture->cameraElevationAngleDeg`. Positive values indicate upward tilt, negative values indicate downward tilt.
+
+These tags enable precise documentation of capture conditions in specialised scenarios such as underwater photography, action cameras, and drone imaging. All values are converted from EXIF RATIONAL or SRATIONAL types into native PHP floats with appropriate unit conversions already applied.
+
 ### EXIF 3.0 → Value objects
 
 | Value object         | Fields                                                                                                                      | Source tag(s)                                                                                | Converter/Enum                                                               |
@@ -122,6 +132,8 @@ All fields are trimmed and converted into PHP primitives (floats, ints, strings 
 | `Exposure`           | `exposureBiasEv`, `gainControl`, `contrast`                                                                                 | `ExposureBiasValue`, `GainControl`, `Contrast`                                               | `GainControl` enum                                                           |
 | `Scene`              | `subjectDistanceRange`                                                                                                      | `SubjectDistanceRange`                                                                       | `SubjectDistanceRange` enum                                                  |
 | `Device`             | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware`                                                  | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware`                   | –                                                                            |
+| `Capture`            | `dateTime`, `temperatureC`, `humidityPercent`, `pressureHPa`, `waterDepthM`, `accelerationMs2`, `cameraElevationAngleDeg`  | `Temperature`, `Humidity`, `Pressure`, `WaterDepth`, `Acceleration`, `CameraElevationAngle`  | `ValueConverters::rationalToFloat()`, `sqrt()` for acceleration magnitude    |
+| `Motion`             | `accelX`, `accelY`, `accelZ`                                                                                                | `Acceleration` (SRATIONAL triplet)                                                           | `ValueConverters::srationalTripletToFloatVector()`                           |
 | `Gps`                | `latitude`, `longitude`, `altitude`, `speed*`, `track*`, `timestamp`, navigation metadata                                   | GPS IFD (`GPS*`) with XMP `exif:GPS*` fallbacks                                              | `ValueConverters::gpsFromIfd()`, harmonisation in `Curate\Exif\ValueFactory` |
 | `MultiPicture`       | `version`, `imageCount`, `entries`, `totalFrames`, `individualImageNumber`, `imageUidList`, `panoramaAngle`, `panoramaAxis` | MP Index IFD, MP Attribute IFD                                                               | `Curate\Exif\ValueFactory::resolveMultiPicture()`                            |
 
@@ -131,6 +143,10 @@ $s->tiff->compression;              // Compression::JPEG
 $s->lens->lensSpecification;       // [minF, minAperture, maxF, maxAperture]
 $s->composite->type;                // CompositeImage::GeneralComposite
 $s->standards->exifVersion;          // "3.00"
+$s->capture->waterDepthM;           // 5.2 (metres below water surface)
+$s->capture->accelerationMs2;       // 9.8 (m/s² magnitude)
+$s->capture->cameraElevationAngleDeg; // 15.5 (degrees relative to horizon)
+$s->motion->accelX;                 // 0.5 (X-axis acceleration component)
 ```
 
 The aggregate always instantiates each value object. Consumers therefore never have to deal with tag identifiers or container-specific key names.
