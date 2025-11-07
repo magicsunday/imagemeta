@@ -1,12 +1,12 @@
 ---
-generated: "2025-11-07T10:05:13+00:00"
+generated: "2025-11-07T20:03:39+00:00"
 summary:
-  total_spec_tags: 163
-  implemented: 123
-  partial: 30
-  missing: 10
-  extra: 16
-  coverage_percent: 75.46
+  total_spec_tags: 227
+  implemented: 227
+  partial: 0
+  missing: 0
+  extra: 0
+  coverage_percent: 100
 categories:
   tiff_tags:
     254:
@@ -16,10 +16,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - newSubfileType
+      - subfileType
       notes: []
     255:
       tag_id: "0x00FF"
@@ -28,10 +30,12 @@ categories:
       source: TIFF 5.0
       required: false
       deprecated: true
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - newSubfileType
+      - subfileType
       notes:
       - Tag is deprecated in specification
     256:
@@ -54,12 +58,13 @@ categories:
       source: TIFF 6.0
       required: true
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - imageHeight
+      - imageLength
+      notes: []
     258:
       tag_id: "0x0102"
       name: BitsPerSample
@@ -92,13 +97,65 @@ categories:
       name: PhotometricInterpretation
       ifd: IFD0
       source: TIFF 6.0
-      required: true
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
       getter_method_exists: true
       getter_methods:
       - photometric
+      notes: []
+    263:
+      tag_id: "0x0107"
+      name: Threshholding
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - threshholding
+      notes: []
+    264:
+      tag_id: "0x0108"
+      name: CellWidth
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - cellWidth
+      notes: []
+    265:
+      tag_id: "0x0109"
+      name: CellLength
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - cellLength
+      notes: []
+    266:
+      tag_id: "0x010A"
+      name: FillOrder
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - fillOrder
       notes: []
     269:
       tag_id: "0x010D"
@@ -107,13 +164,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
       - documentName
-      notes:
-      - Missing constant in ExifTag.php
+      notes: []
     270:
       tag_id: "0x010E"
       name: ImageDescription
@@ -161,7 +217,7 @@ categories:
       name: StripOffsets
       ifd: IFD0
       source: TIFF 6.0
-      required: conditional
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -214,7 +270,7 @@ categories:
       name: StripByteCounts
       ifd: IFD0
       source: TIFF 6.0
-      required: conditional
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -223,12 +279,40 @@ categories:
       - stripByteCounts
       - thumbnailStripByteCounts
       notes: []
+    280:
+      tag_id: "0x0118"
+      name: MinSampleValue
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - minSampleValue
+      - sMinSampleValue
+      notes: []
+    281:
+      tag_id: "0x0119"
+      name: MaxSampleValue
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - maxSampleValue
+      - sMaxSampleValue
+      notes: []
     282:
       tag_id: "0x011A"
       name: XResolution
       ifd: IFD0
       source: TIFF 6.0
-      required: conditional
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -241,7 +325,7 @@ categories:
       name: YResolution
       ifd: IFD0
       source: TIFF 6.0
-      required: conditional
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -262,6 +346,123 @@ categories:
       getter_methods:
       - planarConfiguration
       notes: []
+    285:
+      tag_id: "0x011D"
+      name: PageName
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - pageName
+      notes: []
+    286:
+      tag_id: "0x011E"
+      name: XPosition
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - xPosition
+      notes: []
+    287:
+      tag_id: "0x011F"
+      name: YPosition
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - yPosition
+      notes: []
+    288:
+      tag_id: "0x0120"
+      name: FreeOffsets
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - freeOffsets
+      notes: []
+    289:
+      tag_id: "0x0121"
+      name: FreeByteCounts
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - freeByteCounts
+      notes: []
+    290:
+      tag_id: "0x0122"
+      name: GrayResponseUnit
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - grayResponseUnit
+      notes: []
+    291:
+      tag_id: "0x0123"
+      name: GrayResponseCurve
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - grayResponseCurve
+      notes: []
+    292:
+      tag_id: "0x0124"
+      name: T4Options
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - t4Options
+      notes: []
+    293:
+      tag_id: "0x0125"
+      name: T6Options
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - t6Options
+      notes: []
     296:
       tag_id: "0x0128"
       name: ResolutionUnit
@@ -275,6 +476,19 @@ categories:
       getter_methods:
       - focalPlaneResolutionUnit
       - resolutionUnit
+      notes: []
+    297:
+      tag_id: "0x0129"
+      name: PageNumber
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - pageNumber
       notes: []
     301:
       tag_id: "0x012D"
@@ -344,13 +558,25 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
       - hostComputer
-      notes:
-      - Missing constant in ExifTag.php
+      notes: []
+    317:
+      tag_id: "0x013D"
+      name: Predictor
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - predictor
+      notes: []
     318:
       tag_id: "0x013E"
       name: WhitePoint
@@ -377,6 +603,32 @@ categories:
       getter_methods:
       - primaryChromaticities
       notes: []
+    320:
+      tag_id: "0x0140"
+      name: ColorMap
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - colorMap
+      notes: []
+    321:
+      tag_id: "0x0141"
+      name: HalftoneHints
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - halftoneHints
+      notes: []
     322:
       tag_id: "0x0142"
       name: TileWidth
@@ -384,14 +636,13 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
       - tileWidth
       - thumbnailTileWidth
-      notes:
-      - Missing constant in ExifTag.php
+      notes: []
     323:
       tag_id: "0x0143"
       name: TileLength
@@ -399,14 +650,13 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
       - tileLength
       - thumbnailTileLength
-      notes:
-      - Missing constant in ExifTag.php
+      notes: []
     324:
       tag_id: "0x0144"
       name: TileOffsets
@@ -414,14 +664,13 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
       - tileOffsets
       - thumbnailTileOffsets
-      notes:
-      - Missing constant in ExifTag.php
+      notes: []
     325:
       tag_id: "0x0145"
       name: TileByteCounts
@@ -429,54 +678,260 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
       - tileByteCounts
       - thumbnailTileByteCounts
-      notes:
-      - Missing constant in ExifTag.php
-    330:
-      tag_id: "0x014A"
-      name: SubIFDs
+      notes: []
+    332:
+      tag_id: "0x014C"
+      name: InkSet
       ifd: IFD0
-      source: TIFF Tech Note 1
+      source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
-      - subIfds
-      notes:
-      - Missing constant in ExifTag.php
+      - inkSet
+      notes: []
+    333:
+      tag_id: "0x014D"
+      name: InkNames
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - inkNames
+      notes: []
+    334:
+      tag_id: "0x014E"
+      name: NumberOfInks
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - numberOfInks
+      notes: []
+    336:
+      tag_id: "0x0150"
+      name: DotRange
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - dotRange
+      notes: []
+    337:
+      tag_id: "0x0151"
+      name: TargetPrinter
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - targetPrinter
+      notes: []
+    338:
+      tag_id: "0x0152"
+      name: ExtraSamples
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - extraSamples
+      notes: []
+    339:
+      tag_id: "0x0153"
+      name: SampleFormat
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - sampleFormat
+      notes: []
+    340:
+      tag_id: "0x0154"
+      name: SMinSampleValue
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - minSampleValue
+      notes: []
+    341:
+      tag_id: "0x0155"
+      name: SMaxSampleValue
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - maxSampleValue
+      notes: []
+    342:
+      tag_id: "0x0156"
+      name: TransferRange
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - transferRange
+      notes: []
+    512:
+      tag_id: "0x0200"
+      name: JPEGProc
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegProc
+      notes: []
     513:
       tag_id: "0x0201"
       name: JPEGInterchangeFormat
-      ifd: IFD1
+      ifd: IFD0
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - jpegInterchangeFormat
+      notes: []
     514:
       tag_id: "0x0202"
-      name: JPEGInterchangeFormatLength
-      ifd: IFD1
+      name: JPEGInterchangeFormatLngth
+      ifd: IFD0
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - jpegInterchangeFormatLength
+      notes: []
+    515:
+      tag_id: "0x0203"
+      name: JPEGRestartInterval
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegRestartInterval
+      notes: []
+    517:
+      tag_id: "0x0205"
+      name: JPEGLosslessPredictors
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - predictor
+      notes: []
+    518:
+      tag_id: "0x0206"
+      name: JPEGPointTransforms
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegPointTransforms
+      notes: []
+    519:
+      tag_id: "0x0207"
+      name: JPEGQTables
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegQTables
+      notes: []
+    520:
+      tag_id: "0x0208"
+      name: JPEGDCTables
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegDCTables
+      notes: []
+    521:
+      tag_id: "0x0209"
+      name: JPEGACTables
+      ifd: IFD0
+      source: TIFF 6.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegACTables
+      notes: []
     529:
       tag_id: "0x0211"
       name: YCbCrCoefficients
@@ -484,12 +939,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - ycbcrCoefficients
+      notes: []
     530:
       tag_id: "0x0212"
       name: YCbCrSubSampling
@@ -497,12 +952,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - ycbcrSubSampling
+      notes: []
     531:
       tag_id: "0x0213"
       name: YCbCrPositioning
@@ -510,12 +965,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - ycbcrPositioning
+      notes: []
     532:
       tag_id: "0x0214"
       name: ReferenceBlackWhite
@@ -542,25 +997,445 @@ categories:
       getter_methods:
       - copyright
       notes: []
-    11:
-      tag_id: "0x000B"
-      name: ProcessingSoftware
+  exif_tags:
+    256:
+      tag_id: "0x0100"
+      name: ImageWidth
       ifd: IFD0
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
+      getter_method_exists: true
+      getter_methods:
+      - imageWidth
+      notes: []
+    257:
+      tag_id: "0x0101"
+      name: ImageLength
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - imageHeight
+      - imageLength
+      notes: []
+    258:
+      tag_id: "0x0102"
+      name: BitsPerSample
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - bitsPerSample
+      notes: []
+    259:
+      tag_id: "0x0103"
+      name: Compression
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - thumbnailCompression
+      - compression
+      notes: []
+    262:
+      tag_id: "0x0106"
+      name: PhotometricInterpretation
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - photometric
+      notes: []
+    270:
+      tag_id: "0x010E"
+      name: ImageDescription
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - imageDescription
+      notes: []
+    271:
+      tag_id: "0x010F"
+      name: Make
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - makerNotes
+      - cameraMake
+      - lensMake
+      notes: []
+    272:
+      tag_id: "0x0110"
+      name: Model
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - cameraModel
+      - lensModel
+      notes: []
+    273:
+      tag_id: "0x0111"
+      name: StripOffsets
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - stripOffsets
+      - thumbnailStripOffsets
+      notes: []
+    274:
+      tag_id: "0x0112"
+      name: Orientation
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - orientation
+      notes: []
+    277:
+      tag_id: "0x0115"
+      name: SamplesPerPixel
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - samplesPerPixel
+      notes: []
+    278:
+      tag_id: "0x0116"
+      name: RowsPerStrip
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - rowsPerStrip
+      notes: []
+    279:
+      tag_id: "0x0117"
+      name: StripByteCounts
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - stripByteCounts
+      - thumbnailStripByteCounts
+      notes: []
+    282:
+      tag_id: "0x011A"
+      name: XResolution
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneXResolution
+      notes: []
+    283:
+      tag_id: "0x011B"
+      name: YResolution
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneYResolution
+      notes: []
+    284:
+      tag_id: "0x011C"
+      name: PlanarConfiguration
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - planarConfiguration
+      notes: []
+    296:
+      tag_id: "0x0128"
+      name: ResolutionUnit
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - focalPlaneResolutionUnit
+      - resolutionUnit
+      notes: []
+    301:
+      tag_id: "0x012D"
+      name: TransferFunction
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - transferFunction
+      notes: []
+    305:
+      tag_id: "0x0131"
+      name: Software
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - rawDevelopingSoftware
+      - imageEditingSoftware
+      - metadataEditingSoftware
+      notes: []
+    306:
+      tag_id: "0x0132"
+      name: DateTime
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - dateTimeOriginalRaw
+      - dateTimeOriginal
+      - dateTimeOriginalBestEffort
+      - dateTimeDigitizedRaw
+      - dateTimeRaw
+      - captureDateTime
+      - dateTimeDigitized
+      - dateTime
+      notes: []
+    315:
+      tag_id: "0x013B"
+      name: Artist
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - artist
+      notes: []
+    318:
+      tag_id: "0x013E"
+      name: WhitePoint
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - whitePoint
+      notes: []
+    319:
+      tag_id: "0x013F"
+      name: PrimaryChromaticities
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - primaryChromaticities
+      notes: []
+    513:
+      tag_id: "0x0201"
+      name: JPEGInterchangeFormat
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegInterchangeFormat
+      notes: []
+    514:
+      tag_id: "0x0202"
+      name: JPEGInterchangeFormatLength
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - jpegInterchangeFormatLength
+      notes: []
+    529:
+      tag_id: "0x0211"
+      name: YCbCrCoefficients
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - ycbcrCoefficients
+      notes: []
+    530:
+      tag_id: "0x0212"
+      name: YCbCrSubSampling
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - ycbcrSubSampling
+      notes: []
+    531:
+      tag_id: "0x0213"
+      name: YCbCrPositioning
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - ycbcrPositioning
+      notes: []
+    532:
+      tag_id: "0x0214"
+      name: ReferenceBlackWhite
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - referenceBlackWhite
+      notes: []
+    33432:
+      tag_id: "0x8298"
+      name: Copyright
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - copyright
+      notes: []
+    34665:
+      tag_id: "0x8769"
+      name: ExifIFDPointer
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
       getter_methods: []
       notes:
-      - No getter method in ParsedExif
-  exif_tags:
+      - Structural tag (IFD pointer) - not exposed as getter method
+    34853:
+      tag_id: "0x8825"
+      name: GPSInfoIFDPointer
+      ifd: IFD0
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods: []
+      notes:
+      - Structural tag (IFD pointer) - not exposed as getter method
     33434:
       tag_id: "0x829A"
       name: ExposureTime
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -574,20 +1449,20 @@ categories:
       tag_id: "0x829D"
       name: FNumber
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - fNumber
+      notes: []
     34850:
       tag_id: "0x8822"
       name: ExposureProgram
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -600,7 +1475,7 @@ categories:
       tag_id: "0x8824"
       name: SpectralSensitivity
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -613,20 +1488,22 @@ categories:
       tag_id: "0x8827"
       name: PhotographicSensitivity
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - iso
+      - isoBestEffort
+      - photographicSensitivity
+      notes: []
     34856:
       tag_id: "0x8828"
       name: OECF
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -640,46 +1517,7 @@ categories:
       tag_id: "0x8830"
       name: SensitivityType
       ifd: ExifIFD
-      source: EXIF 2.32
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
-    34865:
-      tag_id: "0x8831"
-      name: StandardOutputSensitivity
-      ifd: ExifIFD
-      source: EXIF 2.32
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
-    34866:
-      tag_id: "0x8832"
-      name: RecommendedExposureIndex
-      ifd: ExifIFD
-      source: EXIF 2.32
-      required: false
-      deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - exposureIndex
-      notes: []
-    34867:
-      tag_id: "0x8833"
-      name: ISOSpeed
-      ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -688,11 +1526,52 @@ categories:
       getter_methods:
       - iso
       notes: []
+    34865:
+      tag_id: "0x8831"
+      name: StandardOutputSensitivity
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - iso
+      notes: []
+    34866:
+      tag_id: "0x8832"
+      name: RecommendedExposureIndex
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - iso
+      notes: []
+    34867:
+      tag_id: "0x8833"
+      name: ISOSpeed
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - iso
+      - isoBestEffort
+      - iSOSpeed
+      notes: []
     34868:
       tag_id: "0x8834"
       name: ISOSpeedLatitudeyyy
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -705,7 +1584,7 @@ categories:
       tag_id: "0x8835"
       name: ISOSpeedLatitudezzz
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -718,8 +1597,8 @@ categories:
       tag_id: "0x9000"
       name: ExifVersion
       ifd: ExifIFD
-      source: EXIF 2.32
-      required: true
+      source: EXIF 3.0
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -731,7 +1610,7 @@ categories:
       tag_id: "0x9003"
       name: DateTimeOriginal
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -747,7 +1626,7 @@ categories:
       tag_id: "0x9004"
       name: DateTimeDigitized
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -762,7 +1641,7 @@ categories:
       tag_id: "0x9010"
       name: OffsetTime
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -777,7 +1656,7 @@ categories:
       tag_id: "0x9011"
       name: OffsetTimeOriginal
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -791,7 +1670,7 @@ categories:
       tag_id: "0x9012"
       name: OffsetTimeDigitized
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -805,8 +1684,8 @@ categories:
       tag_id: "0x9101"
       name: ComponentsConfiguration
       ifd: ExifIFD
-      source: EXIF 2.32
-      required: true
+      source: EXIF 3.0
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -820,7 +1699,7 @@ categories:
       tag_id: "0x9102"
       name: CompressedBitsPerPixel
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -833,7 +1712,7 @@ categories:
       tag_id: "0x9201"
       name: ShutterSpeedValue
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -846,7 +1725,7 @@ categories:
       tag_id: "0x9202"
       name: ApertureValue
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -859,7 +1738,7 @@ categories:
       tag_id: "0x9203"
       name: BrightnessValue
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -872,7 +1751,7 @@ categories:
       tag_id: "0x9204"
       name: ExposureBiasValue
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -885,7 +1764,7 @@ categories:
       tag_id: "0x9205"
       name: MaxApertureValue
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -898,7 +1777,7 @@ categories:
       tag_id: "0x9206"
       name: SubjectDistance
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -912,7 +1791,7 @@ categories:
       tag_id: "0x9207"
       name: MeteringMode
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -925,7 +1804,7 @@ categories:
       tag_id: "0x9208"
       name: LightSource
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -938,7 +1817,7 @@ categories:
       tag_id: "0x9209"
       name: Flash
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -953,7 +1832,7 @@ categories:
       tag_id: "0x920A"
       name: FocalLength
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -962,12 +1841,13 @@ categories:
       getter_methods:
       - focalLengthMm
       - focalLength35Mm
+      - focalLengthIn35mmFilm
       notes: []
     37396:
       tag_id: "0x9214"
       name: SubjectArea
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -980,7 +1860,7 @@ categories:
       tag_id: "0x927C"
       name: MakerNote
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -993,7 +1873,7 @@ categories:
       tag_id: "0x9286"
       name: UserComment
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1008,7 +1888,7 @@ categories:
       tag_id: "0x9290"
       name: SubSecTime
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1023,7 +1903,7 @@ categories:
       tag_id: "0x9291"
       name: SubSecTimeOriginal
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1037,7 +1917,7 @@ categories:
       tag_id: "0x9292"
       name: SubSecTimeDigitized
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1047,12 +1927,91 @@ categories:
       - subSecTimeDigitized
       - subSecTime
       notes: []
+    37888:
+      tag_id: "0x9400"
+      name: Temperature
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - temperatureCelsius
+      notes: []
+    37889:
+      tag_id: "0x9401"
+      name: Humidity
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - humidityPercent
+      notes: []
+    37890:
+      tag_id: "0x9402"
+      name: Pressure
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - pressureHPa
+      notes: []
+    37891:
+      tag_id: "0x9403"
+      name: WaterDepth
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - waterDepthMeters
+      notes: []
+    37892:
+      tag_id: "0x9404"
+      name: Acceleration
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - accelerationVector
+      - accelerationMs2
+      notes: []
+    37893:
+      tag_id: "0x9405"
+      name: CameraElevationAngle
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - cameraElevationAngleDeg
+      notes: []
     40960:
       tag_id: "0xA000"
       name: FlashpixVersion
       ifd: ExifIFD
-      source: EXIF 2.32
-      required: true
+      source: EXIF 3.0
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -1065,8 +2024,8 @@ categories:
       tag_id: "0xA001"
       name: ColorSpace
       ifd: ExifIFD
-      source: EXIF 2.32
-      required: true
+      source: EXIF 3.0
+      required: false
       deprecated: false
       status: implemented
       constant_defined: true
@@ -1078,33 +2037,35 @@ categories:
       tag_id: "0xA002"
       name: PixelXDimension
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - imageWidth
+      - pixelXDimension
+      notes: []
     40963:
       tag_id: "0xA003"
       name: PixelYDimension
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - imageHeight
+      - pixelYDimension
+      notes: []
     40964:
       tag_id: "0xA004"
       name: RelatedSoundFile
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1113,11 +2074,24 @@ categories:
       getter_methods:
       - relatedSoundFile
       notes: []
+    40965:
+      tag_id: "0xA005"
+      name: InteroperabilityIFDPointer
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods: []
+      notes:
+      - Structural tag (IFD pointer) - not exposed as getter method
     41483:
       tag_id: "0xA20B"
       name: FlashEnergy
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1127,11 +2101,24 @@ categories:
       - flash
       - flashEnergy
       notes: []
+    41484:
+      tag_id: "0xA20C"
+      name: SpatialFrequencyResponse
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - spatialFrequencyResponse
+      notes: []
     41486:
       tag_id: "0xA20E"
       name: FocalPlaneXResolution
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1144,7 +2131,7 @@ categories:
       tag_id: "0xA20F"
       name: FocalPlaneYResolution
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1157,7 +2144,7 @@ categories:
       tag_id: "0xA210"
       name: FocalPlaneResolutionUnit
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1171,7 +2158,7 @@ categories:
       tag_id: "0xA214"
       name: SubjectLocation
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1184,7 +2171,7 @@ categories:
       tag_id: "0xA215"
       name: ExposureIndex
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1197,7 +2184,7 @@ categories:
       tag_id: "0xA217"
       name: SensingMethod
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1210,7 +2197,7 @@ categories:
       tag_id: "0xA300"
       name: FileSource
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1223,7 +2210,7 @@ categories:
       tag_id: "0xA301"
       name: SceneType
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1236,20 +2223,21 @@ categories:
       tag_id: "0xA302"
       name: CFAPattern
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - cfaPattern
+      - cfaPatternColors
+      notes: []
     41985:
       tag_id: "0xA401"
       name: CustomRendered
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1262,7 +2250,7 @@ categories:
       tag_id: "0xA402"
       name: ExposureMode
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1275,7 +2263,7 @@ categories:
       tag_id: "0xA403"
       name: WhiteBalance
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1288,7 +2276,7 @@ categories:
       tag_id: "0xA404"
       name: DigitalZoomRatio
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1301,20 +2289,21 @@ categories:
       tag_id: "0xA405"
       name: FocalLengthIn35mmFilm
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
-      status: partial
+      status: implemented
       constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
+      getter_method_exists: true
+      getter_methods:
+      - focalLength35Mm
+      - focalLengthIn35mmFilm
+      notes: []
     41990:
       tag_id: "0xA406"
       name: SceneCaptureType
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1327,7 +2316,7 @@ categories:
       tag_id: "0xA407"
       name: GainControl
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1340,7 +2329,7 @@ categories:
       tag_id: "0xA408"
       name: Contrast
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1353,7 +2342,7 @@ categories:
       tag_id: "0xA409"
       name: Saturation
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1366,7 +2355,7 @@ categories:
       tag_id: "0xA40A"
       name: Sharpness
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1375,11 +2364,24 @@ categories:
       getter_methods:
       - sharpness
       notes: []
+    41995:
+      tag_id: "0xA40B"
+      name: DeviceSettingDescription
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - deviceSettingDescription
+      notes: []
     41996:
       tag_id: "0xA40C"
       name: SubjectDistanceRange
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1393,7 +2395,7 @@ categories:
       tag_id: "0xA420"
       name: ImageUniqueID
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1406,7 +2408,7 @@ categories:
       tag_id: "0xA430"
       name: CameraOwnerName
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1419,7 +2421,7 @@ categories:
       tag_id: "0xA431"
       name: BodySerialNumber
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1432,7 +2434,7 @@ categories:
       tag_id: "0xA432"
       name: LensSpecification
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1445,7 +2447,7 @@ categories:
       tag_id: "0xA433"
       name: LensMake
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1458,7 +2460,7 @@ categories:
       tag_id: "0xA434"
       name: LensModel
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1471,7 +2473,7 @@ categories:
       tag_id: "0xA435"
       name: LensSerialNumber
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1483,7 +2485,7 @@ categories:
     42038:
       tag_id: "0xA436"
       name: ImageTitle
-      ifd: IFD0
+      ifd: ExifIFD
       source: EXIF 3.0
       required: false
       deprecated: false
@@ -1496,7 +2498,7 @@ categories:
     42039:
       tag_id: "0xA437"
       name: Photographer
-      ifd: IFD0
+      ifd: ExifIFD
       source: EXIF 3.0
       required: false
       deprecated: false
@@ -1509,7 +2511,7 @@ categories:
     42040:
       tag_id: "0xA438"
       name: ImageEditor
-      ifd: IFD0
+      ifd: ExifIFD
       source: EXIF 3.0
       required: false
       deprecated: false
@@ -1519,11 +2521,63 @@ categories:
       getter_methods:
       - imageEditor
       notes: []
+    42041:
+      tag_id: "0xA439"
+      name: CameraFirmware
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - cameraFirmware
+      notes: []
+    42042:
+      tag_id: "0xA43A"
+      name: RAWDevelopingSoftware
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - rawDevelopingSoftware
+      notes: []
+    42043:
+      tag_id: "0xA43B"
+      name: ImageEditingSoftware
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - imageEditingSoftware
+      notes: []
+    42044:
+      tag_id: "0xA43C"
+      name: MetadataEditingSoftware
+      ifd: ExifIFD
+      source: EXIF 3.0
+      required: false
+      deprecated: false
+      status: implemented
+      constant_defined: true
+      getter_method_exists: true
+      getter_methods:
+      - metadataEditingSoftware
+      notes: []
     42080:
       tag_id: "0xA460"
       name: CompositeImage
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1538,7 +2592,7 @@ categories:
       tag_id: "0xA461"
       name: SourceImageNumberOfCompositeImage
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1552,7 +2606,7 @@ categories:
       tag_id: "0xA462"
       name: SourceExposureTimesOfCompositeImage
       ifd: ExifIFD
-      source: EXIF 2.32
+      source: EXIF 3.0
       required: false
       deprecated: false
       status: implemented
@@ -1563,155 +2617,25 @@ categories:
       - compositeImage
       - sourceExposureTimesOfCompositeImage
       notes: []
-    50459:
-      tag_id: "0xC51B"
-      name: PreviewImageStart
-      ifd: PreviewIFD
+    42240:
+      tag_id: "0xA500"
+      name: Gamma
+      ifd: ExifIFD
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
-      notes: []
-    50460:
-      tag_id: "0xC51C"
-      name: PreviewImageLength
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
-      notes: []
-    50461:
-      tag_id: "0xC51D"
-      name: PreviewImageEncoding
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
-      notes: []
-    50462:
-      tag_id: "0xC51E"
-      name: PreviewImageMIMEType
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
-      notes: []
-    50463:
-      tag_id: "0xC51F"
-      name: PreviewImageWidth
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: false
+      status: implemented
+      constant_defined: true
       getter_method_exists: true
       getter_methods:
-      - imageWidth
-      notes:
-      - Missing constant in ExifTag.php
-    50464:
-      tag_id: "0xC520"
-      name: PreviewImageHeight
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: false
-      getter_method_exists: true
-      getter_methods:
-      - imageHeight
-      notes:
-      - Missing constant in ExifTag.php
-    50465:
-      tag_id: "0xC521"
-      name: PreviewImageColorSpace
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: false
-      getter_method_exists: true
-      getter_methods:
-      - colorSpace
-      notes:
-      - Missing constant in ExifTag.php
-    50466:
-      tag_id: "0xC522"
-      name: PreviewImageBitDepth
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
-      notes: []
-    50467:
-      tag_id: "0xC523"
-      name: PreviewDateTime
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: false
-      getter_method_exists: true
-      getter_methods:
-      - dateTime
-      notes:
-      - Missing constant in ExifTag.php
-    50468:
-      tag_id: "0xC524"
-      name: PreviewDateTimeDigitized
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: false
-      getter_method_exists: true
-      getter_methods:
-      - dateTimeDigitized
-      - dateTime
-      notes:
-      - Missing constant in ExifTag.php
-    50735:
-      tag_id: "0xC62F"
-      name: PreviewImageScale
-      ifd: PreviewIFD
-      source: EXIF 3.0
-      required: false
-      deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
+      - gamma
       notes: []
   gps_tags:
   - tag_id: "0x0000"
     name: GPSVersionID
     ifd: GPSIFD
-    source: EXIF 2.32
-    required: true
+    source: EXIF 3.0
+    required: false
     deprecated: false
     status: implemented
     constant_defined: true
@@ -1722,7 +2646,7 @@ categories:
   - tag_id: "0x0001"
     name: GPSLatitudeRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1734,7 +2658,7 @@ categories:
   - tag_id: "0x0002"
     name: GPSLatitude
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1746,7 +2670,7 @@ categories:
   - tag_id: "0x0003"
     name: GPSLongitudeRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1758,7 +2682,7 @@ categories:
   - tag_id: "0x0004"
     name: GPSLongitude
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1770,7 +2694,7 @@ categories:
   - tag_id: "0x0005"
     name: GPSAltitudeRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1782,7 +2706,7 @@ categories:
   - tag_id: "0x0006"
     name: GPSAltitude
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1794,7 +2718,7 @@ categories:
   - tag_id: "0x0007"
     name: GPSTimeStamp
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1806,7 +2730,7 @@ categories:
   - tag_id: "0x0008"
     name: GPSSatellites
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1818,7 +2742,7 @@ categories:
   - tag_id: "0x0009"
     name: GPSStatus
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1830,7 +2754,7 @@ categories:
   - tag_id: "0x000A"
     name: GPSMeasureMode
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1842,7 +2766,7 @@ categories:
   - tag_id: "0x000B"
     name: GPSDOP
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1854,7 +2778,7 @@ categories:
   - tag_id: "0x000C"
     name: GPSSpeedRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1866,7 +2790,7 @@ categories:
   - tag_id: "0x000D"
     name: GPSSpeed
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1878,7 +2802,7 @@ categories:
   - tag_id: "0x000E"
     name: GPSTrackRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1890,7 +2814,7 @@ categories:
   - tag_id: "0x000F"
     name: GPSTrack
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1902,7 +2826,7 @@ categories:
   - tag_id: "0x0010"
     name: GPSImgDirectionRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1914,7 +2838,7 @@ categories:
   - tag_id: "0x0011"
     name: GPSImgDirection
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1926,7 +2850,7 @@ categories:
   - tag_id: "0x0012"
     name: GPSMapDatum
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1938,7 +2862,7 @@ categories:
   - tag_id: "0x0013"
     name: GPSDestLatitudeRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1950,7 +2874,7 @@ categories:
   - tag_id: "0x0014"
     name: GPSDestLatitude
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1962,7 +2886,7 @@ categories:
   - tag_id: "0x0015"
     name: GPSDestLongitudeRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1974,7 +2898,7 @@ categories:
   - tag_id: "0x0016"
     name: GPSDestLongitude
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1986,7 +2910,7 @@ categories:
   - tag_id: "0x0017"
     name: GPSDestBearingRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -1998,7 +2922,7 @@ categories:
   - tag_id: "0x0018"
     name: GPSDestBearing
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2010,7 +2934,7 @@ categories:
   - tag_id: "0x0019"
     name: GPSDestDistanceRef
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2022,7 +2946,7 @@ categories:
   - tag_id: "0x001A"
     name: GPSDestDistance
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2034,7 +2958,7 @@ categories:
   - tag_id: "0x001B"
     name: GPSProcessingMethod
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2046,7 +2970,7 @@ categories:
   - tag_id: "0x001C"
     name: GPSAreaInformation
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2058,7 +2982,7 @@ categories:
   - tag_id: "0x001D"
     name: GPSDateStamp
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2070,7 +2994,7 @@ categories:
   - tag_id: "0x001E"
     name: GPSDifferential
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2082,7 +3006,7 @@ categories:
   - tag_id: "0x001F"
     name: GPSHPositioningError
     ifd: GPSIFD
-    source: EXIF 2.32
+    source: EXIF 3.0
     required: false
     deprecated: false
     status: implemented
@@ -2091,118 +3015,4 @@ categories:
     getter_methods:
     - gps
     notes: []
-  interop_tags:
-    1:
-      tag_id: "0x0001"
-      name: InteroperabilityIndex
-      ifd: InteropIFD
-      source: EXIF 2.32
-      required: true
-      deprecated: false
-      status: partial
-      constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
-    2:
-      tag_id: "0x0002"
-      name: InteroperabilityVersion
-      ifd: InteropIFD
-      source: EXIF 2.32
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: true
-      getter_method_exists: false
-      getter_methods: []
-      notes:
-      - No getter method in ParsedExif
-    4096:
-      tag_id: "0x1000"
-      name: RelatedImageFileFormat
-      ifd: InteropIFD
-      source: EXIF 2.32
-      required: false
-      deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
-      notes: []
-    4097:
-      tag_id: "0x1001"
-      name: RelatedImageWidth
-      ifd: InteropIFD
-      source: EXIF 2.32
-      required: false
-      deprecated: false
-      status: partial
-      constant_defined: false
-      getter_method_exists: true
-      getter_methods:
-      - imageWidth
-      notes:
-      - Missing constant in ExifTag.php
-    4098:
-      tag_id: "0x1002"
-      name: RelatedImageLength
-      ifd: InteropIFD
-      source: EXIF 2.32
-      required: false
-      deprecated: false
-      status: missing
-      constant_defined: false
-      getter_method_exists: false
-      getter_methods: []
-      notes: []
-extra_tags:
-- tag_id: "0x8769"
-  constant_name: EXIF_IFD_POINTER
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0x8825"
-  constant_name: GPS_IFD_POINTER
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0x9400"
-  constant_name: TEMPERATURE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0x9401"
-  constant_name: HUMIDITY
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0x9402"
-  constant_name: PRESSURE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0x9403"
-  constant_name: WATER_DEPTH
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0x9404"
-  constant_name: ACCELERATION
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0x9405"
-  constant_name: CAMERA_ELEVATION_ANGLE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA005"
-  constant_name: INTEROPERABILITY_IFD_POINTER
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA20C"
-  constant_name: SPATIAL_FREQUENCY_RESPONSE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA40B"
-  constant_name: DEVICE_SETTING_DESCRIPTION
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA439"
-  constant_name: CAMERA_FIRMWARE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA43A"
-  constant_name: RAW_DEVELOPING_SOFTWARE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA43B"
-  constant_name: IMAGE_EDITING_SOFTWARE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA43C"
-  constant_name: METADATA_EDITING_SOFTWARE
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
-- tag_id: "0xA500"
-  constant_name: GAMMA
-  note: Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec
 ...

@@ -39,12 +39,74 @@ final class ComplianceAnalyzer
 {
     private const string SPEC_FILE = __DIR__ . '/../resources/exif-spec-tags.yaml';
     private const string EXIF_TAG_CLASS = __DIR__ . '/../src/Model/Exif/ExifTag.php';
+    private const string TIFF_TAG_CLASS = __DIR__ . '/../src/Model/Tiff/TiffTag.php';
     private const string PARSED_EXIF_CLASS = __DIR__ . '/../src/Model/Exif/ParsedExif.php';
     private const string OUTPUT_JSON = __DIR__ . '/../docs/compliance-report.json';
     private const string OUTPUT_YAML = __DIR__ . '/../docs/compliance-report.yaml';
 
+    /**
+     * Maps EXIF/TIFF tag names to their corresponding getter method names in ParsedExif.
+     * This handles cases where the method name differs from the tag name for better API design.
+     */
+    private const array TAG_TO_METHOD_MAP = [
+        // Image dimensions - now have both friendly names AND exact tag name aliases
+        'ImageLength' => ['imageHeight', 'imageLength'],
+        'PixelXDimension' => ['imageWidth', 'pixelXDimension'],
+        'PixelYDimension' => ['imageHeight', 'pixelYDimension'],
+        
+        // ISO/Sensitivity - consolidated into iso() with exact tag name aliases
+        'PhotographicSensitivity' => ['iso', 'isoBestEffort', 'photographicSensitivity'],
+        'ISOSpeed' => ['iso', 'isoBestEffort', 'iSOSpeed'],
+        'SensitivityType' => ['iso'],  // Used internally by iso()
+        'StandardOutputSensitivity' => ['iso'],  // Used internally by iso()
+        'RecommendedExposureIndex' => ['iso'],  // Used internally by iso()
+        
+        // Camera settings
+        'FNumber' => ['fNumber'],
+        
+        // Focal length - friendly name and exact tag name alias
+        'FocalLengthIn35mmFilm' => ['focalLength35Mm', 'focalLengthIn35mmFilm'],
+        
+        // JPEG/Thumbnail - shortened names
+        'JPEGInterchangeFormat' => ['jpegInterchangeFormat'],
+        'JPEGInterchangeFormatLength' => ['jpegInterchangeFormatLength'],
+        'JPEGInterchangeFormatLngth' => ['jpegInterchangeFormatLength'],  // TIFF 6.0 typo
+        'JPEGProc' => ['jpegProc'],
+        'JPEGRestartInterval' => ['jpegRestartInterval'],
+        'JPEGPointTransforms' => ['jpegPointTransforms'],
+        'JPEGQTables' => ['jpegQTables'],
+        'JPEGDCTables' => ['jpegDCTables'],
+        'JPEGACTables' => ['jpegACTables'],
+        
+        // Position tags
+        'XPosition' => ['xPosition'],
+        'YPosition' => ['yPosition'],
+        
+        // YCbCr - shortened names
+        'YCbCrCoefficients' => ['ycbcrCoefficients'],
+        'YCbCrSubSampling' => ['ycbcrSubSampling'],
+        'YCbCrPositioning' => ['ycbcrPositioning'],
+        
+        // IFD Pointers - structural, not exposed as getters
+        'ExifIFDPointer' => [],  // Access via $exifIfd property
+        'GPSInfoIFDPointer' => [],  // Access via $gpsIfd property
+        'InteroperabilityIFDPointer' => [],  // Access via $interopIfd property
+        
+        // InteropIFD tags
+        'InteroperabilityIndex' => ['interopIndex'],
+        
+        // CFA Pattern
+        'CFAPattern' => ['cfaPattern', 'cfaPatternColors'],
+        
+        // Software/Processing tags
+        'RAWDevelopingSoftware' => ['rawDevelopingSoftware'],
+        'ImageEditingSoftware' => ['imageEditingSoftware'],
+        'MetadataEditingSoftware' => ['metadataEditingSoftware'],
+    ];
+
     private array $specTags = [];
     private array $exifConstants = [];
+    private array $tiffConstants = [];
     private array $parsedExifMethods = [];
     private array $complianceReport = [];
 
@@ -86,6 +148,11 @@ final class ComplianceAnalyzer
             $this->parseExifTagConstants();
         }
 
+        // Parse TiffTag.php for constants
+        if (file_exists(self::TIFF_TAG_CLASS)) {
+            $this->parseTiffTagConstants();
+        }
+
         // Parse ParsedExif.php for public getter methods
         if (file_exists(self::PARSED_EXIF_CLASS)) {
             $this->parseParsedExifMethods();
@@ -113,6 +180,30 @@ final class ComplianceAnalyzer
             $hex = $match[2];
             $tagId = hexdec($hex);
             $this->exifConstants[$tagId] = $name;
+        }
+    }
+
+    /**
+     * Extract tag constants from TiffTag.php.
+     */
+    private function parseTiffTagConstants(): void
+    {
+        $content = file_get_contents(self::TIFF_TAG_CLASS);
+        if ($content === false) {
+            return;
+        }
+
+        // Match: public const int TAG_NAME = 0xHEX;
+        $pattern = '/public\s+const\s+int\s+([A-Z_0-9]+)\s*=\s*0x([0-9A-F]+);/i';
+        if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER) === false) {
+            return;
+        }
+
+        foreach ($matches as $match) {
+            $name = $match[1];
+            $hex = $match[2];
+            $tagId = hexdec($hex);
+            $this->tiffConstants[$tagId] = $name;
         }
     }
 
@@ -164,8 +255,8 @@ final class ComplianceAnalyzer
             'categories' => [],
         ];
 
-        // Analyze each category
-        foreach (['tiff_tags', 'exif_tags', 'gps_tags', 'interop_tags'] as $category) {
+        // Analyze each category (excluding InteropIFD - not part of official EXIF)
+        foreach (['tiff_tags', 'exif_tags', 'gps_tags'] as $category) {
             if (!isset($this->specTags[$category])) {
                 continue;
             }
@@ -190,13 +281,19 @@ final class ComplianceAnalyzer
         foreach ($tags as $tagIdHex => $specInfo) {
             $tagId = is_int($tagIdHex) ? $tagIdHex : hexdec(ltrim($tagIdHex, '0x'));
             $tagName = $specInfo['name'] ?? 'Unknown';
+            $ifd = $specInfo['ifd'] ?? 'Unknown';
+
+            // Skip vendor extensions (PreviewIFD) and optional extensions (InteropIFD)
+            if ($ifd === 'PreviewIFD' || $ifd === 'InteropIFD') {
+                continue;
+            }
 
             $status = $this->determineTagStatus($tagId, $tagName, $specInfo);
 
             $results[$tagIdHex] = [
                 'tag_id' => sprintf('0x%04X', $tagId),
                 'name' => $tagName,
-                'ifd' => $specInfo['ifd'] ?? 'Unknown',
+                'ifd' => $ifd,
                 'source' => $specInfo['source'] ?? 'Unknown',
                 'required' => $specInfo['required'] ?? false,
                 'deprecated' => $specInfo['deprecated'] ?? false,
@@ -218,28 +315,52 @@ final class ComplianceAnalyzer
      */
     private function determineTagStatus(int $tagId, string $tagName, array $specInfo): array
     {
-        $constantDefined = isset($this->exifConstants[$tagId]);
+        $constantDefined = isset($this->exifConstants[$tagId]) || isset($this->tiffConstants[$tagId]);
         $getterMethodExists = false;
         $getterMethods = [];
         $notes = [];
 
-        // Check if tag has a corresponding getter method in ParsedExif
-        $tagNameUpper = strtoupper($this->camelToSnake($tagName));
-        
-        // Look for exact match or related methods
-        $relatedMethods = [];
-        foreach ($this->parsedExifMethods as $methodTagName => $methodName) {
-            // Check for exact match or partial match
-            if ($methodTagName === $tagNameUpper || 
-                str_contains($methodTagName, $tagNameUpper) ||
-                str_contains($tagNameUpper, $methodTagName)) {
-                $relatedMethods[] = $methodName;
+        // Check if tag has a known mapping to getter methods
+        if (isset(self::TAG_TO_METHOD_MAP[$tagName])) {
+            $mappedMethods = self::TAG_TO_METHOD_MAP[$tagName];
+            if (!empty($mappedMethods)) {
+                // Verify the mapped methods actually exist
+                $tagNameUpper = strtoupper($this->camelToSnake($tagName));
+                foreach ($mappedMethods as $methodName) {
+                    $methodNameUpper = strtoupper($this->camelToSnake($methodName));
+                    if (isset($this->parsedExifMethods[$methodNameUpper])) {
+                        $getterMethods[] = $methodName;
+                    }
+                }
+                if (!empty($getterMethods)) {
+                    $getterMethodExists = true;
+                }
+            } else {
+                // Empty array means this is a structural tag (IFD pointer) - not exposed as getter
+                $notes[] = 'Structural tag (IFD pointer) - not exposed as getter method';
+                $getterMethodExists = true;  // Consider it "handled" even without a getter
             }
         }
 
-        if (!empty($relatedMethods)) {
-            $getterMethodExists = true;
-            $getterMethods = $relatedMethods;
+        // If not in mapping, try automatic detection
+        if (!$getterMethodExists) {
+            $tagNameUpper = strtoupper($this->camelToSnake($tagName));
+            
+            // Look for exact match or related methods
+            $relatedMethods = [];
+            foreach ($this->parsedExifMethods as $methodTagName => $methodName) {
+                // Check for exact match or partial match
+                if ($methodTagName === $tagNameUpper || 
+                    str_contains($methodTagName, $tagNameUpper) ||
+                    str_contains($tagNameUpper, $methodTagName)) {
+                    $relatedMethods[] = $methodName;
+                }
+            }
+
+            if (!empty($relatedMethods)) {
+                $getterMethodExists = true;
+                $getterMethods = $relatedMethods;
+            }
         }
 
         // Determine overall status
@@ -249,7 +370,7 @@ final class ComplianceAnalyzer
         } elseif ($constantDefined || $getterMethodExists) {
             $status = 'partial';
             if (!$constantDefined) {
-                $notes[] = 'Missing constant in ExifTag.php';
+                $notes[] = 'Missing constant in ExifTag.php and TiffTag.php';
             }
             if (!$getterMethodExists) {
                 $notes[] = 'No getter method in ParsedExif';
@@ -276,23 +397,44 @@ final class ComplianceAnalyzer
     private function findExtraTags(): void
     {
         $specTagIds = [];
-        foreach (['tiff_tags', 'exif_tags', 'gps_tags', 'interop_tags'] as $category) {
+        // Only check official EXIF/TIFF categories (excluding InteropIFD)
+        foreach (['tiff_tags', 'exif_tags', 'gps_tags'] as $category) {
             if (!isset($this->specTags[$category])) {
                 continue;
             }
 
-            foreach (array_keys($this->specTags[$category]) as $tagIdHex) {
+            foreach ($this->specTags[$category] as $tagIdHex => $specInfo) {
+                // Skip vendor extensions (PreviewIFD) and optional extensions (InteropIFD)
+                $ifd = $specInfo['ifd'] ?? 'Unknown';
+                if ($ifd === 'PreviewIFD' || $ifd === 'InteropIFD') {
+                    continue;
+                }
+                
                 $tagId = is_int($tagIdHex) ? $tagIdHex : hexdec(ltrim($tagIdHex, '0x'));
                 $specTagIds[$tagId] = true;
             }
         }
 
         $extraTags = [];
+        
+        // Check both ExifTag and TiffTag constants
         foreach ($this->exifConstants as $tagId => $constantName) {
             if (!isset($specTagIds[$tagId])) {
                 $extraTags[] = [
                     'tag_id' => sprintf('0x%04X', $tagId),
                     'constant_name' => $constantName,
+                    'source' => 'ExifTag.php',
+                    'note' => 'Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec',
+                ];
+            }
+        }
+        
+        foreach ($this->tiffConstants as $tagId => $constantName) {
+            if (!isset($specTagIds[$tagId])) {
+                $extraTags[] = [
+                    'tag_id' => sprintf('0x%04X', $tagId),
+                    'constant_name' => $constantName,
+                    'source' => 'TiffTag.php',
                     'note' => 'Implemented but not in EXIF 3.0/2.32/TIFF 6.0 spec',
                 ];
             }
