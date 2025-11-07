@@ -71,6 +71,16 @@ final class ComplianceAnalyzer
         'JPEGInterchangeFormat' => ['jpegInterchangeFormat'],
         'JPEGInterchangeFormatLength' => ['jpegInterchangeFormatLength'],
         'JPEGInterchangeFormatLngth' => ['jpegInterchangeFormatLength'],  // TIFF 6.0 typo
+        'JPEGProc' => ['jpegProc'],
+        'JPEGRestartInterval' => ['jpegRestartInterval'],
+        'JPEGPointTransforms' => ['jpegPointTransforms'],
+        'JPEGQTables' => ['jpegQTables'],
+        'JPEGDCTables' => ['jpegDCTables'],
+        'JPEGACTables' => ['jpegACTables'],
+        
+        // Position tags
+        'XPosition' => ['xPosition'],
+        'YPosition' => ['yPosition'],
         
         // YCbCr - shortened names
         'YCbCrCoefficients' => ['ycbcrCoefficients'],
