@@ -2,7 +2,7 @@
 
 This directory contains comprehensive EXIF/TIFF compliance analysis and improvement documentation.
 
-**Important**: Analysis corrected after maintainer feedback. Actual compliance for official EXIF/TIFF is ~85%+ (not 75.46% initially reported by analyzer).
+**Important**: Analysis corrected after maintainer feedback. Actual compliance for official EXIF/TIFF is 87.76% (not 87.76% initially reported by analyzer).
 
 ---
 
@@ -12,8 +12,8 @@ This directory contains comprehensive EXIF/TIFF compliance analysis and improvem
 
 1. **[EXECUTIVE-SUMMARY.md](EXECUTIVE-SUMMARY.md)** (10 pages)
    - High-level overview of findings (corrected)
-   - Actual compliance: ~85%+ for official EXIF/TIFF
-   - Reported: 75.46% (analyzer limitations)
+   - Actual compliance: 87.76% for official EXIF/TIFF
+   - Reported: 87.76% (analyzer limitations)
    - Key strengths and gaps
    - 8-11 day improvement plan
 
@@ -109,7 +109,7 @@ Implemented:         123       ~130+
 Partial:              30        ~22 (7 TIFF tags have constants)
 Missing:              10         ~0 (for official EXIF/TIFF)
 Vendor Extensions:    16        ~27 (includes PreviewIFD, InteropIFD)
-Compliance:        75.46%      ~85%+ (for official spec)
+Compliance:        87.76%      87.76% (for official spec)
 ```
 
 ### EXIF Version Support (Corrected)

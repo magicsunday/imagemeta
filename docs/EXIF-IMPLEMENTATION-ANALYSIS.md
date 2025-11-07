@@ -2,8 +2,8 @@
 
 **Date**: 2025-11-07  
 **Analyzer Version**: 1.0  
-**Reported Coverage**: 75.46% (123/163 tags by analyzer)  
-**Actual Coverage**: ~85%+ (for official EXIF/TIFF specifications)
+**Reported Coverage**: 87.76% (129/147 tags by analyzer)  
+**Actual Coverage**: 87.76% (for official EXIF/TIFF specifications)
 
 ## Executive Summary
 
@@ -17,7 +17,7 @@ This document provides a comprehensive analysis of the ImageMeta library's EXIF/
 - **Partially Implemented**: ~22 (not 30 - TIFF tags have constants)
 - **Missing**: ~0 (for official specification)
 - **Vendor Extensions**: ~27 (includes PreviewIFD, InteropIFD)
-- **Actual Compliance**: ~85%+ (for official EXIF/TIFF)
+- **Actual Compliance**: 87.76% (for official EXIF/TIFF)
 
 ### Compliance Status
 ✅ **Strengths**:
@@ -735,7 +735,7 @@ public function testCorruptIfdHandling(): void
 ## 11. Documentation Improvements
 
 ### 11.1 Update COMPLIANCE.md
-- Current status: Coverage dropped from 88.34% to 75.46%
+- Current status: Coverage dropped from 88.34% to 87.76%
 - Reason: Analyzer now more accurate (scans ParsedExif directly)
 - Update summary statistics
 - Add section on EXIF 3.0 gaps
