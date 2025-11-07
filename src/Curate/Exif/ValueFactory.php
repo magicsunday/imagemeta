@@ -1020,54 +1020,6 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * Converts a flat list of values into XY point pairs.
-     *
-     * @param list<float> $values
-     *
-     * @return list<array{0: float, 1: float}>
-     */
-    private function chunkPairEntries(array $values): array
-    {
-        $count = count($values);
-        if ($count < 2 || $count % 2 !== 0) {
-            return [];
-        }
-
-        $pairs = [];
-        for ($index = 0; $index < $count; $index += 2) {
-            $pairs[] = [$values[$index], $values[$index + 1]];
-        }
-
-        return $pairs;
-    }
-
-    /**
-     * Converts a flat list of values into RGB triplets.
-     *
-     * @param list<float> $values
-     *
-     * @return list<array{0: float, 1: float, 2: float}>
-     */
-    private function chunkTripletEntries(array $values): array
-    {
-        $count = count($values);
-        if ($count < 3 || $count % 3 !== 0) {
-            return [];
-        }
-
-        $triplets = [];
-        for ($index = 0; $index < $count; $index += 3) {
-            $triplets[] = [
-                $values[$index],
-                $values[$index + 1],
-                $values[$index + 2],
-            ];
-        }
-
-        return $triplets;
-    }
-
-    /**
      * Returns the first string from the list or null.
      *
      * @param list<string> $values List of candidate string values in priority order.

@@ -240,7 +240,7 @@ final class MetadataReaderTest extends TestCase
             'lens'      => static fn (): Lens => $structured->lens,
             'derived'   => static fn (): Derived => $structured->derived,
             'exposure'  => static fn (): Exposure => $structured->exposure,
-            'preview'   => static fn (): Preview => $structured->preview,
+            'thumbnail' => static fn (): Thumbnail => $structured->thumbnail,
             'rights'    => static fn (): Rights => $structured->rights,
         ];
 
@@ -251,7 +251,7 @@ final class MetadataReaderTest extends TestCase
             'lens'      => Lens::class,
             'derived'   => Derived::class,
             'exposure'  => Exposure::class,
-            'preview'   => Thumbnail::class,
+            'thumbnail' => Thumbnail::class,
             'rights'    => Rights::class,
         ];
 
