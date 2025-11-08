@@ -25,7 +25,7 @@ use function trim;
 /**
  * Factory for creating Scene value objects from EXIF, QuickTime and Apple metadata.
  */
-final readonly class SceneFactory implements SubFactoryInterface
+final readonly class SceneFactory
 {
     /**
      * Creates a Scene value object from EXIF, QuickTime and Apple metadata.

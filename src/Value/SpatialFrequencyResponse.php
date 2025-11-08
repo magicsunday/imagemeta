@@ -29,11 +29,11 @@ final readonly class SpatialFrequencyResponse
     /**
      * Creates a spatial frequency response value object.
      *
-     * @param int                    $columns             Number of frequency columns.
-     * @param int                    $rows                Number of direction rows.
-     * @param list<string>           $spatialFrequencies  Spatial frequency values (cycles/pixel).
-     * @param list<string>           $directions          Direction labels (e.g., "Horizontal", "Vertical").
-     * @param list<list<float|null>> $values              Matrix of SRATIONAL response values.
+     * @param int                    $columns            Number of frequency columns.
+     * @param int                    $rows               Number of direction rows.
+     * @param list<string>           $spatialFrequencies Spatial frequency values (cycles/pixel).
+     * @param list<string>           $directions         Direction labels (e.g., "Horizontal", "Vertical").
+     * @param list<list<float|null>> $values             Matrix of SRATIONAL response values.
      */
     public function __construct(
         public int $columns,

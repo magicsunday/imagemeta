@@ -21,7 +21,7 @@ use function is_array;
 /**
  * Factory for creating Motion value objects from EXIF and Apple metadata.
  */
-final readonly class MotionFactory implements SubFactoryInterface
+final readonly class MotionFactory
 {
     /**
      * Creates a Motion value object from EXIF and Apple metadata.

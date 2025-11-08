@@ -37,7 +37,7 @@ final class OecfTest extends TestCase
                 'columns' => ['Input1', 'Input2'],
                 'rows'    => ['Output1', 'Output2', 'Output3'],
             ],
-            'values'  => [
+            'values' => [
                 [0.0, 0.5],
                 [0.5, 1.0],
                 [1.0, 1.5],
@@ -70,7 +70,7 @@ final class OecfTest extends TestCase
                 'columns' => ['Col1', 'Col2'],
                 'rows'    => ['Row1'],
             ],
-            'values'  => [
+            'values' => [
                 [null, 1.0],
             ],
         ];
@@ -107,7 +107,7 @@ final class OecfTest extends TestCase
                 'columns' => ['Col1'],
                 'rows'    => ['Row1'],
             ],
-            'values'  => [
+            'values' => [
                 [1.0, 2.0],
             ],
         ];

@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Value\Sensor;
 /**
  * Factory for creating Sensor value objects from EXIF metadata.
  */
-final readonly class SensorFactory implements SubFactoryInterface
+final readonly class SensorFactory
 {
     /**
      * Creates a Sensor value object from EXIF metadata.

@@ -68,9 +68,9 @@ final readonly class SubjectArea
         $y = $components[1];
 
         return match (count($components)) {
-            2 => new self(SubjectAreaType::Point, $x, $y),
-            3 => new self(SubjectAreaType::Circle, $x, $y, diameter: $components[2]),
-            4 => new self(SubjectAreaType::Rectangle, $x, $y, width: $components[2], height: $components[3]),
+            2       => new self(SubjectAreaType::Point, $x, $y),
+            3       => new self(SubjectAreaType::Circle, $x, $y, diameter: $components[2]),
+            4       => new self(SubjectAreaType::Rectangle, $x, $y, width: $components[2], height: $components[3]),
             default => null,
         };
     }

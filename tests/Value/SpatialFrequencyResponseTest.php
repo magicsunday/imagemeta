@@ -37,7 +37,7 @@ final class SpatialFrequencyResponseTest extends TestCase
                 'columns' => ['10', '20', '30'],
                 'rows'    => ['Horizontal', 'Vertical'],
             ],
-            'values'  => [
+            'values' => [
                 [1.0, 0.9, 0.7],
                 [0.95, 0.85, 0.65],
             ],
@@ -68,7 +68,7 @@ final class SpatialFrequencyResponseTest extends TestCase
                 'columns' => ['10', '20'],
                 'rows'    => ['H'],
             ],
-            'values'  => [
+            'values' => [
                 [null, 0.8],
             ],
         ];
@@ -105,7 +105,7 @@ final class SpatialFrequencyResponseTest extends TestCase
                 'columns' => ['10'],
                 'rows'    => ['H'],
             ],
-            'values'  => [
+            'values' => [
                 [1.0, 0.9],
             ],
         ];

@@ -14,13 +14,12 @@ namespace MagicSunday\ImageMeta\Curate\Exif\SubFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Device;
 
 /**
  * Factory for creating Device value objects from EXIF and QuickTime metadata.
  */
-final readonly class DeviceFactory implements SubFactoryInterface
+final readonly class DeviceFactory
 {
     /**
      * Creates a Device value object from EXIF and QuickTime metadata.

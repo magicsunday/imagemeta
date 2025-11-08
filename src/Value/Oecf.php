@@ -29,11 +29,11 @@ final readonly class Oecf
     /**
      * Creates an OECF value object.
      *
-     * @param int                          $columns      Number of columns in the OECF matrix.
-     * @param int                          $rows         Number of rows in the OECF matrix.
-     * @param list<string>                 $columnLabels Labels for each column (input values).
-     * @param list<string>                 $rowLabels    Labels for each row (output values).
-     * @param list<list<float|null>>       $values       Matrix of SRATIONAL conversion values.
+     * @param int                    $columns      Number of columns in the OECF matrix.
+     * @param int                    $rows         Number of rows in the OECF matrix.
+     * @param list<string>           $columnLabels Labels for each column (input values).
+     * @param list<string>           $rowLabels    Labels for each row (output values).
+     * @param list<list<float|null>> $values       Matrix of SRATIONAL conversion values.
      */
     public function __construct(
         public int $columns,
@@ -59,10 +59,10 @@ final readonly class Oecf
             return null;
         }
 
-        $columns      = $matrix['columns'] ?? null;
-        $rows         = $matrix['rows'] ?? null;
-        $labels       = $matrix['labels'] ?? null;
-        $values       = $matrix['values'] ?? null;
+        $columns = $matrix['columns'] ?? null;
+        $rows    = $matrix['rows'] ?? null;
+        $labels  = $matrix['labels'] ?? null;
+        $values  = $matrix['values'] ?? null;
 
         if (!is_int($columns) || !is_int($rows) || !is_array($labels) || !is_array($values)) {
             return null;

@@ -3172,7 +3172,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for imageHeight() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 8 — Tag 0x0101 ImageLength
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 8 — Tag 0x0101 ImageLength.
      *
      * @return int|null Image height in pixels
      */
@@ -3183,7 +3183,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for imageWidth() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA002 PixelXDimension
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA002 PixelXDimension.
      *
      * @return int|null Image width in pixels
      */
@@ -3194,7 +3194,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for imageHeight() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA003 PixelYDimension
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA003 PixelYDimension.
      *
      * @return int|null Image height in pixels
      */
@@ -3205,7 +3205,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for iso() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8827 PhotographicSensitivity
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8827 PhotographicSensitivity.
      *
      * @return int|null ISO sensitivity value
      */
@@ -3216,7 +3216,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for iso() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8833 ISOSpeed
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8833 ISOSpeed.
      *
      * @return int|null ISO speed value
      */
@@ -3227,7 +3227,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for focalLength35Mm() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA405 FocalLengthIn35mmFilm
+     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0xA405 FocalLengthIn35mmFilm.
      *
      * @return int|null Focal length in 35mm equivalent
      */
@@ -3246,7 +3246,7 @@ final readonly class ParsedExif
 
     /**
      * Returns NewSubfileType tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x00FE
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x00FE.
      *
      * @return int|null
      */
@@ -3257,7 +3257,7 @@ final readonly class ParsedExif
 
     /**
      * Returns SubfileType tag value (deprecated).
-     * TIFF 5.0 (deprecated in TIFF 6.0) — Tag 0x00FF
+     * TIFF 5.0 (deprecated in TIFF 6.0) — Tag 0x00FF.
      *
      * @return int|null
      */
@@ -3268,7 +3268,7 @@ final readonly class ParsedExif
 
     /**
      * Returns Threshholding tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0107
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0107.
      *
      * @return int|null
      */
@@ -3279,7 +3279,7 @@ final readonly class ParsedExif
 
     /**
      * Returns CellWidth tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0108
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0108.
      *
      * @return int|null
      */
@@ -3290,7 +3290,7 @@ final readonly class ParsedExif
 
     /**
      * Returns CellLength tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0109
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0109.
      *
      * @return int|null
      */
@@ -3301,7 +3301,7 @@ final readonly class ParsedExif
 
     /**
      * Returns FillOrder tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x010A
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x010A.
      *
      * @return int|null
      */
@@ -3312,7 +3312,7 @@ final readonly class ParsedExif
 
     /**
      * Returns MinSampleValue tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0118
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0118.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3323,7 +3323,7 @@ final readonly class ParsedExif
 
     /**
      * Returns MaxSampleValue tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0119
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0119.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3334,7 +3334,7 @@ final readonly class ParsedExif
 
     /**
      * Returns PageName tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011D
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011D.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3345,7 +3345,7 @@ final readonly class ParsedExif
 
     /**
      * Returns XPosition tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011E
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011E.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3356,7 +3356,7 @@ final readonly class ParsedExif
 
     /**
      * Returns YPosition tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011F
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011F.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3367,7 +3367,7 @@ final readonly class ParsedExif
 
     /**
      * Returns FreeOffsets tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0120
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0120.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3378,7 +3378,7 @@ final readonly class ParsedExif
 
     /**
      * Returns FreeByteCounts tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0121
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0121.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3389,7 +3389,7 @@ final readonly class ParsedExif
 
     /**
      * Returns GrayResponseUnit tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3400,7 +3400,7 @@ final readonly class ParsedExif
 
     /**
      * Returns GrayResponseCurve tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0123
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0123.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3411,7 +3411,7 @@ final readonly class ParsedExif
 
     /**
      * Returns T4Options tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3422,7 +3422,7 @@ final readonly class ParsedExif
 
     /**
      * Returns T6Options tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3433,7 +3433,7 @@ final readonly class ParsedExif
 
     /**
      * Returns PageNumber tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0129
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0129.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3444,7 +3444,7 @@ final readonly class ParsedExif
 
     /**
      * Returns ColorMap tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0140
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0140.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3455,7 +3455,7 @@ final readonly class ParsedExif
 
     /**
      * Returns HalftoneHints tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0141
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0141.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3466,7 +3466,7 @@ final readonly class ParsedExif
 
     /**
      * Returns InkSet tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3477,7 +3477,7 @@ final readonly class ParsedExif
 
     /**
      * Returns InkNames tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014D
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014D.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3488,7 +3488,7 @@ final readonly class ParsedExif
 
     /**
      * Returns NumberOfInks tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3499,7 +3499,7 @@ final readonly class ParsedExif
 
     /**
      * Returns DotRange tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0150
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0150.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3510,7 +3510,7 @@ final readonly class ParsedExif
 
     /**
      * Returns TargetPrinter tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0151
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0151.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3521,7 +3521,7 @@ final readonly class ParsedExif
 
     /**
      * Returns ExtraSamples tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0152
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0152.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3532,7 +3532,7 @@ final readonly class ParsedExif
 
     /**
      * Returns SampleFormat tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3543,7 +3543,7 @@ final readonly class ParsedExif
 
     /**
      * Returns SMinSampleValue tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0154
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0154.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3554,7 +3554,7 @@ final readonly class ParsedExif
 
     /**
      * Returns SMaxSampleValue tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0155
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0155.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3565,7 +3565,7 @@ final readonly class ParsedExif
 
     /**
      * Returns TransferRange tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0156
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0156.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3576,7 +3576,7 @@ final readonly class ParsedExif
 
     /**
      * Returns JPEGProc tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0200
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0200.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3587,7 +3587,7 @@ final readonly class ParsedExif
 
     /**
      * Returns JPEGRestartInterval tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0203
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0203.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3598,7 +3598,7 @@ final readonly class ParsedExif
 
     /**
      * Returns JPEGPointTransforms tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0206
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0206.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3609,7 +3609,7 @@ final readonly class ParsedExif
 
     /**
      * Returns JPEGQTables tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0207
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0207.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3620,7 +3620,7 @@ final readonly class ParsedExif
 
     /**
      * Returns JPEGDCTables tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0208
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0208.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */
@@ -3631,7 +3631,7 @@ final readonly class ParsedExif
 
     /**
      * Returns JPEGACTables tag value.
-     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0209
+     * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0209.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
      */

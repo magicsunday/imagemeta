@@ -19,7 +19,7 @@ use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 /**
  * Factory for creating MultiPicture value objects from MPF metadata.
  */
-final readonly class MultiPictureFactory implements SubFactoryInterface
+final readonly class MultiPictureFactory
 {
     /**
      * Creates a MultiPicture value object from MPF metadata.
@@ -28,7 +28,7 @@ final readonly class MultiPictureFactory implements SubFactoryInterface
      *
      * @return MultiPicture MultiPicture metadata aggregate.
      */
-    public function create(Metadata $metadata, mixed ...$args): MultiPicture
+    public function create(Metadata $metadata): MultiPicture
     {
         return $this->resolveMultiPicture($metadata->mpfDocument);
     }

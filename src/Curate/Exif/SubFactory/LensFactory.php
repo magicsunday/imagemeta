@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Value\Lens;
 /**
  * Factory for creating Lens value objects from EXIF metadata.
  */
-final readonly class LensFactory implements SubFactoryInterface
+final readonly class LensFactory
 {
     /**
      * Creates a Lens value object from EXIF metadata.

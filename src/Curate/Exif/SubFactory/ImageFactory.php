@@ -22,7 +22,7 @@ use function strtoupper;
 /**
  * Factory for creating Image value objects from EXIF metadata.
  */
-final readonly class ImageFactory implements SubFactoryInterface
+final readonly class ImageFactory
 {
     /**
      * Creates an Image value object from EXIF metadata.

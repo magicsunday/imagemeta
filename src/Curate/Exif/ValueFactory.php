@@ -11,9 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Exif;
 
-use DateTimeImmutable;
-use DateTimeZone;
-use Exception;
 use MagicSunday\ImageMeta\Contracts\ValueFactoryInterface;
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\CameraFactory;
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\DeviceFactory;
@@ -32,35 +29,38 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
+use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
-use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
-use MagicSunday\ImageMeta\Value\ExifFlash;
+use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
+use MagicSunday\ImageMeta\Value\Gps;
+use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
 use MagicSunday\ImageMeta\Value\Keywords;
+use MagicSunday\ImageMeta\Value\Lens;
+use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
-use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\Regions\Region;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
+use MagicSunday\ImageMeta\Value\Scene;
+use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
@@ -69,35 +69,7 @@ use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
 
-use function abs;
-use function array_any;
-use function array_map;
-use function array_shift;
-use function array_values;
-use function ceil;
 use function count;
-use function intdiv;
-use function is_array;
-use function is_float;
-use function is_int;
-use function is_string;
-use function ksort;
-use function log10;
-use function max;
-use function preg_match;
-use function preg_replace;
-use function preg_split;
-use function round;
-use function sprintf;
-use function str_contains;
-use function str_pad;
-use function str_replace;
-use function str_starts_with;
-use function strtoupper;
-use function substr;
-use function trim;
-
-use const PREG_SPLIT_NO_EMPTY;
 
 /**
  * Builds the structured metadata aggregate by orchestrating value-object creation from
@@ -197,8 +169,8 @@ final class ValueFactory implements ValueFactoryInterface
         $temporal     = $this->temporalFactory->create($metadata);
         $regions      = $this->regionsFactory->create($metadata);
         $multiPicture = $this->multiPictureFactory->create($metadata);
-        
         $scene        = $this->sceneFactory->create($metadata, $this->countFaceRegions($regions));
+
         $exifDocument    = $metadata->exifDoc;
         $quickTimeMeta   = $metadata->quickTime;
         $quickTimeLookup = new QuickTimeLookup($quickTimeMeta);
@@ -387,7 +359,7 @@ final class ValueFactory implements ValueFactoryInterface
         }
 
         $whiteBalanceDetails = new WhiteBalanceDetails(
-            mode: $whiteBalance,
+            mode: $exposure->whiteBalance,
             kelvin: $whiteBalanceKelvin,
             rgGain: null,
             bgGain: null,

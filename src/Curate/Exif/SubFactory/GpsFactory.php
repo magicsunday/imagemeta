@@ -40,7 +40,7 @@ use const PREG_SPLIT_NO_EMPTY;
 /**
  * Factory for creating GPS value objects from EXIF and XMP metadata.
  */
-final readonly class GpsFactory implements SubFactoryInterface
+final readonly class GpsFactory
 {
     private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
 

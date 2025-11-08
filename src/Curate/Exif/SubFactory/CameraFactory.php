@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\Value\Camera;
 /**
  * Factory for creating Camera value objects from EXIF metadata.
  */
-final readonly class CameraFactory implements SubFactoryInterface
+final readonly class CameraFactory
 {
     /**
      * Creates a Camera value object from EXIF metadata.

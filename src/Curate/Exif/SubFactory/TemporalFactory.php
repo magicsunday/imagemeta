@@ -34,7 +34,7 @@ use function trim;
 /**
  * Factory for creating Temporal value objects from EXIF, QuickTime and XMP metadata.
  */
-final readonly class TemporalFactory implements SubFactoryInterface
+final readonly class TemporalFactory
 {
     /**
      * Creates a Temporal value object from EXIF, QuickTime and XMP metadata.
@@ -46,7 +46,7 @@ final readonly class TemporalFactory implements SubFactoryInterface
      *
      * @return Temporal Normalised temporal metadata aggregate.
      */
-    public function create(Metadata $metadata, mixed ...$args): Temporal
+    public function create(Metadata $metadata): Temporal
     {
         $exifDocument = $metadata->exifDoc;
         $quickTime    = $metadata->quickTime;

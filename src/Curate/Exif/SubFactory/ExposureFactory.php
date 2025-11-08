@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Value\Exposure;
 /**
  * Factory for creating Exposure value objects from EXIF metadata.
  */
-final readonly class ExposureFactory implements SubFactoryInterface
+final readonly class ExposureFactory
 {
     /**
      * Creates an Exposure value object from EXIF metadata.
