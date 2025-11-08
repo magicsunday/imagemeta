@@ -67,6 +67,24 @@ Each sub-factory:
 **Dependencies:** EXIF document, XMP document, ValueConverters  
 **Lines:** ~550
 
+### TemporalFactory
+**Responsibility:** Date/time metadata with timezone handling  
+**Creates:** `Temporal` value object  
+**Dependencies:** EXIF document, QuickTime metadata, XMP document  
+**Lines:** ~250
+
+### RegionsFactory
+**Responsibility:** Face and region detection from XMP  
+**Creates:** `Regions` value object  
+**Dependencies:** XMP document (MWG-RS and Apple FaceInfo)  
+**Lines:** ~750
+
+### MultiPictureFactory
+**Responsibility:** Multi-picture format (MPF) data  
+**Creates:** `MultiPicture` value object  
+**Dependencies:** MPF document  
+**Lines:** ~65
+
 ## Benefits
 
 1. **Separation of Concerns:** Each factory handles one specific aspect of metadata
@@ -75,13 +93,14 @@ Each sub-factory:
 4. **Reusability:** Factories can be composed differently if needed
 5. **Reduced Complexity:** Main ValueFactory is now a coordinator rather than doing everything
 
-## Remaining Work
+## Migration Complete
 
-The following areas are still in the main ValueFactory and could be extracted:
+All metadata creation has been successfully extracted into specialized sub-factories:
 
-- **TemporalFactory:** Date/time metadata (~150 lines)
-- **RegionsFactory:** Face/region detection (~750 lines)
-- **MultiPictureFactory:** MPF data (~30 lines)
+- **Original ValueFactory:** 2387 lines
+- **Refactored ValueFactory:** 576 lines (-76% reduction)
+- **Total Sub-Factories:** 12 specialized factories
+- **Total Lines in Factories:** ~2150 lines (well-organized and focused)
 
 ## Usage
 
@@ -92,7 +111,15 @@ $valueFactory = new ValueFactory(
     cameraFactory: new CameraFactory(),
     lensFactory: new LensFactory(),
     exposureFactory: new ExposureFactory(),
-    // ... other factories
+    sensorFactory: new SensorFactory(),
+    deviceFactory: new DeviceFactory(),
+    imageFactory: new ImageFactory(),
+    sceneFactory: new SceneFactory(),
+    motionFactory: new MotionFactory(),
+    gpsFactory: new GpsFactory(),
+    temporalFactory: new TemporalFactory(),
+    regionsFactory: new RegionsFactory(),
+    multiPictureFactory: new MultiPictureFactory(),
 );
 
 $components = $valueFactory->createComponents($metadata);
