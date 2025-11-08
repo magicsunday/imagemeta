@@ -15,6 +15,9 @@ use MagicSunday\ImageMeta\Model\Metadata;
 
 /**
  * Contract for specialized sub-factories that create specific value objects.
+ *
+ * Sub-factories may accept additional parameters beyond Metadata to handle
+ * dependencies between value objects (e.g., face count for scene detection).
  */
 interface SubFactoryInterface
 {
@@ -22,8 +25,9 @@ interface SubFactoryInterface
      * Creates a value object from the supplied metadata.
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param mixed    ...$args  Additional factory-specific parameters.
      *
      * @return mixed The created value object.
      */
-    public function create(Metadata $metadata): mixed;
+    public function create(Metadata $metadata, mixed ...$args): mixed;
 }

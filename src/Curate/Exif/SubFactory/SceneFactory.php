@@ -30,17 +30,18 @@ final readonly class SceneFactory implements SubFactoryInterface
     /**
      * Creates a Scene value object from EXIF, QuickTime and Apple metadata.
      *
-     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param Metadata $metadata  Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param int|null $faceCount Optional number of detected face regions.
      *
      * @return Scene Scene metadata value object.
      */
-    public function create(Metadata $metadata): Scene
+    public function create(Metadata $metadata, ?int $faceCount = null): Scene
     {
         $exif           = $metadata->exifDoc;
         $quickTime      = $metadata->quickTime;
         $appleMakerNote = $metadata->makerNotes?->apple ?? $this->emptyAppleMakerNotes();
 
-        return $this->buildScene($exif, $quickTime, $appleMakerNote, null);
+        return $this->buildScene($exif, $quickTime, $appleMakerNote, $faceCount);
     }
 
     /**

@@ -15,6 +15,15 @@ use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
 use MagicSunday\ImageMeta\Contracts\ValueFactoryInterface;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\CameraFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\DeviceFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\ExposureFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\GpsFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\ImageFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\LensFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\MotionFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\SceneFactory;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\SensorFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
@@ -27,27 +36,20 @@ use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
 use MagicSunday\ImageMeta\Value\Author;
-use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\ExifFlash;
-use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
 use MagicSunday\ImageMeta\Value\Focus;
-use MagicSunday\ImageMeta\Value\Gps;
-use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
 use MagicSunday\ImageMeta\Value\Keywords;
-use MagicSunday\ImageMeta\Value\Lens;
-use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\MultiPictureEntry;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
@@ -56,8 +58,6 @@ use MagicSunday\ImageMeta\Value\Regions\Region;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
-use MagicSunday\ImageMeta\Value\Scene;
-use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
@@ -102,6 +102,32 @@ use const PREG_SPLIT_NO_EMPTY;
  */
 final class ValueFactory implements ValueFactoryInterface
 {
+    /**
+     * Constructs the ValueFactory with specialized sub-factories.
+     *
+     * @param CameraFactory   $cameraFactory   Factory for camera metadata.
+     * @param LensFactory     $lensFactory     Factory for lens metadata.
+     * @param ExposureFactory $exposureFactory Factory for exposure metadata.
+     * @param SensorFactory   $sensorFactory   Factory for sensor metadata.
+     * @param DeviceFactory   $deviceFactory   Factory for device metadata.
+     * @param ImageFactory    $imageFactory    Factory for image metadata.
+     * @param SceneFactory    $sceneFactory    Factory for scene metadata.
+     * @param MotionFactory   $motionFactory   Factory for motion metadata.
+     * @param GpsFactory      $gpsFactory      Factory for GPS metadata.
+     */
+    public function __construct(
+        private readonly CameraFactory $cameraFactory = new CameraFactory(),
+        private readonly LensFactory $lensFactory = new LensFactory(),
+        private readonly ExposureFactory $exposureFactory = new ExposureFactory(),
+        private readonly SensorFactory $sensorFactory = new SensorFactory(),
+        private readonly DeviceFactory $deviceFactory = new DeviceFactory(),
+        private readonly ImageFactory $imageFactory = new ImageFactory(),
+        private readonly SceneFactory $sceneFactory = new SceneFactory(),
+        private readonly MotionFactory $motionFactory = new MotionFactory(),
+        private readonly GpsFactory $gpsFactory = new GpsFactory(),
+    ) {
+    }
+
     /**
      * Produces normalised value objects derived from the supplied metadata container.
      *
@@ -150,9 +176,19 @@ final class ValueFactory implements ValueFactoryInterface
     {
         $xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 
-        $gps             = $this->createGps($metadata, $xmpDocument);
-        $regions         = $this->createRegions($xmpDocument);
-        $multiPicture    = $this->createMultiPicture($metadata);
+        // Use sub-factories for modular metadata creation
+        $gps          = $this->gpsFactory->create($metadata);
+        $camera       = $this->cameraFactory->create($metadata);
+        $lens         = $this->lensFactory->create($metadata);
+        $exposure     = $this->exposureFactory->create($metadata);
+        $sensor       = $this->sensorFactory->create($metadata);
+        $device       = $this->deviceFactory->create($metadata);
+        $image        = $this->imageFactory->create($metadata);
+        $motion       = $this->motionFactory->create($metadata);
+        
+        $regions      = $this->createRegions($xmpDocument);
+        $scene        = $this->sceneFactory->create($metadata, $this->countFaceRegions($regions));
+        $multiPicture = $this->createMultiPicture($metadata);
         $exifDocument    = $metadata->exifDoc;
         $quickTimeMeta   = $metadata->quickTime;
         $quickTimeLookup = new QuickTimeLookup($quickTimeMeta);
@@ -230,40 +266,6 @@ final class ValueFactory implements ValueFactoryInterface
 
         $flashPix = new FlashPix($metadata->flashPixStreams);
 
-        $camera = $this->buildCamera($exifDocument);
-        $lens   = $this->buildLens($exifDocument);
-        $image  = $this->buildImage($metadata, $exifDocument);
-
-        $exposureProgram = $exifDocument?->exposureProgram();
-        $meteringMode    = $exifDocument?->meteringMode();
-        $whiteBalance    = $exifDocument?->whiteBalance();
-
-        $flashInfo = ExifFlash::fromExifValue($exifDocument?->flash());
-
-        $exposure = new Exposure(
-            iso: $exifDocument?->isoBestEffort(),
-            exposureTimeSec: $exifDocument?->exposureTime(),
-            fNumber: $exifDocument?->fNumber(),
-            exposureBiasEv: $exifDocument?->exposureBias(),
-            program: $exposureProgram,
-            meteringMode: $meteringMode,
-            flash: $flashInfo,
-            whiteBalance: $whiteBalance,
-            brightnessEv: $exifDocument?->brightnessValue(),
-            exposureMode: $exifDocument?->exposureMode(),
-            gainControl: $exifDocument?->gainControl(),
-            contrast: $exifDocument?->contrast(),
-            saturation: $exifDocument?->saturation(),
-            sharpness: $exifDocument?->sharpness(),
-            digitalZoomRatio: $exifDocument?->digitalZoomRatio(),
-            shutterSpeedEv: $exifDocument?->shutterSpeedEv(),
-            apertureEv: $exifDocument?->apertureEv(),
-            isoLatitudeYyy: $exifDocument?->isoLatitudeYyy(),
-            isoLatitudeZzz: $exifDocument?->isoLatitudeZzz(),
-            exposureIndex: $exifDocument?->exposureIndex(),
-            flashEnergy: $exifDocument?->flashEnergy(),
-        );
-
         $capture = new Capture(
             dateTime: $exifDocument?->captureDateTime(),
             temperatureC: $exifDocument?->temperatureCelsius(),
@@ -273,8 +275,6 @@ final class ValueFactory implements ValueFactoryInterface
             accelerationMs2: $exifDocument?->accelerationMs2(),
             cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
         );
-
-        $device = $this->buildDevice($exifDocument, $quickTimeMeta, $xmpDocument);
 
         $apple = $appleMakerNotes ?? $this->emptyAppleMakerNotes();
         $xmp   = new Xmp($xmpDocument);
@@ -391,15 +391,6 @@ final class ValueFactory implements ValueFactoryInterface
             afMode: null,
         );
 
-        $motion = $this->buildMotion($exifDocument, $apple);
-
-        $scene = $this->buildScene(
-            $exifDocument,
-            $quickTimeMeta,
-            $apple,
-            $this->countFaceRegions($regions),
-        );
-
         $flatKeywords         = $xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'subject') ?? [];
         $hierarchicalKeywords = $xmpDocument?->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject') ?? [];
 
@@ -460,25 +451,6 @@ final class ValueFactory implements ValueFactoryInterface
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
 
-        $focalPlaneUnit     = null;
-        $focalPlaneUnitCode = $exifDocument?->focalPlaneResolutionUnit();
-        if ($focalPlaneUnitCode !== null) {
-            $focalPlaneUnit = ResolutionUnit::tryFrom($focalPlaneUnitCode);
-        }
-
-        $sensor = new Sensor(
-            pixelPitchUm: null,
-            sensorType: null,
-            ibis: false,
-            cfaPattern: $exifDocument?->cfaPattern(),
-            spectralSensitivity: $exifDocument?->spectralSensitivity(),
-            oecf: $exifDocument?->oecf(),
-            spatialFrequencyResponse: $exifDocument?->spatialFrequencyResponse(),
-            focalPlaneXResolution: $exifDocument?->focalPlaneXResolution(),
-            focalPlaneYResolution: $exifDocument?->focalPlaneYResolution(),
-            focalPlaneResolutionUnit: $focalPlaneUnit,
-        );
-
         $hasHistory = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
 
         $integrity = new Integrity(
@@ -526,42 +498,6 @@ final class ValueFactory implements ValueFactoryInterface
             'xmp'             => $xmp,
             'makerNotesApple' => $apple,
         ];
-    }
-
-    /**
-     * Builds the device metadata aggregate by combining EXIF helpers with QuickTime fallbacks.
-     *
-     * @param ParsedExif|null    $exif        Resolver exposing EXIF tag helpers.
-     * @param QuickTimeMeta|null $quickTime   QuickTime metadata container exposing software fields.
-     * @param XmpDocument|null   $xmpDocument Placeholder for future XMP backed device metadata.
-     *
-     * @return Device Device value object describing capture hardware and software.
-     */
-    private function buildDevice(?ParsedExif $exif, ?QuickTimeMeta $quickTime, ?XmpDocument $xmpDocument): Device
-    {
-        $software = null;
-
-        if ($exif instanceof ParsedExif) {
-            $software = $exif->hostComputer();
-        }
-
-        $lookup = new QuickTimeLookup($quickTime);
-
-        if ($software === null) {
-            $software = $lookup->string(
-                'com.apple.quicktime.software',
-                'Software',
-                'com.apple.quicktime.softwareversion',
-                'com.apple.quicktime.software.version',
-            );
-        }
-
-        return new Device(
-            software: $software,
-            rawDevelopingSoftware: $exif?->rawDevelopingSoftware(),
-            imageEditingSoftware: $exif?->imageEditingSoftware(),
-            metadataEditingSoftware: $exif?->metadataEditingSoftware(),
-        );
     }
 
     /**
@@ -718,96 +654,6 @@ final class ValueFactory implements ValueFactoryInterface
     }
 
     /**
-     * Builds a camera value object using EXIF metadata.
-     *
-     * @param ParsedExif|null $exifDocument EXIF document exposing camera related tags.
-     *
-     * @return Camera Normalised camera metadata aggregate.
-     */
-    private function buildCamera(?ParsedExif $exifDocument): Camera
-    {
-        return new Camera(
-            make: $exifDocument?->cameraMake(),
-            model: $exifDocument?->cameraModel(),
-            ownerName: $exifDocument?->ownerName(),
-            firmware: $exifDocument?->cameraFirmware(),
-            fileSource: $exifDocument?->fileSource(),
-            sensingMethod: $exifDocument?->sensingMethod(),
-        );
-    }
-
-    /**
-     * Builds a lens value object using EXIF metadata.
-     *
-     * @param ParsedExif|null $exifDocument EXIF document exposing lens specific tags.
-     *
-     * @return Lens Normalised lens metadata aggregate.
-     */
-    private function buildLens(?ParsedExif $exifDocument): Lens
-    {
-        if (!$exifDocument instanceof ParsedExif) {
-            return new Lens(
-                lensMake: null,
-                lensModel: null,
-                lensSerialNumber: null,
-                focalLengthMm: null,
-                focalLengthIn35mm: null,
-                maxApertureFNumber: null,
-            );
-        }
-
-        $maxApex = $exifDocument->maxApertureApex();
-        $maxF    = $maxApex !== null ? ValueConverters::apexToFNumber($maxApex) : null;
-
-        return new Lens(
-            lensMake: $exifDocument->lensMake(),
-            lensModel: $exifDocument->lensModel(),
-            lensSerialNumber: $exifDocument->lensSerialNumber(),
-            focalLengthMm: $exifDocument->focalLengthMm(),
-            focalLengthIn35mm: $exifDocument->focalLength35Mm(),
-            maxApertureFNumber: $maxF,
-            lensSpecification: $exifDocument->lensSpecification(),
-        );
-    }
-
-    /**
-     * Builds the image value object using EXIF metadata.
-     *
-     * @param Metadata        $metadata     Metadata container supplying JPEG frame fallbacks.
-     * @param ParsedExif|null $exifDocument EXIF document exposing image related tags.
-     *
-     * @return Image Normalised image metadata aggregate.
-     */
-    private function buildImage(Metadata $metadata, ?ParsedExif $exifDocument): Image
-    {
-        $width  = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
-        $height = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
-
-        $orientation = $exifDocument?->orientation();
-
-        $bitsPerSample = $exifDocument?->bitsPerSample();
-        if ($bitsPerSample === null) {
-            $bitsPerSample = $metadata->jpegBitsPerSample;
-        }
-
-        return new Image(
-            width: $width,
-            height: $height,
-            orientation: $orientation,
-            bitsPerSample: $bitsPerSample,
-            colorSpace: $this->normalizedColorSpace($exifDocument),
-            imageUniqueId: $exifDocument?->imageUniqueId(),
-            documentName: $exifDocument?->documentName(),
-            description: $exifDocument?->imageDescription(),
-            title: $exifDocument?->imageTitle(),
-            componentsConfiguration: $exifDocument?->componentsConfiguration(),
-            compressedBitsPerPixel: $exifDocument?->compressedBitsPerPixel(),
-            userComment: $exifDocument?->userComment(),
-            userCommentEncoding: $exifDocument?->userCommentEncodingBestEffort(),
-        );
-    }
-
-    /**
      * Counts the number of face regions detected in the supplied region aggregate.
      *
      * @param Regions $regions Region aggregate containing detected regions.
@@ -825,126 +671,6 @@ final class ValueFactory implements ValueFactoryInterface
         }
 
         return $count > 0 ? $count : null;
-    }
-
-    /**
-     * Builds the scene metadata aggregate using EXIF, QuickTime and Apple sources.
-     *
-     * @param ParsedExif|null    $exif      Resolver exposing EXIF scene metadata.
-     * @param QuickTimeMeta|null $quickTime QuickTime metadata providing scene hints.
-     * @param AppleMakerNotes    $apple     Aggregated Apple maker note metadata.
-     * @param int|null           $faceCount Number of detected face regions.
-     *
-     * @return Scene Scene metadata value object.
-     */
-    private function buildScene(
-        ?ParsedExif $exif,
-        ?QuickTimeMeta $quickTime,
-        AppleMakerNotes $apple,
-        ?int $faceCount,
-    ): Scene {
-        $appleFlags = $apple->flags;
-
-        $lookup = new QuickTimeLookup($quickTime);
-
-        $hdrLabel = $apple->hdrImageType;
-        if ($hdrLabel === null) {
-            $hdrLabel = $lookup->string('HDRImageType');
-        }
-
-        $nightMode = $lookup->bool('NightMode');
-        if ($nightMode === null) {
-            $nightMode = $this->appleFlag($appleFlags, 'nightMode');
-        }
-
-        $hdrScene = null;
-
-        if ($hdrLabel !== null && $this->isHdrSceneLabel($hdrLabel)) {
-            $hdrScene = true;
-        }
-
-        if ($hdrScene === null) {
-            $hdrHeadroom = $apple->hdrHeadroom;
-            if ($hdrHeadroom !== null && $hdrHeadroom > 0.0) {
-                $hdrScene = true;
-            } elseif (
-                $this->appleFlag($appleFlags, 'hdrEnabled') === true
-                || $this->appleFlag($appleFlags, 'hdrAuto') === true
-            ) {
-                $hdrScene = true;
-            }
-        }
-
-        return new Scene(
-            type: $exif?->sceneCaptureType(),
-            sceneType: $exif?->sceneType(),
-            light: $exif?->lightSource(),
-            faceCount: $faceCount,
-            hdrScene: $hdrScene,
-            nightMode: $nightMode,
-            subjectDistanceRange: $exif?->subjectDistanceRange(),
-        );
-    }
-
-    /**
-     * Determines whether the supplied label denotes an HDR scene mode.
-     *
-     * Apple devices record the HDR scene state as free-form strings such as
-     * "HDR" or "HDR+". The check therefore normalises the label to uppercase
-     * and considers every value that starts with "HDR" as an affirmative
-     * indicator.
-     */
-    private function isHdrSceneLabel(string $label): bool
-    {
-        $normalized = strtoupper(trim($label));
-
-        return str_starts_with($normalized, 'HDR');
-    }
-
-    /**
-     * Extracts a boolean flag from the Apple maker note flag map.
-     *
-     * @param array<string, bool> $flags Normalised Apple maker note flag map.
-     * @param string              $key   Name of the flag to resolve.
-     *
-     * @return bool|null Resolved boolean flag or null when the flag is absent.
-     */
-    private function appleFlag(array $flags, string $key): ?bool
-    {
-        return $flags[$key] ?? null;
-    }
-
-    /**
-     * Builds the motion metadata aggregate from EXIF and Apple motion sources.
-     *
-     * @param ParsedExif      $exif  Resolver exposing EXIF camera orientation measurements.
-     * @param AppleMakerNotes $apple Aggregated Apple metadata composed from maker notes and QuickTime sources.
-     *
-     * @return Motion Motion metadata aggregate with camera orientation and per-axis acceleration.
-     */
-    private function buildMotion(?ParsedExif $exif, AppleMakerNotes $apple): Motion
-    {
-        $vector = $apple->accelerationVector;
-
-        if (!is_array($vector)) {
-            $vector = $exif?->accelerationVector();
-        }
-
-        $accelX = null;
-        $accelY = null;
-        $accelZ = null;
-
-        if (is_array($vector)) {
-            $accelX = $vector[0] ?? null;
-            $accelY = $vector[1] ?? null;
-            $accelZ = $vector[2] ?? null;
-        }
-
-        return new Motion(
-            $accelX,
-            $accelY,
-            $accelZ,
-        );
     }
 
     private function emptyAppleMakerNotes(): AppleMakerNotes
@@ -971,38 +697,6 @@ final class ValueFactory implements ValueFactoryInterface
             flags: [],
             accelerationVector: null,
         );
-    }
-
-    /**
-     * Normalises the colour space based on interoperability metadata hints.
-     *
-     * @param ParsedExif|null $exifDocument EXIF document exposing colour space and interoperability tags.
-     *
-     * @return ColorSpace|null Normalised colour space enumeration or null when undefined.
-     */
-    private function normalizedColorSpace(?ParsedExif $exifDocument): ?ColorSpace
-    {
-        if (!$exifDocument instanceof ParsedExif) {
-            return null;
-        }
-
-        $colorSpace = $exifDocument->colorSpace();
-
-        if ($colorSpace === ColorSpace::UNCALIBRATED) {
-            $interopIndex = $exifDocument->interopIndex();
-            if (is_string($interopIndex)) {
-                $normalizedInteropIndex = strtoupper($interopIndex);
-                if ($normalizedInteropIndex === 'R03') {
-                    return ColorSpace::ADOBE_RGB;
-                }
-
-                if ($normalizedInteropIndex === 'R98') {
-                    return ColorSpace::SRGB;
-                }
-            }
-        }
-
-        return $colorSpace;
     }
 
     /**
@@ -1058,542 +752,6 @@ final class ValueFactory implements ValueFactoryInterface
         } catch (Exception) {
             return null;
         }
-    }
-
-    private function createGps(Metadata $metadata, ?XmpDocument $xmpDocument): Gps
-    {
-        $gps = $this->resolveGps($metadata->exifDoc, $xmpDocument);
-
-        if (!$gps instanceof Gps) {
-            return new Gps();
-        }
-
-        return $gps;
-    }
-
-    private const string NS_EXIF = 'http://ns.adobe.com/exif/1.0/';
-
-    /**
-     * Builds a GPS value object from the available metadata.
-     *
-     * The GPS version defaults to 2.0.0.0 whenever EXIF omits the tag or only exposes padding bytes.
-     */
-    private function resolveGps(?ParsedExif $exifDocument, ?XmpDocument $xmpDocument): ?Gps
-    {
-        /**
-         * @var array{
-         *     lat_ref: string|null,
-         *     lat: float|null,
-         *     lon_ref: string|null,
-         *     lon: float|null,
-         *     alt_ref: int|null,
-         *     alt: float|null,
-         *     version: string|null,
-         *     version_raw: string|null,
-         *     satellites: string|null,
-         *     status: string|null,
-         *     measure_mode: string|null,
-         *     dop: float|null,
-         *     speed_ref: string|null,
-         *     speed_ms: float|null,
-         *     speed_original_ref: string|null,
-         *     speed_original: float|null,
-         *     track_ref: string|null,
-         *     track: float|null,
-         *     img_direction_ref: string|null,
-         *     img_direction: float|null,
-         *     map_datum: string|null,
-         *     dest_lat_ref: string|null,
-         *     dest_lat: float|null,
-         *     dest_lon_ref: string|null,
-         *     dest_lon: float|null,
-         *     dest_bearing_ref: string|null,
-         *     dest_bearing: float|null,
-         *     dest_distance_ref: string|null,
-         *     dest_distance_m: float|null,
-         *     dest_distance_original_ref: string|null,
-         *     dest_distance_original: float|null,
-         *     processing_method: string|null,
-         *     area_information: string|null,
-         *     date: string|null,
-         *     date_raw: string|null,
-         *     time: string|null,
-         *     timestamp: DateTimeImmutable|null,
-         *     differential: int|null,
-         *     h_positioning_error: float|null,
-         * } $gpsData
-         */
-        $gpsData = $exifDocument instanceof ParsedExif
-            ? $exifDocument->gps()
-            : ValueConverters::emptyGpsResult();
-
-        $latitude     = $this->floatValue($gpsData['lat']);
-        $longitude    = $this->floatValue($gpsData['lon']);
-        $latitudeRef  = $this->uppercase($gpsData['lat_ref']);
-        $longitudeRef = $this->uppercase($gpsData['lon_ref']);
-        $altitude     = $this->floatValue($gpsData['alt']);
-        $altitudeRef  = $this->intValue($gpsData['alt_ref']);
-
-        $version    = $this->stringValue($gpsData['version']);
-        $versionRaw = $gpsData['version_raw'];
-        if (!is_string($versionRaw)) {
-            $versionRaw = null;
-        }
-
-        $satellites       = $this->stringValue($gpsData['satellites']);
-        $status           = $this->stringValue($gpsData['status']);
-        $measureMode      = $this->stringValue($gpsData['measure_mode']);
-        $dop              = $this->floatValue($gpsData['dop']);
-        $speedRef         = $this->uppercase($gpsData['speed_ref']);
-        $speedMs          = $this->floatValue($gpsData['speed_ms']);
-        $speedOriginalRef = $this->stringValue($gpsData['speed_original_ref']);
-        $speedOriginal    = $this->floatValue($gpsData['speed_original']);
-        $trackRef         = $this->uppercase($gpsData['track_ref']);
-        $track            = $this->floatValue($gpsData['track']);
-        $imgDirRef        = $this->uppercase($gpsData['img_direction_ref']);
-        $imgDir           = $this->floatValue($gpsData['img_direction']);
-        $mapDatum         = $this->stringValue($gpsData['map_datum']);
-
-        $destLatRef          = $this->uppercase($gpsData['dest_lat_ref']);
-        $destLat             = $this->floatValue($gpsData['dest_lat']);
-        $destLonRef          = $this->uppercase($gpsData['dest_lon_ref']);
-        $destLon             = $this->floatValue($gpsData['dest_lon']);
-        $destBearRef         = $this->uppercase($gpsData['dest_bearing_ref']);
-        $destBear            = $this->floatValue($gpsData['dest_bearing']);
-        $destDistRef         = $this->uppercase($gpsData['dest_distance_ref']);
-        $destDistMetre       = $this->floatValue($gpsData['dest_distance_m']);
-        $destDistOriginalRef = $this->stringValue($gpsData['dest_distance_original_ref']);
-        $destDistOriginal    = $this->floatValue($gpsData['dest_distance_original']);
-
-        $processingMethod = $this->stringValue($gpsData['processing_method']);
-        $areaInformation  = $this->stringValue($gpsData['area_information']);
-
-        $date    = $this->normaliseDate($this->stringValue($gpsData['date']));
-        $dateRaw = $gpsData['date_raw'];
-        if (!is_string($dateRaw)) {
-            $dateRaw = null;
-        }
-
-        $time = $this->stringValue($gpsData['time']);
-
-        $timestamp = $exifDocument?->gpsTimestamp();
-        if (!$timestamp instanceof DateTimeImmutable) {
-            $timestamp = null;
-        }
-
-        if ($date === null) {
-            $date = $this->normaliseDate($exifDocument?->gpsDateStamp());
-        }
-
-        if ($time === null) {
-            $time = $this->stringValue($exifDocument?->gpsTimeStampString());
-        }
-
-        // Fill from XMP when EXIF values are absent.
-        $xmpLatRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLatitudeRef'));
-        if ($latitudeRef === null) {
-            $latitudeRef = $xmpLatRef;
-        }
-
-        if ($latitude === null) {
-            $latitude = $this->parseCoordinate(
-                $xmpDocument?->string(self::NS_EXIF, 'GPSLatitude'),
-                $xmpLatRef ?? $latitudeRef,
-            );
-        }
-
-        $xmpLonRef = $this->uppercase($xmpDocument?->string(self::NS_EXIF, 'GPSLongitudeRef'));
-        if ($longitudeRef === null) {
-            $longitudeRef = $xmpLonRef;
-        }
-
-        if ($longitude === null) {
-            $longitude = $this->parseCoordinate(
-                $xmpDocument?->string(self::NS_EXIF, 'GPSLongitude'),
-                $xmpLonRef ?? $longitudeRef,
-            );
-        }
-
-        if ($altitude === null && $xmpDocument instanceof XmpDocument) {
-            $altitudeXmp = $xmpDocument->float(self::NS_EXIF, 'GPSAltitude');
-            if ($altitudeXmp !== null) {
-                $altRefXmp = $this->intValue($xmpDocument->int(self::NS_EXIF, 'GPSAltitudeRef'));
-                $altRef    = $altitudeRef ?? $altRefXmp;
-
-                if ($altRef === 1) {
-                    $altitudeXmp = -$altitudeXmp;
-                }
-
-                $altitude = $altitudeXmp;
-
-                $altitudeRef ??= $altRefXmp;
-            }
-        }
-
-        $xmpSpeedRef = $xmpDocument?->string(self::NS_EXIF, 'GPSSpeedRef');
-        if ($speedRef === null) {
-            $speedRef = $this->uppercase($xmpSpeedRef);
-        }
-
-        if ($speedOriginalRef === null) {
-            $speedOriginalRef = $this->stringValue($xmpSpeedRef);
-        }
-
-        $speedValue = $xmpDocument?->float(self::NS_EXIF, 'GPSSpeed');
-        if ($speedValue !== null) {
-            if ($speedMs === null && $speedRef !== null) {
-                $speedMs = $this->convertSpeedToMetresPerSecond($speedValue, $speedRef);
-            }
-
-            if ($speedOriginal === null) {
-                $speedOriginal = $speedValue;
-            }
-        }
-
-        $xmpDestDistRef = $xmpDocument?->string(self::NS_EXIF, 'GPSDestDistanceRef');
-        if ($destDistRef === null) {
-            $destDistRef = $this->uppercase($xmpDestDistRef);
-        }
-
-        if ($destDistOriginalRef === null) {
-            $destDistOriginalRef = $this->stringValue($xmpDestDistRef);
-        }
-
-        $destDistValue = $xmpDocument?->float(self::NS_EXIF, 'GPSDestDistance');
-        if ($destDistValue !== null) {
-            if ($destDistMetre === null && $destDistRef !== null) {
-                $convertedDistance = $this->convertDistanceToMetres($destDistValue, $destDistRef);
-                if ($convertedDistance !== null) {
-                    $destDistMetre = $convertedDistance;
-                }
-            }
-
-            if ($destDistOriginal === null) {
-                $destDistOriginal = $destDistValue;
-            }
-        }
-
-        if ($date === null) {
-            $date = $this->normaliseDate($xmpDocument?->string(self::NS_EXIF, 'GPSDateStamp'));
-        }
-
-        if ($time === null) {
-            $time = $this->stringValue($xmpDocument?->string(self::NS_EXIF, 'GPSTimeStamp'));
-        }
-
-        if (!$timestamp instanceof DateTimeImmutable) {
-            $timestamp = $this->parseXmpTimestamp($xmpDocument);
-        }
-
-        if (!$timestamp instanceof DateTimeImmutable) {
-            $timestamp = $this->combineDateAndTime($date, $time);
-        }
-
-        $differential = $this->intValue($gpsData['differential'] ?? null);
-        $hError       = $this->floatValue($gpsData['h_positioning_error'] ?? null);
-        $hasData      = array_any([
-            $latitude,
-            $longitude,
-            $altitude,
-            $altitudeRef,
-            $version,
-            $versionRaw,
-            $satellites,
-            $status,
-            $measureMode,
-            $dop,
-            $speedRef,
-            $speedMs,
-            $speedOriginalRef,
-            $speedOriginal,
-            $trackRef,
-            $track,
-            $imgDirRef,
-            $imgDir,
-            $mapDatum,
-            $destLatRef,
-            $destLat,
-            $destLonRef,
-            $destLon,
-            $destBearRef,
-            $destBear,
-            $destDistRef,
-            $destDistMetre,
-            $destDistOriginalRef,
-            $destDistOriginal,
-            $processingMethod,
-            $areaInformation,
-            $date,
-            $dateRaw,
-            $time,
-            $timestamp,
-            $differential,
-            $hError,
-        ], fn ($value): bool => $value !== null);
-
-        if (!$hasData) {
-            return null;
-        }
-
-        return new Gps(
-            latitude: $latitude,
-            longitude: $longitude,
-            latitudeRef: $latitudeRef,
-            longitudeRef: $longitudeRef,
-            altitude: $altitude,
-            altitudeRef: $altitudeRef,
-            version: $version,
-            versionRaw: $versionRaw,
-            satellites: $satellites,
-            status: $status,
-            measureMode: $measureMode,
-            dop: $dop,
-            speedRef: $speedRef,
-            speedMs: $speedMs,
-            speedOriginalRef: $speedOriginalRef,
-            speedOriginal: $speedOriginal,
-            trackRef: $trackRef,
-            track: $track,
-            imageDirectionRef: $imgDirRef,
-            imageDirection: $imgDir,
-            mapDatum: $mapDatum,
-            destinationLatitudeRef: $destLatRef,
-            destinationLatitude: $destLat,
-            destinationLongitudeRef: $destLonRef,
-            destinationLongitude: $destLon,
-            destinationBearingRef: $destBearRef,
-            destinationBearing: $destBear,
-            destinationDistanceRef: $destDistRef,
-            destinationDistanceMetres: $destDistMetre,
-            destinationDistanceOriginalRef: $destDistOriginalRef,
-            destinationDistanceOriginal: $destDistOriginal,
-            processingMethod: $processingMethod,
-            areaInformation: $areaInformation,
-            date: $date,
-            dateRaw: $dateRaw,
-            time: $time,
-            timestamp: $timestamp,
-            differential: $differential,
-            horizontalPositioningError: $hError,
-        );
-    }
-
-    /**
-     * Parses an XMP coordinate representation.
-     */
-    private function parseCoordinate(?string $value, ?string $ref): ?float
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $value = trim($value);
-        if ($value === '') {
-            return null;
-        }
-
-        $parts = preg_split('/[\\s,]+/', $value, -1, PREG_SPLIT_NO_EMPTY);
-        if ($parts === false) {
-            return null;
-        }
-
-        $parts = array_map(
-            trim(...),
-            $parts,
-        );
-
-        if (count($parts) === 3) {
-            $deg = XmpDocument::parseNumericValue($parts[0]);
-            $min = XmpDocument::parseNumericValue($parts[1]);
-            $sec = XmpDocument::parseNumericValue($parts[2]);
-
-            if ($deg !== null && $min !== null && $sec !== null) {
-                $sign = $this->coordinateSign($ref);
-
-                return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
-            }
-        }
-
-        $numeric = XmpDocument::parseNumericValue($parts[0]);
-        if ($numeric === null) {
-            return null;
-        }
-
-        $sign = $this->coordinateSign($ref);
-
-        return $numeric * $sign;
-    }
-
-    /**
-     * Determines the sign for the given coordinate reference.
-     */
-    private function coordinateSign(?string $ref): float
-    {
-        if ($ref === 'S' || $ref === 'W') {
-            return -1.0;
-        }
-
-        return 1.0;
-    }
-
-    /**
-     * Normalises a textual value to uppercase when present.
-     */
-    private function uppercase(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return null;
-        }
-
-        return strtoupper($trimmed);
-    }
-
-    /**
-     * Returns the value as string when not empty.
-     */
-    private function stringValue(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-
-        return $trimmed === '' ? null : $trimmed;
-    }
-
-    /**
-     * Returns the value as float when numeric.
-     */
-    private function floatValue(int|float|null $value): ?float
-    {
-        if (is_float($value)) {
-            return $value;
-        }
-
-        if (is_int($value)) {
-            return (float) $value;
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the value as integer when numeric.
-     */
-    private function intValue(int|float|null $value): ?int
-    {
-        if (is_int($value)) {
-            return $value;
-        }
-
-        if (is_float($value)) {
-            return (int) round($value);
-        }
-
-        return null;
-    }
-
-    /**
-     * Converts a textual GPS date into ISO format.
-     */
-    private function normaliseDate(?string $value): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-        if ($trimmed === '') {
-            return null;
-        }
-
-        if (preg_match('/^\\d{4}:\\d{2}:\\d{2}$/', $trimmed) === 1) {
-            return str_replace(':', '-', $trimmed);
-        }
-
-        return $trimmed;
-    }
-
-    /**
-     * Parses an XMP GPSDateTime value.
-     */
-    private function parseXmpTimestamp(?XmpDocument $document): ?DateTimeImmutable
-    {
-        $value = $document?->string(self::NS_EXIF, 'GPSDateTime');
-        if ($value === null) {
-            return null;
-        }
-
-        try {
-            $dateTime = new DateTimeImmutable($value);
-        } catch (Exception) {
-            return null;
-        }
-
-        return $dateTime->setTimezone(new DateTimeZone('UTC'));
-    }
-
-    /**
-     * Combines the supplied date and time strings into a UTC timestamp.
-     */
-    private function combineDateAndTime(?string $date, ?string $time): ?DateTimeImmutable
-    {
-        if ($date === null || $time === null) {
-            return null;
-        }
-
-        $time = trim($time);
-        if ($time === '') {
-            return null;
-        }
-
-        $dateTimeString = sprintf('%sT%s', $date, $time);
-        $hasZone        = str_contains($time, 'Z') || str_contains($time, 'z')
-            || str_contains($time, '+') || str_contains($time, '-');
-
-        if (!$hasZone) {
-            $dateTimeString .= 'Z';
-        }
-
-        try {
-            $dateTime = new DateTimeImmutable($dateTimeString);
-        } catch (Exception) {
-            return null;
-        }
-
-        return $dateTime->setTimezone(new DateTimeZone('UTC'));
-    }
-
-    /**
-     * Converts destination distance into metres using GPSDestDistanceRef semantics.
-     */
-    private function convertDistanceToMetres(float $distance, string $distanceRef): ?float
-    {
-        return match ($distanceRef) {
-            'K'     => $distance * 1000.0,
-            'M'     => $distance * 1609.344,
-            'N'     => $distance * 1852.0,
-            default => null,
-        };
-    }
-
-    /**
-     * Converts speed in the provided unit to metres per second using GPSSpeedRef semantics.
-     */
-    private function convertSpeedToMetresPerSecond(float $speed, string $speedRef): float
-    {
-        return match ($speedRef) {
-            'K'     => $speed / 3.6,
-            'M'     => $speed * 0.44704,
-            'N'     => $speed * 0.514444,
-            default => $speed,
-        };
     }
 
     private function createRegions(?XmpDocument $document): Regions
