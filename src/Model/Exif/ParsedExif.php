@@ -42,6 +42,9 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\Oecf;
+use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
+use MagicSunday\ImageMeta\Value\SubjectArea;
 
 use function array_map;
 use function count;
@@ -774,19 +777,19 @@ final readonly class ParsedExif
     /**
      * Returns the opto-electronic conversion function data.
      *
-     * @return array{payload:string, matrix:(array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null)}|null
+     * EXIF 3.0 §4.6.3 Table 15: OECF describes the relationship between camera's optical input
+     * and the image file values.
      */
-    public function oecf(): ?array
+    public function oecf(): ?Oecf
     {
         $payload = $this->oecfPayload();
         if ($payload === null) {
             return null;
         }
 
-        return [
-            'payload' => $payload,
-            'matrix'  => ValueConverters::decodeOecf($payload),
-        ];
+        $matrix = ValueConverters::decodeOecf($payload);
+
+        return Oecf::fromMatrix($matrix);
     }
 
     /**
@@ -1162,13 +1165,15 @@ final readonly class ParsedExif
     /**
      * Returns the decoded spatial frequency response table.
      *
-     * @return array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null
+     * EXIF 3.0 §4.6.3 Table 16: SFR records camera and optical system's spatial frequency
+     * response characteristics.
      */
-    public function spatialFrequencyResponse(): ?array
+    public function spatialFrequencyResponse(): ?SpatialFrequencyResponse
     {
         $payload = $this->rawString($this->exifIfd, ExifTag::SPATIAL_FREQUENCY_RESPONSE);
+        $matrix  = ValueConverters::decodeSpatialFrequencyResponse($payload);
 
-        return ValueConverters::decodeSpatialFrequencyResponse($payload);
+        return SpatialFrequencyResponse::fromMatrix($matrix);
     }
 
     /**
@@ -2271,11 +2276,12 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the EXIF subject area values as integers.
+     * Returns the EXIF subject area as a structured value object.
      *
-     * @return list<int>|null
+     * EXIF 3.0 §4.6.6: SubjectArea tag 0x9214 indicates the location and area of the main subject
+     * in the overall scene.
      */
-    public function subjectArea(): ?array
+    public function subjectArea(): ?SubjectArea
     {
         $value = $this->normalisedValue($this->exifIfd, ExifTag::SUBJECT_AREA);
 
@@ -2296,11 +2302,7 @@ final readonly class ParsedExif
                 $components[] = (int) $component;
             }
 
-            return $components;
-        }
-
-        if (is_int($value) || is_float($value)) {
-            return [(int) $value];
+            return SubjectArea::fromComponents($components);
         }
 
         return null;

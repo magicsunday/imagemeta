@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Value\SubjectArea;
+
 /**
  * Represents focus related capture metadata such as subject distance.
  */
@@ -19,19 +21,13 @@ final readonly class Focus
     /**
      * Creates a focus metadata value object.
      *
-     * @param float|null  $subjectDistanceM Focus distance to the subject in metres.
-     * @param int|null    $subjectAreaX     Normalised subject area rectangle origin (X).
-     * @param int|null    $subjectAreaY     Normalised subject area rectangle origin (Y).
-     * @param int|null    $subjectAreaW     Normalised subject area width.
-     * @param int|null    $subjectAreaH     Normalised subject area height.
-     * @param string|null $afMode           Active auto focus mode name.
+     * @param float|null        $subjectDistanceM Focus distance to the subject in metres.
+     * @param SubjectArea|null  $subjectArea      Subject area location and dimensions (EXIF 3.0 §4.6.6).
+     * @param string|null       $afMode           Active auto focus mode name.
      */
     public function __construct(
         public ?float $subjectDistanceM,
-        public ?int $subjectAreaX,
-        public ?int $subjectAreaY,
-        public ?int $subjectAreaW,
-        public ?int $subjectAreaH,
+        public ?SubjectArea $subjectArea,
         public ?string $afMode,
     ) {
     }
