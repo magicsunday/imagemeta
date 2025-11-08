@@ -11,10 +11,19 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\MemoryBuffer;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function pack;
@@ -26,6 +35,15 @@ use function pack;
  * structure with character code prefixes ("ASCII\0\0\0", "JIS\0\0\0\0\0", etc.).
  */
 #[CoversClass(TiffExifReader::class)]
+#[UsesClass(MemoryBuffer::class)]
+#[UsesClass(BitMask::class)]
+#[UsesClass(Endian::class)]
+#[UsesClass(UInt64::class)]
+#[UsesClass(Unpack::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
+#[UsesClass(ParsedExif::class)]
+#[UsesClass(TiffConst::class)]
 final class TiffExifReaderUserCommentTest extends TestCase
 {
     /**
