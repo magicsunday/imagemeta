@@ -12,7 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Curate\Exif\SubFactory;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Device;
 
@@ -30,18 +29,12 @@ final readonly class DeviceFactory
      */
     public function create(Metadata $metadata): Device
     {
-        $exif      = $metadata->exifDoc;
-        $quickTime = $metadata->quickTime;
+        $exif = $metadata->exifDoc;
 
-        $software = null;
+        $software = $exif?->hostComputer();
 
-        if ($exif instanceof ParsedExif) {
-            $software = $exif->hostComputer();
-        }
-
-        $lookup = new QuickTimeLookup($quickTime);
-
-        if ($software === null) {
+        if ($software === null && $metadata->quickTime !== null) {
+            $lookup   = new QuickTimeLookup($metadata->quickTime);
             $software = $lookup->string(
                 'com.apple.quicktime.software',
                 'Software',
