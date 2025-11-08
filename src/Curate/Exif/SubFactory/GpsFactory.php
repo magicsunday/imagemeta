@@ -113,9 +113,7 @@ final readonly class GpsFactory
          *     h_positioning_error: float|null,
          * } $gpsData
          */
-        $gpsData = $exifDocument instanceof ParsedExif
-            ? $exifDocument->gps()
-            : ValueConverters::emptyGpsResult();
+        $gpsData = $exifDocument?->gps() ?? ValueConverters::emptyGpsResult();
 
         $latitude     = $this->floatValue($gpsData['lat']);
         $longitude    = $this->floatValue($gpsData['lon']);

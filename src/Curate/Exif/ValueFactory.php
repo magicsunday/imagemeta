@@ -181,10 +181,7 @@ final class ValueFactory implements ValueFactoryInterface
         );
 
         $bitsPerSample    = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
-        $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling();
-        if ($ycbcrSubSampling === null) {
-            $ycbcrSubSampling = $metadata->jpegYCbCrSubSampling;
-        }
+        $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling() ?? $metadata->jpegYCbCrSubSampling;
 
         $referenceBlackWhite = $exifDocument?->referenceBlackWhite();
         if ($referenceBlackWhite !== null) {
@@ -500,30 +497,36 @@ final class ValueFactory implements ValueFactoryInterface
         return $count > 0 ? $count : null;
     }
 
-    private function emptyAppleMakerNotes(): AppleMakerNotes
+    private static function emptyAppleMakerNotes(): AppleMakerNotes
     {
-        return new AppleMakerNotes(
-            contentIdentifier: null,
-            cameraType: null,
-            hdrHeadroom: null,
-            hdrGain: null,
-            snr: null,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
-            focusPosition: null,
-            livePhotoIndex: null,
-            colorTemperature: null,
-            semanticStylePreset: null,
-            semanticStyleWarmth: null,
-            semanticStyleTone: null,
-            flags: [],
-            accelerationVector: null,
-        );
+        static $empty = null;
+
+        if ($empty === null) {
+            $empty = new AppleMakerNotes(
+                contentIdentifier: null,
+                cameraType: null,
+                hdrHeadroom: null,
+                hdrGain: null,
+                snr: null,
+                aeStable: null,
+                aeTarget: null,
+                aeAverage: null,
+                afStable: null,
+                afPerformance: null,
+                signalToNoiseRatioType: null,
+                luminanceNoiseAmplitude: null,
+                focusPosition: null,
+                livePhotoIndex: null,
+                colorTemperature: null,
+                semanticStylePreset: null,
+                semanticStyleWarmth: null,
+                semanticStyleTone: null,
+                flags: [],
+                accelerationVector: null,
+            );
+        }
+
+        return $empty;
     }
 
     /**

@@ -62,14 +62,19 @@ final readonly class SceneFactory
     ): Scene {
         $appleFlags = $apple->flags;
 
-        $lookup = new QuickTimeLookup($quickTime);
+        $hdrLabel  = $apple->hdrImageType;
+        $nightMode = null;
 
-        $hdrLabel = $apple->hdrImageType;
-        if ($hdrLabel === null) {
-            $hdrLabel = $lookup->string('HDRImageType');
+        if ($quickTime !== null) {
+            $lookup = new QuickTimeLookup($quickTime);
+
+            if ($hdrLabel === null) {
+                $hdrLabel = $lookup->string('HDRImageType');
+            }
+
+            $nightMode = $lookup->bool('NightMode');
         }
 
-        $nightMode = $lookup->bool('NightMode');
         if ($nightMode === null) {
             $nightMode = $this->appleFlag($appleFlags, 'nightMode');
         }
@@ -131,29 +136,35 @@ final readonly class SceneFactory
         return $flags[$key] ?? null;
     }
 
-    private function emptyAppleMakerNotes(): AppleMakerNotes
+    private static function emptyAppleMakerNotes(): AppleMakerNotes
     {
-        return new AppleMakerNotes(
-            contentIdentifier: null,
-            cameraType: null,
-            hdrHeadroom: null,
-            hdrGain: null,
-            snr: null,
-            aeStable: null,
-            aeTarget: null,
-            aeAverage: null,
-            afStable: null,
-            afPerformance: null,
-            signalToNoiseRatioType: null,
-            luminanceNoiseAmplitude: null,
-            focusPosition: null,
-            livePhotoIndex: null,
-            colorTemperature: null,
-            semanticStylePreset: null,
-            semanticStyleWarmth: null,
-            semanticStyleTone: null,
-            flags: [],
-            accelerationVector: null,
-        );
+        static $empty = null;
+
+        if ($empty === null) {
+            $empty = new AppleMakerNotes(
+                contentIdentifier: null,
+                cameraType: null,
+                hdrHeadroom: null,
+                hdrGain: null,
+                snr: null,
+                aeStable: null,
+                aeTarget: null,
+                aeAverage: null,
+                afStable: null,
+                afPerformance: null,
+                signalToNoiseRatioType: null,
+                luminanceNoiseAmplitude: null,
+                focusPosition: null,
+                livePhotoIndex: null,
+                colorTemperature: null,
+                semanticStylePreset: null,
+                semanticStyleWarmth: null,
+                semanticStyleTone: null,
+                flags: [],
+                accelerationVector: null,
+            );
+        }
+
+        return $empty;
     }
 }
