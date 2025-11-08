@@ -196,3 +196,28 @@ This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 s
 - **Raw data**: [compliance-report.json](docs/compliance-report.json) - Machine-readable report
 
 The compliance report is automatically generated on every CI run and available as a downloadable artifact.
+
+## Developer Tools
+
+### Apple Maker Notes Reverse Engineering
+
+For developers working on understanding unknown Apple Maker Note fields, a comprehensive reverse engineering tool is included:
+
+```bash
+php scripts/reverse-engineer-apple-makernotes.php photo.heic
+```
+
+This tool extracts and analyzes Apple maker note payloads, displaying:
+- Parsed field values with type information
+- Known vs. unknown field identification
+- Comparative analysis across multiple files
+- Export to JSON/YAML for further processing
+
+**Full documentation**: [APPLE-MAKERNOTES-REVERSE-ENGINEERING.md](docs/APPLE-MAKERNOTES-REVERSE-ENGINEERING.md)
+
+**Key features**:
+- Extract binary plist and NSKeyedArchive structures
+- Filter by known/unknown fields
+- Compare fields across device models and iOS versions
+- Multiple output formats (text, JSON, YAML)
+- Batch analysis of image directories
