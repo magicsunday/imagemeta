@@ -46,6 +46,34 @@ php scripts/reverse-engineer-apple-makernotes.php photo.heic --known-only
 - `--unknown-only` - Show only unknown/unmapped fields
 - `--verbose` - Show detailed type information
 
+**Example Output:**
+```
+=== Apple Maker Notes Analysis ===
+File: /path/to/photo.heic
+Make: Apple
+Raw Size: 4829 bytes
+Digest: a3f2c8d9e1b4567890abcdef12345678901234ab
+
+--- Parsed Fields ---
+  contentIdentifier: "F285D9AC-8B3E-4C76-A127-5D8E9F2A1B3C"
+  cameraType: "Wide"
+  hdrHeadroom (float): 1.5
+  snr (float): 42.3
+  aeStable (bool): true
+  aeTarget (float): 0.18
+  afStable (bool): true
+  focusPosition (float): 2.45
+  colorTemperature (int): 5500
+  semanticStylePreset: "Standard"
+  semanticStyleWarmth (float): 0.0
+  semanticStyleTone (float): 0.0
+  flags (array[3]):
+    - hdrEnabled: true
+    - nightMode: false
+    - livePhoto: true
+  makerNoteVersion: "12.0.1"
+```
+
 ## Reverse Engineering Workflow
 
 ### 1. Collect Sample Images
