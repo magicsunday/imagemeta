@@ -40,10 +40,7 @@ final readonly class ImageFactory
 
         $orientation = $exifDocument?->orientation();
 
-        $bitsPerSample = $exifDocument?->bitsPerSample();
-        if ($bitsPerSample === null) {
-            $bitsPerSample = $metadata->jpegBitsPerSample;
-        }
+        $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
 
         return new Image(
             width: $width,
