@@ -14,7 +14,15 @@ namespace MagicSunday\ImageMeta\Value;
 use DateTimeImmutable;
 
 /**
- * Holds capture specific timestamps.
+ * Holds capture conditions and environmental sensor data.
+ *
+ * EXIF 3.0 §4.6.6 introduces environmental tags for recording capture conditions:
+ * - Temperature (0x9400): Ambient temperature in Celsius
+ * - Humidity (0x9401): Relative humidity percentage
+ * - Pressure (0x9402): Atmospheric pressure in hPa
+ * - WaterDepth (0x9403): Depth below water surface in metres
+ * - Acceleration (0x9404): Camera acceleration magnitude in m/s²
+ * - CameraElevationAngle (0x9405): Elevation angle relative to horizon in degrees
  */
 final readonly class Capture
 {
@@ -22,12 +30,12 @@ final readonly class Capture
      * Creates a capture conditions metadata value object.
      *
      * @param DateTimeImmutable|null $dateTime                Capture timestamp.
-     * @param float|null             $temperatureC            Recorded temperature in Celsius.
-     * @param float|null             $humidityPercent         Relative humidity percentage.
-     * @param float|null             $pressureHPa             Ambient pressure in hPa.
-     * @param float|null             $waterDepthM             Water depth in metres.
-     * @param float|null             $accelerationMs2         Camera acceleration in metres per second squared.
-     * @param float|null             $cameraElevationAngleDeg Camera elevation angle in degrees.
+     * @param float|null             $temperatureC            Recorded temperature in Celsius (EXIF 3.0 §4.6.6).
+     * @param float|null             $humidityPercent         Relative humidity percentage (EXIF 3.0 §4.6.6).
+     * @param float|null             $pressureHPa             Ambient pressure in hPa (EXIF 3.0 §4.6.6).
+     * @param float|null             $waterDepthM             Water depth in metres (EXIF 3.0 §4.6.6, tag 0x9403).
+     * @param float|null             $accelerationMs2         Camera acceleration magnitude in m/s² (EXIF 3.0 §4.6.6, tag 0x9404).
+     * @param float|null             $cameraElevationAngleDeg Camera elevation angle in degrees (EXIF 3.0 §4.6.6, tag 0x9405).
      */
     public function __construct(
         public ?DateTimeImmutable $dateTime,
