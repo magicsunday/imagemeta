@@ -181,10 +181,7 @@ final class ValueFactory implements ValueFactoryInterface
         );
 
         $bitsPerSample    = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
-        $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling();
-        if ($ycbcrSubSampling === null) {
-            $ycbcrSubSampling = $metadata->jpegYCbCrSubSampling;
-        }
+        $ycbcrSubSampling = $exifDocument?->ycbcrSubSampling() ?? $metadata->jpegYCbCrSubSampling;
 
         $referenceBlackWhite = $exifDocument?->referenceBlackWhite();
         if ($referenceBlackWhite !== null) {
