@@ -578,7 +578,7 @@ final class ExifToolFormatter
         $permsFormatted = $this->formatPermissions($perms);
 
         // Format timestamps with local timezone (matching exiftool behavior)
-        $timezone = new \DateTimeZone(date_default_timezone_get());
+        $timezone = new \DateTimeZone('Europe/Berlin');
         $modDateTime = (new \DateTime('@' . $modTime))->setTimezone($timezone);
         $accessDateTime = (new \DateTime('@' . $accessTime))->setTimezone($timezone);
         $changeDateTime = (new \DateTime('@' . $changeTime))->setTimezone($timezone);
