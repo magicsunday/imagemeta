@@ -1066,7 +1066,10 @@ final class ExifToolFormatter
             'http://ns.adobe.com/exif/1.0/' => 'exif',
             'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/' => 'Iptc4xmpCore',
             'http://www.metadataworkinggroup.com/schemas/regions/' => 'mwg-rs',
+            'http://ns.adobe.com/xmp/sType/Area#' => 'mwg-rs',
+            'http://ns.adobe.com/xmp/sType/Dimensions#' => 'mwg-rs',
             'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
+            'http://ns.apple.com/faceinfo/1.0/' => 'mwg-rs',
             'adobe:ns:meta/' => 'x',
         ];
 
