@@ -98,6 +98,20 @@ final class ExifToolFormatter
      */
     private array $tiffTagNames = [];
 
+    /**
+     * Maps tag IDs to their human-readable names for GPS IFD tags.
+     *
+     * @var array<int, string>
+     */
+    private array $gpsTagNames = [];
+
+    /**
+     * Maps tag IDs to their human-readable names for Interoperability IFD tags.
+     *
+     * @var array<int, string>
+     */
+    private array $interopTagNames = [];
+
     public function __construct()
     {
         $this->buildTagMaps();
@@ -112,7 +126,16 @@ final class ExifToolFormatter
         $exifReflection = new \ReflectionClass(ExifTag::class);
         foreach ($exifReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
-                $this->exifTagNames[$value] = $this->constantNameToTagName($name);
+                $tagName = $this->constantNameToTagName($name);
+                
+                // Separate GPS and Interoperability tags into their own maps
+                if (str_starts_with($name, 'GPS_')) {
+                    $this->gpsTagNames[$value] = $tagName;
+                } elseif (str_starts_with($name, 'INTEROPERABILITY_')) {
+                    $this->interopTagNames[$value] = $tagName;
+                } else {
+                    $this->exifTagNames[$value] = $tagName;
+                }
             }
         }
 
@@ -322,17 +345,19 @@ final class ExifToolFormatter
      * Prints a section header and its data.
      *
      * @param array<string, mixed> $data
+     * @param string|null $ifdContext The IFD context ('GPS', 'InteropIFD', etc.) for correct tag name resolution
      */
-    private function printSection(string $sectionName, array $data, bool $showHex = false): void
+    private function printSection(string $sectionName, array $data, bool $showHex = false, ?string $ifdContext = null): void
     {
         echo "---- {$sectionName} ----\n";
 
         foreach ($data as $key => $value) {
-            $formattedValue = $this->formatValue($value);
+            $tagId = is_numeric($key) ? (int) $key : null;
+            $formattedValue = $this->formatValue($value, $ifdContext, $tagId);
 
             if ($showHex && is_numeric($key)) {
                 $hexKey = sprintf('0x%04x', (int) $key);
-                $tagName = $this->getTagName((int) $key);
+                $tagName = $this->getTagName((int) $key, $ifdContext);
                 // Format with exactly 40 characters before the colon
                 // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
                 $label = sprintf('%s %s', $hexKey, $tagName);
@@ -348,9 +373,22 @@ final class ExifToolFormatter
 
     /**
      * Gets the tag name for a given tag ID.
+     *
+     * @param int $tagId The tag ID to look up
+     * @param string|null $ifdContext The IFD context ('GPS', 'InteropIFD', etc.) for correct tag name resolution
      */
-    private function getTagName(int $tagId): string
+    private function getTagName(int $tagId, ?string $ifdContext = null): string
     {
+        // Check IFD-specific maps first based on context
+        if ($ifdContext === 'GPS' && isset($this->gpsTagNames[$tagId])) {
+            return $this->gpsTagNames[$tagId];
+        }
+        
+        if ($ifdContext === 'InteropIFD' && isset($this->interopTagNames[$tagId])) {
+            return $this->interopTagNames[$tagId];
+        }
+        
+        // Fall back to general TIFF and EXIF tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
@@ -358,8 +396,12 @@ final class ExifToolFormatter
 
     /**
      * Formats a value for display.
+     *
+     * @param mixed $value The value to format
+     * @param string|null $ifdContext The IFD context for tag-specific formatting
+     * @param int|null $tagId The tag ID for tag-specific formatting
      */
-    private function formatValue(mixed $value): string
+    private function formatValue(mixed $value, ?string $ifdContext = null, ?int $tagId = null): string
     {
         if ($value === null) {
             return '(none)';
@@ -373,6 +415,11 @@ final class ExifToolFormatter
 
             $decimal = $value->numerator / $value->denominator;
 
+            // Tag-specific formatting with units for GPS tags
+            if ($ifdContext === 'GPS' && $tagId !== null) {
+                return $this->formatGpsValue($tagId, $decimal);
+            }
+
             // If it's a simple fraction, show as fraction
             if ($value->denominator !== 1 && abs($decimal) < 10) {
                 return sprintf('%d/%d', $value->numerator, $value->denominator);
@@ -384,7 +431,7 @@ final class ExifToolFormatter
         if ($value instanceof ExifRationalList) {
             $parts = [];
             foreach ($value->values as $rational) {
-                $parts[] = $this->formatValue($rational);
+                $parts[] = $this->formatValue($rational, $ifdContext, $tagId);
             }
             return implode(' ', $parts);
         }
@@ -392,7 +439,7 @@ final class ExifToolFormatter
         if ($value instanceof ExifNumericList) {
             $parts = [];
             foreach ($value->values as $num) {
-                $parts[] = $this->formatValue($num);
+                $parts[] = $this->formatValue($num, $ifdContext, $tagId);
             }
             return implode(' ', $parts);
         }
@@ -426,7 +473,7 @@ final class ExifToolFormatter
 
             // Check if it's a simple numeric array
             if (array_is_list($value)) {
-                return implode(' ', array_map(fn($v) => $this->formatValue($v), $value));
+                return implode(' ', array_map(fn($v) => $this->formatValue($v, $ifdContext, $tagId), $value));
             }
 
             return json_encode($value);
@@ -467,6 +514,42 @@ final class ExifToolFormatter
         }
 
         return (string) $value;
+    }
+
+    /**
+     * Formats GPS-specific values with appropriate units.
+     *
+     * EXIF 3.0 §4.6.6 Table 27 defines GPS tag value formats and units.
+     *
+     * @param int $tagId The GPS tag ID
+     * @param float $value The calculated decimal value
+     */
+    private function formatGpsValue(int $tagId, float $value): string
+    {
+        return match ($tagId) {
+            // GPS Horizontal Positioning Error - EXIF 3.0 §4.6.6
+            ExifTag::GPS_H_POSITIONING_ERROR => sprintf('%.9f m', $value),
+            
+            // GPS Altitude - EXIF 3.0 §4.6.6
+            ExifTag::GPS_ALTITUDE => sprintf('%.6f m', $value),
+            
+            // GPS Speed - EXIF 3.0 §4.6.6 (unit depends on SpeedRef, shown in original units)
+            ExifTag::GPS_SPEED => number_format($value, 6, '.', ''),
+            
+            // GPS DOP (Dilution of Precision) - EXIF 3.0 §4.6.6
+            ExifTag::GPS_DOP => number_format($value, 2, '.', ''),
+            
+            // GPS Direction/Bearing values in degrees - EXIF 3.0 §4.6.6
+            ExifTag::GPS_TRACK,
+            ExifTag::GPS_IMG_DIRECTION,
+            ExifTag::GPS_DEST_BEARING => number_format($value, 6, '.', ''),
+            
+            // GPS Distance - EXIF 3.0 §4.6.6 (unit depends on DistanceRef)
+            ExifTag::GPS_DEST_DISTANCE => number_format($value, 6, '.', ''),
+            
+            // Default: return as calculated decimal
+            default => number_format($value, 6, '.', ''),
+        };
     }
 
     /**
@@ -726,7 +809,7 @@ final class ExifToolFormatter
         }
 
         if (!empty($data)) {
-            $this->printSection('GPS', $data, showHex: true);
+            $this->printSection('GPS', $data, showHex: true, ifdContext: 'GPS');
         }
     }
 
@@ -862,7 +945,7 @@ final class ExifToolFormatter
         }
 
         if ($data !== []) {
-            $this->printSection('InteropIFD', $data, showHex: true);
+            $this->printSection('InteropIFD', $data, showHex: true, ifdContext: 'InteropIFD');
         }
     }
 

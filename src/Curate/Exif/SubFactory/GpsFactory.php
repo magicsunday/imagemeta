@@ -18,6 +18,14 @@ use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
+use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
+use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
 use MagicSunday\ImageMeta\Value\Gps;
 
 use function array_any;
@@ -326,34 +334,34 @@ final readonly class GpsFactory
         return new Gps(
             latitude: $latitude,
             longitude: $longitude,
-            latitudeRef: $latitudeRef,
-            longitudeRef: $longitudeRef,
+            latitudeRef: $this->toGpsLatLonRef($latitudeRef),
+            longitudeRef: $this->toGpsLatLonRef($longitudeRef),
             altitude: $altitude,
-            altitudeRef: $altitudeRef,
+            altitudeRef: $this->toGpsAltitudeRef($altitudeRef),
             version: $version,
             versionRaw: $versionRaw,
             satellites: $satellites,
-            status: $status,
-            measureMode: $measureMode,
+            status: $this->toGpsStatus($status),
+            measureMode: $this->toGpsMeasureMode($measureMode),
             dop: $dop,
-            speedRef: $speedRef,
+            speedRef: $this->toGpsSpeedRef($speedRef),
             speedMs: $speedMs,
-            speedOriginalRef: $speedOriginalRef,
+            speedOriginalRef: $this->toGpsSpeedRef($speedOriginalRef),
             speedOriginal: $speedOriginal,
-            trackRef: $trackRef,
+            trackRef: $this->toGpsDirectionRef($trackRef),
             track: $track,
-            imageDirectionRef: $imgDirRef,
+            imageDirectionRef: $this->toGpsDirectionRef($imgDirRef),
             imageDirection: $imgDir,
             mapDatum: $mapDatum,
-            destinationLatitudeRef: $destLatRef,
+            destinationLatitudeRef: $this->toGpsLatLonRef($destLatRef),
             destinationLatitude: $destLat,
-            destinationLongitudeRef: $destLonRef,
+            destinationLongitudeRef: $this->toGpsLatLonRef($destLonRef),
             destinationLongitude: $destLon,
-            destinationBearingRef: $destBearRef,
+            destinationBearingRef: $this->toGpsDirectionRef($destBearRef),
             destinationBearing: $destBear,
-            destinationDistanceRef: $destDistRef,
+            destinationDistanceRef: $this->toGpsDistanceRef($destDistRef),
             destinationDistanceMetres: $destDistMetre,
-            destinationDistanceOriginalRef: $destDistOriginalRef,
+            destinationDistanceOriginalRef: $this->toGpsDistanceRef($destDistOriginalRef),
             destinationDistanceOriginal: $destDistOriginal,
             processingMethod: $processingMethod,
             areaInformation: $areaInformation,
@@ -361,7 +369,7 @@ final readonly class GpsFactory
             dateRaw: $dateRaw,
             time: $time,
             timestamp: $timestamp,
-            differential: $differential,
+            differential: $this->toGpsDifferential($differential),
             horizontalPositioningError: $hError,
         );
     }
@@ -582,5 +590,85 @@ final readonly class GpsFactory
             'N'     => $speed * 0.514444,
             default => $speed,
         };
+    }
+
+    /**
+     * Converts string latitude/longitude reference to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsLatLonRef(?string $value): ?GpsLatLonRef
+    {
+        return GpsLatLonRef::fromIntString($value);
+    }
+
+    /**
+     * Converts int/string altitude reference to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsAltitudeRef(?int $value): ?GpsAltitudeRef
+    {
+        return GpsAltitudeRef::fromIntString($value);
+    }
+
+    /**
+     * Converts string GPS status to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsStatus(?string $value): ?GpsStatus
+    {
+        return GpsStatus::fromIntString($value);
+    }
+
+    /**
+     * Converts string GPS measure mode to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsMeasureMode(?string $value): ?GpsMeasureMode
+    {
+        return GpsMeasureMode::fromIntString($value);
+    }
+
+    /**
+     * Converts string speed reference to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsSpeedRef(?string $value): ?GpsSpeedRef
+    {
+        return GpsSpeedRef::fromIntString($value);
+    }
+
+    /**
+     * Converts string direction reference to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsDirectionRef(?string $value): ?GpsDirectionRef
+    {
+        return GpsDirectionRef::fromIntString($value);
+    }
+
+    /**
+     * Converts string distance reference to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsDistanceRef(?string $value): ?GpsDistanceRef
+    {
+        return GpsDistanceRef::fromIntString($value);
+    }
+
+    /**
+     * Converts int/string differential to enum.
+     *
+     * EXIF 3.0 §4.6.6 Table 27.
+     */
+    private function toGpsDifferential(?int $value): ?GpsDifferential
+    {
+        return GpsDifferential::fromIntString($value);
     }
 }
