@@ -241,6 +241,8 @@ final class ExifToolFormatter
             'ISO' => 'ISO',
             'PHOTOGRAPHIC_SENSITIVITY' => 'ISO',
             'EXIF_VERSION' => 'Exif Version',
+            'DATETIME_ORIGINAL' => 'Date/Time Original',
+            'DATETIME_DIGITIZED' => 'Create Date',
             'DATE_TIME_ORIGINAL' => 'Date/Time Original',
             'CREATE_DATE' => 'Create Date',
             'OFFSET_TIME' => 'Offset Time',
@@ -250,6 +252,7 @@ final class ExifToolFormatter
             'SHUTTER_SPEED_VALUE' => 'Shutter Speed Value',
             'APERTURE_VALUE' => 'Aperture Value',
             'BRIGHTNESS_VALUE' => 'Brightness Value',
+            'EXPOSURE_BIAS_VALUE' => 'Exposure Compensation',
             'EXPOSURE_COMPENSATION' => 'Exposure Compensation',
             'METERING_MODE' => 'Metering Mode',
             'FLASH' => 'Flash',
@@ -271,6 +274,8 @@ final class ExifToolFormatter
             'LENS_MAKE' => 'Lens Make',
             'LENS_MODEL' => 'Lens Model',
             'COMPOSITE_IMAGE' => 'Composite Image',
+            'GPS_IFD_POINTER' => 'GPS IFD Pointer',
+            'EXIF_IFD_POINTER' => 'Exif IFD Pointer',
         ];
 
         if (isset($specialCases[$constantName])) {
@@ -1015,7 +1020,7 @@ final class ExifToolFormatter
         $grouped = [];
 
         foreach ($xmpDoc->data as $clarkNotation => $value) {
-            // Clark notation format: {namespace}localName
+            // Clark notation format: {namespace}localName or just localName
             if (preg_match('/^\{([^}]+)\}(.+)$/', $clarkNotation, $matches)) {
                 $namespace = $matches[1];
                 $localName = $matches[2];
@@ -1028,6 +1033,13 @@ final class ExifToolFormatter
                 }
 
                 $grouped[$prefix][$localName] = $value;
+            } else {
+                // No namespace - use 'unknown' prefix
+                if (!isset($grouped['unknown'])) {
+                    $grouped['unknown'] = [];
+                }
+
+                $grouped['unknown'][$clarkNotation] = $value;
             }
         }
 
@@ -1052,6 +1064,7 @@ final class ExifToolFormatter
             'http://ns.adobe.com/exif/1.0/' => 'exif',
             'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/' => 'Iptc4xmpCore',
             'http://www.metadataworkinggroup.com/schemas/regions/' => 'mwg-rs',
+            'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
             'adobe:ns:meta/' => 'x',
         ];
 
