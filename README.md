@@ -190,7 +190,7 @@ This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 s
 | EXIF Tags | 121 | 0 | 0 | 121 | 100.0% |
 | GPS Tags | 32 | 0 | 0 | 32 | 100.0% |
 
-**Where to find implementation gaps**:
+**Compliance documentation**:
 - **System guide**: [COMPLIANCE.md](docs/COMPLIANCE.md) - How the compliance system works
 - **Raw data**: [compliance-report.json](docs/compliance-report.json) - Machine-readable report
 
