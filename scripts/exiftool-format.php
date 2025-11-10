@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Scripts;
 
 use DateTimeInterface;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\RegionsFactory;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -163,10 +164,15 @@ final class ExifToolFormatter
             if (is_int($value)) {
                 $tagName = $this->constantNameToTagName($name);
 
+                // IFD pointer tags appear in IFD0, not in their target IFDs
+                // So we keep them in the main EXIF tag map
+                $isIfdPointer = str_ends_with($name, '_IFD_POINTER');
+
                 // Separate GPS and Interoperability tags into their own maps
-                if (str_starts_with($name, 'GPS_')) {
+                // unless they're IFD pointers
+                if (!$isIfdPointer && str_starts_with($name, 'GPS_')) {
                     $this->gpsTagNames[$value] = $tagName;
-                } elseif (str_starts_with($name, 'INTEROPERABILITY_')) {
+                } elseif (!$isIfdPointer && str_starts_with($name, 'INTEROPERABILITY_')) {
                     $this->interopTagNames[$value] = $tagName;
                 } else {
                     $this->exifTagNames[$value] = $tagName;
@@ -241,8 +247,8 @@ final class ExifToolFormatter
             'ISO' => 'ISO',
             'PHOTOGRAPHIC_SENSITIVITY' => 'ISO',
             'EXIF_VERSION' => 'Exif Version',
-            'DATE_TIME_ORIGINAL' => 'Date/Time Original',
-            'CREATE_DATE' => 'Create Date',
+            'DATETIME_ORIGINAL' => 'Date/Time Original',
+            'DATETIME_DIGITIZED' => 'Create Date',
             'OFFSET_TIME' => 'Offset Time',
             'OFFSET_TIME_ORIGINAL' => 'Offset Time Original',
             'OFFSET_TIME_DIGITIZED' => 'Offset Time Digitized',
@@ -250,7 +256,7 @@ final class ExifToolFormatter
             'SHUTTER_SPEED_VALUE' => 'Shutter Speed Value',
             'APERTURE_VALUE' => 'Aperture Value',
             'BRIGHTNESS_VALUE' => 'Brightness Value',
-            'EXPOSURE_COMPENSATION' => 'Exposure Compensation',
+            'EXPOSURE_BIAS_VALUE' => 'Exposure Compensation',
             'METERING_MODE' => 'Metering Mode',
             'FLASH' => 'Flash',
             'FOCAL_LENGTH' => 'Focal Length',
@@ -271,6 +277,8 @@ final class ExifToolFormatter
             'LENS_MAKE' => 'Lens Make',
             'LENS_MODEL' => 'Lens Model',
             'COMPOSITE_IMAGE' => 'Composite Image',
+            'GPS_IFD_POINTER' => 'GPS IFD Pointer',
+            'EXIF_IFD_POINTER' => 'Exif IFD Pointer',
         ];
 
         if (isset($specialCases[$constantName])) {
@@ -1015,7 +1023,7 @@ final class ExifToolFormatter
         $grouped = [];
 
         foreach ($xmpDoc->data as $clarkNotation => $value) {
-            // Clark notation format: {namespace}localName
+            // Clark notation format: {namespace}localName or just localName
             if (preg_match('/^\{([^}]+)\}(.+)$/', $clarkNotation, $matches)) {
                 $namespace = $matches[1];
                 $localName = $matches[2];
@@ -1028,6 +1036,13 @@ final class ExifToolFormatter
                 }
 
                 $grouped[$prefix][$localName] = $value;
+            } else {
+                // No namespace - use 'unknown' prefix
+                if (!isset($grouped['unknown'])) {
+                    $grouped['unknown'] = [];
+                }
+
+                $grouped['unknown'][$clarkNotation] = $value;
             }
         }
 
@@ -1051,7 +1066,11 @@ final class ExifToolFormatter
             'http://ns.adobe.com/tiff/1.0/' => 'tiff',
             'http://ns.adobe.com/exif/1.0/' => 'exif',
             'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/' => 'Iptc4xmpCore',
-            'http://www.metadataworkinggroup.com/schemas/regions/' => 'mwg-rs',
+            RegionsFactory::NS_MWG_REGIONS => 'mwg-rs',
+            RegionsFactory::NS_ST_AREA => 'mwg-rs',
+            RegionsFactory::NS_ST_DIMENSIONS => 'mwg-rs',
+            'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
+            RegionsFactory::NS_APPLE_FACEINFO => 'mwg-rs',
             'adobe:ns:meta/' => 'x',
         ];
 
