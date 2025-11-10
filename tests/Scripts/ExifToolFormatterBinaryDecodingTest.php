@@ -37,7 +37,7 @@ final class ExifToolFormatterBinaryDecodingTest extends TestCase
     {
         // Standard YCbCr configuration: [1, 2, 3, 0] = Y, Cb, Cr, -
         $binaryValue = "\x01\x02\x03\x00";
-        $expected    = 'Y, Cb, Cr, -';
+        $expected    = 'Y Cb Cr -';
 
         $decoded = $this->decodeComponentsConfiguration($binaryValue);
 
@@ -54,7 +54,7 @@ final class ExifToolFormatterBinaryDecodingTest extends TestCase
     {
         // RGB configuration: [4, 5, 6, 0] = R, G, B, -
         $binaryValue = "\x04\x05\x06\x00";
-        $expected    = 'R, G, B, -';
+        $expected    = 'R G B -';
 
         $decoded = $this->decodeComponentsConfiguration($binaryValue);
 
@@ -122,7 +122,8 @@ final class ExifToolFormatterBinaryDecodingTest extends TestCase
             $components[] = $componentNames[$byte] ?? sprintf('(Unknown: %d)', $byte);
         }
 
-        return implode(', ', $components);
+        // Use space separation to match ParsedExif output format
+        return implode(' ', $components);
     }
 
     /**

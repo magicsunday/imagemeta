@@ -447,7 +447,7 @@ final class ExifToolFormatter
 
         // ExifIFD section
         if ($metadata->exifDoc !== null && $metadata->exifDoc->exifIfd !== null) {
-            $this->printExifIfdSection($metadata->exifDoc->exifIfd);
+            $this->printExifIfdSection($metadata->exifDoc->exifIfd, $metadata->exifDoc);
         }
 
         // MakerNotes section
@@ -821,6 +821,9 @@ final class ExifToolFormatter
      * EXIF 3.0 §4.6.4 Table 17 defines ComponentsConfiguration as 4 bytes where each
      * byte encodes a component channel identifier.
      *
+     * This is a fallback decoder for cases where ParsedExif is not available.
+     * Prefer using ParsedExif::componentsConfigurationDescription() when possible.
+     *
      * @param string $binaryValue 4-byte binary string
      */
     private function decodeComponentsConfiguration(string $binaryValue): string
@@ -850,7 +853,8 @@ final class ExifToolFormatter
             $components[] = $componentNames[$byte] ?? sprintf('(Unknown: %d)', $byte);
         }
 
-        return implode(', ', $components);
+        // Use space separation to match ParsedExif::componentsConfigurationDescription()
+        return implode(' ', $components);
     }
 
     /**
@@ -901,6 +905,43 @@ final class ExifToolFormatter
         }
 
         return (string) $byte;
+    }
+
+    /**
+     * Gets decoded value from ParsedExif accessor methods for special tags.
+     *
+     * This method leverages the existing decoding logic in ParsedExif rather than
+     * duplicating it in the formatter. For tags with accessor methods that return
+     * typed/decoded values, we use those instead of the raw IFD entry value.
+     *
+     * @param int $tagId The EXIF tag identifier
+     * @param mixed $rawValue The raw value from the IFD entry
+     * @param ParsedExif|null $exifDoc The ParsedExif document for accessing decoded values
+     *
+     * @return mixed|null The decoded value from ParsedExif, or null if no special accessor exists
+     */
+    private function getDecodedValueFromParsedExif(int $tagId, mixed $rawValue, ?ParsedExif $exifDoc): mixed
+    {
+        if ($exifDoc === null) {
+            return null;
+        }
+
+        return match ($tagId) {
+            // ComponentsConfiguration - Use ParsedExif accessor that returns formatted description
+            // EXIF 3.0 §4.6.4 Table 17
+            ExifTag::COMPONENTS_CONFIGURATION => $exifDoc->componentsConfigurationDescription(),
+
+            // SceneType - Use ParsedExif accessor that returns typed enum
+            // EXIF 3.0 §4.6.3 Table 13
+            ExifTag::SCENE_TYPE => $exifDoc->sceneType(),
+
+            // FileSource - Use ParsedExif accessor that returns typed enum
+            // EXIF 3.0 §4.6.3 Table 12
+            ExifTag::FILE_SOURCE => $exifDoc->fileSource(),
+
+            // No special accessor available
+            default => null,
+        };
     }
 
     /**
@@ -1126,15 +1167,22 @@ final class ExifToolFormatter
     /**
      * Prints the ExifIFD section.
      */
-    private function printExifIfdSection(?Ifd $exifIfd): void
+    private function printExifIfdSection(?Ifd $exifIfd, ?ParsedExif $exifDoc = null): void
     {
         $data = [];
 
         // Collect ExifIFD tags
         if (($exifIfd !== null) && isset($exifIfd->entries)) {
             foreach ($exifIfd->entries as $tagId => $entry) {
-                // Convert raw value to enum if applicable
-                $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
+                // Use ParsedExif accessor methods for tags with special decoding
+                $value = $this->getDecodedValueFromParsedExif($tagId, $entry->value, $exifDoc);
+                
+                // Convert raw value to enum if applicable (for tags without special accessors)
+                if ($value === null) {
+                    $value = $this->convertToEnumIfApplicable($tagId, $entry->value);
+                }
+                
+                $data[$tagId] = $value;
             }
         }
 
