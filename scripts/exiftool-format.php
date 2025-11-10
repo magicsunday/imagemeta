@@ -352,7 +352,8 @@ final class ExifToolFormatter
         echo "---- {$sectionName} ----\n";
 
         foreach ($data as $key => $value) {
-            $formattedValue = $this->formatValue($value);
+            $tagId = is_numeric($key) ? (int) $key : null;
+            $formattedValue = $this->formatValue($value, $ifdContext, $tagId);
 
             if ($showHex && is_numeric($key)) {
                 $hexKey = sprintf('0x%04x', (int) $key);
@@ -395,8 +396,12 @@ final class ExifToolFormatter
 
     /**
      * Formats a value for display.
+     *
+     * @param mixed $value The value to format
+     * @param string|null $ifdContext The IFD context for tag-specific formatting
+     * @param int|null $tagId The tag ID for tag-specific formatting
      */
-    private function formatValue(mixed $value): string
+    private function formatValue(mixed $value, ?string $ifdContext = null, ?int $tagId = null): string
     {
         if ($value === null) {
             return '(none)';
@@ -410,6 +415,11 @@ final class ExifToolFormatter
 
             $decimal = $value->numerator / $value->denominator;
 
+            // Tag-specific formatting with units for GPS tags
+            if ($ifdContext === 'GPS' && $tagId !== null) {
+                return $this->formatGpsValue($tagId, $decimal);
+            }
+
             // If it's a simple fraction, show as fraction
             if ($value->denominator !== 1 && abs($decimal) < 10) {
                 return sprintf('%d/%d', $value->numerator, $value->denominator);
@@ -421,7 +431,7 @@ final class ExifToolFormatter
         if ($value instanceof ExifRationalList) {
             $parts = [];
             foreach ($value->values as $rational) {
-                $parts[] = $this->formatValue($rational);
+                $parts[] = $this->formatValue($rational, $ifdContext, $tagId);
             }
             return implode(' ', $parts);
         }
@@ -429,7 +439,7 @@ final class ExifToolFormatter
         if ($value instanceof ExifNumericList) {
             $parts = [];
             foreach ($value->values as $num) {
-                $parts[] = $this->formatValue($num);
+                $parts[] = $this->formatValue($num, $ifdContext, $tagId);
             }
             return implode(' ', $parts);
         }
@@ -463,7 +473,7 @@ final class ExifToolFormatter
 
             // Check if it's a simple numeric array
             if (array_is_list($value)) {
-                return implode(' ', array_map(fn($v) => $this->formatValue($v), $value));
+                return implode(' ', array_map(fn($v) => $this->formatValue($v, $ifdContext, $tagId), $value));
             }
 
             return json_encode($value);
@@ -504,6 +514,42 @@ final class ExifToolFormatter
         }
 
         return (string) $value;
+    }
+
+    /**
+     * Formats GPS-specific values with appropriate units.
+     *
+     * EXIF 3.0 §4.6.6 Table 27 defines GPS tag value formats and units.
+     *
+     * @param int $tagId The GPS tag ID
+     * @param float $value The calculated decimal value
+     */
+    private function formatGpsValue(int $tagId, float $value): string
+    {
+        return match ($tagId) {
+            // GPS Horizontal Positioning Error - EXIF 3.0 §4.6.6
+            ExifTag::GPS_H_POSITIONING_ERROR => sprintf('%.9f m', $value),
+            
+            // GPS Altitude - EXIF 3.0 §4.6.6
+            ExifTag::GPS_ALTITUDE => sprintf('%.6f m', $value),
+            
+            // GPS Speed - EXIF 3.0 §4.6.6 (unit depends on SpeedRef, shown in original units)
+            ExifTag::GPS_SPEED => number_format($value, 6, '.', ''),
+            
+            // GPS DOP (Dilution of Precision) - EXIF 3.0 §4.6.6
+            ExifTag::GPS_DOP => number_format($value, 2, '.', ''),
+            
+            // GPS Direction/Bearing values in degrees - EXIF 3.0 §4.6.6
+            ExifTag::GPS_TRACK,
+            ExifTag::GPS_IMG_DIRECTION,
+            ExifTag::GPS_DEST_BEARING => number_format($value, 6, '.', ''),
+            
+            // GPS Distance - EXIF 3.0 §4.6.6 (unit depends on DistanceRef)
+            ExifTag::GPS_DEST_DISTANCE => number_format($value, 6, '.', ''),
+            
+            // Default: return as calculated decimal
+            default => number_format($value, 6, '.', ''),
+        };
     }
 
     /**
