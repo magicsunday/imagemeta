@@ -48,6 +48,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
@@ -574,6 +575,15 @@ final class ExifToolFormatter
             return '(none)';
         }
 
+        // Special handling for UNDEFINED-type binary tags that need decoding
+        // EXIF 3.0 §4.6.3, §4.6.4
+        if (is_string($value) && $tagId !== null) {
+            $decoded = $this->decodeBinaryExifTag($tagId, $value);
+            if ($decoded !== null) {
+                return $decoded;
+            }
+        }
+
         // Special handling for Flash tag (0x9209) - EXIF 3.0 §4.6.4
         if ($tagId === ExifTag::FLASH) {
             $rawValue = $value;
@@ -769,6 +779,128 @@ final class ExifToolFormatter
     {
         // Check for null bytes or other control characters
         return preg_match('/[\x00-\x08\x0B-\x0C\x0E-\x1F]/', $data) === 1;
+    }
+
+    /**
+     * Decodes binary EXIF tags with UNDEFINED type that need special interpretation.
+     *
+     * EXIF 3.0 §4.6.3, §4.6.4 define several tags with type UNDEFINED where the binary
+     * bytes encode specific values that must be interpreted rather than displayed as hex.
+     *
+     * @param int $tagId The EXIF tag identifier
+     * @param string $binaryValue The raw binary string value from the IFD entry
+     *
+     * @return string|null The decoded string representation, or null if no decoding needed
+     */
+    private function decodeBinaryExifTag(int $tagId, string $binaryValue): ?string
+    {
+        return match ($tagId) {
+            // ComponentsConfiguration - EXIF 3.0 §4.6.4 Table 17
+            // Type: UNDEFINED, Count: 4
+            // Each byte represents a component: 0=none, 1=Y, 2=Cb, 3=Cr, 4=R, 5=G, 6=B
+            ExifTag::COMPONENTS_CONFIGURATION => $this->decodeComponentsConfiguration($binaryValue),
+
+            // SceneType - EXIF 3.0 §4.6.3 Table 13
+            // Type: UNDEFINED, Count: 1
+            // Single byte: 1=directly photographed image, other=reserved
+            ExifTag::SCENE_TYPE => $this->decodeSceneType($binaryValue),
+
+            // FileSource - EXIF 3.0 §4.6.3 Table 12
+            // Type: UNDEFINED, Count: 1
+            // Single byte: 0=other, 1=scanner (transparency), 2=scanner (reflective), 3=DSC
+            ExifTag::FILE_SOURCE => $this->decodeFileSource($binaryValue),
+
+            // No decoding needed for this tag
+            default => null,
+        };
+    }
+
+    /**
+     * Decodes ComponentsConfiguration binary value.
+     *
+     * EXIF 3.0 §4.6.4 Table 17 defines ComponentsConfiguration as 4 bytes where each
+     * byte encodes a component channel identifier.
+     *
+     * @param string $binaryValue 4-byte binary string
+     */
+    private function decodeComponentsConfiguration(string $binaryValue): string
+    {
+        if (strlen($binaryValue) !== 4) {
+            return sprintf('(Invalid ComponentsConfiguration: %d bytes)', strlen($binaryValue));
+        }
+
+        // Component names per EXIF 3.0 §4.6.4 Table 17
+        $componentNames = [
+            0 => '-',    // does not exist
+            1 => 'Y',    // luminance
+            2 => 'Cb',   // blue chrominance
+            3 => 'Cr',   // red chrominance
+            4 => 'R',    // red
+            5 => 'G',    // green
+            6 => 'B',    // blue
+        ];
+
+        $bytes = unpack('C4', $binaryValue);
+        if ($bytes === false) {
+            return '(Decode error)';
+        }
+
+        $components = [];
+        foreach ($bytes as $byte) {
+            $components[] = $componentNames[$byte] ?? sprintf('(Unknown: %d)', $byte);
+        }
+
+        return implode(', ', $components);
+    }
+
+    /**
+     * Decodes SceneType binary value using SceneType enum.
+     *
+     * EXIF 3.0 §4.6.3 Table 13 defines SceneType as 1 byte indicating the type
+     * of scene captured.
+     *
+     * @param string $binaryValue 1-byte binary string
+     */
+    private function decodeSceneType(string $binaryValue): string
+    {
+        if (strlen($binaryValue) !== 1) {
+            return sprintf('(Invalid SceneType: %d bytes)', strlen($binaryValue));
+        }
+
+        $byte = ord($binaryValue[0]);
+        $sceneType = SceneType::fromExifValue($byte);
+
+        if ($sceneType !== null) {
+            $enumName = $this->formatEnumName($sceneType->name);
+            return "{$byte} ({$enumName})";
+        }
+
+        return (string) $byte;
+    }
+
+    /**
+     * Decodes FileSource binary value using FileSource enum.
+     *
+     * EXIF 3.0 §4.6.3 Table 12 defines FileSource as 1 byte indicating how the
+     * image was acquired.
+     *
+     * @param string $binaryValue 1-byte binary string
+     */
+    private function decodeFileSource(string $binaryValue): string
+    {
+        if (strlen($binaryValue) !== 1) {
+            return sprintf('(Invalid FileSource: %d bytes)', strlen($binaryValue));
+        }
+
+        $byte = ord($binaryValue[0]);
+        $fileSource = FileSource::fromExifValue($byte);
+
+        if ($fileSource !== null) {
+            $enumName = $this->formatEnumName($fileSource->name);
+            return "{$byte} ({$enumName})";
+        }
+
+        return (string) $byte;
     }
 
     /**
@@ -1150,13 +1282,47 @@ final class ExifToolFormatter
 
     /**
      * Prints ICC Profile section.
+     *
+     * Decodes and displays ICC profile metadata including the profile description.
+     * See docs/ICC.pdf for ICC profile format specifications.
+     *
+     * @param string $iccProfile The raw ICC profile binary data
      */
     private function printIccSection(string $iccProfile): void
     {
-        // Simplified ICC output
-        $this->printSection('ICC-header', [
-            'Profile Description' => '(Binary data)',
-        ]);
+        $decoder = new IccDecoder();
+        $iccData = $decoder->decode($iccProfile);
+
+        $data = [];
+
+        if ($iccData !== null) {
+            if ($iccData['description'] !== null) {
+                $data['Profile Description'] = $iccData['description'];
+            }
+
+            if ($iccData['version'] !== null) {
+                $data['Profile Version'] = $iccData['version'];
+            }
+
+            if ($iccData['pcs'] !== null) {
+                $data['Profile Connection Space'] = $iccData['pcs'];
+            }
+
+            if ($iccData['renderingIntent'] !== null) {
+                $data['Rendering Intent'] = $iccData['renderingIntent'];
+            }
+
+            if ($iccData['profileId'] !== null) {
+                $data['Profile ID'] = $iccData['profileId'];
+            }
+        }
+
+        // Fallback if decoder couldn't parse the profile
+        if ($data === []) {
+            $data['Profile Description'] = '(Binary data)';
+        }
+
+        $this->printSection('ICC-header', $data);
     }
 
     /**
