@@ -361,12 +361,12 @@ final class ExifToolFormatter
                 // Format with exactly 40 characters before the colon
                 // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
                 $label = sprintf('%s %s', $hexKey, $tagName);
-                printf("%-40s: %s\n", $label, $formattedValue);
+                printf("%-39s: %s\n", $label, $formattedValue);
             } else {
-                // Format with exactly 40 characters before the colon  
+                // Format with exactly 40 characters before the colon
                 // "     - " (7 chars) + key name (padded to fill remaining 33 chars) = 40 total
                 $label = sprintf('     - %s', $key);
-                printf("%-40s: %s\n", $label, $formattedValue);
+                printf("%-39s: %s\n", $label, $formattedValue);
             }
         }
     }
@@ -453,12 +453,12 @@ final class ExifToolFormatter
             // Example: "2 (INCHES)" instead of just "2"
             $enumValue = $value->value ?? $value->name;
             $enumName = $value->name;
-            
+
             // Only add name in parentheses if it's different from the value
             if ((string) $enumValue !== $enumName) {
                 return "{$enumValue} ({$enumName})";
             }
-            
+
             return (string) $enumValue;
         }
 
@@ -490,7 +490,7 @@ final class ExifToolFormatter
             if ($this->isBinary($value)) {
                 $length = strlen($value);
                 $result = sprintf('(Binary data %d bytes)', $length);
-                
+
                 // Show first 32 bytes as hex values
                 $hexBytes = min(32, $length);
                 if ($hexBytes > 0) {
@@ -502,7 +502,7 @@ final class ExifToolFormatter
                         $result .= '...';
                     }
                 }
-                
+
                 return $result;
             }
 
