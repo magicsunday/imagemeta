@@ -40,11 +40,13 @@ use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 
 use function count;
 use function date;
@@ -551,7 +553,7 @@ final class ExifToolFormatter
     /**
      * Prints the File section with container metadata.
      */
-    private function printFileSection($metadata, string $filePath): void
+    private function printFileSection(Metadata $metadata, string $filePath): void
     {
         $data = [
             'File Type' => $this->detectFileType($filePath),
@@ -657,12 +659,12 @@ final class ExifToolFormatter
     /**
      * Prints the ExifIFD section.
      */
-    private function printExifIfdSection($exifIfd): void
+    private function printExifIfdSection(?Ifd $exifIfd): void
     {
         $data = [];
 
         // Collect ExifIFD tags
-        if ($exifIfd !== null && isset($exifIfd->entries)) {
+        if (($exifIfd !== null) && isset($exifIfd->entries)) {
             foreach ($exifIfd->entries as $tagId => $entry) {
                 $data[$tagId] = $entry->value;
             }
@@ -676,12 +678,12 @@ final class ExifToolFormatter
     /**
      * Prints the GPS section.
      */
-    private function printGpsSection($gpsIfd): void
+    private function printGpsSection(?Ifd $gpsIfd): void
     {
         $data = [];
 
         // Collect GPS tags
-        if ($gpsIfd !== null && isset($gpsIfd->entries)) {
+        if (($gpsIfd !== null) && isset($gpsIfd->entries)) {
             foreach ($gpsIfd->entries as $tagId => $entry) {
                 $data[$tagId] = $entry->value;
             }
@@ -745,9 +747,9 @@ final class ExifToolFormatter
     /**
      * Prints XMP sections.
      */
-    private function printXmpSections($xmpDoc): void
+    private function printXmpSections(?XmpDocument $xmpDoc): void
     {
-        if ($xmpDoc === null || !isset($xmpDoc->data)) {
+        if (($xmpDoc === null) || !isset($xmpDoc->data)) {
             return;
         }
 
@@ -812,12 +814,12 @@ final class ExifToolFormatter
     /**
      * Prints the InteropIFD section.
      */
-    private function printInteropIfdSection($interopIfd): void
+    private function printInteropIfdSection(?Ifd $interopIfd): void
     {
         $data = [];
 
         // Collect InteropIFD tags
-        if ($interopIfd !== null && isset($interopIfd->entries)) {
+        if (($interopIfd !== null) && isset($interopIfd->entries)) {
             foreach ($interopIfd->entries as $tagId => $entry) {
                 $data[$tagId] = $entry->value;
             }
@@ -831,12 +833,12 @@ final class ExifToolFormatter
     /**
      * Prints the IFD1 section (thumbnail metadata).
      */
-    private function printIfd1Section($ifd1): void
+    private function printIfd1Section(?Ifd $ifd1): void
     {
         $data = [];
 
         // Collect IFD1 tags
-        if ($ifd1 !== null && isset($ifd1->entries)) {
+        if (($ifd1 !== null) && isset($ifd1->entries)) {
             foreach ($ifd1->entries as $tagId => $entry) {
                 $data[$tagId] = $entry->value;
             }
@@ -850,9 +852,9 @@ final class ExifToolFormatter
     /**
      * Prints QuickTime metadata section.
      */
-    private function printQuickTimeSection($quickTime): void
+    private function printQuickTimeSection(?QuickTimeMeta $quickTime): void
     {
-        if ($quickTime === null || $quickTime->keys === []) {
+        if (($quickTime === null) || ($quickTime->keys === [])) {
             return;
         }
 
@@ -885,7 +887,7 @@ final class ExifToolFormatter
     /**
      * Prints MPF (Multi-Picture Format) section.
      */
-    private function printMpfSection($mpfDocument): void
+    private function printMpfSection(?MpfDocument $mpfDocument): void
     {
         if ($mpfDocument === null) {
             return;
@@ -938,7 +940,7 @@ final class ExifToolFormatter
             $name = $property->getName();
             $value = $property->getValue($entry);
 
-            if ($value !== null && $name !== 'dataOffset' && $name !== 'size') {
+            if (($value !== null) && ($name !== 'dataOffset') && ($name !== 'size')) {
                 $parts[] = "$name=$value";
             }
         }
@@ -992,7 +994,7 @@ final class ExifToolFormatter
     /**
      * Prints JPEG sampling factor details.
      */
-    private function printJpegDetailsSection($metadata): void
+    private function printJpegDetailsSection(Metadata $metadata): void
     {
         $data = [];
 
