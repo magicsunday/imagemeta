@@ -51,6 +51,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
@@ -225,6 +226,7 @@ final class ExifToolFormatter
             ExifTag::FILE_SOURCE => FileSource::class,
             ExifTag::SCENE_TYPE => SceneType::class,
             ExifTag::CUSTOM_RENDERED => CustomRendered::class,
+            ExifTag::COMPOSITE_IMAGE => CompositeImage::class,
 
             // GPS tags - EXIF 3.0 §4.6.6 Table 27
             ExifTag::GPS_LATITUDE_REF => GpsLatLonRef::class,
