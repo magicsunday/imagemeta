@@ -42,6 +42,8 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function count;
@@ -265,9 +267,44 @@ final class ExifToolFormatter
             $this->printGpsSection($metadata->exifDoc->gpsIfd);
         }
 
+        // InteropIFD section
+        if ($metadata->exifDoc !== null && $metadata->exifDoc->interopIfd !== null) {
+            $this->printInteropIfdSection($metadata->exifDoc->interopIfd);
+        }
+
+        // IFD1 section (thumbnail metadata)
+        if ($metadata->exifDoc !== null && $metadata->exifDoc->ifd1 !== null) {
+            $this->printIfd1Section($metadata->exifDoc->ifd1);
+        }
+
         // XMP sections
         if ($metadata->xmpDoc !== null) {
             $this->printXmpSections($metadata->xmpDoc);
+        }
+
+        // QuickTime section
+        if ($metadata->quickTime !== null) {
+            $this->printQuickTimeSection($metadata->quickTime);
+        }
+
+        // MPF section
+        if ($metadata->mpfDocument !== null) {
+            $this->printMpfSection($metadata->mpfDocument);
+        }
+
+        // FlashPix section
+        if ($metadata->flashPixStreams !== []) {
+            $this->printFlashPixSection($metadata->flashPixStreams);
+        }
+
+        // JPEG Audio section
+        if ($metadata->jpegAudioStreams !== []) {
+            $this->printJpegAudioSection($metadata->jpegAudioStreams);
+        }
+
+        // JPEG Details section
+        if ($metadata->jpegFrameSamplingFactors !== null) {
+            $this->printJpegDetailsSection($metadata);
         }
 
         // ICC Profile section
@@ -522,6 +559,11 @@ final class ExifToolFormatter
             'MIME Type' => $metadata->mimeType ?? 'unknown',
         ];
 
+        // Add file size if available
+        if ($metadata->fileSize !== null) {
+            $data['File Size'] = $this->formatFileSize($metadata->fileSize);
+        }
+
         // Add EXIF byte order if available
         if ($metadata->exifDoc !== null) {
             $endianness = $metadata->exifDoc->endianness ?? null;
@@ -541,6 +583,37 @@ final class ExifToolFormatter
         // Add JPEG-specific information
         if ($metadata->jpegBitsPerSample !== null) {
             $data['Bits Per Sample'] = $metadata->jpegBitsPerSample;
+        }
+
+        // Add YCbCr subsampling if available
+        if ($metadata->jpegYCbCrSubSampling !== null) {
+            $data['YCbCr Sub Sampling'] = sprintf(
+                'YCbCr %d:%d',
+                $metadata->jpegYCbCrSubSampling[0],
+                $metadata->jpegYCbCrSubSampling[1]
+            );
+        }
+
+        // Add blob counts
+        if ($metadata->exifBlobs !== []) {
+            $data['EXIF Blob Count'] = count($metadata->exifBlobs);
+        }
+
+        if ($metadata->xmpBlobs !== []) {
+            $data['XMP Blob Count'] = count($metadata->xmpBlobs);
+        }
+
+        if ($metadata->iccSegments !== []) {
+            $data['ICC Segment Count'] = count($metadata->iccSegments);
+        }
+
+        // Add file digests if available
+        if ($metadata->digestSha1 !== null) {
+            $data['SHA1 Digest'] = $metadata->digestSha1;
+        }
+
+        if ($metadata->digestMd5 !== null) {
+            $data['MD5 Digest'] = $metadata->digestMd5;
         }
 
         $this->printSection('File', $data);
@@ -734,6 +807,208 @@ final class ExifToolFormatter
         $this->printSection('ICC-header', [
             'Profile Description' => '(Binary data)',
         ]);
+    }
+
+    /**
+     * Prints the InteropIFD section.
+     */
+    private function printInteropIfdSection($interopIfd): void
+    {
+        $data = [];
+
+        // Collect InteropIFD tags
+        if ($interopIfd !== null && isset($interopIfd->entries)) {
+            foreach ($interopIfd->entries as $tagId => $entry) {
+                $data[$tagId] = $entry->value;
+            }
+        }
+
+        if (!empty($data)) {
+            $this->printSection('InteropIFD', $data, showHex: true);
+        }
+    }
+
+    /**
+     * Prints the IFD1 section (thumbnail metadata).
+     */
+    private function printIfd1Section($ifd1): void
+    {
+        $data = [];
+
+        // Collect IFD1 tags
+        if ($ifd1 !== null && isset($ifd1->entries)) {
+            foreach ($ifd1->entries as $tagId => $entry) {
+                $data[$tagId] = $entry->value;
+            }
+        }
+
+        if (!empty($data)) {
+            $this->printSection('IFD1', $data, showHex: true);
+        }
+    }
+
+    /**
+     * Prints QuickTime metadata section.
+     */
+    private function printQuickTimeSection($quickTime): void
+    {
+        if ($quickTime === null || $quickTime->keys === []) {
+            return;
+        }
+
+        $data = [];
+
+        foreach ($quickTime->keys as $key => $value) {
+            // Convert key to display name
+            $displayKey = $this->quickTimeKeyToDisplayName($key);
+            $data[$displayKey] = $value;
+        }
+
+        if (!empty($data)) {
+            $this->printSection('QuickTime', $data);
+        }
+    }
+
+    /**
+     * Converts QuickTime metadata key to display name.
+     */
+    private function quickTimeKeyToDisplayName(string $key): string
+    {
+        // Remove common prefix
+        $key = preg_replace('/^com\.apple\.quicktime\./', '', $key);
+
+        // Convert camelCase to Title Case
+        $spaced = preg_replace('/([a-z])([A-Z])/', '$1 $2', $key);
+        return ucwords($spaced ?? $key);
+    }
+
+    /**
+     * Prints MPF (Multi-Picture Format) section.
+     */
+    private function printMpfSection($mpfDocument): void
+    {
+        if ($mpfDocument === null) {
+            return;
+        }
+
+        $data = [];
+
+        if ($mpfDocument->version !== null) {
+            $data['MPF Version'] = $mpfDocument->version;
+        }
+
+        $data['Image Count'] = $mpfDocument->imageCount;
+
+        if ($mpfDocument->attributes !== null) {
+            $attrs = $mpfDocument->attributes;
+            $reflection = new \ReflectionClass($attrs);
+            $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+
+            foreach ($properties as $property) {
+                $name = $property->getName();
+                $value = $property->getValue($attrs);
+
+                if ($value !== null) {
+                    $displayName = $this->propertyNameToDisplayName($name);
+                    $data[$displayName] = $value;
+                }
+            }
+        }
+
+        // Add entry information
+        foreach ($mpfDocument->entries as $index => $entry) {
+            $data["Entry {$index} Type"] = $this->formatMpfEntryType($entry);
+        }
+
+        if (!empty($data)) {
+            $this->printSection('MPF', $data);
+        }
+    }
+
+    /**
+     * Formats MPF entry type information.
+     */
+    private function formatMpfEntryType($entry): string
+    {
+        $reflection = new \ReflectionClass($entry);
+        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+        $parts = [];
+
+        foreach ($properties as $property) {
+            $name = $property->getName();
+            $value = $property->getValue($entry);
+
+            if ($value !== null && $name !== 'dataOffset' && $name !== 'size') {
+                $parts[] = "$name=$value";
+            }
+        }
+
+        return !empty($parts) ? implode(', ', $parts) : 'Unknown';
+    }
+
+    /**
+     * Prints FlashPix streams section.
+     */
+    private function printFlashPixSection(array $flashPixStreams): void
+    {
+        $data = [];
+
+        foreach ($flashPixStreams as $identifier => $stream) {
+            $data["Stream {$identifier}"] = sprintf('(Binary data %d bytes)', strlen($stream));
+        }
+
+        if (!empty($data)) {
+            $this->printSection('FlashPix', $data);
+        }
+    }
+
+    /**
+     * Prints JPEG Audio streams section.
+     */
+    private function printJpegAudioSection(array $jpegAudioStreams): void
+    {
+        if (empty($jpegAudioStreams)) {
+            return;
+        }
+
+        foreach ($jpegAudioStreams as $index => $audioStream) {
+            $data = [
+                'Format' => $audioStream->format,
+                'Channels' => $audioStream->channels,
+                'Sample Rate' => sprintf('%d Hz', $audioStream->sampleRate),
+                'Bit Depth' => sprintf('%d bits', $audioStream->bitDepth),
+                'Data Size' => sprintf('%d bytes', strlen($audioStream->data)),
+                'Version' => $audioStream->version,
+            ];
+
+            $sectionName = count($jpegAudioStreams) > 1
+                ? "JPEG Audio Stream {$index}"
+                : 'JPEG Audio';
+
+            $this->printSection($sectionName, $data);
+        }
+    }
+
+    /**
+     * Prints JPEG sampling factor details.
+     */
+    private function printJpegDetailsSection($metadata): void
+    {
+        $data = [];
+
+        if ($metadata->jpegFrameSamplingFactors !== null) {
+            foreach ($metadata->jpegFrameSamplingFactors as $componentId => $factors) {
+                $data["Component {$componentId} Sampling"] = sprintf(
+                    '%dx%d',
+                    $factors['horizontal'],
+                    $factors['vertical']
+                );
+            }
+        }
+
+        if (!empty($data)) {
+            $this->printSection('JPEG Details', $data);
+        }
     }
 
     /**
