@@ -48,6 +48,8 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\ExifFlash;
+use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
@@ -56,7 +58,9 @@ use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
+use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
@@ -217,7 +221,11 @@ final class ExifToolFormatter
             ExifTag::SCENE_TYPE => SceneType::class,
             ExifTag::CUSTOM_RENDERED => CustomRendered::class,
 
-            // GPS tags - EXIF 3.0 §4.6.8
+            // GPS tags - EXIF 3.0 §4.6.6 Table 27
+            ExifTag::GPS_SPEED_REF => GpsSpeedRef::class,
+            ExifTag::GPS_IMG_DIRECTION_REF => GpsDirectionRef::class,
+            ExifTag::GPS_DEST_BEARING_REF => GpsDirectionRef::class,
+            ExifTag::GPS_TRACK_REF => GpsDirectionRef::class,
             ExifTag::GPS_DIFFERENTIAL => GpsDifferential::class,
         ];
     }
@@ -551,6 +559,49 @@ final class ExifToolFormatter
             return '(none)';
         }
 
+        // Special handling for Flash tag (0x9209) - EXIF 3.0 §4.6.4
+        if ($tagId === ExifTag::FLASH) {
+            $rawValue = $value;
+            if ($value instanceof ExifNumericList) {
+                $rawValue = $value->values[0] ?? null;
+            }
+            
+            if (is_int($rawValue) || is_string($rawValue)) {
+                $flashInfo = ExifFlash::fromExifValue($rawValue);
+                if ($flashInfo !== null) {
+                    $parts = [];
+                    
+                    if ($flashInfo->fired) {
+                        $parts[] = 'Flash Fired';
+                    } else {
+                        $parts[] = 'Flash Did Not Fire';
+                    }
+                    
+                    if ($flashInfo->mode !== null) {
+                        $modeName = $this->formatEnumName($flashInfo->mode->name);
+                        $parts[] = $modeName . ' Mode';
+                    }
+                    
+                    if ($flashInfo->returnDetection !== null && $flashInfo->fired) {
+                        $returnName = $this->formatEnumName($flashInfo->returnDetection->name);
+                        if ($returnName !== 'No Strobe Detection') {
+                            $parts[] = $returnName;
+                        }
+                    }
+                    
+                    if ($flashInfo->functionPresence !== null && $flashInfo->functionPresence->name === 'ABSENT') {
+                        $parts[] = 'No Flash Function';
+                    }
+                    
+                    if ($flashInfo->redEyeReduction) {
+                        $parts[] = 'Red-eye Reduction';
+                    }
+                    
+                    return $rawValue . ' (' . implode(', ', $parts) . ')';
+                }
+            }
+        }
+
         if ($value instanceof ExifRational) {
             // Format as fraction or decimal
             if ($value->denominator === 0) {
@@ -848,6 +899,11 @@ final class ExifToolFormatter
         // Add JPEG-specific information
         if ($metadata->jpegBitsPerSample !== null) {
             $data['Bits Per Sample'] = $metadata->jpegBitsPerSample;
+        }
+
+        // Add color components count if available
+        if ($metadata->jpegFrameSamplingFactors !== null) {
+            $data['Color Components'] = count($metadata->jpegFrameSamplingFactors);
         }
 
         // Add YCbCr subsampling if available
