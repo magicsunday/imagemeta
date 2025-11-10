@@ -51,12 +51,14 @@ final class Stream implements BinaryReadAccessInterface
      */
     public static function fromPath(string $path): self
     {
-        $fh = fopen($path, 'rb');
+        $fh = @fopen($path, 'rb');
+
         if ($fh === false) {
             throw new ParseError('Cannot open: ' . $path);
         }
 
         $stat = fstat($fh);
+
         if (!is_array($stat)) {
             throw new ParseError('Cannot determine size of: ' . $path);
         }

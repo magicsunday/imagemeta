@@ -220,7 +220,7 @@ final readonly class MetadataReader
         }
 
         $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $mime  = $finfo->file($path);
+        $mime  = @$finfo->file($path);
 
         if (!is_string($mime) || $mime === '') {
             return null;
@@ -234,7 +234,7 @@ final readonly class MetadataReader
      */
     private function detectFileSize(string $path): ?int
     {
-        $size = filesize($path);
+        $size = @filesize($path);
 
         if ($size === false) {
             return null;
