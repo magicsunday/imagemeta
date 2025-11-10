@@ -1146,8 +1146,8 @@ final class ExifToolFormatter
         }
 
         // Light Value
-        if ($structured->derived->lightValue !== null) {
-            $data['Light Value'] = round($structured->derived->lightValue, 1);
+        if ($structured->derived->ev100 !== null) {
+            $data['Light Value'] = round($structured->derived->ev100, 1);
         }
 
         // Lens ID (combining lens make and model)
