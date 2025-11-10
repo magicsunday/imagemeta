@@ -7,11 +7,27 @@
  * This script generates output similar to 'exiftool -H -a -u -g1' for comparing
  * metadata extraction results between this library and exiftool.
  *
+ * The output format mimics exiftool's grouped display with:
+ * - Hexadecimal tag IDs for EXIF tags (e.g., 0x010f)
+ * - Tag names and values aligned with colons
+ * - Sections grouped by IFD (IFD0, ExifIFD, GPS, etc.)
+ * - File system metadata (System section)
+ * - Container information (File section)
+ * - XMP data grouped by namespace
+ * - Apple MakerNotes details
+ * - Composite/derived values
+ *
  * Usage:
  *   php scripts/exiftool-format.php <image-file>
  *
- * Example:
+ * Examples:
  *   php scripts/exiftool-format.php photo.jpg
+ *   php scripts/exiftool-format.php /path/to/image.heic
+ *
+ * To compare with actual exiftool output:
+ *   exiftool -H -a -u -g1 photo.jpg > exiftool.txt
+ *   php scripts/exiftool-format.php photo.jpg > imagemeta.txt
+ *   diff -u exiftool.txt imagemeta.txt
  */
 
 declare(strict_types=1);
@@ -109,9 +125,90 @@ final class ExifToolFormatter
      */
     private function constantNameToTagName(string $constantName): string
     {
-        // Remove GPS_ prefix if present
+        // Special cases mapping to match exiftool naming
+        $specialCases = [
+            'MAKE' => 'Make',
+            'MODEL' => 'Camera Model Name',
+            'ORIENTATION' => 'Orientation',
+            'X_RESOLUTION' => 'X Resolution',
+            'Y_RESOLUTION' => 'Y Resolution',
+            'RESOLUTION_UNIT' => 'Resolution Unit',
+            'SOFTWARE' => 'Software',
+            'MODIFY_DATE' => 'Modify Date',
+            'HOST_COMPUTER' => 'Host Computer',
+            'TILE_WIDTH' => 'Tile Width',
+            'TILE_LENGTH' => 'Tile Length',
+            'YCBCR_POSITIONING' => 'Y Cb Cr Positioning',
+            'EXPOSURE_TIME' => 'Exposure Time',
+            'F_NUMBER' => 'F Number',
+            'EXPOSURE_PROGRAM' => 'Exposure Program',
+            'ISO' => 'ISO',
+            'PHOTOGRAPHIC_SENSITIVITY' => 'ISO',
+            'EXIF_VERSION' => 'Exif Version',
+            'DATE_TIME_ORIGINAL' => 'Date/Time Original',
+            'CREATE_DATE' => 'Create Date',
+            'OFFSET_TIME' => 'Offset Time',
+            'OFFSET_TIME_ORIGINAL' => 'Offset Time Original',
+            'OFFSET_TIME_DIGITIZED' => 'Offset Time Digitized',
+            'COMPONENTS_CONFIGURATION' => 'Components Configuration',
+            'SHUTTER_SPEED_VALUE' => 'Shutter Speed Value',
+            'APERTURE_VALUE' => 'Aperture Value',
+            'BRIGHTNESS_VALUE' => 'Brightness Value',
+            'EXPOSURE_COMPENSATION' => 'Exposure Compensation',
+            'METERING_MODE' => 'Metering Mode',
+            'FLASH' => 'Flash',
+            'FOCAL_LENGTH' => 'Focal Length',
+            'SUBJECT_AREA' => 'Subject Area',
+            'SUB_SEC_TIME_ORIGINAL' => 'Sub Sec Time Original',
+            'SUB_SEC_TIME_DIGITIZED' => 'Sub Sec Time Digitized',
+            'FLASHPIX_VERSION' => 'Flashpix Version',
+            'COLOR_SPACE' => 'Color Space',
+            'PIXEL_X_DIMENSION' => 'Exif Image Width',
+            'PIXEL_Y_DIMENSION' => 'Exif Image Height',
+            'SENSING_METHOD' => 'Sensing Method',
+            'SCENE_TYPE' => 'Scene Type',
+            'EXPOSURE_MODE' => 'Exposure Mode',
+            'WHITE_BALANCE' => 'White Balance',
+            'FOCAL_LENGTH_IN_35MM_FILM' => 'Focal Length In 35mm Format',
+            'SCENE_CAPTURE_TYPE' => 'Scene Capture Type',
+            'LENS_SPECIFICATION' => 'Lens Info',
+            'LENS_MAKE' => 'Lens Make',
+            'LENS_MODEL' => 'Lens Model',
+            'COMPOSITE_IMAGE' => 'Composite Image',
+        ];
+        
+        if (isset($specialCases[$constantName])) {
+            return $specialCases[$constantName];
+        }
+        
+        // Handle GPS tags
         if (str_starts_with($constantName, 'GPS_')) {
-            $constantName = 'GPS ' . substr($constantName, 4);
+            $gpsName = substr($constantName, 4);
+            
+            // Special GPS cases
+            $gpsSpecialCases = [
+                'LATITUDE_REF' => 'GPS Latitude Ref',
+                'LATITUDE' => 'GPS Latitude',
+                'LONGITUDE_REF' => 'GPS Longitude Ref',
+                'LONGITUDE' => 'GPS Longitude',
+                'ALTITUDE_REF' => 'GPS Altitude Ref',
+                'ALTITUDE' => 'GPS Altitude',
+                'TIME_STAMP' => 'GPS Time Stamp',
+                'SPEED_REF' => 'GPS Speed Ref',
+                'SPEED' => 'GPS Speed',
+                'IMG_DIRECTION_REF' => 'GPS Img Direction Ref',
+                'IMG_DIRECTION' => 'GPS Img Direction',
+                'DEST_BEARING_REF' => 'GPS Dest Bearing Ref',
+                'DEST_BEARING' => 'GPS Dest Bearing',
+                'DATE_STAMP' => 'GPS Date Stamp',
+                'H_POSITIONING_ERROR' => 'GPS Horizontal Positioning Error',
+            ];
+            
+            if (isset($gpsSpecialCases[$gpsName])) {
+                return $gpsSpecialCases[$gpsName];
+            }
+            
+            $constantName = 'GPS ' . $gpsName;
         }
         
         // Convert SNAKE_CASE to Title Case
@@ -646,6 +743,15 @@ final class ExifToolFormatter
         $structured = $metadata->structured();
         $data = [];
 
+        // Run Time Since Power Up (from Apple maker notes)
+        if ($structured->makerNotesApple?->runTime !== null) {
+            $runTime = $structured->makerNotesApple->runTime;
+            if ($runTime->value !== null && $runTime->scale !== null && $runTime->scale > 0) {
+                $seconds = $runTime->value / $runTime->scale;
+                $data['Run Time Since Power Up'] = $this->formatDuration($seconds);
+            }
+        }
+
         // Aperture
         if ($structured->exposure->fNumber !== null) {
             $data['Aperture'] = $structured->exposure->fNumber;
@@ -664,9 +770,58 @@ final class ExifToolFormatter
             );
         }
 
+        // Scale Factor To 35mm Equivalent
+        if ($structured->derived->scaleFactor35mm !== null) {
+            $data['Scale Factor To 35 mm Equivalent'] = round($structured->derived->scaleFactor35mm, 1);
+        }
+
         // Shutter Speed
         if ($structured->exposure->exposureTime !== null) {
             $data['Shutter Speed'] = $this->formatShutterSpeed($structured->exposure->exposureTime);
+        }
+
+        // Create Date with subseconds
+        if ($structured->temporal->created !== null) {
+            $dateStr = $structured->temporal->created->format('Y:m:d H:i:s');
+            if ($structured->temporal->subSecTimeOriginal !== null) {
+                $dateStr .= '.' . $structured->temporal->subSecTimeOriginal;
+            }
+            if ($structured->temporal->offsetTimeOriginal !== null) {
+                $dateStr .= $structured->temporal->offsetTimeOriginal;
+            }
+            $data['Create Date'] = $dateStr;
+        }
+
+        // Date/Time Original
+        if ($structured->temporal->original !== null) {
+            $dateStr = $structured->temporal->original->format('Y:m:d H:i:s');
+            if ($structured->temporal->subSecTimeOriginal !== null) {
+                $dateStr .= '.' . $structured->temporal->subSecTimeOriginal;
+            }
+            if ($structured->temporal->offsetTimeOriginal !== null) {
+                $dateStr .= $structured->temporal->offsetTimeOriginal;
+            }
+            $data['Date/Time Original'] = $dateStr;
+        }
+
+        // Modify Date
+        if ($structured->temporal->modified !== null) {
+            $dateStr = $structured->temporal->modified->format('Y:m:d H:i:s');
+            if ($structured->temporal->offsetTime !== null) {
+                $dateStr .= $structured->temporal->offsetTime;
+            }
+            $data['Modify Date'] = $dateStr;
+        }
+
+        // GPS Altitude
+        if ($structured->gps->altitude !== null) {
+            $altRef = $structured->gps->altitudeRef ?? 'Above Sea Level';
+            $data['GPS Altitude'] = sprintf('%.1f m %s', $structured->gps->altitude, $altRef);
+        }
+
+        // GPS Date/Time
+        if ($structured->gps->timestamp !== null) {
+            $data['GPS Date/Time'] = $structured->gps->timestamp->format('Y:m:d H:i:s') . 'Z';
         }
 
         // GPS Position
@@ -679,11 +834,73 @@ final class ExifToolFormatter
                 $structured->gps->longitude,
                 $structured->gps->longitudeRef ?? 'E'
             );
+            
+            // Combined GPS Position
+            $data['GPS Position'] = sprintf(
+                '%s, %s',
+                $this->formatGpsCoordinate($structured->gps->latitude, $structured->gps->latitudeRef ?? 'N'),
+                $this->formatGpsCoordinate($structured->gps->longitude, $structured->gps->longitudeRef ?? 'E')
+            );
+        }
+
+        // Circle Of Confusion
+        if ($structured->derived->circleOfConfusionMm !== null) {
+            $data['Circle Of Confusion'] = sprintf('%.3f mm', $structured->derived->circleOfConfusionMm);
+        }
+
+        // Field Of View
+        if ($structured->derived->fieldOfViewDiagonalDeg !== null) {
+            $data['Field Of View'] = sprintf('%.1f deg', $structured->derived->fieldOfViewDiagonalDeg);
+        }
+
+        // Focal Length with 35mm equivalent
+        if ($structured->lens->focalLengthMm !== null) {
+            $focalStr = sprintf('%.1f mm', $structured->lens->focalLengthMm);
+            if ($structured->lens->focalLength35Mm !== null) {
+                $focalStr .= sprintf(' (35 mm equivalent: %.1f mm)', $structured->lens->focalLength35Mm);
+            }
+            $data['Focal Length'] = $focalStr;
+        }
+
+        // Hyperfocal Distance
+        if ($structured->derived->hyperfocalDistanceM !== null) {
+            $data['Hyperfocal Distance'] = sprintf('%.2f m', $structured->derived->hyperfocalDistanceM);
+        }
+
+        // Light Value
+        if ($structured->derived->lightValue !== null) {
+            $data['Light Value'] = round($structured->derived->lightValue, 1);
+        }
+
+        // Lens ID (combining lens make and model)
+        if ($structured->lens->lensModel !== null) {
+            $data['Lens ID'] = $structured->lens->lensModel;
         }
 
         if (!empty($data)) {
             $this->printSection('Composite', $data);
         }
+    }
+
+    /**
+     * Formats duration in days/hours/minutes/seconds.
+     */
+    private function formatDuration(float $totalSeconds): string
+    {
+        $days = (int) ($totalSeconds / 86400);
+        $hours = (int) (($totalSeconds % 86400) / 3600);
+        $minutes = (int) (($totalSeconds % 3600) / 60);
+        $seconds = (int) ($totalSeconds % 60);
+
+        if ($days > 0) {
+            return sprintf('%d days %d:%02d:%02d', $days, $hours, $minutes, $seconds);
+        }
+        
+        if ($hours > 0) {
+            return sprintf('%d:%02d:%02d', $hours, $minutes, $seconds);
+        }
+        
+        return sprintf('%d:%02d', $minutes, $seconds);
     }
 
     /**
