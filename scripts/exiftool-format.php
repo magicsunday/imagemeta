@@ -58,9 +58,14 @@ use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
+use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
@@ -222,10 +227,18 @@ final class ExifToolFormatter
             ExifTag::CUSTOM_RENDERED => CustomRendered::class,
 
             // GPS tags - EXIF 3.0 §4.6.6 Table 27
+            ExifTag::GPS_LATITUDE_REF => GpsLatLonRef::class,
+            ExifTag::GPS_LONGITUDE_REF => GpsLatLonRef::class,
+            ExifTag::GPS_ALTITUDE_REF => GpsAltitudeRef::class,
+            ExifTag::GPS_STATUS => GpsStatus::class,
+            ExifTag::GPS_MEASURE_MODE => GpsMeasureMode::class,
             ExifTag::GPS_SPEED_REF => GpsSpeedRef::class,
-            ExifTag::GPS_IMG_DIRECTION_REF => GpsDirectionRef::class,
-            ExifTag::GPS_DEST_BEARING_REF => GpsDirectionRef::class,
             ExifTag::GPS_TRACK_REF => GpsDirectionRef::class,
+            ExifTag::GPS_IMG_DIRECTION_REF => GpsDirectionRef::class,
+            ExifTag::GPS_DEST_LATITUDE_REF => GpsLatLonRef::class,
+            ExifTag::GPS_DEST_LONGITUDE_REF => GpsLatLonRef::class,
+            ExifTag::GPS_DEST_BEARING_REF => GpsDirectionRef::class,
+            ExifTag::GPS_DEST_DISTANCE_REF => GpsDistanceRef::class,
             ExifTag::GPS_DIFFERENTIAL => GpsDifferential::class,
         ];
     }
