@@ -98,6 +98,20 @@ final class ExifToolFormatter
      */
     private array $tiffTagNames = [];
 
+    /**
+     * Maps tag IDs to their human-readable names for GPS IFD tags.
+     *
+     * @var array<int, string>
+     */
+    private array $gpsTagNames = [];
+
+    /**
+     * Maps tag IDs to their human-readable names for Interoperability IFD tags.
+     *
+     * @var array<int, string>
+     */
+    private array $interopTagNames = [];
+
     public function __construct()
     {
         $this->buildTagMaps();
@@ -112,7 +126,16 @@ final class ExifToolFormatter
         $exifReflection = new \ReflectionClass(ExifTag::class);
         foreach ($exifReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
-                $this->exifTagNames[$value] = $this->constantNameToTagName($name);
+                $tagName = $this->constantNameToTagName($name);
+                
+                // Separate GPS and Interoperability tags into their own maps
+                if (str_starts_with($name, 'GPS_')) {
+                    $this->gpsTagNames[$value] = $tagName;
+                } elseif (str_starts_with($name, 'INTEROPERABILITY_')) {
+                    $this->interopTagNames[$value] = $tagName;
+                } else {
+                    $this->exifTagNames[$value] = $tagName;
+                }
             }
         }
 
@@ -322,8 +345,9 @@ final class ExifToolFormatter
      * Prints a section header and its data.
      *
      * @param array<string, mixed> $data
+     * @param string|null $ifdContext The IFD context ('GPS', 'InteropIFD', etc.) for correct tag name resolution
      */
-    private function printSection(string $sectionName, array $data, bool $showHex = false): void
+    private function printSection(string $sectionName, array $data, bool $showHex = false, ?string $ifdContext = null): void
     {
         echo "---- {$sectionName} ----\n";
 
@@ -332,7 +356,7 @@ final class ExifToolFormatter
 
             if ($showHex && is_numeric($key)) {
                 $hexKey = sprintf('0x%04x', (int) $key);
-                $tagName = $this->getTagName((int) $key);
+                $tagName = $this->getTagName((int) $key, $ifdContext);
                 // Format with exactly 40 characters before the colon
                 // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
                 $label = sprintf('%s %s', $hexKey, $tagName);
@@ -348,9 +372,22 @@ final class ExifToolFormatter
 
     /**
      * Gets the tag name for a given tag ID.
+     *
+     * @param int $tagId The tag ID to look up
+     * @param string|null $ifdContext The IFD context ('GPS', 'InteropIFD', etc.) for correct tag name resolution
      */
-    private function getTagName(int $tagId): string
+    private function getTagName(int $tagId, ?string $ifdContext = null): string
     {
+        // Check IFD-specific maps first based on context
+        if ($ifdContext === 'GPS' && isset($this->gpsTagNames[$tagId])) {
+            return $this->gpsTagNames[$tagId];
+        }
+        
+        if ($ifdContext === 'InteropIFD' && isset($this->interopTagNames[$tagId])) {
+            return $this->interopTagNames[$tagId];
+        }
+        
+        // Fall back to general TIFF and EXIF tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
@@ -726,7 +763,7 @@ final class ExifToolFormatter
         }
 
         if (!empty($data)) {
-            $this->printSection('GPS', $data, showHex: true);
+            $this->printSection('GPS', $data, showHex: true, ifdContext: 'GPS');
         }
     }
 
@@ -862,7 +899,7 @@ final class ExifToolFormatter
         }
 
         if ($data !== []) {
-            $this->printSection('InteropIFD', $data, showHex: true);
+            $this->printSection('InteropIFD', $data, showHex: true, ifdContext: 'InteropIFD');
         }
     }
 
