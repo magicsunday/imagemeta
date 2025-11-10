@@ -163,10 +163,15 @@ final class ExifToolFormatter
             if (is_int($value)) {
                 $tagName = $this->constantNameToTagName($name);
 
+                // IFD pointer tags appear in IFD0, not in their target IFDs
+                // So we keep them in the main EXIF tag map
+                $isIfdPointer = str_ends_with($name, '_IFD_POINTER');
+
                 // Separate GPS and Interoperability tags into their own maps
-                if (str_starts_with($name, 'GPS_')) {
+                // unless they're IFD pointers
+                if (!$isIfdPointer && str_starts_with($name, 'GPS_')) {
                     $this->gpsTagNames[$value] = $tagName;
-                } elseif (str_starts_with($name, 'INTEROPERABILITY_')) {
+                } elseif (!$isIfdPointer && str_starts_with($name, 'INTEROPERABILITY_')) {
                     $this->interopTagNames[$value] = $tagName;
                 } else {
                     $this->exifTagNames[$value] = $tagName;
