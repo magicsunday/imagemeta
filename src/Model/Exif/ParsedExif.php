@@ -230,16 +230,21 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the EXIF orientation enumeration when present.
+     * Returns the EXIF orientation enumeration.
      *
-     * @return Orientation|null
+     * TIFF 6.0 §8 and EXIF 3.0 §4.6.4 specify default value 1 (top-left) when not present.
+     *
+     * @return Orientation
      */
-    public function orientation(): ?Orientation
+    public function orientation(): Orientation
     {
         $rawOrientation = $this->enumValue($this->ifd0, ExifTag::ORIENTATION);
 
         // Normalises numeric-string encodings emitted by some cameras.
-        return Orientation::fromExifValue($rawOrientation);
+        $orientation = Orientation::fromExifValue($rawOrientation);
+
+        // TIFF 6.0 §8: Default is 1 (top-left) when tag is not present
+        return $orientation ?? Orientation::TOP_LEFT;
     }
 
     /**
@@ -1907,18 +1912,28 @@ final readonly class ParsedExif
 
     /**
      * Returns the bits per sample defined for the primary image.
+     *
+     * TIFF 6.0 §8 specifies default value 1 when not present.
+     *
+     * @return int
      */
-    public function bitsPerSample(): ?int
+    public function bitsPerSample(): int
     {
-        return $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+        // TIFF 6.0 §8: Default is 1 when tag is not present
+        return $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE) ?? 1;
     }
 
     /**
-     * Returns the number of samples per pixel when provided by the TIFF data.
+     * Returns the number of samples per pixel.
+     *
+     * TIFF 6.0 §8 specifies default value 1 when not present.
+     *
+     * @return int
      */
-    public function samplesPerPixel(): ?int
+    public function samplesPerPixel(): int
     {
-        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL);
+        // TIFF 6.0 §8: Default is 1 when tag is not present
+        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 1;
     }
 
     /**
@@ -1931,12 +1946,18 @@ final readonly class ParsedExif
 
     /**
      * Returns the TIFF compression method enum.
+     *
+     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present.
+     *
+     * @return Compression
      */
-    public function compression(): ?Compression
+    public function compression(): Compression
     {
         $value = $this->enumValue($this->ifd0, ExifTag::COMPRESSION);
+        $compression = Compression::fromExifValue($value);
 
-        return Compression::fromExifValue($value);
+        // TIFF 6.0 §8: Default is 1 (UNCOMPRESSED) when tag is not present
+        return $compression ?? Compression::UNCOMPRESSED;
     }
 
     /**
@@ -1950,23 +1971,35 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the planar configuration enum when recorded.
+     * Returns the planar configuration enum.
+     *
+     * TIFF 6.0 §8 specifies default value 1 (chunky format) when not present.
+     *
+     * @return PlanarConfiguration
      */
-    public function planarConfiguration(): ?PlanarConfiguration
+    public function planarConfiguration(): PlanarConfiguration
     {
         $value = $this->enumValue($this->ifd0, ExifTag::PLANAR_CONFIGURATION);
+        $config = PlanarConfiguration::fromExifValue($value);
 
-        return PlanarConfiguration::fromExifValue($value);
+        // TIFF 6.0 §8: Default is 1 (CHUNKY) when tag is not present
+        return $config ?? PlanarConfiguration::CHUNKY;
     }
 
     /**
      * Returns the resolution unit enum for the reported X/Y resolution values.
+     *
+     * TIFF 6.0 §8 and EXIF 3.0 §4.6.2 specify default value 2 (inches) when not present.
+     *
+     * @return ResolutionUnit
      */
-    public function resolutionUnit(): ?ResolutionUnit
+    public function resolutionUnit(): ResolutionUnit
     {
         $value = $this->enumValue($this->ifd0, ExifTag::RESOLUTION_UNIT);
+        $unit = ResolutionUnit::fromExifValue($value);
 
-        return ResolutionUnit::fromExifValue($value);
+        // TIFF 6.0 §8: Default is 2 (INCHES) when tag is not present
+        return $unit ?? ResolutionUnit::INCHES;
     }
 
     /**
