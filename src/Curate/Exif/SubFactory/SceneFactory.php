@@ -39,7 +39,7 @@ final readonly class SceneFactory
     {
         $exif           = $metadata->exifDoc;
         $quickTime      = $metadata->quickTime;
-        $appleMakerNote = $metadata->makerNotes?->apple ?? $this->emptyAppleMakerNotes();
+        $appleMakerNote = $metadata->makerNotes?->apple ?? self::emptyAppleMakerNotes();
 
         return $this->buildScene($exif, $quickTime, $appleMakerNote, $faceCount);
     }

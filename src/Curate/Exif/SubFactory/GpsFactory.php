@@ -599,7 +599,7 @@ final readonly class GpsFactory
      */
     private function toGpsLatLonRef(?string $value): ?GpsLatLonRef
     {
-        return GpsLatLonRef::fromIntString($value);
+        return GpsLatLonRef::fromExifValue($value);
     }
 
     /**
@@ -609,7 +609,7 @@ final readonly class GpsFactory
      */
     private function toGpsAltitudeRef(?int $value): ?GpsAltitudeRef
     {
-        return GpsAltitudeRef::fromIntString($value);
+        return GpsAltitudeRef::fromExifValue($value);
     }
 
     /**
@@ -619,7 +619,7 @@ final readonly class GpsFactory
      */
     private function toGpsStatus(?string $value): ?GpsStatus
     {
-        return GpsStatus::fromIntString($value);
+        return GpsStatus::fromExifValue($value);
     }
 
     /**
@@ -629,7 +629,7 @@ final readonly class GpsFactory
      */
     private function toGpsMeasureMode(?string $value): ?GpsMeasureMode
     {
-        return GpsMeasureMode::fromIntString($value);
+        return GpsMeasureMode::fromExifValue($value);
     }
 
     /**
@@ -639,7 +639,7 @@ final readonly class GpsFactory
      */
     private function toGpsSpeedRef(?string $value): ?GpsSpeedRef
     {
-        return GpsSpeedRef::fromIntString($value);
+        return GpsSpeedRef::fromExifValue($value);
     }
 
     /**
@@ -649,7 +649,7 @@ final readonly class GpsFactory
      */
     private function toGpsDirectionRef(?string $value): ?GpsDirectionRef
     {
-        return GpsDirectionRef::fromIntString($value);
+        return GpsDirectionRef::fromExifValue($value);
     }
 
     /**
@@ -659,7 +659,7 @@ final readonly class GpsFactory
      */
     private function toGpsDistanceRef(?string $value): ?GpsDistanceRef
     {
-        return GpsDistanceRef::fromIntString($value);
+        return GpsDistanceRef::fromExifValue($value);
     }
 
     /**
@@ -669,6 +669,6 @@ final readonly class GpsFactory
      */
     private function toGpsDifferential(?int $value): ?GpsDifferential
     {
-        return GpsDifferential::fromIntString($value);
+        return GpsDifferential::fromExifValue($value);
     }
 }

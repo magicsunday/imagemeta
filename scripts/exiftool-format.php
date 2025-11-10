@@ -127,7 +127,7 @@ final class ExifToolFormatter
         foreach ($exifReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $tagName = $this->constantNameToTagName($name);
-                
+
                 // Separate GPS and Interoperability tags into their own maps
                 if (str_starts_with($name, 'GPS_')) {
                     $this->gpsTagNames[$value] = $tagName;
@@ -383,11 +383,11 @@ final class ExifToolFormatter
         if ($ifdContext === 'GPS' && isset($this->gpsTagNames[$tagId])) {
             return $this->gpsTagNames[$tagId];
         }
-        
+
         if ($ifdContext === 'InteropIFD' && isset($this->interopTagNames[$tagId])) {
             return $this->interopTagNames[$tagId];
         }
-        
+
         // Fall back to general TIFF and EXIF tag maps
         return $this->tiffTagNames[$tagId]
             ?? $this->exifTagNames[$tagId]
@@ -529,24 +529,24 @@ final class ExifToolFormatter
         return match ($tagId) {
             // GPS Horizontal Positioning Error - EXIF 3.0 §4.6.6
             ExifTag::GPS_H_POSITIONING_ERROR => sprintf('%.9f m', $value),
-            
+
             // GPS Altitude - EXIF 3.0 §4.6.6
             ExifTag::GPS_ALTITUDE => sprintf('%.6f m', $value),
-            
+
             // GPS Speed - EXIF 3.0 §4.6.6 (unit depends on SpeedRef, shown in original units)
             ExifTag::GPS_SPEED => number_format($value, 6, '.', ''),
-            
+
             // GPS DOP (Dilution of Precision) - EXIF 3.0 §4.6.6
             ExifTag::GPS_DOP => number_format($value, 2, '.', ''),
-            
+
             // GPS Direction/Bearing values in degrees - EXIF 3.0 §4.6.6
             ExifTag::GPS_TRACK,
             ExifTag::GPS_IMG_DIRECTION,
             ExifTag::GPS_DEST_BEARING => number_format($value, 6, '.', ''),
-            
+
             // GPS Distance - EXIF 3.0 §4.6.6 (unit depends on DistanceRef)
             ExifTag::GPS_DEST_DISTANCE => number_format($value, 6, '.', ''),
-            
+
             // Default: return as calculated decimal
             default => number_format($value, 6, '.', ''),
         };
@@ -1212,8 +1212,8 @@ final class ExifToolFormatter
 
         // GPS Altitude
         if ($structured->gps->altitude !== null) {
-            $altRef = $structured->gps->altitudeRef ?? 'Above Sea Level';
-            $data['GPS Altitude'] = sprintf('%.1f m %s', $structured->gps->altitude, $altRef);
+            $altRef = $structured->gps->altitudeRef->name ?? 'Above Sea Level';
+            $data['GPS Altitude'] = sprintf('%.1f m (%s)', $structured->gps->altitude, $altRef);
         }
 
         // GPS Date/Time
