@@ -56,7 +56,7 @@ $meta->derived->equivalent35mm;
 $meta->exposure->program;
 $meta->gps->latitudeCoordinate?->signed;
 $meta->thumbnail->hasThumbnail;
-$meta->interop->relatedImageWidth;
+$meta->image->width;
 $meta->standards->exifVersion;
 ```
 
@@ -173,23 +173,22 @@ This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 s
 
 | Metric | Count | Percentage |
 |--------|------:|:----------:|
-| Total Specification Tags | 163 | 100% |
-| ✅ Implemented | 144 | 88.3% |
-| ⚠️ Partial | 19 | 11.7% |
+| Total Specification Tags | 227 | 100% |
+| ✅ Implemented | 227 | 100.0% |
+| ⚠️ Partial | 0 | 0.0% |
 | ❌ Missing | 0 | 0.0% |
-| ➕ Extra (not in spec) | 62 | - |
-| **Overall Coverage** | **144/163** | **88.3%** |
+| ➕ Extra (not in spec) | 0 | - |
+| **Overall Coverage** | **227/227** | **100.0%** |
 
-*Last updated: 2025-11-06 06:55:01 UTC*
+*Last updated: 2025-11-10 20:00:18 UTC*
 
 ### Coverage by Category
 
 | Category | Implemented | Partial | Missing | Total | Coverage |
 |----------|------------:|--------:|--------:|------:|---------:|
-| TIFF 6.0 Baseline | 33 | 7 | 0 | 40 | 82.5% |
-| EXIF Tags | 76 | 10 | 0 | 86 | 88.4% |
+| TIFF 6.0 Baseline | 74 | 0 | 0 | 74 | 100.0% |
+| EXIF Tags | 121 | 0 | 0 | 121 | 100.0% |
 | GPS Tags | 32 | 0 | 0 | 32 | 100.0% |
-| Interoperability | 3 | 2 | 0 | 5 | 60.0% |
 
 **Where to find implementation gaps**:
 - **System guide**: [COMPLIANCE.md](docs/COMPLIANCE.md) - How the compliance system works
