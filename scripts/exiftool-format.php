@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Scripts;
 
 use DateTimeInterface;
+use MagicSunday\ImageMeta\Curate\Exif\SubFactory\RegionsFactory;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -1065,11 +1066,11 @@ final class ExifToolFormatter
             'http://ns.adobe.com/tiff/1.0/' => 'tiff',
             'http://ns.adobe.com/exif/1.0/' => 'exif',
             'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/' => 'Iptc4xmpCore',
-            'http://www.metadataworkinggroup.com/schemas/regions/' => 'mwg-rs',
-            'http://ns.adobe.com/xmp/sType/Area#' => 'mwg-rs',
-            'http://ns.adobe.com/xmp/sType/Dimensions#' => 'mwg-rs',
+            RegionsFactory::NS_MWG_REGIONS => 'mwg-rs',
+            RegionsFactory::NS_ST_AREA => 'mwg-rs',
+            RegionsFactory::NS_ST_DIMENSIONS => 'mwg-rs',
             'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
-            'http://ns.apple.com/faceinfo/1.0/' => 'mwg-rs',
+            RegionsFactory::NS_APPLE_FACEINFO => 'mwg-rs',
             'adobe:ns:meta/' => 'x',
         ];
 
