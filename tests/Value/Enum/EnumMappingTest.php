@@ -17,6 +17,10 @@ use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
@@ -42,6 +46,10 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SensingMethod::class)]
 #[CoversClass(LightSource::class)]
 #[CoversClass(MeteringMode::class)]
+#[CoversClass(GpsSpeedRef::class)]
+#[CoversClass(GpsDirectionRef::class)]
+#[CoversClass(GpsLatLonRef::class)]
+#[CoversClass(GpsStatus::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[CoversClass(Compression::class)]
 final class EnumMappingTest extends TestCase
@@ -116,5 +124,46 @@ final class EnumMappingTest extends TestCase
     public function returnsNullForOutOfRangeOrientationCodes(): void
     {
         self::assertNull(Orientation::fromExifValue(9));
+    }
+
+    /**
+     * Maps GPS string-backed enums correctly.
+     *
+     * EXIF 3.0 §4.6.6 Table 27 defines GPS reference tags using single-character
+     * string values (e.g., 'K', 'M', 'N' for speed reference, 'T', 'M' for direction).
+     */
+    #[Test]
+    public function mapsGpsStringBackedEnums(): void
+    {
+        // GPS Speed Reference - EXIF 3.0 §4.6.6 Table 27
+        self::assertSame(GpsSpeedRef::KILOMETERS_PER_HOUR, GpsSpeedRef::fromExifValue('K'));
+        self::assertSame(GpsSpeedRef::MILES_PER_HOUR, GpsSpeedRef::fromExifValue('M'));
+        self::assertSame(GpsSpeedRef::KNOTS, GpsSpeedRef::fromExifValue('N'));
+
+        // GPS Direction Reference - EXIF 3.0 §4.6.6 Table 27
+        self::assertSame(GpsDirectionRef::TRUE_DIRECTION, GpsDirectionRef::fromExifValue('T'));
+        self::assertSame(GpsDirectionRef::MAGNETIC_DIRECTION, GpsDirectionRef::fromExifValue('M'));
+
+        // GPS Latitude/Longitude Reference - EXIF 3.0 §4.6.6 Table 27
+        self::assertSame(GpsLatLonRef::NORTH, GpsLatLonRef::fromExifValue('N'));
+        self::assertSame(GpsLatLonRef::SOUTH, GpsLatLonRef::fromExifValue('S'));
+        self::assertSame(GpsLatLonRef::EAST, GpsLatLonRef::fromExifValue('E'));
+        self::assertSame(GpsLatLonRef::WEST, GpsLatLonRef::fromExifValue('W'));
+
+        // GPS Status - EXIF 3.0 §4.6.6 Table 27
+        self::assertSame(GpsStatus::MEASUREMENT_IN_PROGRESS, GpsStatus::fromExifValue('A'));
+        self::assertSame(GpsStatus::MEASUREMENT_VOID, GpsStatus::fromExifValue('V'));
+    }
+
+    /**
+     * Returns null for invalid GPS string values.
+     */
+    #[Test]
+    public function returnsNullForInvalidGpsStrings(): void
+    {
+        self::assertNull(GpsSpeedRef::fromExifValue('X'));
+        self::assertNull(GpsDirectionRef::fromExifValue('Z'));
+        self::assertNull(GpsLatLonRef::fromExifValue('Q'));
+        self::assertNull(GpsStatus::fromExifValue('B'));
     }
 }
