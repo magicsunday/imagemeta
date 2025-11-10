@@ -825,7 +825,7 @@ final class ExifToolFormatter
             }
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('InteropIFD', $data, showHex: true);
         }
     }
@@ -844,7 +844,7 @@ final class ExifToolFormatter
             }
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('IFD1', $data, showHex: true);
         }
     }
@@ -866,7 +866,7 @@ final class ExifToolFormatter
             $data[$displayKey] = $value;
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('QuickTime', $data);
         }
     }
@@ -922,7 +922,7 @@ final class ExifToolFormatter
             $data["Entry {$index} Type"] = $this->formatMpfEntryType($entry);
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('MPF', $data);
         }
     }
@@ -945,7 +945,7 @@ final class ExifToolFormatter
             }
         }
 
-        return !empty($parts) ? implode(', ', $parts) : 'Unknown';
+        return $parts !== [] ? implode(', ', $parts) : 'Unknown';
     }
 
     /**
@@ -959,7 +959,7 @@ final class ExifToolFormatter
             $data["Stream {$identifier}"] = sprintf('(Binary data %d bytes)', strlen($stream));
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('FlashPix', $data);
         }
     }
@@ -969,7 +969,7 @@ final class ExifToolFormatter
      */
     private function printJpegAudioSection(array $jpegAudioStreams): void
     {
-        if (empty($jpegAudioStreams)) {
+        if ($jpegAudioStreams === []) {
             return;
         }
 
@@ -1008,7 +1008,7 @@ final class ExifToolFormatter
             }
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('JPEG Details', $data);
         }
     }
