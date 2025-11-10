@@ -47,6 +47,29 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\Contrast;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
+use MagicSunday\ImageMeta\Value\Enum\FileSource;
+use MagicSunday\ImageMeta\Value\Enum\GainControl;
+use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
+use MagicSunday\ImageMeta\Value\Enum\LightSource;
+use MagicSunday\ImageMeta\Value\Enum\MeteringMode;
+use MagicSunday\ImageMeta\Value\Enum\Orientation;
+use MagicSunday\ImageMeta\Value\Enum\Photometric;
+use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
+use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Enum\Saturation;
+use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
+use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
+use MagicSunday\ImageMeta\Value\Enum\Sharpness;
+use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 
 use function count;
 use function date;
@@ -118,6 +141,18 @@ final class ExifToolFormatter
     }
 
     /**
+     * Maps EXIF tag IDs to their corresponding enum class names.
+     *
+     * This mapping enables conversion of raw EXIF values (typically integers)
+     * to typed enum instances for better formatting and display.
+     *
+     * EXIF 3.0 §4.6 and earlier specifications define these enumerated values.
+     *
+     * @var array<int, class-string<\BackedEnum>>
+     */
+    private array $tagToEnumMap = [];
+
+    /**
      * Builds reverse mapping from tag IDs to tag names.
      */
     private function buildTagMaps(): void
@@ -146,6 +181,39 @@ final class ExifToolFormatter
                 $this->tiffTagNames[$value] = $this->constantNameToTagName($name);
             }
         }
+
+        // Build tag-to-enum mapping
+        // Maps EXIF tag IDs to their corresponding enum classes
+        $this->tagToEnumMap = [
+            // IFD0 / TIFF tags - EXIF 3.0 §4.6.2, TIFF 6.0 §8
+            ExifTag::ORIENTATION => Orientation::class,
+            ExifTag::COMPRESSION => Compression::class,
+            ExifTag::PHOTOMETRIC_INTERPRETATION => Photometric::class,
+            ExifTag::PLANAR_CONFIGURATION => PlanarConfiguration::class,
+            ExifTag::RESOLUTION_UNIT => ResolutionUnit::class,
+            ExifTag::YCBCR_POSITIONING => YCbCrPositioning::class,
+
+            // ExifIFD tags - EXIF 3.0 §4.6.3, §4.6.4
+            ExifTag::COLOR_SPACE => ColorSpace::class,
+            ExifTag::EXPOSURE_PROGRAM => ExposureProgram::class,
+            ExifTag::METERING_MODE => MeteringMode::class,
+            ExifTag::LIGHT_SOURCE => LightSource::class,
+            ExifTag::WHITE_BALANCE => WhiteBalance::class,
+            ExifTag::EXPOSURE_MODE => ExposureMode::class,
+            ExifTag::SCENE_CAPTURE_TYPE => SceneCaptureType::class,
+            ExifTag::GAIN_CONTROL => GainControl::class,
+            ExifTag::CONTRAST => Contrast::class,
+            ExifTag::SATURATION => Saturation::class,
+            ExifTag::SHARPNESS => Sharpness::class,
+            ExifTag::SUBJECT_DISTANCE_RANGE => SubjectDistanceRange::class,
+            ExifTag::SENSING_METHOD => SensingMethod::class,
+            ExifTag::FILE_SOURCE => FileSource::class,
+            ExifTag::SCENE_TYPE => SceneType::class,
+            ExifTag::CUSTOM_RENDERED => CustomRendered::class,
+
+            // GPS tags - EXIF 3.0 §4.6.8
+            ExifTag::GPS_DIFFERENTIAL => GpsDifferential::class,
+        ];
     }
 
     /**
@@ -246,6 +314,55 @@ final class ExifToolFormatter
         }, $parts);
 
         return implode(' ', $parts);
+    }
+
+    /**
+     * Converts a raw EXIF value to an enum instance if the tag ID has an enum mapping.
+     *
+     * This method enables the display of enum values in exiftool-like format by
+     * converting raw integer/string values to their typed enum representations.
+     *
+     * @param int|null $tagId The EXIF tag identifier
+     * @param mixed $value The raw value from the IFD entry
+     *
+     * @return mixed The converted enum instance or the original value if no mapping exists
+     */
+    private function convertToEnumIfApplicable(?int $tagId, mixed $value): mixed
+    {
+        if ($tagId === null || !isset($this->tagToEnumMap[$tagId])) {
+            return $value;
+        }
+
+        $enumClass = $this->tagToEnumMap[$tagId];
+
+        // Extract scalar value if it's wrapped in a list
+        $scalarValue = $value;
+        if ($value instanceof ExifNumericList) {
+            $scalarValue = $value->values[0] ?? null;
+        } elseif ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+            if ($first instanceof ExifRational) {
+                if ($first->denominator === 0) {
+                    return $value;
+                }
+                $scalarValue = (int) round((float) $first->numerator / (float) $first->denominator);
+            } else {
+                return $value;
+            }
+        }
+
+        // Only attempt conversion for int and string values
+        if (!is_int($scalarValue) && !is_string($scalarValue)) {
+            return $value;
+        }
+
+        // Call the enum's fromExifValue method if it exists
+        if (method_exists($enumClass, 'fromExifValue')) {
+            $enumInstance = $enumClass::fromExifValue($scalarValue);
+            return $enumInstance ?? $value;
+        }
+
+        return $value;
     }
 
     /**
@@ -786,7 +903,8 @@ final class ExifToolFormatter
 
         // Collect IFD0 tags from the ifd0 entries
         foreach ($exif->ifd0->entries as $tagId => $entry) {
-            $data[$tagId] = $entry->value;
+            // Convert raw value to enum if applicable
+            $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
         }
 
         if (!empty($data)) {
@@ -804,7 +922,8 @@ final class ExifToolFormatter
         // Collect ExifIFD tags
         if (($exifIfd !== null) && isset($exifIfd->entries)) {
             foreach ($exifIfd->entries as $tagId => $entry) {
-                $data[$tagId] = $entry->value;
+                // Convert raw value to enum if applicable
+                $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
             }
         }
 
@@ -823,7 +942,8 @@ final class ExifToolFormatter
         // Collect GPS tags
         if (($gpsIfd !== null) && isset($gpsIfd->entries)) {
             foreach ($gpsIfd->entries as $tagId => $entry) {
-                $data[$tagId] = $entry->value;
+                // Convert raw value to enum if applicable
+                $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
             }
         }
 
@@ -959,7 +1079,8 @@ final class ExifToolFormatter
         // Collect InteropIFD tags
         if (($interopIfd !== null) && isset($interopIfd->entries)) {
             foreach ($interopIfd->entries as $tagId => $entry) {
-                $data[$tagId] = $entry->value;
+                // Convert raw value to enum if applicable
+                $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
             }
         }
 
@@ -978,7 +1099,8 @@ final class ExifToolFormatter
         // Collect IFD1 tags
         if (($ifd1 !== null) && isset($ifd1->entries)) {
             foreach ($ifd1->entries as $tagId => $entry) {
-                $data[$tagId] = $entry->value;
+                // Convert raw value to enum if applicable
+                $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
             }
         }
 
