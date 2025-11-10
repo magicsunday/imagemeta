@@ -464,13 +464,19 @@ final class ExifToolFormatter
         $sizeFormatted = $this->formatFileSize($fileSize);
         $permsFormatted = $this->formatPermissions($perms);
 
+        // Format timestamps with local timezone (matching exiftool behavior)
+        $timezone = new \DateTimeZone(date_default_timezone_get());
+        $modDateTime = (new \DateTime('@' . $modTime))->setTimezone($timezone);
+        $accessDateTime = (new \DateTime('@' . $accessTime))->setTimezone($timezone);
+        $changeDateTime = (new \DateTime('@' . $changeTime))->setTimezone($timezone);
+
         $this->printSection('System', [
             'File Name' => $fileName,
             'Directory' => $directory,
             'File Size' => $sizeFormatted,
-            'File Modification Date/Time' => date('Y:m:d H:i:sP', $modTime),
-            'File Access Date/Time' => date('Y:m:d H:i:sP', $accessTime),
-            'File Inode Change Date/Time' => date('Y:m:d H:i:sP', $changeTime),
+            'File Modification Date/Time' => $modDateTime->format('Y:m:d H:i:sP'),
+            'File Access Date/Time' => $accessDateTime->format('Y:m:d H:i:sP'),
+            'File Inode Change Date/Time' => $changeDateTime->format('Y:m:d H:i:sP'),
             'File Permissions' => $permsFormatted,
         ]);
     }
