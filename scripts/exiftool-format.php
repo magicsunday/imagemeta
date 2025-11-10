@@ -333,9 +333,15 @@ final class ExifToolFormatter
             if ($showHex && is_numeric($key)) {
                 $hexKey = sprintf('0x%04x', (int) $key);
                 $tagName = $this->getTagName((int) $key);
-                printf("%s %-30s: %s\n", $hexKey, $tagName, $formattedValue);
+                // Format with exactly 40 characters before the colon
+                // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
+                $label = sprintf('%s %s', $hexKey, $tagName);
+                printf("%-40s: %s\n", $label, $formattedValue);
             } else {
-                printf("     - %-30s: %s\n", $key, $formattedValue);
+                // Format with exactly 40 characters before the colon  
+                // "     - " (7 chars) + key name (padded to fill remaining 33 chars) = 40 total
+                $label = sprintf('     - %s', $key);
+                printf("%-40s: %s\n", $label, $formattedValue);
             }
         }
     }
@@ -396,8 +402,17 @@ final class ExifToolFormatter
         }
 
         if ($value instanceof \BackedEnum) {
-            // For enums, use their value or name
-            return $value->value ?? $value->name;
+            // For enums, show both value and name in parentheses
+            // Example: "2 (INCHES)" instead of just "2"
+            $enumValue = $value->value ?? $value->name;
+            $enumName = $value->name;
+            
+            // Only add name in parentheses if it's different from the value
+            if ((string) $enumValue !== $enumName) {
+                return "{$enumValue} ({$enumName})";
+            }
+            
+            return (string) $enumValue;
         }
 
         if (is_bool($value)) {
@@ -426,7 +441,22 @@ final class ExifToolFormatter
         if (is_string($value)) {
             // Check for binary data
             if ($this->isBinary($value)) {
-                return sprintf('(Binary data %d bytes)', strlen($value));
+                $length = strlen($value);
+                $result = sprintf('(Binary data %d bytes)', $length);
+                
+                // Show first 32 bytes as hex values
+                $hexBytes = min(32, $length);
+                if ($hexBytes > 0) {
+                    $hexString = bin2hex(substr($value, 0, $hexBytes));
+                    // Format as space-separated pairs (e.g., "4d 4d 00 2a")
+                    $hexFormatted = implode(' ', str_split($hexString, 2));
+                    $result .= ': ' . $hexFormatted;
+                    if ($length > 32) {
+                        $result .= '...';
+                    }
+                }
+                
+                return $result;
             }
 
             // Limit string length for display
@@ -464,13 +494,19 @@ final class ExifToolFormatter
         $sizeFormatted = $this->formatFileSize($fileSize);
         $permsFormatted = $this->formatPermissions($perms);
 
+        // Format timestamps with local timezone (matching exiftool behavior)
+        $timezone = new \DateTimeZone(date_default_timezone_get());
+        $modDateTime = (new \DateTime('@' . $modTime))->setTimezone($timezone);
+        $accessDateTime = (new \DateTime('@' . $accessTime))->setTimezone($timezone);
+        $changeDateTime = (new \DateTime('@' . $changeTime))->setTimezone($timezone);
+
         $this->printSection('System', [
             'File Name' => $fileName,
             'Directory' => $directory,
             'File Size' => $sizeFormatted,
-            'File Modification Date/Time' => date('Y:m:d H:i:sP', $modTime),
-            'File Access Date/Time' => date('Y:m:d H:i:sP', $accessTime),
-            'File Inode Change Date/Time' => date('Y:m:d H:i:sP', $changeTime),
+            'File Modification Date/Time' => $modDateTime->format('Y:m:d H:i:sP'),
+            'File Access Date/Time' => $accessDateTime->format('Y:m:d H:i:sP'),
+            'File Inode Change Date/Time' => $changeDateTime->format('Y:m:d H:i:sP'),
             'File Permissions' => $permsFormatted,
         ]);
     }
