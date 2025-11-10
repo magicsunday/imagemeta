@@ -48,6 +48,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
@@ -446,7 +447,7 @@ final class ExifToolFormatter
 
         // ExifIFD section
         if ($metadata->exifDoc !== null && $metadata->exifDoc->exifIfd !== null) {
-            $this->printExifIfdSection($metadata->exifDoc->exifIfd);
+            $this->printExifIfdSection($metadata->exifDoc->exifIfd, $metadata->exifDoc);
         }
 
         // MakerNotes section
@@ -772,6 +773,43 @@ final class ExifToolFormatter
     }
 
     /**
+     * Gets decoded value from ParsedExif accessor methods for special tags.
+     *
+     * This method leverages the existing decoding logic in ParsedExif rather than
+     * duplicating it in the formatter. For tags with accessor methods that return
+     * typed/decoded values, we use those instead of the raw IFD entry value.
+     *
+     * @param int $tagId The EXIF tag identifier
+     * @param mixed $rawValue The raw value from the IFD entry
+     * @param ParsedExif|null $exifDoc The ParsedExif document for accessing decoded values
+     *
+     * @return mixed|null The decoded value from ParsedExif, or null if no special accessor exists
+     */
+    private function getDecodedValueFromParsedExif(int $tagId, mixed $rawValue, ?ParsedExif $exifDoc): mixed
+    {
+        if ($exifDoc === null) {
+            return null;
+        }
+
+        return match ($tagId) {
+            // ComponentsConfiguration - Use ParsedExif accessor that returns formatted description
+            // EXIF 3.0 §4.6.4 Table 17
+            ExifTag::COMPONENTS_CONFIGURATION => $exifDoc->componentsConfigurationDescription(),
+
+            // SceneType - Use ParsedExif accessor that returns typed enum
+            // EXIF 3.0 §4.6.3 Table 13
+            ExifTag::SCENE_TYPE => $exifDoc->sceneType(),
+
+            // FileSource - Use ParsedExif accessor that returns typed enum
+            // EXIF 3.0 §4.6.3 Table 12
+            ExifTag::FILE_SOURCE => $exifDoc->fileSource(),
+
+            // No special accessor available
+            default => null,
+        };
+    }
+
+    /**
      * Prints the System section with file system metadata.
      */
     private function printSystemSection(string $filePath): void
@@ -982,8 +1020,15 @@ final class ExifToolFormatter
 
         // Collect IFD0 tags from the ifd0 entries
         foreach ($exif->ifd0->entries as $tagId => $entry) {
-            // Convert raw value to enum if applicable
-            $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
+            // Use ParsedExif accessor methods for tags with special decoding
+            $value = $this->getDecodedValueFromParsedExif($tagId, $entry->value, $exif);
+            
+            // Convert raw value to enum if applicable (for tags without special accessors)
+            if ($value === null) {
+                $value = $this->convertToEnumIfApplicable($tagId, $entry->value);
+            }
+            
+            $data[$tagId] = $value;
         }
 
         if (!empty($data)) {
@@ -994,15 +1039,22 @@ final class ExifToolFormatter
     /**
      * Prints the ExifIFD section.
      */
-    private function printExifIfdSection(?Ifd $exifIfd): void
+    private function printExifIfdSection(?Ifd $exifIfd, ?ParsedExif $exifDoc = null): void
     {
         $data = [];
 
         // Collect ExifIFD tags
         if (($exifIfd !== null) && isset($exifIfd->entries)) {
             foreach ($exifIfd->entries as $tagId => $entry) {
-                // Convert raw value to enum if applicable
-                $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
+                // Use ParsedExif accessor methods for tags with special decoding
+                $value = $this->getDecodedValueFromParsedExif($tagId, $entry->value, $exifDoc);
+                
+                // Convert raw value to enum if applicable (for tags without special accessors)
+                if ($value === null) {
+                    $value = $this->convertToEnumIfApplicable($tagId, $entry->value);
+                }
+                
+                $data[$tagId] = $value;
             }
         }
 
@@ -1150,13 +1202,47 @@ final class ExifToolFormatter
 
     /**
      * Prints ICC Profile section.
+     *
+     * Decodes and displays ICC profile metadata including the profile description.
+     * See docs/ICC.pdf for ICC profile format specifications.
+     *
+     * @param string $iccProfile The raw ICC profile binary data
      */
     private function printIccSection(string $iccProfile): void
     {
-        // Simplified ICC output
-        $this->printSection('ICC-header', [
-            'Profile Description' => '(Binary data)',
-        ]);
+        $decoder = new IccDecoder();
+        $iccData = $decoder->decode($iccProfile);
+
+        $data = [];
+
+        if ($iccData !== null) {
+            if ($iccData['description'] !== null) {
+                $data['Profile Description'] = $iccData['description'];
+            }
+
+            if ($iccData['version'] !== null) {
+                $data['Profile Version'] = $iccData['version'];
+            }
+
+            if ($iccData['pcs'] !== null) {
+                $data['Profile Connection Space'] = $iccData['pcs'];
+            }
+
+            if ($iccData['renderingIntent'] !== null) {
+                $data['Rendering Intent'] = $iccData['renderingIntent'];
+            }
+
+            if ($iccData['profileId'] !== null) {
+                $data['Profile ID'] = $iccData['profileId'];
+            }
+        }
+
+        // Fallback if decoder couldn't parse the profile
+        if ($data === []) {
+            $data['Profile Description'] = '(Binary data)';
+        }
+
+        $this->printSection('ICC-header', $data);
     }
 
     /**
