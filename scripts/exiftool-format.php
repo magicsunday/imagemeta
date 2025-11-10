@@ -1085,8 +1085,8 @@ final class ExifToolFormatter
         }
 
         // Scale Factor To 35mm Equivalent
-        if ($structured->derived->equivalent35mm !== null) {
-            $data['Scale Factor To 35 mm Equivalent'] = round($structured->derived->equivalent35mm, 1);
+        if ($structured->derived->cropFactor !== null) {
+            $data['Scale Factor To 35 mm Equivalent'] = round($structured->derived->cropFactor, 1);
         }
 
         // Shutter Speed
@@ -1163,8 +1163,8 @@ final class ExifToolFormatter
         }
 
         // Field Of View
-        if ($structured->derived->fieldOfViewDiagonalDeg !== null) {
-            $data['Field Of View'] = sprintf('%.1f deg', $structured->derived->fieldOfViewDiagonalDeg);
+        if ($structured->derived->fieldOfViewHorizontalDeg !== null) {
+            $data['Field Of View'] = sprintf('%.1f deg', $structured->derived->fieldOfViewHorizontalDeg);
         }
 
         // Focal Length with 35mm equivalent
