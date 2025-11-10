@@ -41,6 +41,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function count;
@@ -78,14 +79,14 @@ foreach ($autoloadPaths as $autoloadPath) {
 final class ExifToolFormatter
 {
     private const string VERSION = '1.0.0';
-    
+
     /**
      * Maps tag IDs to their human-readable names for EXIF tags.
      *
      * @var array<int, string>
      */
     private array $exifTagNames = [];
-    
+
     /**
      * Maps tag IDs to their human-readable names for TIFF tags.
      *
@@ -176,15 +177,15 @@ final class ExifToolFormatter
             'LENS_MODEL' => 'Lens Model',
             'COMPOSITE_IMAGE' => 'Composite Image',
         ];
-        
+
         if (isset($specialCases[$constantName])) {
             return $specialCases[$constantName];
         }
-        
+
         // Handle GPS tags
         if (str_starts_with($constantName, 'GPS_')) {
             $gpsName = substr($constantName, 4);
-            
+
             // Special GPS cases
             $gpsSpecialCases = [
                 'LATITUDE_REF' => 'GPS Latitude Ref',
@@ -203,20 +204,20 @@ final class ExifToolFormatter
                 'DATE_STAMP' => 'GPS Date Stamp',
                 'H_POSITIONING_ERROR' => 'GPS Horizontal Positioning Error',
             ];
-            
+
             if (isset($gpsSpecialCases[$gpsName])) {
                 return $gpsSpecialCases[$gpsName];
             }
-            
+
             $constantName = 'GPS ' . $gpsName;
         }
-        
+
         // Convert SNAKE_CASE to Title Case
         $parts = explode('_', $constantName);
         $parts = array_map(function ($part) {
             return ucfirst(strtolower($part));
         }, $parts);
-        
+
         return implode(' ', $parts);
     }
 
@@ -286,10 +287,10 @@ final class ExifToolFormatter
     private function printSection(string $sectionName, array $data, bool $showHex = false): void
     {
         echo "---- {$sectionName} ----\n";
-        
+
         foreach ($data as $key => $value) {
             $formattedValue = $this->formatValue($value);
-            
+
             if ($showHex && is_numeric($key)) {
                 $hexKey = sprintf('0x%04x', (int) $key);
                 $tagName = $this->getTagName((int) $key);
@@ -305,8 +306,8 @@ final class ExifToolFormatter
      */
     private function getTagName(int $tagId): string
     {
-        return $this->tiffTagNames[$tagId] 
-            ?? $this->exifTagNames[$tagId] 
+        return $this->tiffTagNames[$tagId]
+            ?? $this->exifTagNames[$tagId]
             ?? sprintf('Unknown 0x%04x', $tagId);
     }
 
@@ -324,20 +325,20 @@ final class ExifToolFormatter
             if ($value->denominator === 0) {
                 return 'inf';
             }
-            
+
             $decimal = $value->numerator / $value->denominator;
-            
+
             // If it's a simple fraction, show as fraction
             if ($value->denominator !== 1 && abs($decimal) < 10) {
                 return sprintf('%d/%d', $value->numerator, $value->denominator);
             }
-            
+
             return number_format($decimal, 6, '.', '');
         }
 
         if ($value instanceof ExifRationalList) {
             $parts = [];
-            foreach ($value->rationals as $rational) {
+            foreach ($value->values as $rational) {
                 $parts[] = $this->formatValue($rational);
             }
             return implode(' ', $parts);
@@ -368,12 +369,12 @@ final class ExifToolFormatter
             if (empty($value)) {
                 return '(none)';
             }
-            
+
             // Check if it's a simple numeric array
             if (array_is_list($value)) {
                 return implode(' ', array_map(fn($v) => $this->formatValue($v), $value));
             }
-            
+
             return json_encode($value);
         }
 
@@ -388,7 +389,7 @@ final class ExifToolFormatter
             if ($this->isBinary($value)) {
                 return sprintf('(Binary data %d bytes)', strlen($value));
             }
-            
+
             // Limit string length for display
             if (strlen($value) > 100) {
                 return substr($value, 0, 100) . '...';
@@ -525,8 +526,8 @@ final class ExifToolFormatter
         if ($metadata->exifDoc !== null) {
             $endianness = $metadata->exifDoc->endianness ?? null;
             if ($endianness !== null) {
-                $data['Exif Byte Order'] = $endianness->value === 'MM' 
-                    ? 'Big-endian (Motorola, MM)' 
+                $data['Exif Byte Order'] = $endianness->value === 'MM'
+                    ? 'Big-endian (Motorola, MM)'
                     : 'Little-endian (Intel, II)';
             }
         }
@@ -551,7 +552,7 @@ final class ExifToolFormatter
     private function detectFileType(string $filePath): string
     {
         $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-        
+
         return match ($ext) {
             'jpg', 'jpeg' => 'JPEG',
             'heic' => 'HEIC',
@@ -629,27 +630,27 @@ final class ExifToolFormatter
 
         // Determine vendor name
         $vendor = $makerNotes->vendor ?? 'Unknown';
-        
+
         // For Apple maker notes, extract detailed information
         if ($makerNotes->apple !== null) {
             $data = [];
             $apple = $makerNotes->apple;
-            
+
             // Use reflection to get all properties
             $reflection = new \ReflectionClass($apple);
             $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
-            
+
             foreach ($properties as $property) {
                 $name = $property->getName();
                 $value = $property->getValue($apple);
-                
+
                 if ($value !== null) {
                     // Convert property name to title case
                     $displayName = $this->propertyNameToDisplayName($name);
                     $data[$displayName] = $value;
                 }
             }
-            
+
             if (!empty($data)) {
                 $this->printSection('Apple', $data);
             }
@@ -663,7 +664,7 @@ final class ExifToolFormatter
     {
         // Insert space before uppercase letters
         $spaced = preg_replace('/([a-z])([A-Z])/', '$1 $2', $propertyName);
-        
+
         // Capitalize first letter of each word
         return ucwords($spaced ?? $propertyName);
     }
@@ -679,24 +680,24 @@ final class ExifToolFormatter
 
         // Group XMP data by namespace
         $grouped = [];
-        
+
         foreach ($xmpDoc->data as $clarkNotation => $value) {
             // Clark notation format: {namespace}localName
             if (preg_match('/^\{([^}]+)\}(.+)$/', $clarkNotation, $matches)) {
                 $namespace = $matches[1];
                 $localName = $matches[2];
-                
+
                 // Simplify namespace for display
                 $prefix = $this->namespaceToPrefix($namespace);
-                
+
                 if (!isset($grouped[$prefix])) {
                     $grouped[$prefix] = [];
                 }
-                
+
                 $grouped[$prefix][$localName] = $value;
             }
         }
-        
+
         // Print each namespace section
         foreach ($grouped as $prefix => $data) {
             if (!empty($data)) {
@@ -720,7 +721,7 @@ final class ExifToolFormatter
             'http://www.metadataworkinggroup.com/schemas/regions/' => 'mwg-rs',
             'adobe:ns:meta/' => 'x',
         ];
-        
+
         return $prefixMap[$namespace] ?? 'unknown';
     }
 
@@ -738,7 +739,7 @@ final class ExifToolFormatter
     /**
      * Prints the Composite section with derived values.
      */
-    private function printCompositeSection($metadata): void
+    private function printCompositeSection(Metadata $metadata): void
     {
         $structured = $metadata->structured();
         $data = [];
@@ -746,8 +747,8 @@ final class ExifToolFormatter
         // Run Time Since Power Up (from Apple maker notes)
         if ($structured->makerNotesApple?->runTime !== null) {
             $runTime = $structured->makerNotesApple->runTime;
-            if ($runTime->value !== null && $runTime->scale !== null && $runTime->scale > 0) {
-                $seconds = $runTime->value / $runTime->scale;
+            if ($runTime->value !== null && $runTime->timescale !== null && $runTime->timescale > 0) {
+                $seconds = $runTime->value / $runTime->timescale;
                 $data['Run Time Since Power Up'] = $this->formatDuration($seconds);
             }
         }
@@ -771,18 +772,18 @@ final class ExifToolFormatter
         }
 
         // Scale Factor To 35mm Equivalent
-        if ($structured->derived->scaleFactor35mm !== null) {
-            $data['Scale Factor To 35 mm Equivalent'] = round($structured->derived->scaleFactor35mm, 1);
+        if ($structured->derived->equivalent35mm !== null) {
+            $data['Scale Factor To 35 mm Equivalent'] = round($structured->derived->equivalent35mm, 1);
         }
 
         // Shutter Speed
-        if ($structured->exposure->exposureTime !== null) {
-            $data['Shutter Speed'] = $this->formatShutterSpeed($structured->exposure->exposureTime);
+        if ($structured->exposure->exposureTimeSec !== null) {
+            $data['Shutter Speed'] = $this->formatShutterSpeed($structured->exposure->exposureTimeSec);
         }
 
         // Create Date with subseconds
-        if ($structured->temporal->created !== null) {
-            $dateStr = $structured->temporal->created->format('Y:m:d H:i:s');
+        if ($structured->temporal->create !== null) {
+            $dateStr = $structured->temporal->create->format('Y:m:d H:i:s');
             if ($structured->temporal->subSecTimeOriginal !== null) {
                 $dateStr .= '.' . $structured->temporal->subSecTimeOriginal;
             }
@@ -805,8 +806,8 @@ final class ExifToolFormatter
         }
 
         // Modify Date
-        if ($structured->temporal->modified !== null) {
-            $dateStr = $structured->temporal->modified->format('Y:m:d H:i:s');
+        if ($structured->temporal->modify !== null) {
+            $dateStr = $structured->temporal->modify->format('Y:m:d H:i:s');
             if ($structured->temporal->offsetTime !== null) {
                 $dateStr .= $structured->temporal->offsetTime;
             }
@@ -834,7 +835,7 @@ final class ExifToolFormatter
                 $structured->gps->longitude,
                 $structured->gps->longitudeRef ?? 'E'
             );
-            
+
             // Combined GPS Position
             $data['GPS Position'] = sprintf(
                 '%s, %s',
@@ -856,15 +857,15 @@ final class ExifToolFormatter
         // Focal Length with 35mm equivalent
         if ($structured->lens->focalLengthMm !== null) {
             $focalStr = sprintf('%.1f mm', $structured->lens->focalLengthMm);
-            if ($structured->lens->focalLength35Mm !== null) {
-                $focalStr .= sprintf(' (35 mm equivalent: %.1f mm)', $structured->lens->focalLength35Mm);
+            if ($structured->lens->focalLengthIn35mm !== null) {
+                $focalStr .= sprintf(' (35 mm equivalent: %.1f mm)', $structured->lens->focalLengthIn35mm);
             }
             $data['Focal Length'] = $focalStr;
         }
 
         // Hyperfocal Distance
-        if ($structured->derived->hyperfocalDistanceM !== null) {
-            $data['Hyperfocal Distance'] = sprintf('%.2f m', $structured->derived->hyperfocalDistanceM);
+        if ($structured->derived->hyperfocalDistanceMetres !== null) {
+            $data['Hyperfocal Distance'] = sprintf('%.2f m', $structured->derived->hyperfocalDistanceMetres);
         }
 
         // Light Value
@@ -895,11 +896,11 @@ final class ExifToolFormatter
         if ($days > 0) {
             return sprintf('%d days %d:%02d:%02d', $days, $hours, $minutes, $seconds);
         }
-        
+
         if ($hours > 0) {
             return sprintf('%d:%02d:%02d', $hours, $minutes, $seconds);
         }
-        
+
         return sprintf('%d:%02d', $minutes, $seconds);
     }
 
