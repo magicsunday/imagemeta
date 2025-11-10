@@ -249,6 +249,25 @@ final class ExifToolFormatter
     }
 
     /**
+     * Converts enum name from SCREAMING_SNAKE_CASE to Title Case.
+     *
+     * Examples:
+     *   AUTO -> Auto
+     *   AUTO_BRACKET -> Auto Bracket
+     *   MANUAL -> Manual
+     *
+     * @param string $enumName The enum case name in SCREAMING_SNAKE_CASE
+     */
+    private function formatEnumName(string $enumName): string
+    {
+        // Split by underscore and convert each part to title case
+        $parts = explode('_', $enumName);
+        $parts = array_map(fn(string $part) => ucfirst(strtolower($part)), $parts);
+
+        return implode(' ', $parts);
+    }
+
+    /**
      * Formats the output for a given image file.
      */
     public function format(string $filePath): void
@@ -450,9 +469,9 @@ final class ExifToolFormatter
 
         if ($value instanceof \BackedEnum) {
             // For enums, show both value and name in parentheses
-            // Example: "2 (INCHES)" instead of just "2"
+            // Example: "0 (Auto)" instead of "0 (AUTO)"
             $enumValue = $value->value ?? $value->name;
-            $enumName = $value->name;
+            $enumName = $this->formatEnumName($value->name);
 
             // Only add name in parentheses if it's different from the value
             if ((string) $enumValue !== $enumName) {
