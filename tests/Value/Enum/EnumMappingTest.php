@@ -18,7 +18,9 @@ use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
@@ -50,6 +52,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(GpsDirectionRef::class)]
 #[CoversClass(GpsLatLonRef::class)]
 #[CoversClass(GpsStatus::class)]
+#[CoversClass(GpsDistanceRef::class)]
+#[CoversClass(GpsMeasureMode::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[CoversClass(Compression::class)]
 final class EnumMappingTest extends TestCase
@@ -153,6 +157,15 @@ final class EnumMappingTest extends TestCase
         // GPS Status - EXIF 3.0 §4.6.6 Table 27
         self::assertSame(GpsStatus::MEASUREMENT_IN_PROGRESS, GpsStatus::fromExifValue('A'));
         self::assertSame(GpsStatus::MEASUREMENT_VOID, GpsStatus::fromExifValue('V'));
+
+        // GPS Distance Reference - EXIF 3.0 §4.6.6 Table 27
+        self::assertSame(GpsDistanceRef::KILOMETERS, GpsDistanceRef::fromExifValue('K'));
+        self::assertSame(GpsDistanceRef::MILES, GpsDistanceRef::fromExifValue('M'));
+        self::assertSame(GpsDistanceRef::NAUTICAL_MILES, GpsDistanceRef::fromExifValue('N'));
+
+        // GPS Measure Mode - EXIF 3.0 §4.6.6 Table 27
+        self::assertSame(GpsMeasureMode::TWO_DIMENSIONAL, GpsMeasureMode::fromExifValue('2'));
+        self::assertSame(GpsMeasureMode::THREE_DIMENSIONAL, GpsMeasureMode::fromExifValue('3'));
     }
 
     /**
@@ -165,5 +178,7 @@ final class EnumMappingTest extends TestCase
         self::assertNull(GpsDirectionRef::fromExifValue('Z'));
         self::assertNull(GpsLatLonRef::fromExifValue('Q'));
         self::assertNull(GpsStatus::fromExifValue('B'));
+        self::assertNull(GpsDistanceRef::fromExifValue('Y'));
+        self::assertNull(GpsMeasureMode::fromExifValue('5'));
     }
 }
