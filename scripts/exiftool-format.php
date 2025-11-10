@@ -1545,19 +1545,21 @@ final class ExifToolFormatter
     /**
      * Formats GPS coordinate in degrees/minutes/seconds.
      */
-    private function formatGpsCoordinate(float $decimal, string $ref): string
+    private function formatGpsCoordinate(float $decimal, GpsLatLonRef|string $ref): string
     {
         $degrees = (int) abs($decimal);
         $minutesFloat = (abs($decimal) - $degrees) * 60;
         $minutes = (int) $minutesFloat;
         $seconds = ($minutesFloat - $minutes) * 60;
 
+        $refString = $ref instanceof GpsLatLonRef ? $ref->value : $ref;
+
         return sprintf(
             '%d deg %d\' %.2f" %s',
             $degrees,
             $minutes,
             $seconds,
-            $ref
+            $refString
         );
     }
 }
