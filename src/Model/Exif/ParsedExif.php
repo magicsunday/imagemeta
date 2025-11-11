@@ -3128,14 +3128,16 @@ final readonly class ParsedExif
 
         // Validate that columns and rows are reasonable values
         // If they seem invalid, try big-endian
-        if ($columns > 1000 || $rows > 1000 || $columns === 0 || $rows === 0) {
+        // Display settings typically have modest dimensions (e.g., 3-20 columns, 5-50 rows)
+        // We use 500 as a generous upper bound to detect byte order issues
+        if ($columns > 500 || $rows > 500 || $columns === 0 || $rows === 0) {
             $unpackedBE = unpack('n2', substr($raw, 0, 4));
             if ($unpackedBE !== false) {
                 $columnsBE = $unpackedBE[1];
                 $rowsBE    = $unpackedBE[2];
 
                 // Use big-endian if values seem more reasonable
-                if ($columnsBE <= 1000 && $rowsBE <= 1000 && $columnsBE > 0 && $rowsBE > 0) {
+                if ($columnsBE <= 500 && $rowsBE <= 500 && $columnsBE > 0 && $rowsBE > 0) {
                     $columns = $columnsBE;
                     $rows    = $rowsBE;
                 }
