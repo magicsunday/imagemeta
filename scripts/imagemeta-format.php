@@ -62,6 +62,7 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use ReflectionClass;
 use ReflectionProperty;
@@ -623,6 +624,19 @@ final class MetadataFormatter
                     return $rawValue . ' (' . implode(', ', $parts) . ')';
                 }
             }
+        }
+
+        // Special handling for DeviceSettingDescription value object - EXIF 3.0 §4.6.6.7.45
+        if ($value instanceof DeviceSettingDescription) {
+            $parts = [];
+            $parts[] = sprintf('Columns: %d', $value->columns);
+            $parts[] = sprintf('Rows: %d', $value->rows);
+
+            if (($value->settings !== null) && ($value->settings !== '')) {
+                $parts[] = sprintf('Settings: %s', $value->settings);
+            }
+
+            return implode(', ', $parts);
         }
 
         if ($value instanceof ExifRational) {
