@@ -201,6 +201,26 @@ final readonly class IsoBmffExtractor
     public const int MAX_ITEM_PAYLOAD_SIZE = 8 * 1024 * 1024;
 
     /**
+     * Maximum number of items allowed in an iloc box to prevent DoS attacks.
+     */
+    private const int MAX_ILOC_ITEMS = 10000;
+
+    /**
+     * Maximum number of entries in an iinf box to prevent DoS attacks.
+     */
+    private const int MAX_IINF_ENTRIES = 10000;
+
+    /**
+     * Maximum number of keys in a keys box to prevent DoS attacks.
+     */
+    private const int MAX_KEYS_ENTRIES = 1000;
+
+    /**
+     * Maximum number of sample entries in an stsd box to prevent DoS attacks.
+     */
+    private const int MAX_STSD_ENTRIES = 100;
+
+    /**
      * Initialises the extractor with the source stream that contains the ISO BMFF structure.
      *
      * @param Stream $stream Stream positioned at the beginning of the media file to parse.
@@ -428,14 +448,15 @@ final readonly class IsoBmffExtractor
         $version = $win->readU8();
         $this->readUInt24($win); // flags
 
+        // ISO/IEC 14496-12 §8.3.2: version 0 uses 32-bit timestamps, version 1 uses 64-bit
         if ($version === 1) {
             if ($tkhd->contentSize < 96) {
                 throw new ParseError('tkhd version 1 box truncated');
             }
 
-            $win->read(8 + 8 + 4 + 4 + 8); // creation, modification, track id, reserved, duration
+            $win->read(8 + 8 + 4 + 4 + 8); // creation(64), modification(64), track_id(32), reserved(32), duration(64)
         } else {
-            $win->read(4 + 4 + 4 + 4 + 4); // creation, modification, track id, reserved, duration
+            $win->read(4 + 4 + 4 + 4 + 4); // creation(32), modification(32), track_id(32), reserved(32), duration(32)
         }
 
         $win->read(8); // reserved
@@ -572,6 +593,11 @@ final readonly class IsoBmffExtractor
 
         $win->read(4); // version/flags
         $entryCount = $win->readU32BE();
+
+        if ($entryCount > self::MAX_STSD_ENTRIES) {
+            throw new ParseError('stsd entry count exceeds maximum allowed');
+        }
+
         $result     = [];
         $pos        = $win->tell();
 
@@ -1007,6 +1033,11 @@ final readonly class IsoBmffExtractor
         $this->readUInt24($win); // flags
 
         $entryCount = $version === 0 ? $win->readU16BE() : $win->readU32BE();
+
+        if ($entryCount > self::MAX_IINF_ENTRIES) {
+            throw new ParseError('iinf entry count exceeds maximum allowed');
+        }
+
         $start      = $win->tell();
         $items      = [];
         $index      = 0;
@@ -1098,10 +1129,12 @@ final readonly class IsoBmffExtractor
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
+        // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
         $offsetLengthSizes = $win->readU8();
-        $offsetSize        = $this->validateSizeNibble(($offsetLengthSizes >> 4) & BitMask::LOW_NIBBLE);
-        $lengthSize        = $this->validateSizeNibble($offsetLengthSizes & BitMask::LOW_NIBBLE);
+        $offsetSize        = $this->validateSizeNibble(($offsetLengthSizes >> 4) & BitMask::LOW_NIBBLE); // High nibble
+        $lengthSize        = $this->validateSizeNibble($offsetLengthSizes & BitMask::LOW_NIBBLE);         // Low nibble
 
+        // ISO/IEC 14496-12 §8.11.3: base_offset_size in high nibble, index_size_size in low nibble (v1/v2)
         $baseField      = $win->readU8();
         $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & BitMask::LOW_NIBBLE);
         $indexSize      = 0;
@@ -1110,6 +1143,11 @@ final readonly class IsoBmffExtractor
         }
 
         $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
+
+        if ($itemCount > self::MAX_ILOC_ITEMS) {
+            throw new ParseError('iloc item count exceeds maximum allowed');
+        }
+
         $locations = [];
 
         for ($i = 0; $i < $itemCount; ++$i) {
@@ -1123,6 +1161,7 @@ final readonly class IsoBmffExtractor
 
             $constructionMethod = 0;
             if ($version === 1 || $version === 2) {
+                // ISO/IEC 14496-12 §8.11.3: construction_method is in the high 4 bits of a 16-bit field
                 $tmp                = $win->readU16BE();
                 $constructionMethod = ($tmp >> 12) & BitMask::LOW_NIBBLE;
             }
@@ -1191,6 +1230,11 @@ final readonly class IsoBmffExtractor
         $win->read(4);
 
         $entryCount = $win->readU32BE();
+
+        if ($entryCount > self::MAX_KEYS_ENTRIES) {
+            throw new ParseError('keys entry count exceeds maximum allowed');
+        }
+
         $map        = [];
         $pos        = $win->tell();
 
