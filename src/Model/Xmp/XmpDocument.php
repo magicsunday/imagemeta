@@ -33,13 +33,18 @@ use function trim;
 final readonly class XmpDocument
 {
     /**
-     * @param array<string, string|array<int, string>> $data Map of Clark notation => value
+     * @param array<string, string|array<int, string>> $data              Map of Clark notation => value
+     * @param array<string, string>                    $namespacePrefixes Map of namespace URI => prefix
      */
     public function __construct(
         /**
          * @var array<string, string|array<int, string>>
          */
         public array $data,
+        /**
+         * @var array<string, string> Map of namespace URI to prefix (e.g., "http://ns.adobe.com/xap/1.0/" => "xmp")
+         */
+        public array $namespacePrefixes = [],
     ) {
     }
 
