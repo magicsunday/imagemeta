@@ -282,4 +282,71 @@ XML;
         self::assertArrayHasKey($key, $document->data);
         self::assertSame('Prefix <tag> & middle suffix', $document->find('title'));
     }
+
+    /**
+     * Ensures multiple custom namespaces (drone-dji, Camera, crs, GPano) are extracted correctly.
+     *
+     * This test validates XMP data from various sources including DJI drones, Pix4D camera data,
+     * Adobe Camera Raw settings, and Google Panorama metadata. All should be captured with their
+     * full namespace URIs in Clark notation.
+     */
+    #[Test]
+    public function parseExtractsMultipleCustomNamespaces(): void
+    {
+        $xml = <<<XML
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<rdf:Description rdf:about="DJI Meta Data"
+xmlns:tiff="http://ns.adobe.com/tiff/1.0/"
+xmlns:xmp="http://ns.adobe.com/xap/1.0/"
+xmlns:dc="http://purl.org/dc/elements/1.1/"
+xmlns:crs="http://ns.adobe.com/camera-raw-settings/1.0/"
+xmlns:drone-dji="http://www.dji.com/drone-dji/1.0/"
+xmlns:GPano="http://ns.google.com/photos/1.0/panorama/"
+xmlns:Camera="http://pix4d.com/camera/1.0"
+xmp:ModifyDate="2025-04-20T12:10:18+02:00"
+tiff:Make="DJI"
+tiff:Model="FC8671"
+dc:format="image/jpeg"
+drone-dji:Version="1.6"
+drone-dji:GpsLatitude="+51.242990270"
+drone-dji:ProductName="NEO"
+Camera:FileType="single"
+crs:Version="7.0"
+crs:HasSettings="False"
+GPano:ProjectionType="equirectangular"
+>
+</rdf:Description>
+</rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        // Validate DJI drone namespace
+        $djiNs = 'http://www.dji.com/drone-dji/1.0/';
+        self::assertSame('1.6', $document->get($djiNs, 'Version'));
+        self::assertSame('+51.242990270', $document->get($djiNs, 'GpsLatitude'));
+        self::assertSame('NEO', $document->get($djiNs, 'ProductName'));
+
+        // Validate Pix4D Camera namespace
+        $cameraNs = 'http://pix4d.com/camera/1.0';
+        self::assertSame('single', $document->get($cameraNs, 'FileType'));
+
+        // Validate Adobe Camera Raw Settings namespace
+        $crsNs = 'http://ns.adobe.com/camera-raw-settings/1.0/';
+        self::assertSame('7.0', $document->get($crsNs, 'Version'));
+        self::assertSame('False', $document->get($crsNs, 'HasSettings'));
+
+        // Validate Google Panorama namespace
+        $gpanoNs = 'http://ns.google.com/photos/1.0/panorama/';
+        self::assertSame('equirectangular', $document->get($gpanoNs, 'ProjectionType'));
+
+        // Also validate standard namespaces still work
+        self::assertSame('2025-04-20T12:10:18+02:00', $document->get(self::XMP_NS, 'ModifyDate'));
+        self::assertSame('DJI', $document->get(self::TIFF_NS, 'Make'));
+        self::assertSame('FC8671', $document->get(self::TIFF_NS, 'Model'));
+        self::assertSame('image/jpeg', $document->get(self::DC_NS, 'format'));
+    }
 }

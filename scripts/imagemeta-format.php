@@ -1197,6 +1197,10 @@ final class MetadataFormatter
             'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
             RegionsFactory::NS_APPLE_FACEINFO              => 'mwg-rs',
             'adobe:ns:meta/'                               => 'x',
+            'http://www.dji.com/drone-dji/1.0/'            => 'drone-dji',
+            'http://pix4d.com/camera/1.0'                  => 'Camera',
+            'http://ns.adobe.com/camera-raw-settings/1.0/' => 'crs',
+            'http://ns.google.com/photos/1.0/panorama/'    => 'GPano',
         ];
 
         return $prefixMap[$namespace] ?? 'unknown';
