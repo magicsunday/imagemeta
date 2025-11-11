@@ -42,6 +42,7 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\Oecf;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SubjectArea;
@@ -1310,11 +1311,21 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the device setting description payload.
+     * Returns the device setting description with parsed structure.
+     *
+     * EXIF 3.0 §4.6.6.7.45: This tag indicates information on the picture-taking
+     * conditions of a particular camera model. The data is recorded in Unicode
+     * using SHORT type for the number of display rows and columns and UNDEFINED
+     * type for the camera settings.
+     *
+     * Format:
+     * - 2 bytes SHORT: Display columns
+     * - 2 bytes SHORT: Display rows
+     * - Remaining bytes: Camera settings (Unicode UTF-16, NULL-terminated)
      */
-    public function deviceSettingDescription(): ?string
+    public function deviceSettingDescription(): ?DeviceSettingDescription
     {
-        return $this->binaryString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
+        return $this->parseDeviceSettingDescription();
     }
 
     /**
@@ -3080,6 +3091,62 @@ final readonly class ParsedExif
         }
 
         return $nullCount >= (int) ($length / 4);
+    }
+
+    /**
+     * Parses the DeviceSettingDescription tag structure.
+     *
+     * EXIF 3.0 §4.6.6.7.45: The format consists of:
+     * - 2 bytes SHORT: Display columns
+     * - 2 bytes SHORT: Display rows
+     * - Remaining bytes: Camera settings in Unicode (UTF-16), NULL-terminated
+     */
+    private function parseDeviceSettingDescription(): ?DeviceSettingDescription
+    {
+        $raw = $this->rawString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
+        if ($raw === null || strlen($raw) < 4) {
+            return null;
+        }
+
+        // Try unpacking as little-endian first, then big-endian
+        $unpackedLE = unpack('v2', substr($raw, 0, 4));
+        if ($unpackedLE === false) {
+            return null;
+        }
+
+        $columns = $unpackedLE[1];
+        $rows    = $unpackedLE[2];
+
+        // Extract camera settings (skip the 4-byte header)
+        $settingsBytes = substr($raw, 4);
+        $settings      = null;
+
+        if ($settingsBytes !== '' && $settingsBytes !== false) {
+            // Decode UTF-16 to UTF-8
+            $settings = $this->decodeUnicodeComment($settingsBytes);
+        }
+
+        // Validate that columns and rows are reasonable values
+        // If they seem invalid, try big-endian
+        if ($columns > 1000 || $rows > 1000 || $columns === 0 || $rows === 0) {
+            $unpackedBE = unpack('n2', substr($raw, 0, 4));
+            if ($unpackedBE !== false) {
+                $columnsBE = $unpackedBE[1];
+                $rowsBE    = $unpackedBE[2];
+
+                // Use big-endian if values seem more reasonable
+                if ($columnsBE <= 1000 && $rowsBE <= 1000 && $columnsBE > 0 && $rowsBE > 0) {
+                    $columns = $columnsBE;
+                    $rows    = $rowsBE;
+                }
+            }
+        }
+
+        return new DeviceSettingDescription(
+            columns: $columns,
+            rows: $rows,
+            settings: $settings,
+        );
     }
 
     /**

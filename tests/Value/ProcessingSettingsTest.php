@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Value;
 
+use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\Enum\Contrast;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
@@ -46,6 +47,12 @@ final class ProcessingSettingsTest extends TestCase
     #[Test]
     public function constructsWithAllProcessingInfo(): void
     {
+        $deviceDesc = new DeviceSettingDescription(
+            columns: 5,
+            rows: 10,
+            settings: 'Camera settings',
+        );
+
         $settings = new ProcessingSettings(
             sharpness: Sharpness::HARD,
             contrast: Contrast::HARD,
@@ -53,7 +60,7 @@ final class ProcessingSettingsTest extends TestCase
             pictureStyle: 'Vivid',
             clarity: 25,
             customRendered: 1,
-            deviceSettingDescription: 'binary_data',
+            deviceSettingDescription: $deviceDesc,
         );
 
         self::assertSame(Sharpness::HARD, $settings->sharpness);
@@ -62,7 +69,7 @@ final class ProcessingSettingsTest extends TestCase
         self::assertSame('Vivid', $settings->pictureStyle);
         self::assertSame(25, $settings->clarity);
         self::assertSame(1, $settings->customRendered);
-        self::assertSame('binary_data', $settings->deviceSettingDescription);
+        self::assertSame($deviceDesc, $settings->deviceSettingDescription);
     }
 
     #[Test]

@@ -23,13 +23,13 @@ final readonly class ProcessingSettings
     /**
      * Creates a processing settings metadata value object.
      *
-     * @param Sharpness|null  $sharpness                Sharpness adjustment level.
-     * @param Contrast|null   $contrast                 Contrast adjustment level.
-     * @param Saturation|null $saturation               Saturation adjustment level.
-     * @param string|null     $pictureStyle             Vendor specific picture style identifier.
-     * @param int|null        $clarity                  Clarity adjustment level.
-     * @param int|null        $customRendered           Indicates whether a custom rendering was applied in-camera.
-     * @param string|null     $deviceSettingDescription Binary device setting description payload.
+     * @param Sharpness|null                  $sharpness                Sharpness adjustment level.
+     * @param Contrast|null                   $contrast                 Contrast adjustment level.
+     * @param Saturation|null                 $saturation               Saturation adjustment level.
+     * @param string|null                     $pictureStyle             Vendor specific picture style identifier.
+     * @param int|null                        $clarity                  Clarity adjustment level.
+     * @param int|null                        $customRendered           Indicates whether a custom rendering was applied in-camera.
+     * @param DeviceSettingDescription|null   $deviceSettingDescription Structured device setting description.
      */
     public function __construct(
         public ?Sharpness $sharpness,
@@ -38,7 +38,7 @@ final readonly class ProcessingSettings
         public ?string $pictureStyle,
         public ?int $clarity,
         public ?int $customRendered,
-        public ?string $deviceSettingDescription,
+        public ?DeviceSettingDescription $deviceSettingDescription,
     ) {
     }
 }
