@@ -68,6 +68,10 @@ final class XmpParser
                         $listBuffers[$depth] = [];
                     }
 
+                    // XMP Specification Part 1 §7.9.2.2: Properties may be encoded as attributes
+                    // on rdf:Description or other elements. Extract non-structural attributes.
+                    $this->extractAttributes($reader, $data);
+
                     if ($reader->isEmptyElement) {
                         if ($namespace !== self::RDF_NAMESPACE) {
                             $this->storeFinalizedValue(
@@ -133,6 +137,61 @@ final class XmpParser
         $reader->close();
 
         return new XmpDocument($data);
+    }
+
+    /**
+     * Extracts attribute properties from the current element.
+     *
+     * XMP Specification Part 1 §7.9.2.2 allows simple properties to be encoded
+     * as attributes on rdf:Description or other elements. This method filters
+     * out namespace declarations (xmlns:*) and RDF structural attributes
+     * (rdf:about, rdf:ID, rdf:nodeID, rdf:parseType) while capturing actual
+     * property values.
+     *
+     * @param XMLReader                                    $reader Active XMLReader positioned on an element.
+     * @param array<string, array<int, string>|string> &$data   Target map for discovered properties.
+     */
+    private function extractAttributes(XMLReader $reader, array &$data): void
+    {
+        if (!$reader->hasAttributes) {
+            return;
+        }
+
+        $reader->moveToFirstAttribute();
+
+        do {
+            $attrNamespace = $reader->namespaceURI;
+            $attrLocalName = $reader->localName;
+
+            // XMP Specification Part 1 §7.2: Skip namespace declarations (xmlns:*)
+            if ($attrNamespace === 'http://www.w3.org/2000/xmlns/') {
+                continue;
+            }
+
+            // XMP Specification Part 1 §7.9.2.2: Skip RDF structural attributes
+            if (
+                $attrNamespace === self::RDF_NAMESPACE
+                && (
+                    $attrLocalName === 'about'
+                    || $attrLocalName === 'ID'
+                    || $attrLocalName === 'nodeID'
+                    || $attrLocalName === 'parseType'
+                )
+            ) {
+                continue;
+            }
+
+            // Capture the attribute value as a property
+            $value = $reader->value;
+
+            if ($value !== '') {
+                $key = $this->buildClarkName($attrNamespace, $attrLocalName);
+                $this->storeValue($data, $key, $value);
+            }
+        } while ($reader->moveToNextAttribute());
+
+        // Return to the element node after attribute traversal
+        $reader->moveToElement();
     }
 
     /**
