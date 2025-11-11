@@ -54,8 +54,8 @@ final class RegionsFactoryTest extends TestCase
             },
         );
 
-        $metadata       = new Metadata();
-        $metadata->xmpDoc  = $xmpDoc;
+        $metadata         = new Metadata();
+        $metadata->xmpDoc = $xmpDoc;
 
         $factory = new RegionsFactory();
         $regions = $factory->create($metadata);
@@ -89,8 +89,8 @@ final class RegionsFactoryTest extends TestCase
             },
         );
 
-        $metadata       = new Metadata();
-        $metadata->xmpDoc  = $xmpDoc;
+        $metadata         = new Metadata();
+        $metadata->xmpDoc = $xmpDoc;
 
         $factory = new RegionsFactory();
         $regions = $factory->create($metadata);
@@ -136,8 +136,8 @@ final class RegionsFactoryTest extends TestCase
             },
         );
 
-        $metadata       = new Metadata();
-        $metadata->xmpDoc  = $xmpDoc;
+        $metadata         = new Metadata();
+        $metadata->xmpDoc = $xmpDoc;
 
         $factory = new RegionsFactory();
         $regions = $factory->create($metadata);

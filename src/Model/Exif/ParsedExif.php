@@ -1953,7 +1953,7 @@ final readonly class ParsedExif
      */
     public function compression(): Compression
     {
-        $value = $this->enumValue($this->ifd0, ExifTag::COMPRESSION);
+        $value       = $this->enumValue($this->ifd0, ExifTag::COMPRESSION);
         $compression = Compression::fromExifValue($value);
 
         // TIFF 6.0 §8: Default is 1 (UNCOMPRESSED) when tag is not present
@@ -1979,7 +1979,7 @@ final readonly class ParsedExif
      */
     public function planarConfiguration(): PlanarConfiguration
     {
-        $value = $this->enumValue($this->ifd0, ExifTag::PLANAR_CONFIGURATION);
+        $value  = $this->enumValue($this->ifd0, ExifTag::PLANAR_CONFIGURATION);
         $config = PlanarConfiguration::fromExifValue($value);
 
         // TIFF 6.0 §8: Default is 1 (CHUNKY) when tag is not present
@@ -1996,7 +1996,7 @@ final readonly class ParsedExif
     public function resolutionUnit(): ResolutionUnit
     {
         $value = $this->enumValue($this->ifd0, ExifTag::RESOLUTION_UNIT);
-        $unit = ResolutionUnit::fromExifValue($value);
+        $unit  = ResolutionUnit::fromExifValue($value);
 
         // TIFF 6.0 §8: Default is 2 (INCHES) when tag is not present
         return $unit ?? ResolutionUnit::INCHES;

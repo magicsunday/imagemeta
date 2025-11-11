@@ -25,13 +25,13 @@ final class MultiPictureFactoryTest extends TestCase
     #[Test]
     public function createsFromMpfDocument(): void
     {
-        $mpfDocument = $this->createMock(MpfDocument::class);
+        $mpfDocument             = $this->createMock(MpfDocument::class);
         $mpfDocument->version    = '0100';
         $mpfDocument->imageCount = 2;
         $mpfDocument->entries    = [];
         $mpfDocument->attributes = null;
 
-        $metadata             = new Metadata();
+        $metadata              = new Metadata();
         $metadata->mpfDocument = $mpfDocument;
 
         $factory      = new MultiPictureFactory();

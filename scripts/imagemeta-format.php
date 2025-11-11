@@ -2,39 +2,21 @@
 <?php
 
 /**
- * ExifTool-like Output Formatter
+ * This file is part of the package magicsunday/imagemeta.
  *
- * This script generates output similar to 'exiftool -H -a -u -g1' for comparing
- * metadata extraction results between this library and exiftool.
- *
- * The output format mimics exiftool's grouped display with:
- * - Hexadecimal tag IDs for EXIF tags (e.g., 0x010f)
- * - Tag names and values aligned with colons
- * - Sections grouped by IFD (IFD0, ExifIFD, GPS, etc.)
- * - File system metadata (System section)
- * - Container information (File section)
- * - XMP data grouped by namespace
- * - Apple MakerNotes details
- * - Composite/derived values
- *
- * Usage:
- *   php scripts/exiftool-format.php <image-file>
- *
- * Examples:
- *   php scripts/exiftool-format.php photo.jpg
- *   php scripts/exiftool-format.php /path/to/image.heic
- *
- * To compare with actual exiftool output:
- *   exiftool -H -a -u -g1 photo.jpg > exiftool.txt
- *   php scripts/exiftool-format.php photo.jpg > imagemeta.txt
- *   diff -u exiftool.txt imagemeta.txt
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
  */
 
 declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Scripts;
 
+use BackedEnum;
+use DateTime;
+use DateTimeImmutable;
 use DateTimeInterface;
+use DateTimeZone;
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\RegionsFactory;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
@@ -49,8 +31,6 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
-use MagicSunday\ImageMeta\Value\ExifFlash;
-use MagicSunday\ImageMeta\Value\FlashInfo;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
@@ -61,8 +41,8 @@ use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
+use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
@@ -82,22 +62,29 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\ExifFlash;
+use ReflectionClass;
+use ReflectionProperty;
+use Throwable;
 
 use function count;
-use function date;
+use function dirname;
 use function file_exists;
-use function fileperms;
 use function fileatime;
 use function filectime;
 use function filemtime;
+use function fileperms;
 use function filesize;
 use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
 use function is_numeric;
 use function is_string;
 use function number_format;
 use function round;
 use function sprintf;
-use function str_pad;
+use function strlen;
 
 // Check if we're using composer or standalone
 $autoloadPaths = [
@@ -114,8 +101,33 @@ foreach ($autoloadPaths as $autoloadPath) {
 
 /**
  * Formats metadata in an exiftool-like output format.
+ *
+ * This script generates output similar to 'exiftool -H -a -u -g1' for comparing
+ * metadata extraction results between this library and exiftool.
+ *
+ * The output format mimics exiftool's grouped display with:
+ * - Hexadecimal tag IDs for EXIF tags (e.g., 0x010f)
+ * - Tag names and values aligned with colons
+ * - Sections grouped by IFD (IFD0, ExifIFD, GPS, etc.)
+ * - File system metadata (System section)
+ * - Container information (File section)
+ * - XMP data grouped by namespace
+ * - Apple MakerNotes details
+ * - Composite/derived values
+ *
+ * Usage:
+ *   php scripts/imagemeta-format.php <image-file>
+ *
+ * Examples:
+ *   php scripts/imagemeta-format.php photo.jpg
+ *   php scripts/imagemeta-format.php /path/to/image.heic
+ *
+ * To compare with actual exiftool output:
+ *   exiftool -H -a -u -g1 photo.jpg > exiftool.txt
+ *   php scripts/imagemeta-format.php photo.jpg > imagemeta.txt
+ *   diff -u exiftool.txt imagemeta.txt
  */
-final class ExifToolFormatter
+final class MetadataFormatter
 {
     private const string VERSION = '1.0.0';
 
@@ -160,7 +172,7 @@ final class ExifToolFormatter
      *
      * EXIF 3.0 §4.6 and earlier specifications define these enumerated values.
      *
-     * @var array<int, class-string<\BackedEnum>>
+     * @var array<int, class-string<BackedEnum>>
      */
     private array $tagToEnumMap = [];
 
@@ -170,7 +182,7 @@ final class ExifToolFormatter
     private function buildTagMaps(): void
     {
         // Build EXIF tag map
-        $exifReflection = new \ReflectionClass(ExifTag::class);
+        $exifReflection = new ReflectionClass(ExifTag::class);
         foreach ($exifReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $tagName = $this->constantNameToTagName($name);
@@ -192,7 +204,7 @@ final class ExifToolFormatter
         }
 
         // Build TIFF tag map
-        $tiffReflection = new \ReflectionClass(TiffTag::class);
+        $tiffReflection = new ReflectionClass(TiffTag::class);
         foreach ($tiffReflection->getConstants() as $name => $value) {
             if (is_int($value)) {
                 $this->tiffTagNames[$value] = $this->constantNameToTagName($name);
@@ -203,46 +215,46 @@ final class ExifToolFormatter
         // Maps EXIF tag IDs to their corresponding enum classes
         $this->tagToEnumMap = [
             // IFD0 / TIFF tags - EXIF 3.0 §4.6.2, TIFF 6.0 §8
-            ExifTag::ORIENTATION => Orientation::class,
-            ExifTag::COMPRESSION => Compression::class,
+            ExifTag::ORIENTATION                => Orientation::class,
+            ExifTag::COMPRESSION                => Compression::class,
             ExifTag::PHOTOMETRIC_INTERPRETATION => Photometric::class,
-            ExifTag::PLANAR_CONFIGURATION => PlanarConfiguration::class,
-            ExifTag::RESOLUTION_UNIT => ResolutionUnit::class,
-            ExifTag::YCBCR_POSITIONING => YCbCrPositioning::class,
+            ExifTag::PLANAR_CONFIGURATION       => PlanarConfiguration::class,
+            ExifTag::RESOLUTION_UNIT            => ResolutionUnit::class,
+            ExifTag::YCBCR_POSITIONING          => YCbCrPositioning::class,
 
             // ExifIFD tags - EXIF 3.0 §4.6.3, §4.6.4
-            ExifTag::COLOR_SPACE => ColorSpace::class,
-            ExifTag::EXPOSURE_PROGRAM => ExposureProgram::class,
-            ExifTag::METERING_MODE => MeteringMode::class,
-            ExifTag::LIGHT_SOURCE => LightSource::class,
-            ExifTag::WHITE_BALANCE => WhiteBalance::class,
-            ExifTag::EXPOSURE_MODE => ExposureMode::class,
-            ExifTag::SCENE_CAPTURE_TYPE => SceneCaptureType::class,
-            ExifTag::GAIN_CONTROL => GainControl::class,
-            ExifTag::CONTRAST => Contrast::class,
-            ExifTag::SATURATION => Saturation::class,
-            ExifTag::SHARPNESS => Sharpness::class,
+            ExifTag::COLOR_SPACE            => ColorSpace::class,
+            ExifTag::EXPOSURE_PROGRAM       => ExposureProgram::class,
+            ExifTag::METERING_MODE          => MeteringMode::class,
+            ExifTag::LIGHT_SOURCE           => LightSource::class,
+            ExifTag::WHITE_BALANCE          => WhiteBalance::class,
+            ExifTag::EXPOSURE_MODE          => ExposureMode::class,
+            ExifTag::SCENE_CAPTURE_TYPE     => SceneCaptureType::class,
+            ExifTag::GAIN_CONTROL           => GainControl::class,
+            ExifTag::CONTRAST               => Contrast::class,
+            ExifTag::SATURATION             => Saturation::class,
+            ExifTag::SHARPNESS              => Sharpness::class,
             ExifTag::SUBJECT_DISTANCE_RANGE => SubjectDistanceRange::class,
-            ExifTag::SENSING_METHOD => SensingMethod::class,
-            ExifTag::FILE_SOURCE => FileSource::class,
-            ExifTag::SCENE_TYPE => SceneType::class,
-            ExifTag::CUSTOM_RENDERED => CustomRendered::class,
-            ExifTag::COMPOSITE_IMAGE => CompositeImage::class,
+            ExifTag::SENSING_METHOD         => SensingMethod::class,
+            ExifTag::FILE_SOURCE            => FileSource::class,
+            ExifTag::SCENE_TYPE             => SceneType::class,
+            ExifTag::CUSTOM_RENDERED        => CustomRendered::class,
+            ExifTag::COMPOSITE_IMAGE        => CompositeImage::class,
 
             // GPS tags - EXIF 3.0 §4.6.6 Table 27
-            ExifTag::GPS_LATITUDE_REF => GpsLatLonRef::class,
-            ExifTag::GPS_LONGITUDE_REF => GpsLatLonRef::class,
-            ExifTag::GPS_ALTITUDE_REF => GpsAltitudeRef::class,
-            ExifTag::GPS_STATUS => GpsStatus::class,
-            ExifTag::GPS_MEASURE_MODE => GpsMeasureMode::class,
-            ExifTag::GPS_SPEED_REF => GpsSpeedRef::class,
-            ExifTag::GPS_TRACK_REF => GpsDirectionRef::class,
-            ExifTag::GPS_IMG_DIRECTION_REF => GpsDirectionRef::class,
-            ExifTag::GPS_DEST_LATITUDE_REF => GpsLatLonRef::class,
+            ExifTag::GPS_LATITUDE_REF       => GpsLatLonRef::class,
+            ExifTag::GPS_LONGITUDE_REF      => GpsLatLonRef::class,
+            ExifTag::GPS_ALTITUDE_REF       => GpsAltitudeRef::class,
+            ExifTag::GPS_STATUS             => GpsStatus::class,
+            ExifTag::GPS_MEASURE_MODE       => GpsMeasureMode::class,
+            ExifTag::GPS_SPEED_REF          => GpsSpeedRef::class,
+            ExifTag::GPS_TRACK_REF          => GpsDirectionRef::class,
+            ExifTag::GPS_IMG_DIRECTION_REF  => GpsDirectionRef::class,
+            ExifTag::GPS_DEST_LATITUDE_REF  => GpsLatLonRef::class,
             ExifTag::GPS_DEST_LONGITUDE_REF => GpsLatLonRef::class,
-            ExifTag::GPS_DEST_BEARING_REF => GpsDirectionRef::class,
-            ExifTag::GPS_DEST_DISTANCE_REF => GpsDistanceRef::class,
-            ExifTag::GPS_DIFFERENTIAL => GpsDifferential::class,
+            ExifTag::GPS_DEST_BEARING_REF   => GpsDirectionRef::class,
+            ExifTag::GPS_DEST_DISTANCE_REF  => GpsDistanceRef::class,
+            ExifTag::GPS_DIFFERENTIAL       => GpsDifferential::class,
         ];
     }
 
@@ -253,56 +265,56 @@ final class ExifToolFormatter
     {
         // Special cases mapping to match exiftool naming
         $specialCases = [
-            'MAKE' => 'Make',
-            'MODEL' => 'Camera Model Name',
-            'ORIENTATION' => 'Orientation',
-            'X_RESOLUTION' => 'X Resolution',
-            'Y_RESOLUTION' => 'Y Resolution',
-            'RESOLUTION_UNIT' => 'Resolution Unit',
-            'SOFTWARE' => 'Software',
-            'MODIFY_DATE' => 'Modify Date',
-            'HOST_COMPUTER' => 'Host Computer',
-            'TILE_WIDTH' => 'Tile Width',
-            'TILE_LENGTH' => 'Tile Length',
-            'YCBCR_POSITIONING' => 'Y Cb Cr Positioning',
-            'EXPOSURE_TIME' => 'Exposure Time',
-            'F_NUMBER' => 'F Number',
-            'EXPOSURE_PROGRAM' => 'Exposure Program',
-            'ISO' => 'ISO',
-            'PHOTOGRAPHIC_SENSITIVITY' => 'ISO',
-            'EXIF_VERSION' => 'Exif Version',
-            'DATETIME_ORIGINAL' => 'Date/Time Original',
-            'DATETIME_DIGITIZED' => 'Create Date',
-            'OFFSET_TIME' => 'Offset Time',
-            'OFFSET_TIME_ORIGINAL' => 'Offset Time Original',
-            'OFFSET_TIME_DIGITIZED' => 'Offset Time Digitized',
-            'COMPONENTS_CONFIGURATION' => 'Components Configuration',
-            'SHUTTER_SPEED_VALUE' => 'Shutter Speed Value',
-            'APERTURE_VALUE' => 'Aperture Value',
-            'BRIGHTNESS_VALUE' => 'Brightness Value',
-            'EXPOSURE_BIAS_VALUE' => 'Exposure Compensation',
-            'METERING_MODE' => 'Metering Mode',
-            'FLASH' => 'Flash',
-            'FOCAL_LENGTH' => 'Focal Length',
-            'SUBJECT_AREA' => 'Subject Area',
-            'SUB_SEC_TIME_ORIGINAL' => 'Sub Sec Time Original',
-            'SUB_SEC_TIME_DIGITIZED' => 'Sub Sec Time Digitized',
-            'FLASHPIX_VERSION' => 'Flashpix Version',
-            'COLOR_SPACE' => 'Color Space',
-            'PIXEL_X_DIMENSION' => 'Exif Image Width',
-            'PIXEL_Y_DIMENSION' => 'Exif Image Height',
-            'SENSING_METHOD' => 'Sensing Method',
-            'SCENE_TYPE' => 'Scene Type',
-            'EXPOSURE_MODE' => 'Exposure Mode',
-            'WHITE_BALANCE' => 'White Balance',
+            'MAKE'                      => 'Make',
+            'MODEL'                     => 'Camera Model Name',
+            'ORIENTATION'               => 'Orientation',
+            'X_RESOLUTION'              => 'X Resolution',
+            'Y_RESOLUTION'              => 'Y Resolution',
+            'RESOLUTION_UNIT'           => 'Resolution Unit',
+            'SOFTWARE'                  => 'Software',
+            'MODIFY_DATE'               => 'Modify Date',
+            'HOST_COMPUTER'             => 'Host Computer',
+            'TILE_WIDTH'                => 'Tile Width',
+            'TILE_LENGTH'               => 'Tile Length',
+            'YCBCR_POSITIONING'         => 'Y Cb Cr Positioning',
+            'EXPOSURE_TIME'             => 'Exposure Time',
+            'F_NUMBER'                  => 'F Number',
+            'EXPOSURE_PROGRAM'          => 'Exposure Program',
+            'ISO'                       => 'ISO',
+            'PHOTOGRAPHIC_SENSITIVITY'  => 'ISO',
+            'EXIF_VERSION'              => 'Exif Version',
+            'DATETIME_ORIGINAL'         => 'Date/Time Original',
+            'DATETIME_DIGITIZED'        => 'Create Date',
+            'OFFSET_TIME'               => 'Offset Time',
+            'OFFSET_TIME_ORIGINAL'      => 'Offset Time Original',
+            'OFFSET_TIME_DIGITIZED'     => 'Offset Time Digitized',
+            'COMPONENTS_CONFIGURATION'  => 'Components Configuration',
+            'SHUTTER_SPEED_VALUE'       => 'Shutter Speed Value',
+            'APERTURE_VALUE'            => 'Aperture Value',
+            'BRIGHTNESS_VALUE'          => 'Brightness Value',
+            'EXPOSURE_BIAS_VALUE'       => 'Exposure Compensation',
+            'METERING_MODE'             => 'Metering Mode',
+            'FLASH'                     => 'Flash',
+            'FOCAL_LENGTH'              => 'Focal Length',
+            'SUBJECT_AREA'              => 'Subject Area',
+            'SUB_SEC_TIME_ORIGINAL'     => 'Sub Sec Time Original',
+            'SUB_SEC_TIME_DIGITIZED'    => 'Sub Sec Time Digitized',
+            'FLASHPIX_VERSION'          => 'Flashpix Version',
+            'COLOR_SPACE'               => 'Color Space',
+            'PIXEL_X_DIMENSION'         => 'Exif Image Width',
+            'PIXEL_Y_DIMENSION'         => 'Exif Image Height',
+            'SENSING_METHOD'            => 'Sensing Method',
+            'SCENE_TYPE'                => 'Scene Type',
+            'EXPOSURE_MODE'             => 'Exposure Mode',
+            'WHITE_BALANCE'             => 'White Balance',
             'FOCAL_LENGTH_IN_35MM_FILM' => 'Focal Length In 35mm Format',
-            'SCENE_CAPTURE_TYPE' => 'Scene Capture Type',
-            'LENS_SPECIFICATION' => 'Lens Info',
-            'LENS_MAKE' => 'Lens Make',
-            'LENS_MODEL' => 'Lens Model',
-            'COMPOSITE_IMAGE' => 'Composite Image',
-            'GPS_IFD_POINTER' => 'GPS IFD Pointer',
-            'EXIF_IFD_POINTER' => 'Exif IFD Pointer',
+            'SCENE_CAPTURE_TYPE'        => 'Scene Capture Type',
+            'LENS_SPECIFICATION'        => 'Lens Info',
+            'LENS_MAKE'                 => 'Lens Make',
+            'LENS_MODEL'                => 'Lens Model',
+            'COMPOSITE_IMAGE'           => 'Composite Image',
+            'GPS_IFD_POINTER'           => 'GPS IFD Pointer',
+            'EXIF_IFD_POINTER'          => 'Exif IFD Pointer',
         ];
 
         if (isset($specialCases[$constantName])) {
@@ -315,20 +327,20 @@ final class ExifToolFormatter
 
             // Special GPS cases
             $gpsSpecialCases = [
-                'LATITUDE_REF' => 'GPS Latitude Ref',
-                'LATITUDE' => 'GPS Latitude',
-                'LONGITUDE_REF' => 'GPS Longitude Ref',
-                'LONGITUDE' => 'GPS Longitude',
-                'ALTITUDE_REF' => 'GPS Altitude Ref',
-                'ALTITUDE' => 'GPS Altitude',
-                'TIME_STAMP' => 'GPS Time Stamp',
-                'SPEED_REF' => 'GPS Speed Ref',
-                'SPEED' => 'GPS Speed',
-                'IMG_DIRECTION_REF' => 'GPS Img Direction Ref',
-                'IMG_DIRECTION' => 'GPS Img Direction',
-                'DEST_BEARING_REF' => 'GPS Dest Bearing Ref',
-                'DEST_BEARING' => 'GPS Dest Bearing',
-                'DATE_STAMP' => 'GPS Date Stamp',
+                'LATITUDE_REF'        => 'GPS Latitude Ref',
+                'LATITUDE'            => 'GPS Latitude',
+                'LONGITUDE_REF'       => 'GPS Longitude Ref',
+                'LONGITUDE'           => 'GPS Longitude',
+                'ALTITUDE_REF'        => 'GPS Altitude Ref',
+                'ALTITUDE'            => 'GPS Altitude',
+                'TIME_STAMP'          => 'GPS Time Stamp',
+                'SPEED_REF'           => 'GPS Speed Ref',
+                'SPEED'               => 'GPS Speed',
+                'IMG_DIRECTION_REF'   => 'GPS Img Direction Ref',
+                'IMG_DIRECTION'       => 'GPS Img Direction',
+                'DEST_BEARING_REF'    => 'GPS Dest Bearing Ref',
+                'DEST_BEARING'        => 'GPS Dest Bearing',
+                'DATE_STAMP'          => 'GPS Date Stamp',
                 'H_POSITIONING_ERROR' => 'GPS Horizontal Positioning Error',
             ];
 
@@ -341,9 +353,7 @@ final class ExifToolFormatter
 
         // Convert SNAKE_CASE to Title Case
         $parts = explode('_', $constantName);
-        $parts = array_map(function ($part) {
-            return ucfirst(strtolower($part));
-        }, $parts);
+        $parts = array_map(static fn ($part): string => ucfirst(strtolower($part)), $parts);
 
         return implode(' ', $parts);
     }
@@ -355,7 +365,7 @@ final class ExifToolFormatter
      * converting raw integer/string values to their typed enum representations.
      *
      * @param int|null $tagId The EXIF tag identifier
-     * @param mixed $value The raw value from the IFD entry
+     * @param mixed    $value The raw value from the IFD entry
      *
      * @return mixed The converted enum instance or the original value if no mapping exists
      */
@@ -391,6 +401,7 @@ final class ExifToolFormatter
         // Call the enum's fromExifValue method if it exists
         if (method_exists($enumClass, 'fromExifValue')) {
             $enumInstance = $enumClass::fromExifValue($scalarValue);
+
             return $enumInstance ?? $value;
         }
 
@@ -411,7 +422,7 @@ final class ExifToolFormatter
     {
         // Split by underscore and convert each part to title case
         $parts = explode('_', $enumName);
-        $parts = array_map(fn(string $part) => ucfirst(strtolower($part)), $parts);
+        $parts = array_map(static fn (string $part): string => ucfirst(strtolower($part)), $parts);
 
         return implode(' ', $parts);
     }
@@ -422,16 +433,16 @@ final class ExifToolFormatter
     public function format(string $filePath): void
     {
         if (!file_exists($filePath)) {
-            echo "Error: File not found: {$filePath}\n";
+            echo sprintf('Error: File not found: %s%s', $filePath, PHP_EOL);
             exit(1);
         }
 
-        $reader = new MetadataReader();
+        $reader   = new MetadataReader();
         $metadata = $reader->read($filePath, withDigests: true);
 
-        // ExifTool section
-        $this->printSection('ExifTool', [
-            'ExifTool Version Number' => self::VERSION,
+        // ImageMeta section
+        $this->printSection('ImageMeta', [
+            'ImageMeta Version Number' => self::VERSION,
         ]);
 
         // System section
@@ -441,47 +452,47 @@ final class ExifToolFormatter
         $this->printFileSection($metadata, $filePath);
 
         // IFD0 section
-        if ($metadata->exifDoc !== null) {
+        if ($metadata->exifDoc instanceof ParsedExif) {
             $this->printIfd0Section($metadata->exifDoc);
         }
 
         // ExifIFD section
-        if ($metadata->exifDoc !== null && $metadata->exifDoc->exifIfd !== null) {
+        if ($metadata->exifDoc instanceof ParsedExif && $metadata->exifDoc->exifIfd instanceof Ifd) {
             $this->printExifIfdSection($metadata->exifDoc->exifIfd, $metadata->exifDoc);
         }
 
         // MakerNotes section
-        if ($metadata->makerNotes !== null) {
+        if ($metadata->makerNotes instanceof \MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord) {
             $this->printMakerNotesSection($metadata->makerNotes);
         }
 
         // GPS section
-        if ($metadata->exifDoc !== null && $metadata->exifDoc->gpsIfd !== null) {
+        if ($metadata->exifDoc instanceof ParsedExif && $metadata->exifDoc->gpsIfd instanceof Ifd) {
             $this->printGpsSection($metadata->exifDoc->gpsIfd);
         }
 
         // InteropIFD section
-        if ($metadata->exifDoc !== null && $metadata->exifDoc->interopIfd !== null) {
+        if ($metadata->exifDoc instanceof ParsedExif && $metadata->exifDoc->interopIfd instanceof Ifd) {
             $this->printInteropIfdSection($metadata->exifDoc->interopIfd);
         }
 
         // IFD1 section (thumbnail metadata)
-        if ($metadata->exifDoc !== null && $metadata->exifDoc->ifd1 !== null) {
+        if ($metadata->exifDoc instanceof ParsedExif && $metadata->exifDoc->ifd1 instanceof Ifd) {
             $this->printIfd1Section($metadata->exifDoc->ifd1);
         }
 
         // XMP sections
-        if ($metadata->xmpDoc !== null) {
+        if ($metadata->xmpDoc instanceof XmpDocument) {
             $this->printXmpSections($metadata->xmpDoc);
         }
 
         // QuickTime section
-        if ($metadata->quickTime !== null) {
+        if ($metadata->quickTime instanceof QuickTimeMeta) {
             $this->printQuickTimeSection($metadata->quickTime);
         }
 
         // MPF section
-        if ($metadata->mpfDocument !== null) {
+        if ($metadata->mpfDocument instanceof MpfDocument) {
             $this->printMpfSection($metadata->mpfDocument);
         }
 
@@ -513,18 +524,18 @@ final class ExifToolFormatter
      * Prints a section header and its data.
      *
      * @param array<string, mixed> $data
-     * @param string|null $ifdContext The IFD context ('GPS', 'InteropIFD', etc.) for correct tag name resolution
+     * @param string|null          $ifdContext The IFD context ('GPS', 'InteropIFD', etc.) for correct tag name resolution
      */
     private function printSection(string $sectionName, array $data, bool $showHex = false, ?string $ifdContext = null): void
     {
         echo "---- {$sectionName} ----\n";
 
         foreach ($data as $key => $value) {
-            $tagId = is_numeric($key) ? (int) $key : null;
+            $tagId          = is_numeric($key) ? (int) $key : null;
             $formattedValue = $this->formatValue($value, $ifdContext, $tagId);
 
             if ($showHex && is_numeric($key)) {
-                $hexKey = sprintf('0x%04x', (int) $key);
+                $hexKey  = sprintf('0x%04x', (int) $key);
                 $tagName = $this->getTagName((int) $key, $ifdContext);
                 // Format with exactly 40 characters before the colon
                 // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
@@ -542,7 +553,7 @@ final class ExifToolFormatter
     /**
      * Gets the tag name for a given tag ID.
      *
-     * @param int $tagId The tag ID to look up
+     * @param int         $tagId      The tag ID to look up
      * @param string|null $ifdContext The IFD context ('GPS', 'InteropIFD', etc.) for correct tag name resolution
      */
     private function getTagName(int $tagId, ?string $ifdContext = null): string
@@ -565,9 +576,9 @@ final class ExifToolFormatter
     /**
      * Formats a value for display.
      *
-     * @param mixed $value The value to format
+     * @param mixed       $value      The value to format
      * @param string|null $ifdContext The IFD context for tag-specific formatting
-     * @param int|null $tagId The tag ID for tag-specific formatting
+     * @param int|null    $tagId      The tag ID for tag-specific formatting
      */
     private function formatValue(mixed $value, ?string $ifdContext = null, ?int $tagId = null): string
     {
@@ -581,38 +592,34 @@ final class ExifToolFormatter
             if ($value instanceof ExifNumericList) {
                 $rawValue = $value->values[0] ?? null;
             }
-            
+
             if (is_int($rawValue) || is_string($rawValue)) {
                 $flashInfo = ExifFlash::fromExifValue($rawValue);
-                if ($flashInfo !== null) {
+                if ($flashInfo instanceof \MagicSunday\ImageMeta\Value\FlashInfo) {
                     $parts = [];
-                    
-                    if ($flashInfo->fired) {
-                        $parts[] = 'Flash Fired';
-                    } else {
-                        $parts[] = 'Flash Did Not Fire';
-                    }
-                    
-                    if ($flashInfo->mode !== null) {
+
+                    $parts[] = $flashInfo->fired ? 'Flash Fired' : 'Flash Did Not Fire';
+
+                    if ($flashInfo->mode instanceof \MagicSunday\ImageMeta\Value\Enum\FlashMode) {
                         $modeName = $this->formatEnumName($flashInfo->mode->name);
-                        $parts[] = $modeName . ' Mode';
+                        $parts[]  = $modeName . ' Mode';
                     }
-                    
-                    if ($flashInfo->returnDetection !== null && $flashInfo->fired) {
+
+                    if ($flashInfo->returnDetection instanceof \MagicSunday\ImageMeta\Value\Enum\FlashReturn && $flashInfo->fired) {
                         $returnName = $this->formatEnumName($flashInfo->returnDetection->name);
                         if ($returnName !== 'No Strobe Detection') {
                             $parts[] = $returnName;
                         }
                     }
-                    
-                    if ($flashInfo->functionPresence !== null && $flashInfo->functionPresence->name === 'ABSENT') {
+
+                    if ($flashInfo->functionPresence instanceof \MagicSunday\ImageMeta\Value\Enum\FlashFunction && $flashInfo->functionPresence->name === 'ABSENT') {
                         $parts[] = 'No Flash Function';
                     }
-                    
+
                     if ($flashInfo->redEyeReduction) {
                         $parts[] = 'Red-eye Reduction';
                     }
-                    
+
                     return $rawValue . ' (' . implode(', ', $parts) . ')';
                 }
             }
@@ -644,6 +651,7 @@ final class ExifToolFormatter
             foreach ($value->values as $rational) {
                 $parts[] = $this->formatValue($rational, $ifdContext, $tagId);
             }
+
             return implode(' ', $parts);
         }
 
@@ -652,6 +660,7 @@ final class ExifToolFormatter
             foreach ($value->values as $num) {
                 $parts[] = $this->formatValue($num, $ifdContext, $tagId);
             }
+
             return implode(' ', $parts);
         }
 
@@ -659,15 +668,15 @@ final class ExifToolFormatter
             return $value->format('Y:m:d H:i:s');
         }
 
-        if ($value instanceof \BackedEnum) {
+        if ($value instanceof BackedEnum) {
             // For enums, show both value and name in parentheses
             // Example: "0 (Auto)" instead of "0 (AUTO)"
             $enumValue = $value->value ?? $value->name;
-            $enumName = $this->formatEnumName($value->name);
+            $enumName  = $this->formatEnumName($value->name);
 
             // Only add name in parentheses if it's different from the value
             if ((string) $enumValue !== $enumName) {
-                return "{$enumValue} ({$enumName})";
+                return sprintf('%s (%s)', $enumValue, $enumName);
             }
 
             return (string) $enumValue;
@@ -678,13 +687,13 @@ final class ExifToolFormatter
         }
 
         if (is_array($value)) {
-            if (empty($value)) {
+            if ($value === []) {
                 return '(none)';
             }
 
             // Check if it's a simple numeric array
             if (array_is_list($value)) {
-                return implode(' ', array_map(fn($v) => $this->formatValue($v, $ifdContext, $tagId), $value));
+                return implode(' ', array_map(fn ($v): string => $this->formatValue($v, $ifdContext, $tagId), $value));
             }
 
             return json_encode($value);
@@ -693,6 +702,7 @@ final class ExifToolFormatter
         if (is_float($value)) {
             // Clean up unnecessary decimals
             $formatted = number_format($value, 10, '.', '');
+
             return rtrim(rtrim($formatted, '0'), '.');
         }
 
@@ -721,6 +731,7 @@ final class ExifToolFormatter
             if (strlen($value) > 100) {
                 return substr($value, 0, 100) . '...';
             }
+
             return $value;
         }
 
@@ -732,7 +743,7 @@ final class ExifToolFormatter
      *
      * EXIF 3.0 §4.6.6 Table 27 defines GPS tag value formats and units.
      *
-     * @param int $tagId The GPS tag ID
+     * @param int   $tagId The GPS tag ID
      * @param float $value The calculated decimal value
      */
     private function formatGpsValue(int $tagId, float $value): string
@@ -773,21 +784,54 @@ final class ExifToolFormatter
     }
 
     /**
+     * Prints the System section with file system metadata.
+     */
+    private function printSystemSection(string $filePath): void
+    {
+        $fileName   = basename($filePath);
+        $directory  = dirname($filePath);
+        $fileSize   = filesize($filePath);
+        $modTime    = filemtime($filePath);
+        $accessTime = fileatime($filePath);
+        $changeTime = filectime($filePath);
+        $perms      = fileperms($filePath);
+
+        $sizeFormatted  = $this->formatFileSize($fileSize);
+        $permsFormatted = $this->formatPermissions($perms);
+
+        // Format timestamps with local timezone (matching exiftool behavior)
+        $timezone       = new DateTimeZone('Europe/Berlin');
+        $modDateTime    = (new DateTime('@' . $modTime))->setTimezone($timezone);
+        $accessDateTime = (new DateTime('@' . $accessTime))->setTimezone($timezone);
+        $changeDateTime = (new DateTime('@' . $changeTime))->setTimezone($timezone);
+
+        $this->printSection('System', [
+            'File Name'                   => $fileName,
+            'Directory'                   => $directory,
+            'File Size'                   => $sizeFormatted,
+            'File Modification Date/Time' => $modDateTime->format('Y:m:d H:i:sP'),
+            'File Access Date/Time'       => $accessDateTime->format('Y:m:d H:i:sP'),
+            'File Inode Change Date/Time' => $changeDateTime->format('Y:m:d H:i:sP'),
+            'File Permissions'            => $permsFormatted,
+        ]);
+    }
+
+    /**
      * Gets decoded value from ParsedExif accessor methods for special tags.
      *
      * This method leverages the existing decoding logic in ParsedExif rather than
      * duplicating it in the formatter. For tags with accessor methods that return
      * typed/decoded values, we use those instead of the raw IFD entry value.
      *
-     * @param int $tagId The EXIF tag identifier
-     * @param mixed $rawValue The raw value from the IFD entry
-     * @param ParsedExif|null $exifDoc The ParsedExif document for accessing decoded values
+     * @param int             $tagId    The EXIF tag identifier
+     * @param mixed           $rawValue The raw value from the IFD entry
+     * @param ParsedExif|null $exifDoc  The ParsedExif document for accessing decoded values
      *
      * @return mixed|null The decoded value from ParsedExif, or null if no special accessor exists
      */
     private function getDecodedValueFromParsedExif(int $tagId, mixed $rawValue, ?ParsedExif $exifDoc): mixed
     {
-        if ($exifDoc === null) {
+        if (!$exifDoc instanceof ParsedExif) {
             return null;
         }
 
@@ -810,39 +854,6 @@ final class ExifToolFormatter
     }
 
     /**
-     * Prints the System section with file system metadata.
-     */
-    private function printSystemSection(string $filePath): void
-    {
-        $fileName = basename($filePath);
-        $directory = dirname($filePath);
-        $fileSize = filesize($filePath);
-        $modTime = filemtime($filePath);
-        $accessTime = fileatime($filePath);
-        $changeTime = filectime($filePath);
-        $perms = fileperms($filePath);
-
-        $sizeFormatted = $this->formatFileSize($fileSize);
-        $permsFormatted = $this->formatPermissions($perms);
-
-        // Format timestamps with local timezone (matching exiftool behavior)
-        $timezone = new \DateTimeZone('Europe/Berlin');
-        $modDateTime = (new \DateTime('@' . $modTime))->setTimezone($timezone);
-        $accessDateTime = (new \DateTime('@' . $accessTime))->setTimezone($timezone);
-        $changeDateTime = (new \DateTime('@' . $changeTime))->setTimezone($timezone);
-
-        $this->printSection('System', [
-            'File Name' => $fileName,
-            'Directory' => $directory,
-            'File Size' => $sizeFormatted,
-            'File Modification Date/Time' => $modDateTime->format('Y:m:d H:i:sP'),
-            'File Access Date/Time' => $accessDateTime->format('Y:m:d H:i:sP'),
-            'File Inode Change Date/Time' => $changeDateTime->format('Y:m:d H:i:sP'),
-            'File Permissions' => $permsFormatted,
-        ]);
-    }
-
-    /**
      * Formats file size in human-readable format.
      */
     private function formatFileSize(int|false $bytes): string
@@ -852,12 +863,12 @@ final class ExifToolFormatter
         }
 
         $units = ['bytes', 'kB', 'MB', 'GB'];
-        $i = 0;
-        $size = (float) $bytes;
+        $i     = 0;
+        $size  = (float) $bytes;
 
         while ($size >= 1024 && $i < count($units) - 1) {
             $size /= 1024;
-            $i++;
+            ++$i;
         }
 
         return round($size, 1) . ' ' . $units[$i];
@@ -871,8 +882,6 @@ final class ExifToolFormatter
         if ($perms === false) {
             return 'unknown';
         }
-
-        $info = '';
 
         // File type
         if (($perms & 0xC000) === 0xC000) {
@@ -894,25 +903,25 @@ final class ExifToolFormatter
         }
 
         // Owner permissions
-        $info .= (($perms & 0x0100) ? 'r' : '-');
-        $info .= (($perms & 0x0080) ? 'w' : '-');
-        $info .= (($perms & 0x0040) ?
-            (($perms & 0x0800) ? 's' : 'x') :
-            (($perms & 0x0800) ? 'S' : '-'));
+        $info .= ((($perms & 0x0100) !== 0) ? 'r' : '-');
+        $info .= ((($perms & 0x0080) !== 0) ? 'w' : '-');
+        $info .= ((($perms & 0x0040) !== 0) ?
+            ((($perms & 0x0800) !== 0) ? 's' : 'x') :
+            ((($perms & 0x0800) !== 0) ? 'S' : '-'));
 
         // Group permissions
-        $info .= (($perms & 0x0020) ? 'r' : '-');
-        $info .= (($perms & 0x0010) ? 'w' : '-');
-        $info .= (($perms & 0x0008) ?
-            (($perms & 0x0400) ? 's' : 'x') :
-            (($perms & 0x0400) ? 'S' : '-'));
+        $info .= ((($perms & 0x0020) !== 0) ? 'r' : '-');
+        $info .= ((($perms & 0x0010) !== 0) ? 'w' : '-');
+        $info .= ((($perms & 0x0008) !== 0) ?
+            ((($perms & 0x0400) !== 0) ? 's' : 'x') :
+            ((($perms & 0x0400) !== 0) ? 'S' : '-'));
 
         // Other permissions
-        $info .= (($perms & 0x0004) ? 'r' : '-');
-        $info .= (($perms & 0x0002) ? 'w' : '-');
-        $info .= (($perms & 0x0001) ?
-            (($perms & 0x0200) ? 't' : 'x') :
-            (($perms & 0x0200) ? 'T' : '-'));
+        $info .= ((($perms & 0x0004) !== 0) ? 'r' : '-');
+        $info .= ((($perms & 0x0002) !== 0) ? 'w' : '-');
+        $info .= ((($perms & 0x0001) !== 0) ?
+            ((($perms & 0x0200) !== 0) ? 't' : 'x') :
+            ((($perms & 0x0200) !== 0) ? 'T' : '-'));
 
         return $info;
     }
@@ -923,9 +932,9 @@ final class ExifToolFormatter
     private function printFileSection(Metadata $metadata, string $filePath): void
     {
         $data = [
-            'File Type' => $this->detectFileType($filePath),
+            'File Type'           => $this->detectFileType($filePath),
             'File Type Extension' => $metadata->extension ?? 'unknown',
-            'MIME Type' => $metadata->mimeType ?? 'unknown',
+            'MIME Type'           => $metadata->mimeType ?? 'unknown',
         ];
 
         // Add file size if available
@@ -934,7 +943,7 @@ final class ExifToolFormatter
         }
 
         // Add EXIF byte order if available
-        if ($metadata->exifDoc !== null) {
+        if ($metadata->exifDoc instanceof ParsedExif) {
             $endianness = $metadata->exifDoc->endianness ?? null;
             if ($endianness !== null) {
                 $data['Exif Byte Order'] = $endianness->value === 'MM'
@@ -945,7 +954,7 @@ final class ExifToolFormatter
 
         // Add image dimensions if available from JPEG or EXIF
         if ($metadata->jpegFrameWidth !== null && $metadata->jpegFrameHeight !== null) {
-            $data['Image Width'] = $metadata->jpegFrameWidth;
+            $data['Image Width']  = $metadata->jpegFrameWidth;
             $data['Image Height'] = $metadata->jpegFrameHeight;
         }
 
@@ -1002,11 +1011,11 @@ final class ExifToolFormatter
 
         return match ($ext) {
             'jpg', 'jpeg' => 'JPEG',
-            'heic' => 'HEIC',
-            'heif' => 'HEIF',
-            'avif' => 'AVIF',
-            'mov' => 'MOV',
-            'mp4' => 'MP4',
+            'heic'  => 'HEIC',
+            'heif'  => 'HEIF',
+            'avif'  => 'AVIF',
+            'mov'   => 'MOV',
+            'mp4'   => 'MP4',
             default => strtoupper($ext),
         };
     }
@@ -1022,16 +1031,16 @@ final class ExifToolFormatter
         foreach ($exif->ifd0->entries as $tagId => $entry) {
             // Use ParsedExif accessor methods for tags with special decoding
             $value = $this->getDecodedValueFromParsedExif($tagId, $entry->value, $exif);
-            
+
             // Convert raw value to enum if applicable (for tags without special accessors)
             if ($value === null) {
                 $value = $this->convertToEnumIfApplicable($tagId, $entry->value);
             }
-            
+
             $data[$tagId] = $value;
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('IFD0', $data, showHex: true);
         }
     }
@@ -1044,21 +1053,21 @@ final class ExifToolFormatter
         $data = [];
 
         // Collect ExifIFD tags
-        if (($exifIfd !== null) && isset($exifIfd->entries)) {
+        if (($exifIfd instanceof Ifd) && isset($exifIfd->entries)) {
             foreach ($exifIfd->entries as $tagId => $entry) {
                 // Use ParsedExif accessor methods for tags with special decoding
                 $value = $this->getDecodedValueFromParsedExif($tagId, $entry->value, $exifDoc);
-                
+
                 // Convert raw value to enum if applicable (for tags without special accessors)
                 if ($value === null) {
                     $value = $this->convertToEnumIfApplicable($tagId, $entry->value);
                 }
-                
+
                 $data[$tagId] = $value;
             }
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('ExifIFD', $data, showHex: true);
         }
     }
@@ -1071,14 +1080,14 @@ final class ExifToolFormatter
         $data = [];
 
         // Collect GPS tags
-        if (($gpsIfd !== null) && isset($gpsIfd->entries)) {
+        if (($gpsIfd instanceof Ifd) && isset($gpsIfd->entries)) {
             foreach ($gpsIfd->entries as $tagId => $entry) {
                 // Convert raw value to enum if applicable
                 $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
             }
         }
 
-        if (!empty($data)) {
+        if ($data !== []) {
             $this->printSection('GPS', $data, showHex: true, ifdContext: 'GPS');
         }
     }
@@ -1086,36 +1095,29 @@ final class ExifToolFormatter
     /**
      * Prints MakerNotes sections.
      */
-    private function printMakerNotesSection($makerNotes): void
+    private function printMakerNotesSection(\MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord $makerNotes): void
     {
-        if ($makerNotes === null) {
-            return;
-        }
-
-        // Determine vendor name
-        $vendor = $makerNotes->vendor ?? 'Unknown';
-
         // For Apple maker notes, extract detailed information
-        if ($makerNotes->apple !== null) {
-            $data = [];
+        if ($makerNotes->apple instanceof \MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes) {
+            $data  = [];
             $apple = $makerNotes->apple;
 
             // Use reflection to get all properties
-            $reflection = new \ReflectionClass($apple);
-            $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+            $reflection = new ReflectionClass($apple);
+            $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
 
             foreach ($properties as $property) {
-                $name = $property->getName();
+                $name  = $property->getName();
                 $value = $property->getValue($apple);
 
                 if ($value !== null) {
                     // Convert property name to title case
-                    $displayName = $this->propertyNameToDisplayName($name);
+                    $displayName        = $this->propertyNameToDisplayName($name);
                     $data[$displayName] = $value;
                 }
             }
 
-            if (!empty($data)) {
+            if ($data !== []) {
                 $this->printSection('Apple', $data);
             }
         }
@@ -1138,7 +1140,7 @@ final class ExifToolFormatter
      */
     private function printXmpSections(?XmpDocument $xmpDoc): void
     {
-        if (($xmpDoc === null) || !isset($xmpDoc->data)) {
+        if ((!$xmpDoc instanceof XmpDocument) || !isset($xmpDoc->data)) {
             return;
         }
 
@@ -1171,8 +1173,8 @@ final class ExifToolFormatter
 
         // Print each namespace section
         foreach ($grouped as $prefix => $data) {
-            if (!empty($data)) {
-                $this->printSection("XMP-{$prefix}", $data);
+            if ($data !== []) {
+                $this->printSection('XMP-' . $prefix, $data);
             }
         }
     }
@@ -1183,18 +1185,18 @@ final class ExifToolFormatter
     private function namespaceToPrefix(string $namespace): string
     {
         $prefixMap = [
-            'http://ns.adobe.com/xap/1.0/' => 'xmp',
-            'http://purl.org/dc/elements/1.1/' => 'dc',
-            'http://ns.adobe.com/photoshop/1.0/' => 'photoshop',
-            'http://ns.adobe.com/tiff/1.0/' => 'tiff',
-            'http://ns.adobe.com/exif/1.0/' => 'exif',
-            'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/' => 'Iptc4xmpCore',
-            RegionsFactory::NS_MWG_REGIONS => 'mwg-rs',
-            RegionsFactory::NS_ST_AREA => 'mwg-rs',
-            RegionsFactory::NS_ST_DIMENSIONS => 'mwg-rs',
+            'http://ns.adobe.com/xap/1.0/'                 => 'xmp',
+            'http://purl.org/dc/elements/1.1/'             => 'dc',
+            'http://ns.adobe.com/photoshop/1.0/'           => 'photoshop',
+            'http://ns.adobe.com/tiff/1.0/'                => 'tiff',
+            'http://ns.adobe.com/exif/1.0/'                => 'exif',
+            'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/'  => 'Iptc4xmpCore',
+            RegionsFactory::NS_MWG_REGIONS                 => 'mwg-rs',
+            RegionsFactory::NS_ST_AREA                     => 'mwg-rs',
+            RegionsFactory::NS_ST_DIMENSIONS               => 'mwg-rs',
             'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
-            RegionsFactory::NS_APPLE_FACEINFO => 'mwg-rs',
-            'adobe:ns:meta/' => 'x',
+            RegionsFactory::NS_APPLE_FACEINFO              => 'mwg-rs',
+            'adobe:ns:meta/'                               => 'x',
         ];
 
         return $prefixMap[$namespace] ?? 'unknown';
@@ -1212,8 +1214,7 @@ final class ExifToolFormatter
     {
         $decoder = new IccDecoder();
         $iccData = $decoder->decode($iccProfile);
-
-        $data = [];
+        $data    = [];
 
         if ($iccData !== null) {
             if ($iccData['description'] !== null) {
@@ -1253,7 +1254,7 @@ final class ExifToolFormatter
         $data = [];
 
         // Collect InteropIFD tags
-        if (($interopIfd !== null) && isset($interopIfd->entries)) {
+        if (($interopIfd instanceof Ifd) && isset($interopIfd->entries)) {
             foreach ($interopIfd->entries as $tagId => $entry) {
                 // Convert raw value to enum if applicable
                 $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
@@ -1273,7 +1274,7 @@ final class ExifToolFormatter
         $data = [];
 
         // Collect IFD1 tags
-        if (($ifd1 !== null) && isset($ifd1->entries)) {
+        if (($ifd1 instanceof Ifd) && isset($ifd1->entries)) {
             foreach ($ifd1->entries as $tagId => $entry) {
                 // Convert raw value to enum if applicable
                 $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
@@ -1290,7 +1291,7 @@ final class ExifToolFormatter
      */
     private function printQuickTimeSection(?QuickTimeMeta $quickTime): void
     {
-        if (($quickTime === null) || ($quickTime->keys === [])) {
+        if ((!$quickTime instanceof QuickTimeMeta) || ($quickTime->keys === [])) {
             return;
         }
 
@@ -1298,13 +1299,11 @@ final class ExifToolFormatter
 
         foreach ($quickTime->keys as $key => $value) {
             // Convert key to display name
-            $displayKey = $this->quickTimeKeyToDisplayName($key);
+            $displayKey        = $this->quickTimeKeyToDisplayName($key);
             $data[$displayKey] = $value;
         }
 
-        if ($data !== []) {
-            $this->printSection('QuickTime', $data);
-        }
+        $this->printSection('QuickTime', $data);
     }
 
     /**
@@ -1316,8 +1315,9 @@ final class ExifToolFormatter
         $key = preg_replace('/^com\.apple\.quicktime\./', '', $key);
 
         // Convert camelCase to Title Case
-        $spaced = preg_replace('/([a-z])([A-Z])/', '$1 $2', $key);
-        return ucwords($spaced ?? $key);
+        $spaced = preg_replace('/([a-z])([A-Z])/', '$1 $2', (string) $key);
+
+        return ucwords((string) ($spaced ?? $key));
     }
 
     /**
@@ -1325,7 +1325,7 @@ final class ExifToolFormatter
      */
     private function printMpfSection(?MpfDocument $mpfDocument): void
     {
-        if ($mpfDocument === null) {
+        if (!$mpfDocument instanceof MpfDocument) {
             return;
         }
 
@@ -1337,17 +1337,17 @@ final class ExifToolFormatter
 
         $data['Image Count'] = $mpfDocument->imageCount;
 
-        if ($mpfDocument->attributes !== null) {
-            $attrs = $mpfDocument->attributes;
-            $reflection = new \ReflectionClass($attrs);
-            $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
+        if ($mpfDocument->attributes instanceof \MagicSunday\ImageMeta\Model\Mpf\MpfAttributes) {
+            $attrs      = $mpfDocument->attributes;
+            $reflection = new ReflectionClass($attrs);
+            $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
 
             foreach ($properties as $property) {
-                $name = $property->getName();
+                $name  = $property->getName();
                 $value = $property->getValue($attrs);
 
                 if ($value !== null) {
-                    $displayName = $this->propertyNameToDisplayName($name);
+                    $displayName        = $this->propertyNameToDisplayName($name);
                     $data[$displayName] = $value;
                 }
             }
@@ -1355,12 +1355,10 @@ final class ExifToolFormatter
 
         // Add entry information
         foreach ($mpfDocument->entries as $index => $entry) {
-            $data["Entry {$index} Type"] = $this->formatMpfEntryType($entry);
+            $data[sprintf('Entry %d Type', $index)] = $this->formatMpfEntryType($entry);
         }
 
-        if ($data !== []) {
-            $this->printSection('MPF', $data);
-        }
+        $this->printSection('MPF', $data);
     }
 
     /**
@@ -1368,16 +1366,16 @@ final class ExifToolFormatter
      */
     private function formatMpfEntryType($entry): string
     {
-        $reflection = new \ReflectionClass($entry);
-        $properties = $reflection->getProperties(\ReflectionProperty::IS_PUBLIC);
-        $parts = [];
+        $reflection = new ReflectionClass($entry);
+        $properties = $reflection->getProperties(ReflectionProperty::IS_PUBLIC);
+        $parts      = [];
 
         foreach ($properties as $property) {
-            $name = $property->getName();
+            $name  = $property->getName();
             $value = $property->getValue($entry);
 
             if (($value !== null) && ($name !== 'dataOffset') && ($name !== 'size')) {
-                $parts[] = "$name=$value";
+                $parts[] = sprintf('%s=%s', $name, $value);
             }
         }
 
@@ -1392,7 +1390,7 @@ final class ExifToolFormatter
         $data = [];
 
         foreach ($flashPixStreams as $identifier => $stream) {
-            $data["Stream {$identifier}"] = sprintf('(Binary data %d bytes)', strlen($stream));
+            $data['Stream ' . $identifier] = sprintf('(Binary data %d bytes)', strlen((string) $stream));
         }
 
         if ($data !== []) {
@@ -1411,16 +1409,16 @@ final class ExifToolFormatter
 
         foreach ($jpegAudioStreams as $index => $audioStream) {
             $data = [
-                'Format' => $audioStream->format,
-                'Channels' => $audioStream->channels,
+                'Format'      => $audioStream->format,
+                'Channels'    => $audioStream->channels,
                 'Sample Rate' => sprintf('%d Hz', $audioStream->sampleRate),
-                'Bit Depth' => sprintf('%d bits', $audioStream->bitDepth),
-                'Data Size' => sprintf('%d bytes', strlen($audioStream->data)),
-                'Version' => $audioStream->version,
+                'Bit Depth'   => sprintf('%d bits', $audioStream->bitDepth),
+                'Data Size'   => sprintf('%d bytes', strlen((string) $audioStream->data)),
+                'Version'     => $audioStream->version,
             ];
 
             $sectionName = count($jpegAudioStreams) > 1
-                ? "JPEG Audio Stream {$index}"
+                ? 'JPEG Audio Stream ' . $index
                 : 'JPEG Audio';
 
             $this->printSection($sectionName, $data);
@@ -1436,7 +1434,7 @@ final class ExifToolFormatter
 
         if ($metadata->jpegFrameSamplingFactors !== null) {
             foreach ($metadata->jpegFrameSamplingFactors as $componentId => $factors) {
-                $data["Component {$componentId} Sampling"] = sprintf(
+                $data[sprintf('Component %d Sampling', $componentId)] = sprintf(
                     '%dx%d',
                     $factors['horizontal'],
                     $factors['vertical']
@@ -1455,13 +1453,13 @@ final class ExifToolFormatter
     private function printCompositeSection(Metadata $metadata): void
     {
         $structured = $metadata->structured();
-        $data = [];
+        $data       = [];
 
         // Run Time Since Power Up (from Apple maker notes)
-        if ($structured->makerNotesApple?->runTime !== null) {
+        if ($structured->makerNotesApple?->runTime instanceof \MagicSunday\ImageMeta\Value\RunTime) {
             $runTime = $structured->makerNotesApple->runTime;
             if ($runTime->value !== null && $runTime->timescale !== null && $runTime->timescale > 0) {
-                $seconds = $runTime->value / $runTime->timescale;
+                $seconds                         = $runTime->value / $runTime->timescale;
                 $data['Run Time Since Power Up'] = $this->formatDuration($seconds);
             }
         }
@@ -1495,7 +1493,7 @@ final class ExifToolFormatter
         }
 
         // Create Date with subseconds
-        if ($structured->temporal->create !== null) {
+        if ($structured->temporal->create instanceof DateTimeImmutable) {
             $dateStr = $structured->temporal->create->format('Y:m:d H:i:s');
             if ($structured->temporal->subSecTimeOriginal !== null) {
                 $dateStr .= '.' . $structured->temporal->subSecTimeOriginal;
@@ -1507,7 +1505,7 @@ final class ExifToolFormatter
         }
 
         // Date/Time Original
-        if ($structured->temporal->original !== null) {
+        if ($structured->temporal->original instanceof DateTimeImmutable) {
             $dateStr = $structured->temporal->original->format('Y:m:d H:i:s');
             if ($structured->temporal->subSecTimeOriginal !== null) {
                 $dateStr .= '.' . $structured->temporal->subSecTimeOriginal;
@@ -1519,7 +1517,7 @@ final class ExifToolFormatter
         }
 
         // Modify Date
-        if ($structured->temporal->modify !== null) {
+        if ($structured->temporal->modify instanceof DateTimeImmutable) {
             $dateStr = $structured->temporal->modify->format('Y:m:d H:i:s');
             if ($structured->temporal->offsetTime !== null) {
                 $dateStr .= $structured->temporal->offsetTime;
@@ -1529,12 +1527,12 @@ final class ExifToolFormatter
 
         // GPS Altitude
         if ($structured->gps->altitude !== null) {
-            $altRef = $structured->gps->altitudeRef->name ?? 'Above Sea Level';
+            $altRef               = $structured->gps->altitudeRef->name ?? 'Above Sea Level';
             $data['GPS Altitude'] = sprintf('%.1f m (%s)', $structured->gps->altitude, $altRef);
         }
 
         // GPS Date/Time
-        if ($structured->gps->timestamp !== null) {
+        if ($structured->gps->timestamp instanceof DateTimeImmutable) {
             $data['GPS Date/Time'] = $structured->gps->timestamp->format('Y:m:d H:i:s') . 'Z';
         }
 
@@ -1542,18 +1540,24 @@ final class ExifToolFormatter
         if ($structured->gps->latitude !== null && $structured->gps->longitude !== null) {
             $data['GPS Latitude'] = $this->formatGpsCoordinate(
                 $structured->gps->latitude,
-                $structured->gps->latitudeRef ?? 'N'
+                $structured->gps->latitudeRef->value ?? 'N'
             );
             $data['GPS Longitude'] = $this->formatGpsCoordinate(
                 $structured->gps->longitude,
-                $structured->gps->longitudeRef ?? 'E'
+                $structured->gps->longitudeRef->value ?? 'E'
             );
 
             // Combined GPS Position
             $data['GPS Position'] = sprintf(
                 '%s, %s',
-                $this->formatGpsCoordinate($structured->gps->latitude, $structured->gps->latitudeRef ?? 'N'),
-                $this->formatGpsCoordinate($structured->gps->longitude, $structured->gps->longitudeRef ?? 'E')
+                $this->formatGpsCoordinate(
+                    $structured->gps->latitude,
+                    $structured->gps->latitudeRef->value ?? 'N'
+                ),
+                $this->formatGpsCoordinate(
+                    $structured->gps->longitude,
+                    $structured->gps->longitudeRef->value ?? 'E'
+                )
             );
         }
 
@@ -1601,10 +1605,10 @@ final class ExifToolFormatter
      */
     private function formatDuration(float $totalSeconds): string
     {
-        $days = (int) ($totalSeconds / 86400);
-        $hours = (int) (($totalSeconds % 86400) / 3600);
+        $days    = (int) ($totalSeconds / 86400);
+        $hours   = (int) (($totalSeconds % 86400) / 3600);
         $minutes = (int) (($totalSeconds % 3600) / 60);
-        $seconds = (int) ($totalSeconds % 60);
+        $seconds = $totalSeconds % 60;
 
         if ($days > 0) {
             return sprintf('%d days %d:%02d:%02d', $days, $hours, $minutes, $seconds);
@@ -1627,20 +1631,20 @@ final class ExifToolFormatter
         }
 
         $denominator = (int) round(1 / $exposureTime);
-        return "1/{$denominator}";
+
+        return '1/' . $denominator;
     }
 
     /**
      * Formats GPS coordinate in degrees/minutes/seconds.
      */
-    private function formatGpsCoordinate(float $decimal, GpsLatLonRef|string $ref): string
+    private function formatGpsCoordinate(float $decimal, string $ref): string
     {
-        $degrees = (int) abs($decimal);
+        $degrees      = (int) abs($decimal);
         $minutesFloat = (abs($decimal) - $degrees) * 60;
-        $minutes = (int) $minutesFloat;
-        $seconds = ($minutesFloat - $minutes) * 60;
-
-        $refString = $ref instanceof GpsLatLonRef ? $ref->value : $ref;
+        $minutes      = (int) $minutesFloat;
+        $seconds      = ($minutesFloat - $minutes) * 60;
+        $refString    = $ref;
 
         return sprintf(
             '%d deg %d\' %.2f" %s',
@@ -1664,10 +1668,10 @@ if ($argc < 2) {
 $filePath = $argv[1];
 
 try {
-    $formatter = new ExifToolFormatter();
+    $formatter = new MetadataFormatter();
     $formatter->format($filePath);
-} catch (\Throwable $e) {
-    echo "ERROR: " . $e->getMessage() . "\n";
+} catch (Throwable $e) {
+    echo 'ERROR: ' . $e->getMessage() . "\n";
     echo $e->getTraceAsString() . "\n";
     exit(1);
 }

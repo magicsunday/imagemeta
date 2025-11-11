@@ -14,8 +14,8 @@ namespace MagicSunday\ImageMeta\Value;
 use DateTimeImmutable;
 use DateTimeZone;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
+use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
@@ -158,7 +158,7 @@ final readonly class Gps
 
     private function signedCoordinate(?float $value, ?GpsLatLonRef $reference, GpsLatLonRef $negativeReference, GpsLatLonRef $positiveReference): ?float
     {
-        if ($value === null || $reference === null) {
+        if ($value === null || !$reference instanceof GpsLatLonRef) {
             return $value;
         }
 

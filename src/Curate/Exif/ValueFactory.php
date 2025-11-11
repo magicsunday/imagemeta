@@ -26,7 +26,6 @@ use MagicSunday\ImageMeta\Curate\Exif\SubFactory\SensorFactory;
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\TemporalFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
@@ -55,7 +54,6 @@ use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
 use MagicSunday\ImageMeta\Value\Regions;
-use MagicSunday\ImageMeta\Value\Regions\Region;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
@@ -75,7 +73,7 @@ use function count;
  * Builds the structured metadata aggregate by orchestrating value-object creation from
  * ParsedExif, QuickTimeMeta and MakerNotes sources.
  */
-final class ValueFactory implements ValueFactoryInterface
+final readonly class ValueFactory implements ValueFactoryInterface
 {
     /**
      * Constructs the ValueFactory with specialized sub-factories.
@@ -94,18 +92,18 @@ final class ValueFactory implements ValueFactoryInterface
      * @param MultiPictureFactory $multiPictureFactory Factory for multi-picture metadata.
      */
     public function __construct(
-        private readonly CameraFactory $cameraFactory = new CameraFactory(),
-        private readonly LensFactory $lensFactory = new LensFactory(),
-        private readonly ExposureFactory $exposureFactory = new ExposureFactory(),
-        private readonly SensorFactory $sensorFactory = new SensorFactory(),
-        private readonly DeviceFactory $deviceFactory = new DeviceFactory(),
-        private readonly ImageFactory $imageFactory = new ImageFactory(),
-        private readonly SceneFactory $sceneFactory = new SceneFactory(),
-        private readonly MotionFactory $motionFactory = new MotionFactory(),
-        private readonly GpsFactory $gpsFactory = new GpsFactory(),
-        private readonly TemporalFactory $temporalFactory = new TemporalFactory(),
-        private readonly RegionsFactory $regionsFactory = new RegionsFactory(),
-        private readonly MultiPictureFactory $multiPictureFactory = new MultiPictureFactory(),
+        private CameraFactory $cameraFactory = new CameraFactory(),
+        private LensFactory $lensFactory = new LensFactory(),
+        private ExposureFactory $exposureFactory = new ExposureFactory(),
+        private SensorFactory $sensorFactory = new SensorFactory(),
+        private DeviceFactory $deviceFactory = new DeviceFactory(),
+        private ImageFactory $imageFactory = new ImageFactory(),
+        private SceneFactory $sceneFactory = new SceneFactory(),
+        private MotionFactory $motionFactory = new MotionFactory(),
+        private GpsFactory $gpsFactory = new GpsFactory(),
+        private TemporalFactory $temporalFactory = new TemporalFactory(),
+        private RegionsFactory $regionsFactory = new RegionsFactory(),
+        private MultiPictureFactory $multiPictureFactory = new MultiPictureFactory(),
     ) {
     }
 
@@ -497,7 +495,7 @@ final class ValueFactory implements ValueFactoryInterface
         return $count > 0 ? $count : null;
     }
 
-    private static function emptyAppleMakerNotes(): AppleMakerNotes
+    private function emptyAppleMakerNotes(): AppleMakerNotes
     {
         static $empty = null;
 

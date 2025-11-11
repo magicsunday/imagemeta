@@ -55,7 +55,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function parsesUserCommentWithAsciiEncoding(): void
     {
         $comment = "ASCII\0\0\0Hello World";
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -72,7 +72,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function parsesUserCommentWithJisEncoding(): void
     {
         $comment = "JIS\0\0\0\0\0Some text";
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -89,7 +89,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function parsesUserCommentWithUnicodeEncoding(): void
     {
         $comment = "UNICODE\0Test";
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -106,7 +106,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function parsesUserCommentWithUndefinedEncoding(): void
     {
         $comment = "\0\0\0\0\0\0\0\0Plain text";
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -121,8 +121,8 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function handlesUserCommentTruncatedPrefix(): void
     {
         // Only partial encoding prefix (should still parse)
-        $comment = "ASC";  // Truncated "ASCII\0\0\0"
-        $blob = $this->buildTiffWithUserComment($comment);
+        $comment = 'ASC';  // Truncated "ASCII\0\0\0"
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -137,7 +137,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function handlesUserCommentInvalidEncoding(): void
     {
         $comment = "INVALID\0Data";
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -166,7 +166,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function handlesUserCommentEncodingOnly(): void
     {
         $comment = "ASCII\0\0\0";
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -181,7 +181,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function handlesUserCommentWithNonPrintable(): void
     {
         $comment = "ASCII\0\0\0\x01\x02\x03\x04\x05";
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -197,7 +197,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     {
         // Create a large comment (but within reasonable bounds)
         $comment = "ASCII\0\0\0" . str_repeat('A', 1000);
-        $blob = $this->buildTiffWithUserComment($comment);
+        $blob    = $this->buildTiffWithUserComment($comment);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
@@ -214,7 +214,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     public function parsesMakerNote(): void
     {
         $makerNoteData = "Canon\0\0\0Some proprietary data";
-        $blob = $this->buildTiffWithMakerNote($makerNoteData);
+        $blob          = $this->buildTiffWithMakerNote($makerNoteData);
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);

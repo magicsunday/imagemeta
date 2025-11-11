@@ -44,7 +44,7 @@ final class TemporalFactoryTest extends TestCase
         $exifDoc->method('dateTimeOriginalRaw')->willReturn('2023:06:15 14:30:00');
         $exifDoc->method('dateTimeDigitizedRaw')->willReturn('2023:06:15 14:30:00');
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory  = new TemporalFactory();
@@ -68,12 +68,12 @@ final class TemporalFactoryTest extends TestCase
             static fn (string $ns, string $name): ?string => match ($name) {
                 'CreateDate' => '2023-06-15T14:30:00+02:00',
                 'ModifyDate' => '2023-06-16T10:00:00+02:00',
-                default => null,
+                default      => null,
             },
         );
 
-        $metadata       = new Metadata();
-        $metadata->xmpDoc  = $xmpDoc;
+        $metadata         = new Metadata();
+        $metadata->xmpDoc = $xmpDoc;
 
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
@@ -92,8 +92,8 @@ final class TemporalFactoryTest extends TestCase
             'ModifyDate'   => '2023-06-16T10:00:00+02:00',
         ];
 
-        $metadata           = new Metadata();
-        $metadata->quickTime   = $quickTime;
+        $metadata            = new Metadata();
+        $metadata->quickTime = $quickTime;
 
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
@@ -121,7 +121,7 @@ final class TemporalFactoryTest extends TestCase
         $exifDoc->method('dateTimeOriginalRaw')->willReturn('2023:06:15 14:30:00');
         $exifDoc->method('dateTimeDigitizedRaw')->willReturn('2023:06:15 14:30:00');
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory  = new TemporalFactory();

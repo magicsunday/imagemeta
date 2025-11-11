@@ -129,7 +129,7 @@ final readonly class TemporalFactory
      */
     private function originalTimestampComponents(?ParsedExif $document): array
     {
-        if ($document === null) {
+        if (!$document instanceof ParsedExif) {
             return [null, null, null];
         }
 

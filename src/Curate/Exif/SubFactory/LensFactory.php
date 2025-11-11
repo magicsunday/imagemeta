@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Curate\Exif\SubFactory;
 
+use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Lens;
@@ -31,7 +32,7 @@ final readonly class LensFactory
     {
         $exifDocument = $metadata->exifDoc;
 
-        if ($exifDocument === null) {
+        if (!$exifDocument instanceof ParsedExif) {
             return new Lens(
                 lensMake: null,
                 lensModel: null,

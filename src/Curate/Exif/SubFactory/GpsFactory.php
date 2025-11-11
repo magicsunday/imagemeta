@@ -19,8 +19,8 @@ use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
+use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
@@ -64,7 +64,7 @@ final readonly class GpsFactory
         $xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
         $gps         = $this->resolveGps($metadata->exifDoc, $xmpDocument);
 
-        if ($gps === null) {
+        if (!$gps instanceof Gps) {
             return new Gps();
         }
 

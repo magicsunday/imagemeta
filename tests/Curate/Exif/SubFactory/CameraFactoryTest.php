@@ -35,7 +35,7 @@ final class CameraFactoryTest extends TestCase
         $exifDoc->method('fileSource')->willReturn(FileSource::DIGITAL_CAMERA);
         $exifDoc->method('sensingMethod')->willReturn(SensingMethod::ONE_CHIP_COLOR_AREA);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new CameraFactory();
@@ -78,7 +78,7 @@ final class CameraFactoryTest extends TestCase
         $exifDoc->method('fileSource')->willReturn(null);
         $exifDoc->method('sensingMethod')->willReturn(null);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new CameraFactory();

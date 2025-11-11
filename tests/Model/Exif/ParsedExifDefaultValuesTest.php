@@ -40,8 +40,8 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function bitsPerSampleReturnsDefaultWhenMissing(): void
     {
-        $ifd0        = new Ifd([]);
-        $parsedExif  = new ParsedExif($ifd0, null, null, null, null);
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(1, $parsedExif->bitsPerSample());
     }
@@ -55,8 +55,8 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function samplesPerPixelReturnsDefaultWhenMissing(): void
     {
-        $ifd0        = new Ifd([]);
-        $parsedExif  = new ParsedExif($ifd0, null, null, null, null);
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(1, $parsedExif->samplesPerPixel());
     }
@@ -70,8 +70,8 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function compressionReturnsDefaultWhenMissing(): void
     {
-        $ifd0        = new Ifd([]);
-        $parsedExif  = new ParsedExif($ifd0, null, null, null, null);
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(Compression::UNCOMPRESSED, $parsedExif->compression());
     }
@@ -86,8 +86,8 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function orientationReturnsDefaultWhenMissing(): void
     {
-        $ifd0        = new Ifd([]);
-        $parsedExif  = new ParsedExif($ifd0, null, null, null, null);
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(Orientation::TOP_LEFT, $parsedExif->orientation());
     }
@@ -101,8 +101,8 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function planarConfigurationReturnsDefaultWhenMissing(): void
     {
-        $ifd0        = new Ifd([]);
-        $parsedExif  = new ParsedExif($ifd0, null, null, null, null);
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(PlanarConfiguration::CHUNKY, $parsedExif->planarConfiguration());
     }
@@ -117,8 +117,8 @@ final class ParsedExifDefaultValuesTest extends TestCase
     #[Test]
     public function resolutionUnitReturnsDefaultWhenMissing(): void
     {
-        $ifd0        = new Ifd([]);
-        $parsedExif  = new ParsedExif($ifd0, null, null, null, null);
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(ResolutionUnit::INCHES, $parsedExif->resolutionUnit());
     }

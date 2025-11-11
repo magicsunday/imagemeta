@@ -57,7 +57,7 @@ final class ExposureFactoryTest extends TestCase
         $exifDoc->method('exposureIndex')->willReturn(null);
         $exifDoc->method('flashEnergy')->willReturn(null);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory  = new ExposureFactory();
@@ -124,7 +124,7 @@ final class ExposureFactoryTest extends TestCase
         $exifDoc->method('exposureIndex')->willReturn(null);
         $exifDoc->method('flashEnergy')->willReturn(null);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory  = new ExposureFactory();

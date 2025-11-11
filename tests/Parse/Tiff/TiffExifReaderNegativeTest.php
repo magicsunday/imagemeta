@@ -247,7 +247,7 @@ final class TiffExifReaderNegativeTest extends TestCase
     {
         // Create TIFF where IFD0's next pointer points back to itself
         $ifdOffset = 8;
-        $blob = 'II'
+        $blob      = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)  // First IFD at offset 8
             . pack('v', 0)           // 0 entries in IFD

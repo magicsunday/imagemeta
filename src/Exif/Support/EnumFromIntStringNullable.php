@@ -56,7 +56,7 @@ trait EnumFromIntStringNullable
             return null;
         }
 
-        $firstCase = $cases[0];
+        $firstCase   = $cases[0];
         $backingType = gettype($firstCase->value);
 
         // Handle int-backed enums

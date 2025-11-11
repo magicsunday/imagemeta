@@ -132,7 +132,7 @@ These tags enable precise documentation of capture conditions in specialised sce
 | `Exposure`           | `exposureBiasEv`, `gainControl`, `contrast`                                                                                 | `ExposureBiasValue`, `GainControl`, `Contrast`                                               | `GainControl` enum                                                           |
 | `Scene`              | `subjectDistanceRange`                                                                                                      | `SubjectDistanceRange`                                                                       | `SubjectDistanceRange` enum                                                  |
 | `Device`             | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware`                                                  | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware`                   | –                                                                            |
-| `Capture`            | `dateTime`, `temperatureC`, `humidityPercent`, `pressureHPa`, `waterDepthM`, `accelerationMs2`, `cameraElevationAngleDeg`  | `Temperature`, `Humidity`, `Pressure`, `WaterDepth`, `Acceleration`, `CameraElevationAngle`  | `ValueConverters::rationalToFloat()`, `sqrt()` for acceleration magnitude    |
+| `Capture`            | `dateTime`, `temperatureC`, `humidityPercent`, `pressureHPa`, `waterDepthM`, `accelerationMs2`, `cameraElevationAngleDeg`   | `Temperature`, `Humidity`, `Pressure`, `WaterDepth`, `Acceleration`, `CameraElevationAngle`  | `ValueConverters::rationalToFloat()`, `sqrt()` for acceleration magnitude    |
 | `Motion`             | `accelX`, `accelY`, `accelZ`                                                                                                | `Acceleration` (SRATIONAL triplet)                                                           | `ValueConverters::srationalTripletToFloatVector()`                           |
 | `Gps`                | `latitude`, `longitude`, `altitude`, `speed*`, `track*`, `timestamp`, navigation metadata                                   | GPS IFD (`GPS*`) with XMP `exif:GPS*` fallbacks                                              | `ValueConverters::gpsFromIfd()`, harmonisation in `Curate\Exif\ValueFactory` |
 | `MultiPicture`       | `version`, `imageCount`, `entries`, `totalFrames`, `individualImageNumber`, `imageUidList`, `panoramaAngle`, `panoramaAxis` | MP Index IFD, MP Attribute IFD                                                               | `Curate\Exif\ValueFactory::resolveMultiPicture()`                            |
@@ -171,24 +171,24 @@ This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 s
 
 ### Compliance Summary
 
-| Metric | Count | Percentage |
-|--------|------:|:----------:|
-| Total Specification Tags | 227 | 100% |
-| ✅ Implemented | 227 | 100.0% |
-| ⚠️ Partial | 0 | 0.0% |
-| ❌ Missing | 0 | 0.0% |
-| ➕ Extra (not in spec) | 0 | - |
-| **Overall Coverage** | **227/227** | **100.0%** |
+| Metric                   |       Count | Percentage |
+|--------------------------|------------:|:----------:|
+| Total Specification Tags |         227 |    100%    |
+| ✅ Implemented            |         227 |   100.0%   |
+| ⚠️ Partial               |           0 |    0.0%    |
+| ❌ Missing                |           0 |    0.0%    |
+| ➕ Extra (not in spec)    |           0 |     -      |
+| **Overall Coverage**     | **227/227** | **100.0%** |
 
 *Last updated: 2025-11-10 20:00:18 UTC*
 
 ### Coverage by Category
 
-| Category | Implemented | Partial | Missing | Total | Coverage |
-|----------|------------:|--------:|--------:|------:|---------:|
-| TIFF 6.0 Baseline | 74 | 0 | 0 | 74 | 100.0% |
-| EXIF Tags | 121 | 0 | 0 | 121 | 100.0% |
-| GPS Tags | 32 | 0 | 0 | 32 | 100.0% |
+| Category          | Implemented | Partial | Missing | Total | Coverage |
+|-------------------|------------:|--------:|--------:|------:|---------:|
+| TIFF 6.0 Baseline |          74 |       0 |       0 |    74 |   100.0% |
+| EXIF Tags         |         121 |       0 |       0 |   121 |   100.0% |
+| GPS Tags          |          32 |       0 |       0 |    32 |   100.0% |
 
 **Compliance documentation**:
 - **System guide**: [COMPLIANCE.md](docs/COMPLIANCE.md) - How the compliance system works

@@ -49,8 +49,8 @@ final class MotionFactoryTest extends TestCase
             accelerationVector: [0.1, 0.2, 0.98],
         );
 
-        $metadata                = new Metadata();
-        $metadata->makerNotes    = new class ($apple) {
+        $metadata             = new Metadata();
+        $metadata->makerNotes = new class($apple) {
             public function __construct(public AppleMakerNotes $apple)
             {
             }
@@ -71,7 +71,7 @@ final class MotionFactoryTest extends TestCase
         $exifDoc = $this->createMock(ParsedExif::class);
         $exifDoc->method('accelerationVector')->willReturn([-0.1, -0.2, -0.98]);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new MotionFactory();
@@ -112,9 +112,9 @@ final class MotionFactoryTest extends TestCase
             accelerationVector: [0.5, 0.6, 0.7],
         );
 
-        $metadata                = new Metadata();
-        $metadata->exifDoc          = $exifDoc;
-        $metadata->makerNotes    = new class ($apple) {
+        $metadata             = new Metadata();
+        $metadata->exifDoc    = $exifDoc;
+        $metadata->makerNotes = new class($apple) {
             public function __construct(public AppleMakerNotes $apple)
             {
             }
@@ -149,7 +149,7 @@ final class MotionFactoryTest extends TestCase
         $exifDoc = $this->createMock(ParsedExif::class);
         $exifDoc->method('accelerationVector')->willReturn([0.1, 0.2]);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new MotionFactory();

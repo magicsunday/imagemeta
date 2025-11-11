@@ -68,7 +68,7 @@ final readonly class ImageFactory
      */
     private function normalizedColorSpace(?ParsedExif $exifDocument): ?ColorSpace
     {
-        if ($exifDocument === null) {
+        if (!$exifDocument instanceof ParsedExif) {
             return null;
         }
 

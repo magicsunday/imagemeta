@@ -34,7 +34,7 @@ final class LensFactoryTest extends TestCase
         $exifDoc->method('maxApertureApex')->willReturn(3.0);
         $exifDoc->method('lensSpecification')->willReturn([24.0, 70.0, 2.8, 2.8]);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new LensFactory();
@@ -79,7 +79,7 @@ final class LensFactoryTest extends TestCase
         $exifDoc->method('maxApertureApex')->willReturn(2.0);
         $exifDoc->method('lensSpecification')->willReturn(null);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new LensFactory();
@@ -102,7 +102,7 @@ final class LensFactoryTest extends TestCase
         $exifDoc->method('maxApertureApex')->willReturn(null);
         $exifDoc->method('lensSpecification')->willReturn(null);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new LensFactory();

@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Curate\Exif\SubFactory;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Device;
 
 /**
@@ -33,7 +34,7 @@ final readonly class DeviceFactory
 
         $software = $exif?->hostComputer();
 
-        if ($software === null && $metadata->quickTime !== null) {
+        if ($software === null && $metadata->quickTime instanceof QuickTimeMeta) {
             $lookup   = new QuickTimeLookup($metadata->quickTime);
             $software = $lookup->string(
                 'com.apple.quicktime.software',

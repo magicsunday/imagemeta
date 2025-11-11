@@ -39,7 +39,7 @@ final readonly class SceneFactory
     {
         $exif           = $metadata->exifDoc;
         $quickTime      = $metadata->quickTime;
-        $appleMakerNote = $metadata->makerNotes?->apple ?? self::emptyAppleMakerNotes();
+        $appleMakerNote = $metadata->makerNotes?->apple ?? $this->emptyAppleMakerNotes();
 
         return $this->buildScene($exif, $quickTime, $appleMakerNote, $faceCount);
     }
@@ -65,7 +65,7 @@ final readonly class SceneFactory
         $hdrLabel  = $apple->hdrImageType;
         $nightMode = null;
 
-        if ($quickTime !== null) {
+        if ($quickTime instanceof QuickTimeMeta) {
             $lookup = new QuickTimeLookup($quickTime);
 
             if ($hdrLabel === null) {
@@ -136,7 +136,7 @@ final readonly class SceneFactory
         return $flags[$key] ?? null;
     }
 
-    private static function emptyAppleMakerNotes(): AppleMakerNotes
+    private function emptyAppleMakerNotes(): AppleMakerNotes
     {
         static $empty = null;
 

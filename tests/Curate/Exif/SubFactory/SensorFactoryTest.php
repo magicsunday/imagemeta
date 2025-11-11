@@ -35,7 +35,7 @@ final class SensorFactoryTest extends TestCase
         $exifDoc->method('focalPlaneYResolution')->willReturn(3000.0);
         $exifDoc->method('focalPlaneResolutionUnit')->willReturn(2);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new SensorFactory();
@@ -87,7 +87,7 @@ final class SensorFactoryTest extends TestCase
         $exifDoc->method('focalPlaneYResolution')->willReturn(2000.0);
         $exifDoc->method('focalPlaneResolutionUnit')->willReturn(999);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new SensorFactory();
@@ -109,7 +109,7 @@ final class SensorFactoryTest extends TestCase
         $exifDoc->method('focalPlaneYResolution')->willReturn(1200.0);
         $exifDoc->method('focalPlaneResolutionUnit')->willReturn(3);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new SensorFactory();

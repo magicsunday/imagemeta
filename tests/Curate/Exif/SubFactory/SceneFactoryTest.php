@@ -36,7 +36,7 @@ final class SceneFactoryTest extends TestCase
         $exifDoc->method('lightSource')->willReturn(LightSource::DAYLIGHT);
         $exifDoc->method('subjectDistanceRange')->willReturn(SubjectDistanceRange::CLOSE_VIEW);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new SceneFactory();
@@ -77,14 +77,14 @@ final class SceneFactoryTest extends TestCase
         );
 
         $metadata             = new Metadata();
-        $metadata->makerNotes = new class ($apple) {
+        $metadata->makerNotes = new class($apple) {
             public function __construct(public AppleMakerNotes $apple)
             {
             }
         };
 
         $factory = new SceneFactory();
-        $scene   = $factory->create($metadata, null);
+        $scene   = $factory->create($metadata);
 
         self::assertInstanceOf(Scene::class, $scene);
         self::assertTrue($scene->hdrScene);
@@ -96,11 +96,11 @@ final class SceneFactoryTest extends TestCase
         $quickTime           = new QuickTimeMeta();
         $quickTime->metadata = ['NightMode' => true];
 
-        $metadata           = new Metadata();
-        $metadata->quickTime   = $quickTime;
+        $metadata            = new Metadata();
+        $metadata->quickTime = $quickTime;
 
         $factory = new SceneFactory();
-        $scene   = $factory->create($metadata, null);
+        $scene   = $factory->create($metadata);
 
         self::assertInstanceOf(Scene::class, $scene);
         self::assertTrue($scene->nightMode);
@@ -133,14 +133,14 @@ final class SceneFactoryTest extends TestCase
         );
 
         $metadata             = new Metadata();
-        $metadata->makerNotes = new class ($apple) {
+        $metadata->makerNotes = new class($apple) {
             public function __construct(public AppleMakerNotes $apple)
             {
             }
         };
 
         $factory = new SceneFactory();
-        $scene   = $factory->create($metadata, null);
+        $scene   = $factory->create($metadata);
 
         self::assertInstanceOf(Scene::class, $scene);
         self::assertTrue($scene->hdrScene);
@@ -152,7 +152,7 @@ final class SceneFactoryTest extends TestCase
         $metadata = new Metadata();
 
         $factory = new SceneFactory();
-        $scene   = $factory->create($metadata, null);
+        $scene   = $factory->create($metadata);
 
         self::assertInstanceOf(Scene::class, $scene);
         self::assertNull($scene->type);

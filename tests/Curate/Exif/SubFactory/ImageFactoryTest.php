@@ -44,7 +44,7 @@ final class ImageFactoryTest extends TestCase
         $exifDoc->method('userComment')->willReturn('Test comment');
         $exifDoc->method('userCommentEncodingBestEffort')->willReturn(CharacterEncoding::ASCII);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new ImageFactory();
@@ -69,9 +69,9 @@ final class ImageFactoryTest extends TestCase
     #[Test]
     public function fallsBackToJpegDimensions(): void
     {
-        $metadata                = new Metadata();
-        $metadata->jpegFrameWidth  = 1920;
-        $metadata->jpegFrameHeight = 1080;
+        $metadata                    = new Metadata();
+        $metadata->jpegFrameWidth    = 1920;
+        $metadata->jpegFrameHeight   = 1080;
         $metadata->jpegBitsPerSample = [8];
 
         $factory = new ImageFactory();
@@ -102,7 +102,7 @@ final class ImageFactoryTest extends TestCase
         $exifDoc->method('userComment')->willReturn(null);
         $exifDoc->method('userCommentEncodingBestEffort')->willReturn(null);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new ImageFactory();
@@ -131,7 +131,7 @@ final class ImageFactoryTest extends TestCase
         $exifDoc->method('userComment')->willReturn(null);
         $exifDoc->method('userCommentEncodingBestEffort')->willReturn(null);
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new ImageFactory();

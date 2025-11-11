@@ -348,9 +348,9 @@ final class TiffExifReaderBigTiffTest extends TestCase
     /**
      * Builds a minimal BigTIFF header.
      *
-     * @param int $offsetSize  Offset size (8 or 16).
-     * @param int $reserved    Reserved field value (should be 0).
-     * @param int $firstIfd    Offset to first IFD.
+     * @param int $offsetSize Offset size (8 or 16).
+     * @param int $reserved   Reserved field value (should be 0).
+     * @param int $firstIfd   Offset to first IFD.
      *
      * @return string Binary BigTIFF blob.
      */

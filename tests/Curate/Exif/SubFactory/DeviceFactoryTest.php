@@ -32,7 +32,7 @@ final class DeviceFactoryTest extends TestCase
         $exifDoc->method('imageEditingSoftware')->willReturn('Adobe Photoshop 24.0');
         $exifDoc->method('metadataEditingSoftware')->willReturn('Lightroom Classic 12.0');
 
-        $metadata       = new Metadata();
+        $metadata          = new Metadata();
         $metadata->exifDoc = $exifDoc;
 
         $factory = new DeviceFactory();
@@ -54,12 +54,12 @@ final class DeviceFactoryTest extends TestCase
         $exifDoc->method('imageEditingSoftware')->willReturn(null);
         $exifDoc->method('metadataEditingSoftware')->willReturn(null);
 
-        $quickTime = new QuickTimeMeta();
+        $quickTime                                           = new QuickTimeMeta();
         $quickTime->metadata['com.apple.quicktime.software'] = 'iPhone OS 16.0';
 
-        $metadata           = new Metadata();
-        $metadata->exifDoc     = $exifDoc;
-        $metadata->quickTime   = $quickTime;
+        $metadata            = new Metadata();
+        $metadata->exifDoc   = $exifDoc;
+        $metadata->quickTime = $quickTime;
 
         $factory = new DeviceFactory();
         $device  = $factory->create($metadata);
@@ -77,12 +77,12 @@ final class DeviceFactoryTest extends TestCase
         $exifDoc->method('imageEditingSoftware')->willReturn(null);
         $exifDoc->method('metadataEditingSoftware')->willReturn(null);
 
-        $quickTime = new QuickTimeMeta();
+        $quickTime                                           = new QuickTimeMeta();
         $quickTime->metadata['com.apple.quicktime.software'] = 'iPhone OS 16.0';
 
-        $metadata           = new Metadata();
-        $metadata->exifDoc     = $exifDoc;
-        $metadata->quickTime   = $quickTime;
+        $metadata            = new Metadata();
+        $metadata->exifDoc   = $exifDoc;
+        $metadata->quickTime = $quickTime;
 
         $factory = new DeviceFactory();
         $device  = $factory->create($metadata);
