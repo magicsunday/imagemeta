@@ -288,7 +288,8 @@ XML;
      *
      * This test validates XMP data from various sources including DJI drones, Pix4D camera data,
      * Adobe Camera Raw settings, and Google Panorama metadata. All should be captured with their
-     * full namespace URIs in Clark notation.
+     * full namespace URIs in Clark notation, and namespace prefixes should be extracted from
+     * xmlns declarations.
      */
     #[Test]
     public function parseExtractsMultipleCustomNamespaces(): void
@@ -348,5 +349,28 @@ XML;
         self::assertSame('DJI', $document->get(self::TIFF_NS, 'Make'));
         self::assertSame('FC8671', $document->get(self::TIFF_NS, 'Model'));
         self::assertSame('image/jpeg', $document->get(self::DC_NS, 'format'));
+
+        // Validate that namespace prefixes were extracted correctly
+        self::assertArrayHasKey($djiNs, $document->namespacePrefixes);
+        self::assertSame('drone-dji', $document->namespacePrefixes[$djiNs]);
+        
+        self::assertArrayHasKey($cameraNs, $document->namespacePrefixes);
+        self::assertSame('Camera', $document->namespacePrefixes[$cameraNs]);
+        
+        self::assertArrayHasKey($crsNs, $document->namespacePrefixes);
+        self::assertSame('crs', $document->namespacePrefixes[$crsNs]);
+        
+        self::assertArrayHasKey($gpanoNs, $document->namespacePrefixes);
+        self::assertSame('GPano', $document->namespacePrefixes[$gpanoNs]);
+
+        // Validate standard namespace prefixes
+        self::assertArrayHasKey(self::XMP_NS, $document->namespacePrefixes);
+        self::assertSame('xmp', $document->namespacePrefixes[self::XMP_NS]);
+        
+        self::assertArrayHasKey(self::TIFF_NS, $document->namespacePrefixes);
+        self::assertSame('tiff', $document->namespacePrefixes[self::TIFF_NS]);
+        
+        self::assertArrayHasKey(self::DC_NS, $document->namespacePrefixes);
+        self::assertSame('dc', $document->namespacePrefixes[self::DC_NS]);
     }
 }

@@ -1153,8 +1153,8 @@ final class MetadataFormatter
                 $namespace = $matches[1];
                 $localName = $matches[2];
 
-                // Simplify namespace for display
-                $prefix = $this->namespaceToPrefix($namespace);
+                // Use extracted namespace prefix from document, or fall back to lookup
+                $prefix = $xmpDoc->namespacePrefixes[$namespace] ?? $this->namespaceToPrefix($namespace);
 
                 if (!isset($grouped[$prefix])) {
                     $grouped[$prefix] = [];
@@ -1181,6 +1181,10 @@ final class MetadataFormatter
 
     /**
      * Converts XMP namespace URI to common prefix.
+     *
+     * This is a fallback mapping for well-known namespaces when the xmlns declaration
+     * is not available in the XMP document. The primary source of namespace prefixes
+     * should be the extracted xmlns:* declarations from the XMP document itself.
      */
     private function namespaceToPrefix(string $namespace): string
     {
@@ -1197,10 +1201,6 @@ final class MetadataFormatter
             'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
             RegionsFactory::NS_APPLE_FACEINFO              => 'mwg-rs',
             'adobe:ns:meta/'                               => 'x',
-            'http://www.dji.com/drone-dji/1.0/'            => 'drone-dji',
-            'http://pix4d.com/camera/1.0'                  => 'Camera',
-            'http://ns.adobe.com/camera-raw-settings/1.0/' => 'crs',
-            'http://ns.google.com/photos/1.0/panorama/'    => 'GPano',
         ];
 
         return $prefixMap[$namespace] ?? 'unknown';

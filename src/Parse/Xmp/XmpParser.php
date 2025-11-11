@@ -32,7 +32,8 @@ final class XmpParser
      * Parses an XMP packet and returns a document containing discovered properties.
      *
      * The resulting document stores values keyed by Clark notation ("{namespace}local") and
-     * flattens RDF containers (Bag/Seq/Alt) into PHP lists.
+     * flattens RDF containers (Bag/Seq/Alt) into PHP lists. Namespace prefixes are extracted
+     * from xmlns declarations for later display.
      *
      * @param string $xml The raw XML payload containing the XMP packet.
      *
@@ -42,11 +43,13 @@ final class XmpParser
     {
         $reader = XMLReader::XML($xml, null, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
         if (!$reader instanceof XMLReader) {
-            return new XmpDocument([]);
+            return new XmpDocument([], []);
         }
 
         /** @var array<string, array<int, string>|string> $data */
         $data = [];
+        /** @var array<string, string> $namespacePrefixes Maps namespace URI to prefix */
+        $namespacePrefixes = [];
         /** @var array<int, array{string, string}> $elementPath */
         $elementPath = [];
         /** @var array<int, string> $textBuffers */
@@ -67,6 +70,9 @@ final class XmpParser
                     if ($namespace !== self::RDF_NAMESPACE) {
                         $listBuffers[$depth] = [];
                     }
+
+                    // XMP Specification Part 1 §7.2: Extract namespace prefix declarations
+                    $this->extractNamespacePrefixes($reader, $namespacePrefixes);
 
                     // XMP Specification Part 1 §7.9.2.2: Properties may be encoded as attributes
                     // on rdf:Description or other elements. Extract non-structural attributes.
@@ -136,7 +142,44 @@ final class XmpParser
 
         $reader->close();
 
-        return new XmpDocument($data);
+        return new XmpDocument($data, $namespacePrefixes);
+    }
+
+    /**
+     * Extracts namespace prefix declarations from element attributes.
+     *
+     * XMP Specification Part 1 §7.2 defines namespace declarations as xmlns:prefix attributes.
+     * This method captures the mapping from namespace URI to prefix for display purposes.
+     *
+     * @param XMLReader                $reader             Active XMLReader positioned on an element.
+     * @param array<string, string> &$namespacePrefixes Target map for namespace URI => prefix.
+     */
+    private function extractNamespacePrefixes(XMLReader $reader, array &$namespacePrefixes): void
+    {
+        if (!$reader->hasAttributes) {
+            return;
+        }
+
+        $reader->moveToFirstAttribute();
+
+        do {
+            $attrNamespace = $reader->namespaceURI;
+            $attrLocalName = $reader->localName;
+
+            // XMP Specification Part 1 §7.2: Capture namespace declarations (xmlns:*)
+            if ($attrNamespace === 'http://www.w3.org/2000/xmlns/') {
+                $namespaceUri = $reader->value;
+                $prefix       = $attrLocalName;
+
+                // Store the mapping if not already present (first declaration wins)
+                if ($namespaceUri !== '' && !isset($namespacePrefixes[$namespaceUri])) {
+                    $namespacePrefixes[$namespaceUri] = $prefix;
+                }
+            }
+        } while ($reader->moveToNextAttribute());
+
+        // Return to the element node after attribute traversal
+        $reader->moveToElement();
     }
 
     /**
