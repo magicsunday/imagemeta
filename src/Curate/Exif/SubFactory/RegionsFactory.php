@@ -35,13 +35,13 @@ use function trim;
  */
 final readonly class RegionsFactory
 {
-    public const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
+    private const string NS_MWG_REGIONS = 'http://www.metadataworkinggroup.com/schemas/regions/';
 
-    public const string NS_ST_AREA = 'http://ns.adobe.com/xmp/sType/Area#';
+    private const string NS_ST_AREA = 'http://ns.adobe.com/xmp/sType/Area#';
 
-    public const string NS_ST_DIMENSIONS = 'http://ns.adobe.com/xmp/sType/Dimensions#';
+    private const string NS_ST_DIMENSIONS = 'http://ns.adobe.com/xmp/sType/Dimensions#';
 
-    public const string NS_APPLE_FACEINFO = 'http://ns.apple.com/faceinfo/1.0/';
+    private const string NS_APPLE_FACEINFO = 'http://ns.apple.com/faceinfo/1.0/';
 
     private const float MATCH_THRESHOLD = 0.12;
 

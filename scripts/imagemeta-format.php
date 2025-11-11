@@ -17,7 +17,6 @@ use DateTime;
 use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
-use MagicSunday\ImageMeta\Curate\Exif\SubFactory\RegionsFactory;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -1171,8 +1170,8 @@ final class MetadataFormatter
                 $namespace = $matches[1];
                 $localName = $matches[2];
 
-                // Use extracted namespace prefix from document, or fall back to lookup
-                $prefix = $xmpDoc->namespacePrefixes[$namespace] ?? $this->namespaceToPrefix($namespace);
+                // Use extracted namespace prefix from the document
+                $prefix = $xmpDoc->namespacePrefixes[$namespace] ?? 'unknown';
 
                 if (!isset($grouped[$prefix])) {
                     $grouped[$prefix] = [];
@@ -1195,33 +1194,6 @@ final class MetadataFormatter
                 $this->printSection('XMP-' . $prefix, $data);
             }
         }
-    }
-
-    /**
-     * Converts XMP namespace URI to common prefix.
-     *
-     * This is a fallback mapping for well-known namespaces when the xmlns declaration
-     * is not available in the XMP document. The primary source of namespace prefixes
-     * should be the extracted xmlns:* declarations from the XMP document itself.
-     */
-    private function namespaceToPrefix(string $namespace): string
-    {
-        $prefixMap = [
-            'http://ns.adobe.com/xap/1.0/'                 => 'xmp',
-            'http://purl.org/dc/elements/1.1/'             => 'dc',
-            'http://ns.adobe.com/photoshop/1.0/'           => 'photoshop',
-            'http://ns.adobe.com/tiff/1.0/'                => 'tiff',
-            'http://ns.adobe.com/exif/1.0/'                => 'exif',
-            'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/'  => 'Iptc4xmpCore',
-            RegionsFactory::NS_MWG_REGIONS                 => 'mwg-rs',
-            RegionsFactory::NS_ST_AREA                     => 'mwg-rs',
-            RegionsFactory::NS_ST_DIMENSIONS               => 'mwg-rs',
-            'http://ns.apple.com/adjustment-settings/1.0/' => 'apple-fi',
-            RegionsFactory::NS_APPLE_FACEINFO              => 'mwg-rs',
-            'adobe:ns:meta/'                               => 'x',
-        ];
-
-        return $prefixMap[$namespace] ?? 'unknown';
     }
 
     /**

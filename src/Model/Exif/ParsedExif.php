@@ -3104,6 +3104,7 @@ final readonly class ParsedExif
     private function parseDeviceSettingDescription(): ?DeviceSettingDescription
     {
         $raw = $this->rawString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
+
         if ($raw === null || strlen($raw) < 4) {
             return null;
         }
@@ -3121,7 +3122,7 @@ final readonly class ParsedExif
         $settingsBytes = substr($raw, 4);
         $settings      = null;
 
-        if ($settingsBytes !== '' && $settingsBytes !== false) {
+        if ($settingsBytes !== '') {
             // Decode UTF-16 to UTF-8
             $settings = $this->decodeUnicodeComment($settingsBytes);
         }
@@ -3438,7 +3439,7 @@ final readonly class ParsedExif
      * Returns PageName tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011D.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|string
      */
     public function pageName(): ?string
     {
@@ -3493,7 +3494,7 @@ final readonly class ParsedExif
      * Returns GrayResponseUnit tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function grayResponseUnit(): ?int
     {
@@ -3515,7 +3516,7 @@ final readonly class ParsedExif
      * Returns T4Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function t4Options(): ?int
     {
@@ -3526,7 +3527,7 @@ final readonly class ParsedExif
      * Returns T6Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function t6Options(): ?int
     {
@@ -3570,7 +3571,7 @@ final readonly class ParsedExif
      * Returns InkSet tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function inkSet(): ?int
     {
@@ -3581,7 +3582,7 @@ final readonly class ParsedExif
      * Returns InkNames tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014D.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|string
      */
     public function inkNames(): ?string
     {
@@ -3592,7 +3593,7 @@ final readonly class ParsedExif
      * Returns NumberOfInks tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function numberOfInks(): ?int
     {
@@ -3614,7 +3615,7 @@ final readonly class ParsedExif
      * Returns TargetPrinter tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0151.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|string
      */
     public function targetPrinter(): ?string
     {
@@ -3636,7 +3637,7 @@ final readonly class ParsedExif
      * Returns SampleFormat tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function sampleFormat(): ?int
     {
@@ -3680,7 +3681,7 @@ final readonly class ParsedExif
      * Returns JPEGProc tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0200.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function jpegProc(): ?int
     {
@@ -3691,7 +3692,7 @@ final readonly class ParsedExif
      * Returns JPEGRestartInterval tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0203.
      *
-     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null
+     * @return null|int
      */
     public function jpegRestartInterval(): ?int
     {
