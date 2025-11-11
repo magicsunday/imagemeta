@@ -862,6 +862,10 @@ final class MetadataFormatter
             // EXIF 3.0 §4.6.3 Table 12
             ExifTag::FILE_SOURCE => $exifDoc->fileSource(),
 
+            // DeviceSettingDescription - Use ParsedExif accessor that returns structured value object
+            // EXIF 3.0 §4.6.6.7.45
+            ExifTag::DEVICE_SETTING_DESCRIPTION => $exifDoc->deviceSettingDescription(),
+
             // No special accessor available
             default => null,
         };
