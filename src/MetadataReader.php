@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
@@ -121,7 +122,13 @@ final readonly class MetadataReader
 
         // Parse the embedded XMP packet when present.
         if ($xmpBlobs !== []) {
-            $xmpDoc = $this->xmpParser->parse($xmpBlobs[0]);
+            $documents = [];
+
+            foreach ($xmpBlobs as $blob) {
+                $documents[] = $this->xmpParser->parse($blob);
+            }
+
+            $xmpDoc = XmpDocument::merge(...$documents);
         }
 
         // Assemble the final metadata aggregate with container context.
@@ -184,7 +191,13 @@ final readonly class MetadataReader
         $makerNotes = $this->appleMerger->merge($makerNotes, $qt);
 
         if ($xmpBlobs !== []) {
-            $xmpDoc = $this->xmpParser->parse($xmpBlobs[0]);
+            $documents = [];
+
+            foreach ($xmpBlobs as $blob) {
+                $documents[] = $this->xmpParser->parse($blob);
+            }
+
+            $xmpDoc = XmpDocument::merge(...$documents);
         }
 
         return new Metadata(

@@ -308,6 +308,41 @@ XML;
     }
 
     /**
+     * Ensures all available XMP blobs are merged when lazily parsing the document.
+     */
+    #[Test]
+    public function mergesAllXmpBlobsWhenSelectingDocument(): void
+    {
+        $exifBlob = <<<XML
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description xmlns:exif="http://ns.adobe.com/exif/1.0/">
+      <exif:ExposureTime>0.020000</exif:ExposureTime>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $tiffBlob = <<<XML
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
+      <tiff:Model>GT-I9195</tiff:Model>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $metadata = new Metadata([], null, null, [$exifBlob, $tiffBlob]);
+
+        $document = $metadata->selectiveXmpDocument();
+
+        self::assertInstanceOf(XmpDocument::class, $document);
+        self::assertSame('0.020000', $document->string('http://ns.adobe.com/exif/1.0/', 'ExposureTime'));
+        self::assertSame('GT-I9195', $document->string('http://ns.adobe.com/tiff/1.0/', 'Model'));
+    }
+
+    /**
      * Ensures the already supplied XMP document is reused without invoking the parser again.
      */
     #[Test]

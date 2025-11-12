@@ -85,6 +85,7 @@ use function number_format;
 use function round;
 use function sprintf;
 use function strlen;
+use function realpath;
 
 // Check if we're using composer or standalone
 $autoloadPaths = [
@@ -594,9 +595,7 @@ final class MetadataFormatter
         }
 
         // XMP sections
-        if ($metadata->xmpDoc instanceof XmpDocument) {
-            $this->printXmpSections($metadata->xmpDoc);
-        }
+        $this->printXmpSections($metadata->xmpDoc ?? $metadata->selectiveXmpDocument());
 
         // QuickTime section
         if ($metadata->quickTime instanceof QuickTimeMeta) {
@@ -1766,21 +1765,23 @@ final class MetadataFormatter
 }
 
 // Main execution
-if ($argc < 2) {
-    echo "Usage: php scripts/exiftool-format.php <image-file>\n";
-    echo "\n";
-    echo "Example:\n";
-    echo "  php scripts/exiftool-format.php photo.jpg\n";
-    exit(1);
-}
+if ((PHP_SAPI === 'cli') && (realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__)) {
+    if ($argc < 2) {
+        echo "Usage: php scripts/exiftool-format.php <image-file>\n";
+        echo "\n";
+        echo "Example:\n";
+        echo "  php scripts/exiftool-format.php photo.jpg\n";
+        exit(1);
+    }
 
-$filePath = $argv[1];
+    $filePath = $argv[1];
 
-try {
-    $formatter = new MetadataFormatter();
-    $formatter->format($filePath);
-} catch (Throwable $e) {
-    echo 'ERROR: ' . $e->getMessage() . "\n";
-    echo $e->getTraceAsString() . "\n";
-    exit(1);
+    try {
+        $formatter = new MetadataFormatter();
+        $formatter->format($filePath);
+    } catch (Throwable $e) {
+        echo 'ERROR: ' . $e->getMessage() . "\n";
+        echo $e->getTraceAsString() . "\n";
+        exit(1);
+    }
 }
