@@ -124,6 +124,31 @@ final class XmpParser
                                 }
                             }
                         }
+                    } elseif ($namespace === self::RDF_NAMESPACE && $localName === 'value') {
+                        // XMP Specification Part 1 §7.9.3: Qualified properties encode their primary value via rdf:value.
+                        $text = trim($textBuffers[$depth] ?? '');
+                        if ($text !== '') {
+                            for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
+                                $parentInfo = $elementPath[$parentDepth] ?? null;
+                                if ($parentInfo === null) {
+                                    continue;
+                                }
+
+                                [$parentNamespace, $parentLocalName] = $parentInfo;
+
+                                if ($parentNamespace === self::RDF_NAMESPACE && $parentLocalName === 'li') {
+                                    $existing = $textBuffers[$parentDepth] ?? '';
+                                    $textBuffers[$parentDepth] = $existing . $text;
+                                    break;
+                                }
+
+                                if ($parentNamespace !== self::RDF_NAMESPACE) {
+                                    $existing = $textBuffers[$parentDepth] ?? '';
+                                    $textBuffers[$parentDepth] = $existing . $text;
+                                    break;
+                                }
+                            }
+                        }
                     } elseif ($namespace !== self::RDF_NAMESPACE) {
                         $this->storeFinalizedValue(
                             $data,
