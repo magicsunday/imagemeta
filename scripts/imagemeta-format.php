@@ -159,9 +159,20 @@ final class MetadataFormatter
      */
     private array $interopTagNames = [];
 
+    /**
+     * Maps XMP properties (namespace + local name) to their corresponding enum class names.
+     *
+     * This mapping enables conversion of raw XMP values to typed enum instances
+     * for better formatting and display, similar to EXIF enum mapping.
+     *
+     * @var array<string, class-string<BackedEnum>>
+     */
+    private array $xmpPropertyToEnumMap = [];
+
     public function __construct()
     {
         $this->buildTagMaps();
+        $this->buildXmpEnumMap();
     }
 
     /**
@@ -255,6 +266,48 @@ final class MetadataFormatter
             ExifTag::GPS_DEST_BEARING_REF   => GpsDirectionRef::class,
             ExifTag::GPS_DEST_DISTANCE_REF  => GpsDistanceRef::class,
             ExifTag::GPS_DIFFERENTIAL       => GpsDifferential::class,
+        ];
+    }
+
+    /**
+     * Builds mapping from XMP properties to enum classes.
+     *
+     * XMP properties that correspond to EXIF/TIFF tags use the same enum values.
+     * This method maps common XMP namespace+localName combinations to their enums.
+     */
+    private function buildXmpEnumMap(): void
+    {
+        // XMP EXIF namespace properties - correspond to EXIF tags
+        // http://ns.adobe.com/exif/1.0/
+        $exifNs = 'http://ns.adobe.com/exif/1.0/';
+        
+        $this->xmpPropertyToEnumMap = [
+            // EXIF namespace - shooting conditions
+            $exifNs . 'ColorSpace'         => ColorSpace::class,
+            $exifNs . 'ExposureProgram'    => ExposureProgram::class,
+            $exifNs . 'MeteringMode'       => MeteringMode::class,
+            $exifNs . 'LightSource'        => LightSource::class,
+            $exifNs . 'WhiteBalance'       => WhiteBalance::class,
+            $exifNs . 'ExposureMode'       => ExposureMode::class,
+            $exifNs . 'SceneCaptureType'   => SceneCaptureType::class,
+            $exifNs . 'GainControl'        => GainControl::class,
+            $exifNs . 'Contrast'           => Contrast::class,
+            $exifNs . 'Saturation'         => Saturation::class,
+            $exifNs . 'Sharpness'          => Sharpness::class,
+            $exifNs . 'SubjectDistanceRange' => SubjectDistanceRange::class,
+            $exifNs . 'SensingMethod'      => SensingMethod::class,
+            $exifNs . 'FileSource'         => FileSource::class,
+            $exifNs . 'SceneType'          => SceneType::class,
+            $exifNs . 'CustomRendered'     => CustomRendered::class,
+            
+            // TIFF namespace properties - correspond to TIFF/IFD0 tags
+            // http://ns.adobe.com/tiff/1.0/
+            'http://ns.adobe.com/tiff/1.0/' . 'Orientation'             => Orientation::class,
+            'http://ns.adobe.com/tiff/1.0/' . 'Compression'             => Compression::class,
+            'http://ns.adobe.com/tiff/1.0/' . 'PhotometricInterpretation' => Photometric::class,
+            'http://ns.adobe.com/tiff/1.0/' . 'PlanarConfiguration'     => PlanarConfiguration::class,
+            'http://ns.adobe.com/tiff/1.0/' . 'ResolutionUnit'          => ResolutionUnit::class,
+            'http://ns.adobe.com/tiff/1.0/' . 'YCbCrPositioning'        => YCbCrPositioning::class,
         ];
     }
 
@@ -405,6 +458,65 @@ final class MetadataFormatter
             return $enumInstance ?? $value;
         }
 
+        return $value;
+    }
+
+    /**
+     * Converts a raw XMP value to an enum instance if the property has an enum mapping.
+     *
+     * XMP properties often store the same enumerated values as their EXIF counterparts.
+     * This method applies enum conversion to XMP values for consistent display.
+     *
+     * @param string $namespace The XMP namespace URI
+     * @param string $localName The XMP property local name
+     * @param mixed  $value     The raw value from XMP
+     *
+     * @return mixed The converted enum instance or the original value if no mapping exists
+     */
+    private function convertXmpValueToEnum(string $namespace, string $localName, mixed $value): mixed
+    {
+        $propertyKey = $namespace . $localName;
+        
+        if (!isset($this->xmpPropertyToEnumMap[$propertyKey])) {
+            return $value;
+        }
+        
+        $enumClass = $this->xmpPropertyToEnumMap[$propertyKey];
+        
+        // Extract scalar value - XMP values are typically strings or arrays of strings
+        $scalarValue = $value;
+        
+        if (is_array($value)) {
+            $scalarValue = $value[0] ?? null;
+        }
+        
+        if ($scalarValue === null) {
+            return $value;
+        }
+        
+        // Parse numeric strings to int/float for enum matching
+        if (is_string($scalarValue) && is_numeric($scalarValue)) {
+            // Try to preserve type - use int if no decimal point
+            if (str_contains($scalarValue, '.')) {
+                $scalarValue = (float) $scalarValue;
+            } else {
+                $scalarValue = (int) $scalarValue;
+            }
+        }
+        
+        // Only attempt conversion for int and string values
+        if (!is_int($scalarValue) && !is_string($scalarValue)) {
+            return $value;
+        }
+        
+        // Call the enum's fromExifValue method if it exists
+        // XMP and EXIF use the same enum value systems
+        if (method_exists($enumClass, 'fromExifValue')) {
+            $enumInstance = $enumClass::fromExifValue($scalarValue);
+            
+            return $enumInstance ?? $value;
+        }
+        
         return $value;
     }
 
@@ -1161,7 +1273,7 @@ final class MetadataFormatter
             return;
         }
 
-        // Group XMP data by namespace
+        // Group XMP data by namespace, applying enum conversion
         $grouped = [];
 
         foreach ($xmpDoc->data as $clarkNotation => $value) {
@@ -1170,6 +1282,9 @@ final class MetadataFormatter
                 $namespace = $matches[1];
                 $localName = $matches[2];
 
+                // Convert XMP value to enum if applicable
+                $convertedValue = $this->convertXmpValueToEnum($namespace, $localName, $value);
+
                 // Use extracted namespace prefix from the document
                 $prefix = $xmpDoc->namespacePrefixes[$namespace] ?? 'unknown';
 
@@ -1177,7 +1292,7 @@ final class MetadataFormatter
                     $grouped[$prefix] = [];
                 }
 
-                $grouped[$prefix][$localName] = $value;
+                $grouped[$prefix][$localName] = $convertedValue;
             } else {
                 // No namespace - use 'unknown' prefix
                 if (!isset($grouped['unknown'])) {
