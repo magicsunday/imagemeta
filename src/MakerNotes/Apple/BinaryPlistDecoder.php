@@ -126,6 +126,9 @@ final class BinaryPlistDecoder
     /** @var int Index of the top-level object in the offset table */
     private int $topObjectIndex = 0;
 
+    /** @var int Total number of objects inside the payload */
+    private int $objectCount = 0;
+
     /**
      * Decodes the supplied binary property list and returns the top level value.
      *
@@ -159,6 +162,7 @@ final class BinaryPlistDecoder
         $this->length        = strlen($data);
         $this->offsetTable   = [];
         $this->objectRefSize = 0;
+        $this->objectCount   = 0;
         $this->decodeTrailer();
 
         if ($this->offsetTable === []) {
@@ -166,8 +170,8 @@ final class BinaryPlistDecoder
         }
 
         $topIndex = $this->topObjectIndex;
-        if ($topIndex < 0) {
-            throw new ParseError('Missing top level object index.');
+        if ($topIndex < 0 || $topIndex >= $this->objectCount) {
+            throw new ParseError('Top level object index is out of range.');
         }
 
         return $this->parseObject($topIndex);
@@ -199,17 +203,70 @@ final class BinaryPlistDecoder
             throw new ParseError('The property list does not contain any objects.');
         }
 
+        if ($numObjects > PHP_INT_MAX) {
+            throw new ParseError('The property list contains too many objects.');
+        }
+
         if ($offsetTableStart >= $this->length) {
             throw new ParseError('The offset table is located outside of the payload.');
         }
 
+        if ($topObject > PHP_INT_MAX) {
+            throw new ParseError('The top level object index exceeds platform limits.');
+        }
+
+        $trailerStart = $this->length - 32;
+
+        if ($offsetTableStart < 8) {
+            throw new ParseError('The offset table offset is invalid.');
+        }
+
+        if ($numObjects > intdiv(PHP_INT_MAX, $offsetIntSize)) {
+            throw new ParseError('The offset table size exceeds platform limits.');
+        }
+
+        $offsetTableBytes = $numObjects * $offsetIntSize;
+        $offsetTableEnd   = $offsetTableStart + $offsetTableBytes;
+
+        if ($offsetTableEnd > $trailerStart) {
+            throw new ParseError('The offset table exceeds payload bounds.');
+        }
+
+        if ($offsetTableEnd !== $trailerStart) {
+            throw new ParseError('The property list payload contains unexpected padding.');
+        }
+
+        if ($objectRefSize < 8) {
+            $maxReferences = 1 << ($objectRefSize * 8);
+            if ($maxReferences <= $numObjects) {
+                throw new ParseError('Object reference size is insufficient for object count.');
+            }
+        }
+
+        if ($offsetIntSize < 8) {
+            $maxOffset = 1 << ($offsetIntSize * 8);
+            if ($maxOffset <= $offsetTableStart) {
+                throw new ParseError('Offset integer size cannot represent object positions.');
+            }
+        }
+
+        if ($topObject >= $numObjects) {
+            throw new ParseError('Top level object index is out of range.');
+        }
+
         $this->objectRefSize = $objectRefSize;
+        $this->objectCount   = $numObjects;
 
         // Build offsets from the offset table region.
         $entries = [];
         $cursor  = $offsetTableStart;
+        $maxObjectOffset = $offsetTableStart - 1;
         for ($idx = 0; $idx < $numObjects; ++$idx) {
-            $offset    = $this->readUint($cursor, $offsetIntSize);
+            $offset = $this->readUint($cursor, $offsetIntSize);
+            if ($offset < 8 || $offset > $maxObjectOffset) {
+                throw new ParseError('Object offset is outside of the object table range.');
+            }
+
             $entries[] = $offset;
             $cursor += $offsetIntSize;
         }
@@ -229,6 +286,10 @@ final class BinaryPlistDecoder
      */
     private function parseObject(int $index): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
+        if ($index < 0 || $index >= $this->objectCount) {
+            throw new ParseError('The property list object reference is invalid.');
+        }
+
         if (!array_key_exists($index, $this->offsetTable)) {
             throw new ParseError('The property list object reference is invalid.');
         }

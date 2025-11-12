@@ -28,6 +28,7 @@ use function implode;
 use function pack;
 use function str_repeat;
 use function strlen;
+use function substr;
 
 #[CoversClass(BinaryPlistDecoder::class)]
 #[UsesClass(ApplePlistArray::class)]
@@ -51,6 +52,82 @@ final class BinaryPlistDecoderTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Unsupported property list format');
         $decoder->decode('not-a-plist');
+    }
+
+    #[Test]
+    public function decodeRejectsOffsetTableBeforeHeader(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        $object  = chr(0x50 | 0x01) . 'A';
+        $payload = $this->buildPlistWithSingleObject($object);
+
+        // Replace the trailer's offset-table start with an invalid value before the header.
+        $payload = substr($payload, 0, -8) . $this->packUint64BE(0);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('offset table offset is invalid');
+        $decoder->decode($payload);
+    }
+
+    #[Test]
+    public function decodeRejectsOffsetTableOverlappingTrailer(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        $object  = chr(0x50 | 0x01) . 'A';
+        $payload = $this->buildPlistWithSingleObject($object);
+
+        // Increase the reported object count so the offset table would overlap the trailer.
+        $trailerOffset = strlen($payload) - 32;
+        $trailer       = substr($payload, $trailerOffset);
+        $invalidTrailer = substr($trailer, 0, 8)
+            . $this->packUint64BE(2)
+            . substr($trailer, 16);
+        $payload = substr($payload, 0, $trailerOffset) . $invalidTrailer;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('offset table exceeds payload bounds');
+        $decoder->decode($payload);
+    }
+
+    #[Test]
+    public function decodeRejectsObjectOffsetOutsideTableRange(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        $object  = chr(0x50 | 0x01) . 'A';
+        $payload = $this->buildPlistWithSingleObject($object);
+
+        $offsetTableStart = strlen($payload) - 32 - 1; // single 1-byte entry
+        $payload = substr($payload, 0, $offsetTableStart)
+            . chr($offsetTableStart + 10)
+            . substr($payload, $offsetTableStart + 1);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('outside of the object table range');
+        $decoder->decode($payload);
+    }
+
+    #[Test]
+    public function decodeRejectsTopObjectIndexOutOfRange(): void
+    {
+        $decoder = new BinaryPlistDecoder();
+
+        $object  = chr(0x50 | 0x01) . 'A';
+        $payload = $this->buildPlistWithSingleObject($object);
+
+        // Set top object index to 1 while only a single object exists.
+        $trailerOffset = strlen($payload) - 32;
+        $trailer       = substr($payload, $trailerOffset);
+        $invalidTrailer = substr($trailer, 0, 16)
+            . $this->packUint64BE(1)
+            . substr($trailer, 24);
+        $payload = substr($payload, 0, $trailerOffset) . $invalidTrailer;
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Top level object index is out of range');
+        $decoder->decode($payload);
     }
 
     #[Test]
