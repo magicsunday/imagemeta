@@ -185,6 +185,140 @@ XML;
     }
 
     /**
+     * Ensures rdf:value structured properties are flattened to scalar values.
+     *
+     * XMP Specification Part 1 §7.9.3 describes qualified properties that declare their primary value via rdf:value.
+     */
+    #[Test]
+    public function parseExtractsValuesFromRdfValueElements(): void
+    {
+        $xml = <<<'XML'
+<x:xmpmeta xmlns:x="adobe:ns:meta/">
+  <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+    <rdf:Description rdf:about=""
+      xmlns:tiff="http://ns.adobe.com/tiff/1.0/"
+      xmlns:dc="http://purl.org/dc/elements/1.1/">
+      <tiff:Model rdf:parseType="Resource">
+        <rdf:value>GT-I9195</rdf:value>
+      </tiff:Model>
+      <tiff:Orientation rdf:parseType="Resource">
+        <rdf:value>1</rdf:value>
+      </tiff:Orientation>
+      <dc:subject>
+        <rdf:Bag>
+          <rdf:li rdf:parseType="Resource">
+            <rdf:value>Portrait</rdf:value>
+          </rdf:li>
+        </rdf:Bag>
+      </dc:subject>
+    </rdf:Description>
+  </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame('GT-I9195', $document->get(self::TIFF_NS, 'Model'));
+        self::assertSame('1', $document->get(self::TIFF_NS, 'Orientation'));
+        self::assertSame(['Portrait'], $document->get(self::DC_NS, 'subject'));
+    }
+
+    /**
+     * Ensures all EXIF and TIFF values from a Samsung sample are captured.
+     */
+    #[Test]
+    public function parseExtractsCompleteExifAndTiffSample(): void
+    {
+        $xml = <<<XML
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="XMP Core 4.4.0">
+   <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+      <rdf:Description rdf:about=""
+            xmlns:exif="http://ns.adobe.com/exif/1.0/">
+         <exif:ExposureTime>0.020000</exif:ExposureTime>
+         <exif:ExposureProgram>3</exif:ExposureProgram>
+         <exif:DateTimeOriginal>2015:11:10 20:18:59</exif:DateTimeOriginal>
+         <exif:DateTimeDigitized>2015:11:10 20:18:59</exif:DateTimeDigitized>
+         <exif:ShutterSpeedValue>0.020000</exif:ShutterSpeedValue>
+         <exif:BrightnessValue>76.000000</exif:BrightnessValue>
+         <exif:ExposureBiasValue>0.000000</exif:ExposureBiasValue>
+         <exif:MeteringMode>2</exif:MeteringMode>
+         <exif:LightSource>0</exif:LightSource>
+         <exif:ColorSpace>1</exif:ColorSpace>
+         <exif:PixelXDimension>3264</exif:PixelXDimension>
+         <exif:PixelYDimension>2448</exif:PixelYDimension>
+         <exif:SensingMethod>2</exif:SensingMethod>
+         <exif:ExposureMode>0</exif:ExposureMode>
+         <exif:WhiteBalance>0</exif:WhiteBalance>
+         <exif:DigitalZoomRatio>1.000000</exif:DigitalZoomRatio>
+         <exif:SceneCaptureType>0</exif:SceneCaptureType>
+         <exif:Saturation>0</exif:Saturation>
+         <exif:Sharpness>0</exif:Sharpness>
+      </rdf:Description>
+      <rdf:Description rdf:about=""
+            xmlns:tiff="http://ns.adobe.com/tiff/1.0/">
+         <tiff:Compression>6</tiff:Compression>
+         <tiff:Make>SAMSUNG</tiff:Make>
+         <tiff:Model>GT-I9195</tiff:Model>
+         <tiff:Orientation>1</tiff:Orientation>
+         <tiff:XResolution>72.000000</tiff:XResolution>
+         <tiff:YResolution>72.000000</tiff:YResolution>
+         <tiff:ResolutionUnit>2</tiff:ResolutionUnit>
+      </rdf:Description>
+   </rdf:RDF>
+</x:xmpmeta>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        $expectedExif = [
+            'ExposureTime' => '0.020000',
+            'ExposureProgram' => '3',
+            'DateTimeOriginal' => '2015:11:10 20:18:59',
+            'DateTimeDigitized' => '2015:11:10 20:18:59',
+            'ShutterSpeedValue' => '0.020000',
+            'BrightnessValue' => '76.000000',
+            'ExposureBiasValue' => '0.000000',
+            'MeteringMode' => '2',
+            'LightSource' => '0',
+            'ColorSpace' => '1',
+            'PixelXDimension' => '3264',
+            'PixelYDimension' => '2448',
+            'SensingMethod' => '2',
+            'ExposureMode' => '0',
+            'WhiteBalance' => '0',
+            'DigitalZoomRatio' => '1.000000',
+            'SceneCaptureType' => '0',
+            'Saturation' => '0',
+            'Sharpness' => '0',
+        ];
+
+        foreach ($expectedExif as $tag => $value) {
+            self::assertSame($value, $document->get(self::EXIF_NS, $tag));
+        }
+
+        $expectedTiff = [
+            'Compression' => '6',
+            'Make' => 'SAMSUNG',
+            'Model' => 'GT-I9195',
+            'Orientation' => '1',
+            'XResolution' => '72.000000',
+            'YResolution' => '72.000000',
+            'ResolutionUnit' => '2',
+        ];
+
+        foreach ($expectedTiff as $tag => $value) {
+            self::assertSame($value, $document->get(self::TIFF_NS, $tag));
+        }
+
+        self::assertArrayHasKey(self::EXIF_NS, $document->namespacePrefixes);
+        self::assertSame('exif', $document->namespacePrefixes[self::EXIF_NS]);
+        self::assertArrayHasKey(self::TIFF_NS, $document->namespacePrefixes);
+        self::assertSame('tiff', $document->namespacePrefixes[self::TIFF_NS]);
+    }
+
+
+    /**
      * Ensures scalar properties and rdf:Bag containers are extracted correctly.
      */
     #[Test]
