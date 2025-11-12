@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
 use function array_filter;
+use function array_key_exists;
 use function array_find;
 use function array_map;
 use function array_values;
@@ -46,6 +47,75 @@ final readonly class XmpDocument
          */
         public array $namespacePrefixes = [],
     ) {
+    }
+
+    /**
+     * Merges multiple XMP documents into a single aggregate.
+     *
+     * @param XmpDocument ...$documents Source documents to merge.
+     */
+    public static function merge(self ...$documents): self
+    {
+        if ($documents === []) {
+            return new self([], []);
+        }
+
+        /** @var array<string, string|array<int, string>> $data */
+        $data = [];
+        /** @var array<string, string> $namespacePrefixes */
+        $namespacePrefixes = [];
+
+        foreach ($documents as $document) {
+            foreach ($document->data as $key => $value) {
+                self::accumulateValue($data, $key, $value);
+            }
+
+            foreach ($document->namespacePrefixes as $uri => $prefix) {
+                if (!array_key_exists($uri, $namespacePrefixes)) {
+                    $namespacePrefixes[$uri] = $prefix;
+                }
+            }
+        }
+
+        return new self($data, $namespacePrefixes);
+    }
+
+    /**
+     * Accumulates a value into the aggregate data map using the same semantics as the parser.
+     *
+     * @param array<string, string|array<int, string>> $data
+     * @param list<string>|string                      $value
+     */
+    private static function accumulateValue(array &$data, string $key, array|string $value): void
+    {
+        if (!array_key_exists($key, $data)) {
+            $data[$key] = $value;
+
+            return;
+        }
+
+        $existing = $data[$key];
+
+        if (is_array($existing)) {
+            if (is_array($value)) {
+                $data[$key] = [...$existing, ...$value];
+
+                return;
+            }
+
+            $existing[]    = $value;
+            $data[$key] = $existing;
+
+            return;
+        }
+
+        if (is_array($value)) {
+            $data[$key] = [$existing, ...$value];
+
+            return;
+        }
+
+        $data[$key] = [$existing, $value];
     }
 
     /**

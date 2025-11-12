@@ -177,7 +177,14 @@ final readonly class Metadata
             return null;
         }
 
-        return (new XmpParser())->parse($this->xmpBlobs[0]);
+        $parser     = new XmpParser();
+        $documents = [];
+
+        foreach ($this->xmpBlobs as $blob) {
+            $documents[] = $parser->parse($blob);
+        }
+
+        return XmpDocument::merge(...$documents);
     }
 
     /**
