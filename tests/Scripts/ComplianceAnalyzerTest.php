@@ -144,7 +144,7 @@ final class ComplianceAnalyzerTest extends TestCase
                 self::assertNotEmpty($tagInfo['name'], sprintf('Tag %s name cannot be empty', $tagId));
 
                 // Validate IFD is one of the known values
-                $validIfds = ['IFD0', 'IFD1', 'ExifIFD', 'GPSIFD', 'InteropIFD', 'PreviewIFD'];
+                $validIfds = ['IFD0', 'IFD1', 'ExifIFD', 'GPSIFD', 'InteropIFD'];
                 self::assertContains(
                     $tagInfo['ifd'],
                     $validIfds,
