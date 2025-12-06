@@ -19,7 +19,7 @@
         "optimize-autoloader": true
     },
     "require": {
-        "php": "^8.4",
+        "php": ">=8.4.0 <8.6.0",
         "ext-ctype": "*",
         "ext-date": "*",
         "ext-fileinfo": "*",
@@ -52,37 +52,37 @@
     },
     "scripts": {
         "ci:cgl": [
-            "php-cs-fixer fix --config .build/.php-cs-fixer.dist.php --diff --verbose"
+            "php-cs-fixer fix --config .php-cs-fixer.dist.php --diff --verbose"
         ],
         "ci:rector": [
-            "rector process --config .build/rector.php"
+            "rector process --config rector.php"
         ],
         "ci:test:php:cgl": [
             "@ci:cgl --dry-run"
         ],
         "ci:test:php:lint": [
-            "phplint --configuration .build/.phplint.yml"
+            "phplint --configuration .phplint.yml"
         ],
         "ci:test:php:phpstan": [
-            "phpstan analyze --configuration .build/phpstan.neon --memory-limit=-1"
+            "phpstan analyze --configuration phpstan.neon --memory-limit=-1"
         ],
         "ci:test:php:phpstan:baseline": [
-            "phpstan analyze --configuration .build/phpstan.neon --memory-limit=-1 --generate-baseline .build/phpstan-baseline.neon --allow-empty-baseline"
+            "phpstan analyze --configuration phpstan.neon --memory-limit=-1 --generate-baseline phpstan-baseline.neon --allow-empty-baseline"
         ],
         "ci:test:php:rector": [
             "@ci:rector --dry-run"
         ],
-        "ci:test:php:cpd": [
-            "npx -y jscpd@latest --config .build/.jscpd.json"
-        ],
         "ci:test:php:unit": [
-            "phpunit --configuration .build/phpunit.xml"
+            "phpunit --configuration phpunit.xml"
         ],
         "ci:test:php:unit:coverage": [
-            "XDEBUG_MODE=coverage phpunit --configuration .build/phpunit.xml --coverage-html .build/coverage/"
+            "XDEBUG_MODE=coverage phpunit --configuration phpunit.xml --coverage-html coverage/"
         ],
         "ci:compliance": [
             "php scripts/analyze-exif-compliance.php 50"
+        ],
+        "ci:test:php:cpd": [
+            "npx jscpd --config .jscpd.json"
         ],
         "ci:test": [
             "@ci:test:php:lint",
@@ -91,6 +91,9 @@
             "@ci:test:php:cgl",
             "@ci:test:php:unit",
             "@ci:compliance"
+        ],
+        "post-update-cmd": [
+            "npm install jscpd"
         ]
     }
 }

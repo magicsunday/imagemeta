@@ -8,23 +8,21 @@
 vendor/
 bin/
 logs/
-log/
 composer.lock
 
+# NPM
+node_modules/
+package.json
+package-lock.json
+
 # Build stuff
-.build/*.cache
+.build/
 
 # Cache
-.build/cache
 .php-cs-fixer.cache
 .phplint.cache
 .phpunit.result.cache
 .phpunit.cache
 
-# Coverage reports
-.build/coverage
-coverage-report/
-coverage-report-xdebug/
-phpunit-*.xml
-
+# Custom
 test-images/
