@@ -272,25 +272,25 @@ XML;
         $document = (new XmpParser())->parse($xml);
 
         $expectedExif = [
-            'ExposureTime' => '0.020000',
-            'ExposureProgram' => '3',
-            'DateTimeOriginal' => '2015:11:10 20:18:59',
+            'ExposureTime'      => '0.020000',
+            'ExposureProgram'   => '3',
+            'DateTimeOriginal'  => '2015:11:10 20:18:59',
             'DateTimeDigitized' => '2015:11:10 20:18:59',
             'ShutterSpeedValue' => '0.020000',
-            'BrightnessValue' => '76.000000',
+            'BrightnessValue'   => '76.000000',
             'ExposureBiasValue' => '0.000000',
-            'MeteringMode' => '2',
-            'LightSource' => '0',
-            'ColorSpace' => '1',
-            'PixelXDimension' => '3264',
-            'PixelYDimension' => '2448',
-            'SensingMethod' => '2',
-            'ExposureMode' => '0',
-            'WhiteBalance' => '0',
-            'DigitalZoomRatio' => '1.000000',
-            'SceneCaptureType' => '0',
-            'Saturation' => '0',
-            'Sharpness' => '0',
+            'MeteringMode'      => '2',
+            'LightSource'       => '0',
+            'ColorSpace'        => '1',
+            'PixelXDimension'   => '3264',
+            'PixelYDimension'   => '2448',
+            'SensingMethod'     => '2',
+            'ExposureMode'      => '0',
+            'WhiteBalance'      => '0',
+            'DigitalZoomRatio'  => '1.000000',
+            'SceneCaptureType'  => '0',
+            'Saturation'        => '0',
+            'Sharpness'         => '0',
         ];
 
         foreach ($expectedExif as $tag => $value) {
@@ -298,12 +298,12 @@ XML;
         }
 
         $expectedTiff = [
-            'Compression' => '6',
-            'Make' => 'SAMSUNG',
-            'Model' => 'GT-I9195',
-            'Orientation' => '1',
-            'XResolution' => '72.000000',
-            'YResolution' => '72.000000',
+            'Compression'    => '6',
+            'Make'           => 'SAMSUNG',
+            'Model'          => 'GT-I9195',
+            'Orientation'    => '1',
+            'XResolution'    => '72.000000',
+            'YResolution'    => '72.000000',
             'ResolutionUnit' => '2',
         ];
 
@@ -316,7 +316,6 @@ XML;
         self::assertArrayHasKey(self::TIFF_NS, $document->namespacePrefixes);
         self::assertSame('tiff', $document->namespacePrefixes[self::TIFF_NS]);
     }
-
 
     /**
      * Ensures scalar properties and rdf:Bag containers are extracted correctly.
@@ -487,23 +486,23 @@ XML;
         // Validate that namespace prefixes were extracted correctly
         self::assertArrayHasKey($djiNs, $document->namespacePrefixes);
         self::assertSame('drone-dji', $document->namespacePrefixes[$djiNs]);
-        
+
         self::assertArrayHasKey($cameraNs, $document->namespacePrefixes);
         self::assertSame('Camera', $document->namespacePrefixes[$cameraNs]);
-        
+
         self::assertArrayHasKey($crsNs, $document->namespacePrefixes);
         self::assertSame('crs', $document->namespacePrefixes[$crsNs]);
-        
+
         self::assertArrayHasKey($gpanoNs, $document->namespacePrefixes);
         self::assertSame('GPano', $document->namespacePrefixes[$gpanoNs]);
 
         // Validate standard namespace prefixes
         self::assertArrayHasKey(self::XMP_NS, $document->namespacePrefixes);
         self::assertSame('xmp', $document->namespacePrefixes[self::XMP_NS]);
-        
+
         self::assertArrayHasKey(self::TIFF_NS, $document->namespacePrefixes);
         self::assertSame('tiff', $document->namespacePrefixes[self::TIFF_NS]);
-        
+
         self::assertArrayHasKey(self::DC_NS, $document->namespacePrefixes);
         self::assertSame('dc', $document->namespacePrefixes[self::DC_NS]);
     }

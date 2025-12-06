@@ -17,7 +17,6 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
-use ReflectionMethod;
 
 /**
  * Tests XMP enum mapping functionality in the metadata formatter.
@@ -198,7 +197,7 @@ final class MetadataFormatterXmpEnumTest extends TestCase
         $result = $method->invoke($formatter, self::EXIF_NS, 'MeteringMode', '2');
         self::assertInstanceOf(\MagicSunday\ImageMeta\Value\Enum\MeteringMode::class, $result);
 
-        // Test float as string  
+        // Test float as string
         $result = $method->invoke($formatter, self::EXIF_NS, 'WhiteBalance', '0.0');
         self::assertInstanceOf(\MagicSunday\ImageMeta\Value\Enum\WhiteBalance::class, $result);
         self::assertSame(0, $result->value);

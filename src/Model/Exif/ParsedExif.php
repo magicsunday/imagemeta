@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -42,7 +43,6 @@ use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
-use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\Oecf;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SubjectArea;
@@ -3439,7 +3439,7 @@ final readonly class ParsedExif
      * Returns PageName tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x011D.
      *
-     * @return null|string
+     * @return string|null
      */
     public function pageName(): ?string
     {
@@ -3494,7 +3494,7 @@ final readonly class ParsedExif
      * Returns GrayResponseUnit tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0122.
      *
-     * @return null|int
+     * @return int|null
      */
     public function grayResponseUnit(): ?int
     {
@@ -3516,7 +3516,7 @@ final readonly class ParsedExif
      * Returns T4Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0124.
      *
-     * @return null|int
+     * @return int|null
      */
     public function t4Options(): ?int
     {
@@ -3527,7 +3527,7 @@ final readonly class ParsedExif
      * Returns T6Options tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0125.
      *
-     * @return null|int
+     * @return int|null
      */
     public function t6Options(): ?int
     {
@@ -3571,7 +3571,7 @@ final readonly class ParsedExif
      * Returns InkSet tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014C.
      *
-     * @return null|int
+     * @return int|null
      */
     public function inkSet(): ?int
     {
@@ -3582,7 +3582,7 @@ final readonly class ParsedExif
      * Returns InkNames tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014D.
      *
-     * @return null|string
+     * @return string|null
      */
     public function inkNames(): ?string
     {
@@ -3593,7 +3593,7 @@ final readonly class ParsedExif
      * Returns NumberOfInks tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x014E.
      *
-     * @return null|int
+     * @return int|null
      */
     public function numberOfInks(): ?int
     {
@@ -3615,7 +3615,7 @@ final readonly class ParsedExif
      * Returns TargetPrinter tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0151.
      *
-     * @return null|string
+     * @return string|null
      */
     public function targetPrinter(): ?string
     {
@@ -3637,7 +3637,7 @@ final readonly class ParsedExif
      * Returns SampleFormat tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0153.
      *
-     * @return null|int
+     * @return int|null
      */
     public function sampleFormat(): ?int
     {
@@ -3681,7 +3681,7 @@ final readonly class ParsedExif
      * Returns JPEGProc tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0200.
      *
-     * @return null|int
+     * @return int|null
      */
     public function jpegProc(): ?int
     {
@@ -3692,7 +3692,7 @@ final readonly class ParsedExif
      * Returns JPEGRestartInterval tag value.
      * TIFF 6.0 §8 Baseline Field Reference — Tag 0x0203.
      *
-     * @return null|int
+     * @return int|null
      */
     public function jpegRestartInterval(): ?int
     {

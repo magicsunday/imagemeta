@@ -79,8 +79,8 @@ final class BinaryPlistDecoderTest extends TestCase
         $payload = $this->buildPlistWithSingleObject($object);
 
         // Increase the reported object count so the offset table would overlap the trailer.
-        $trailerOffset = strlen($payload) - 32;
-        $trailer       = substr($payload, $trailerOffset);
+        $trailerOffset  = strlen($payload) - 32;
+        $trailer        = substr($payload, $trailerOffset);
         $invalidTrailer = substr($trailer, 0, 8)
             . $this->packUint64BE(2)
             . substr($trailer, 16);
@@ -100,7 +100,7 @@ final class BinaryPlistDecoderTest extends TestCase
         $payload = $this->buildPlistWithSingleObject($object);
 
         $offsetTableStart = strlen($payload) - 32 - 1; // single 1-byte entry
-        $payload = substr($payload, 0, $offsetTableStart)
+        $payload          = substr($payload, 0, $offsetTableStart)
             . chr($offsetTableStart + 10)
             . substr($payload, $offsetTableStart + 1);
 
@@ -118,8 +118,8 @@ final class BinaryPlistDecoderTest extends TestCase
         $payload = $this->buildPlistWithSingleObject($object);
 
         // Set top object index to 1 while only a single object exists.
-        $trailerOffset = strlen($payload) - 32;
-        $trailer       = substr($payload, $trailerOffset);
+        $trailerOffset  = strlen($payload) - 32;
+        $trailer        = substr($payload, $trailerOffset);
         $invalidTrailer = substr($trailer, 0, 16)
             . $this->packUint64BE(1)
             . substr($trailer, 24);

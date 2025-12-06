@@ -137,13 +137,13 @@ final class XmpParser
                                 [$parentNamespace, $parentLocalName] = $parentInfo;
 
                                 if ($parentNamespace === self::RDF_NAMESPACE && $parentLocalName === 'li') {
-                                    $existing = $textBuffers[$parentDepth] ?? '';
+                                    $existing                  = $textBuffers[$parentDepth] ?? '';
                                     $textBuffers[$parentDepth] = $existing . $text;
                                     break;
                                 }
 
                                 if ($parentNamespace !== self::RDF_NAMESPACE) {
-                                    $existing = $textBuffers[$parentDepth] ?? '';
+                                    $existing                  = $textBuffers[$parentDepth] ?? '';
                                     $textBuffers[$parentDepth] = $existing . $text;
                                     break;
                                 }
@@ -176,7 +176,7 @@ final class XmpParser
      * XMP Specification Part 1 §7.2 defines namespace declarations as xmlns:prefix attributes.
      * This method captures the mapping from namespace URI to prefix for display purposes.
      *
-     * @param XMLReader                $reader             Active XMLReader positioned on an element.
+     * @param XMLReader             $reader             Active XMLReader positioned on an element.
      * @param array<string, string> &$namespacePrefixes Target map for namespace URI => prefix.
      */
     private function extractNamespacePrefixes(XMLReader $reader, array &$namespacePrefixes): void
@@ -216,8 +216,8 @@ final class XmpParser
      * (rdf:about, rdf:ID, rdf:nodeID, rdf:parseType) while capturing actual
      * property values.
      *
-     * @param XMLReader                                    $reader Active XMLReader positioned on an element.
-     * @param array<string, array<int, string>|string> &$data   Target map for discovered properties.
+     * @param XMLReader                                $reader Active XMLReader positioned on an element.
+     * @param array<string, array<int, string>|string> &$data  Target map for discovered properties.
      */
     private function extractAttributes(XMLReader $reader, array &$data): void
     {

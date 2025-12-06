@@ -598,8 +598,8 @@ final readonly class IsoBmffExtractor
             throw new ParseError('stsd entry count exceeds maximum allowed');
         }
 
-        $result     = [];
-        $pos        = $win->tell();
+        $result = [];
+        $pos    = $win->tell();
 
         for ($i = 0; $i < $entryCount; ++$i) {
             if ($pos + 8 > $stsd->contentSize) {
@@ -1038,9 +1038,9 @@ final readonly class IsoBmffExtractor
             throw new ParseError('iinf entry count exceeds maximum allowed');
         }
 
-        $start      = $win->tell();
-        $items      = [];
-        $index      = 0;
+        $start = $win->tell();
+        $items = [];
+        $index = 0;
         foreach ($this->walkChildren($iinf, $start) as $child) {
             if ($child->type !== self::BOX_INFE) {
                 continue;
@@ -1235,8 +1235,8 @@ final readonly class IsoBmffExtractor
             throw new ParseError('keys entry count exceeds maximum allowed');
         }
 
-        $map        = [];
-        $pos        = $win->tell();
+        $map = [];
+        $pos = $win->tell();
 
         for ($i = 1; $i <= $entryCount; ++$i) {
             if ($pos + 8 > $keys->contentSize) {

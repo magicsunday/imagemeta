@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
 use function array_filter;
-use function array_key_exists;
 use function array_find;
+use function array_key_exists;
 use function array_map;
 use function array_values;
 use function explode;
@@ -103,7 +103,7 @@ final readonly class XmpDocument
                 return;
             }
 
-            $existing[]    = $value;
+            $existing[] = $value;
             $data[$key] = $existing;
 
             return;

@@ -258,8 +258,8 @@ final class BinaryPlistDecoder
         $this->objectCount   = $numObjects;
 
         // Build offsets from the offset table region.
-        $entries = [];
-        $cursor  = $offsetTableStart;
+        $entries         = [];
+        $cursor          = $offsetTableStart;
         $maxObjectOffset = $offsetTableStart - 1;
         for ($idx = 0; $idx < $numObjects; ++$idx) {
             $offset = $this->readUint($cursor, $offsetIntSize);

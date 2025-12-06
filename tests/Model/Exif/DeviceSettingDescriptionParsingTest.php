@@ -113,7 +113,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         // Little-endian: 3 columns, 7 rows
         // UTF-16LE: "Test" = T(0x54 0x00) e(0x65 0x00) s(0x73 0x00) t(0x74 0x00) \0(0x00 0x00)
-        $data  = "\x03\x00\x07\x00" . "T\x00e\x00s\x00t\x00\x00\x00";
+        $data  = "\x03\x00\x07\x00T\x00e\x00s\x00t\x00\x00\x00";
         $entry = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
             type: 7, // UNDEFINED
@@ -137,7 +137,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
     {
         // Little-endian: 3 columns, 7 rows
         // UTF-16BE: "Test" = T(0x00 0x54) e(0x00 0x65) s(0x00 0x73) t(0x00 0x74) \0(0x00 0x00)
-        $data  = "\x03\x00\x07\x00" . "\x00T\x00e\x00s\x00t\x00\x00";
+        $data  = "\x03\x00\x07\x00\x00T\x00e\x00s\x00t\x00\x00";
         $entry = new IfdEntry(
             tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
             type: 7, // UNDEFINED
