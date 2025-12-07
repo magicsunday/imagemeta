@@ -36,6 +36,7 @@ use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
+use MagicSunday\ImageMeta\Value\Enum\SensitivityType;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
@@ -812,13 +813,27 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.4 Table 10.
+     */
+    public function sensitivityType(): ?SensitivityType
+    {
+        $value = $this->enumValue($this->exifIfd, ExifTag::SENSITIVITY_TYPE);
+
+        if ($value === null) {
+            return null;
+        }
+
+        return SensitivityType::fromExifValue($value);
+    }
+
+    /**
      * Returns the ISO sensitivity value if present.
      *
      * @return int|null
      */
     public function iso(): ?int
     {
-        $sensitivityType = $this->int($this->exifIfd, ExifTag::SENSITIVITY_TYPE);
+        $sensitivityType = $this->sensitivityType();
         if ($sensitivityType !== null) {
             foreach ($this->sensitivityTagPriority($sensitivityType) as $tag) {
                 $value = $this->int($this->exifIfd, $tag);
@@ -943,16 +958,16 @@ final readonly class ParsedExif
      *
      * @return list<int>
      */
-    private function sensitivityTagPriority(int $type): array
+    private function sensitivityTagPriority(SensitivityType $type): array
     {
         return match ($type) {
-            1       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
-            2       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            3       => [ExifTag::ISO_SPEED],
-            4       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            5       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
-            6       => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
-            7       => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            SensitivityType::RECOMMENDED_EXPOSURE_INDEX => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            SensitivityType::ISO_SPEED => [ExifTag::ISO_SPEED],
+            SensitivityType::SOS_AND_REI => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
+            SensitivityType::SOS_AND_ISO => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
+            SensitivityType::REI_AND_ISO => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            SensitivityType::SOS_AND_REI_AND_ISO => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
             default => [],
         };
     }
