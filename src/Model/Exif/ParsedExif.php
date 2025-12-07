@@ -967,8 +967,12 @@ final readonly class ParsedExif
             SensitivityType::SOS_AND_REI => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
             SensitivityType::SOS_AND_ISO => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
             SensitivityType::REI_AND_ISO => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
-            SensitivityType::SOS_AND_REI_AND_ISO => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
-            default => [],
+            SensitivityType::SOS_AND_REI_AND_ISO => [
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+                ExifTag::ISO_SPEED,
+            ],
+            SensitivityType::UNKNOWN => [],
         };
     }
 
