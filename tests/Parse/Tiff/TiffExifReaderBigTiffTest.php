@@ -68,7 +68,7 @@ final class TiffExifReaderBigTiffTest extends TestCase
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertNotNull($result->ifd0);
+        self::assertSame([], $result->ifd0->entries);
     }
 
     /**
@@ -103,7 +103,6 @@ final class TiffExifReaderBigTiffTest extends TestCase
         $result = $reader->parseFromBlob($blob);
 
         // Zero offset should result in empty IFD
-        self::assertNotNull($result->ifd0);
         self::assertCount(0, $result->ifd0->entries);
     }
 
@@ -144,7 +143,6 @@ final class TiffExifReaderBigTiffTest extends TestCase
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertNotNull($result->ifd0);
         self::assertCount(2, $result->ifd0->entries);
     }
 
@@ -177,7 +175,6 @@ final class TiffExifReaderBigTiffTest extends TestCase
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertNotNull($result->ifd0);
         self::assertCount(1, $result->ifd0->entries);
     }
 
@@ -208,7 +205,7 @@ final class TiffExifReaderBigTiffTest extends TestCase
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertNotNull($result->ifd0);
+        self::assertCount(1, $result->ifd0->entries);
     }
 
     /**
@@ -238,7 +235,7 @@ final class TiffExifReaderBigTiffTest extends TestCase
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertNotNull($result->ifd0);
+        self::assertCount(1, $result->ifd0->entries);
     }
 
     /**
@@ -363,7 +360,7 @@ final class TiffExifReaderBigTiffTest extends TestCase
             . pack('P', $firstIfd);
 
         // Add minimal IFD if firstIfd is non-zero and within blob
-        if ($firstIfd > 0 && $firstIfd === 16) {
+        if ($firstIfd === 16) {
             $blob .= pack('P', 0)   // 0 entries
                 . pack('P', 0);     // Next IFD offset
         }

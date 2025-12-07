@@ -497,6 +497,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
 
     private function emptyAppleMakerNotes(): AppleMakerNotes
     {
+        /** @var AppleMakerNotes|null $empty */
         static $empty = null;
 
         if ($empty === null) {

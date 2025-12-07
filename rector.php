@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
 use Rector\Config\RectorConfig;
+use Rector\DeadCode\Rector\Assign\RemoveUnusedVariableAssignRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessParamTagRector;
 use Rector\DeadCode\Rector\ClassMethod\RemoveUselessReturnTagRector;
 use Rector\DeadCode\Rector\Stmt\RemoveUnreachableStatementRector;
+use Rector\Php84\Rector\MethodCall\NewMethodCallWithoutParenthesesRector;
 use Rector\Set\ValueObject\LevelSetList;
 use Rector\Set\ValueObject\SetList;
 
@@ -75,5 +77,7 @@ return static function (RectorConfig $rectorConfig): void {
         RemoveUnreachableStatementRector::class,
         RemoveUselessParamTagRector::class,
         RemoveUselessReturnTagRector::class,
+        RemoveUnusedVariableAssignRector::class,
+        NewMethodCallWithoutParenthesesRector::class,
     ]);
 };

@@ -19,17 +19,10 @@ use function array_key_exists;
 final class ApplePlistDictionary implements ApplePlistValue
 {
     /**
-     * @var array<string, ApplePlistValue>
-     */
-    private array $values;
-
-    /**
      * @param array<string, ApplePlistValue> $values
      */
-    public function __construct(array $values)
+    public function __construct(private array $values)
     {
-        /** @var array<string, ApplePlistValue> $values */
-        $this->values = $values;
     }
 
     public function has(string $key): bool

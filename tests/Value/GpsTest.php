@@ -13,6 +13,10 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\GpsCoordinate;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -30,34 +34,34 @@ final class GpsTest extends TestCase
         $gps = new Gps(
             latitude: 1.23,
             longitude: 4.56,
-            latitudeRef: 'N',
-            longitudeRef: 'E',
+            latitudeRef: GpsLatLonRef::NORTH,
+            longitudeRef: GpsLatLonRef::EAST,
             dop: 0.8,
-            speedRef: 'K',
-            speedOriginalRef: 'M',
-            trackRef: 'T',
-            imageDirectionRef: 'M',
-            destinationLatitudeRef: 'N',
-            destinationLongitudeRef: 'E',
-            destinationBearingRef: 'T',
-            destinationDistanceRef: 'K',
-            destinationDistanceOriginalRef: 'N',
+            speedRef: GpsSpeedRef::KILOMETERS_PER_HOUR,
+            speedOriginalRef: GpsSpeedRef::MILES_PER_HOUR,
+            trackRef: GpsDirectionRef::TRUE_DIRECTION,
+            imageDirectionRef: GpsDirectionRef::MAGNETIC_DIRECTION,
+            destinationLatitudeRef: GpsLatLonRef::NORTH,
+            destinationLongitudeRef: GpsLatLonRef::EAST,
+            destinationBearingRef: GpsDirectionRef::TRUE_DIRECTION,
+            destinationDistanceRef: GpsDistanceRef::KILOMETERS,
+            destinationDistanceOriginalRef: GpsDistanceRef::NAUTICAL_MILES,
         );
 
         self::assertSame(1.23, $gps->latitude);
-        self::assertSame('N', $gps->latitudeRef);
+        self::assertSame(GpsLatLonRef::NORTH, $gps->latitudeRef);
         self::assertSame(4.56, $gps->longitude);
-        self::assertSame('E', $gps->longitudeRef);
+        self::assertSame(GpsLatLonRef::EAST, $gps->longitudeRef);
         self::assertSame(0.8, $gps->dop);
-        self::assertSame('K', $gps->speedRef);
-        self::assertSame('M', $gps->speedOriginalRef);
-        self::assertSame('T', $gps->trackRef);
-        self::assertSame('M', $gps->imageDirectionRef);
-        self::assertSame('N', $gps->destinationLatitudeRef);
-        self::assertSame('E', $gps->destinationLongitudeRef);
-        self::assertSame('T', $gps->destinationBearingRef);
-        self::assertSame('K', $gps->destinationDistanceRef);
-        self::assertSame('N', $gps->destinationDistanceOriginalRef);
+        self::assertSame(GpsSpeedRef::KILOMETERS_PER_HOUR, $gps->speedRef);
+        self::assertSame(GpsSpeedRef::MILES_PER_HOUR, $gps->speedOriginalRef);
+        self::assertSame(GpsDirectionRef::TRUE_DIRECTION, $gps->trackRef);
+        self::assertSame(GpsDirectionRef::MAGNETIC_DIRECTION, $gps->imageDirectionRef);
+        self::assertSame(GpsLatLonRef::NORTH, $gps->destinationLatitudeRef);
+        self::assertSame(GpsLatLonRef::EAST, $gps->destinationLongitudeRef);
+        self::assertSame(GpsDirectionRef::TRUE_DIRECTION, $gps->destinationBearingRef);
+        self::assertSame(GpsDistanceRef::KILOMETERS, $gps->destinationDistanceRef);
+        self::assertSame(GpsDistanceRef::NAUTICAL_MILES, $gps->destinationDistanceOriginalRef);
     }
 
     #[Test]
@@ -66,8 +70,8 @@ final class GpsTest extends TestCase
         $gps = new Gps(
             latitude: 12.5,
             longitude: 7.5,
-            latitudeRef: 's',
-            longitudeRef: 'W',
+            latitudeRef: GpsLatLonRef::SOUTH,
+            longitudeRef: GpsLatLonRef::WEST,
         );
 
         self::assertSame(-12.5, $gps->latitudeSigned);

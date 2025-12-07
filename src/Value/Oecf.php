@@ -13,11 +13,14 @@ namespace MagicSunday\ImageMeta\Value;
 
 use function count;
 use function is_array;
+use function is_float;
+use function is_int;
+use function is_string;
 
 /**
  * Opto-Electronic Conversion Function (OECF) data structure.
  *
- * EXIF 3.0 §4.6.3 Table 15: OECF describes the relationship between camera's optical input
+ * EXIF 3.0 §4.6.3 Table 15: OECF describes the relationship between the camera's optical input
  * and the image file values. The structure contains:
  * - Dimensions (columns × rows matrix)
  * - Column labels (typically input/pixel values)
@@ -29,11 +32,11 @@ final readonly class Oecf
     /**
      * Creates an OECF value object.
      *
-     * @param int                    $columns      Number of columns in the OECF matrix.
-     * @param int                    $rows         Number of rows in the OECF matrix.
-     * @param list<string>           $columnLabels Labels for each column (input values).
-     * @param list<string>           $rowLabels    Labels for each row (output values).
-     * @param list<list<float|null>> $values       Matrix of SRATIONAL conversion values.
+     * @param int                                $columns      Number of columns in the OECF matrix.
+     * @param int                                $rows         Number of rows in the OECF matrix.
+     * @param list<string>                       $columnLabels Labels for each column (input values).
+     * @param list<string>                       $rowLabels    Labels for each row (output values).
+     * @param array<int, array<int, float|null>> $values       Matrix of SRATIONAL conversion values.
      */
     public function __construct(
         public int $columns,
@@ -45,17 +48,17 @@ final readonly class Oecf
     }
 
     /**
-     * Creates an OECF from decoded matrix structure.
+     * Creates an OECF from the decoded matrix structure.
      *
      * EXIF 3.0 §4.6.3 Table 15: OECF matrix format with dimensions, labels, and values.
      *
-     * @param array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null $matrix Decoded OECF matrix.
+     * @param array<string, mixed>|null $matrix Decoded OECF matrix. OECF matrix.
      *
      * @return self|null OECF value object or null if matrix is invalid.
      */
     public static function fromMatrix(?array $matrix): ?self
     {
-        if ($matrix === null || !is_array($matrix)) {
+        if ($matrix === null) {
             return null;
         }
 
@@ -64,22 +67,78 @@ final readonly class Oecf
         $labels  = $matrix['labels'] ?? null;
         $values  = $matrix['values'] ?? null;
 
-        if (!is_int($columns) || !is_int($rows) || !is_array($labels) || !is_array($values)) {
+        if (
+            !is_int($columns)
+            || !is_int($rows)
+            || !is_array($labels)
+            || !is_array($values)
+        ) {
             return null;
         }
 
         $columnLabels = $labels['columns'] ?? null;
         $rowLabels    = $labels['rows'] ?? null;
 
-        if (!is_array($columnLabels) || !is_array($rowLabels)) {
+        if (
+            !is_array($columnLabels)
+            || !is_array($rowLabels)
+        ) {
             return null;
         }
 
         // Validate dimensions match label counts
-        if (count($columnLabels) !== $columns || count($rowLabels) !== $rows) {
+        $normalizedColumnLabels = [];
+        foreach ($columnLabels as $label) {
+            if (!is_string($label)) {
+                return null;
+            }
+
+            $normalizedColumnLabels[] = $label;
+        }
+
+        $normalizedRowLabels = [];
+        foreach ($rowLabels as $label) {
+            if (!is_string($label)) {
+                return null;
+            }
+
+            $normalizedRowLabels[] = $label;
+        }
+
+        $normalizedValues = [];
+        foreach ($values as $row) {
+            if (!is_array($row)) {
+                return null;
+            }
+
+            $normalizedRow = [];
+            foreach ($row as $cell) {
+                if (
+                    !is_float($cell)
+                    && ($cell !== null)
+                ) {
+                    return null;
+                }
+
+                $normalizedRow[] = $cell;
+            }
+
+            $normalizedValues[] = $normalizedRow;
+        }
+
+        if (
+            (count($normalizedColumnLabels) !== $columns)
+            || (count($normalizedRowLabels) !== $rows)
+        ) {
             return null;
         }
 
-        return new self($columns, $rows, $columnLabels, $rowLabels, $values);
+        return new self(
+            $columns,
+            $rows,
+            $normalizedColumnLabels,
+            $normalizedRowLabels,
+            $normalizedValues
+        );
     }
 }

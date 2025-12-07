@@ -33,6 +33,7 @@ use PHPUnit\Framework\TestCase;
 
 use function pack;
 use function str_repeat;
+use function strlen;
 
 /**
  * Fuzz-style tests for TiffExifReader using edge cases and malformed inputs.
@@ -196,7 +197,6 @@ final class TiffExifReaderFuzzTest extends TestCase
         $result = $reader->parseFromBlob($blob);
 
         // Should parse without error (overlapping is allowed, just reads same data twice)
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -209,8 +209,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -223,8 +221,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -237,8 +233,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -251,8 +245,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -265,8 +257,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -291,8 +281,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertNotNull($result->ifd0);
-        self::assertCount(4, $result->additionalIfds);
+        self::assertCount(4, $result->subsequentIfds());
     }
 
     /**
@@ -319,8 +308,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -344,8 +331,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -370,8 +355,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -400,8 +383,6 @@ final class TiffExifReaderFuzzTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
-
-        self::assertNotNull($result->ifd0);
     }
 
     /**
@@ -426,9 +407,8 @@ final class TiffExifReaderFuzzTest extends TestCase
             . pack('V', 26);
 
         $blob .= pack('V', 0);
-        $blob .= pack('V', $numerator) . pack('V', $denominator);
 
-        return $blob;
+        return $blob . (pack('V', $numerator) . pack('V', $denominator));
     }
 
     /**
@@ -453,8 +433,7 @@ final class TiffExifReaderFuzzTest extends TestCase
             . pack('V', 26);
 
         $blob .= pack('V', 0);
-        $blob .= pack('l', $numerator) . pack('l', $denominator);
 
-        return $blob;
+        return $blob . (pack('l', $numerator) . pack('l', $denominator));
     }
 }

@@ -13,13 +13,17 @@ namespace MagicSunday\ImageMeta\Tests\Curate\Exif\SubFactory;
 
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\SceneFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Enum\LightSource;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
+use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
-use MagicSunday\ImageMeta\Value\Scene;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -30,28 +34,31 @@ final class SceneFactoryTest extends TestCase
     #[Test]
     public function createsFromExifMetadata(): void
     {
-        $exifDoc = $this->createMock(ParsedExif::class);
-        $exifDoc->method('sceneCaptureType')->willReturn(SceneCaptureType::STANDARD);
-        $exifDoc->method('sceneType')->willReturn(1);
-        $exifDoc->method('lightSource')->willReturn(LightSource::DAYLIGHT);
-        $exifDoc->method('subjectDistanceRange')->willReturn(SubjectDistanceRange::CLOSE_VIEW);
+        $parsedExif = $this->parsedExif(
+            sceneCaptureType: SceneCaptureType::STANDARD,
+            sceneType: SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE->value,
+            lightSource: LightSource::DAYLIGHT,
+            subjectDistanceRange: SubjectDistanceRange::CLOSE,
+        );
 
-        $metadata          = new Metadata();
-        $metadata->exifDoc = $exifDoc;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
 
         $factory = new SceneFactory();
         $scene   = $factory->create($metadata, 2);
 
-        self::assertInstanceOf(Scene::class, $scene);
         self::assertSame(SceneCaptureType::STANDARD, $scene->type);
-        self::assertSame(1, $scene->sceneType);
+        self::assertSame(SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE, $scene->sceneType);
         self::assertSame(LightSource::DAYLIGHT, $scene->light);
         self::assertSame(2, $scene->faceCount);
-        self::assertSame(SubjectDistanceRange::CLOSE_VIEW, $scene->subjectDistanceRange);
+        self::assertSame(SubjectDistanceRange::CLOSE, $scene->subjectDistanceRange);
     }
 
     #[Test]
-    public function detectsHdrSceneFromApple(): void
+    public function detectsHdrSceneFromAppleHeadroom(): void
     {
         $apple = new AppleMakerNotes(
             contentIdentifier: null,
@@ -76,38 +83,45 @@ final class SceneFactoryTest extends TestCase
             accelerationVector: null,
         );
 
-        $metadata             = new Metadata();
-        $metadata->makerNotes = new class($apple) {
-            public function __construct(public AppleMakerNotes $apple)
-            {
-            }
-        };
+        $makerNotes = new MakerNotesRecord(
+            vendor: 'APPLE',
+            length: 0,
+            sha1: str_repeat('0', 40),
+            apple: $apple,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            makerNotes: $makerNotes,
+        );
 
         $factory = new SceneFactory();
         $scene   = $factory->create($metadata);
 
-        self::assertInstanceOf(Scene::class, $scene);
         self::assertTrue($scene->hdrScene);
     }
 
     #[Test]
     public function detectsNightModeFromQuickTime(): void
     {
-        $quickTime           = new QuickTimeMeta();
-        $quickTime->metadata = ['NightMode' => true];
+        $quickTime = new QuickTimeMeta([
+            'NightMode' => true,
+        ]);
 
-        $metadata            = new Metadata();
-        $metadata->quickTime = $quickTime;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+        );
 
         $factory = new SceneFactory();
         $scene   = $factory->create($metadata);
 
-        self::assertInstanceOf(Scene::class, $scene);
         self::assertTrue($scene->nightMode);
     }
 
     #[Test]
-    public function detectsHdrFromFlags(): void
+    public function detectsHdrFromAppleFlags(): void
     {
         $apple = new AppleMakerNotes(
             contentIdentifier: null,
@@ -132,29 +146,36 @@ final class SceneFactoryTest extends TestCase
             accelerationVector: null,
         );
 
-        $metadata             = new Metadata();
-        $metadata->makerNotes = new class($apple) {
-            public function __construct(public AppleMakerNotes $apple)
-            {
-            }
-        };
+        $makerNotes = new MakerNotesRecord(
+            vendor: 'APPLE',
+            length: 0,
+            sha1: str_repeat('0', 40),
+            apple: $apple,
+        );
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            makerNotes: $makerNotes,
+        );
 
         $factory = new SceneFactory();
         $scene   = $factory->create($metadata);
 
-        self::assertInstanceOf(Scene::class, $scene);
         self::assertTrue($scene->hdrScene);
     }
 
     #[Test]
     public function createsWithNullMetadata(): void
     {
-        $metadata = new Metadata();
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
 
         $factory = new SceneFactory();
         $scene   = $factory->create($metadata);
 
-        self::assertInstanceOf(Scene::class, $scene);
         self::assertNull($scene->type);
         self::assertNull($scene->sceneType);
         self::assertNull($scene->light);
@@ -162,5 +183,61 @@ final class SceneFactoryTest extends TestCase
         self::assertNull($scene->hdrScene);
         self::assertNull($scene->nightMode);
         self::assertNull($scene->subjectDistanceRange);
+    }
+
+    private function parsedExif(
+        ?SceneCaptureType $sceneCaptureType,
+        ?int $sceneType,
+        ?LightSource $lightSource,
+        ?SubjectDistanceRange $subjectDistanceRange,
+    ): ParsedExif {
+        $exifEntries = [];
+
+        if ($sceneCaptureType instanceof SceneCaptureType) {
+            $exifEntries[ExifTag::SCENE_CAPTURE_TYPE] = new IfdEntry(
+                ExifTag::SCENE_CAPTURE_TYPE,
+                3,
+                1,
+                $sceneCaptureType->value,
+            );
+        }
+
+        if ($sceneType !== null) {
+            $exifEntries[ExifTag::SCENE_TYPE] = new IfdEntry(
+                ExifTag::SCENE_TYPE,
+                7,
+                1,
+                $sceneType,
+            );
+        }
+
+        if ($lightSource instanceof LightSource) {
+            $exifEntries[ExifTag::LIGHT_SOURCE] = new IfdEntry(
+                ExifTag::LIGHT_SOURCE,
+                3,
+                1,
+                $lightSource->value,
+            );
+        }
+
+        if ($subjectDistanceRange instanceof SubjectDistanceRange) {
+            $exifEntries[ExifTag::SUBJECT_DISTANCE_RANGE] = new IfdEntry(
+                ExifTag::SUBJECT_DISTANCE_RANGE,
+                3,
+                1,
+                $subjectDistanceRange->value,
+            );
+        }
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        return new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
     }
 }

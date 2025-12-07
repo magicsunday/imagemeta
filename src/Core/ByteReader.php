@@ -24,12 +24,6 @@ use const SEEK_SET;
  */
 final readonly class ByteReader
 {
-    private Closure $read;
-
-    private Closure $tell;
-
-    private Closure $seek;
-
     /**
      * Creates a reader backed by callbacks that operate on an external data source.
      *
@@ -38,15 +32,8 @@ final readonly class ByteReader
      * @param Closure(int|UInt64, int):void $seek    Callback that repositions the cursor of the data source.
      * @param string                        $context Short description used in error messages.
      */
-    public function __construct(
-        Closure $read,
-        Closure $tell,
-        Closure $seek,
-        private string $context,
-    ) {
-        $this->read = $read;
-        $this->tell = $tell;
-        $this->seek = $seek;
+    public function __construct(private Closure $read, private Closure $tell, private Closure $seek, private string $context)
+    {
     }
 
     /**

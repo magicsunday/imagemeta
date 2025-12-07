@@ -30,12 +30,6 @@ use function is_int;
  */
 final readonly class IfdEntry
 {
-    public int $tag;
-
-    public int $type;
-
-    public int $count;
-
     public int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64 $value;
 
     /**
@@ -47,15 +41,12 @@ final readonly class IfdEntry
      * @param ExifInputValue $value The raw value or values decoded from the IFD.
      */
     public function __construct(
-        int $tag,
-        int $type,
-        int $count,
+        public int $tag,
+        public int $type,
+        public int $count,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|array $value,
     ) {
-        $this->tag   = $tag;
-        $this->type  = $type;
-        $this->count = $count;
-        $this->value = $this->normaliseValue($type, $count, $value);
+        $this->value = $this->normaliseValue($this->type, $this->count, $value);
     }
 
     /**

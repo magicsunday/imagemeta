@@ -100,7 +100,8 @@ final readonly class TemporalFactory
 
         $tzSource = null;
 
-        if (($tz instanceof DateTimeZone)
+        if (
+            ($tz instanceof DateTimeZone)
             && ($offsetTimeOriginal !== null)
             && (ValueConverters::parseOffset($offsetTimeOriginal) instanceof DateTimeZone)
         ) {
@@ -219,6 +220,7 @@ final readonly class TemporalFactory
         }
 
         $digits = preg_replace('/\\D+/', '', $value);
+
         if ($digits === null || $digits === '') {
             return null;
         }

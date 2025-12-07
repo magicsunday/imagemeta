@@ -16,6 +16,8 @@ use MagicSunday\ImageMeta\Convenience\ExifConvenience;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
@@ -172,10 +174,10 @@ final class ExifConvenienceTest extends TestCase
         $gps = new Gps(
             latitude    : 51.5,
             longitude   : 0.125,
-            latitudeRef : 'N',
-            longitudeRef: 'E',
+            latitudeRef : GpsLatLonRef::NORTH,
+            longitudeRef: GpsLatLonRef::EAST,
             altitude    : 45.0,
-            altitudeRef : 0,
+            altitudeRef : GpsAltitudeRef::ABOVE_SEA_LEVEL,
         );
 
         $formatted = ExifConvenience::gpsString(
@@ -362,10 +364,10 @@ final class ExifConvenienceTest extends TestCase
         $gps = new Gps(
             51.5,
             0.125,
-            'N',
-            'E',
+            GpsLatLonRef::NORTH,
+            GpsLatLonRef::EAST,
             45.0,
-            0
+            GpsAltitudeRef::ABOVE_SEA_LEVEL,
         );
 
         $expected = [

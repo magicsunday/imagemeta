@@ -35,11 +35,6 @@ final class Stream implements BinaryReadAccessInterface
     use ReadsBinaryPrimitives;
     use NormalisesOffsets;
 
-    /** @var resource */
-    private $fh;
-
-    private readonly int $size;
-
     private int $pos = 0;
 
     private readonly ByteReader $byteReader;
@@ -74,10 +69,8 @@ final class Stream implements BinaryReadAccessInterface
      * @param resource $fh   Open resource positioned at the beginning of the file.
      * @param int      $size Total size of the readable data in bytes.
      */
-    public function __construct($fh, int $size)
+    public function __construct(private $fh, private readonly int $size)
     {
-        $this->fh         = $fh;
-        $this->size       = $size;
         $this->byteReader = new ByteReader(
             read: $this->read(...),
             tell: fn (): int => $this->pos,

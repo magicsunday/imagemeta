@@ -13,49 +13,58 @@ namespace MagicSunday\ImageMeta\Value;
 
 use function count;
 use function is_array;
+use function is_float;
+use function is_int;
+use function is_string;
 
 /**
- * Spatial Frequency Response (SFR) data structure.
+ * Spatial Frequency Response (SFR) value object.
  *
- * EXIF 3.0 §4.6.3 Table 16: SFR records camera and optical system's spatial frequency
- * response characteristics. The structure contains:
- * - Dimensions (columns × rows matrix)
- * - Spatial frequency values (column labels)
- * - Direction labels (row labels, e.g., horizontal/vertical)
- * - Matrix of SRATIONAL response values
+ * Matches the binary layout described in EXIF 3.0 §4.6.6.7.25
+ * and Figure 20 "Spatial Frequency Response Description":
+ *
+ *  - columns (n): number of spatial frequency columns
+ *  - rows    (m): number of SFR rows
+ *  - column item names: spatial frequency labels
+ *  - m×n RATIONAL values: SFR[row][column]
  */
 final readonly class SpatialFrequencyResponse
 {
     /**
-     * Creates a spatial frequency response value object.
-     *
-     * @param int                    $columns            Number of frequency columns.
-     * @param int                    $rows               Number of direction rows.
-     * @param list<string>           $spatialFrequencies Spatial frequency values (cycles/pixel).
-     * @param list<string>           $directions         Direction labels (e.g., "Horizontal", "Vertical").
-     * @param list<list<float|null>> $values             Matrix of SRATIONAL response values.
+     * @param int                $columns            Number of frequency columns (n).
+     * @param int                $rows               Number of SFR rows (m).
+     * @param list<string>       $spatialFrequencies Column item names (spatial frequencies).
+     * @param array<list<float>> $values             SFR values matrix [row][column].
      */
     public function __construct(
         public int $columns,
         public int $rows,
         public array $spatialFrequencies,
-        public array $directions,
         public array $values,
     ) {
     }
 
     /**
-     * Creates a SpatialFrequencyResponse from decoded matrix structure.
+     * Creates a SpatialFrequencyResponse from a decoded matrix structure.
      *
-     * EXIF 3.0 §4.6.3 Table 16: SFR matrix format with frequencies, directions, and values.
+     * Expected decoded structure (already parsed from tag 41484):
      *
-     * @param array{columns:int, rows:int, labels:array{columns:list<string>, rows:list<string>}, values:list<list<float|null>>}|null $matrix Decoded SFR matrix.
+     * [
+     *     'columns' => int,                          // n
+     *     'rows'    => int,                          // m
+     *     'labels'  => [
+     *         'columns' => list<string>,             // column item names
+     *     ],
+     *     'values'  => array<list<float>> // SFR[row][column]
+     * ]
      *
-     * @return self|null SpatialFrequencyResponse value object or null if matrix is invalid.
+     * @param array<string, mixed>|null $matrix
+     *
+     * @return self|null
      */
     public static function fromMatrix(?array $matrix): ?self
     {
-        if ($matrix === null || !is_array($matrix)) {
+        if ($matrix === null) {
             return null;
         }
 
@@ -64,22 +73,72 @@ final readonly class SpatialFrequencyResponse
         $labels  = $matrix['labels'] ?? null;
         $values  = $matrix['values'] ?? null;
 
-        if (!is_int($columns) || !is_int($rows) || !is_array($labels) || !is_array($values)) {
+        if (
+            !is_int($columns)
+            || ($columns <= 0)
+            || !is_int($rows)
+            || ($rows <= 0)
+            || !is_array($labels)
+            || !is_array($values)
+        ) {
             return null;
         }
 
         $columnLabels = $labels['columns'] ?? null;
-        $rowLabels    = $labels['rows'] ?? null;
-
-        if (!is_array($columnLabels) || !is_array($rowLabels)) {
+        if (!is_array($columnLabels)) {
             return null;
         }
 
-        // Validate dimensions match label counts
-        if (count($columnLabels) !== $columns || count($rowLabels) !== $rows) {
+        // Validate and normalize column item names to list<string>
+        $frequencies = [];
+
+        foreach ($columnLabels as $label) {
+            if (!is_string($label)) {
+                return null;
+            }
+
+            $frequencies[] = $label;
+        }
+
+        if (count($frequencies) !== $columns) {
             return null;
         }
 
-        return new self($columns, $rows, $columnLabels, $rowLabels, $values);
+        // Validate that values form an exact m×n matrix of float RATIONALs
+        if (count($values) !== $rows) {
+            return null;
+        }
+
+        $typedValues = [];
+
+        foreach ($values as $rowIndex => $row) {
+            if (!is_array($row)) {
+                return null;
+            }
+
+            $typedRow = [];
+
+            foreach ($row as $cell) {
+                // Spec: RATIONAL ⇒ always a numeric value, null is not allowed
+                if (!is_float($cell)) {
+                    return null;
+                }
+
+                $typedRow[] = $cell;
+            }
+
+            if (count($typedRow) !== $columns) {
+                return null;
+            }
+
+            $typedValues[$rowIndex] = $typedRow;
+        }
+
+        return new self(
+            $columns,
+            $rows,
+            $frequencies,
+            $typedValues
+        );
     }
 }

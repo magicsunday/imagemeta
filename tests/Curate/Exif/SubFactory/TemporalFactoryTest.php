@@ -12,16 +12,19 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Curate\Exif\SubFactory;
 
 use DateTimeImmutable;
-use DateTimeZone;
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\TemporalFactory;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Value\Temporal;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+
+use function strlen;
 
 #[CoversClass(TemporalFactory::class)]
 final class TemporalFactoryTest extends TestCase
@@ -29,32 +32,31 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function createsFromExifMetadata(): void
     {
-        $dateTime = new DateTimeImmutable('2023-06-15 14:30:00');
+        $parsedExif = $this->parsedExif(
+            create: new DateTimeImmutable('2023-06-15T14:30:00+02:00'),
+            modify: new DateTimeImmutable('2023-06-16T10:00:00+02:00'),
+            original: new DateTimeImmutable('2023-06-15T14:00:00+02:00'),
+            offsetTime: '+02:00',
+            offsetTimeOriginal: '+02:00',
+            offsetTimeDigitized: '+02:00',
+            subSecTime: '500',
+            subSecTimeOriginal: '500',
+            subSecTimeDigitized: '500',
+        );
 
-        $exifDoc = $this->createMock(ParsedExif::class);
-        $exifDoc->method('dateTimeDigitized')->willReturn($dateTime);
-        $exifDoc->method('dateTime')->willReturn($dateTime);
-        $exifDoc->method('dateTimeOriginalBestEffort')->willReturn($dateTime);
-        $exifDoc->method('offsetTime')->willReturn('+02:00');
-        $exifDoc->method('offsetTimeOriginal')->willReturn('+02:00');
-        $exifDoc->method('offsetTimeDigitized')->willReturn('+02:00');
-        $exifDoc->method('subSecTime')->willReturn('500');
-        $exifDoc->method('subSecTimeDigitized')->willReturn('500');
-        $exifDoc->method('subSecTimeOriginal')->willReturn('500');
-        $exifDoc->method('dateTimeOriginalRaw')->willReturn('2023:06:15 14:30:00');
-        $exifDoc->method('dateTimeDigitizedRaw')->willReturn('2023:06:15 14:30:00');
-
-        $metadata          = new Metadata();
-        $metadata->exifDoc = $exifDoc;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
 
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
 
-        self::assertInstanceOf(Temporal::class, $temporal);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->original);
-        self::assertInstanceOf(DateTimeZone::class, $temporal->tz);
+        self::assertNotNull($temporal->tz);
         self::assertSame('500', $temporal->subSecTime);
         self::assertSame('500', $temporal->subSecTimeOriginal);
         self::assertSame('500', $temporal->subSecTimeDigitized);
@@ -63,22 +65,23 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function fallsBackToXmpTimestamps(): void
     {
-        $xmpDoc = $this->createMock(XmpDocument::class);
-        $xmpDoc->method('string')->willReturnCallback(
-            static fn (string $ns, string $name): ?string => match ($name) {
-                'CreateDate' => '2023-06-15T14:30:00+02:00',
-                'ModifyDate' => '2023-06-16T10:00:00+02:00',
-                default      => null,
-            },
-        );
+        $parsedExif = $this->parsedExif();
 
-        $metadata         = new Metadata();
-        $metadata->xmpDoc = $xmpDoc;
+        $xmp = new XmpDocument([
+            '{http://ns.adobe.com/exif/1.0/}CreateDate' => '2023-06-15T14:30:00+02:00',
+            '{http://ns.adobe.com/exif/1.0/}ModifyDate' => '2023-06-16T10:00:00+02:00',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+            xmpDoc: $xmp,
+        );
 
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
 
-        self::assertInstanceOf(Temporal::class, $temporal);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
     }
@@ -86,19 +89,22 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function fallsBackToQuickTimeTimestamps(): void
     {
-        $quickTime           = new QuickTimeMeta();
-        $quickTime->metadata = [
+        $parsedExif = $this->parsedExif();
+
+        $quickTime = new QuickTimeMeta([
             'CreationDate' => '2023-06-15T14:30:00+02:00',
             'ModifyDate'   => '2023-06-16T10:00:00+02:00',
-        ];
+        ]);
 
-        $metadata            = new Metadata();
-        $metadata->quickTime = $quickTime;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $parsedExif,
+        );
 
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
 
-        self::assertInstanceOf(Temporal::class, $temporal);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->create);
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
     }
@@ -106,45 +112,167 @@ final class TemporalFactoryTest extends TestCase
     #[Test]
     public function sanitizesSubSeconds(): void
     {
-        $dateTime = new DateTimeImmutable('2023-06-15 14:30:00');
+        $parsedExif = $this->parsedExif(
+            subSecTime: '5',
+            subSecTimeOriginal: '50',
+            subSecTimeDigitized: '5000',
+        );
 
-        $exifDoc = $this->createMock(ParsedExif::class);
-        $exifDoc->method('dateTimeDigitized')->willReturn($dateTime);
-        $exifDoc->method('dateTime')->willReturn($dateTime);
-        $exifDoc->method('dateTimeOriginalBestEffort')->willReturn($dateTime);
-        $exifDoc->method('offsetTime')->willReturn(null);
-        $exifDoc->method('offsetTimeOriginal')->willReturn(null);
-        $exifDoc->method('offsetTimeDigitized')->willReturn(null);
-        $exifDoc->method('subSecTime')->willReturn('5');
-        $exifDoc->method('subSecTimeDigitized')->willReturn('50');
-        $exifDoc->method('subSecTimeOriginal')->willReturn('500');
-        $exifDoc->method('dateTimeOriginalRaw')->willReturn('2023:06:15 14:30:00');
-        $exifDoc->method('dateTimeDigitizedRaw')->willReturn('2023:06:15 14:30:00');
-
-        $metadata          = new Metadata();
-        $metadata->exifDoc = $exifDoc;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
 
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
 
-        self::assertInstanceOf(Temporal::class, $temporal);
-        self::assertSame('500', $temporal->subSecTime);
-        self::assertSame('500', $temporal->subSecTimeOriginal);
-        self::assertSame('050', $temporal->subSecTimeDigitized);
+        self::assertSame('005', $temporal->subSecTime);
+        self::assertSame('050', $temporal->subSecTimeOriginal);
+        self::assertSame('500', $temporal->subSecTimeDigitized);
     }
 
     #[Test]
     public function createsWithNullMetadata(): void
     {
-        $metadata = new Metadata();
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
 
         $factory  = new TemporalFactory();
         $temporal = $factory->create($metadata);
 
-        self::assertInstanceOf(Temporal::class, $temporal);
         self::assertNull($temporal->create);
         self::assertNull($temporal->modify);
         self::assertNull($temporal->original);
         self::assertNull($temporal->tz);
+    }
+
+    private function parsedExif(
+        ?DateTimeImmutable $create = null,
+        ?DateTimeImmutable $modify = null,
+        ?DateTimeImmutable $original = null,
+        ?string $offsetTime = null,
+        ?string $offsetTimeOriginal = null,
+        ?string $offsetTimeDigitized = null,
+        ?string $subSecTime = null,
+        ?string $subSecTimeOriginal = null,
+        ?string $subSecTimeDigitized = null,
+    ): ParsedExif {
+        $ifd0Entries   = [];
+        $exifEntries   = [];
+        $hasAnyEntries = false;
+
+        if ($modify instanceof DateTimeImmutable) {
+            $ifd0Entries[ExifTag::DATETIME] = new IfdEntry(
+                ExifTag::DATETIME,
+                2,
+                20,
+                $modify->format('Y:m:d H:i:s'),
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($create instanceof DateTimeImmutable) {
+            $exifEntries[ExifTag::DATETIME_DIGITIZED] = new IfdEntry(
+                ExifTag::DATETIME_DIGITIZED,
+                2,
+                20,
+                $create->format('Y:m:d H:i:s'),
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($original instanceof DateTimeImmutable) {
+            $exifEntries[ExifTag::DATETIME_ORIGINAL] = new IfdEntry(
+                ExifTag::DATETIME_ORIGINAL,
+                2,
+                20,
+                $original->format('Y:m:d H:i:s'),
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($offsetTime !== null) {
+            $exifEntries[ExifTag::OFFSET_TIME] = new IfdEntry(
+                ExifTag::OFFSET_TIME,
+                2,
+                strlen($offsetTime),
+                $offsetTime,
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($offsetTimeOriginal !== null) {
+            $exifEntries[ExifTag::OFFSET_TIME_ORIGINAL] = new IfdEntry(
+                ExifTag::OFFSET_TIME_ORIGINAL,
+                2,
+                strlen($offsetTimeOriginal),
+                $offsetTimeOriginal,
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($offsetTimeDigitized !== null) {
+            $exifEntries[ExifTag::OFFSET_TIME_DIGITIZED] = new IfdEntry(
+                ExifTag::OFFSET_TIME_DIGITIZED,
+                2,
+                strlen($offsetTimeDigitized),
+                $offsetTimeDigitized,
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($subSecTime !== null) {
+            $exifEntries[ExifTag::SUB_SEC_TIME] = new IfdEntry(
+                ExifTag::SUB_SEC_TIME,
+                2,
+                strlen($subSecTime),
+                $subSecTime,
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($subSecTimeOriginal !== null) {
+            $exifEntries[ExifTag::SUB_SEC_TIME_ORIGINAL] = new IfdEntry(
+                ExifTag::SUB_SEC_TIME_ORIGINAL,
+                2,
+                strlen($subSecTimeOriginal),
+                $subSecTimeOriginal,
+            );
+            $hasAnyEntries = true;
+        }
+
+        if ($subSecTimeDigitized !== null) {
+            $exifEntries[ExifTag::SUB_SEC_TIME_DIGITIZED] = new IfdEntry(
+                ExifTag::SUB_SEC_TIME_DIGITIZED,
+                2,
+                strlen($subSecTimeDigitized),
+                $subSecTimeDigitized,
+            );
+            $hasAnyEntries = true;
+        }
+
+        if (!$hasAnyEntries) {
+            return new ParsedExif(
+                ifd0: new Ifd([]),
+                exifIfd: new Ifd([]),
+                gpsIfd: null,
+                interopIfd: null,
+                ifd1: null,
+            );
+        }
+
+        $ifd0    = new Ifd($ifd0Entries);
+        $exifIfd = new Ifd($exifEntries);
+
+        return new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
     }
 }

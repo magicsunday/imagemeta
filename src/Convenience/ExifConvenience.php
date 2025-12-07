@@ -15,6 +15,8 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
@@ -321,14 +323,22 @@ final class ExifConvenience
     {
         $ref = $gps->latitudeRef;
 
-        return $ref ?? ($latitude >= 0.0 ? 'N' : 'S');
+        if ($ref instanceof GpsLatLonRef) {
+            return $ref->value;
+        }
+
+        return $latitude >= 0.0 ? 'N' : 'S';
     }
 
     private static function resolveLongitudeRef(Gps $gps, float $longitude): string
     {
         $ref = $gps->longitudeRef;
 
-        return $ref ?? ($longitude >= 0.0 ? 'E' : 'W');
+        if ($ref instanceof GpsLatLonRef) {
+            return $ref->value;
+        }
+
+        return $longitude >= 0.0 ? 'E' : 'W';
     }
 
     private static function resolveAltitude(Gps $gps): ?float
@@ -339,7 +349,8 @@ final class ExifConvenience
         }
 
         $reference = $gps->altitudeRef;
-        if ($reference === 1) {
+
+        if ($reference === GpsAltitudeRef::BELOW_SEA_LEVEL) {
             return -$altitude;
         }
 

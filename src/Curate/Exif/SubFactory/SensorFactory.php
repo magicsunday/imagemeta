@@ -33,6 +33,7 @@ final readonly class SensorFactory
 
         $focalPlaneUnit     = null;
         $focalPlaneUnitCode = $exifDocument?->focalPlaneResolutionUnit();
+
         if ($focalPlaneUnitCode !== null) {
             $focalPlaneUnit = ResolutionUnit::tryFrom($focalPlaneUnitCode);
         }

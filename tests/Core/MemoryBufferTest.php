@@ -12,7 +12,9 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Core {
     use MagicSunday\ImageMeta\Tests\Core\MemoryBufferTest;
 
-    if (!\function_exists(__NAMESPACE__ . '\\substr')) {
+    use function function_exists;
+
+    if (!function_exists(__NAMESPACE__ . '\\substr')) {
         /**
          * Test hook that allows forcing short-read behaviour for MemoryBuffer::read().
          */
@@ -30,7 +32,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
     use MagicSunday\ImageMeta\Core\ParseError;
     use MagicSunday\ImageMeta\Core\Util\UInt64;
     use MagicSunday\ImageMeta\Core\Util\Unpack;
-    use PHPUnit\Framework\Attributes\After;
     use PHPUnit\Framework\Attributes\CoversClass;
     use PHPUnit\Framework\Attributes\Test;
     use PHPUnit\Framework\Attributes\UsesClass;
@@ -73,15 +74,6 @@ namespace MagicSunday\ImageMeta\Tests\Core {
             }
 
             return substr($string, $offset, $length);
-        }
-
-        /**
-         * Resets the short-read override flag after each test to avoid cross-test leakage.
-         */
-        #[After]
-        protected function resetOverrides(): void
-        {
-            self::$forceShortRead = false;
         }
 
         /**

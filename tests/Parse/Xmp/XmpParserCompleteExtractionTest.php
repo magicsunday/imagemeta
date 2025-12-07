@@ -27,6 +27,7 @@ use PHPUnit\Framework\TestCase;
 final class XmpParserCompleteExtractionTest extends TestCase
 {
     private const string EXIF_NS = 'http://ns.adobe.com/exif/1.0/';
+
     private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
 
     /**

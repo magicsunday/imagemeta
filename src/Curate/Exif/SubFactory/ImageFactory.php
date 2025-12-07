@@ -35,11 +35,9 @@ final readonly class ImageFactory
     {
         $exifDocument = $metadata->exifDoc;
 
-        $width  = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
-        $height = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
-
-        $orientation = $exifDocument?->orientation();
-
+        $width         = $exifDocument?->imageWidth() ?? $metadata->jpegFrameWidth;
+        $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
+        $orientation   = $exifDocument?->orientation();
         $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
 
         return new Image(
@@ -76,8 +74,10 @@ final readonly class ImageFactory
 
         if ($colorSpace === ColorSpace::UNCALIBRATED) {
             $interopIndex = $exifDocument->interopIndex();
+
             if (is_string($interopIndex)) {
                 $normalizedInteropIndex = strtoupper($interopIndex);
+
                 if ($normalizedInteropIndex === 'R03') {
                     return ColorSpace::ADOBE_RGB;
                 }

@@ -84,7 +84,7 @@ final readonly class XmpDocument
      * Accumulates a value into the aggregate data map using the same semantics as the parser.
      *
      * @param array<string, string|array<int, string>> $data
-     * @param list<string>|string                      $value
+     * @param array<int, string>|string                $value
      */
     private static function accumulateValue(array &$data, string $key, array|string $value): void
     {

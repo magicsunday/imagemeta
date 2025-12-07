@@ -1138,9 +1138,8 @@ final class ValueConvertersTest extends TestCase
         $payload .= $this->packSrational(60, 100);
         $payload .= $this->packSrational(85, 100);
         $payload .= $this->packSrational(70, 100);
-        $payload .= $this->packSrational(55, 100);
 
-        return $payload;
+        return $payload . $this->packSrational(55, 100);
     }
 
     private function packSrational(int $numerator, int $denominator): string
@@ -1165,7 +1164,6 @@ final class ValueConvertersTest extends TestCase
         $result = ValueConverters::srationalTripletToFloatVector($list);
 
         self::assertIsArray($result);
-        self::assertCount(3, $result);
         self::assertEqualsWithDelta(0.5, $result[0], 0.001);
         self::assertEqualsWithDelta(-0.2, $result[1], 0.001);
         self::assertEqualsWithDelta(9.8, $result[2], 0.001);

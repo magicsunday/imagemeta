@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Tests\Curate\Exif\SubFactory;
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\RegionsFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Value\Regions;
 use MagicSunday\ImageMeta\Value\Regions\RegionType;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -26,125 +25,158 @@ final class RegionsFactoryTest extends TestCase
     #[Test]
     public function createsEmptyRegionsWithNullXmpDoc(): void
     {
-        $metadata = new Metadata();
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
 
         $factory = new RegionsFactory();
         $regions = $factory->create($metadata);
 
-        self::assertInstanceOf(Regions::class, $regions);
         self::assertSame([], $regions->items);
     }
 
     #[Test]
     public function extractsMwgRegions(): void
     {
-        $xmpDoc = $this->createMock(XmpDocument::class);
-        $xmpDoc->method('get')->willReturnCallback(
-            static fn (string $ns, string $name): mixed => match ($name) {
-                'Type'              => ['Face'],
-                'Name'              => ['John Doe'],
-                'PersonDisplayName' => [],
-                'Confidence'        => [0.95],
-                'Rotation'          => [0.0],
-                'x'                 => [0.5],
-                'y'                 => [0.5],
-                'w'                 => [0.2],
-                'h'                 => [0.2],
-                default             => null,
-            },
-        );
+        $nsMwgRegions = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $nsStArea     = 'http://ns.adobe.com/xmp/sType/Area#';
 
-        $metadata         = new Metadata();
-        $metadata->xmpDoc = $xmpDoc;
+        $xmpData = [
+            '{' . $nsMwgRegions . '}Type'              => ['Face'],
+            '{' . $nsMwgRegions . '}Name'              => ['John Doe'],
+            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
+            '{' . $nsMwgRegions . '}Confidence'        => ['0.95'],
+            '{' . $nsMwgRegions . '}Rotation'          => ['0.0'],
+            '{' . $nsStArea . '}x'                     => ['0.5'],
+            '{' . $nsStArea . '}y'                     => ['0.5'],
+            '{' . $nsStArea . '}w'                     => ['0.2'],
+            '{' . $nsStArea . '}h'                     => ['0.2'],
+        ];
+
+        $xmpDoc = new XmpDocument($xmpData, []);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: $xmpDoc,
+        );
 
         $factory = new RegionsFactory();
         $regions = $factory->create($metadata);
 
-        self::assertInstanceOf(Regions::class, $regions);
         self::assertCount(1, $regions->items);
-        self::assertSame(RegionType::FACE, $regions->items[0]->type);
-        self::assertSame('John Doe', $regions->items[0]->personName);
+
+        $region = $regions->items[0];
+
+        self::assertSame(RegionType::FACE, $region->type);
+        self::assertSame('John Doe', $region->personName);
+        self::assertEqualsWithDelta(0.4, $region->x, 1e-6);
+        self::assertEqualsWithDelta(0.4, $region->y, 1e-6);
+        self::assertEqualsWithDelta(0.2, $region->w, 1e-6);
+        self::assertEqualsWithDelta(0.2, $region->h, 1e-6);
+        self::assertEqualsWithDelta(0.95, $region->confidence, 1e-6);
     }
 
     #[Test]
     public function extractsAppleFaceRegions(): void
     {
-        $xmpDoc = $this->createMock(XmpDocument::class);
-        $xmpDoc->method('get')->willReturnCallback(
-            static fn (string $ns, string $name): mixed => match (true) {
-                str_contains($ns, 'faceinfo') && $name === 'CenterX'         => [0.5],
-                str_contains($ns, 'faceinfo') && $name === 'CenterY'         => [0.5],
-                str_contains($ns, 'faceinfo') && $name === 'Width'           => [0.2],
-                str_contains($ns, 'faceinfo') && $name === 'Height'          => [0.2],
-                str_contains($ns, 'faceinfo') && $name === 'ConfidenceLevel' => [90.0],
-                str_contains($ns, 'faceinfo') && $name === 'Confidence'      => [],
-                str_contains($ns, 'faceinfo') && $name === 'AngleInfoRoll'   => [],
-                str_contains($ns, 'faceinfo') && $name === 'Roll'            => [],
-                str_contains($ns, 'faceinfo') && $name === 'Yaw'             => [],
-                str_contains($ns, 'faceinfo') && $name === 'Name'            => ['Jane Doe'],
-                str_contains($ns, 'faceinfo') && $name === 'FullName'        => [],
-                str_contains($ns, 'faceinfo') && $name === 'FaceID'          => ['ABC123'],
-                str_contains($ns, 'faceinfo') && $name === 'FaceUUID'        => [],
-                default                                                      => [],
-            },
-        );
+        $nsAppleFaceInfo = 'http://ns.apple.com/faceinfo/1.0/';
 
-        $metadata         = new Metadata();
-        $metadata->xmpDoc = $xmpDoc;
+        $xmpData = [
+            '{' . $nsAppleFaceInfo . '}CenterX'         => ['0.5'],
+            '{' . $nsAppleFaceInfo . '}CenterY'         => ['0.5'],
+            '{' . $nsAppleFaceInfo . '}Width'           => ['0.2'],
+            '{' . $nsAppleFaceInfo . '}Height'          => ['0.2'],
+            '{' . $nsAppleFaceInfo . '}ConfidenceLevel' => ['90.0'],
+            '{' . $nsAppleFaceInfo . '}Confidence'      => [],
+            '{' . $nsAppleFaceInfo . '}AngleInfoRoll'   => [],
+            '{' . $nsAppleFaceInfo . '}Roll'            => [],
+            '{' . $nsAppleFaceInfo . '}Yaw'             => [],
+            '{' . $nsAppleFaceInfo . '}Name'            => ['Jane Doe'],
+            '{' . $nsAppleFaceInfo . '}FullName'        => [],
+            '{' . $nsAppleFaceInfo . '}FaceID'          => ['ABC123'],
+            '{' . $nsAppleFaceInfo . '}FaceUUID'        => [],
+        ];
+
+        $xmpDoc = new XmpDocument($xmpData, []);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: $xmpDoc,
+        );
 
         $factory = new RegionsFactory();
         $regions = $factory->create($metadata);
 
-        self::assertInstanceOf(Regions::class, $regions);
         self::assertCount(1, $regions->items);
-        self::assertSame(RegionType::FACE, $regions->items[0]->type);
-        self::assertSame('Jane Doe', $regions->items[0]->personName);
-        self::assertSame('ABC123', $regions->items[0]->faceId);
+
+        $region = $regions->items[0];
+
+        self::assertSame(RegionType::FACE, $region->type);
+        self::assertSame('Jane Doe', $region->personName);
+        self::assertSame('ABC123', $region->faceId);
+        self::assertEqualsWithDelta(0.5 - 0.1, $region->x, 1e-6);
+        self::assertEqualsWithDelta(0.5 - 0.1, $region->y, 1e-6);
     }
 
     #[Test]
     public function mergesOverlappingRegions(): void
     {
-        $xmpDoc = $this->createMock(XmpDocument::class);
-        $xmpDoc->method('get')->willReturnCallback(
-            static fn (string $ns, string $name): mixed => match (true) {
-                str_contains($ns, 'regions') && $name === 'Type'              => ['Face'],
-                str_contains($ns, 'regions') && $name === 'Name'              => [''],
-                str_contains($ns, 'regions') && $name === 'PersonDisplayName' => [],
-                str_contains($ns, 'regions') && $name === 'Confidence'        => [],
-                str_contains($ns, 'regions') && $name === 'Rotation'          => [],
-                str_contains($ns, 'Area') && $name === 'x'                    => [0.5],
-                str_contains($ns, 'Area') && $name === 'y'                    => [0.5],
-                str_contains($ns, 'Area') && $name === 'w'                    => [0.2],
-                str_contains($ns, 'Area') && $name === 'h'                    => [0.2],
-                str_contains($ns, 'faceinfo') && $name === 'CenterX'          => [0.5],
-                str_contains($ns, 'faceinfo') && $name === 'CenterY'          => [0.5],
-                str_contains($ns, 'faceinfo') && $name === 'Width'            => [0.2],
-                str_contains($ns, 'faceinfo') && $name === 'Height'           => [0.2],
-                str_contains($ns, 'faceinfo') && $name === 'ConfidenceLevel'  => [],
-                str_contains($ns, 'faceinfo') && $name === 'Confidence'       => [95.0],
-                str_contains($ns, 'faceinfo') && $name === 'AngleInfoRoll'    => [],
-                str_contains($ns, 'faceinfo') && $name === 'Roll'             => [],
-                str_contains($ns, 'faceinfo') && $name === 'Yaw'              => [],
-                str_contains($ns, 'faceinfo') && $name === 'Name'             => ['Bob Smith'],
-                str_contains($ns, 'faceinfo') && $name === 'FullName'         => [],
-                str_contains($ns, 'faceinfo') && $name === 'FaceID'           => [],
-                str_contains($ns, 'faceinfo') && $name === 'FaceUUID'         => [],
-                str_contains($ns, 'Dimensions') && $name === 'w'              => [],
-                str_contains($ns, 'Dimensions') && $name === 'h'              => [],
-                default                                                       => [],
-            },
-        );
+        $nsMwgRegions   = 'http://www.metadataworkinggroup.com/schemas/regions/';
+        $nsStArea       = 'http://ns.adobe.com/xmp/sType/Area#';
+        $nsAppleFaceInf = 'http://ns.apple.com/faceinfo/1.0/';
 
-        $metadata         = new Metadata();
-        $metadata->xmpDoc = $xmpDoc;
+        $xmpData = [
+            // MWG region covering a face without person or confidence metadata.
+            '{' . $nsMwgRegions . '}Type'              => ['Face'],
+            '{' . $nsMwgRegions . '}Name'              => [''],
+            '{' . $nsMwgRegions . '}PersonDisplayName' => [],
+            '{' . $nsMwgRegions . '}Confidence'        => [],
+            '{' . $nsMwgRegions . '}Rotation'          => [],
+            '{' . $nsStArea . '}x'                     => ['0.5'],
+            '{' . $nsStArea . '}y'                     => ['0.5'],
+            '{' . $nsStArea . '}w'                     => ['0.2'],
+            '{' . $nsStArea . '}h'                     => ['0.2'],
+            // Apple faceinfo entry with overlapping geometry and richer metadata.
+            '{' . $nsAppleFaceInf . '}CenterX'         => ['0.5'],
+            '{' . $nsAppleFaceInf . '}CenterY'         => ['0.5'],
+            '{' . $nsAppleFaceInf . '}Width'           => ['0.2'],
+            '{' . $nsAppleFaceInf . '}Height'          => ['0.2'],
+            '{' . $nsAppleFaceInf . '}ConfidenceLevel' => [],
+            '{' . $nsAppleFaceInf . '}Confidence'      => ['95.0'],
+            '{' . $nsAppleFaceInf . '}AngleInfoRoll'   => [],
+            '{' . $nsAppleFaceInf . '}Roll'            => [],
+            '{' . $nsAppleFaceInf . '}Yaw'             => [],
+            '{' . $nsAppleFaceInf . '}Name'            => ['Bob Smith'],
+            '{' . $nsAppleFaceInf . '}FullName'        => [],
+            '{' . $nsAppleFaceInf . '}FaceID'          => [],
+            '{' . $nsAppleFaceInf . '}FaceUUID'        => [],
+        ];
+
+        $xmpDoc = new XmpDocument($xmpData, []);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: null,
+            xmpBlobs: [],
+            xmpDoc: $xmpDoc,
+        );
 
         $factory = new RegionsFactory();
         $regions = $factory->create($metadata);
 
-        self::assertInstanceOf(Regions::class, $regions);
         self::assertCount(1, $regions->items);
-        self::assertSame('Bob Smith', $regions->items[0]->personName);
-        self::assertEqualsWithDelta(0.95, $regions->items[0]->confidence, 0.01);
+
+        $region = $regions->items[0];
+
+        self::assertSame('Bob Smith', $region->personName);
+        self::assertEqualsWithDelta(0.95, $region->confidence, 0.01);
     }
 }

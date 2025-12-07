@@ -17,6 +17,7 @@ use XMLReader;
 use function array_filter;
 use function array_key_exists;
 use function array_values;
+use function in_array;
 use function is_array;
 use function sprintf;
 use function trim;
@@ -239,12 +240,7 @@ final class XmpParser
             // XMP Specification Part 1 §7.9.2.2: Skip RDF structural attributes
             if (
                 $attrNamespace === self::RDF_NAMESPACE
-                && (
-                    $attrLocalName === 'about'
-                    || $attrLocalName === 'ID'
-                    || $attrLocalName === 'nodeID'
-                    || $attrLocalName === 'parseType'
-                )
+                    && in_array($attrLocalName, ['about', 'ID', 'nodeID', 'parseType'], true)
             ) {
                 continue;
             }

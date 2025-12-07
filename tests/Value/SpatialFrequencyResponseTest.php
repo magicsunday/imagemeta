@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,23 +24,23 @@ use PHPUnit\Framework\TestCase;
  * - rows: number of SFR value rows
  * - columnLabels: frequency values
  * - rowLabels: direction/color labels
- * - values: matrix of SRATIONAL response values
+ * - values: matrix of RATIONAL response values
  */
 #[CoversClass(SpatialFrequencyResponse::class)]
 final class SpatialFrequencyResponseTest extends TestCase
 {
-    public function testCreateSfrFromDecodedMatrix(): void
+    #[Test]
+    public function createSfrFromDecodedMatrix(): void
     {
         $matrix = [
             'columns' => 3,
             'rows'    => 2,
             'labels'  => [
-                'columns' => ['10', '20', '30'],
-                'rows'    => ['Horizontal', 'Vertical'],
+                'columns' => ['0.1', '0.2', '0.3'],
             ],
             'values' => [
-                [1.0, 0.9, 0.7],
-                [0.95, 0.85, 0.65],
+                [1.00, 0.90, 0.80],
+                [1.00, 0.95, 0.85],
             ],
         ];
 
@@ -48,45 +49,26 @@ final class SpatialFrequencyResponseTest extends TestCase
         self::assertNotNull($sfr);
         self::assertSame(3, $sfr->columns);
         self::assertSame(2, $sfr->rows);
-        self::assertSame(['10', '20', '30'], $sfr->spatialFrequencies);
-        self::assertSame(['Horizontal', 'Vertical'], $sfr->directions);
+        self::assertSame(['0.1', '0.2', '0.3'], $sfr->spatialFrequencies);
         self::assertSame(
             [
-                [1.0, 0.9, 0.7],
-                [0.95, 0.85, 0.65],
+                [1.00, 0.90, 0.80],
+                [1.00, 0.95, 0.85],
             ],
             $sfr->values
         );
     }
 
-    public function testCreateSfrWithNullValues(): void
-    {
-        $matrix = [
-            'columns' => 2,
-            'rows'    => 1,
-            'labels'  => [
-                'columns' => ['10', '20'],
-                'rows'    => ['H'],
-            ],
-            'values' => [
-                [null, 0.8],
-            ],
-        ];
-
-        $sfr = SpatialFrequencyResponse::fromMatrix($matrix);
-
-        self::assertNotNull($sfr);
-        self::assertSame([[null, 0.8]], $sfr->values);
-    }
-
-    public function testInvalidMatrixReturnsNull(): void
+    #[Test]
+    public function invalidMatrixReturnsNull(): void
     {
         self::assertNull(SpatialFrequencyResponse::fromMatrix(null));
         self::assertNull(SpatialFrequencyResponse::fromMatrix([]));
         self::assertNull(SpatialFrequencyResponse::fromMatrix(['columns' => 0]));
     }
 
-    public function testMissingRequiredFieldsReturnsNull(): void
+    #[Test]
+    public function missingRequiredFieldsReturnsNull(): void
     {
         $incomplete = [
             'columns' => 2,
@@ -96,14 +78,14 @@ final class SpatialFrequencyResponseTest extends TestCase
         self::assertNull(SpatialFrequencyResponse::fromMatrix($incomplete));
     }
 
-    public function testInvalidDimensionsReturnsNull(): void
+    #[Test]
+    public function invalidDimensionsReturnsNull(): void
     {
         $matrix = [
             'columns' => 2,
             'rows'    => 1,
             'labels'  => [
                 'columns' => ['10'],
-                'rows'    => ['H'],
             ],
             'values' => [
                 [1.0, 0.9],

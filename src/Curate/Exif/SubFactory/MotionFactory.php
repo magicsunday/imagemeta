@@ -33,7 +33,11 @@ final readonly class MotionFactory
     public function create(Metadata $metadata): Motion
     {
         $exif  = $metadata->exifDoc;
-        $apple = $metadata->makerNotes?->apple ?? $this->emptyAppleMakerNotes();
+        $apple = $metadata->makerNotes?->apple;
+
+        if (!$apple instanceof AppleMakerNotes) {
+            $apple = $this->emptyAppleMakerNotes();
+        }
 
         return $this->buildMotion($exif, $apple);
     }
@@ -73,6 +77,7 @@ final readonly class MotionFactory
 
     private function emptyAppleMakerNotes(): AppleMakerNotes
     {
+        /** @var AppleMakerNotes|null $empty */
         static $empty = null;
 
         if ($empty === null) {

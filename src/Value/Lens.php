@@ -17,11 +17,6 @@ namespace MagicSunday\ImageMeta\Value;
 final readonly class Lens
 {
     /**
-     * @var array{0:float,1:float,2:float,3:float}|null
-     */
-    public ?array $lensSpecification;
-
-    /**
      * Creates a lens metadata value object.
      *
      * @param string|null                                 $lensMake           Lens manufacturer.
@@ -32,15 +27,7 @@ final readonly class Lens
      * @param float|null                                  $maxApertureFNumber Maximum aperture value as f-number.
      * @param array{0:float,1:float,2:float,3:float}|null $lensSpecification  Lens specification describing zoom and aperture range.
      */
-    public function __construct(
-        public ?string $lensMake,
-        public ?string $lensModel,
-        public ?string $lensSerialNumber,
-        public ?float $focalLengthMm,
-        public ?int $focalLengthIn35mm,
-        public ?float $maxApertureFNumber,
-        ?array $lensSpecification = null,
-    ) {
-        $this->lensSpecification = $lensSpecification;
+    public function __construct(public ?string $lensMake, public ?string $lensModel, public ?string $lensSerialNumber, public ?float $focalLengthMm, public ?int $focalLengthIn35mm, public ?float $maxApertureFNumber, public ?array $lensSpecification = null)
+    {
     }
 }

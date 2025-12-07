@@ -138,9 +138,9 @@ final readonly class RegionsFactory
 
             $typeLabel = $types[$index] ?? null;
             $type      = $typeLabel !== null ? RegionType::fromLabel($typeLabel) : null;
+            $person    = $displayNames[$index] ?? $names[$index] ?? null;
 
-            $person = $displayNames[$index] ?? $names[$index] ?? null;
-            if ($person !== null && $person === '') {
+            if ($person === '') {
                 $person = null;
             }
 

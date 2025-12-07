@@ -54,7 +54,7 @@ use function substr;
 /**
  * Parses classic TIFF and BigTIFF structures embedded in EXIF payloads.
  *
- * EXIF 3.0 §4.5 outlines the TIFF header layout, data type handling and IFD
+ * EXIF 3.0 §4.5 outlines the TIFF header layout, data type handling, and IFD
  * traversal rules honoured by this reader; EXIF 2.32 §4.5 documents the legacy
  * behaviour retained for older images, EXIF 2.1 §2.5.1 and §2.6.2 describe the
  * original TIFF header and directory traversal rules. TIFF 6.0 §2.1 defines the
@@ -126,7 +126,7 @@ final class TiffExifReader implements ExifReaderInterface
     /**
      * Parses an EXIF TIFF blob into a structured document model.
      *
-     * EXIF 3.0 §4.5 describes the TIFF header, byte-order markers and IFD
+     * EXIF 3.0 §4.5 describes the TIFF header, byte-order markers, and IFD
      * chaining strategy applied while decoding embedded EXIF payloads; EXIF 2.32 §4.5
      * and EXIF 2.1 §2.5.1/§2.6.2 outline the same traversal rules for legacy files.
      *
@@ -267,7 +267,7 @@ final class TiffExifReader implements ExifReaderInterface
      * Parses an image file directory starting at the given byte offset.
      *
      * EXIF 3.0 §4.5.2 details the layout of classic and BigTIFF IFD structures,
-     * including entry counts, entry sizes and next-pointer chaining; EXIF 2.32 §4.5.2
+     * including entry counts, entry sizes, and next-pointer chaining; EXIF 2.32 §4.5.2
      * and EXIF 2.1 §2.6.2 describe the same classic TIFF directory form.
      *
      * @param int|UInt64|string $offset Zero-based byte offset to the IFD structure.
@@ -337,7 +337,7 @@ final class TiffExifReader implements ExifReaderInterface
      * Reads a single directory entry and returns it keyed by tag identifier.
      *
      * EXIF 3.0 §4.5.2 (and EXIF 2.32 §4.5.2 for legacy files) define the tag,
-     * type, count and value/offset fields mirrored by this reader, aligning with
+     * type, count, and value/offset fields mirrored by this reader, aligning with
      * the TIFF 6.0 §8 directory entry layout and the EXIF 2.1 §2.6.2 field schema.
      *
      * @return array<int, IfdEntry> tagId => entry
@@ -1351,7 +1351,7 @@ final class TiffExifReader implements ExifReaderInterface
      * Reads a BigTIFF offset using the configured field width.
      *
      * EXIF 3.0 §4.5.2; EXIF 2.32 §4.5.2; TIFF 6.0 §8 define the BigTIFF offset field
-     * width (8 or 16 bytes), null-pointer semantics and the handling of offsets that
+     * width (8 or 16 bytes), null-pointer semantics, and the handling of offsets that
      * exceed native integer precision, so this helper normalises the raw value into
      * the closest PHP representation.
      */

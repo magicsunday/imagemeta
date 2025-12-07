@@ -43,7 +43,16 @@ final readonly class MultiPictureFactory
     private function resolveMultiPicture(?MpfDocument $document): MultiPicture
     {
         if (!$document instanceof MpfDocument) {
-            return new MultiPicture(null, 0, [], null, null, null, null, null);
+            return new MultiPicture(
+                null,
+                0,
+                [],
+                null,
+                null,
+                null,
+                null,
+                null
+            );
         }
 
         $entries = [];

@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 use MagicSunday\ImageMeta\Value\Enum\SubjectAreaType;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -27,9 +28,12 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SubjectArea::class)]
 final class SubjectAreaTest extends TestCase
 {
-    public function testCreatePoint(): void
+    #[Test]
+    public function createPoint(): void
     {
         $area = SubjectArea::fromComponents([100, 200]);
+
+        self::assertNotNull($area);
 
         self::assertSame(SubjectAreaType::Point, $area->type);
         self::assertSame(100, $area->centerX);
@@ -39,9 +43,12 @@ final class SubjectAreaTest extends TestCase
         self::assertNull($area->height);
     }
 
-    public function testCreateCircle(): void
+    #[Test]
+    public function createCircle(): void
     {
         $area = SubjectArea::fromComponents([100, 200, 50]);
+
+        self::assertNotNull($area);
 
         self::assertSame(SubjectAreaType::Circle, $area->type);
         self::assertSame(100, $area->centerX);
@@ -51,9 +58,12 @@ final class SubjectAreaTest extends TestCase
         self::assertNull($area->height);
     }
 
-    public function testCreateRectangle(): void
+    #[Test]
+    public function createRectangle(): void
     {
         $area = SubjectArea::fromComponents([100, 200, 80, 120]);
+
+        self::assertNotNull($area);
 
         self::assertSame(SubjectAreaType::Rectangle, $area->type);
         self::assertSame(100, $area->centerX);
@@ -63,14 +73,16 @@ final class SubjectAreaTest extends TestCase
         self::assertSame(120, $area->height);
     }
 
-    public function testInvalidComponentCountReturnsNull(): void
+    #[Test]
+    public function invalidComponentCountReturnsNull(): void
     {
         self::assertNull(SubjectArea::fromComponents([]));
         self::assertNull(SubjectArea::fromComponents([100]));
         self::assertNull(SubjectArea::fromComponents([100, 200, 50, 60, 70]));
     }
 
-    public function testNullInputReturnsNull(): void
+    #[Test]
+    public function nullInputReturnsNull(): void
     {
         self::assertNull(SubjectArea::fromComponents(null));
     }

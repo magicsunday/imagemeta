@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Value;
 
 use MagicSunday\ImageMeta\Value\Oecf;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,7 +29,8 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Oecf::class)]
 final class OecfTest extends TestCase
 {
-    public function testCreateOecfFromDecodedMatrix(): void
+    #[Test]
+    public function createOecfFromDecodedMatrix(): void
     {
         $matrix = [
             'columns' => 2,
@@ -61,7 +63,8 @@ final class OecfTest extends TestCase
         );
     }
 
-    public function testCreateOecfWithNullValues(): void
+    #[Test]
+    public function createOecfWithNullValues(): void
     {
         $matrix = [
             'columns' => 2,
@@ -81,14 +84,16 @@ final class OecfTest extends TestCase
         self::assertSame([[null, 1.0]], $oecf->values);
     }
 
-    public function testInvalidMatrixReturnsNull(): void
+    #[Test]
+    public function invalidMatrixReturnsNull(): void
     {
         self::assertNull(Oecf::fromMatrix(null));
         self::assertNull(Oecf::fromMatrix([]));
         self::assertNull(Oecf::fromMatrix(['columns' => 0]));
     }
 
-    public function testMissingRequiredFieldsReturnsNull(): void
+    #[Test]
+    public function missingRequiredFieldsReturnsNull(): void
     {
         $incomplete = [
             'columns' => 2,
@@ -98,7 +103,8 @@ final class OecfTest extends TestCase
         self::assertNull(Oecf::fromMatrix($incomplete));
     }
 
-    public function testInvalidDimensionsReturnsNull(): void
+    #[Test]
+    public function invalidDimensionsReturnsNull(): void
     {
         $matrix = [
             'columns' => 2,

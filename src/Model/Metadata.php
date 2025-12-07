@@ -25,65 +25,6 @@ use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 final readonly class Metadata
 {
     /**
-     * @var list<string>
-     */
-    public array $exifBlobs;
-
-    public ?QuickTimeMeta $quickTime;
-
-    public ?ParsedExif $exifDoc;
-
-    /**
-     * @var list<string>
-     */
-    public array $xmpBlobs;
-
-    public ?XmpDocument $xmpDoc;
-
-    public ?MakerNotesRecord $makerNotes;
-
-    public ?string $iccProfile;
-
-    /**
-     * @var list<string>
-     */
-    public array $iccSegments;
-
-    /**
-     * @var array<int, string>
-     */
-    public array $flashPixStreams;
-
-    public ?MpfDocument $mpfDocument;
-
-    /**
-     * @var list<JpegAudioStream>
-     */
-    public array $jpegAudioStreams;
-
-    public ?int $jpegBitsPerSample;
-
-    /** @var array<int, array{horizontal:int, vertical:int}>|null */
-    public ?array $jpegFrameSamplingFactors;
-
-    /** @var array{0:int,1:int}|null */
-    public ?array $jpegYCbCrSubSampling;
-
-    public ?int $jpegFrameWidth;
-
-    public ?int $jpegFrameHeight;
-
-    public ?string $mimeType;
-
-    public ?int $fileSize;
-
-    public ?string $extension;
-
-    public ?string $digestSha1;
-
-    public ?string $digestMd5;
-
-    /**
      * Lazily assembled structured metadata cache.
      */
     private StructuredMetadataCache $structuredCache;
@@ -101,8 +42,7 @@ final readonly class Metadata
      * @param MpfDocument|null                                     $mpfDocument              Parsed MPF document derived from APP2 segments.
      * @param list<JpegAudioStream>                                $jpegAudioStreams         EXIF audio streams embedded in JPEG APP2 markers.
      * @param int|null                                             $jpegBitsPerSample        Sample precision reported by the JPEG frame header.
-     * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by
-     *                                                                                       identifier.
+     * @param array<int, array{horizontal:int, vertical:int}>|null $jpegFrameSamplingFactors Component sampling factors by identifier.
      * @param array{0:int,1:int}|null                              $jpegYCbCrSubSampling     Derived YCbCr subsampling from the JPEG frame header.
      * @param int|null                                             $jpegFrameWidth           Frame width reported by the JPEG start of frame marker.
      * @param int|null                                             $jpegFrameHeight          Frame height reported by the JPEG start of frame marker.
@@ -113,50 +53,29 @@ final readonly class Metadata
      * @param string|null                                          $digestMd5                Lowercase hexadecimal MD5 digest of the payload.
      */
     public function __construct(
-        array $exifBlobs,
-        ?QuickTimeMeta $quickTime,
-        ?ParsedExif $exifDoc = null,
-        array $xmpBlobs = [],
-        ?XmpDocument $xmpDoc = null,
-        ?MakerNotesRecord $makerNotes = null,
-        ?string $iccProfile = null,
-        array $iccSegments = [],
-        array $flashPixStreams = [],
-        ?MpfDocument $mpfDocument = null,
-        array $jpegAudioStreams = [],
-        ?int $jpegBitsPerSample = null,
-        ?array $jpegFrameSamplingFactors = null,
-        ?array $jpegYCbCrSubSampling = null,
-        ?string $mimeType = null,
-        ?int $fileSize = null,
-        ?string $extension = null,
-        ?string $digestSha1 = null,
-        ?string $digestMd5 = null,
-        ?int $jpegFrameWidth = null,
-        ?int $jpegFrameHeight = null,
+        public array $exifBlobs,
+        public ?QuickTimeMeta $quickTime,
+        public ?ParsedExif $exifDoc = null,
+        public array $xmpBlobs = [],
+        public ?XmpDocument $xmpDoc = null,
+        public ?MakerNotesRecord $makerNotes = null,
+        public ?string $iccProfile = null,
+        public array $iccSegments = [],
+        public array $flashPixStreams = [],
+        public ?MpfDocument $mpfDocument = null,
+        public array $jpegAudioStreams = [],
+        public ?int $jpegBitsPerSample = null,
+        public ?array $jpegFrameSamplingFactors = null,
+        public ?array $jpegYCbCrSubSampling = null,
+        public ?string $mimeType = null,
+        public ?int $fileSize = null,
+        public ?string $extension = null,
+        public ?string $digestSha1 = null,
+        public ?string $digestMd5 = null,
+        public ?int $jpegFrameWidth = null,
+        public ?int $jpegFrameHeight = null,
     ) {
-        $this->exifBlobs                = $exifBlobs;
-        $this->quickTime                = $quickTime;
-        $this->exifDoc                  = $exifDoc;
-        $this->xmpBlobs                 = $xmpBlobs;
-        $this->xmpDoc                   = $xmpDoc;
-        $this->makerNotes               = $makerNotes;
-        $this->iccProfile               = $iccProfile;
-        $this->iccSegments              = $iccSegments;
-        $this->flashPixStreams          = $flashPixStreams;
-        $this->mpfDocument              = $mpfDocument;
-        $this->jpegAudioStreams         = $jpegAudioStreams;
-        $this->jpegBitsPerSample        = $jpegBitsPerSample;
-        $this->jpegFrameSamplingFactors = $jpegFrameSamplingFactors;
-        $this->jpegYCbCrSubSampling     = $jpegYCbCrSubSampling;
-        $this->mimeType                 = $mimeType;
-        $this->fileSize                 = $fileSize;
-        $this->extension                = $extension;
-        $this->digestSha1               = $digestSha1;
-        $this->digestMd5                = $digestMd5;
-        $this->jpegFrameWidth           = $jpegFrameWidth;
-        $this->jpegFrameHeight          = $jpegFrameHeight;
-        $this->structuredCache          = new StructuredMetadataCache();
+        $this->structuredCache = new StructuredMetadataCache();
     }
 
     /**

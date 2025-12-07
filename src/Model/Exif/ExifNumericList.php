@@ -40,7 +40,7 @@ final readonly class ExifNumericList
 
         foreach ($values as $value) {
             try {
-                $this->assertNumericComponent($value);
+                $this->assertNumericComponent();
             } catch (TypeError $exception) {
                 throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.', 0, $exception);
             }
@@ -76,7 +76,7 @@ final readonly class ExifNumericList
         throw new InvalidArgumentException('Numeric EXIF values must form a list.');
     }
 
-    private function assertNumericComponent(int|float|UInt64 $value): void
+    private function assertNumericComponent(): void
     {
         // The union type enforces numeric values at the call site. The method body remains intentionally empty.
     }

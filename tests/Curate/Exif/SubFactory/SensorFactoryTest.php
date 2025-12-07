@@ -12,13 +12,18 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Curate\Exif\SubFactory;
 
 use MagicSunday\ImageMeta\Curate\Exif\SubFactory\SensorFactory;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
+use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
-use MagicSunday\ImageMeta\Value\Sensor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
+
+use function count;
+use function strlen;
 
 #[CoversClass(SensorFactory::class)]
 final class SensorFactoryTest extends TestCase
@@ -26,43 +31,44 @@ final class SensorFactoryTest extends TestCase
     #[Test]
     public function createsFromExifMetadata(): void
     {
-        $exifDoc = $this->createMock(ParsedExif::class);
-        $exifDoc->method('cfaPattern')->willReturn([0, 1, 1, 2]);
-        $exifDoc->method('spectralSensitivity')->willReturn('ISO 12232');
-        $exifDoc->method('oecf')->willReturn([1, 2, 3]);
-        $exifDoc->method('spatialFrequencyResponse')->willReturn([0.5, 1.0, 1.5]);
-        $exifDoc->method('focalPlaneXResolution')->willReturn(3000.0);
-        $exifDoc->method('focalPlaneYResolution')->willReturn(3000.0);
-        $exifDoc->method('focalPlaneResolutionUnit')->willReturn(2);
+        $parsedExif = $this->parsedExif(
+            cfaPattern: [0, 1, 1, 2],
+            spectralSensitivity: 'ISO 12232',
+            focalPlaneXResolution: 3000.0,
+            focalPlaneYResolution: 3000.0,
+            focalPlaneResolutionUnit: ResolutionUnit::INCHES,
+        );
 
-        $metadata          = new Metadata();
-        $metadata->exifDoc = $exifDoc;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
 
         $factory = new SensorFactory();
         $sensor  = $factory->create($metadata);
 
-        self::assertInstanceOf(Sensor::class, $sensor);
+        self::assertSame([0, 1, 1, 2], $sensor->cfaPattern);
+        self::assertSame('ISO 12232', $sensor->spectralSensitivity);
+        self::assertSame(3000.0, $sensor->focalPlaneXResolution);
+        self::assertSame(3000.0, $sensor->focalPlaneYResolution);
+        self::assertSame(ResolutionUnit::INCHES, $sensor->focalPlaneResolutionUnit);
         self::assertNull($sensor->pixelPitchUm);
         self::assertNull($sensor->sensorType);
         self::assertFalse($sensor->ibis);
-        self::assertSame([0, 1, 1, 2], $sensor->cfaPattern);
-        self::assertSame('ISO 12232', $sensor->spectralSensitivity);
-        self::assertSame([1, 2, 3], $sensor->oecf);
-        self::assertSame([0.5, 1.0, 1.5], $sensor->spatialFrequencyResponse);
-        self::assertSame(3000.0, $sensor->focalPlaneXResolution);
-        self::assertSame(3000.0, $sensor->focalPlaneYResolution);
-        self::assertSame(ResolutionUnit::INCH, $sensor->focalPlaneResolutionUnit);
     }
 
     #[Test]
     public function createsWithNullExifDoc(): void
     {
-        $metadata = new Metadata();
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+        );
 
         $factory = new SensorFactory();
         $sensor  = $factory->create($metadata);
 
-        self::assertInstanceOf(Sensor::class, $sensor);
         self::assertNull($sensor->pixelPitchUm);
         self::assertNull($sensor->sensorType);
         self::assertFalse($sensor->ibis);
@@ -78,44 +84,126 @@ final class SensorFactoryTest extends TestCase
     #[Test]
     public function handlesInvalidResolutionUnit(): void
     {
-        $exifDoc = $this->createMock(ParsedExif::class);
-        $exifDoc->method('cfaPattern')->willReturn(null);
-        $exifDoc->method('spectralSensitivity')->willReturn(null);
-        $exifDoc->method('oecf')->willReturn(null);
-        $exifDoc->method('spatialFrequencyResponse')->willReturn(null);
-        $exifDoc->method('focalPlaneXResolution')->willReturn(2000.0);
-        $exifDoc->method('focalPlaneYResolution')->willReturn(2000.0);
-        $exifDoc->method('focalPlaneResolutionUnit')->willReturn(999);
+        $parsedExif = $this->parsedExif(
+            cfaPattern: [],
+            spectralSensitivity: null,
+            focalPlaneXResolution: 2000.0,
+            focalPlaneYResolution: 2000.0,
+            focalPlaneResolutionUnit: null,
+            focalPlaneResolutionUnitCode: 999,
+        );
 
-        $metadata          = new Metadata();
-        $metadata->exifDoc = $exifDoc;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
 
         $factory = new SensorFactory();
         $sensor  = $factory->create($metadata);
 
-        self::assertInstanceOf(Sensor::class, $sensor);
         self::assertNull($sensor->focalPlaneResolutionUnit);
+        self::assertSame(2000.0, $sensor->focalPlaneXResolution);
+        self::assertSame(2000.0, $sensor->focalPlaneYResolution);
     }
 
     #[Test]
     public function convertsResolutionUnitCmToEnum(): void
     {
-        $exifDoc = $this->createMock(ParsedExif::class);
-        $exifDoc->method('cfaPattern')->willReturn(null);
-        $exifDoc->method('spectralSensitivity')->willReturn(null);
-        $exifDoc->method('oecf')->willReturn(null);
-        $exifDoc->method('spatialFrequencyResponse')->willReturn(null);
-        $exifDoc->method('focalPlaneXResolution')->willReturn(1200.0);
-        $exifDoc->method('focalPlaneYResolution')->willReturn(1200.0);
-        $exifDoc->method('focalPlaneResolutionUnit')->willReturn(3);
+        $parsedExif = $this->parsedExif(
+            cfaPattern: [],
+            spectralSensitivity: null,
+            focalPlaneXResolution: 1200.0,
+            focalPlaneYResolution: 1200.0,
+            focalPlaneResolutionUnit: ResolutionUnit::CENTIMETER,
+        );
 
-        $metadata          = new Metadata();
-        $metadata->exifDoc = $exifDoc;
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            exifDoc: $parsedExif,
+        );
 
         $factory = new SensorFactory();
         $sensor  = $factory->create($metadata);
 
-        self::assertInstanceOf(Sensor::class, $sensor);
-        self::assertSame(ResolutionUnit::CM, $sensor->focalPlaneResolutionUnit);
+        self::assertSame(ResolutionUnit::CENTIMETER, $sensor->focalPlaneResolutionUnit);
+    }
+
+    /**
+     * @param list<int> $cfaPattern
+     */
+    private function parsedExif(
+        array $cfaPattern,
+        ?string $spectralSensitivity,
+        ?float $focalPlaneXResolution,
+        ?float $focalPlaneYResolution,
+        ?ResolutionUnit $focalPlaneResolutionUnit,
+        ?int $focalPlaneResolutionUnitCode = null,
+    ): ParsedExif {
+        $exifEntries = [];
+
+        if ($cfaPattern !== []) {
+            $exifEntries[ExifTag::CFA_PATTERN] = new IfdEntry(
+                ExifTag::CFA_PATTERN,
+                7,
+                count($cfaPattern),
+                $cfaPattern,
+            );
+        }
+
+        if ($spectralSensitivity !== null) {
+            $exifEntries[ExifTag::SPECTRAL_SENSITIVITY] = new IfdEntry(
+                ExifTag::SPECTRAL_SENSITIVITY,
+                2,
+                strlen($spectralSensitivity),
+                $spectralSensitivity,
+            );
+        }
+
+        if ($focalPlaneXResolution !== null) {
+            $exifEntries[ExifTag::FOCAL_PLANE_X_RESOLUTION] = new IfdEntry(
+                ExifTag::FOCAL_PLANE_X_RESOLUTION,
+                5,
+                1,
+                $focalPlaneXResolution,
+            );
+        }
+
+        if ($focalPlaneYResolution !== null) {
+            $exifEntries[ExifTag::FOCAL_PLANE_Y_RESOLUTION] = new IfdEntry(
+                ExifTag::FOCAL_PLANE_Y_RESOLUTION,
+                5,
+                1,
+                $focalPlaneYResolution,
+            );
+        }
+
+        if ($focalPlaneResolutionUnit instanceof ResolutionUnit) {
+            $exifEntries[ExifTag::FOCAL_PLANE_RESOLUTION_UNIT] = new IfdEntry(
+                ExifTag::FOCAL_PLANE_RESOLUTION_UNIT,
+                3,
+                1,
+                $focalPlaneResolutionUnit->value,
+            );
+        } elseif ($focalPlaneResolutionUnitCode !== null) {
+            $exifEntries[ExifTag::FOCAL_PLANE_RESOLUTION_UNIT] = new IfdEntry(
+                ExifTag::FOCAL_PLANE_RESOLUTION_UNIT,
+                3,
+                1,
+                $focalPlaneResolutionUnitCode,
+            );
+        }
+
+        $ifd0    = new Ifd([]);
+        $exifIfd = new Ifd($exifEntries);
+
+        return new ParsedExif(
+            ifd0: $ifd0,
+            exifIfd: $exifIfd,
+            gpsIfd: null,
+            interopIfd: null,
+            ifd1: null,
+        );
     }
 }

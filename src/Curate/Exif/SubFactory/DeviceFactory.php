@@ -30,11 +30,13 @@ final readonly class DeviceFactory
      */
     public function create(Metadata $metadata): Device
     {
-        $exif = $metadata->exifDoc;
-
+        $exif     = $metadata->exifDoc;
         $software = $exif?->hostComputer();
 
-        if ($software === null && $metadata->quickTime instanceof QuickTimeMeta) {
+        if (
+            ($software === null)
+            && $metadata->quickTime instanceof QuickTimeMeta
+        ) {
             $lookup   = new QuickTimeLookup($metadata->quickTime);
             $software = $lookup->string(
                 'com.apple.quicktime.software',

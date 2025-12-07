@@ -27,6 +27,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function pack;
+use function strlen;
 
 /**
  * Edge case tests for UserComment encoding and special EXIF fields.

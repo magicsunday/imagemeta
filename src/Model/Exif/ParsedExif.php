@@ -2875,21 +2875,6 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns a trimmed binary string value, or null when empty.
-     */
-    private function binaryString(?Ifd $ifd, int $tag): ?string
-    {
-        $value = $this->rawString($ifd, $tag);
-        if ($value === null) {
-            return null;
-        }
-
-        $trimmed = trim($value, "\0");
-
-        return $trimmed === '' ? null : $trimmed;
-    }
-
-    /**
      * Decodes EXIF user comment strings with encoding prefixes.
      */
     private function decodeUserComment(string $raw): ?string
@@ -3105,18 +3090,29 @@ final readonly class ParsedExif
     {
         $raw = $this->rawString($this->exifIfd, ExifTag::DEVICE_SETTING_DESCRIPTION);
 
-        if ($raw === null || strlen($raw) < 4) {
+        if (
+            ($raw === null)
+            || (strlen($raw) < 4)
+        ) {
             return null;
         }
 
         // Try unpacking as little-endian first, then big-endian
         $unpackedLE = unpack('v2', substr($raw, 0, 4));
+
         if ($unpackedLE === false) {
             return null;
         }
 
-        $columns = $unpackedLE[1];
-        $rows    = $unpackedLE[2];
+        $columns = $unpackedLE[1] ?? null;
+        $rows    = $unpackedLE[2] ?? null;
+
+        if (
+            !is_int($columns)
+            || !is_int($rows)
+        ) {
+            return null;
+        }
 
         // Extract camera settings (skip the 4-byte header)
         $settingsBytes = substr($raw, 4);
@@ -3131,14 +3127,26 @@ final readonly class ParsedExif
         // If they seem invalid, try big-endian
         // Display settings typically have modest dimensions (e.g., 3-20 columns, 5-50 rows)
         // We use 500 as a generous upper bound to detect byte order issues
-        if ($columns > 500 || $rows > 500 || $columns === 0 || $rows === 0) {
+        if (
+            ($columns > 500)
+            || ($rows > 500)
+            || ($columns === 0)
+            || ($rows === 0)
+        ) {
             $unpackedBE = unpack('n2', substr($raw, 0, 4));
-            if ($unpackedBE !== false) {
-                $columnsBE = $unpackedBE[1];
-                $rowsBE    = $unpackedBE[2];
 
-                // Use big-endian if values seem more reasonable
-                if ($columnsBE <= 500 && $rowsBE <= 500 && $columnsBE > 0 && $rowsBE > 0) {
+            if ($unpackedBE !== false) {
+                $columnsBE = $unpackedBE[1] ?? null;
+                $rowsBE    = $unpackedBE[2] ?? null;
+
+                if (
+                    is_int($columnsBE)
+                    && is_int($rowsBE)
+                    && ($columnsBE <= 500)
+                    && ($rowsBE <= 500)
+                    && ($columnsBE > 0)
+                    && ($rowsBE > 0)
+                ) {
                     $columns = $columnsBE;
                     $rows    = $rowsBE;
                 }
