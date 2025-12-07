@@ -844,10 +844,11 @@ final readonly class ParsedExif
         }
 
         $candidates = [
+            [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->exifIfd, ExifTag::ISO_SPEED],
             [$this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY],
             [$this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            [$this->exifIfd, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
+            [$this->exifIfd, ExifTag::EXPOSURE_INDEX],
             [$this->ifd0, ExifTag::PHOTOGRAPHIC_SENSITIVITY],
             [$this->ifd0, ExifTag::ISO_SPEED],
         ];
@@ -962,14 +963,35 @@ final readonly class ParsedExif
     {
         return match ($type) {
             SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
-            SensitivityType::RECOMMENDED_EXPOSURE_INDEX => [ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            SensitivityType::ISO_SPEED => [ExifTag::ISO_SPEED],
-            SensitivityType::SOS_AND_REI => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::RECOMMENDED_EXPOSURE_INDEX],
-            SensitivityType::SOS_AND_ISO => [ExifTag::STANDARD_OUTPUT_SENSITIVITY, ExifTag::ISO_SPEED],
-            SensitivityType::REI_AND_ISO => [ExifTag::RECOMMENDED_EXPOSURE_INDEX, ExifTag::ISO_SPEED],
+            SensitivityType::RECOMMENDED_EXPOSURE_INDEX => [
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+                ExifTag::EXPOSURE_INDEX,
+            ],
+            SensitivityType::ISO_SPEED => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::ISO_SPEED,
+            ],
+            SensitivityType::SOS_AND_REI => [
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+                ExifTag::EXPOSURE_INDEX,
+            ],
+            SensitivityType::SOS_AND_ISO => [
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::ISO_SPEED,
+            ],
+            SensitivityType::REI_AND_ISO => [
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+                ExifTag::EXPOSURE_INDEX,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::ISO_SPEED,
+            ],
             SensitivityType::SOS_AND_REI_AND_ISO => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
+                ExifTag::EXPOSURE_INDEX,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::UNKNOWN => [],
