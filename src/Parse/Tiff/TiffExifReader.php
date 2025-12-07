@@ -189,14 +189,20 @@ final class TiffExifReader implements ExifReaderInterface
 
         $exifPointer = $ifd0->get(ExifTag::EXIF_IFD_POINTER);
         if ($exifPointer instanceof IfdEntry) {
-            $exifIfd = $this->readIfd($this->pointerOffset($exifPointer));
+            $offset = $this->pointerOffset($exifPointer);
+            if ($offset !== null) {
+                $exifIfd = $this->readIfd($offset);
+            }
         }
 
         $interopIfd = $this->locateInteropIfd($exifIfd, $ifd0);
 
         $gpsPointer = $ifd0->get(ExifTag::GPS_IFD_POINTER);
         if ($gpsPointer instanceof IfdEntry) {
-            $gpsIfd = $this->readIfd($this->pointerOffset($gpsPointer));
+            $gpsOffset = $this->pointerOffset($gpsPointer);
+            if ($gpsOffset !== null) {
+                $gpsIfd = $this->readIfd($gpsOffset);
+            }
         }
 
         $additionalIfds = [];
@@ -585,6 +591,10 @@ final class TiffExifReader implements ExifReaderInterface
             }
 
             $offset = $this->pointerOffset($entry);
+            if ($offset === null) {
+                continue;
+            }
+
             if (isset($this->interopVisitedOffsets[$offset])) {
                 continue;
             }
@@ -1273,9 +1283,9 @@ final class TiffExifReader implements ExifReaderInterface
      *
      * @param IfdEntry $entry Entry that should contain a pointer/offset value.
      *
-     * @return int
+     * @return int|null
      */
-    private function pointerOffset(IfdEntry $entry): int
+    private function pointerOffset(IfdEntry $entry): ?int
     {
         $value = $entry->value;
 
@@ -1284,6 +1294,10 @@ final class TiffExifReader implements ExifReaderInterface
         }
 
         if ($value instanceof UInt64) {
+            if ($value->isZero()) {
+                return null;
+            }
+
             return $this->ensureOffset($value, sprintf('IFD pointer tag 0x%04X', $entry->tag));
         }
 
@@ -1298,6 +1312,10 @@ final class TiffExifReader implements ExifReaderInterface
             }
 
             if ($first instanceof UInt64) {
+                if ($first->isZero()) {
+                    return null;
+                }
+
                 return $this->ensureOffset($first, sprintf('IFD pointer tag 0x%04X', $entry->tag));
             }
 
@@ -1315,12 +1333,12 @@ final class TiffExifReader implements ExifReaderInterface
      * @param int $offset Candidate offset.
      * @param int $tag    Tag identifier emitting the offset.
      *
-     * @return int
+     * @return int|null
      */
-    private function validatePointerOffset(int $offset, int $tag): int
+    private function validatePointerOffset(int $offset, int $tag): ?int
     {
-        if ($offset < 0) {
-            throw new ParseError(sprintf('IFD pointer tag 0x%04X must not be negative.', $tag));
+        if ($offset <= 0) {
+            return null;
         }
 
         return $this->ensureOffset($offset, sprintf('IFD pointer tag 0x%04X', $tag));
@@ -1332,16 +1350,16 @@ final class TiffExifReader implements ExifReaderInterface
      * @param float $value Floating-point representation to normalise.
      * @param int   $tag   Tag identifier emitting the offset.
      *
-     * @return int
+     * @return int|null
      */
-    private function pointerOffsetFromFloat(float $value, int $tag): int
+    private function pointerOffsetFromFloat(float $value, int $tag): ?int
     {
         if (!is_finite($value) || (float) (int) $value !== $value) {
             throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain an integer offset.', $tag));
         }
 
-        if ($value < 0.0) {
-            throw new ParseError(sprintf('IFD pointer tag 0x%04X must not be negative.', $tag));
+        if ($value <= 0.0) {
+            return null;
         }
 
         return $this->ensureOffset((int) $value, sprintf('IFD pointer tag 0x%04X', $tag));
@@ -1365,7 +1383,16 @@ final class TiffExifReader implements ExifReaderInterface
             throw new ParseError('Unsupported BigTIFF offset size.');
         }
 
-        $raw    = $this->buffer->read(16);
+        $required  = $this->bigTiffOffsetSize;
+        $remaining = $this->buffer->size() - $this->buffer->tell();
+        $length    = $required <= $remaining ? $required : $remaining;
+
+        $raw = $this->buffer->read($length);
+
+        if (strlen($raw) < $required) {
+            $raw = str_pad($raw, $required, "\0", STR_PAD_RIGHT);
+        }
+
         $little = $this->bo === Endian::Little;
 
         $lowBytes  = $little ? substr($raw, 0, 8) : substr($raw, 8, 8);

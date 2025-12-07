@@ -756,12 +756,17 @@ final readonly class ParsedExif
      */
     private function canonicalUserCommentMarker(string $prefix): string
     {
-        if ($prefix === "\0\0\0\0\0\0\0\0") {
+        $stripped = trim(str_replace(['\\0', "\0"], '', $prefix));
+
+        if ($stripped === '') {
             return 'UNDEFINED';
         }
 
-        $encoding   = strtoupper(trim($prefix, "\0 "));
-        $normalized = str_replace(['-', ' '], '', $encoding);
+        if (preg_match('/^([A-Za-z]+)/', $stripped, $matches) !== 1) {
+            return '';
+        }
+
+        $normalized = strtoupper($matches[1]);
 
         return match ($normalized) {
             'ASCII'   => 'ASCII',
@@ -2211,24 +2216,30 @@ final readonly class ParsedExif
      */
     public function fileSource(): ?FileSource
     {
-        $value = $this->value($this->exifIfd, ExifTag::FILE_SOURCE);
-
-        if ($value instanceof ExifNumericList) {
-            $first = $value->values[0] ?? null;
-
-            if (is_int($first) || is_float($first)) {
-                return FileSource::fromExifValue((int) $first);
+        foreach ([$this->exifIfd, $this->ifd0] as $ifd) {
+            if (!$ifd instanceof Ifd) {
+                continue;
             }
 
-            return null;
-        }
+            $value = $this->value($ifd, ExifTag::FILE_SOURCE);
 
-        if (is_int($value) || is_float($value)) {
-            return FileSource::fromExifValue((int) $value);
-        }
+            if ($value instanceof ExifNumericList) {
+                $first = $value->values[0] ?? null;
 
-        if (is_string($value) && $value !== '') {
-            return FileSource::fromExifValue(ord($value[0]));
+                if (is_int($first) || is_float($first)) {
+                    return FileSource::fromExifValue((int) $first);
+                }
+
+                continue;
+            }
+
+            if (is_int($value) || is_float($value)) {
+                return FileSource::fromExifValue((int) $value);
+            }
+
+            if (is_string($value) && $value !== '') {
+                return FileSource::fromExifValue(ord($value[0]));
+            }
         }
 
         return null;
@@ -2964,15 +2975,30 @@ final readonly class ParsedExif
             return null;
         }
 
-        $converted = @iconv('UTF-16LE', 'UTF-8', $content);
-        if ($converted === false) {
-            $converted = @iconv('UTF-16BE', 'UTF-8', $content);
+        $encodings = ['UTF-16LE', 'UTF-16BE'];
+
+        if (strlen($content) >= 2) {
+            $first  = $content[0];
+            $second = $content[1];
+
+            if (($first === "\0") && ($second !== "\0")) {
+                $encodings = ['UTF-16BE', 'UTF-16LE'];
+            } elseif (($second === "\0") && ($first !== "\0")) {
+                $encodings = ['UTF-16LE', 'UTF-16BE'];
+            }
         }
 
-        if ($converted !== false) {
-            $converted = trim($converted, "\0");
+        foreach ($encodings as $encoding) {
+            $converted = @iconv($encoding, 'UTF-8', $content);
 
-            return $converted === '' ? null : $converted;
+            if ($converted === false) {
+                continue;
+            }
+
+            $converted = trim($converted, "\0");
+            if ($converted !== '') {
+                return $converted;
+            }
         }
 
         $stripped = preg_replace('/\x00/u', '', $content);

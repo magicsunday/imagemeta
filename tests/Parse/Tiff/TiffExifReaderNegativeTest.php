@@ -194,7 +194,7 @@ final class TiffExifReaderNegativeTest extends TestCase
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
 
-        // Should parse without throwing, but denominator will be 0
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -210,6 +210,8 @@ final class TiffExifReaderNegativeTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
     }
 
     /**
@@ -252,6 +254,8 @@ final class TiffExifReaderNegativeTest extends TestCase
 
         $reader = new TiffExifReader();
         $result = $reader->parseFromBlob($blob);
+
+        $this->addToAssertionCount(1);
 
         // Parser should detect the cycle and stop (not infinite loop)
     }

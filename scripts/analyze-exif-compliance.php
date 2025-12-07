@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Scripts;
 
+use Symfony\Component\Yaml\Yaml;
 use RuntimeException;
 use Throwable;
 
@@ -129,9 +130,13 @@ final class ComplianceAnalyzer
             throw new RuntimeException('Failed to read specification file');
         }
 
-        $data = yaml_parse($content);
-        if ($data === false) {
-            throw new RuntimeException('Failed to parse specification YAML');
+        if (function_exists('yaml_parse')) {
+            $data = yaml_parse($content);
+            if ($data === false) {
+                throw new RuntimeException('Failed to parse specification YAML');
+            }
+        } else {
+            $data = Yaml::parse($content);
         }
 
         $this->specTags = $data;
@@ -509,9 +514,13 @@ final class ComplianceAnalyzer
         echo 'JSON report generated: ' . self::OUTPUT_JSON . "\n";
 
         // YAML report
-        $yaml = yaml_emit($this->complianceReport, YAML_UTF8_ENCODING);
-        if ($yaml === false) {
-            throw new RuntimeException('Failed to encode YAML report');
+        if (function_exists('yaml_emit')) {
+            $yaml = yaml_emit($this->complianceReport, YAML_UTF8_ENCODING);
+            if ($yaml === false) {
+                throw new RuntimeException('Failed to encode YAML report');
+            }
+        } else {
+            $yaml = Yaml::dump($this->complianceReport, 4, 2, Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK);
         }
 
         if (file_put_contents(self::OUTPUT_YAML, $yaml) === false) {

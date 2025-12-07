@@ -210,6 +210,14 @@ final readonly class GpsFactory
             );
         }
 
+        if ($latitude !== null) {
+            $latitude = round($latitude, 6);
+        }
+
+        if ($longitude !== null) {
+            $longitude = round($longitude, 6);
+        }
+
         if ($altitude === null && $xmpDocument instanceof XmpDocument) {
             $altitudeXmp = $xmpDocument->float(self::NS_EXIF, 'GPSAltitude');
             if ($altitudeXmp !== null) {
@@ -406,7 +414,9 @@ final readonly class GpsFactory
             if ($deg !== null && $min !== null && $sec !== null) {
                 $sign = $this->coordinateSign($ref);
 
-                return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+                $coordinate = $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+
+                return round($coordinate, 6);
             }
         }
 
@@ -417,7 +427,9 @@ final readonly class GpsFactory
 
         $sign = $this->coordinateSign($ref);
 
-        return $numeric * $sign;
+        $coordinate = $numeric * $sign;
+
+        return round($coordinate, 6);
     }
 
     /**

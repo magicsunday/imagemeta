@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif\Support;
 
+use ReflectionEnum;
+use ReflectionNamedType;
+
 use function is_int;
 use function is_numeric;
 
@@ -39,31 +42,25 @@ trait EnumFromIntStringNullable
      */
     public static function fromExifValue(int|string|null $value): ?self
     {
-        if ($value === null) {
+        if (($value === null) || ($value === '')) {
             return null;
         }
 
-        if ($value === '') {
+        $reflection = new ReflectionEnum(self::class);
+        $backing    = $reflection->getBackingType();
+
+        if (!$backing instanceof ReflectionNamedType) {
             return null;
         }
 
-        if (is_int($value)) {
-            $candidate = self::tryFrom($value);
-            if ($candidate !== null) {
-                return $candidate;
+        if ($backing->getName() === 'int') {
+            if (!is_numeric($value)) {
+                return null;
             }
 
-            $value = (string) $value;
+            return self::tryFrom(is_int($value) ? $value : (int) $value);
         }
 
-        // Ab hier ist $value sicher ein nicht-leerer string
-        if (is_numeric($value)) {
-            $intCandidate = self::tryFrom((int) $value);
-            if ($intCandidate !== null) {
-                return $intCandidate;
-            }
-        }
-
-        return self::tryFrom($value);
+        return self::tryFrom((string) $value);
     }
 }
