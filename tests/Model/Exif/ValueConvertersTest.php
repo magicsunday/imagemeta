@@ -148,6 +148,7 @@ final class ValueConvertersTest extends TestCase
     {
         self::assertEqualsWithDelta(1 / 128, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(7, 1)), 0.0000001);
         self::assertEqualsWithDelta(1.0, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(0, 1)), 0.0000001);
+        self::assertEqualsWithDelta(1 / 60, ValueConverters::apexShutterSpeedToSeconds(new ExifRational(59, 10)), 0.0001);
         self::assertNull(ValueConverters::apexShutterSpeedToSeconds(new ExifRational(1, 0)));
     }
 
