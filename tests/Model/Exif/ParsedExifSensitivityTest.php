@@ -99,6 +99,7 @@ final class ParsedExifSensitivityTest extends TestCase
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
                 ExifTag::ISO_SPEED => 300,
+                ExifTag::EXPOSURE_INDEX => 250,
             ],
             'expected' => 200,
         ];
@@ -109,8 +110,9 @@ final class ParsedExifSensitivityTest extends TestCase
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
                 ExifTag::ISO_SPEED => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
             ],
-            'expected' => 300,
+            'expected' => 320,
         ];
 
         yield 'sos and rei' => [
@@ -119,6 +121,7 @@ final class ParsedExifSensitivityTest extends TestCase
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
                 ExifTag::ISO_SPEED => 300,
+                ExifTag::EXPOSURE_INDEX => 250,
             ],
             'expected' => 100,
         ];
@@ -129,6 +132,7 @@ final class ParsedExifSensitivityTest extends TestCase
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
                 ExifTag::ISO_SPEED => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
             ],
             'expected' => 100,
         ];
@@ -139,6 +143,8 @@ final class ParsedExifSensitivityTest extends TestCase
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
                 ExifTag::ISO_SPEED => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
+                ExifTag::EXPOSURE_INDEX => 250,
             ],
             'expected' => 200,
         ];
@@ -149,6 +155,8 @@ final class ParsedExifSensitivityTest extends TestCase
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
                 ExifTag::ISO_SPEED => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
+                ExifTag::EXPOSURE_INDEX => 250,
             ],
             'expected' => 100,
         ];
@@ -159,7 +167,7 @@ final class ParsedExifSensitivityTest extends TestCase
                 ExifTag::ISO_SPEED => 400,
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY => 500,
             ],
-            'expected' => 400,
+            'expected' => 500,
         ];
     }
 }
