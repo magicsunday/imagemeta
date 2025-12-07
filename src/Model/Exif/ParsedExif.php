@@ -36,10 +36,10 @@ use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\Saturation;
-use MagicSunday\ImageMeta\Value\Enum\SensitivityType;
 use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
+use MagicSunday\ImageMeta\Value\Enum\SensitivityType;
 use MagicSunday\ImageMeta\Value\Enum\Sharpness;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
@@ -834,7 +834,7 @@ final readonly class ParsedExif
     public function iso(): ?int
     {
         $sensitivityType = $this->sensitivityType();
-        if ($sensitivityType !== null) {
+        if ($sensitivityType instanceof SensitivityType) {
             foreach ($this->sensitivityTagPriority($sensitivityType) as $tag) {
                 $value = $this->int($this->exifIfd, $tag);
                 if ($value !== null) {
@@ -963,7 +963,7 @@ final readonly class ParsedExif
     {
         return match ($type) {
             SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
-            SensitivityType::RECOMMENDED_EXPOSURE_INDEX => [
+            SensitivityType::RECOMMENDED_EXPOSURE_INDEX  => [
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
             ],

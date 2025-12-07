@@ -47,9 +47,8 @@ final class ParsedExifSensitivityTest extends TestCase
     public function isoUsesSensitivityTypePriorities(
         SensitivityType $sensitivityType,
         array $tagValues,
-        int $expected
-    ): void
-    {
+        int $expected,
+    ): void {
         $entries = [
             ExifTag::SENSITIVITY_TYPE => new IfdEntry(ExifTag::SENSITIVITY_TYPE, 3, 1, $sensitivityType->value),
         ];
@@ -85,86 +84,86 @@ final class ParsedExifSensitivityTest extends TestCase
     {
         yield 'standard output sensitivity' => [
             'sensitivityType' => SensitivityType::STANDARD_OUTPUT_SENSITIVITY,
-            'tagValues' => [
+            'tagValues'       => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
-                ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
-                ExifTag::ISO_SPEED => 300,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX  => 200,
+                ExifTag::ISO_SPEED                   => 300,
             ],
             'expected' => 100,
         ];
 
         yield 'recommended exposure index' => [
             'sensitivityType' => SensitivityType::RECOMMENDED_EXPOSURE_INDEX,
-            'tagValues' => [
+            'tagValues'       => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
-                ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
-                ExifTag::ISO_SPEED => 300,
-                ExifTag::EXPOSURE_INDEX => 250,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX  => 200,
+                ExifTag::ISO_SPEED                   => 300,
+                ExifTag::EXPOSURE_INDEX              => 250,
             ],
             'expected' => 200,
         ];
 
         yield 'iso speed' => [
             'sensitivityType' => SensitivityType::ISO_SPEED,
-            'tagValues' => [
+            'tagValues'       => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
-                ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
-                ExifTag::ISO_SPEED => 300,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX  => 200,
+                ExifTag::ISO_SPEED                   => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 320,
             ],
             'expected' => 320,
         ];
 
         yield 'sos and rei' => [
             'sensitivityType' => SensitivityType::SOS_AND_REI,
-            'tagValues' => [
+            'tagValues'       => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
-                ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
-                ExifTag::ISO_SPEED => 300,
-                ExifTag::EXPOSURE_INDEX => 250,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX  => 200,
+                ExifTag::ISO_SPEED                   => 300,
+                ExifTag::EXPOSURE_INDEX              => 250,
             ],
             'expected' => 100,
         ];
 
         yield 'sos and iso' => [
             'sensitivityType' => SensitivityType::SOS_AND_ISO,
-            'tagValues' => [
+            'tagValues'       => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
-                ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
-                ExifTag::ISO_SPEED => 300,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX  => 200,
+                ExifTag::ISO_SPEED                   => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 320,
             ],
             'expected' => 100,
         ];
 
         yield 'rei and iso' => [
             'sensitivityType' => SensitivityType::REI_AND_ISO,
-            'tagValues' => [
+            'tagValues'       => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
-                ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
-                ExifTag::ISO_SPEED => 300,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
-                ExifTag::EXPOSURE_INDEX => 250,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX  => 200,
+                ExifTag::ISO_SPEED                   => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 320,
+                ExifTag::EXPOSURE_INDEX              => 250,
             ],
             'expected' => 200,
         ];
 
         yield 'sos and rei and iso' => [
             'sensitivityType' => SensitivityType::SOS_AND_REI_AND_ISO,
-            'tagValues' => [
+            'tagValues'       => [
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY => 100,
-                ExifTag::RECOMMENDED_EXPOSURE_INDEX => 200,
-                ExifTag::ISO_SPEED => 300,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY => 320,
-                ExifTag::EXPOSURE_INDEX => 250,
+                ExifTag::RECOMMENDED_EXPOSURE_INDEX  => 200,
+                ExifTag::ISO_SPEED                   => 300,
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY    => 320,
+                ExifTag::EXPOSURE_INDEX              => 250,
             ],
             'expected' => 100,
         ];
 
         yield 'unknown sensitivity type' => [
             'sensitivityType' => SensitivityType::UNKNOWN,
-            'tagValues' => [
-                ExifTag::ISO_SPEED => 400,
+            'tagValues'       => [
+                ExifTag::ISO_SPEED                => 400,
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY => 500,
             ],
             'expected' => 500,
