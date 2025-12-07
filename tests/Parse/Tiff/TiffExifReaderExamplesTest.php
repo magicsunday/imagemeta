@@ -87,7 +87,7 @@ final class TiffExifReaderExamplesTest extends TestCase
     {
         $gps = $result->gps();
 
-        $expectedLatitude = 35 + (59 / 60) + (30.3 / 3600);
+        $expectedLatitude  = 35 + (59 / 60) + (30.3 / 3600);
         $expectedLongitude = 139 + (44 / 60) + (30.0 / 3600);
 
         self::assertSame('N', $gps['lat_ref']);
@@ -100,8 +100,8 @@ final class TiffExifReaderExamplesTest extends TestCase
 
     private function buildClassicExample(Endian $endian): string
     {
-        $packShort = $endian === Endian::Little ? 'v' : 'n';
-        $packLong = $endian === Endian::Little ? 'V' : 'N';
+        $packShort    = $endian === Endian::Little ? 'v' : 'n';
+        $packLong     = $endian === Endian::Little ? 'V' : 'N';
         $packRational = $endian === Endian::Little ? 'V2' : 'N2';
 
         $header = $endian->value
@@ -201,10 +201,10 @@ final class TiffExifReaderExamplesTest extends TestCase
 
     private function buildBigTiffExample(Endian $endian): string
     {
-        $packShort = $endian === Endian::Little ? 'v' : 'n';
-        $packLong = $endian === Endian::Little ? 'V' : 'N';
+        $packShort    = $endian === Endian::Little ? 'v' : 'n';
+        $packLong     = $endian === Endian::Little ? 'V' : 'N';
         $packRational = $endian === Endian::Little ? 'V2' : 'N2';
-        $header = $endian->value
+        $header       = $endian->value
             . pack($packShort, TiffConst::MAGIC_BIG)
             . pack($packShort, 8)
             . pack($packShort, 0)
@@ -251,8 +251,7 @@ final class TiffExifReaderExamplesTest extends TestCase
             . $this->packUint64(208, $endian)
             . $this->packUint64(0, $endian);
 
-        $exifData = '2024:01:02 03:04:05' . "\0"
-            . 'ASCII' . "\0\0\0" . 'Sample EXIF 3.0' . "\0";
+        $exifData = '2024:01:02 03:04:05 ASCII   Sample EXIF 3.0 ';
 
         // GPS IFD entries (6 entries => data region starts at offset 368).
         $gpsIfd = $this->packUint64(6, $endian)
