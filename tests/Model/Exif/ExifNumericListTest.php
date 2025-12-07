@@ -62,7 +62,6 @@ final class ExifNumericListTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
 
-        // @phpstan-ignore-next-line: string element passed intentionally to assert runtime validation.
         new ExifNumericList($values);
     }
 }

@@ -13,9 +13,10 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 
 use InvalidArgumentException;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use TypeError;
 
 use function array_is_list;
+use function is_float;
+use function is_int;
 
 /**
  * Represents a list of numeric EXIF values.
@@ -30,7 +31,7 @@ final readonly class ExifNumericList
     /**
      * @param list<int|float|UInt64> $values Ordered list of numeric components.
      *
-     * @phpstan-param array<int, int|float|UInt64> $values Ordered list of numeric components.
+     * @phpstan-param array<int, mixed> $values Ordered list of numeric components.
      *
      * @psalm-param list<int|float|UInt64> $values
      */
@@ -39,11 +40,19 @@ final readonly class ExifNumericList
         $this->assertList($values);
 
         foreach ($values as $value) {
-            try {
-                $this->assertNumericComponent();
-            } catch (TypeError $exception) {
-                throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.', 0, $exception);
+            if ($value instanceof UInt64) {
+                continue;
             }
+
+            if (is_int($value)) {
+                continue;
+            }
+
+            if (is_float($value)) {
+                continue;
+            }
+
+            throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
         }
 
         /** @var list<int|float|UInt64> $values */
@@ -61,11 +70,11 @@ final readonly class ExifNumericList
     }
 
     /**
-     * @param list<int|float|UInt64> $values
+     * @param list<mixed> $values
      *
-     * @phpstan-param array<int, int|float|UInt64> $values
+     * @phpstan-param array<int, mixed> $values
      *
-     * @phpstan-assert list<int|float|UInt64> $values
+     * @phpstan-assert list<mixed> $values
      */
     private function assertList(array $values): void
     {
@@ -74,10 +83,5 @@ final readonly class ExifNumericList
         }
 
         throw new InvalidArgumentException('Numeric EXIF values must form a list.');
-    }
-
-    private function assertNumericComponent(): void
-    {
-        // The union type enforces numeric values at the call site. The method body remains intentionally empty.
     }
 }

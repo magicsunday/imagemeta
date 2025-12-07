@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
+use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
 use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
@@ -80,7 +81,7 @@ final class GpsFactoryTest extends TestCase
         self::assertSame(GpsMeasureMode::THREE_DIMENSIONAL, $gps->measureMode);
         self::assertSame(1.5, $gps->dop);
         self::assertSame(GpsSpeedRef::KILOMETERS_PER_HOUR, $gps->speedRef);
-        self::assertSame(5.0, $gps->speedMs);
+        self::assertSame(5.0 / 3.6, $gps->speedMs);
         self::assertSame(90.0, $gps->track);
         self::assertSame('WGS-84', $gps->mapDatum);
         self::assertSame('GPS', $gps->processingMethod);
@@ -88,7 +89,7 @@ final class GpsFactoryTest extends TestCase
         self::assertSame('2023-06-15', $gps->date);
         self::assertSame('14:30:00', $gps->time);
         self::assertInstanceOf(DateTimeImmutable::class, $gps->timestamp);
-        self::assertNull($gps->differential);
+        self::assertSame(GpsDifferential::NO_CORRECTION, $gps->differential);
         self::assertSame(3.0, $gps->horizontalPositioningError);
     }
 
@@ -389,11 +390,13 @@ final class GpsFactoryTest extends TestCase
         }
 
         if ($date !== null) {
+            $dateStamp = str_replace('-', ':', $date);
+
             $gpsEntries[ExifTag::GPS_DATE_STAMP] = new IfdEntry(
                 ExifTag::GPS_DATE_STAMP,
                 2,
-                strlen($date),
-                $date,
+                strlen($dateStamp),
+                $dateStamp,
             );
         }
 

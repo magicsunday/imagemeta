@@ -69,8 +69,10 @@ final readonly class TemporalFactory
         $exifCreate = $exifDocument?->dateTimeDigitized();
         $exifModify = $exifDocument?->dateTime();
 
-        $xmpCreate       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'));
-        $xmpModify       = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'));
+        $xmpCreate = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'CreateDate'))
+            ?? $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/exif/1.0/', 'CreateDate'));
+        $xmpModify = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/xap/1.0/', 'ModifyDate'))
+            ?? $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/exif/1.0/', 'ModifyDate'));
         $xmpDateCreated  = $this->parseFlexibleDate($xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'DateCreated'));
         $lookup          = new QuickTimeLookup($quickTime);
         $quickTimeCreate = $this->parseFlexibleDate($lookup->string('CreationDate'));
@@ -227,7 +229,7 @@ final readonly class TemporalFactory
 
         $digits = substr($digits, 0, 3);
 
-        return str_pad($digits, 3, '0');
+        return str_pad($digits, 3, '0', STR_PAD_LEFT);
     }
 
     /**
