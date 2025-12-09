@@ -252,6 +252,10 @@ final readonly class ParsedExif
     /**
      * Returns the image width, preferring the EXIF-specific tag and falling back to IFD0.
      *
+     * EXIF 3.0 §4.6.5.1.1 defines ImageWidth (Tag 0x0100) as a SHORT or LONG with a single
+     * value and no default; JPEG-encoded images convey the dimension via JPEG markers
+     * instead of this tag.
+     *
      * @return int|null
      */
     public function imageWidth(): ?int
