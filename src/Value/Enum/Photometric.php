@@ -14,21 +14,17 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Enumerates the photometric interpretations listed for the
- * PhotometricInterpretation tag in EXIF 3.0 §4.6.2 (image data structure),
- * aligning with EXIF 2.32 §4.6.2 and the TIFF 6.0 §8 definitions.
+ * Enumerates the photometric interpretations allowed for the
+ * PhotometricInterpretation tag in EXIF 3.0 §4.6.5.1.5 (image data structure),
+ * aligning with EXIF 2.32 §4.6.5.1.5.
+ *
+ * Only RGB (2) and YCbCr (6) are defined; other codes are reserved and will be
+ * rejected.
  */
 enum Photometric: int
 {
     use EnumFromIntStringNullable;
 
-    case WHITE_IS_ZERO     = 0;
-    case BLACK_IS_ZERO     = 1;
-    case RGB               = 2;
-    case PALETTE_COLOR     = 3;
-    case TRANSPARENCY_MASK = 4;
-    case CMYK              = 5;
-    case YCBCR             = 6;
-    case CIELAB            = 8;
-    case ICCLAB            = 9;
+    case RGB   = 2;
+    case YCBCR = 6;
 }

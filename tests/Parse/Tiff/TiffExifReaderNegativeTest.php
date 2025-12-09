@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
@@ -302,6 +303,25 @@ final class TiffExifReaderNegativeTest extends TestCase
     }
 
     /**
+     * Ensures interoperability IFD pointers follow the single LONG layout mandated by EXIF.
+     *
+     * EXIF 3.0 §4.6.3.3.1 and EXIF 2.32 §4.6.3.3.1 define the interoperability IFD pointer
+     * as a LONG with count 1 referencing another TIFF-structured IFD without image payloads.
+     */
+    #[Test]
+    public function rejectsInteropPointerWithInvalidLayout(): void
+    {
+        $blob = $this->buildTiffWithInteropPointer(TiffConst::TYPE_SHORT, 2);
+
+        $reader = new TiffExifReader();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Interoperability IFD pointer must contain exactly one offset per EXIF 3.0 §4.6.3.3.1.');
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
      * Builds a minimal valid TIFF blob with a RATIONAL value.
      *
      * @param int $numerator   Numerator for the rational.
@@ -331,6 +351,40 @@ final class TiffExifReaderNegativeTest extends TestCase
         // Rational data at offset 26: numerator and denominator
         $blob .= pack('V', $numerator)
             . pack('V', $denominator);
+
+        return $blob;
+    }
+
+    /**
+     * Builds a TIFF blob with an Exif IFD that carries a malformed interoperability pointer.
+     *
+     * @param int $type  Field type used for the interoperability pointer entry.
+     * @param int $count Value count stored for the interoperability pointer entry.
+     */
+    private function buildTiffWithInteropPointer(int $type, int $count): string
+    {
+        $ifd0Offset    = 8;
+        $exifIfdOffset = 26;
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset);
+
+        // IFD0 with an Exif IFD pointer
+        $blob .= pack('v', 1)
+            . pack('v', ExifTag::EXIF_IFD_POINTER)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $exifIfdOffset)
+            . pack('V', 0);
+
+        // Exif IFD with malformed interoperability pointer entry
+        $blob .= pack('v', 1)
+            . pack('v', ExifTag::INTEROPERABILITY_IFD_POINTER)
+            . pack('v', $type)
+            . pack('V', $count)
+            . pack('V', 0)
+            . pack('V', 0);
 
         return $blob;
     }

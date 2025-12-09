@@ -136,7 +136,6 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
     private function buildBigTiffGpsExample(Endian $endian): string
     {
         $packShort = $endian === Endian::Little ? 'v' : 'n';
-        $packLong  = $endian === Endian::Little ? 'V' : 'N';
         $packLong8 = $endian === Endian::Little ? 'P' : 'J';
         $packRatio = $endian === Endian::Little ? 'V2' : 'N2';
 
@@ -200,8 +199,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packRatio, 5678, 100)
             . pack($packRatio, 98, 1)
             . pack($packRatio, 45, 1)
-            . pack($packRatio, 4321, 100)
-            . pack($packRatio, 11, 2);
+            . pack($packRatio, 4321, 100);
 
         return $header . $ifd0 . $gpsIfd . $gpsData;
     }

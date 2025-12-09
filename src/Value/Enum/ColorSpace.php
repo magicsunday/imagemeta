@@ -14,15 +14,14 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Represents the colour space encodings described for the ColorSpace tag in
- * EXIF 3.0 §4.6.3 (tags relating to shooting conditions), carried over from
- * the EXIF 2.32 §4.6.3 definitions.
+ * Represents the colour space encodings described for the ColorSpace tag.
+ *
+ * EXIF 3.0 §4.6.6.2.1 (ColorSpace); EXIF 2.32 §4.6.6.2.1.
  */
 enum ColorSpace: int
 {
     use EnumFromIntStringNullable;
 
     case SRGB         = 1;
-    case ADOBE_RGB    = 2;
     case UNCALIBRATED = 65535;
 }
