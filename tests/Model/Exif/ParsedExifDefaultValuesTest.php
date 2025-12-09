@@ -85,7 +85,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * of Orientation::TOP_LEFT when the tag is not present.
      *
      * @see TIFF 6.0 §8: Orientation default is 1 (top-left)
-     * @see EXIF 3.0 §4.6.4: Orientation default is 1
+     * @see EXIF 3.0 §4.6.5.1.6: Orientation default is 1
      */
     #[Test]
     public function orientationReturnsDefaultWhenMissing(): void

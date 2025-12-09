@@ -82,10 +82,16 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 1)
-            . pack($packLong, 30)
+            . pack($packLong, 0) // placeholder, real offset set below
             . pack($packLong, 0);
 
-        $gpsIfd = pack($packShort, 5)
+        $gpsIfdOffset = strlen($header . $ifd0);
+        $gpsIfdLength = 2 + (6 * 12) + 4;
+        $gpsDataOffset = $gpsIfdOffset + $gpsIfdLength;
+
+        $ifd0 = substr_replace($ifd0, pack($packLong, $gpsIfdOffset), 10, 4);
+
+        $gpsIfd = pack($packShort, 6)
             // GPSLatitudeRef = "S"
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
@@ -95,7 +101,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
-            . pack($packLong, 112)
+            . pack($packLong, $gpsDataOffset)
             // GPSLongitudeRef = "W"
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
@@ -105,7 +111,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
-            . pack($packLong, 136)
+            . pack($packLong, $gpsDataOffset + (3 * 8))
             // GPSAltitudeRef = 1 (below sea level)
             . pack($packShort, ExifTag::GPS_ALTITUDE_REF)
             . pack($packShort, TiffConst::TYPE_BYTE)
@@ -115,7 +121,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_ALTITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 1)
-            . pack($packLong, 160)
+            . pack($packLong, $gpsDataOffset + (6 * 8))
             . pack($packLong, 0);
 
         $gpsData = pack($packRational, 12, 1)
@@ -132,20 +138,21 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
     private function buildBigTiffGpsExample(Endian $endian): string
     {
         $packShort = $endian === Endian::Little ? 'v' : 'n';
-        $packLong  = $endian === Endian::Little ? 'V' : 'N';
         $packLong8 = $endian === Endian::Little ? 'P' : 'J';
-        $packRatio = $endian === Endian::Little ? 'P2' : 'J2';
+        $packRatio = $endian === Endian::Little ? 'V2' : 'N2';
 
         $header = $endian->value
             . pack($packShort, TiffConst::MAGIC_BIG_TIFF)
             . pack($packShort, 8)
             . pack($packShort, 0)
-            . pack($packLong, 8)
-            . pack($packLong8, 16);
+            . pack($packLong8, 0); // placeholder, real offset set below
 
-        $firstIfdOffset = 16;
+        $firstIfdOffset = strlen($header);
+        $header         = substr_replace($header, pack($packLong8, $firstIfdOffset), 8, 8);
+
         $ifd0EntryCount = pack($packLong8, 1);
-        $gpsIfdOffset   = $firstIfdOffset + 8 + 20 + 8; // header + entry count + one entry + next offset
+        $ifd0Length     = 8 + 20 + 8;
+        $gpsIfdOffset   = $firstIfdOffset + $ifd0Length;
 
         $ifd0 = $ifd0EntryCount
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
@@ -154,8 +161,9 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packLong8, $gpsIfdOffset)
             . pack($packLong8, 0);
 
-        $gpsEntryCount = pack($packLong8, 5);
-        $gpsDataOffset = $gpsIfdOffset + 8 + (5 * 20) + 8;
+        $gpsEntryCount = pack($packLong8, 6);
+        $gpsIfdLength  = 8 + (6 * 20) + 8;
+        $gpsDataOffset = $gpsIfdOffset + $gpsIfdLength;
 
         $gpsIfd = $gpsEntryCount
             // GPSLatitudeRef = "S" (inline)
@@ -187,7 +195,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_ALTITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong8, 1)
-            . pack($packLong8, $gpsDataOffset + (6 * 8))
+            . pack($packRatio, 11, 2)
             . pack($packLong8, 0);
 
         $gpsData = pack($packRatio, 12, 1)

@@ -234,7 +234,7 @@ final readonly class ParsedExif
     /**
      * Returns the EXIF orientation enumeration.
      *
-     * TIFF 6.0 §8 and EXIF 3.0 §4.6.4 specify default value 1 (top-left) when not present.
+     * TIFF 6.0 §8 and EXIF 3.0 §4.6.5.1.6 specify default value 1 (top-left) when not present.
      *
      * @return Orientation
      */
@@ -432,7 +432,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile width defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
      * For thumbnail tile width, use thumbnailTileWidth().
      */
     public function tileWidth(): ?int
@@ -443,7 +443,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile length defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
      * For thumbnail tile length, use thumbnailTileLength().
      */
     public function tileLength(): ?int
@@ -454,7 +454,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile offsets defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
      * For thumbnail tile offsets, use thumbnailTileOffsets().
      *
      * @return list<int>|null
@@ -467,7 +467,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile byte counts defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
      * For thumbnail tile byte counts, use thumbnailTileByteCounts().
      *
      * @return list<int>|null
@@ -480,7 +480,7 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
      * For thumbnail strip offsets, use thumbnailStripOffsets().
      *
      * @return list<int>|null
@@ -493,7 +493,7 @@ final readonly class ParsedExif
     /**
      * Returns the strip byte counts for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
      * For thumbnail strip byte counts, use thumbnailStripByteCounts().
      *
      * @return list<int>|null
@@ -516,7 +516,7 @@ final readonly class ParsedExif
     /**
      * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
+     * EXIF 3.0 §4.6.5.1.6 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
      * both offset and length to be populated for a valid embedded thumbnail.
      */
     public function hasThumbnail(): bool
@@ -534,7 +534,7 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail offset from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 document JPEGInterchangeFormat as
+     * EXIF 3.0 §4.6.5.1.6 (Table 3) and EXIF 2.32 §4.6.4 document JPEGInterchangeFormat as
      * the byte offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
      */
     public function thumbnailJpegInterchangeFormat(): ?int
@@ -545,7 +545,7 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail byte length from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
+     * EXIF 3.0 §4.6.5.1.6 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
      * as the size in bytes of the JPEG thumbnail stream in IFD1.
      */
     public function thumbnailJpegInterchangeFormatLength(): ?int
@@ -556,7 +556,7 @@ final readonly class ParsedExif
     /**
      * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 map the Compression tag in the
+     * EXIF 3.0 §4.6.5.1.6 and EXIF 2.32 §4.6.4 map the Compression tag in the
      * thumbnail IFD to the embedded preview codec.
      */
     public function thumbnailCompression(): ?Compression
@@ -567,7 +567,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile width defined for the thumbnail image data (IFD1).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
      */
     public function thumbnailTileWidth(): ?int
     {
@@ -577,7 +577,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile length defined for the thumbnail image data (IFD1).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
      */
     public function thumbnailTileLength(): ?int
     {
@@ -587,7 +587,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile offsets for the thumbnail image when stored using TIFF tiles.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
      *
      * @return list<int>|null
      */
@@ -599,7 +599,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile byte counts for the thumbnail image when stored using TIFF tiles.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
      *
      * @return list<int>|null
      */
@@ -611,7 +611,7 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
      *
      * @return list<int>|null
      */
@@ -623,7 +623,7 @@ final readonly class ParsedExif
     /**
      * Returns the strip byte counts for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
      *
      * @return list<int>|null
      */
@@ -822,7 +822,7 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.4 Table 10.
+     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.5.1.6 Table 10.
      */
     public function sensitivityType(): ?SensitivityType
     {
@@ -2925,7 +2925,6 @@ final readonly class ParsedExif
         return match ($photometric) {
             Photometric::RGB => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
             Photometric::YCBCR => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
-            default => null,
         };
     }
 

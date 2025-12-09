@@ -15,7 +15,8 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the orientation values defined for the Orientation tag in EXIF
- * 3.0 §4.6.2 (image data structure), inherited from EXIF 2.32 §4.6.2.
+ * 3.0 §4.6.5.1.6 (image data structure), inherited from EXIF 2.32
+ * §4.6.5.1.6.
  */
 enum Orientation: int
 {

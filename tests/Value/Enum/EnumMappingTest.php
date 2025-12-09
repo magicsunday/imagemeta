@@ -131,6 +131,16 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
+     * Rejects reserved photometric interpretation codes per EXIF 3.0 §4.6.5.1.5.
+     */
+    #[Test]
+    public function returnsNullForReservedPhotometricCodes(): void
+    {
+        self::assertNull(Photometric::fromExifValue(0));
+        self::assertNull(Photometric::fromExifValue(3));
+    }
+
+    /**
      * Maps GPS string-backed enums correctly.
      *
      * EXIF 3.0 §4.6.6 Table 27 defines GPS reference tags using single-character
