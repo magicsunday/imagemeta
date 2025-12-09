@@ -190,8 +190,11 @@ final readonly class ExifTag
     public const int GPS_H_POSITIONING_ERROR = 0x001F;
 
     /**
-     * The number of columns of image data, equal to the number of pixels per row. In JPEG compressed data, this
-     * tag shall not be used because a JPEG marker is used instead of it.
+     * The number of columns of image data, equal to the number of pixels per row.
+     *
+     * EXIF 3.0 §4.6.5.1.1 (also TIFF 6.0 §8) defines this baseline tag as a SHORT or LONG
+     * with a single value and no default. For JPEG compressed data a JPEG marker shall be
+     * used instead of this tag.
      */
     public const int IMAGE_WIDTH = 0x0100;
 
