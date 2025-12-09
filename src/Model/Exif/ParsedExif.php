@@ -635,11 +635,20 @@ final readonly class ParsedExif
     /**
      * Returns the reference black and white point values as floating point numbers.
      *
+     * EXIF 3.0 §4.6.5.3.5 and EXIF 2.32 §4.6.5 describe defaults when the
+     * colour space is declared.
+     *
      * @return list<float>|null
      */
     public function referenceBlackWhite(): ?array
     {
-        return $this->rationalList($this->ifd0, ExifTag::REFERENCE_BLACK_WHITE);
+        $values = $this->rationalList($this->ifd0, ExifTag::REFERENCE_BLACK_WHITE);
+
+        if ($values !== null) {
+            return $this->normaliseReferenceBlackWhite($values);
+        }
+
+        return $this->defaultReferenceBlackWhite();
     }
 
     /**
@@ -2868,6 +2877,56 @@ final readonly class ParsedExif
         }
 
         return null;
+    }
+
+    /**
+     * Normalises a reference black and white array to six components.
+     *
+     * EXIF 3.0 §4.6.5.3.5 requires six rational values representing the
+     * black and white points for each channel.
+     *
+     * @param list<float> $values
+     *
+     * @return array{0: float, 1: float, 2: float, 3: float, 4: float, 5: float}|null
+     */
+    private function normaliseReferenceBlackWhite(array $values): ?array
+    {
+        if (count($values) !== 6) {
+            return null;
+        }
+
+        return [
+            0 => $values[0],
+            1 => $values[1],
+            2 => $values[2],
+            3 => $values[3],
+            4 => $values[4],
+            5 => $values[5],
+        ];
+    }
+
+    /**
+     * Applies EXIF 3.0 §4.6.5.3.5 defaults when ReferenceBlackWhite is absent.
+     *
+     * Defaults are only valid when the colour space is explicitly defined and
+     * the photometric interpretation is RGB or YCbCr.
+     *
+     * @return array{0: float, 1: float, 2: float, 3: float, 4: float, 5: float}|null
+     */
+    private function defaultReferenceBlackWhite(): ?array
+    {
+        $photometric = $this->photometric();
+        $colorSpace  = $this->colorSpace();
+
+        if (($photometric === null) || ($colorSpace === null) || ($colorSpace === ColorSpace::UNCALIBRATED)) {
+            return null;
+        }
+
+        return match ($photometric) {
+            Photometric::RGB => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
+            Photometric::YCBCR => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
+            default => null,
+        };
     }
 
     /**
