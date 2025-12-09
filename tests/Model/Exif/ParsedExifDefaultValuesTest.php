@@ -97,10 +97,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that planarConfiguration() returns the TIFF 6.0 default value
-     * of PlanarConfiguration::CHUNKY when the tag is not present.
+     * Verifies that planarConfiguration() returns the TIFF 6.0/EXIF 3.0 default
+     * value of PlanarConfiguration::CHUNKY when the tag is not present.
      *
      * @see TIFF 6.0 §8: PlanarConfiguration default is 1 (chunky format)
+     * @see EXIF 3.0 §4.6.5.1.10: PlanarConfiguration default is 1
      */
     #[Test]
     public function planarConfigurationReturnsDefaultWhenMissing(): void
@@ -112,11 +113,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that resolutionUnit() returns the TIFF 6.0/EXIF 3.0 default value
-     * of ResolutionUnit::INCHES when the tag is not present.
+     * Verifies that resolutionUnit() returns the TIFF 6.0/EXIF 3.0 default
+     * value of ResolutionUnit::INCHES when the tag is not present.
      *
      * @see TIFF 6.0 §8: ResolutionUnit default is 2 (inches)
-     * @see EXIF 3.0 §4.6.2: ResolutionUnit default is 2
+     * @see EXIF 3.0 §4.6.5.1.11: ResolutionUnit default is 2
      */
     #[Test]
     public function resolutionUnitReturnsDefaultWhenMissing(): void

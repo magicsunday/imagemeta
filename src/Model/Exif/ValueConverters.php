@@ -513,7 +513,8 @@ final readonly class ValueConverters
 
     /**
      * Converts a textual YCbCr subsampling representation into integer pairs as
-     * described in EXIF 2.32 §4.6.2 / EXIF 3.0 §4.6.2 (image data structure).
+     * described in EXIF 2.32 §4.6.5.1.12 / EXIF 3.0 §4.6.5.1.12 (image data
+     * structure).
      *
      * EXIF 3.0 §4.6.5.1.12 (YCbCrSubSampling) defines only [2,1] (YCbCr4:2:2) and
      * [2,2] (YCbCr4:2:0) as legal values. Other combinations are reserved and rejected.
