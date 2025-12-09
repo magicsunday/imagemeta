@@ -267,7 +267,7 @@ All tests reference relevant EXIF/TIFF specifications:
 - **EXIF 3.0 §4.5**: TIFF header layout and IFD traversal
 - **EXIF 3.0 §4.5.1**: Byte order and magic numbers
 - **EXIF 3.0 §4.5.2**: IFD structure and field types (Table 3)
-- **EXIF 3.0 §4.6.5**: UserComment and MakerNote (Table 11)
+- **EXIF 3.0 §4.6.6.4.1–4.6.6.4.2**: MakerNote and UserComment (Table 11)
 - **TIFF 6.0 §2**: File structure
 - **TIFF 6.0 §8**: Baseline IFD
 

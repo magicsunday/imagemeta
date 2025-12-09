@@ -112,6 +112,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the decoded maker note metadata when a decoder is available.
+     *
+     * EXIF 3.0 §4.6.6.4.1 and EXIF 2.32 §4.6.6.4.1 reserve MakerNote for manufacturer-specific data.
      */
     public function makerNotes(): ?MakerNotesRecord
     {
@@ -722,6 +724,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the user comment string after decoding the EXIF prefix.
+     *
+     * EXIF 3.0 §4.6.6.4.2 and EXIF 2.32 §4.6.6.4.2 define the multicode-compatible prefix (see §4.6.4)
+     * that annotates the UserComment character code.
      */
     public function userComment(): ?string
     {
