@@ -937,6 +937,8 @@ exif_tags:
     ifd: IFD0
     category: I
     update: 0
+    type: RATIONAL
+    count: 6
     source: EXIF 3.0
 
   0x8298:

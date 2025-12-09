@@ -12,11 +12,15 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -121,5 +125,86 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(ResolutionUnit::INCHES, $parsedExif->resolutionUnit());
+    }
+
+    /**
+     * Verifies that ReferenceBlackWhite returns the EXIF 3.0 §4.6.5.3.5 default
+     * when the colour space is defined and the photometric interpretation is RGB.
+     */
+    #[Test]
+    public function referenceBlackWhiteDefaultsForRgb(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::RGB->value,
+            ),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::SRGB->value),
+        ]);
+
+        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(
+            [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
+            $parsedExif->referenceBlackWhite(),
+        );
+    }
+
+    /**
+     * Verifies that ReferenceBlackWhite returns the EXIF 3.0 §4.6.5.3.5 default
+     * when the colour space is defined and the photometric interpretation is YCbCr.
+     */
+    #[Test]
+    public function referenceBlackWhiteDefaultsForYCbCr(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::YCBCR->value,
+            ),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::ADOBE_RGB->value),
+        ]);
+
+        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+
+        self::assertSame(
+            [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
+            $parsedExif->referenceBlackWhite(),
+        );
+    }
+
+    /**
+     * Ensures no default ReferenceBlackWhite is applied when the colour space
+     * is uncalibrated even if the photometric interpretation is RGB.
+     */
+    #[Test]
+    public function referenceBlackWhiteDefaultsAreSuppressedForUncalibratedColorSpace(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::RGB->value,
+            ),
+        ]);
+
+        $exifIfd = new Ifd([
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::UNCALIBRATED->value),
+        ]);
+
+        $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
+
+        self::assertNull($parsedExif->referenceBlackWhite());
     }
 }
