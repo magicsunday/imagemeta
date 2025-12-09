@@ -133,13 +133,16 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Rejects reserved photometric interpretation codes per EXIF 3.0 §4.6.5.1.5.
+     * Rejects reserved photometric interpretations outside the EXIF allowed set.
+     *
+     * EXIF 3.0 §4.6.5.1.5 limits PhotometricInterpretation to RGB (2) and YCbCr (6).
      */
     #[Test]
     public function returnsNullForReservedPhotometricCodes(): void
     {
         self::assertNull(Photometric::fromExifValue(0));
         self::assertNull(Photometric::fromExifValue(3));
+        self::assertNull(Photometric::fromExifValue(8));
     }
 
     /**
