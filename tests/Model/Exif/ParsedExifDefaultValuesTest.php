@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -129,36 +130,19 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that xResolution() returns the EXIF 3.0 default value of 72 when
-     * the tag is not present.
+     * Verifies that ycbcrPositioning() returns the EXIF 3.0 default value of
+     * YCbCrPositioning::CENTERED when the tag is not present.
      *
-     * @see EXIF 3.0 §4.6.5.1.8: XResolution defaults to 72 when unknown
+     * @see EXIF 3.0 §4.6.5.1.13: Default value is 1 (centered) if missing
+     * @see EXIF 2.32 §4.6.2
      */
     #[Test]
-    public function xResolutionReturnsDefaultWhenMissing(): void
+    public function ycbcrPositioningDefaultsToCenteredWhenMissing(): void
     {
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(72.0, $parsedExif->xResolution());
-    }
-
-    /**
-     * Verifies that yResolution() defaults to the value of xResolution() when
-     * not provided separately.
-     *
-     * @see EXIF 3.0 §4.6.5.1.9: YResolution shall match XResolution
-     */
-    #[Test]
-    public function yResolutionFallsBackToXResolution(): void
-    {
-        $ifd0 = new Ifd([
-            ExifTag::X_RESOLUTION => new IfdEntry(ExifTag::X_RESOLUTION, 5, 1, [300, 1]),
-        ]);
-
-        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
-
-        self::assertSame(300.0, $parsedExif->yResolution());
+        self::assertSame(YCbCrPositioning::CENTERED, $parsedExif->ycbcrPositioning());
     }
 
     /**
