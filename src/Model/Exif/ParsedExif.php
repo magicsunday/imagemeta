@@ -822,8 +822,8 @@ final readonly class ParsedExif
     /**
      * Returns the opto-electronic conversion function data.
      *
-     * EXIF 3.0 §4.6.3 Table 15: OECF describes the relationship between camera's optical input
-     * and the image file values.
+     * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) and EXIF 2.32 §4.6.3: OECF describes the
+     * relationship between camera's optical input and the image file values.
      */
     public function oecf(): ?Oecf
     {
