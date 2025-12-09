@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -125,6 +126,22 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(ResolutionUnit::INCHES, $parsedExif->resolutionUnit());
+    }
+
+    /**
+     * Verifies that ycbcrPositioning() returns the EXIF 3.0 default value of
+     * YCbCrPositioning::CENTERED when the tag is not present.
+     *
+     * @see EXIF 3.0 §4.6.5.1.13: Default value is 1 (centered) if missing
+     * @see EXIF 2.32 §4.6.2
+     */
+    #[Test]
+    public function ycbcrPositioningDefaultsToCenteredWhenMissing(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(YCbCrPositioning::CENTERED, $parsedExif->ycbcrPositioning());
     }
 
     /**

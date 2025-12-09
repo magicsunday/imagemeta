@@ -2086,10 +2086,19 @@ final readonly class ParsedExif
 
     /**
      * Returns the YCbCr positioning enum describing the chroma siting.
+     *
+     * @see EXIF 3.0 §4.6.5.1.13: Default to centered positioning when tag is absent
+     * @see EXIF 2.32 §4.6.2
      */
     public function ycbcrPositioning(): ?YCbCrPositioning
     {
-        $value = $this->enumValue($this->ifd0, ExifTag::YCBCR_POSITIONING);
+        $rawValue = $this->value($this->ifd0, ExifTag::YCBCR_POSITIONING);
+
+        if ($rawValue === null) {
+            return YCbCrPositioning::CENTERED;
+        }
+
+        $value = $this->normaliseEnumScalar($rawValue);
 
         return YCbCrPositioning::fromExifValue($value);
     }
