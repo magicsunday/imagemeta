@@ -1512,6 +1512,10 @@ final readonly class ParsedExif
     /**
      * Returns the raw DateTimeOriginal tag value.
      *
+     * EXIF 3.0 §4.6.6.6.1 describes DateTimeOriginal as a 20-byte ASCII
+     * timestamp (including the terminating NULL) formatted as
+     * "YYYY:MM:DD HH:MM:SS".
+     *
      * @return string|null
      */
     public function dateTimeOriginalRaw(): ?string
@@ -1584,6 +1588,10 @@ final readonly class ParsedExif
     /**
      * Returns the raw DateTimeDigitized tag value.
      *
+     * EXIF 3.0 §4.6.6.6.2 documents DateTimeDigitized as a 20-byte ASCII
+     * timestamp (including the terminating NULL) formatted as
+     * "YYYY:MM:DD HH:MM:SS".
+     *
      * @return string|null
      */
     public function dateTimeDigitizedRaw(): ?string
@@ -1631,6 +1639,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the normalized offset time for DateTimeOriginal.
+     *
+     * EXIF 3.0 §4.6.6.6.4 defines OffsetTimeOriginal as an ASCII string of
+     * length 7 (including the terminating NULL) using the format "±HH:MM".
      */
     public function offsetTimeOriginal(): ?string
     {
@@ -1651,6 +1662,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the normalized offset time for DateTimeDigitized.
+     *
+     * EXIF 3.0 §4.6.6.6.5 defines OffsetTimeDigitized as an ASCII string of
+     * length 7 (including the terminating NULL) using the format "±HH:MM".
      */
     public function offsetTimeDigitized(): ?string
     {
@@ -1671,6 +1685,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the normalized offset time for the IFD0 ModifyDate/DateTime tag.
+     *
+     * EXIF 3.0 §4.6.6.6.3 defines OffsetTime as an ASCII string of length 7
+     * (including the terminating NULL) using the format "±HH:MM".
      */
     public function offsetTime(): ?string
     {
@@ -3369,7 +3386,15 @@ final readonly class ParsedExif
      */
     private function parseExifDateTime(?string $rawDateTime, ?string $rawOffset, ?string $subSeconds): ?DateTimeImmutable
     {
-        if ($rawDateTime === null || $rawDateTime === '' || strlen($rawDateTime) < 19) {
+        $rawDateTime = rtrim($rawDateTime ?? '', " \0");
+
+        if ($rawDateTime === '' || strlen($rawDateTime) < 19) {
+            return null;
+        }
+
+        $rawDateTime = substr($rawDateTime, 0, 19);
+
+        if (preg_match('/\d/', $rawDateTime) !== 1) {
             return null;
         }
 
