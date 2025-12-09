@@ -275,6 +275,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the colour space enumeration if present.
+     *
+     * EXIF 3.0 §4.6.6.2.1 (ColorSpace); EXIF 2.32 §4.6.6.2.1.
      */
     public function colorSpace(): ?ColorSpace
     {
@@ -2227,6 +2229,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the gamma correction value when provided.
+     *
+     * EXIF 3.0 §4.6.6.2.2 (Gamma); EXIF 2.32 §4.6.6.2.2.
      */
     public function gamma(): ?float
     {
