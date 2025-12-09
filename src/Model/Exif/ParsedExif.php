@@ -482,26 +482,36 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.1 and EXIF 2.32 §4.6.5 define StripOffsets for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed primary images.
      * For thumbnail strip offsets, use thumbnailStripOffsets().
      *
      * @return list<int>|null
      */
     public function stripOffsets(): ?array
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd0, ExifTag::STRIP_OFFSETS);
     }
 
     /**
      * Returns the strip byte counts for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.3 and EXIF 2.32 §4.6.5 define StripByteCounts for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed primary images.
      * For thumbnail strip byte counts, use thumbnailStripByteCounts().
      *
      * @return list<int>|null
      */
     public function stripByteCounts(): ?array
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd0, ExifTag::STRIP_BYTE_COUNTS);
     }
 
@@ -536,8 +546,8 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail offset from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.5.1.6 (Table 3) and EXIF 2.32 §4.6.4 document JPEGInterchangeFormat as
-     * the byte offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
+     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 document JPEGInterchangeFormat as the byte
+     * offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
      */
     public function thumbnailJpegInterchangeFormat(): ?int
     {
@@ -613,24 +623,34 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.1 and EXIF 2.32 §4.6.5 define StripOffsets for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
      */
     public function thumbnailStripOffsets(): ?array
     {
+        if ($this->isJpegCompression($this->thumbnailCompression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
     }
 
     /**
      * Returns the strip byte counts for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.3 and EXIF 2.32 §4.6.5 define StripByteCounts for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
      */
     public function thumbnailStripByteCounts(): ?array
     {
+        if ($this->isJpegCompression($this->thumbnailCompression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
     }
 
@@ -2011,9 +2031,16 @@ final readonly class ParsedExif
 
     /**
      * Returns the rows per strip value when the image data is organized in strips.
+     *
+     * EXIF 3.0 §4.6.5.2.2 and EXIF 2.32 §4.6.5 define RowsPerStrip for strip-based images
+     * and require the tag to be omitted for JPEG-compressed primary images.
      */
     public function rowsPerStrip(): ?int
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->int($this->ifd0, ExifTag::ROWS_PER_STRIP);
     }
 
@@ -2220,17 +2247,31 @@ final readonly class ParsedExif
 
     /**
      * Returns the JPEG interchange format offset for legacy thumbnails.
+     *
+     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 note that this tag shall not be recorded
+     * for primary images encoded with JPEG compression.
      */
     public function jpegInterchangeFormat(): ?int
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT);
     }
 
     /**
      * Returns the JPEG interchange format length for legacy thumbnails.
+     *
+     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 note that this tag shall not be recorded
+     * for primary images encoded with JPEG compression.
      */
     public function jpegInterchangeFormatLength(): ?int
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
     }
 
@@ -2855,6 +2896,23 @@ final readonly class ParsedExif
         }
 
         return null;
+    }
+
+    /**
+     * Determines whether strip-based metadata shall be omitted for JPEG-encoded payloads.
+     */
+    private function isJpegCompression(?Compression $compression): bool
+    {
+        if ($compression === null) {
+            return false;
+        }
+
+        return in_array($compression, [
+            Compression::JPEG_OLD_STYLE,
+            Compression::JPEG,
+            Compression::LOSSY_JPEG,
+            Compression::JPEG_2000,
+        ], true);
     }
 
     /**

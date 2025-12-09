@@ -34,7 +34,7 @@ final class TiffConst
     public const int MAGIC_BIG = 0x002B;
 
     /**
-     * BigTIFF magic number (43 decimal), retained for clarity when building test fixtures.
+     * Alias for the BigTIFF magic number for compatibility with legacy helpers.
      * BigTIFF specification; EXIF 3.0 §4.5.1.
      */
     public const int MAGIC_BIG_TIFF = self::MAGIC_BIG;
