@@ -13,20 +13,19 @@ namespace MagicSunday\ImageMeta\Core;
 
 use function ctype_digit;
 use function preg_replace;
-use function rtrim;
+use function str_contains;
 use function strlen;
 use function trim;
 
 /**
  * Derives EXIF capability profiles from version identifiers defined in
- * EXIF 2.32 §4.6.8 and EXIF 3.0 §4.6.8 (other tags).
+ * EXIF 2.32 §4.6.6.1.1 and EXIF 3.0 §4.6.6.1.1 (ExifVersion).
  */
 final class ExifCapabilities
 {
     /**
      * Normalises vendor provided EXIF version identifiers to known capability profile codes.
-     * Trims whitespace, removes trailing null bytes and maps digit-only fallbacks so unusual
-     * encodings still yield the canonical profile.
+     * Trims whitespace and maps digit-only fallbacks so unusual encodings still yield the canonical profile.
      *
      * @param ?string $exifVersion Raw EXIF version string as read from metadata, possibly null or padded.
      *
@@ -35,22 +34,19 @@ final class ExifCapabilities
     public static function fromVersion(?string $exifVersion): string
     {
         if ($exifVersion === null) {
-            return '2.2';
+            return 'unknown';
+        }
+
+        if (str_contains($exifVersion, "\0")) {
+            return 'unknown';
         }
 
         $trimmed = trim($exifVersion);
         if ($trimmed === '') {
-            return '2.2';
+            return 'unknown';
         }
 
-        // Remove any trailing null bytes coming from byte aligned EXIF strings.
-        $trimmed = rtrim($trimmed, "\0");
-
-        if ($trimmed === '') {
-            return '2.2';
-        }
-
-        // EXIF 3.0 §4.6.8 and EXIF 2.32 §4.6.8 define the canonical ASCII
+        // EXIF 3.0 §4.6.6.1.1 and EXIF 2.32 §4.6.6.1.1 define the canonical ASCII
         // version identifiers recorded in the ExifVersion tag (0x9000).
         $profile = match ($trimmed) {
             '1.00', '1.0' => '1.0',

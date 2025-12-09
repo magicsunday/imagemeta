@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
+use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -36,10 +37,11 @@ use PHPUnit\Framework\TestCase;
 final class ParsedExifDefaultValuesTest extends TestCase
 {
     /**
-     * Verifies that bitsPerSample() returns the TIFF 6.0 default value of 1
-     * when the tag is not present.
+     * Verifies that bitsPerSample() returns the EXIF 3.0 default value of 8 per
+     * component when the tag is not present.
      *
-     * @see TIFF 6.0 §8: BitsPerSample default is 1 (bilevel image)
+     * @see EXIF 3.0 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
+     * @see EXIF 2.32 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
      */
     #[Test]
     public function bitsPerSampleReturnsDefaultWhenMissing(): void
@@ -47,14 +49,14 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(1, $parsedExif->bitsPerSample());
+        self::assertSame(8, $parsedExif->bitsPerSample());
     }
 
     /**
-     * Verifies that samplesPerPixel() returns the TIFF 6.0 default value of 1
+     * Verifies that samplesPerPixel() returns the EXIF 3.0 default value of 3
      * when the tag is not present.
      *
-     * @see TIFF 6.0 §8: SamplesPerPixel default is 1 (grayscale image)
+     * @see EXIF 3.0 §4.6.5.1.7: SamplesPerPixel defaults to 3 for RGB/YCbCr
      */
     #[Test]
     public function samplesPerPixelReturnsDefaultWhenMissing(): void
@@ -62,7 +64,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(1, $parsedExif->samplesPerPixel());
+        self::assertSame(3, $parsedExif->samplesPerPixel());
     }
 
     /**
@@ -85,7 +87,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * of Orientation::TOP_LEFT when the tag is not present.
      *
      * @see TIFF 6.0 §8: Orientation default is 1 (top-left)
-     * @see EXIF 3.0 §4.6.4: Orientation default is 1
+     * @see EXIF 3.0 §4.6.5.1.6: Orientation default is 1
      */
     #[Test]
     public function orientationReturnsDefaultWhenMissing(): void
@@ -97,10 +99,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that planarConfiguration() returns the TIFF 6.0 default value
-     * of PlanarConfiguration::CHUNKY when the tag is not present.
+     * Verifies that planarConfiguration() returns the TIFF 6.0/EXIF 3.0 default
+     * value of PlanarConfiguration::CHUNKY when the tag is not present.
      *
      * @see TIFF 6.0 §8: PlanarConfiguration default is 1 (chunky format)
+     * @see EXIF 3.0 §4.6.5.1.10: PlanarConfiguration default is 1
      */
     #[Test]
     public function planarConfigurationReturnsDefaultWhenMissing(): void
@@ -112,11 +115,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that resolutionUnit() returns the TIFF 6.0/EXIF 3.0 default value
-     * of ResolutionUnit::INCHES when the tag is not present.
+     * Verifies that resolutionUnit() returns the TIFF 6.0/EXIF 3.0 default
+     * value of ResolutionUnit::INCHES when the tag is not present.
      *
      * @see TIFF 6.0 §8: ResolutionUnit default is 2 (inches)
-     * @see EXIF 3.0 §4.6.2: ResolutionUnit default is 2
+     * @see EXIF 3.0 §4.6.5.1.11: ResolutionUnit default is 2
      */
     #[Test]
     public function resolutionUnitReturnsDefaultWhenMissing(): void
@@ -125,6 +128,22 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(ResolutionUnit::INCHES, $parsedExif->resolutionUnit());
+    }
+
+    /**
+     * Verifies that ycbcrPositioning() returns the EXIF 3.0 default value of
+     * YCbCrPositioning::CENTERED when the tag is not present.
+     *
+     * @see EXIF 3.0 §4.6.5.1.13: Default value is 1 (centered) if missing
+     * @see EXIF 2.32 §4.6.2
+     */
+    #[Test]
+    public function ycbcrPositioningDefaultsToCenteredWhenMissing(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(YCbCrPositioning::CENTERED, $parsedExif->ycbcrPositioning());
     }
 
     /**
@@ -172,7 +191,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::ADOBE_RGB->value),
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::SRGB->value),
         ]);
 
         $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
@@ -206,5 +225,57 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
 
         self::assertNull($parsedExif->referenceBlackWhite());
+    }
+
+    #[Test]
+    public function transferFunctionRequiresCompleteLut(): void
+    {
+        $incomplete = new Ifd([
+            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 6, [0, 1, 2, 3, 4, 5]),
+        ]);
+
+        $parsedExif = new ParsedExif($incomplete, null, null, null, null);
+
+        self::assertNull($parsedExif->transferFunction());
+
+        $table = range(0, 767);
+
+        $complete = new Ifd([
+            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, count($table), $table),
+        ]);
+
+        $parsedExif = new ParsedExif($complete, null, null, null, null);
+
+        self::assertSame($table, $parsedExif->transferFunction());
+    }
+
+    #[Test]
+    public function ycbcrCoefficientsDefaultToAnnexDWhenMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::YCBCR->value,
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame([0.299, 0.587, 0.114], $parsedExif->ycbcrCoefficients());
+
+        $rgbIfd = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::RGB->value,
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif($rgbIfd, null, null, null, null);
+
+        self::assertNull($parsedExif->ycbcrCoefficients());
     }
 }

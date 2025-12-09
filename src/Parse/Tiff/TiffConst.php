@@ -34,6 +34,12 @@ final class TiffConst
     public const int MAGIC_BIG = 0x002B;
 
     /**
+     * Alias for the BigTIFF magic number for compatibility with legacy helpers.
+     * BigTIFF specification; EXIF 3.0 §4.5.1.
+     */
+    public const int MAGIC_BIG_TIFF = self::MAGIC_BIG;
+
+    /**
      * 8-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */

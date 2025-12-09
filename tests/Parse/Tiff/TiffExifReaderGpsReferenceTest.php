@@ -74,9 +74,13 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $packLong     = $endian === Endian::Little ? 'V' : 'N';
         $packRational = $endian === Endian::Little ? 'V2' : 'N2';
 
-        $header = $endian->value
+        $header       = $endian->value
             . pack($packShort, TiffConst::MAGIC_CLASSIC)
             . pack($packLong, 8);
+        $gpsIfdOffset  = 26;
+        $gpsDataOffset = $gpsIfdOffset + 2 + (6 * 12) + 4;
+        $lonOffset     = $gpsDataOffset + (3 * 8);
+        $altOffset     = $lonOffset + (3 * 8);
 
         $ifd0EntryCount = pack($packShort, 1);
         $ifd0NextOffset = pack($packLong, 0);
@@ -194,7 +198,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong8, 3)
-            . pack($packLong8, $gpsDataOffset + (3 * 8))
+            . pack($packLong8, $lonOffset)
             // GPSAltitudeRef = 1
             . pack($packShort, ExifTag::GPS_ALTITUDE_REF)
             . pack($packShort, TiffConst::TYPE_BYTE)

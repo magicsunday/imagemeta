@@ -15,8 +15,11 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the TIFF/EXIF compression schemes recorded for the Compression tag
- * in EXIF 3.0 §4.6.2 (image data structure), preserving the mapping defined in
- * EXIF 2.32 §4.6.2 and the baseline assignments from TIFF 6.0 §8.
+ * in EXIF 3.0 §4.6.5.1.4 (image configuration), preserving the mapping defined
+ * in EXIF 2.32 §4.6.5.1.4 and the baseline assignments from TIFF 6.0 §8.
+ *
+ * The EXIF specification omits the Compression tag for primary JPEG images; for
+ * JPEG thumbnails, the tag shall be recorded with value 6 (JPEG compression).
  */
 enum Compression: int
 {
@@ -27,8 +30,8 @@ enum Compression: int
     case CCITT_T4_GROUP3_FAX        = 3;
     case CCITT_T6_GROUP4_FAX        = 4;
     case LZW                        = 5;
-    case JPEG_OLD_STYLE             = 6;
-    case JPEG                       = 7;
+    case JPEG                       = 6;
+    case JPEG_NEW_STYLE             = 7;
     case ADOBE_DEFLATE              = 8;
     case PACKBITS                   = 32773;
     case THUNDERSCAN                = 32809;
