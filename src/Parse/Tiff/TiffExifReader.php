@@ -83,8 +83,10 @@ final class TiffExifReader implements ExifReaderInterface
      * Tags whose values encode offsets within the TIFF blob.
      *
      * EXIF 3.0 §4.6.3 and EXIF 2.32 §4.6.3 list the Exif, GPS and Interoperability IFD
-     * pointer fields that chain the directory hierarchy, with EXIF 2.1 §2.6.3 establishing
-     * the original Exif and GPS pointer layout.
+     * pointer fields that chain the directory hierarchy, with EXIF 3.0 §4.6.3.1.1 clarifying
+     * that the Exif IFD pointer is a single LONG offset to an IFD structured like TIFF but
+     * without embedded image data. EXIF 2.1 §2.6.3 establishes the original Exif and GPS
+     * pointer layout.
      *
      * @var list<int>
      */

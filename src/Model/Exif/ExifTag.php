@@ -357,7 +357,11 @@ final readonly class ExifTag
     public const int F_NUMBER = 0x829D;
 
     /**
-     * Offset to the Exif-specific IFD block.
+     * Pointer to the Exif IFD (Tag 0x8769, type LONG, count 1).
+     *
+     * EXIF 3.0 §4.6.3.1.1 and EXIF 2.32 §4.6.3.1 define this pointer to the
+     * dedicated Exif IFD, which mirrors the TIFF IFD structure but does not
+     * carry any image data entries.
      */
     public const int EXIF_IFD_POINTER = 0x8769;
 
