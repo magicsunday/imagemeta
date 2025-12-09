@@ -813,6 +813,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the spectral sensitivity description.
+     *
+     * EXIF 3.0 §4.6.6.7.4 (SpectralSensitivity); EXIF 2.32 §4.6.6.7.4.
      */
     public function spectralSensitivity(): ?string
     {
@@ -1050,6 +1052,8 @@ final readonly class ParsedExif
     /**
      * Returns the exposure time in seconds if available.
      *
+     * EXIF 3.0 §4.6.6.7.1 (ExposureTime); EXIF 2.32 §4.6.6.7.1.
+     *
      * @return float|null
      */
     public function exposureTime(): ?float
@@ -1081,6 +1085,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the aperture (f-number) if available.
+     *
+     * EXIF 3.0 §4.6.6.7.2 (FNumber); EXIF 2.32 §4.6.6.7.2.
      *
      * @return float|null
      */
@@ -1119,6 +1125,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera exposure program enumeration if present.
+     *
+     * EXIF 3.0 §4.6.6.7.3 (ExposureProgram); EXIF 2.32 §4.6.6.7.3.
      */
     public function exposureProgram(): ?ExposureProgram
     {
@@ -3560,7 +3568,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for iso() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8827 PhotographicSensitivity.
+     * EXIF 3.0 §4.6.6.7.5 (PhotographicSensitivity); EXIF 2.32 §4.6.6.7.5.
      *
      * @return int|null ISO sensitivity value
      */
