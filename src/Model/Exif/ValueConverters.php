@@ -34,7 +34,6 @@ use function atan;
 use function chr;
 use function count;
 use function ctype_digit;
-use function ctype_print;
 use function explode;
 use function floor;
 use function fmod;
@@ -563,8 +562,10 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises a raw EXIF version byte string into a dotted decimal representation
-     * per EXIF 2.32 §4.6.8 / EXIF 3.0 §4.6.8 (other tags).
+     * Normalises a raw EXIF version byte string into a dotted decimal representation.
+     *
+     * EXIF 3.0 §4.6.6.1.1 (ExifVersion) / EXIF 2.32 §4.6.6.1.1 require the field to contain
+     * exactly four ASCII digits without a terminating null byte.
      */
     public static function toExifVersion(?string $bytes): ?string
     {
@@ -572,40 +573,44 @@ final readonly class ValueConverters
             return null;
         }
 
-        $trimmed = trim($bytes, "\0");
+        if (str_contains($bytes, "\0")) {
+            return null;
+        }
+
+        $trimmed = trim($bytes, " \t\n\r");
         if ($trimmed === '') {
             return null;
         }
 
-        if (ctype_digit($trimmed) && strlen($trimmed) === 4) {
-            $known = [
-                '0100',
-                '0110',
-                '0200',
-                '0210',
-                '0220',
-                '0221',
-                '0230',
-                '0231',
-                '0232',
-                '0300',
-            ];
-
-            if (in_array($trimmed, $known, true)) {
-                $major = (int) substr($trimmed, 0, 2);
-                $minor = substr($trimmed, 2, 2);
-
-                return sprintf('%d.%s', $major, $minor);
-            }
-
+        if (strlen($trimmed) !== 4) {
             return null;
         }
 
-        if (ctype_print($trimmed)) {
-            return $trimmed;
+        if (!ctype_digit($trimmed)) {
+            return null;
         }
 
-        return null;
+        $known = [
+            '0100',
+            '0110',
+            '0200',
+            '0210',
+            '0220',
+            '0221',
+            '0230',
+            '0231',
+            '0232',
+            '0300',
+        ];
+
+        if (!in_array($trimmed, $known, true)) {
+            return null;
+        }
+
+        $major = (int) substr($trimmed, 0, 2);
+        $minor = substr($trimmed, 2, 2);
+
+        return sprintf('%d.%s', $major, $minor);
     }
 
     /**
