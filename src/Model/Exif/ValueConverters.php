@@ -368,7 +368,7 @@ final readonly class ValueConverters
         }
 
         /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
-        if (count($values) < 2) {
+        if (count($values) !== 2) {
             return null;
         }
 
@@ -424,7 +424,7 @@ final readonly class ValueConverters
         }
 
         /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
-        if (count($values) < 6) {
+        if (count($values) !== 6) {
             return null;
         }
 

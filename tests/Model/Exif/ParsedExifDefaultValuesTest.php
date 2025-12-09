@@ -241,4 +241,56 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
         self::assertNull($parsedExif->referenceBlackWhite());
     }
+
+    #[Test]
+    public function transferFunctionRequiresCompleteLut(): void
+    {
+        $incomplete = new Ifd([
+            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, 6, [0, 1, 2, 3, 4, 5]),
+        ]);
+
+        $parsedExif = new ParsedExif($incomplete, null, null, null, null);
+
+        self::assertNull($parsedExif->transferFunction());
+
+        $table = range(0, 767);
+
+        $complete = new Ifd([
+            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, count($table), $table),
+        ]);
+
+        $parsedExif = new ParsedExif($complete, null, null, null, null);
+
+        self::assertSame($table, $parsedExif->transferFunction());
+    }
+
+    #[Test]
+    public function ycbcrCoefficientsDefaultToAnnexDWhenMissing(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::YCBCR->value,
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame([0.299, 0.587, 0.114], $parsedExif->ycbcrCoefficients());
+
+        $rgbIfd = new Ifd([
+            ExifTag::PHOTOMETRIC_INTERPRETATION => new IfdEntry(
+                ExifTag::PHOTOMETRIC_INTERPRETATION,
+                3,
+                1,
+                Photometric::RGB->value,
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif($rgbIfd, null, null, null, null);
+
+        self::assertNull($parsedExif->ycbcrCoefficients());
+    }
 }
