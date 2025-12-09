@@ -36,10 +36,11 @@ use PHPUnit\Framework\TestCase;
 final class ParsedExifDefaultValuesTest extends TestCase
 {
     /**
-     * Verifies that bitsPerSample() returns the TIFF 6.0 default value of 1
-     * when the tag is not present.
+     * Verifies that bitsPerSample() returns the EXIF 3.0 default value of 8 per
+     * component when the tag is not present.
      *
-     * @see TIFF 6.0 §8: BitsPerSample default is 1 (bilevel image)
+     * @see EXIF 3.0 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
+     * @see EXIF 2.32 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
      */
     #[Test]
     public function bitsPerSampleReturnsDefaultWhenMissing(): void
@@ -47,7 +48,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(1, $parsedExif->bitsPerSample());
+        self::assertSame(8, $parsedExif->bitsPerSample());
     }
 
     /**

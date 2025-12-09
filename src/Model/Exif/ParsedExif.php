@@ -264,6 +264,8 @@ final readonly class ParsedExif
     /**
      * Returns the image height, preferring the EXIF-specific tag and falling back to IFD0.
      *
+     * EXIF 3.0 §4.6.5.1.2 ImageLength (Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data).
+     *
      * @return int|null
      */
     public function imageHeight(): ?int
@@ -556,8 +558,8 @@ final readonly class ParsedExif
     /**
      * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
      *
-     * EXIF 3.0 §4.6.5.1.6 and EXIF 2.32 §4.6.4 map the Compression tag in the
-     * thumbnail IFD to the embedded preview codec.
+     * EXIF 3.0 §4.6.5.1.4 and EXIF 2.32 §4.6.5.1.4 define Compression value
+     * 6 to designate JPEG-compressed thumbnails stored in IFD1.
      */
     public function thumbnailCompression(): ?Compression
     {
@@ -1979,14 +1981,17 @@ final readonly class ParsedExif
     /**
      * Returns the bits per sample defined for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 when not present.
+     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values with a
+     * default of 8 8 8 for RGB components. JPEG compressed data relies on the frame
+     * header precision instead of this tag.
      *
      * @return int
      */
     public function bitsPerSample(): int
     {
-        // TIFF 6.0 §8: Default is 1 when tag is not present
-        return $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE) ?? 1;
+        $bitsPerSample = $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+
+        return $bitsPerSample ?? 8;
     }
 
     /**
@@ -2011,9 +2016,11 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the TIFF compression method enum.
+     * Returns the compression method enum for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present.
+     * EXIF 3.0 §4.6.5.1.4 omits the Compression tag for primary JPEG images.
+     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present
+     * in TIFF image data.
      *
      * @return Compression
      */
@@ -3408,7 +3415,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for imageHeight() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 8 — Tag 0x0101 ImageLength.
+     * EXIF 3.0 §4.6.5.1.2 ImageLength — Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data.
      *
      * @return int|null Image height in pixels
      */
