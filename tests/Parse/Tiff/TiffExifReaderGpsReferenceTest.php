@@ -180,7 +180,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong8, 3)
-            . pack($packLong8, $gpsDataOffset + (3 * 8))
+            . pack($packLong8, $gpsLongOffset)
             // GPSAltitudeRef = 1
             . pack($packShort, ExifTag::GPS_ALTITUDE_REF)
             . pack($packShort, TiffConst::TYPE_BYTE)
@@ -198,8 +198,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packRatio, 5678, 100)
             . pack($packRatio, 98, 1)
             . pack($packRatio, 45, 1)
-            . pack($packRatio, 4321, 100)
-            . pack($packRatio, 11, 2);
+            . pack($packRatio, 4321, 100);
 
         return $header . $ifd0 . $gpsIfd . $gpsData;
     }
