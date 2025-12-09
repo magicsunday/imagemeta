@@ -1204,7 +1204,6 @@ final readonly class ValueConverters
                 4       => 'R',
                 5       => 'G',
                 6       => 'B',
-                7       => 'A',
                 default => null,
             };
 

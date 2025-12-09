@@ -448,11 +448,17 @@ final readonly class ExifTag
 
     /**
      * Arrangement of colour components in a compressed stream.
+     *
+     * EXIF 3.0 §4.6.6.3.3 (and EXIF 2.32 §4.6.6.3.3) defines a four-byte UNDEFINED payload
+     * describing the component order for compressed image data.
      */
     public const int COMPONENTS_CONFIGURATION = 0x9101;
 
     /**
      * Compression rate expressed as bits per pixel.
+     *
+     * EXIF 3.0 §4.6.6.3.4 (and EXIF 2.32 §4.6.6.3.4) stores the compression mode for compressed
+     * images as a single RATIONAL value.
      */
     public const int COMPRESSED_BITS_PER_PIXEL = 0x9102;
 
@@ -577,12 +583,18 @@ final readonly class ExifTag
     public const int COLOR_SPACE = 0xA001;
 
     /**
-     * Valid pixel width of the primary image.
+     * Valid pixel width of the primary image for compressed data streams.
+     *
+     * EXIF 3.0 §4.6.6.3.1 (and EXIF 2.32 §4.6.6.3.1) specify SHORT/LONG width for compressed data
+     * where padding or restart markers may be present.
      */
     public const int PIXEL_X_DIMENSION = 0xA002;
 
     /**
-     * Valid pixel height of the primary image.
+     * Valid pixel height of the primary image for compressed data streams.
+     *
+     * EXIF 3.0 §4.6.6.3.2 (and EXIF 2.32 §4.6.6.3.2) specify SHORT/LONG height for compressed data,
+     * matching the number of lines recorded in the SOF marker.
      */
     public const int PIXEL_Y_DIMENSION = 0xA003;
 

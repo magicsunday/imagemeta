@@ -250,27 +250,45 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the image width, preferring the EXIF-specific tag and falling back to IFD0.
+     * Returns the image width, preferring the compressed-specific EXIF tag when applicable.
+     *
+     * EXIF 3.0 §4.6.6.3.1 (and EXIF 2.32 §4.6.6.3.1) define PixelXDimension for compressed
+     * image data only; uncompressed images rely on the base ImageWidth tag instead.
      *
      * @return int|null
      */
     public function imageWidth(): ?int
     {
-        $width = $this->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION);
+        $compression     = $this->compression();
+        $isCompressed    = $compression !== Compression::UNCOMPRESSED;
+        $compressedWidth = $isCompressed ? $this->int($this->exifIfd, ExifTag::PIXEL_X_DIMENSION) : null;
 
-        return $width ?? $this->int($this->ifd0, ExifTag::IMAGE_WIDTH);
+        if ($compressedWidth !== null) {
+            return $compressedWidth;
+        }
+
+        return $this->int($this->ifd0, ExifTag::IMAGE_WIDTH);
     }
 
     /**
-     * Returns the image height, preferring the EXIF-specific tag and falling back to IFD0.
+     * Returns the image height, preferring the compressed-specific EXIF tag when applicable.
+     *
+     * EXIF 3.0 §4.6.6.3.2 (and EXIF 2.32 §4.6.6.3.2) define PixelYDimension for compressed
+     * image data only; uncompressed images rely on the base ImageLength tag instead.
      *
      * @return int|null
      */
     public function imageHeight(): ?int
     {
-        $height = $this->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION);
+        $compression      = $this->compression();
+        $isCompressed     = $compression !== Compression::UNCOMPRESSED;
+        $compressedHeight = $isCompressed ? $this->int($this->exifIfd, ExifTag::PIXEL_Y_DIMENSION) : null;
 
-        return $height ?? $this->int($this->ifd0, ExifTag::IMAGE_LENGTH);
+        if ($compressedHeight !== null) {
+            return $compressedHeight;
+        }
+
+        return $this->int($this->ifd0, ExifTag::IMAGE_LENGTH);
     }
 
     /**
@@ -662,6 +680,9 @@ final readonly class ParsedExif
     /**
      * Returns the components configuration array when present.
      *
+     * EXIF 3.0 §4.6.6.3.3 (and EXIF 2.32 §4.6.6.3.3) describe the four-byte component order
+     * for compressed image data.
+     *
      * @return list<int>|null
      */
     public function componentsConfiguration(): ?array
@@ -673,6 +694,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the component configuration labels in human readable form.
+     *
+     * EXIF 3.0 §4.6.6.3.3 (and EXIF 2.32 §4.6.6.3.3) document the channel identifiers for
+     * compressed data streams.
      *
      * @return list<string>|null
      */
@@ -695,6 +719,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the compressed bits per pixel ratio.
+     *
+     * EXIF 3.0 §4.6.6.3.4 (and EXIF 2.32 §4.6.6.3.4) define this rational value for compressed
+     * imagery to indicate the effective compression mode.
      */
     public function compressedBitsPerPixel(): ?float
     {
