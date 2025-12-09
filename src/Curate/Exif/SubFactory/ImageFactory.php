@@ -72,20 +72,20 @@ final readonly class ImageFactory
 
         $colorSpace = $exifDocument->colorSpace();
 
-        if ($colorSpace === ColorSpace::UNCALIBRATED) {
-            $interopIndex = $exifDocument->interopIndex();
+        if ($colorSpace !== ColorSpace::UNCALIBRATED) {
+            return $colorSpace;
+        }
 
-            if (is_string($interopIndex)) {
-                $normalizedInteropIndex = strtoupper($interopIndex);
+        $interopIndex = $exifDocument->interopIndex();
 
-                if ($normalizedInteropIndex === 'R03') {
-                    return ColorSpace::ADOBE_RGB;
-                }
+        if (!is_string($interopIndex)) {
+            return $colorSpace;
+        }
 
-                if ($normalizedInteropIndex === 'R98') {
-                    return ColorSpace::SRGB;
-                }
-            }
+        $normalizedInteropIndex = strtoupper($interopIndex);
+
+        if ($normalizedInteropIndex === 'R98') {
+            return ColorSpace::SRGB;
         }
 
         return $colorSpace;

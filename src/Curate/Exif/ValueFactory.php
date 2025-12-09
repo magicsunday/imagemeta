@@ -233,7 +233,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
         );
 
         $exifVersion = $exifDocument?->exifVersion();
-        $profile     = $exifDocument?->exifProfile() ?? '2.2';
+        $profile     = $exifDocument?->exifProfile() ?? 'unknown';
 
         $standards = new Standards(
             exifVersion: $exifVersion,

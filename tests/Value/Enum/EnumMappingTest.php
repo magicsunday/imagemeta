@@ -64,7 +64,8 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function mapsCommonEnumValues(): void
     {
-        self::assertSame(Compression::JPEG, Compression::fromExifValue(7));
+        self::assertSame(Compression::JPEG, Compression::fromExifValue(6));
+        self::assertSame(Compression::JPEG_NEW_STYLE, Compression::fromExifValue(7));
         self::assertSame(Photometric::YCBCR, Photometric::fromExifValue(6));
         self::assertSame(PlanarConfiguration::CHUNKY, PlanarConfiguration::fromExifValue(1));
         self::assertSame(ResolutionUnit::CENTIMETER, ResolutionUnit::fromExifValue(3));
@@ -84,7 +85,8 @@ final class EnumMappingTest extends TestCase
     #[Test]
     public function normalizesStringInputs(): void
     {
-        self::assertSame(Compression::JPEG, Compression::fromExifValue('7'));
+        self::assertSame(Compression::JPEG, Compression::fromExifValue('6'));
+        self::assertSame(Compression::JPEG_NEW_STYLE, Compression::fromExifValue('7'));
         self::assertSame(CompositeImage::CAPTURED_WHILE_SHOOTING, CompositeImage::fromExifValue('3'));
         self::assertSame(LightSource::UNKNOWN, LightSource::fromExifValue('0'));
     }
@@ -128,6 +130,16 @@ final class EnumMappingTest extends TestCase
     public function returnsNullForOutOfRangeOrientationCodes(): void
     {
         self::assertNull(Orientation::fromExifValue(9));
+    }
+
+    /**
+     * Rejects reserved photometric interpretation codes per EXIF 3.0 §4.6.5.1.5.
+     */
+    #[Test]
+    public function returnsNullForReservedPhotometricCodes(): void
+    {
+        self::assertNull(Photometric::fromExifValue(0));
+        self::assertNull(Photometric::fromExifValue(3));
     }
 
     /**
