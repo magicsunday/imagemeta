@@ -198,16 +198,25 @@ final readonly class ExifTag
     /**
      * The number of rows of image data. In JPEG compressed data, this tag shall not be used because a JPEG
      * marker is used instead of it.
+     *
+     * EXIF 3.0 §4.6.5.1.2: Tag 0x0101 ImageLength, type SHORT or LONG, count 1, no default.
      */
     public const int IMAGE_LENGTH = 0x0101;
 
     /**
      * Number of bits for each colour component.
+     *
+     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values (Tag 258)
+     * with a default of 8 8 8 for RGB components. JPEG compressed data uses the frame
+     * header precision instead of this tag.
      */
     public const int BITS_PER_SAMPLE = 0x0102;
 
     /**
      * Compression scheme applied to the image data.
+     *
+     * EXIF 3.0 §4.6.5.1.4 omits this tag for primary JPEG images; JPEG
+     * thumbnails store value 6 to designate JPEG compression.
      */
     public const int COMPRESSION = 0x0103;
 
@@ -357,7 +366,11 @@ final readonly class ExifTag
     public const int F_NUMBER = 0x829D;
 
     /**
-     * Offset to the Exif-specific IFD block.
+     * Pointer to the Exif IFD (Tag 0x8769, type LONG, count 1).
+     *
+     * EXIF 3.0 §4.6.3.1.1 and EXIF 2.32 §4.6.3.1 define this pointer to the
+     * dedicated Exif IFD, which mirrors the TIFF IFD structure but does not
+     * carry any image data entries.
      */
     public const int EXIF_IFD_POINTER = 0x8769;
 
@@ -372,7 +385,11 @@ final readonly class ExifTag
     public const int SPECTRAL_SENSITIVITY = 0x8824;
 
     /**
-     * Offset to the GPS IFD block.
+     * Pointer to the GPS Info IFD containing geolocation metadata.
+     *
+     * EXIF 3.0 §4.6.3.2.1 defines this field as a single LONG value pointing to the GPS Info IFD,
+     * which itself contains no image data. The legacy EXIF 2.32 §4.6.3.2.1 specification retains
+     * the same offset semantics.
      */
     public const int GPS_IFD_POINTER = 0x8825;
 
@@ -592,7 +609,11 @@ final readonly class ExifTag
     public const int RELATED_SOUND_FILE = 0xA004;
 
     /**
-     * Offset to the interoperability IFD block.
+     * Offset to the interoperability IFD block (LONG, count 1).
+     *
+     * EXIF 3.0 §4.6.3.3.1 and EXIF 2.32 §4.6.3.3.1 define this pointer to an
+     * interoperability IFD that mirrors TIFF directory structure without
+     * containing image data payloads.
      */
     public const int INTEROPERABILITY_IFD_POINTER = 0xA005;
 

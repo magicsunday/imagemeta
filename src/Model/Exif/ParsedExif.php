@@ -234,7 +234,7 @@ final readonly class ParsedExif
     /**
      * Returns the EXIF orientation enumeration.
      *
-     * TIFF 6.0 §8 and EXIF 3.0 §4.6.4 specify default value 1 (top-left) when not present.
+     * TIFF 6.0 §8 and EXIF 3.0 §4.6.5.1.6 specify default value 1 (top-left) when not present.
      *
      * @return Orientation
      */
@@ -263,6 +263,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the image height, preferring the EXIF-specific tag and falling back to IFD0.
+     *
+     * EXIF 3.0 §4.6.5.1.2 ImageLength (Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data).
      *
      * @return int|null
      */
@@ -432,7 +434,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile width defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
      * For thumbnail tile width, use thumbnailTileWidth().
      */
     public function tileWidth(): ?int
@@ -443,7 +445,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile length defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
      * For thumbnail tile length, use thumbnailTileLength().
      */
     public function tileLength(): ?int
@@ -454,7 +456,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile offsets defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
      * For thumbnail tile offsets, use thumbnailTileOffsets().
      *
      * @return list<int>|null
@@ -467,7 +469,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile byte counts defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
      * For thumbnail tile byte counts, use thumbnailTileByteCounts().
      *
      * @return list<int>|null
@@ -526,7 +528,7 @@ final readonly class ParsedExif
     /**
      * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
+     * EXIF 3.0 §4.6.5.1.6 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
      * both offset and length to be populated for a valid embedded thumbnail.
      */
     public function hasThumbnail(): bool
@@ -555,7 +557,7 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail byte length from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
+     * EXIF 3.0 §4.6.5.1.6 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
      * as the size in bytes of the JPEG thumbnail stream in IFD1.
      */
     public function thumbnailJpegInterchangeFormatLength(): ?int
@@ -566,8 +568,8 @@ final readonly class ParsedExif
     /**
      * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 map the Compression tag in the
-     * thumbnail IFD to the embedded preview codec.
+     * EXIF 3.0 §4.6.5.1.4 and EXIF 2.32 §4.6.5.1.4 define Compression value
+     * 6 to designate JPEG-compressed thumbnails stored in IFD1.
      */
     public function thumbnailCompression(): ?Compression
     {
@@ -577,7 +579,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile width defined for the thumbnail image data (IFD1).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
      */
     public function thumbnailTileWidth(): ?int
     {
@@ -587,7 +589,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile length defined for the thumbnail image data (IFD1).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
      */
     public function thumbnailTileLength(): ?int
     {
@@ -597,7 +599,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile offsets for the thumbnail image when stored using TIFF tiles.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
      *
      * @return list<int>|null
      */
@@ -609,7 +611,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile byte counts for the thumbnail image when stored using TIFF tiles.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
      *
      * @return list<int>|null
      */
@@ -842,7 +844,7 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.4 Table 10.
+     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.5.1.6 Table 10.
      */
     public function sensitivityType(): ?SensitivityType
     {
@@ -1999,27 +2001,32 @@ final readonly class ParsedExif
     /**
      * Returns the bits per sample defined for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 when not present.
+     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values with a
+     * default of 8 8 8 for RGB components. JPEG compressed data relies on the frame
+     * header precision instead of this tag.
      *
      * @return int
      */
     public function bitsPerSample(): int
     {
-        // TIFF 6.0 §8: Default is 1 when tag is not present
-        return $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE) ?? 1;
+        $bitsPerSample = $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+
+        return $bitsPerSample ?? 8;
     }
 
     /**
      * Returns the number of samples per pixel.
      *
-     * TIFF 6.0 §8 specifies default value 1 when not present.
+     * EXIF 3.0 §4.6.5.1.7 specifies a default of 3 samples for RGB/YCbCr images.
+     * TIFF 6.0 §8 lists 1 as the grayscale default; the EXIF profile overrides
+     * this for the supported colour models.
      *
      * @return int
      */
     public function samplesPerPixel(): int
     {
-        // TIFF 6.0 §8: Default is 1 when tag is not present
-        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 1;
+        // EXIF 3.0 §4.6.5.1.7: Default is 3 when tag is not present (RGB/YCbCr)
+        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 3;
     }
 
     /**
@@ -2038,9 +2045,11 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the TIFF compression method enum.
+     * Returns the compression method enum for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present.
+     * EXIF 3.0 §4.6.5.1.4 omits the Compression tag for primary JPEG images.
+     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present
+     * in TIFF image data.
      *
      * @return Compression
      */
@@ -2100,7 +2109,8 @@ final readonly class ParsedExif
      */
     public function xResolution(): ?float
     {
-        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION);
+        // EXIF 3.0 §4.6.5.1.8: Default is 72 dpi when resolution is unknown
+        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION) ?? 72.0;
     }
 
     /**
@@ -2108,7 +2118,14 @@ final readonly class ParsedExif
      */
     public function yResolution(): ?float
     {
-        return $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
+        $resolution = $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
+
+        if ($resolution !== null) {
+            return $resolution;
+        }
+
+        // EXIF 3.0 §4.6.5.1.9: Default matches XResolution (72 dpi when unknown)
+        return $this->xResolution();
     }
 
     /**
@@ -2983,7 +3000,6 @@ final readonly class ParsedExif
         return match ($photometric) {
             Photometric::RGB => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
             Photometric::YCBCR => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
-            default => null,
         };
     }
 
@@ -3467,7 +3483,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for imageHeight() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 8 — Tag 0x0101 ImageLength.
+     * EXIF 3.0 §4.6.5.1.2 ImageLength — Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data.
      *
      * @return int|null Image height in pixels
      */

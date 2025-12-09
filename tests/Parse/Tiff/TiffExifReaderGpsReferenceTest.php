@@ -152,7 +152,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $gpsLongOffset  = $gpsDataOffset + (3 * 8);
 
         $header = $endian->value
-            . pack($packShort, TiffConst::MAGIC_BIG_TIFF)
+            . pack($packShort, TiffConst::MAGIC_BIG)
             . pack($packShort, 8)
             . pack($packShort, 0)
             . pack($packLong8, $firstIfdOffset);
