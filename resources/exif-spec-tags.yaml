@@ -120,7 +120,7 @@ tiff_tags:
     name: ImageDescription
     tag: 270
     hex: 10E
-    type: ASCII
+    type: ASCII or UTF-8
     count: any
     ifd: IFD0
     source: TIFF 6.0
@@ -129,7 +129,7 @@ tiff_tags:
     name: Make
     tag: 271
     hex: 10F
-    type: ASCII
+    type: ASCII or UTF-8
     count: any
     ifd: IFD0
     source: TIFF 6.0
@@ -138,7 +138,7 @@ tiff_tags:
     name: Model
     tag: 272
     hex: 110
-    type: ASCII
+    type: ASCII or UTF-8
     count: any
     ifd: IFD0
     source: TIFF 6.0
@@ -345,7 +345,7 @@ tiff_tags:
     name: Software
     tag: 305
     hex: 131
-    type: ASCII
+    type: ASCII or UTF-8
     count: any
     ifd: IFD0
     source: TIFF 6.0
@@ -363,7 +363,7 @@ tiff_tags:
     name: Artist
     tag: 315
     hex: 13B
-    type: ASCII
+    type: ASCII or UTF-8
     count: any
     ifd: IFD0
     source: TIFF 6.0
@@ -660,8 +660,8 @@ tiff_tags:
     name: ReferenceBlackWhite
     tag: 532
     hex: 214
-    type: LONG
-    count: 2*SamplesPerPixel
+    type: RATIONAL
+    count: 6
     ifd: IFD0
     source: TIFF 6.0
 
@@ -669,7 +669,7 @@ tiff_tags:
     name: Copyright
     tag: 33432
     hex: 8298
-    type: ASCII
+    type: ASCII or UTF-8
     count: Any
     ifd: IFD0
     source: TIFF 6.0
