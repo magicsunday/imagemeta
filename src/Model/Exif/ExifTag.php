@@ -376,7 +376,11 @@ final readonly class ExifTag
     public const int SPECTRAL_SENSITIVITY = 0x8824;
 
     /**
-     * Offset to the GPS IFD block.
+     * Pointer to the GPS Info IFD containing geolocation metadata.
+     *
+     * EXIF 3.0 §4.6.3.2.1 defines this field as a single LONG value pointing to the GPS Info IFD,
+     * which itself contains no image data. The legacy EXIF 2.32 §4.6.3.2.1 specification retains
+     * the same offset semantics.
      */
     public const int GPS_IFD_POINTER = 0x8825;
 
