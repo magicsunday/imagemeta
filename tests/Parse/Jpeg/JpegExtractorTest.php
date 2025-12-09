@@ -192,6 +192,30 @@ final class JpegExtractorTest extends TestCase
     }
 
     /**
+     * Ensures unknown vendor APPn markers are skipped without interrupting metadata extraction.
+     */
+    #[Test]
+    public function skipsUnknownAppMarkersWhileExtractingKnownMetadata(): void
+    {
+        $exifPayload = 'primary-exif';
+        $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Meta</x:xmpmeta>';
+
+        $jpeg = $this->jpeg(
+            self::segment(0xE3, 'vendor-one'),
+            self::segment(0xE4, 'vendor-two'),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(0xE5, 'vendor-three'),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
+            self::segment(0xE6, 'vendor-four')
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([$xmpXml], $extractor->extractXmpPackets());
+    }
+
+    /**
      * Confirms ICC profile fragments are reordered and merged into a single profile.
      */
     #[Test]
