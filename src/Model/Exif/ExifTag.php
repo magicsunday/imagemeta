@@ -212,6 +212,9 @@ final readonly class ExifTag
 
     /**
      * Compression scheme applied to the image data.
+     *
+     * EXIF 3.0 §4.6.5.1.4 omits this tag for primary JPEG images; JPEG
+     * thumbnails store value 6 to designate JPEG compression.
      */
     public const int COMPRESSION = 0x0103;
 

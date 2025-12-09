@@ -556,8 +556,8 @@ final readonly class ParsedExif
     /**
      * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 map the Compression tag in the
-     * thumbnail IFD to the embedded preview codec.
+     * EXIF 3.0 §4.6.5.1.4 and EXIF 2.32 §4.6.5.1.4 define Compression value
+     * 6 to designate JPEG-compressed thumbnails stored in IFD1.
      */
     public function thumbnailCompression(): ?Compression
     {
@@ -2014,9 +2014,11 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the TIFF compression method enum.
+     * Returns the compression method enum for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present.
+     * EXIF 3.0 §4.6.5.1.4 omits the Compression tag for primary JPEG images.
+     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present
+     * in TIFF image data.
      *
      * @return Compression
      */
