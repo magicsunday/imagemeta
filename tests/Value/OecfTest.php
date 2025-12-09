@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for OECF (Opto-Electronic Conversion Function) value object.
  *
- * EXIF 3.0 §4.6.3 Table 15 defines OECF structure:
+ * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) and EXIF 2.32 §4.6.3 define the OECF structure:
  * - columns: number of input (pixel value) columns
  * - rows: number of output (luminance) rows
  * - columnLabels: names for each column
@@ -119,6 +119,42 @@ final class OecfTest extends TestCase
         ];
 
         // Column count mismatch (labels has 1, but columns says 2)
+        self::assertNull(Oecf::fromMatrix($matrix));
+    }
+
+    #[Test]
+    public function mismatchingValueRowCountReturnsNull(): void
+    {
+        $matrix = [
+            'columns' => 2,
+            'rows'    => 2,
+            'labels'  => [
+                'columns' => ['Col1', 'Col2'],
+                'rows'    => ['Row1', 'Row2'],
+            ],
+            'values' => [
+                [1.0, 2.0],
+            ],
+        ];
+
+        self::assertNull(Oecf::fromMatrix($matrix));
+    }
+
+    #[Test]
+    public function mismatchingValueColumnsReturnNull(): void
+    {
+        $matrix = [
+            'columns' => 2,
+            'rows'    => 1,
+            'labels'  => [
+                'columns' => ['Col1', 'Col2'],
+                'rows'    => ['Row1'],
+            ],
+            'values' => [
+                [1.0],
+            ],
+        ];
+
         self::assertNull(Oecf::fromMatrix($matrix));
     }
 }

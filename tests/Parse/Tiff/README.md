@@ -121,8 +121,8 @@ These tests validate critical security properties:
 
 Tests reference:
 
-- **EXIF 3.0** (primary) - §4.5, §4.6.5
-- **EXIF 2.32** - §4.5, §4.6.5  
+- **EXIF 3.0** (primary) - §4.5, §4.6.6.4.1–4.6.6.4.2
+- **EXIF 2.32** - §4.5, §4.6.6.4.1–4.6.6.4.2  
 - **TIFF 6.0** - §2, §8
 - **BigTIFF** specification
 
