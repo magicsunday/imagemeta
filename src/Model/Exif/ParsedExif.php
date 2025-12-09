@@ -48,6 +48,7 @@ use MagicSunday\ImageMeta\Value\Oecf;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 
+use function array_find;
 use function array_map;
 use function count;
 use function iconv;
@@ -82,8 +83,6 @@ final readonly class ParsedExif
 {
     private ?string $exifVersion;
 
-    private bool $exifVersionMissingOrEmpty;
-
     private string $exifProfile;
 
     /**
@@ -106,14 +105,15 @@ final readonly class ParsedExif
         public array $subsequentIfds = [],
         public array $subIfds = [],
     ) {
-        $rawVersion                      = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
-        $this->exifVersionMissingOrEmpty = $rawVersion === null || trim($rawVersion) === '';
-        $this->exifVersion               = ValueConverters::toExifVersion($rawVersion);
-        $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
+        $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
+        $this->exifVersion = ValueConverters::toExifVersion($rawVersion);
+        $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
     }
 
     /**
      * Returns the decoded maker note metadata when a decoder is available.
+     *
+     * EXIF 3.0 §4.6.6.4.1 and EXIF 2.32 §4.6.6.4.1 reserve MakerNote for manufacturer-specific data.
      */
     public function makerNotes(): ?MakerNotesRecord
     {
@@ -143,6 +143,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera manufacturer string if present.
      *
+     * EXIF 3.0 §4.6.5.4.2 (Make) and EXIF 2.32 §4.6.5 store the free-form
+     * manufacturer identifier as ASCII or UTF-8 including the terminating NUL.
+     *
      * @return string|null
      */
     public function cameraMake(): ?string
@@ -152,6 +155,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera model string if present.
+     *
+     * EXIF 3.0 §4.6.5.4.3 (Model) and EXIF 2.32 §4.6.5 define the model name
+     * or number as an ASCII or UTF-8 string with the NUL terminator counted in
+     * the tag length.
      *
      * @return string|null
      */
@@ -234,7 +241,7 @@ final readonly class ParsedExif
     /**
      * Returns the EXIF orientation enumeration.
      *
-     * TIFF 6.0 §8 and EXIF 3.0 §4.6.4 specify default value 1 (top-left) when not present.
+     * TIFF 6.0 §8 and EXIF 3.0 §4.6.5.1.6 specify default value 1 (top-left) when not present.
      *
      * @return Orientation
      */
@@ -252,6 +259,10 @@ final readonly class ParsedExif
     /**
      * Returns the image width, preferring the EXIF-specific tag and falling back to IFD0.
      *
+     * EXIF 3.0 §4.6.5.1.1 defines ImageWidth (Tag 0x0100) as a SHORT or LONG with a single
+     * value and no default; JPEG-encoded images convey the dimension via JPEG markers
+     * instead of this tag.
+     *
      * @return int|null
      */
     public function imageWidth(): ?int
@@ -264,6 +275,8 @@ final readonly class ParsedExif
     /**
      * Returns the image height, preferring the EXIF-specific tag and falling back to IFD0.
      *
+     * EXIF 3.0 §4.6.5.1.2 ImageLength (Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data).
+     *
      * @return int|null
      */
     public function imageHeight(): ?int
@@ -275,6 +288,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the colour space enumeration if present.
+     *
+     * EXIF 3.0 §4.6.6.2.1 (ColorSpace); EXIF 2.32 §4.6.6.2.1.
      */
     public function colorSpace(): ?ColorSpace
     {
@@ -294,25 +309,21 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the normalised EXIF version string, defaulting to '2.2' when missing.
+     * Returns the normalised EXIF version string when present.
+     *
+     * EXIF 3.0 §4.6.6.1.1 (ExifVersion) treats a missing tag as non-conformance.
      */
     public function exifVersion(): ?string
     {
-        if ($this->exifVersion !== null) {
-            return $this->exifVersion;
-        }
-
-        if ($this->exifVersionMissingOrEmpty) {
-            return '2.2';
-        }
-
-        return null;
+        return $this->exifVersion;
     }
 
     /**
      * Returns the normalised FlashPix version string when present.
+     *
+     * EXIF 3.0 §4.6.6.1.2 (FlashpixVersion) limits this field to four ASCII digits.
      */
-    public function flashpixVersion(): string
+    public function flashpixVersion(): ?string
     {
         $value = $this->rawString($this->exifIfd, ExifTag::FLASHPIX_VERSION);
 
@@ -320,15 +331,9 @@ final readonly class ParsedExif
             return '1.00';
         }
 
-        $trimmed = trim($value, "\0 ");
+        $normalized = ValueConverters::toExifVersion($value);
 
-        if ($trimmed === '') {
-            return '1.00';
-        }
-
-        $normalized = ValueConverters::toExifVersion($trimmed);
-
-        return $normalized ?? '1.00';
+        return $normalized;
     }
 
     /**
@@ -382,7 +387,11 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the EXIF image description or XPComment when available.
+     * Returns the EXIF image description when available.
+     *
+     * EXIF 3.0 §4.6.5.4.1 (ImageDescription) and EXIF 2.32 §4.6.5 define a
+     * free-form ASCII or UTF-8 description of the image content with the NUL
+     * terminator included in the stored count.
      */
     public function imageDescription(): ?string
     {
@@ -395,6 +404,18 @@ final readonly class ParsedExif
     public function hostComputer(): ?string
     {
         return $this->str($this->ifd0, TiffTag::HOST_COMPUTER);
+    }
+
+    /**
+     * Returns the software or firmware identifier reported by the image source.
+     *
+     * EXIF 3.0 §4.6.5.4.4 (Software) and EXIF 2.32 §4.6.5 recommend recording
+     * the generating software name and version in ASCII or UTF-8 with the
+     * terminating NUL accounted for in the count.
+     */
+    public function software(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::SOFTWARE);
     }
 
     /**
@@ -432,7 +453,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile width defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
      * For thumbnail tile width, use thumbnailTileWidth().
      */
     public function tileWidth(): ?int
@@ -443,7 +464,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile length defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
      * For thumbnail tile length, use thumbnailTileLength().
      */
     public function tileLength(): ?int
@@ -454,7 +475,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile offsets defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
      * For thumbnail tile offsets, use thumbnailTileOffsets().
      *
      * @return list<int>|null
@@ -467,7 +488,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile byte counts defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
      * For thumbnail tile byte counts, use thumbnailTileByteCounts().
      *
      * @return list<int>|null
@@ -480,43 +501,66 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.1 and EXIF 2.32 §4.6.5 define StripOffsets for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed primary images.
      * For thumbnail strip offsets, use thumbnailStripOffsets().
      *
      * @return list<int>|null
      */
     public function stripOffsets(): ?array
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd0, ExifTag::STRIP_OFFSETS);
     }
 
     /**
      * Returns the strip byte counts for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.3 and EXIF 2.32 §4.6.5 define StripByteCounts for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed primary images.
      * For thumbnail strip byte counts, use thumbnailStripByteCounts().
      *
      * @return list<int>|null
      */
     public function stripByteCounts(): ?array
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd0, ExifTag::STRIP_BYTE_COUNTS);
     }
 
     /**
      * Returns the transfer function lookup table when available.
      *
+     * EXIF 3.0 §4.6.5.3.1 and EXIF 2.32 §4.6.5.3.1 define TransferFunction as
+     * a 3×256 table of SHORT values describing the tone reproduction curve.
+     *
      * @return list<int>|null
      */
     public function transferFunction(): ?array
     {
-        return $this->numericList($this->ifd0, ExifTag::TRANSFER_FUNCTION);
+        $values = $this->numericList($this->ifd0, ExifTag::TRANSFER_FUNCTION);
+
+        if ($values === null) {
+            return null;
+        }
+
+        if (count($values) !== 3 * 256) {
+            return null;
+        }
+
+        return $values;
     }
 
     /**
      * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
+     * EXIF 3.0 §4.6.5.1.6 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
      * both offset and length to be populated for a valid embedded thumbnail.
      */
     public function hasThumbnail(): bool
@@ -534,8 +578,8 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail offset from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 document JPEGInterchangeFormat as
-     * the byte offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
+     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 document JPEGInterchangeFormat as the byte
+     * offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
      */
     public function thumbnailJpegInterchangeFormat(): ?int
     {
@@ -545,7 +589,7 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail byte length from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.4 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
+     * EXIF 3.0 §4.6.5.1.6 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
      * as the size in bytes of the JPEG thumbnail stream in IFD1.
      */
     public function thumbnailJpegInterchangeFormatLength(): ?int
@@ -556,8 +600,8 @@ final readonly class ParsedExif
     /**
      * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
      *
-     * EXIF 3.0 §4.6.4 and EXIF 2.32 §4.6.4 map the Compression tag in the
-     * thumbnail IFD to the embedded preview codec.
+     * EXIF 3.0 §4.6.5.1.4 and EXIF 2.32 §4.6.5.1.4 define Compression value
+     * 6 to designate JPEG-compressed thumbnails stored in IFD1.
      */
     public function thumbnailCompression(): ?Compression
     {
@@ -567,7 +611,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile width defined for the thumbnail image data (IFD1).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileWidth for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileWidth for tiled image storage.
      */
     public function thumbnailTileWidth(): ?int
     {
@@ -577,7 +621,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile length defined for the thumbnail image data (IFD1).
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileLength for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileLength for tiled image storage.
      */
     public function thumbnailTileLength(): ?int
     {
@@ -587,7 +631,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile offsets for the thumbnail image when stored using TIFF tiles.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileOffsets for tiled image storage.
      *
      * @return list<int>|null
      */
@@ -599,7 +643,7 @@ final readonly class ParsedExif
     /**
      * Returns the tile byte counts for the thumbnail image when stored using TIFF tiles.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
+     * EXIF 3.0 §4.6.5.1.6 and TIFF 6.0 §15 define TileByteCounts for tiled image storage.
      *
      * @return list<int>|null
      */
@@ -611,24 +655,34 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripOffsets for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.1 and EXIF 2.32 §4.6.5 define StripOffsets for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
      */
     public function thumbnailStripOffsets(): ?array
     {
+        if ($this->isJpegCompression($this->thumbnailCompression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd1, ExifTag::STRIP_OFFSETS);
     }
 
     /**
      * Returns the strip byte counts for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.4 and TIFF 6.0 §8 define StripByteCounts for strip-based image storage.
+     * EXIF 3.0 §4.6.5.2.3 and EXIF 2.32 §4.6.5 define StripByteCounts for strip-based image
+     * storage and require the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
      */
     public function thumbnailStripByteCounts(): ?array
     {
+        if ($this->isJpegCompression($this->thumbnailCompression())) {
+            return null;
+        }
+
         return $this->numericList($this->ifd1, ExifTag::STRIP_BYTE_COUNTS);
     }
 
@@ -653,6 +707,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the copyright notice string when present.
+     *
+     * EXIF 3.0 §4.6.5.4.7 and EXIF 2.32 §4.6.5.4.7 represent empty or
+     * blank-filled copyright fields as unknown values.
      */
     public function copyright(): ?string
     {
@@ -703,6 +760,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the user comment string after decoding the EXIF prefix.
+     *
+     * EXIF 3.0 §4.6.6.4.2 and EXIF 2.32 §4.6.6.4.2 define the multicode-compatible prefix (see §4.6.4)
+     * that annotates the UserComment character code.
      */
     public function userComment(): ?string
     {
@@ -789,6 +849,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the spectral sensitivity description.
+     *
+     * EXIF 3.0 §4.6.6.7.4 (SpectralSensitivity); EXIF 2.32 §4.6.6.7.4.
      */
     public function spectralSensitivity(): ?string
     {
@@ -798,8 +860,8 @@ final readonly class ParsedExif
     /**
      * Returns the opto-electronic conversion function data.
      *
-     * EXIF 3.0 §4.6.3 Table 15: OECF describes the relationship between camera's optical input
-     * and the image file values.
+     * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) and EXIF 2.32 §4.6.3: OECF describes the
+     * relationship between camera's optical input and the image file values.
      */
     public function oecf(): ?Oecf
     {
@@ -822,7 +884,7 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.4 Table 10.
+     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.5.1.6 Table 10.
      */
     public function sensitivityType(): ?SensitivityType
     {
@@ -1026,6 +1088,8 @@ final readonly class ParsedExif
     /**
      * Returns the exposure time in seconds if available.
      *
+     * EXIF 3.0 §4.6.6.7.1 (ExposureTime); EXIF 2.32 §4.6.6.7.1.
+     *
      * @return float|null
      */
     public function exposureTime(): ?float
@@ -1057,6 +1121,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the aperture (f-number) if available.
+     *
+     * EXIF 3.0 §4.6.6.7.2 (FNumber); EXIF 2.32 §4.6.6.7.2.
      *
      * @return float|null
      */
@@ -1095,6 +1161,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera exposure program enumeration if present.
+     *
+     * EXIF 3.0 §4.6.6.7.3 (ExposureProgram); EXIF 2.32 §4.6.6.7.3.
      */
     public function exposureProgram(): ?ExposureProgram
     {
@@ -1512,6 +1580,10 @@ final readonly class ParsedExif
     /**
      * Returns the raw DateTimeOriginal tag value.
      *
+     * EXIF 3.0 §4.6.6.6.1 describes DateTimeOriginal as a 20-byte ASCII
+     * timestamp (including the terminating NULL) formatted as
+     * "YYYY:MM:DD HH:MM:SS".
+     *
      * @return string|null
      */
     public function dateTimeOriginalRaw(): ?string
@@ -1584,6 +1656,10 @@ final readonly class ParsedExif
     /**
      * Returns the raw DateTimeDigitized tag value.
      *
+     * EXIF 3.0 §4.6.6.6.2 documents DateTimeDigitized as a 20-byte ASCII
+     * timestamp (including the terminating NULL) formatted as
+     * "YYYY:MM:DD HH:MM:SS".
+     *
      * @return string|null
      */
     public function dateTimeDigitizedRaw(): ?string
@@ -1631,6 +1707,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the normalized offset time for DateTimeOriginal.
+     *
+     * EXIF 3.0 §4.6.6.6.4 defines OffsetTimeOriginal as an ASCII string of
+     * length 7 (including the terminating NULL) using the format "±HH:MM".
      */
     public function offsetTimeOriginal(): ?string
     {
@@ -1651,6 +1730,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the normalized offset time for DateTimeDigitized.
+     *
+     * EXIF 3.0 §4.6.6.6.5 defines OffsetTimeDigitized as an ASCII string of
+     * length 7 (including the terminating NULL) using the format "±HH:MM".
      */
     public function offsetTimeDigitized(): ?string
     {
@@ -1671,6 +1753,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the normalized offset time for the IFD0 ModifyDate/DateTime tag.
+     *
+     * EXIF 3.0 §4.6.6.6.3 defines OffsetTime as an ASCII string of length 7
+     * (including the terminating NULL) using the format "±HH:MM".
      */
     public function offsetTime(): ?string
     {
@@ -1957,6 +2042,10 @@ final readonly class ParsedExif
     /**
      * Returns the ModifyDate/DateTime tag combined with its optional offset.
      *
+     * EXIF 3.0 §4.6.5.4.5 (and EXIF 2.32 §4.6.5.4.5) define DateTime as
+     * "YYYY:MM:DD HH:MM:SS" with blank-filled placeholders treated as
+     * unknown values.
+     *
      * @return DateTimeImmutable|null
      */
     public function dateTime(): ?DateTimeImmutable
@@ -1970,50 +2059,84 @@ final readonly class ParsedExif
 
     /**
      * Returns the artist tag value when present.
+     *
+     * EXIF 3.0 §4.6.5.4.6 (also EXIF 2.32 §4.6.5.4.6) requires Artist to be
+     * populated alongside CameraOwnerName, Photographer, or ImageEditor. The
+     * closest available attribution is returned when the primary tag is
+     * missing.
      */
     public function artist(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::ARTIST);
+        $artist = $this->str($this->ifd0, ExifTag::ARTIST);
+
+        if ($artist !== null) {
+            return $artist;
+        }
+
+        return array_find(
+            [
+                $this->str($this->exifIfd, ExifTag::CAMERA_OWNER_NAME),
+                $this->str($this->ifd0, ExifTag::PHOTOGRAPHER),
+                $this->str($this->exifIfd, ExifTag::PHOTOGRAPHER),
+                $this->str($this->ifd0, ExifTag::IMAGE_EDITOR),
+                $this->str($this->exifIfd, ExifTag::IMAGE_EDITOR),
+            ],
+            static fn (?string $value): bool => $value !== null,
+        );
     }
 
     /**
      * Returns the bits per sample defined for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 when not present.
+     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values with a
+     * default of 8 8 8 for RGB components. JPEG compressed data relies on the frame
+     * header precision instead of this tag.
      *
      * @return int
      */
     public function bitsPerSample(): int
     {
-        // TIFF 6.0 §8: Default is 1 when tag is not present
-        return $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE) ?? 1;
+        $bitsPerSample = $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+
+        return $bitsPerSample ?? 8;
     }
 
     /**
      * Returns the number of samples per pixel.
      *
-     * TIFF 6.0 §8 specifies default value 1 when not present.
+     * EXIF 3.0 §4.6.5.1.7 specifies a default of 3 samples for RGB/YCbCr images.
+     * TIFF 6.0 §8 lists 1 as the grayscale default; the EXIF profile overrides
+     * this for the supported colour models.
      *
      * @return int
      */
     public function samplesPerPixel(): int
     {
-        // TIFF 6.0 §8: Default is 1 when tag is not present
-        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 1;
+        // EXIF 3.0 §4.6.5.1.7: Default is 3 when tag is not present (RGB/YCbCr)
+        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 3;
     }
 
     /**
      * Returns the rows per strip value when the image data is organized in strips.
+     *
+     * EXIF 3.0 §4.6.5.2.2 and EXIF 2.32 §4.6.5 define RowsPerStrip for strip-based images
+     * and require the tag to be omitted for JPEG-compressed primary images.
      */
     public function rowsPerStrip(): ?int
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->int($this->ifd0, ExifTag::ROWS_PER_STRIP);
     }
 
     /**
-     * Returns the TIFF compression method enum.
+     * Returns the compression method enum for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present.
+     * EXIF 3.0 §4.6.5.1.4 omits the Compression tag for primary JPEG images.
+     * TIFF 6.0 §8 specifies default value 1 (no compression) when not present
+     * in TIFF image data.
      *
      * @return Compression
      */
@@ -2073,7 +2196,8 @@ final readonly class ParsedExif
      */
     public function xResolution(): ?float
     {
-        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION);
+        // EXIF 3.0 §4.6.5.1.8: Default is 72 dpi when resolution is unknown
+        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION) ?? 72.0;
     }
 
     /**
@@ -2081,15 +2205,31 @@ final readonly class ParsedExif
      */
     public function yResolution(): ?float
     {
-        return $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
+        $resolution = $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
+
+        if ($resolution !== null) {
+            return $resolution;
+        }
+
+        // EXIF 3.0 §4.6.5.1.9: Default matches XResolution (72 dpi when unknown)
+        return $this->xResolution();
     }
 
     /**
      * Returns the YCbCr positioning enum describing the chroma siting.
+     *
+     * @see EXIF 3.0 §4.6.5.1.13: Default to centered positioning when tag is absent
+     * @see EXIF 2.32 §4.6.2
      */
     public function ycbcrPositioning(): ?YCbCrPositioning
     {
-        $value = $this->enumValue($this->ifd0, ExifTag::YCBCR_POSITIONING);
+        $rawValue = $this->value($this->ifd0, ExifTag::YCBCR_POSITIONING);
+
+        if ($rawValue === null) {
+            return YCbCrPositioning::CENTERED;
+        }
+
+        $value = $this->normaliseEnumScalar($rawValue);
 
         return YCbCrPositioning::fromExifValue($value);
     }
@@ -2118,6 +2258,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the YCbCr conversion coefficients when provided.
+     *
+     * EXIF 3.0 §4.6.5.3.4 (and EXIF 2.32 §4.6.5.3.4) defines three rational
+     * coefficients for RGB→YCbCr conversion, defaulting to Annex D values when
+     * the tag is absent.
      *
      * @return array{0:float,1:float,2:float}|null
      */
@@ -2159,11 +2303,14 @@ final readonly class ParsedExif
             return count($coeffs) === 3 ? $coeffs : null;
         }
 
-        return null;
+        return $this->defaultYCbCrCoefficients();
     }
 
     /**
      * Returns the normalized white point coordinates.
+     *
+     * EXIF 3.0 §4.6.5.3.2 (WhitePoint) and EXIF 2.32 §4.6.5.3.2 encode the
+     * chromaticity of the white point as exactly two rational values (X,Y).
      *
      * @return array{0:float,1:float}|null
      */
@@ -2178,6 +2325,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the primary chromaticities ordered as R,G,B.
+     *
+     * EXIF 3.0 §4.6.5.3.3 (PrimaryChromaticities) and EXIF 2.32 §4.6.5.3.3
+     * define three rational pairs (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
      */
@@ -2203,17 +2353,31 @@ final readonly class ParsedExif
 
     /**
      * Returns the JPEG interchange format offset for legacy thumbnails.
+     *
+     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 note that this tag shall not be recorded
+     * for primary images encoded with JPEG compression.
      */
     public function jpegInterchangeFormat(): ?int
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT);
     }
 
     /**
      * Returns the JPEG interchange format length for legacy thumbnails.
+     *
+     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 note that this tag shall not be recorded
+     * for primary images encoded with JPEG compression.
      */
     public function jpegInterchangeFormatLength(): ?int
     {
+        if ($this->isJpegCompression($this->compression())) {
+            return null;
+        }
+
         return $this->int($this->ifd0, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
     }
 
@@ -2227,6 +2391,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the gamma correction value when provided.
+     *
+     * EXIF 3.0 §4.6.6.2.2 (Gamma); EXIF 2.32 §4.6.6.2.2.
      */
     public function gamma(): ?float
     {
@@ -2423,7 +2589,11 @@ final readonly class ParsedExif
 
         $trimmed = rtrim($value, "\0");
 
-        return $trimmed === '' ? null : $trimmed;
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return trim($trimmed) === '' ? null : $trimmed;
     }
 
     /**
@@ -2841,6 +3011,23 @@ final readonly class ParsedExif
     }
 
     /**
+     * Determines whether strip-based metadata shall be omitted for JPEG-encoded payloads.
+     */
+    private function isJpegCompression(?Compression $compression): bool
+    {
+        if ($compression === null) {
+            return false;
+        }
+
+        return in_array($compression, [
+            Compression::JPEG_OLD_STYLE,
+            Compression::JPEG,
+            Compression::LOSSY_JPEG,
+            Compression::JPEG_2000,
+        ], true);
+    }
+
+    /**
      * Converts a numeric list or undefined string into a list of integers.
      *
      * @return list<int>|null
@@ -2906,6 +3093,23 @@ final readonly class ParsedExif
     }
 
     /**
+     * Applies EXIF 3.0 §4.6.5.3.4 defaults for missing YCbCrCoefficients.
+     *
+     * Annex D recommends the ITU-R BT.601 coefficients when no matrix is
+     * specified: [0.299, 0.587, 0.114].
+     *
+     * @return array{0: float, 1: float, 2: float}|null
+     */
+    private function defaultYCbCrCoefficients(): ?array
+    {
+        if ($this->photometric() !== Photometric::YCBCR) {
+            return null;
+        }
+
+        return [0.299, 0.587, 0.114];
+    }
+
+    /**
      * Applies EXIF 3.0 §4.6.5.3.5 defaults when ReferenceBlackWhite is absent.
      *
      * Defaults are only valid when the colour space is explicitly defined and
@@ -2925,7 +3129,6 @@ final readonly class ParsedExif
         return match ($photometric) {
             Photometric::RGB => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
             Photometric::YCBCR => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
-            default => null,
         };
     }
 
@@ -3369,7 +3572,15 @@ final readonly class ParsedExif
      */
     private function parseExifDateTime(?string $rawDateTime, ?string $rawOffset, ?string $subSeconds): ?DateTimeImmutable
     {
-        if ($rawDateTime === null || $rawDateTime === '' || strlen($rawDateTime) < 19) {
+        $rawDateTime = rtrim($rawDateTime ?? '', " \0");
+
+        if ($rawDateTime === '' || strlen($rawDateTime) < 19) {
+            return null;
+        }
+
+        $rawDateTime = substr($rawDateTime, 0, 19);
+
+        if (preg_match('/\d/', $rawDateTime) !== 1) {
             return null;
         }
 
@@ -3399,6 +3610,18 @@ final readonly class ParsedExif
         return $dt !== false ? $dt : null;
     }
 
+    /**
+     * Detects EXIF DateTime placeholders filled with blanks instead of numeric content.
+     */
+    private function isBlankDateTimeString(string $value): bool
+    {
+        if (trim($value) === '') {
+            return true;
+        }
+
+        return trim(str_replace(':', '', $value)) === '';
+    }
+
     // ========================================================================
     // Alias methods with exact EXIF/TIFF tag names
     // ========================================================================
@@ -3409,7 +3632,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for imageHeight() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 8 — Tag 0x0101 ImageLength.
+     * EXIF 3.0 §4.6.5.1.2 ImageLength — Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data.
      *
      * @return int|null Image height in pixels
      */
@@ -3442,7 +3665,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for iso() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8827 PhotographicSensitivity.
+     * EXIF 3.0 §4.6.6.7.5 (PhotographicSensitivity); EXIF 2.32 §4.6.6.7.5.
      *
      * @return int|null ISO sensitivity value
      */

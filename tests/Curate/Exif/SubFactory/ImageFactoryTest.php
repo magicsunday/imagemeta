@@ -136,7 +136,7 @@ final class ImageFactoryTest extends TestCase
     }
 
     #[Test]
-    public function normalizesAdobeRgbFromInterop(): void
+    public function keepsUncalibratedWhenInteropHintsNonSrgb(): void
     {
         $parsedExif = $this->parsedExif(
             width: null,
@@ -164,7 +164,7 @@ final class ImageFactoryTest extends TestCase
         $factory = new ImageFactory();
         $image   = $factory->create($metadata);
 
-        self::assertSame(ColorSpace::ADOBE_RGB, $image->colorSpace);
+        self::assertSame(ColorSpace::UNCALIBRATED, $image->colorSpace);
     }
 
     #[Test]

@@ -15,8 +15,8 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the chroma positioning choices defined for the YCbCrPositioning
- * tag in EXIF 3.0 §4.6.2 (image data structure), continuing the EXIF 2.32
- * §4.6.2 mapping.
+ * tag in EXIF 3.0 §4.6.5.1.13 (image data structure), continuing the EXIF 2.32
+ * §4.6.2 mapping and reflecting the TIFF default of CENTERED when absent.
  */
 enum YCbCrPositioning: int
 {

@@ -35,8 +35,8 @@ final class ExifCapabilitiesTest extends TestCase
      */
     public static function exifVersionProvider(): iterable
     {
-        yield 'null defaults to 2.2' => ['2.2', null];
-        yield 'empty string defaults to 2.2' => ['2.2', ''];
+        yield 'null yields unknown profile' => ['unknown', null];
+        yield 'empty string yields unknown profile' => ['unknown', ''];
         yield 'decimal 1.0 maps to 1.0' => ['1.0', '1.0'];
         yield 'decimal 1.1 maps to 1.1' => ['1.1', '1.1'];
         yield 'numeric 0200 maps to 2.0' => ['2.0', '0200'];
@@ -56,6 +56,7 @@ final class ExifCapabilitiesTest extends TestCase
         yield 'decimal 2.32 maps to 2.32' => ['2.32', '2.32'];
         yield 'numeric 0300 maps to 3.0' => ['3.0', '0300'];
         yield 'decimal 3.0 maps to 3.0' => ['3.0', '3.0'];
+        yield 'null bytes are rejected' => ['unknown', "0300\0"];
         yield 'unknown when digits do not match revision' => ['unknown', '9999'];
         yield 'unknown when format malformed' => ['unknown', 'abc'];
     }

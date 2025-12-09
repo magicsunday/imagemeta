@@ -14,9 +14,10 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
- * Describes the exposure program encodings defined for the ExposureProgram tag
- * in EXIF 3.0 §4.6.3 (shooting conditions), matching the EXIF 2.32 §4.6.3
- * assignments.
+ * Exposure program encodings for EXIF tag 0x8822 ExposureProgram.
+ *
+ * EXIF 3.0 §4.6.6.7.3 aligns with EXIF 2.32 §4.6.6.7.3 and defines values
+ * 0–8; all other payloads are reserved and mapped to null.
  */
 enum ExposureProgram: int
 {
@@ -31,5 +32,4 @@ enum ExposureProgram: int
     case ACTION_PROGRAM    = 6;
     case PORTRAIT_MODE     = 7;
     case LANDSCAPE_MODE    = 8;
-    case BULB              = 9;
 }
