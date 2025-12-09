@@ -69,6 +69,7 @@ final class EnumMappingTest extends TestCase
         self::assertSame(Photometric::YCBCR, Photometric::fromExifValue(6));
         self::assertSame(PlanarConfiguration::CHUNKY, PlanarConfiguration::fromExifValue(1));
         self::assertSame(ResolutionUnit::CENTIMETER, ResolutionUnit::fromExifValue(3));
+        self::assertNull(ResolutionUnit::fromExifValue(1));
         self::assertSame(YCbCrPositioning::CO_SITED, YCbCrPositioning::fromExifValue(2));
         self::assertSame(ExposureMode::AUTO_BRACKET, ExposureMode::fromExifValue(2));
         self::assertSame(GainControl::HIGH_GAIN_UP, GainControl::fromExifValue(2));

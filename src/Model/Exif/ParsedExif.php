@@ -2162,7 +2162,9 @@ final readonly class ParsedExif
     /**
      * Returns the planar configuration enum.
      *
-     * TIFF 6.0 §8 specifies default value 1 (chunky format) when not present.
+     * EXIF 3.0 §4.6.5.1.10 / TIFF 6.0 §8 specify default value 1 (chunky format)
+     * when not present. JPEG compressed data shall not record this tag because
+     * the JPEG marker carries the equivalent information.
      *
      * @return PlanarConfiguration
      */
@@ -2178,7 +2180,8 @@ final readonly class ParsedExif
     /**
      * Returns the resolution unit enum for the reported X/Y resolution values.
      *
-     * TIFF 6.0 §8 and EXIF 3.0 §4.6.2 specify default value 2 (inches) when not present.
+     * EXIF 3.0 §4.6.5.1.11 and TIFF 6.0 §8 specify default value 2 (inches) when
+     * not present.
      *
      * @return ResolutionUnit
      */
@@ -2236,6 +2239,11 @@ final readonly class ParsedExif
 
     /**
      * Returns the YCbCr subsampling factors.
+     *
+     * EXIF 3.0 §4.6.5.1.12 defines only [2,1] (YCbCr4:2:2) and [2,2]
+     * (YCbCr4:2:0) as legal values. The tag shall not be recorded for JPEG
+     * compressed data because the JPEG marker stream already encodes the
+     * sampling factors.
      *
      * @return array{0:int,1:int}|null
      */
