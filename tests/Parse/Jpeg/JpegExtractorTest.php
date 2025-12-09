@@ -597,6 +597,53 @@ final class JpegExtractorTest extends TestCase
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
     }
 
+    #[Test]
+    public function ignoresSegmentsAfterEoi(): void
+    {
+        $exifPayload  = 'pre-eoi-exif';
+        $xmpPayload   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">PreEOI</x:xmpmeta>';
+        $iccProfile   = 'icc-profile';
+        $postExifData = 'ignored-post-eoi';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
+            . self::segment(self::MARKER_APP2, self::ICC_SIGNATURE . "\x01\x01" . $iccProfile)
+            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . 'scan-data'
+            . "\xFF\xD9"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $postExifData)
+            . self::segment(self::MARKER_APP2, self::ICC_SIGNATURE . "\x02\x02" . 'ignored')
+            . "\xFF\x00" . 'padding';
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
+        self::assertSame($iccProfile, $extractor->getIccProfile());
+    }
+
+    #[Test]
+    public function skipsMalformedTrailingDataAfterEoi(): void
+    {
+        $exifPayload = 'pre-eoi-exif';
+        $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Trailing</x:xmpmeta>';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
+            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . 'entropy'
+            . "\xFF\xD9"
+            . "\xFF\xE1\xFF\xFF" // Advertised oversized length after EOI should be ignored
+            . "\x00\x01";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
+    }
+
     /**
      * Builds a JPEG binary by wrapping payload segments with SOI/EOI markers.
      *
