@@ -264,6 +264,8 @@ final readonly class ParsedExif
     /**
      * Returns the image height, preferring the EXIF-specific tag and falling back to IFD0.
      *
+     * EXIF 3.0 §4.6.5.1.2 ImageLength (Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data).
+     *
      * @return int|null
      */
     public function imageHeight(): ?int
@@ -3409,7 +3411,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for imageHeight() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.3 Tag Support Levels, Table 8 — Tag 0x0101 ImageLength.
+     * EXIF 3.0 §4.6.5.1.2 ImageLength — Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data.
      *
      * @return int|null Image height in pixels
      */
