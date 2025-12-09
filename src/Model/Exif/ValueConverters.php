@@ -1043,7 +1043,7 @@ final readonly class ValueConverters
 
     /**
      * Decodes the opto-electronic conversion function payload as defined by
-     * EXIF 3.0 §4.6.3 (table 15) and the earlier EXIF 2.32 §4.6.3 layout.
+     * EXIF 3.0 §4.6.6.7.6 (figure 16, table 11) and the earlier EXIF 2.32 §4.6.3 layout.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
