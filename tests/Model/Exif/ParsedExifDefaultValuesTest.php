@@ -52,10 +52,10 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that samplesPerPixel() returns the TIFF 6.0 default value of 1
+     * Verifies that samplesPerPixel() returns the EXIF 3.0 default value of 3
      * when the tag is not present.
      *
-     * @see TIFF 6.0 §8: SamplesPerPixel default is 1 (grayscale image)
+     * @see EXIF 3.0 §4.6.5.1.7: SamplesPerPixel defaults to 3 for RGB/YCbCr
      */
     #[Test]
     public function samplesPerPixelReturnsDefaultWhenMissing(): void
@@ -63,7 +63,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(1, $parsedExif->samplesPerPixel());
+        self::assertSame(3, $parsedExif->samplesPerPixel());
     }
 
     /**
@@ -126,6 +126,39 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertSame(ResolutionUnit::INCHES, $parsedExif->resolutionUnit());
+    }
+
+    /**
+     * Verifies that xResolution() returns the EXIF 3.0 default value of 72 when
+     * the tag is not present.
+     *
+     * @see EXIF 3.0 §4.6.5.1.8: XResolution defaults to 72 when unknown
+     */
+    #[Test]
+    public function xResolutionReturnsDefaultWhenMissing(): void
+    {
+        $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(72.0, $parsedExif->xResolution());
+    }
+
+    /**
+     * Verifies that yResolution() defaults to the value of xResolution() when
+     * not provided separately.
+     *
+     * @see EXIF 3.0 §4.6.5.1.9: YResolution shall match XResolution
+     */
+    #[Test]
+    public function yResolutionFallsBackToXResolution(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::X_RESOLUTION => new IfdEntry(ExifTag::X_RESOLUTION, 5, 1, [300, 1]),
+        ]);
+
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(300.0, $parsedExif->yResolution());
     }
 
     /**

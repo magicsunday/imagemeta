@@ -1997,14 +1997,16 @@ final readonly class ParsedExif
     /**
      * Returns the number of samples per pixel.
      *
-     * TIFF 6.0 §8 specifies default value 1 when not present.
+     * EXIF 3.0 §4.6.5.1.7 specifies a default of 3 samples for RGB/YCbCr images.
+     * TIFF 6.0 §8 lists 1 as the grayscale default; the EXIF profile overrides
+     * this for the supported colour models.
      *
      * @return int
      */
     public function samplesPerPixel(): int
     {
-        // TIFF 6.0 §8: Default is 1 when tag is not present
-        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 1;
+        // EXIF 3.0 §4.6.5.1.7: Default is 3 when tag is not present (RGB/YCbCr)
+        return $this->int($this->ifd0, ExifTag::SAMPLES_PER_PIXEL) ?? 3;
     }
 
     /**
@@ -2080,7 +2082,8 @@ final readonly class ParsedExif
      */
     public function xResolution(): ?float
     {
-        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION);
+        // EXIF 3.0 §4.6.5.1.8: Default is 72 dpi when resolution is unknown
+        return $this->rational($this->ifd0, ExifTag::X_RESOLUTION) ?? 72.0;
     }
 
     /**
@@ -2088,7 +2091,14 @@ final readonly class ParsedExif
      */
     public function yResolution(): ?float
     {
-        return $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
+        $resolution = $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
+
+        if ($resolution !== null) {
+            return $resolution;
+        }
+
+        // EXIF 3.0 §4.6.5.1.9: Default matches XResolution (72 dpi when unknown)
+        return $this->xResolution();
     }
 
     /**
