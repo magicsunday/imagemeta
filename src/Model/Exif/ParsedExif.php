@@ -1979,14 +1979,17 @@ final readonly class ParsedExif
     /**
      * Returns the bits per sample defined for the primary image.
      *
-     * TIFF 6.0 §8 specifies default value 1 when not present.
+     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values with a
+     * default of 8 8 8 for RGB components. JPEG compressed data relies on the frame
+     * header precision instead of this tag.
      *
      * @return int
      */
     public function bitsPerSample(): int
     {
-        // TIFF 6.0 §8: Default is 1 when tag is not present
-        return $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE) ?? 1;
+        $bitsPerSample = $this->int($this->ifd0, ExifTag::BITS_PER_SAMPLE);
+
+        return $bitsPerSample ?? 8;
     }
 
     /**

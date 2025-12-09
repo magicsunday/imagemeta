@@ -203,6 +203,10 @@ final readonly class ExifTag
 
     /**
      * Number of bits for each colour component.
+     *
+     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values (Tag 258)
+     * with a default of 8 8 8 for RGB components. JPEG compressed data uses the frame
+     * header precision instead of this tag.
      */
     public const int BITS_PER_SAMPLE = 0x0102;
 
