@@ -48,6 +48,7 @@ use MagicSunday\ImageMeta\Value\Oecf;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 
+use function array_find;
 use function array_map;
 use function count;
 use function iconv;
@@ -666,6 +667,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the copyright notice string when present.
+     *
+     * EXIF 3.0 §4.6.5.4.7 and EXIF 2.32 §4.6.5.4.7 represent empty or
+     * blank-filled copyright fields as unknown values.
      */
     public function copyright(): ?string
     {
@@ -1970,6 +1974,10 @@ final readonly class ParsedExif
     /**
      * Returns the ModifyDate/DateTime tag combined with its optional offset.
      *
+     * EXIF 3.0 §4.6.5.4.5 (and EXIF 2.32 §4.6.5.4.5) define DateTime as
+     * "YYYY:MM:DD HH:MM:SS" with blank-filled placeholders treated as
+     * unknown values.
+     *
      * @return DateTimeImmutable|null
      */
     public function dateTime(): ?DateTimeImmutable
@@ -1983,10 +1991,30 @@ final readonly class ParsedExif
 
     /**
      * Returns the artist tag value when present.
+     *
+     * EXIF 3.0 §4.6.5.4.6 (also EXIF 2.32 §4.6.5.4.6) requires Artist to be
+     * populated alongside CameraOwnerName, Photographer, or ImageEditor. The
+     * closest available attribution is returned when the primary tag is
+     * missing.
      */
     public function artist(): ?string
     {
-        return $this->str($this->ifd0, ExifTag::ARTIST);
+        $artist = $this->str($this->ifd0, ExifTag::ARTIST);
+
+        if ($artist !== null) {
+            return $artist;
+        }
+
+        return array_find(
+            [
+                $this->str($this->exifIfd, ExifTag::CAMERA_OWNER_NAME),
+                $this->str($this->ifd0, ExifTag::PHOTOGRAPHER),
+                $this->str($this->exifIfd, ExifTag::PHOTOGRAPHER),
+                $this->str($this->ifd0, ExifTag::IMAGE_EDITOR),
+                $this->str($this->exifIfd, ExifTag::IMAGE_EDITOR),
+            ],
+            static fn (?string $value): bool => $value !== null,
+        );
     }
 
     /**
@@ -2472,7 +2500,11 @@ final readonly class ParsedExif
 
         $trimmed = rtrim($value, "\0");
 
-        return $trimmed === '' ? null : $trimmed;
+        if ($trimmed === '') {
+            return null;
+        }
+
+        return trim($trimmed) === '' ? null : $trimmed;
     }
 
     /**
@@ -3434,7 +3466,7 @@ final readonly class ParsedExif
      */
     private function parseExifDateTime(?string $rawDateTime, ?string $rawOffset, ?string $subSeconds): ?DateTimeImmutable
     {
-        if ($rawDateTime === null || $rawDateTime === '' || strlen($rawDateTime) < 19) {
+        if ($rawDateTime === null || $rawDateTime === '' || strlen($rawDateTime) < 19 || $this->isBlankDateTimeString($rawDateTime)) {
             return null;
         }
 
@@ -3462,6 +3494,18 @@ final readonly class ParsedExif
         $dt = DateTimeImmutable::createFromFormat($format, $normalized, $tz);
 
         return $dt !== false ? $dt : null;
+    }
+
+    /**
+     * Detects EXIF DateTime placeholders filled with blanks instead of numeric content.
+     */
+    private function isBlankDateTimeString(string $value): bool
+    {
+        if (trim($value) === '') {
+            return true;
+        }
+
+        return trim(str_replace(':', '', $value)) === '';
     }
 
     // ========================================================================
