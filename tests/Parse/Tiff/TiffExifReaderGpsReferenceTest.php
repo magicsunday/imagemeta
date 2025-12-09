@@ -74,18 +74,23 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $packLong     = $endian === Endian::Little ? 'V' : 'N';
         $packRational = $endian === Endian::Little ? 'V2' : 'N2';
 
-        $header = $endian->value
+        $header           = $endian->value
             . pack($packShort, TiffConst::MAGIC_CLASSIC)
             . pack($packLong, 8);
+        $ifd0Length       = 2 + 12 + 4;
+        $gpsIfdOffset     = 8 + $ifd0Length;
+        $gpsIfdLength     = 2 + (6 * 12) + 4;
+        $gpsDataOffset    = $gpsIfdOffset + $gpsIfdLength;
+        $gpsLongitudeData = $gpsDataOffset + (3 * 8);
 
         $ifd0 = pack($packShort, 1)
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 1)
-            . pack($packLong, 30)
+            . pack($packLong, $gpsIfdOffset)
             . pack($packLong, 0);
 
-        $gpsIfd = pack($packShort, 5)
+        $gpsIfd = pack($packShort, 6)
             // GPSLatitudeRef = "S"
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
@@ -95,7 +100,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
-            . pack($packLong, 112)
+            . pack($packLong, $gpsDataOffset)
             // GPSLongitudeRef = "W"
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
@@ -105,7 +110,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
-            . pack($packLong, 136)
+            . pack($packLong, $gpsLongitudeData)
             // GPSAltitudeRef = 1 (below sea level)
             . pack($packShort, ExifTag::GPS_ALTITUDE_REF)
             . pack($packShort, TiffConst::TYPE_BYTE)
@@ -115,7 +120,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_ALTITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 1)
-            . pack($packLong, 160)
+            . pack($packLong, $gpsLongitudeData + (3 * 8))
             . pack($packLong, 0);
 
         $gpsData = pack($packRational, 12, 1)
@@ -132,15 +137,13 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
     private function buildBigTiffGpsExample(Endian $endian): string
     {
         $packShort = $endian === Endian::Little ? 'v' : 'n';
-        $packLong  = $endian === Endian::Little ? 'V' : 'N';
         $packLong8 = $endian === Endian::Little ? 'P' : 'J';
-        $packRatio = $endian === Endian::Little ? 'P2' : 'J2';
+        $packRatio = $endian === Endian::Little ? 'V2' : 'N2';
 
         $header = $endian->value
-            . pack($packShort, TiffConst::MAGIC_BIG_TIFF)
+            . pack($packShort, TiffConst::MAGIC_BIG)
             . pack($packShort, 8)
             . pack($packShort, 0)
-            . pack($packLong, 8)
             . pack($packLong8, 16);
 
         $firstIfdOffset = 16;
@@ -154,8 +157,8 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packLong8, $gpsIfdOffset)
             . pack($packLong8, 0);
 
-        $gpsEntryCount = pack($packLong8, 5);
-        $gpsDataOffset = $gpsIfdOffset + 8 + (5 * 20) + 8;
+        $gpsEntryCount = pack($packLong8, 6);
+        $gpsDataOffset = $gpsIfdOffset + 8 + (6 * 20) + 8;
 
         $gpsIfd = $gpsEntryCount
             // GPSLatitudeRef = "S" (inline)
@@ -187,7 +190,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_ALTITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong8, 1)
-            . pack($packLong8, $gpsDataOffset + (6 * 8))
+            . pack($packRatio, 11, 2)
             . pack($packLong8, 0);
 
         $gpsData = pack($packRatio, 12, 1)

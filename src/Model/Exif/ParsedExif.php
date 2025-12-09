@@ -82,8 +82,6 @@ final readonly class ParsedExif
 {
     private ?string $exifVersion;
 
-    private bool $exifVersionMissingOrEmpty;
-
     private string $exifProfile;
 
     /**
@@ -106,10 +104,9 @@ final readonly class ParsedExif
         public array $subsequentIfds = [],
         public array $subIfds = [],
     ) {
-        $rawVersion                      = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
-        $this->exifVersionMissingOrEmpty = $rawVersion === null || trim($rawVersion) === '';
-        $this->exifVersion               = ValueConverters::toExifVersion($rawVersion);
-        $this->exifProfile               = ExifCapabilities::fromVersion($this->exifVersion);
+        $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
+        $this->exifVersion = ValueConverters::toExifVersion($rawVersion);
+        $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
     }
 
     /**
@@ -294,25 +291,21 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the normalised EXIF version string, defaulting to '2.2' when missing.
+     * Returns the normalised EXIF version string when present.
+     *
+     * EXIF 3.0 §4.6.6.1.1 (ExifVersion) treats a missing tag as non-conformance.
      */
     public function exifVersion(): ?string
     {
-        if ($this->exifVersion !== null) {
-            return $this->exifVersion;
-        }
-
-        if ($this->exifVersionMissingOrEmpty) {
-            return '2.2';
-        }
-
-        return null;
+        return $this->exifVersion;
     }
 
     /**
      * Returns the normalised FlashPix version string when present.
+     *
+     * EXIF 3.0 §4.6.6.1.2 (FlashpixVersion) limits this field to four ASCII digits.
      */
-    public function flashpixVersion(): string
+    public function flashpixVersion(): ?string
     {
         $value = $this->rawString($this->exifIfd, ExifTag::FLASHPIX_VERSION);
 
@@ -320,15 +313,9 @@ final readonly class ParsedExif
             return '1.00';
         }
 
-        $trimmed = trim($value, "\0 ");
+        $normalized = ValueConverters::toExifVersion($value);
 
-        if ($trimmed === '') {
-            return '1.00';
-        }
-
-        $normalized = ValueConverters::toExifVersion($trimmed);
-
-        return $normalized ?? '1.00';
+        return $normalized;
     }
 
     /**
