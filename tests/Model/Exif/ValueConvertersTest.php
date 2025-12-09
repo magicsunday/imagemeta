@@ -180,6 +180,18 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Ensures reserved component identifiers result in null outputs.
+     */
+    #[Test]
+    public function returnsNullForReservedComponentIdentifiers(): void
+    {
+        $values = new ExifNumericList([1, 2, 7, 0]);
+
+        self::assertNull(ValueConverters::componentsConfigurationLabels($values));
+        self::assertNull(ValueConverters::componentsConfigurationDescription($values));
+    }
+
+    /**
      * Ensures maker note safety flags convert to booleans.
      */
     #[Test]
