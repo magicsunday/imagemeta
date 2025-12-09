@@ -31,7 +31,7 @@ final class ImageTest extends TestCase
             height: 4000,
             orientation: Orientation::RIGHT_TOP,
             bitsPerSample: 14,
-            colorSpace: ColorSpace::ADOBE_RGB,
+            colorSpace: ColorSpace::SRGB,
             imageUniqueId: 'unique-id',
             documentName: 'IMG_0042',
             description: 'Sunrise',
@@ -46,7 +46,7 @@ final class ImageTest extends TestCase
         self::assertSame(4000, $image->height);
         self::assertSame(Orientation::RIGHT_TOP, $image->orientation);
         self::assertSame(14, $image->bitsPerSample);
-        self::assertSame(ColorSpace::ADOBE_RGB, $image->colorSpace);
+        self::assertSame(ColorSpace::SRGB, $image->colorSpace);
         self::assertSame('unique-id', $image->imageUniqueId);
         self::assertSame('IMG_0042', $image->documentName);
         self::assertSame('Sunrise', $image->description);

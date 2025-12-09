@@ -206,7 +206,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
         ]);
 
         $exifIfd = new Ifd([
-            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::ADOBE_RGB->value),
+            ExifTag::COLOR_SPACE => new IfdEntry(ExifTag::COLOR_SPACE, 3, 1, ColorSpace::SRGB->value),
         ]);
 
         $parsedExif = new ParsedExif($ifd0, $exifIfd, null, null, null);
