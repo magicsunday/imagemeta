@@ -198,6 +198,8 @@ final readonly class ExifTag
     /**
      * The number of rows of image data. In JPEG compressed data, this tag shall not be used because a JPEG
      * marker is used instead of it.
+     *
+     * EXIF 3.0 §4.6.5.1.2: Tag 0x0101 ImageLength, type SHORT or LONG, count 1, no default.
      */
     public const int IMAGE_LENGTH = 0x0101;
 
