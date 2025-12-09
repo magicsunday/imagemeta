@@ -143,6 +143,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera manufacturer string if present.
      *
+     * EXIF 3.0 §4.6.5.4.2 (Make) and EXIF 2.32 §4.6.5 store the free-form
+     * manufacturer identifier as ASCII or UTF-8 including the terminating NUL.
+     *
      * @return string|null
      */
     public function cameraMake(): ?string
@@ -152,6 +155,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera model string if present.
+     *
+     * EXIF 3.0 §4.6.5.4.3 (Model) and EXIF 2.32 §4.6.5 define the model name
+     * or number as an ASCII or UTF-8 string with the NUL terminator counted in
+     * the tag length.
      *
      * @return string|null
      */
@@ -380,7 +387,11 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the EXIF image description or XPComment when available.
+     * Returns the EXIF image description when available.
+     *
+     * EXIF 3.0 §4.6.5.4.1 (ImageDescription) and EXIF 2.32 §4.6.5 define a
+     * free-form ASCII or UTF-8 description of the image content with the NUL
+     * terminator included in the stored count.
      */
     public function imageDescription(): ?string
     {
@@ -393,6 +404,18 @@ final readonly class ParsedExif
     public function hostComputer(): ?string
     {
         return $this->str($this->ifd0, TiffTag::HOST_COMPUTER);
+    }
+
+    /**
+     * Returns the software or firmware identifier reported by the image source.
+     *
+     * EXIF 3.0 §4.6.5.4.4 (Software) and EXIF 2.32 §4.6.5 recommend recording
+     * the generating software name and version in ASCII or UTF-8 with the
+     * terminating NUL accounted for in the count.
+     */
+    public function software(): ?string
+    {
+        return $this->str($this->ifd0, ExifTag::SOFTWARE);
     }
 
     /**

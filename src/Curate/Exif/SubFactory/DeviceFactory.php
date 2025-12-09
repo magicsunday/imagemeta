@@ -31,7 +31,7 @@ final readonly class DeviceFactory
     public function create(Metadata $metadata): Device
     {
         $exif     = $metadata->exifDoc;
-        $software = $exif?->hostComputer();
+        $software = $exif?->software() ?? $exif?->hostComputer();
 
         if (
             ($software === null)
