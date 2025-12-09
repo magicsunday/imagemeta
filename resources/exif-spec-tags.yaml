@@ -973,6 +973,8 @@ exif_tags:
     name: ExposureTime
     tag: 33434
     hex: 829A
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -982,6 +984,8 @@ exif_tags:
     name: FNumber
     tag: 33437
     hex: 829D
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -991,6 +995,8 @@ exif_tags:
     name: ExposureProgram
     tag: 34850
     hex: 8822
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1000,6 +1006,8 @@ exif_tags:
     name: SpectralSensitivity
     tag: 34852
     hex: 8824
+    type: ASCII
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1009,6 +1017,8 @@ exif_tags:
     name: PhotographicSensitivity
     tag: 34855
     hex: 8827
+    type: SHORT
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1018,6 +1028,8 @@ exif_tags:
     name: OECF
     tag: 34856
     hex: 8828
+    type: UNDEFINED
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1027,6 +1039,8 @@ exif_tags:
     name: SensitivityType
     tag: 34864
     hex: 8830
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1036,6 +1050,8 @@ exif_tags:
     name: StandardOutputSensitivity
     tag: 34865
     hex: 8831
+    type: LONG
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1045,6 +1061,8 @@ exif_tags:
     name: RecommendedExposureIndex
     tag: 34866
     hex: 8832
+    type: LONG
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1054,6 +1072,8 @@ exif_tags:
     name: ISOSpeed
     tag: 34867
     hex: 8833
+    type: LONG
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1063,6 +1083,8 @@ exif_tags:
     name: ISOSpeedLatitudeyyy
     tag: 34868
     hex: 8834
+    type: LONG
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1072,6 +1094,8 @@ exif_tags:
     name: ISOSpeedLatitudezzz
     tag: 34869
     hex: 8835
+    type: LONG
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1081,6 +1105,8 @@ exif_tags:
     name: ExifVersion
     tag: 36864
     hex: 9000
+    type: UNDEFINED
+    count: 4
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1090,6 +1116,8 @@ exif_tags:
     name: DateTimeOriginal
     tag: 36867
     hex: 9003
+    type: ASCII
+    count: 20
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1099,6 +1127,8 @@ exif_tags:
     name: DateTimeDigitized
     tag: 36868
     hex: 9004
+    type: ASCII
+    count: 20
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1108,6 +1138,8 @@ exif_tags:
     name: OffsetTime
     tag: 36880
     hex: 9010
+    type: ASCII
+    count: 7
     ifd: ExifIFD
     category: III
     update: 0
@@ -1117,6 +1149,8 @@ exif_tags:
     name: OffsetTimeOriginal
     tag: 36881
     hex: 9011
+    type: ASCII
+    count: 7
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1126,6 +1160,8 @@ exif_tags:
     name: OffsetTimeDigitized
     tag: 36882
     hex: 9012
+    type: ASCII
+    count: 7
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1135,6 +1171,8 @@ exif_tags:
     name: ComponentsConfiguration
     tag: 37121
     hex: 9101
+    type: UNDEFINED
+    count: 4
     ifd: ExifIFD
     category: I
     update: 0
@@ -1144,6 +1182,8 @@ exif_tags:
     name: CompressedBitsPerPixel
     tag: 37122
     hex: 9102
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: I
     update: 0
@@ -1153,6 +1193,8 @@ exif_tags:
     name: ShutterSpeedValue
     tag: 37377
     hex: 9201
+    type: SRATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1162,6 +1204,8 @@ exif_tags:
     name: ApertureValue
     tag: 37378
     hex: 9202
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1171,6 +1215,8 @@ exif_tags:
     name: BrightnessValue
     tag: 37379
     hex: 9203
+    type: SRATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1180,6 +1226,8 @@ exif_tags:
     name: ExposureBiasValue
     tag: 37380
     hex: 9204
+    type: SRATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1189,6 +1237,8 @@ exif_tags:
     name: MaxApertureValue
     tag: 37381
     hex: 9205
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1198,6 +1248,8 @@ exif_tags:
     name: SubjectDistance
     tag: 37382
     hex: 9206
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1207,6 +1259,8 @@ exif_tags:
     name: MeteringMode
     tag: 37383
     hex: 9207
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1216,6 +1270,8 @@ exif_tags:
     name: LightSource
     tag: 37384
     hex: 9208
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1225,6 +1281,8 @@ exif_tags:
     name: Flash
     tag: 37385
     hex: 9209
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1234,6 +1292,8 @@ exif_tags:
     name: FocalLength
     tag: 37386
     hex: 920A
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1243,6 +1303,8 @@ exif_tags:
     name: SubjectArea
     tag: 37396
     hex: 9214
+    type: SHORT
+    count: 2 or 3 or 4
     ifd: ExifIFD
     category: I/II
     update: 0
@@ -1252,6 +1314,8 @@ exif_tags:
     name: MakerNote
     tag: 37500
     hex: 927C
+    type: UNDEFINED
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1261,6 +1325,8 @@ exif_tags:
     name: UserComment
     tag: 37510
     hex: 9286
+    type: UNDEFINED
+    count: Any
     ifd: ExifIFD
     category: III
     update: 1
@@ -1270,6 +1336,8 @@ exif_tags:
     name: SubSecTime
     tag: 37520
     hex: 9290
+    type: ASCII
+    count: Any
     ifd: ExifIFD
     category: III
     update: 0
@@ -1279,6 +1347,8 @@ exif_tags:
     name: SubSecTimeOriginal
     tag: 37521
     hex: 9291
+    type: ASCII
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1288,6 +1358,8 @@ exif_tags:
     name: SubSecTimeDigitized
     tag: 37522
     hex: 9292
+    type: ASCII
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1297,6 +1369,8 @@ exif_tags:
     name: Temperature
     tag: 37888
     hex: 9400
+    type: SRATIONAL
+    count: 1
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1306,6 +1380,8 @@ exif_tags:
     name: Humidity
     tag: 37889
     hex: 9401
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1315,6 +1391,8 @@ exif_tags:
     name: Pressure
     tag: 37890
     hex: 9402
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1324,6 +1402,8 @@ exif_tags:
     name: WaterDepth
     tag: 37891
     hex: 9403
+    type: SRATIONAL
+    count: 1
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1333,6 +1413,8 @@ exif_tags:
     name: Acceleration
     tag: 37892
     hex: 9404
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1342,6 +1424,8 @@ exif_tags:
     name: CameraElevationAngle
     tag: 37893
     hex: 9405
+    type: SRATIONAL
+    count: 1
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1351,6 +1435,8 @@ exif_tags:
     name: FlashpixVersion
     tag: 40960
     hex: A000
+    type: UNDEFINED
+    count: 4
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1360,6 +1446,8 @@ exif_tags:
     name: ColorSpace
     tag: 40961
     hex: A001
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: I
     update: 0
@@ -1369,6 +1457,8 @@ exif_tags:
     name: PixelXDimension
     tag: 40962
     hex: A002
+    type: SHORT or LONG
+    count: 1
     ifd: ExifIFD
     category: I
     update: 0
@@ -1378,6 +1468,8 @@ exif_tags:
     name: PixelYDimension
     tag: 40963
     hex: A003
+    type: SHORT or LONG
+    count: 1
     ifd: ExifIFD
     category: I
     update: 0
@@ -1387,6 +1479,8 @@ exif_tags:
     name: RelatedSoundFile
     tag: 40964
     hex: A004
+    type: ASCII
+    count: 13
     ifd: ExifIFD
     category: I
     update: 0
@@ -1406,6 +1500,8 @@ exif_tags:
     name: FlashEnergy
     tag: 41483
     hex: A20B
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1415,6 +1511,8 @@ exif_tags:
     name: SpatialFrequencyResponse
     tag: 41484
     hex: A20C
+    type: UNDEFINED
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1424,6 +1522,8 @@ exif_tags:
     name: FocalPlaneXResolution
     tag: 41486
     hex: A20E
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1433,6 +1533,8 @@ exif_tags:
     name: FocalPlaneYResolution
     tag: 41487
     hex: A20F
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1442,6 +1544,8 @@ exif_tags:
     name: FocalPlaneResolutionUnit
     tag: 41488
     hex: A210
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1451,6 +1555,8 @@ exif_tags:
     name: SubjectLocation
     tag: 41492
     hex: A214
+    type: SHORT
+    count: 2
     ifd: ExifIFD
     category: I/II
     update: 0
@@ -1460,6 +1566,8 @@ exif_tags:
     name: ExposureIndex
     tag: 41493
     hex: A215
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1469,6 +1577,8 @@ exif_tags:
     name: SensingMethod
     tag: 41495
     hex: A217
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1478,6 +1588,8 @@ exif_tags:
     name: FileSource
     tag: 41728
     hex: A300
+    type: UNDEFINED
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1487,6 +1599,8 @@ exif_tags:
     name: SceneType
     tag: 41729
     hex: A301
+    type: UNDEFINED
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1496,6 +1610,8 @@ exif_tags:
     name: CFAPattern
     tag: 41730
     hex: A302
+    type: UNDEFINED
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1505,6 +1621,8 @@ exif_tags:
     name: CustomRendered
     tag: 41985
     hex: A401
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1514,6 +1632,8 @@ exif_tags:
     name: ExposureMode
     tag: 41986
     hex: A402
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1523,6 +1643,8 @@ exif_tags:
     name: WhiteBalance
     tag: 41987
     hex: A403
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1532,6 +1654,8 @@ exif_tags:
     name: DigitalZoomRatio
     tag: 41988
     hex: A404
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1541,6 +1665,8 @@ exif_tags:
     name: FocalLengthIn35mmFilm
     tag: 41989
     hex: A405
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1550,6 +1676,8 @@ exif_tags:
     name: SceneCaptureType
     tag: 41990
     hex: A406
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1559,6 +1687,8 @@ exif_tags:
     name: GainControl
     tag: 41991
     hex: A407
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1568,6 +1698,8 @@ exif_tags:
     name: Contrast
     tag: 41992
     hex: A408
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1577,6 +1709,8 @@ exif_tags:
     name: Saturation
     tag: 41993
     hex: A409
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1586,6 +1720,8 @@ exif_tags:
     name: Sharpness
     tag: 41994
     hex: A40A
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1595,6 +1731,8 @@ exif_tags:
     name: DeviceSettingDescription
     tag: 41995
     hex: A40B
+    type: UNDEFINED
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1604,6 +1742,8 @@ exif_tags:
     name: SubjectDistanceRange
     tag: 41996
     hex: A40C
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1613,6 +1753,8 @@ exif_tags:
     name: ImageUniqueID
     tag: 42016
     hex: A420
+    type: ASCII
+    count: 33
     ifd: ExifIFD
     category: III
     freeze: 0
@@ -1622,6 +1764,8 @@ exif_tags:
     name: CameraOwnerName
     tag: 42032
     hex: A430
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1631,6 +1775,8 @@ exif_tags:
     name: BodySerialNumber
     tag: 42033
     hex: A431
+    type: ASCII
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 1
@@ -1640,6 +1786,8 @@ exif_tags:
     name: LensSpecification
     tag: 42034
     hex: A432
+    type: RATIONAL
+    count: 4
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1649,6 +1797,8 @@ exif_tags:
     name: LensMake
     tag: 42035
     hex: A433
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1658,6 +1808,8 @@ exif_tags:
     name: LensModel
     tag: 42036
     hex: A434
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1667,6 +1819,8 @@ exif_tags:
     name: LensSerialNumber
     tag: 42037
     hex: A435
+    type: ASCII
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1676,6 +1830,8 @@ exif_tags:
     name: ImageTitle
     tag: 42038
     hex: A436
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     update: 1
@@ -1685,6 +1841,8 @@ exif_tags:
     name: Photographer
     tag: 42039
     hex: A437
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1694,6 +1852,8 @@ exif_tags:
     name: ImageEditor
     tag: 42040
     hex: A438
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     update: 1
@@ -1703,6 +1863,8 @@ exif_tags:
     name: CameraFirmware
     tag: 42041
     hex: A439
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1712,6 +1874,8 @@ exif_tags:
     name: RAWDevelopingSoftware
     tag: 42042
     hex: A43A
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     freeze: 2
@@ -1721,6 +1885,8 @@ exif_tags:
     name: ImageEditingSoftware
     tag: 42043
     hex: A43B
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     update: 1
@@ -1730,6 +1896,8 @@ exif_tags:
     name: MetadataEditingSoftware
     tag: 42044
     hex: A43C
+    type: ASCII or UTF-8
+    count: Any
     ifd: ExifIFD
     category: III
     update: 1
@@ -1739,6 +1907,8 @@ exif_tags:
     name: CompositeImage
     tag: 42080
     hex: A460
+    type: SHORT
+    count: 1
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1748,6 +1918,8 @@ exif_tags:
     name: SourceImageNumberOfCompositeImage
     tag: 42081
     hex: A461
+    type: SHORT
+    count: 2
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1757,6 +1929,8 @@ exif_tags:
     name: SourceExposureTimesOfCompositeImage
     tag: 42082
     hex: A462
+    type: UNDEFINED
+    count: Any
     ifd: ExifIFD
     category: II
     freeze: 1
@@ -1766,6 +1940,8 @@ exif_tags:
     name: Gamma
     tag: 42240
     hex: A500
+    type: RATIONAL
+    count: 1
     ifd: ExifIFD
     category: I
     update: 0
