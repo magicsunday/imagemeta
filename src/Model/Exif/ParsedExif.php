@@ -506,11 +506,24 @@ final readonly class ParsedExif
     /**
      * Returns the transfer function lookup table when available.
      *
+     * EXIF 3.0 §4.6.5.3.1 and EXIF 2.32 §4.6.5.3.1 define TransferFunction as
+     * a 3×256 table of SHORT values describing the tone reproduction curve.
+     *
      * @return list<int>|null
      */
     public function transferFunction(): ?array
     {
-        return $this->numericList($this->ifd0, ExifTag::TRANSFER_FUNCTION);
+        $values = $this->numericList($this->ifd0, ExifTag::TRANSFER_FUNCTION);
+
+        if ($values === null) {
+            return null;
+        }
+
+        if (count($values) !== 3 * 256) {
+            return null;
+        }
+
+        return $values;
     }
 
     /**
@@ -2119,6 +2132,10 @@ final readonly class ParsedExif
     /**
      * Returns the YCbCr conversion coefficients when provided.
      *
+     * EXIF 3.0 §4.6.5.3.4 (and EXIF 2.32 §4.6.5.3.4) defines three rational
+     * coefficients for RGB→YCbCr conversion, defaulting to Annex D values when
+     * the tag is absent.
+     *
      * @return array{0:float,1:float,2:float}|null
      */
     public function ycbcrCoefficients(): ?array
@@ -2159,11 +2176,14 @@ final readonly class ParsedExif
             return count($coeffs) === 3 ? $coeffs : null;
         }
 
-        return null;
+        return $this->defaultYCbCrCoefficients();
     }
 
     /**
      * Returns the normalized white point coordinates.
+     *
+     * EXIF 3.0 §4.6.5.3.2 (WhitePoint) and EXIF 2.32 §4.6.5.3.2 encode the
+     * chromaticity of the white point as exactly two rational values (X,Y).
      *
      * @return array{0:float,1:float}|null
      */
@@ -2178,6 +2198,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the primary chromaticities ordered as R,G,B.
+     *
+     * EXIF 3.0 §4.6.5.3.3 (PrimaryChromaticities) and EXIF 2.32 §4.6.5.3.3
+     * define three rational pairs (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
      */
@@ -2903,6 +2926,23 @@ final readonly class ParsedExif
             4 => $values[4],
             5 => $values[5],
         ];
+    }
+
+    /**
+     * Applies EXIF 3.0 §4.6.5.3.4 defaults for missing YCbCrCoefficients.
+     *
+     * Annex D recommends the ITU-R BT.601 coefficients when no matrix is
+     * specified: [0.299, 0.587, 0.114].
+     *
+     * @return array{0: float, 1: float, 2: float}|null
+     */
+    private function defaultYCbCrCoefficients(): ?array
+    {
+        if ($this->photometric() !== Photometric::YCBCR) {
+            return null;
+        }
+
+        return [0.299, 0.587, 0.114];
     }
 
     /**

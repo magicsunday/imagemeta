@@ -1000,6 +1000,27 @@ final class ValueConvertersTest extends TestCase
     }
 
     #[Test]
+    public function rejectsInvalidWhitePointAndChromaticityLengths(): void
+    {
+        $whitePoint = new ExifRationalList([
+            new ExifRational(1, 2),
+            new ExifRational(1, 2),
+            new ExifRational(1, 2),
+        ]);
+
+        self::assertNull(ValueConverters::toWhitePoint($whitePoint));
+
+        $chromaticities = new ExifRationalList([
+            new ExifRational(1, 1),
+            new ExifRational(1, 1),
+            new ExifRational(1, 1),
+            new ExifRational(1, 1),
+        ]);
+
+        self::assertNull(ValueConverters::toPrimaryChromaticities($chromaticities));
+    }
+
+    #[Test]
     public function calculatesFieldOfViewAndHyperfocalMetrics(): void
     {
         $cropFactor = ValueConverters::calcCropFactor(75, 50.0);
