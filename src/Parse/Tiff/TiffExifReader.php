@@ -928,7 +928,7 @@ final class TiffExifReader implements ExifReaderInterface
     /**
      * Resolves maker note metadata using the provided registry when available.
      *
-     * EXIF 3.0 §4.6.5 (Table 4) and EXIF 2.32 §4.6.5 define the MakerNote tag semantics
+     * EXIF 3.0 §4.6.6.4.1 (Table 4) and EXIF 2.32 §4.6.6.4.1 define the MakerNote tag semantics
      * and the MakerNoteSafety flag used to indicate whether in-place modification is safe,
      * continuing the EXIF 2.1 §2.6.5 guidance on manufacturer-specific tags.
      */

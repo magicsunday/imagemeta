@@ -32,7 +32,7 @@ use function strlen;
 /**
  * Edge case tests for UserComment encoding and special EXIF fields.
  *
- * EXIF 3.0 §4.6.5 (Table 11) and EXIF 2.32 §4.6.5 define the UserComment tag
+ * EXIF 3.0 §4.6.6.4.2 (Table 11) and EXIF 2.32 §4.6.6.4.2 define the UserComment tag
  * structure with character code prefixes ("ASCII\0\0\0", "JIS\0\0\0\0\0", etc.).
  */
 #[CoversClass(TiffExifReader::class)]
@@ -50,7 +50,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     /**
      * Tests UserComment with ASCII encoding prefix.
      *
-     * EXIF 3.0 §4.6.5 Table 11 defines "ASCII\0\0\0" as the ASCII character code.
+     * EXIF 3.0 §4.6.6.4.2 Table 11 defines "ASCII\0\0\0" as the ASCII character code as noted in §4.6.4.
      */
     #[Test]
     public function parsesUserCommentWithAsciiEncoding(): void
@@ -67,7 +67,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     /**
      * Tests UserComment with JIS encoding prefix.
      *
-     * EXIF 3.0 §4.6.5 Table 11 defines "JIS\0\0\0\0\0" for JIS character code.
+     * EXIF 3.0 §4.6.6.4.2 Table 11 defines "JIS\0\0\0\0\0" for JIS character code per §4.6.4 prefix rules.
      */
     #[Test]
     public function parsesUserCommentWithJisEncoding(): void
@@ -84,7 +84,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     /**
      * Tests UserComment with UNICODE encoding prefix.
      *
-     * EXIF 3.0 §4.6.5 Table 11 defines "UNICODE\0" for Unicode character code.
+     * EXIF 3.0 §4.6.6.4.2 Table 11 defines "UNICODE\0" for Unicode character code per §4.6.4 prefix rules.
      */
     #[Test]
     public function parsesUserCommentWithUnicodeEncoding(): void
@@ -101,7 +101,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     /**
      * Tests UserComment with undefined encoding (no prefix).
      *
-     * EXIF 3.0 §4.6.5 allows undefined character codes (8 bytes of 0x00).
+     * EXIF 3.0 §4.6.6.4.2 allows undefined character codes (8 bytes of 0x00).
      */
     #[Test]
     public function parsesUserCommentWithUndefinedEncoding(): void
@@ -209,7 +209,7 @@ final class TiffExifReaderUserCommentTest extends TestCase
     /**
      * Tests MakerNote field handling.
      *
-     * EXIF 3.0 §4.6.5 (Table 4) defines the MakerNote tag for manufacturer-specific data.
+     * EXIF 3.0 §4.6.6.4.1 (Table 4) and EXIF 2.32 §4.6.6.4.1 define the MakerNote tag for manufacturer-specific data.
      */
     #[Test]
     public function parsesMakerNote(): void
