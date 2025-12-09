@@ -592,7 +592,11 @@ final readonly class ExifTag
     public const int RELATED_SOUND_FILE = 0xA004;
 
     /**
-     * Offset to the interoperability IFD block.
+     * Offset to the interoperability IFD block (LONG, count 1).
+     *
+     * EXIF 3.0 §4.6.3.3.1 and EXIF 2.32 §4.6.3.3.1 define this pointer to an
+     * interoperability IFD that mirrors TIFF directory structure without
+     * containing image data payloads.
      */
     public const int INTEROPERABILITY_IFD_POINTER = 0xA005;
 

@@ -1287,6 +1287,10 @@ final class TiffExifReader implements ExifReaderInterface
      */
     private function pointerOffset(IfdEntry $entry): ?int
     {
+        if ($entry->tag === ExifTag::INTEROPERABILITY_IFD_POINTER) {
+            $this->assertInteropPointerLayout($entry);
+        }
+
         $value = $entry->value;
 
         if (is_int($value)) {
@@ -1325,6 +1329,36 @@ final class TiffExifReader implements ExifReaderInterface
         }
 
         throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $entry->tag));
+    }
+
+    /**
+     * Validates the interoperability IFD pointer layout mandated by EXIF.
+     *
+     * EXIF 3.0 §4.6.3.3.1 and EXIF 2.32 §4.6.3.3.1 describe the interoperability
+     * IFD pointer as a single LONG value referencing another TIFF-structured IFD
+     * that does not itself embed image data.
+     */
+    private function assertInteropPointerLayout(IfdEntry $entry): void
+    {
+        if ($entry->count !== 1) {
+            throw new ParseError('Interoperability IFD pointer must contain exactly one offset per EXIF 3.0 §4.6.3.3.1.');
+        }
+
+        $allowedTypes = $this->bigTiff
+            ? [
+                TiffConst::TYPE_LONG,
+                TiffConst::TYPE_IFD,
+                TiffConst::TYPE_LONG8,
+                TiffConst::TYPE_IFD8,
+            ]
+            : [
+                TiffConst::TYPE_LONG,
+                TiffConst::TYPE_IFD,
+            ];
+
+        if (!in_array($entry->type, $allowedTypes, true)) {
+            throw new ParseError('Interoperability IFD pointer must use a LONG/IFD field type per EXIF 3.0 §4.6.3.3.1.');
+        }
     }
 
     /**
