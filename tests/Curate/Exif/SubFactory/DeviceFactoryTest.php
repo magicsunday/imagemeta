@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -32,6 +33,7 @@ final class DeviceFactoryTest extends TestCase
     public function createsFromExifMetadata(): void
     {
         $parsedExif = $this->parsedExif(
+            software: 'Exif Software Version 1.00a' . "\0",
             hostComputer: 'MacBook Pro',
             rawDevelopingSoftware: 'Adobe Camera Raw 15.0',
             imageEditingSoftware: 'Adobe Photoshop 24.0',
@@ -47,7 +49,7 @@ final class DeviceFactoryTest extends TestCase
         $factory = new DeviceFactory();
         $device  = $factory->create($metadata);
 
-        self::assertSame('MacBook Pro', $device->software);
+        self::assertSame('Exif Software Version 1.00a', $device->software);
         self::assertSame('Adobe Camera Raw 15.0', $device->rawDevelopingSoftware);
         self::assertSame('Adobe Photoshop 24.0', $device->imageEditingSoftware);
         self::assertSame('Lightroom Classic 12.0', $device->metadataEditingSoftware);
@@ -57,6 +59,7 @@ final class DeviceFactoryTest extends TestCase
     public function fallsBackToQuickTimeSoftware(): void
     {
         $parsedExif = $this->parsedExif(
+            software: null,
             hostComputer: null,
             rawDevelopingSoftware: null,
             imageEditingSoftware: null,
@@ -86,6 +89,7 @@ final class DeviceFactoryTest extends TestCase
     public function prefersExifOverQuickTime(): void
     {
         $parsedExif = $this->parsedExif(
+            software: null,
             hostComputer: 'Desktop PC',
             rawDevelopingSoftware: null,
             imageEditingSoftware: null,
@@ -109,6 +113,33 @@ final class DeviceFactoryTest extends TestCase
     }
 
     #[Test]
+    public function prefersSoftwareOverHostComputer(): void
+    {
+        $parsedExif = $this->parsedExif(
+            software: 'CameraApp 3.1',
+            hostComputer: 'Workstation',
+            rawDevelopingSoftware: null,
+            imageEditingSoftware: null,
+            metadataEditingSoftware: null,
+        );
+
+        $quickTime = new QuickTimeMeta([
+            'com.apple.quicktime.software' => 'iPhone OS 16.0',
+        ]);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: $quickTime,
+            exifDoc: $parsedExif,
+        );
+
+        $factory = new DeviceFactory();
+        $device  = $factory->create($metadata);
+
+        self::assertSame('CameraApp 3.1', $device->software);
+    }
+
+    #[Test]
     public function createsWithNullMetadata(): void
     {
         $metadata = new Metadata(
@@ -126,6 +157,7 @@ final class DeviceFactoryTest extends TestCase
     }
 
     private function parsedExif(
+        ?string $software,
         ?string $hostComputer,
         ?string $rawDevelopingSoftware,
         ?string $imageEditingSoftware,
@@ -134,10 +166,19 @@ final class DeviceFactoryTest extends TestCase
         $ifd0Entries = [];
         $exifEntries = [];
 
+        if ($software !== null) {
+            $ifd0Entries[ExifTag::SOFTWARE] = new IfdEntry(
+                ExifTag::SOFTWARE,
+                TiffConst::TYPE_ASCII,
+                strlen($software),
+                $software,
+            );
+        }
+
         if ($hostComputer !== null) {
             $ifd0Entries[TiffTag::HOST_COMPUTER] = new IfdEntry(
                 TiffTag::HOST_COMPUTER,
-                2,
+                TiffConst::TYPE_ASCII,
                 strlen($hostComputer),
                 $hostComputer,
             );
@@ -146,7 +187,7 @@ final class DeviceFactoryTest extends TestCase
         if ($rawDevelopingSoftware !== null) {
             $exifEntries[ExifTag::RAW_DEVELOPING_SOFTWARE] = new IfdEntry(
                 ExifTag::RAW_DEVELOPING_SOFTWARE,
-                2,
+                TiffConst::TYPE_ASCII,
                 strlen($rawDevelopingSoftware),
                 $rawDevelopingSoftware,
             );
@@ -155,7 +196,7 @@ final class DeviceFactoryTest extends TestCase
         if ($imageEditingSoftware !== null) {
             $exifEntries[ExifTag::IMAGE_EDITING_SOFTWARE] = new IfdEntry(
                 ExifTag::IMAGE_EDITING_SOFTWARE,
-                2,
+                TiffConst::TYPE_ASCII,
                 strlen($imageEditingSoftware),
                 $imageEditingSoftware,
             );
@@ -164,7 +205,7 @@ final class DeviceFactoryTest extends TestCase
         if ($metadataEditingSoftware !== null) {
             $exifEntries[ExifTag::METADATA_EDITING_SOFTWARE] = new IfdEntry(
                 ExifTag::METADATA_EDITING_SOFTWARE,
-                2,
+                TiffConst::TYPE_ASCII,
                 strlen($metadataEditingSoftware),
                 $metadataEditingSoftware,
             );
