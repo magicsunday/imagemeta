@@ -15,8 +15,11 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the composite image classifications defined for the CompositeImage
- * tag in EXIF 3.0 §4.6.3 (shooting conditions), continuing the set introduced
- * in EXIF 2.32 §4.6.3.
+ * tag.
+ *
+ * EXIF 3.0 §4.6.6.7.47 defines 0 = Unknown, 1 = Non-composite image, 2 =
+ * General composite image, 3 = Composite image captured when shooting. EXIF
+ * 2.32 §4.6.6.7.47 retains the same numeric encodings and reserved range.
  */
 enum CompositeImage: int
 {

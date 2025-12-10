@@ -134,6 +134,26 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
+     * Rejects reserved subject distance range codes outside the defined set.
+     */
+    #[Test]
+    public function returnsNullForReservedSubjectDistanceRanges(): void
+    {
+        self::assertNull(SubjectDistanceRange::fromExifValue(4));
+        self::assertNull(SubjectDistanceRange::fromExifValue('9'));
+    }
+
+    /**
+     * Rejects composite image codes outside the enumerated EXIF range.
+     */
+    #[Test]
+    public function returnsNullForReservedCompositeImageCodes(): void
+    {
+        self::assertNull(CompositeImage::fromExifValue(4));
+        self::assertNull(CompositeImage::fromExifValue('7'));
+    }
+
+    /**
      * Rejects reserved photometric interpretations outside the EXIF allowed set.
      *
      * EXIF 3.0 §4.6.5.1.5 limits PhotometricInterpretation to RGB (2) and YCbCr (6).
