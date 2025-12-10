@@ -39,4 +39,38 @@ final class ParsedExifSubjectDistanceTest extends TestCase
 
         self::assertSame(2.0, $parsedExif->subjectDistance());
     }
+
+    #[Test]
+    public function returnsInfinityWhenSubjectDistanceRecordsInfinity(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::SUBJECT_DISTANCE => new IfdEntry(
+                ExifTag::SUBJECT_DISTANCE,
+                5,
+                1,
+                new ExifRational(0xFFFFFFFF, 1),
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(INF, $parsedExif->subjectDistance());
+    }
+
+    #[Test]
+    public function returnsNullWhenSubjectDistanceIsUnknown(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::SUBJECT_DISTANCE => new IfdEntry(
+                ExifTag::SUBJECT_DISTANCE,
+                5,
+                1,
+                new ExifRational(0, 10),
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertNull($parsedExif->subjectDistance());
+    }
 }

@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Describes whether the flash function is present on the camera as specified in
- * EXIF 3.0 §4.6.4 (flash information), consistent with EXIF 2.32 §4.6.4.
+ * EXIF 3.0 §4.6.6.7.21 (Flash), consistent with EXIF 2.32 §4.6.4.
  */
 enum FlashFunction: int
 {
