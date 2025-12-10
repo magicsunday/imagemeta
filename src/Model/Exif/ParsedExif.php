@@ -1549,6 +1549,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the in-camera contrast setting.
+     *
+     * EXIF 3.0 §4.6.6.7.42; EXIF 2.32 §4.6.3.
      */
     public function contrast(): ?Contrast
     {
@@ -1559,6 +1561,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the in-camera saturation setting.
+     *
+     * EXIF 3.0 §4.6.6.7.43; EXIF 2.32 §4.6.3.
      */
     public function saturation(): ?Saturation
     {
@@ -1569,6 +1573,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the in-camera sharpness setting.
+     *
+     * EXIF 3.0 §4.6.6.7.44; EXIF 2.32 §4.6.3.
      */
     public function sharpness(): ?Sharpness
     {
@@ -2582,6 +2588,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the gain control enum describing in-camera amplification.
+     *
+     * EXIF 3.0 §4.6.6.7.41; EXIF 2.32 §4.6.3.
      */
     public function gainControl(): ?GainControl
     {

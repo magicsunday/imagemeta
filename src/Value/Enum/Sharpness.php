@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the sharpness processing levels described for the Sharpness tag in
- * EXIF 3.0 §4.6.3 (shooting conditions), consistent with EXIF 2.32 §4.6.3.
+ * EXIF 3.0 §4.6.6.7.44 (shooting conditions), consistent with EXIF 2.32 §4.6.3.
  */
 enum Sharpness: int
 {
