@@ -21,21 +21,21 @@ namespace MagicSunday\ImageMeta\Value;
  * The information is recorded in the format:
  * - 2 bytes SHORT: Display columns
  * - 2 bytes SHORT: Display rows
- * - Remaining bytes: Camera settings (Unicode UTF-16, NULL-terminated)
+ * - Remaining bytes: Camera settings (Unicode UTF-16, NULL-terminated, multiple strings allowed)
  */
 final readonly class DeviceSettingDescription
 {
     /**
      * Creates a device setting description value object.
      *
-     * @param int         $columns  Number of display columns for the settings.
-     * @param int         $rows     Number of display rows for the settings.
-     * @param string|null $settings Camera settings text (decoded from UTF-16 to UTF-8).
+     * @param int          $columns  Number of display columns for the settings grid.
+     * @param int          $rows     Number of display rows for the settings grid.
+     * @param list<string> $settings Camera settings strings decoded to UTF-8.
      */
     public function __construct(
         public int $columns,
         public int $rows,
-        public ?string $settings,
+        public array $settings,
     ) {
     }
 }

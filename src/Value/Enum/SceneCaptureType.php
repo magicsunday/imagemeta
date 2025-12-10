@@ -15,8 +15,8 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the scene capture classifications defined for the SceneCaptureType
- * tag in EXIF 3.0 §4.6.3 (shooting conditions), unchanged from EXIF 2.32
- * §4.6.3.
+ * tag in EXIF 3.0 §4.6.6.7.40 (shooting conditions), unchanged from EXIF
+ * 2.32 §4.6.3.
  */
 enum SceneCaptureType: int
 {
@@ -26,5 +26,4 @@ enum SceneCaptureType: int
     case LANDSCAPE   = 1;
     case PORTRAIT    = 2;
     case NIGHT_SCENE = 3;
-    case OTHER       = 4;
 }

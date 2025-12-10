@@ -28,9 +28,9 @@ final readonly class Sensor
      * @param string|null                   $spectralSensitivity      Spectral sensitivity description.
      * @param Oecf|null                     $oecf                     Opto-electronic conversion function (EXIF 3.0 §4.6.3).
      * @param SpatialFrequencyResponse|null $spatialFrequencyResponse Spatial frequency response (EXIF 3.0 §4.6.3).
-     * @param float|null                    $focalPlaneXResolution    Focal plane X resolution.
-     * @param float|null                    $focalPlaneYResolution    Focal plane Y resolution.
-     * @param ResolutionUnit|null           $focalPlaneResolutionUnit Focal plane resolution unit.
+     * @param float|null                    $focalPlaneXResolution    Focal plane X resolution (EXIF 3.0 §4.6.6.7.26).
+     * @param float|null                    $focalPlaneYResolution    Focal plane Y resolution (EXIF 3.0 §4.6.6.7.27).
+     * @param ResolutionUnit|null           $focalPlaneResolutionUnit Focal plane resolution unit (EXIF 3.0 §4.6.6.7.28).
      */
     public function __construct(
         public ?float $pixelPitchUm = null,

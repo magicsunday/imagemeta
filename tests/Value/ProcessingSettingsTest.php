@@ -50,7 +50,7 @@ final class ProcessingSettingsTest extends TestCase
         $deviceDesc = new DeviceSettingDescription(
             columns: 5,
             rows: 10,
-            settings: 'Camera settings',
+            settings: ['Camera settings'],
         );
 
         $settings = new ProcessingSettings(
