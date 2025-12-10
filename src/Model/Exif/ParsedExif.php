@@ -1222,6 +1222,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the white balance enumeration if present.
+     *
+     * EXIF 3.0 §4.6.6.7.37 (WhiteBalance); EXIF 2.32 §4.6.3.
      */
     public function whiteBalance(): ?WhiteBalance
     {
@@ -1422,6 +1424,8 @@ final readonly class ParsedExif
 
     /**
      * Returns whether a custom rendering process was applied.
+     *
+     * EXIF 3.0 §4.6.6.7.35 (CustomRendered); EXIF 2.32 §4.6.3.
      */
     public function customRendered(): ?CustomRendered
     {
@@ -2436,14 +2440,25 @@ final readonly class ParsedExif
 
     /**
      * Returns the digital zoom ratio when encoded by the camera.
+     *
+     * EXIF 3.0 §4.6.6.7.38 (DigitalZoomRatio); EXIF 2.32 §4.6.3.
+     * A ratio with a numerator of zero indicates that digital zoom was not used.
      */
     public function digitalZoomRatio(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO);
+        $ratio = $this->rational($this->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO);
+
+        if ($ratio === 0.0) {
+            return null;
+        }
+
+        return $ratio;
     }
 
     /**
      * Returns the exposure mode enum indicating manual or auto settings.
+     *
+     * EXIF 3.0 §4.6.6.7.36 (ExposureMode); EXIF 2.32 §4.6.3.
      */
     public function exposureMode(): ?ExposureMode
     {
@@ -2521,6 +2536,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the scene capture type enum when recorded.
+     *
+     * EXIF 3.0 §4.6.6.7.40 (SceneCaptureType); EXIF 2.32 §4.6.3.
      *
      * @return SceneCaptureType|null
      */
