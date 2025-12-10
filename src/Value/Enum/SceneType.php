@@ -15,7 +15,8 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the scene type encodings recorded by the SceneType tag in EXIF
- * 3.0 §4.6.3 (shooting conditions), preserving the EXIF 2.32 §4.6.3 meaning.
+ * 3.0 §4.6.6.7.33 (SceneType), preserving the EXIF 2.32 §4.6.6.7.33 meaning
+ * that directly photographed images use the value 1.
  */
 enum SceneType: int
 {

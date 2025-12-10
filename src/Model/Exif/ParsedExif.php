@@ -1304,6 +1304,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the exposure index value.
+     *
+     * EXIF 3.0 §4.6.6.7.30 (ExposureIndex); EXIF 2.32 §4.6.6.7.30.
      */
     public function exposureIndex(): ?float
     {
@@ -1398,6 +1400,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the scene type classification when present.
+     *
+     * EXIF 3.0 §4.6.6.7.33 (SceneType); EXIF 2.32 §4.6.6.7.33.
      */
     public function sceneType(): ?SceneType
     {
@@ -2464,6 +2468,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the EXIF file source enum when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.32 (FileSource); EXIF 2.32 §4.6.6.7.32.
      */
     public function fileSource(): ?FileSource
     {
@@ -2498,6 +2504,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the EXIF sensing method enum when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.31 (SensingMethod); EXIF 2.32 §4.6.6.7.31.
      */
     public function sensingMethod(): ?SensingMethod
     {
