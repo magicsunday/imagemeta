@@ -2687,8 +2687,8 @@ final readonly class ParsedExif
     /**
      * Returns the EXIF subject area as a structured value object.
      *
-     * EXIF 3.0 §4.6.6: SubjectArea tag 0x9214 indicates the location and area of the main subject
-     * in the overall scene.
+     * EXIF 3.0 §4.6.6.7.22: SubjectArea tag 0x9214 indicates the location and area of the main
+     * subject in the overall scene.
      */
     public function subjectArea(): ?SubjectArea
     {
