@@ -1480,6 +1480,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the recorded temperature in Celsius.
+     *
+     * EXIF 3.0 §4.6.6.8.2 (Temperature, 0x9400) stores an SRATIONAL in °C with
+     * a denominator of 0xFFFFFFFF indicating an unknown value.
      */
     public function temperatureCelsius(): ?float
     {
@@ -1488,6 +1491,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the relative humidity in percent.
+     *
+     * EXIF 3.0 §4.6.6.8.3 (Humidity, 0x9401) stores a RATIONAL in % with
+     * denominator 0xFFFFFFFF meaning the humidity is unknown.
      */
     public function humidityPercent(): ?float
     {
@@ -1496,6 +1502,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the ambient pressure in hPa.
+     *
+     * EXIF 3.0 §4.6.6.8.4 (Pressure, 0x9402) stores a RATIONAL in hPa and
+     * uses 0xFFFFFFFF as denominator to express unknown values.
      */
     public function pressureHPa(): ?float
     {
@@ -1505,8 +1514,8 @@ final readonly class ParsedExif
     /**
      * Returns the recorded water depth in metres.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: WaterDepth (0x9403) records the depth of the camera
-     * below the water surface, stored as RATIONAL in metres.
+     * EXIF 3.0 §4.6.6.8.5 WaterDepth (0x9403) records the depth of the camera below the
+     * water surface, stored as SRATIONAL in metres with 0xFFFFFFFF indicating unknown.
      *
      * @return float|null Water depth in metres, or null if not present.
      */
@@ -1518,8 +1527,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera acceleration vector in metres per second squared.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) records the 3D acceleration
-     * vector as an SRATIONAL triplet (X, Y, Z components) in m/s².
+     * EXIF 3.0 §4.6.6.8.6 Acceleration (0x9404) records the 3D acceleration vector as an
+     * SRATIONAL triplet (X, Y, Z components) in mGal (10^-5 m/s²). A denominator of
+     * 0xFFFFFFFF marks an unknown component.
      *
      * @return array{0:float,1:float,2:float}|null Three-component acceleration vector, or null if not present.
      */
@@ -1537,8 +1547,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera acceleration in metres per second squared.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) as scalar magnitude.
-     * Computes the Euclidean norm of the acceleration vector: sqrt(x² + y² + z²).
+     * EXIF 3.0 §4.6.6.8.6 Acceleration (0x9404) as scalar magnitude. Computes the
+     * Euclidean norm of the acceleration vector: sqrt(x² + y² + z²). Components with a
+     * denominator of 0xFFFFFFFF are treated as unknown and produce null.
      *
      * @return float|null Acceleration magnitude in m/s², or null if not present.
      */
@@ -1561,8 +1572,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera elevation angle in degrees.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: CameraElevationAngle (0x9405) records the camera's
-     * elevation angle relative to the horizon as SRATIONAL in degrees.
+     * EXIF 3.0 §4.6.6.8.7 CameraElevationAngle (0x9405) records the camera's elevation
+     * angle relative to the horizon as SRATIONAL in degrees, using denominator 0xFFFFFFFF
+     * to denote unknown.
      * Positive values indicate upward tilt, negative values indicate downward tilt.
      *
      * @return float|null Elevation angle in degrees, or null if not present.
@@ -3055,8 +3067,8 @@ final readonly class ParsedExif
         }
 
         return in_array($compression, [
-            Compression::JPEG_OLD_STYLE,
             Compression::JPEG,
+            Compression::JPEG_NEW_STYLE,
             Compression::LOSSY_JPEG,
             Compression::JPEG_2000,
         ], true);

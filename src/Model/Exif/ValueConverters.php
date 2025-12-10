@@ -161,11 +161,17 @@ final readonly class ValueConverters
     private const string DEFAULT_GPS_VERSION = '2.0.0.0';
 
     /**
+     * EXIF 3.0 §4.6.6.8 defines 0xFFFFFFFF as "unknown" for shooting situation rationals.
+     */
+    private const int UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
+
+    /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
      * EXIF 3.0 §4.6 (Exif IFD attribute information) reiterates that RATIONAL and SRATIONAL
      * values are stored as numerator/denominator pairs; this implementation keeps the legacy
-     * EXIF 2.32 §4.6 interpretation for earlier encoders.
+     * EXIF 2.32 §4.6 interpretation for earlier encoders and honours EXIF 3.0 §4.6.6.8
+     * "unknown" denominators encoded as 0xFFFFFFFF.
      *
      * @param int|float|string|array<int, int|float|string|UInt64>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
      *
@@ -192,7 +198,7 @@ final readonly class ValueConverters
             $numerator   = self::normaliseNumericComponent($components[0]);
             $denominator = self::normaliseNumericComponent($components[1]);
 
-            if ($numerator === null || $denominator === null || $denominator === 0.0) {
+            if ($numerator === null || $denominator === null || self::isUnknownDenominator($denominator)) {
                 return null;
             }
 
@@ -200,7 +206,7 @@ final readonly class ValueConverters
         }
 
         if ($value instanceof ExifRational) {
-            if ($value->denominator === 0) {
+            if (self::isUnknownDenominator($value->denominator)) {
                 return null;
             }
 
@@ -240,7 +246,8 @@ final readonly class ValueConverters
      * require degrees/minutes/seconds triplets encoded as SRATIONAL numerators/denominators.
      *
      * This method validates that exactly three components are present and that no denominator
-     * is zero before converting each SRATIONAL to a float.
+     * is zero or the EXIF 3.0 §4.6.6.8 unknown marker 0xFFFFFFFF before converting each
+     * SRATIONAL to a float.
      *
      * @param ExifRationalList $value List containing exactly three SRATIONAL values.
      *
@@ -254,7 +261,7 @@ final readonly class ValueConverters
 
         if (array_any(
             $value->values,
-            static fn (ExifRational $component): bool => $component->denominator === 0
+            static fn (ExifRational $component): bool => self::isUnknownDenominator($component->denominator)
         )) {
             return null;
         }
@@ -266,6 +273,19 @@ final readonly class ValueConverters
         );
 
         return [$vector[0], $vector[1], $vector[2]];
+    }
+
+    private static function isUnknownDenominator(int|float $denominator): bool
+    {
+        if ($denominator === 0 || $denominator === 0.0) {
+            return true;
+        }
+
+        if ($denominator === -1 || $denominator === -1.0) {
+            return true;
+        }
+
+        return $denominator === self::UNKNOWN_DENOMINATOR || $denominator === (float) self::UNKNOWN_DENOMINATOR;
     }
 
     /**
