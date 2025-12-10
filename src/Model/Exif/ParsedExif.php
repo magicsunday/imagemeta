@@ -68,6 +68,7 @@ use function sqrt;
 use function str_pad;
 use function str_replace;
 use function strlen;
+use function strpos;
 use function strtoupper;
 use function substr;
 use function substr_count;
@@ -3448,7 +3449,7 @@ final readonly class ParsedExif
      * EXIF 3.0 §4.6.6.7.45: The format consists of:
      * - 2 bytes SHORT: Display columns
      * - 2 bytes SHORT: Display rows
-     * - Remaining bytes: Camera settings in Unicode (UTF-16), NULL-terminated
+     * - Remaining bytes: Camera settings in Unicode (UTF-16), NULL-terminated strings
      */
     private function parseDeviceSettingDescription(): ?DeviceSettingDescription
     {
@@ -3480,12 +3481,7 @@ final readonly class ParsedExif
 
         // Extract camera settings (skip the 4-byte header)
         $settingsBytes = substr($raw, 4);
-        $settings      = null;
-
-        if ($settingsBytes !== '') {
-            // Decode UTF-16 to UTF-8
-            $settings = $this->decodeUnicodeComment($settingsBytes);
-        }
+        $settings      = $this->parseDeviceSettingStrings($settingsBytes);
 
         // Validate that columns and rows are reasonable values
         // If they seem invalid, try big-endian
@@ -3522,6 +3518,49 @@ final readonly class ParsedExif
             rows: $rows,
             settings: $settings,
         );
+    }
+
+    /**
+     * Parses UTF-16 encoded camera settings entries following the display grid dimensions.
+     *
+     * EXIF 3.0 §4.6.6.7.45; EXIF 2.32 §4.6.6.7.45.
+     *
+     * @return list<string>
+     */
+    private function parseDeviceSettingStrings(string $payload): array
+    {
+        $length = strlen($payload);
+
+        if ($length === 0) {
+            return [];
+        }
+
+        $settings = [];
+        $offset   = 0;
+
+        while ($offset < $length) {
+            $terminatorPosition = strpos($payload, "\0\0", $offset);
+
+            if ($terminatorPosition === false) {
+                $segment = substr($payload, $offset);
+                $offset  = $length;
+            } else {
+                $segment = substr($payload, $offset, $terminatorPosition - $offset);
+                $offset  = $terminatorPosition + 2;
+            }
+
+            if ($segment === '') {
+                continue;
+            }
+
+            $decoded = $this->decodeUnicodeComment($segment);
+
+            if ($decoded !== null) {
+                $settings[] = $decoded;
+            }
+        }
+
+        return $settings;
     }
 
     /**
