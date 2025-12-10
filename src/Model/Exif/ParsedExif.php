@@ -928,6 +928,36 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the standard output sensitivity (SOS) value recorded for the capture.
+     *
+     * EXIF 3.0 §4.6.6.7.8; EXIF 2.32 §4.6.6.7.8.
+     */
+    public function standardOutputSensitivity(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY);
+    }
+
+    /**
+     * Returns the recommended exposure index (REI) value recorded for the capture.
+     *
+     * EXIF 3.0 §4.6.6.7.9; EXIF 2.32 §4.6.6.7.9.
+     */
+    public function recommendedExposureIndex(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX);
+    }
+
+    /**
+     * Returns the ISO speed value when provided separately from photographic sensitivity.
+     *
+     * EXIF 3.0 §4.6.6.7.10; EXIF 2.32 §4.6.6.7.10.
+     */
+    public function isoSpeedValue(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::ISO_SPEED);
+    }
+
+    /**
      * Returns the ISO sensitivity value if present.
      *
      * EXIF 3.0 §4.6.6.7.7 Table 14 defines how SensitivityType maps the
@@ -1110,15 +1140,29 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the ISO latitude yyy value when present.
+     * Returns the ISO latitude yyy value when present and paired with ISOSpeed and ISOSpeedLatitudezzz.
+     *
+     * EXIF 3.0 §4.6.6.7.11; EXIF 2.32 §4.6.6.7.11.
      */
     public function isoSpeedLatitudeYyy(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::ISO_SPEED_LATITUDE_YYY);
+        $latitudeYyy = $this->int($this->exifIfd, ExifTag::ISO_SPEED_LATITUDE_YYY);
+
+        if ($latitudeYyy === null) {
+            return null;
+        }
+
+        if (($this->isoSpeedValue() === null) || ($this->isoSpeedLatitudeZzz() === null)) {
+            return null;
+        }
+
+        return $latitudeYyy;
     }
 
     /**
      * Returns the ISO latitude zzz value when present.
+     *
+     * EXIF 3.0 §4.6.6.7.12; EXIF 2.32 §4.6.6.7.12.
      */
     public function isoSpeedLatitudeZzz(): ?int
     {
@@ -3068,7 +3112,6 @@ final readonly class ParsedExif
         }
 
         return in_array($compression, [
-            Compression::JPEG_OLD_STYLE,
             Compression::JPEG,
             Compression::LOSSY_JPEG,
             Compression::JPEG_2000,
@@ -3723,14 +3766,14 @@ final readonly class ParsedExif
     }
 
     /**
-     * Alias for iso() using exact EXIF tag name.
+     * Alias for isoSpeedValue() using exact EXIF tag name.
      * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8833 ISOSpeed.
      *
      * @return int|null ISO speed value
      */
     public function iSOSpeed(): ?int
     {
-        return $this->iso();
+        return $this->isoSpeedValue();
     }
 
     /**

@@ -39,6 +39,65 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame(SensitivityType::SOS_AND_REI, $parsedExif->sensitivityType());
     }
 
+    #[Test]
+    public function standardOutputSensitivityReturnsValue(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::STANDARD_OUTPUT_SENSITIVITY => new IfdEntry(ExifTag::STANDARD_OUTPUT_SENSITIVITY, 4, 1, 80),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(80, $parsedExif->standardOutputSensitivity());
+    }
+
+    #[Test]
+    public function recommendedExposureIndexReturnsValue(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::RECOMMENDED_EXPOSURE_INDEX => new IfdEntry(ExifTag::RECOMMENDED_EXPOSURE_INDEX, 4, 1, 160),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(160, $parsedExif->recommendedExposureIndex());
+    }
+
+    #[Test]
+    public function isoSpeedValueReturnsValue(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 400),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(400, $parsedExif->isoSpeedValue());
+    }
+
+    #[Test]
+    public function isoSpeedLatitudeYyyRequiresRelatedTags(): void
+    {
+        $missingIsoIfd = new Ifd([
+            ExifTag::ISO_SPEED_LATITUDE_YYY => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 20),
+            ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 30),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $missingIsoIfd, null, null, null);
+
+        self::assertNull($parsedExif->isoSpeedLatitudeYyy());
+
+        $completeIfd = new Ifd([
+            ExifTag::ISO_SPEED                => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 200),
+            ExifTag::ISO_SPEED_LATITUDE_YYY   => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 20),
+            ExifTag::ISO_SPEED_LATITUDE_ZZZ   => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 30),
+        ]);
+
+        $parsedWithIso = new ParsedExif(new Ifd([]), $completeIfd, null, null, null);
+
+        self::assertSame(20, $parsedWithIso->isoSpeedLatitudeYyy());
+    }
+
     /**
      * @param array<int, int> $tagValues
      */

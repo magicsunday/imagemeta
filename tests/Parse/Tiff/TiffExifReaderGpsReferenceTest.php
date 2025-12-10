@@ -177,6 +177,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . $ifd0NextOffset;
         $gpsIfdLength   = strlen($gpsIfdPlaceholder);
         $gpsDataOffset  = strlen($header . $ifd0) + $gpsIfdLength;
+        $lonOffset      = $gpsDataOffset + (3 * 8);
 
         $gpsIfd = $gpsEntryCount
             // GPSLatitudeRef = "S" (inline)
