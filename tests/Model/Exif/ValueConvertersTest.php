@@ -898,7 +898,7 @@ final class ValueConvertersTest extends TestCase
             ValueConverters::subjectAreaToRect([10, 20]),
         );
         self::assertSame(
-            ['x' => 75, 'y' => 95, 'w' => 50, 'h' => 50],
+            ['x' => 100, 'y' => 120, 'w' => 25, 'h' => 25],
             ValueConverters::subjectAreaToRect([100, 120, 25]),
         );
         self::assertSame(
@@ -908,6 +908,7 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::subjectAreaToRect([10]));
         self::assertNull(ValueConverters::subjectAreaToRect([10, 20, -5]));
         self::assertNull(ValueConverters::subjectAreaToRect(['a', 'b']));
+        self::assertNull(ValueConverters::subjectAreaToRect([1, 2, 3, 4, 5]));
     }
 
     #[Test]

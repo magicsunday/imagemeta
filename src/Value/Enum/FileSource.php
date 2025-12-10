@@ -15,8 +15,8 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the image acquisition sources recorded by the FileSource tag in
- * EXIF 3.0 §4.6.3 (shooting conditions), preserving the list from EXIF 2.32
- * §4.6.3.
+ * EXIF 3.0 §4.6.6.7.32 (FileSource), preserving the list from EXIF 2.32
+ * §4.6.6.7.32 where DSC images default to 3.
  */
 enum FileSource: int
 {

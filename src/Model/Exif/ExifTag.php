@@ -408,31 +408,43 @@ final readonly class ExifTag
 
     /**
      * Type of sensitivity value recorded in ISO tags.
+     *
+     * EXIF 3.0 §4.6.4 Table 10; EXIF 2.32 §4.6.6.
      */
     public const int SENSITIVITY_TYPE = 0x8830;
 
     /**
      * Standard output sensitivity of the camera.
+     *
+     * EXIF 3.0 §4.6.6.7.8; EXIF 2.32 §4.6.6.7.8.
      */
     public const int STANDARD_OUTPUT_SENSITIVITY = 0x8831;
 
     /**
      * Recommended exposure index for the scene.
+     *
+     * EXIF 3.0 §4.6.6.7.9; EXIF 2.32 §4.6.6.7.9.
      */
     public const int RECOMMENDED_EXPOSURE_INDEX = 0x8832;
 
     /**
      * Calculated ISO speed value.
+     *
+     * EXIF 3.0 §4.6.6.7.10; EXIF 2.32 §4.6.6.7.10.
      */
     public const int ISO_SPEED = 0x8833;
 
     /**
      * Latitude component of the ISO speed range (YYY value).
+     *
+     * EXIF 3.0 §4.6.6.7.11; EXIF 2.32 §4.6.6.7.11.
      */
     public const int ISO_SPEED_LATITUDE_YYY = 0x8834;
 
     /**
      * Latitude component of the ISO speed range (ZZZ value).
+     *
+     * EXIF 3.0 §4.6.6.7.12; EXIF 2.32 §4.6.6.7.12.
      */
     public const int ISO_SPEED_LATITUDE_ZZZ = 0x8835;
 

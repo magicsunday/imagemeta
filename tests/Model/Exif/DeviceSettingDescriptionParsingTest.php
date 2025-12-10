@@ -20,6 +20,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function mb_convert_encoding;
 use function strlen;
 
 /**
@@ -82,7 +83,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(5, $result->columns);
         self::assertSame(10, $result->rows);
-        self::assertNull($result->settings);
+        self::assertSame([], $result->settings);
     }
 
     #[Test]
@@ -107,7 +108,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(5, $result->columns);
         self::assertSame(10, $result->rows);
-        self::assertNull($result->settings);
+        self::assertSame([], $result->settings);
     }
 
     #[Test]
@@ -131,7 +132,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(3, $result->columns);
         self::assertSame(7, $result->rows);
-        self::assertSame('Test', $result->settings);
+        self::assertSame(['Test'], $result->settings);
     }
 
     #[Test]
@@ -155,7 +156,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(3, $result->columns);
         self::assertSame(7, $result->rows);
-        self::assertSame('Test', $result->settings);
+        self::assertSame(['Test'], $result->settings);
     }
 
     #[Test]
@@ -181,7 +182,7 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(5, $result->columns);
         self::assertSame(10, $result->rows);
-        self::assertSame($settingsText, $result->settings);
+        self::assertSame([$settingsText], $result->settings);
     }
 
     #[Test]
@@ -205,6 +206,30 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertInstanceOf(DeviceSettingDescription::class, $result);
         self::assertSame(2, $result->columns);
         self::assertSame(3, $result->rows);
-        self::assertNull($result->settings);
+        self::assertSame([], $result->settings);
+    }
+
+    #[Test]
+    public function parsesMultipleSettingsStrings(): void
+    {
+        $firstSetting  = mb_convert_encoding('ISO:100', 'UTF-16LE', 'UTF-8');
+        $secondSetting = mb_convert_encoding('WB:Auto', 'UTF-16LE', 'UTF-8');
+        $data          = "\x02\x00\x02\x00" . $firstSetting . "\x00\x00" . $secondSetting . "\x00\x00";
+        $entry         = new IfdEntry(
+            tag: ExifTag::DEVICE_SETTING_DESCRIPTION,
+            type: 7, // UNDEFINED
+            count: strlen($data),
+            value: $data,
+        );
+
+        $exifIfd    = new Ifd([ExifTag::DEVICE_SETTING_DESCRIPTION => $entry]);
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        $result = $parsedExif->deviceSettingDescription();
+
+        self::assertInstanceOf(DeviceSettingDescription::class, $result);
+        self::assertSame(2, $result->columns);
+        self::assertSame(2, $result->rows);
+        self::assertSame(['ISO:100', 'WB:Auto'], $result->settings);
     }
 }
