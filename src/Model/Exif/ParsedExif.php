@@ -1450,6 +1450,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the composite image classification when available.
+     *
+     * EXIF 3.0 §4.6.6.7.47 (also EXIF 2.32 §4.6.6.7.47) defines the
+     * CompositeImage tag with four enumerated states, reserving all others.
      */
     public function compositeImage(): ?CompositeImage
     {
@@ -2704,6 +2707,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the subject distance range enum when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.46 (retained from EXIF 2.32 §4.6.6.7.46) provides the
+     * four valid SubjectDistanceRange codes; other values are reserved.
      */
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
