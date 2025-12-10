@@ -75,6 +75,40 @@ final class ParsedExifApexExamplesTest extends TestCase
     }
 
     #[Test]
+    public function returnsBrightnessValueFromSpecRange(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::BRIGHTNESS_VALUE => new IfdEntry(
+                ExifTag::BRIGHTNESS_VALUE,
+                10,
+                1,
+                new ExifRational(7600, 100),
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertEqualsWithDelta(76.0, $parsedExif->brightnessValue(), 0.0001);
+    }
+
+    #[Test]
+    public function returnsNullWhenBrightnessValueIsUnknown(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::BRIGHTNESS_VALUE => new IfdEntry(
+                ExifTag::BRIGHTNESS_VALUE,
+                10,
+                1,
+                new ExifRational(-1, 1),
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertNull($parsedExif->brightnessValue());
+    }
+
+    #[Test]
     public function returnsApertureFromSpecExample(): void
     {
         $exifIfd = new Ifd([
