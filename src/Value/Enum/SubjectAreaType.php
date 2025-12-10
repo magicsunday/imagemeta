@@ -12,10 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Value\Enum;
 
 /**
- * Subject area types as defined by EXIF 3.0 §4.6.6.
+ * Subject area types as defined by EXIF 3.0 §4.6.6.7.22.
  *
- * EXIF 3.0 §4.6.6: SubjectArea tag 0x9214 indicates the location and area of the main subject
- * in the overall scene. The area is expressed as:
+ * EXIF 3.0 §4.6.6.7.22: SubjectArea tag 0x9214 indicates the location and area of the main
+ * subject in the overall scene. The area is expressed as:
  * - Point (2 values): center coordinates
  * - Circle (3 values): center coordinates and diameter
  * - Rectangle (4 values): center coordinates, width, and height

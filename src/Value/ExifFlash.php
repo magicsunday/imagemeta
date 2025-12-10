@@ -43,6 +43,10 @@ final class ExifFlash
     /**
      * Creates a FlashInfo instance from the numeric EXIF Flash tag value.
      *
+     * EXIF 3.0 §4.6.6.7.21 (Flash) and EXIF 2.32 §4.6.4 define the grouped bit fields decoded here:
+     * bit 0 (fired), bits 1-2 (return detection), bits 3-4 (mode), bit 5 (function presence),
+     * bit 6 (red-eye reduction support).
+     *
      * @param int|string|null $value Raw EXIF Flash tag encoding the capture state.
      *
      * @return FlashInfo|null Structured flash details or null when no information is provided.
@@ -55,8 +59,7 @@ final class ExifFlash
 
         $flashBits = is_int($value) ? $value : (int) $value;
 
-        // EXIF 2.32 §4.6.4 and EXIF 3.0 §4.6.4 define the Flash tag bit layout decoded below.
-        // Extract the grouped bit fields encoded within the EXIF Flash tag.
+        // EXIF 3.0 §4.6.6.7.21 and EXIF 2.32 §4.6.4 define the grouped Flash tag bit layout decoded below.
         $returnBits  = ($flashBits >> self::RETURN_SHIFT) & self::TWO_BIT_MASK;
         $modeBits    = ($flashBits >> self::MODE_SHIFT) & self::TWO_BIT_MASK;
         $functionBit = ($flashBits >> self::FUNCTION_SHIFT) & self::ONE_BIT_MASK;

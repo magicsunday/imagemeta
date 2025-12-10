@@ -42,6 +42,22 @@ final class ExifFlashTest extends TestCase
     }
 
     /**
+     * Ensures reserved return bits are surfaced instead of discarded.
+     */
+    #[Test]
+    public function exposesReservedReturnDetection(): void
+    {
+        $info = ExifFlash::fromExifValue(2);
+
+        self::assertNotNull($info);
+        self::assertFalse($info->fired);
+        self::assertSame(FlashMode::UNKNOWN, $info->mode);
+        self::assertSame(FlashReturn::RESERVED, $info->returnDetection);
+        self::assertSame(FlashFunction::PRESENT, $info->functionPresence);
+        self::assertFalse($info->redEyeReduction);
+    }
+
+    /**
      * Ensures null is returned when no value is supplied.
      */
     #[Test]
