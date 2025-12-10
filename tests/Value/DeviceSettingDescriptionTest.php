@@ -28,12 +28,12 @@ final class DeviceSettingDescriptionTest extends TestCase
         $desc = new DeviceSettingDescription(
             columns: 5,
             rows: 10,
-            settings: null,
+            settings: [],
         );
 
         self::assertSame(5, $desc->columns);
         self::assertSame(10, $desc->rows);
-        self::assertNull($desc->settings);
+        self::assertSame([], $desc->settings);
     }
 
     #[Test]
@@ -42,12 +42,12 @@ final class DeviceSettingDescriptionTest extends TestCase
         $desc = new DeviceSettingDescription(
             columns: 3,
             rows: 7,
-            settings: 'ISO:100 WB:Auto Sharpness:Normal',
+            settings: ['ISO:100 WB:Auto Sharpness:Normal'],
         );
 
         self::assertSame(3, $desc->columns);
         self::assertSame(7, $desc->rows);
-        self::assertSame('ISO:100 WB:Auto Sharpness:Normal', $desc->settings);
+        self::assertSame(['ISO:100 WB:Auto Sharpness:Normal'], $desc->settings);
     }
 
     #[Test]
@@ -56,11 +56,11 @@ final class DeviceSettingDescriptionTest extends TestCase
         $desc = new DeviceSettingDescription(
             columns: 1,
             rows: 1,
-            settings: null,
+            settings: [],
         );
 
         self::assertSame(1, $desc->columns);
         self::assertSame(1, $desc->rows);
-        self::assertNull($desc->settings);
+        self::assertSame([], $desc->settings);
     }
 }

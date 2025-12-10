@@ -742,8 +742,8 @@ final class MetadataFormatter
             $parts[] = sprintf('Columns: %d', $value->columns);
             $parts[] = sprintf('Rows: %d', $value->rows);
 
-            if (($value->settings !== null) && ($value->settings !== '')) {
-                $parts[] = sprintf('Settings: %s', $value->settings);
+            if ($value->settings !== []) {
+                $parts[] = sprintf('Settings: %s', implode('; ', $value->settings));
             }
 
             return implode(', ', $parts);

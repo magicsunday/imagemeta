@@ -1689,7 +1689,7 @@ exif_tags:
     name: GainControl
     tag: 41991
     hex: A407
-    type: RATIONAL
+    type: SHORT
     count: 1
     ifd: ExifIFD
     category: II

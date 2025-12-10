@@ -20,8 +20,10 @@ use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
+use MagicSunday\ImageMeta\Value\Enum\SubjectAreaType;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\FlashInfo;
+use MagicSunday\ImageMeta\Value\SubjectArea;
 use Throwable;
 
 use function abs;
@@ -161,11 +163,17 @@ final readonly class ValueConverters
     private const string DEFAULT_GPS_VERSION = '2.0.0.0';
 
     /**
+     * EXIF 3.0 §4.6.6.8 defines 0xFFFFFFFF as "unknown" for shooting situation rationals.
+     */
+    private const int UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
+
+    /**
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
      * EXIF 3.0 §4.6 (Exif IFD attribute information) reiterates that RATIONAL and SRATIONAL
      * values are stored as numerator/denominator pairs; this implementation keeps the legacy
-     * EXIF 2.32 §4.6 interpretation for earlier encoders.
+     * EXIF 2.32 §4.6 interpretation for earlier encoders and honours EXIF 3.0 §4.6.6.8
+     * "unknown" denominators encoded as 0xFFFFFFFF.
      *
      * @param int|float|string|array<int, int|float|string|UInt64>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
      *
@@ -192,7 +200,7 @@ final readonly class ValueConverters
             $numerator   = self::normaliseNumericComponent($components[0]);
             $denominator = self::normaliseNumericComponent($components[1]);
 
-            if ($numerator === null || $denominator === null || $denominator === 0.0) {
+            if ($numerator === null || $denominator === null || self::isUnknownDenominator($denominator)) {
                 return null;
             }
 
@@ -200,7 +208,7 @@ final readonly class ValueConverters
         }
 
         if ($value instanceof ExifRational) {
-            if ($value->denominator === 0) {
+            if (self::isUnknownDenominator($value->denominator)) {
                 return null;
             }
 
@@ -240,7 +248,8 @@ final readonly class ValueConverters
      * require degrees/minutes/seconds triplets encoded as SRATIONAL numerators/denominators.
      *
      * This method validates that exactly three components are present and that no denominator
-     * is zero before converting each SRATIONAL to a float.
+     * is zero or the EXIF 3.0 §4.6.6.8 unknown marker 0xFFFFFFFF before converting each
+     * SRATIONAL to a float.
      *
      * @param ExifRationalList $value List containing exactly three SRATIONAL values.
      *
@@ -254,7 +263,7 @@ final readonly class ValueConverters
 
         if (array_any(
             $value->values,
-            static fn (ExifRational $component): bool => $component->denominator === 0
+            static fn (ExifRational $component): bool => self::isUnknownDenominator($component->denominator)
         )) {
             return null;
         }
@@ -268,62 +277,61 @@ final readonly class ValueConverters
         return [$vector[0], $vector[1], $vector[2]];
     }
 
+    private static function isUnknownDenominator(int|float $denominator): bool
+    {
+        if ($denominator === 0 || $denominator === 0.0) {
+            return true;
+        }
+
+        if ($denominator === -1 || $denominator === -1.0) {
+            return true;
+        }
+
+        return $denominator === self::UNKNOWN_DENOMINATOR || $denominator === (float) self::UNKNOWN_DENOMINATOR;
+    }
+
     /**
      * Normalises EXIF subject area representations into a rectangle map.
      *
-     * EXIF 3.0 §4.6.3 (SubjectArea) keeps the EXIF 2.32 §4.6.3 encoding rules for point,
-     * circular and rectangular focus areas.
+     * EXIF 3.0 §4.6.6.7.22 (SubjectArea) defines Count = 2 (point), Count = 3 (circle),
+     * and Count = 4 (rectangle) using unsigned SHORT components prior to rotation processing.
      *
      * @param array<int, int|float|string> $values Subject area values as extracted from metadata.
      *
-     * @return array{x:?int,y:?int,w:?int,h:?int}|null
+     * @return array{x:int,y:int,w:int|null,h:int|null}|null
      */
     public static function subjectAreaToRect(array $values): ?array
     {
-        $values = array_values($values);
-        $count  = count($values);
+        $subjectArea = SubjectArea::fromComponents(array_values($values));
 
-        if ($count >= 4) {
-            if (!is_numeric($values[0]) || !is_numeric($values[1]) || !is_numeric($values[2]) || !is_numeric($values[3])) {
-                return null;
-            }
-
-            return [
-                'x' => (int) $values[0],
-                'y' => (int) $values[1],
-                'w' => (int) $values[2],
-                'h' => (int) $values[3],
-            ];
+        if ($subjectArea === null) {
+            return null;
         }
 
-        if ($count === 3) {
-            if (!is_numeric($values[0]) || !is_numeric($values[1]) || !is_numeric($values[2])) {
-                return null;
-            }
-
-            $radius = (int) $values[2];
-
-            if ($radius < 0) {
-                return null;
-            }
-
-            return [
-                'x' => (int) $values[0] - $radius,
-                'y' => (int) $values[1] - $radius,
-                'w' => $radius * 2,
-                'h' => $radius * 2,
-            ];
-        }
-
-        if ($count === 2) {
-            if (!is_numeric($values[0]) || !is_numeric($values[1])) {
-                return null;
-            }
-
-            return ['x' => (int) $values[0], 'y' => (int) $values[1], 'w' => null, 'h' => null];
-        }
-
-        return null;
+        return match ($subjectArea->type) {
+            SubjectAreaType::Point => [
+                'x' => $subjectArea->centerX,
+                'y' => $subjectArea->centerY,
+                'w' => null,
+                'h' => null,
+            ],
+            SubjectAreaType::Circle => $subjectArea->diameter === null
+                ? null
+                : [
+                    'x' => $subjectArea->centerX,
+                    'y' => $subjectArea->centerY,
+                    'w' => $subjectArea->diameter,
+                    'h' => $subjectArea->diameter,
+                ],
+            SubjectAreaType::Rectangle => ($subjectArea->width === null || $subjectArea->height === null)
+                ? null
+                : [
+                    'x' => $subjectArea->centerX,
+                    'y' => $subjectArea->centerY,
+                    'w' => $subjectArea->width,
+                    'h' => $subjectArea->height,
+                ],
+        };
     }
 
     /**
@@ -1364,7 +1372,7 @@ final readonly class ValueConverters
 
     /**
      * Converts the EXIF flash bit field into a typed value object per
-     * EXIF 2.32 §4.6.4 / EXIF 3.0 §4.6.4 (Flash tag bit layout).
+     * EXIF 3.0 §4.6.6.7.21 (Flash) and EXIF 2.32 §4.6.4 (Flash tag bit layout).
      *
      * @param ExifScalar $value Flash tag value representation.
      */

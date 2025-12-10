@@ -370,6 +370,14 @@ final class TiffExifReader implements ExifReaderInterface
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
         $value      = $this->convertUInt64Values($tag, $value);
 
+        if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
+            $decodedPattern = $this->decodeCfaPatternPayload($rawBytes);
+
+            if ($decodedPattern instanceof ExifNumericList) {
+                $value = $decodedPattern;
+            }
+        }
+
         if ($tag === ExifTag::MAKER_NOTE) {
             $this->makerNoteRaw = $rawBytes;
         }
@@ -730,6 +738,40 @@ final class TiffExifReader implements ExifReaderInterface
         }
 
         return $count === 1 ? $vals[0] : new ExifNumericList($vals);
+    }
+
+    /**
+     * Decodes the CFA pattern (UNDEFINED) payload into numeric components.
+     *
+     * EXIF 3.0 §4.6.6.7.34 defines the CFA pattern as two SHORT repeat units followed by m×n
+     * bytes describing the colour filter layout; EXIF 2.32 §4.6.6.7.34 mirrors this structure.
+     */
+    private function decodeCfaPatternPayload(string $bytes): ?ExifNumericList
+    {
+        if (strlen($bytes) < 4) {
+            return null;
+        }
+
+        $horizontalRepeatPixelUnit = $this->unpackU16(substr($bytes, 0, 2));
+        $verticalRepeatPixelUnit   = $this->unpackU16(substr($bytes, 2, 2));
+
+        if ($horizontalRepeatPixelUnit <= 0 || $verticalRepeatPixelUnit <= 0) {
+            return null;
+        }
+
+        $expectedPatternValues = $horizontalRepeatPixelUnit * $verticalRepeatPixelUnit;
+        $availableBytes        = strlen($bytes) - 4;
+
+        if ($availableBytes < $expectedPatternValues) {
+            return null;
+        }
+
+        $components = [$horizontalRepeatPixelUnit, $verticalRepeatPixelUnit];
+        for ($index = 0; $index < $expectedPatternValues; ++$index) {
+            $components[] = ord($bytes[4 + $index]);
+        }
+
+        return new ExifNumericList($components);
     }
 
     /**
