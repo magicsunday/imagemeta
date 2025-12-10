@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for SubjectArea value object.
  *
- * EXIF 3.0 §4.6.6 defines SubjectArea tag 0x9214 formats:
+ * EXIF 3.0 §4.6.6.7.22 defines SubjectArea tag 0x9214 formats:
  * - 2 values: center point (x, y)
  * - 3 values: circle (center x, y, diameter)
  * - 4 values: rectangle (center x, y, width, height)
@@ -85,5 +85,13 @@ final class SubjectAreaTest extends TestCase
     public function nullInputReturnsNull(): void
     {
         self::assertNull(SubjectArea::fromComponents(null));
+    }
+
+    #[Test]
+    public function rejectsNegativeOrNonNumericValues(): void
+    {
+        self::assertNull(SubjectArea::fromComponents([-1, 10]));
+        self::assertNull(SubjectArea::fromComponents([10, 20, -5]));
+        self::assertNull(SubjectArea::fromComponents(['a', 'b']));
     }
 }
