@@ -1759,7 +1759,7 @@ exif_tags:
     count: 33
     ifd: ExifIFD
     category: III
-    freeze: 0
+    freeze: 2
     source: EXIF 3.0
 
   0xA430:
