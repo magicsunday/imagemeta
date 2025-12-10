@@ -1345,17 +1345,32 @@ final readonly class ParsedExif
     /**
      * Returns the number of source images contributing to the composite result.
      *
+     * EXIF 3.0 §4.6.6.7.48 (EXIF 2.32 §4.6.6.7.48) records both the total number of
+     * captured source images and how many were actually used to assemble the
+     * composite. Figure 24 requires two SHORT values where both counters are at
+     * least two and the used count cannot exceed the captured total.
+     *
      * @return array{0:int,1:int}|null
      */
     public function sourceImageNumberOfCompositeImage(): ?array
     {
         $values = $this->numericList($this->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
 
-        if ($values === null || count($values) !== 2) {
+        if (($values === null) || (count($values) !== 2)) {
             return null;
         }
 
-        return [$values[0], $values[1]];
+        [$capturedCount, $usedCount] = $values;
+
+        if (($capturedCount < 2) || ($usedCount < 2)) {
+            return null;
+        }
+
+        if ($usedCount > $capturedCount) {
+            return null;
+        }
+
+        return [$capturedCount, $usedCount];
     }
 
     /**

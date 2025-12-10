@@ -22,7 +22,7 @@ final readonly class CompositeImageInfo
      * Creates a composite image information metadata value object.
      *
      * @param CompositeImage|null     $type               Composite image classification.
-     * @param array{0:int,1:int}|null $counts             Pair of [sourceCount, usedCount].
+     * @param array{0:int,1:int}|null $counts             Pair of [capturedTotal, usedForComposite].
      * @param list<float>|null        $exposureTimesTotal Exposure times for contributing frames.
      */
     public function __construct(
