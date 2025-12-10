@@ -1169,6 +1169,8 @@ final readonly class ParsedExif
     /**
      * Returns the focal length in millimetres if available.
      *
+     * EXIF 3.0 §4.6.6.7.23 (FocalLength); EXIF 2.32 §4.6.6.7.23.
+     *
      * @return float|null
      */
     public function focalLengthMm(): ?float
@@ -1221,6 +1223,18 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the flash energy in beam candle power seconds when available.
+     *
+     * EXIF 3.0 §4.6.6.7.24 (FlashEnergy); EXIF 2.32 §4.6.6.7.24.
+     *
+     * @return float|null
+     */
+    public function flashEnergy(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FLASH_ENERGY);
+    }
+
+    /**
      * Returns the white balance enumeration if present.
      */
     public function whiteBalance(): ?WhiteBalance
@@ -1258,14 +1272,6 @@ final readonly class ParsedExif
     public function maxApertureApex(): ?float
     {
         return $this->rational($this->exifIfd, ExifTag::MAX_APERTURE_VALUE);
-    }
-
-    /**
-     * Returns the flash energy when provided.
-     */
-    public function flashEnergy(): ?float
-    {
-        return $this->rational($this->exifIfd, ExifTag::FLASH_ENERGY);
     }
 
     /**
@@ -3054,12 +3060,16 @@ final readonly class ParsedExif
             return false;
         }
 
-        return in_array($compression, [
-            Compression::JPEG_OLD_STYLE,
-            Compression::JPEG,
-            Compression::LOSSY_JPEG,
-            Compression::JPEG_2000,
-        ], true);
+        return in_array(
+            $compression,
+            [
+                Compression::JPEG,
+                Compression::JPEG_NEW_STYLE,
+                Compression::LOSSY_JPEG,
+                Compression::JPEG_2000,
+            ],
+            true
+        );
     }
 
     /**
