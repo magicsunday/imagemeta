@@ -184,6 +184,9 @@ final readonly class ParsedExif
     /**
      * Returns the lens model string if present.
      *
+     * EXIF 3.0 §4.6.6.9.6 (also EXIF 2.32 §4.6.6.9.6) stores the lens model as
+     * an ASCII or UTF-8 string.
+     *
      * @return string|null
      */
     public function lensModel(): ?string
@@ -193,6 +196,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the lens manufacturer string if present.
+     *
+     * EXIF 3.0 §4.6.6.9.5 (EXIF 2.32 §4.6.6.9.5) records LensMake as an ASCII or
+     * UTF-8 identifier and expects it to remain stable once captured.
      *
      * @return string|null
      */
@@ -204,6 +210,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera owner name if present.
      *
+     * EXIF 3.0 §4.6.6.9.2 (and EXIF 2.32 §4.6.6.9.2) allows ASCII or UTF-8 text
+     * for CameraOwnerName and expects Artist to be populated alongside it.
+     *
      * @return string|null
      */
     public function ownerName(): ?string
@@ -213,6 +222,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera body serial number if present.
+     *
+     * EXIF 3.0 §4.6.6.9.3 (also EXIF 2.32 §4.6.6.9.3) stores the camera body
+     * serial as an ASCII string.
      *
      * @return string|null
      */
@@ -224,6 +236,9 @@ final readonly class ParsedExif
     /**
      * Returns the lens serial number if present.
      *
+     * EXIF 3.0 §4.6.6.9.7 (also EXIF 2.32 §4.6.6.9.7) defines LensSerialNumber
+     * as a free-form ASCII value that should remain stable across edits.
+     *
      * @return string|null
      */
     public function lensSerialNumber(): ?string
@@ -233,6 +248,11 @@ final readonly class ParsedExif
 
     /**
      * Returns the lens specification describing focal and aperture range.
+     *
+     * EXIF 3.0 §4.6.6.9.4 (EXIF 2.32 §4.6.6.9.4) stores four RATIONALs: minimum
+     * focal length, maximum focal length, minimum F-number at the minimum focal
+     * length, and minimum F-number at the maximum focal length. Unknown
+     * apertures are recorded as 0/0.
      *
      * @return array{0:float,1:float,2:float,3:float}|null
      */
@@ -333,6 +353,10 @@ final readonly class ParsedExif
     /**
      * Returns the image unique identifier if present.
      *
+     * EXIF 3.0 §4.6.6.9.1 (also EXIF 2.32 §4.6.6.9.1) records a 128-bit UUID in
+     * hexadecimal ASCII with a fixed count of 33 (including the terminator).
+     * Version 4 UUIDs are recommended and the value should remain immutable.
+     *
      * @return string|null
      */
     public function imageUniqueId(): ?string
@@ -378,6 +402,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the optional image title string.
+     *
+     * EXIF 3.0 §4.6.6.9.8 (EXIF 2.32 §4.6.6.9.8) allows ASCII or UTF-8 text for
+     * ImageTitle and treats blank fields as unknown.
      */
     public function imageTitle(): ?string
     {
@@ -452,6 +479,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the photographer name if present.
+     *
+     * EXIF 3.0 §4.6.6.9.9 (and EXIF 2.32 §4.6.6.9.9) recommends keeping the
+     * photographer attribution stable and recording Artist alongside it.
      */
     public function photographer(): ?string
     {
@@ -471,6 +501,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the image editor attribution if present.
+     *
+     * EXIF 3.0 §4.6.6.9.10 (EXIF 2.32 §4.6.6.9.10) captures the primary editor
+     * name and expects Artist to be recorded when this tag is present.
      */
     public function imageEditor(): ?string
     {
@@ -1847,6 +1880,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the camera firmware string when present.
+     *
+     * EXIF 3.0 §4.6.6.9.11 (EXIF 2.32 §4.6.6.9.11) captures the camera firmware
+     * name/version in ASCII or UTF-8 and expects the Software tag to be present
+     * alongside it.
      */
     public function cameraFirmware(): ?string
     {
@@ -1855,6 +1892,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the raw developing software string.
+     *
+     * EXIF 3.0 §4.6.6.9.12 (EXIF 2.32 §4.6.6.9.12) stores RAWDevelopingSoftware
+     * to document the RAW processor and requires Software to be recorded too.
      */
     public function rawDevelopingSoftware(): ?string
     {
@@ -1863,6 +1903,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the image editing software string.
+     *
+     * EXIF 3.0 §4.6.6.9.13 (EXIF 2.32 §4.6.6.9.13) lists the primary image
+     * editing software and expects the Software tag to accompany it.
      */
     public function imageEditingSoftware(): ?string
     {
@@ -1871,6 +1914,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the metadata editing software string.
+     *
+     * EXIF 3.0 §4.6.6.9.14 (EXIF 2.32 §4.6.6.9.14) records the tool used to edit
+     * metadata without changing pixels and likewise expects Software to be
+     * filled.
      */
     public function metadataEditingSoftware(): ?string
     {
