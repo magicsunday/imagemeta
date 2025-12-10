@@ -14,8 +14,10 @@ namespace MagicSunday\ImageMeta\Model\Exif;
 use DateTimeImmutable;
 use DateTimeZone;
 use Exception;
+use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
+use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
@@ -47,6 +49,7 @@ use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Oecf;
 use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
+use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 
 use function array_find;
@@ -88,6 +91,12 @@ final readonly class ParsedExif
 
     private string $exifProfile;
 
+    private Endian $byteOrder;
+
+    private const int RATIONAL_BYTE_LENGTH = 8;
+
+    private const int SHORT_BYTE_LENGTH = 2;
+
     /**
      * @param Ifd                   $ifd0           Root IFD of the TIFF structure.
      * @param Ifd|null              $exifIfd        Sub IFD containing EXIF-specific tags.
@@ -107,10 +116,12 @@ final readonly class ParsedExif
         public ?MakerNotesRecord $makerNotes = null,
         public array $subsequentIfds = [],
         public array $subIfds = [],
+        ?Endian $byteOrder = null,
     ) {
         $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
         $this->exifVersion = ValueConverters::toExifVersion($rawVersion);
         $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
+        $this->byteOrder = $byteOrder ?? Endian::Little;
     }
 
     /**
@@ -1493,19 +1504,115 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the exposure times for each source image used in the composite.
+     * Decodes the SourceExposureTimesOfCompositeImage payload.
      *
-     * @return list<float>|null
+     * EXIF 3.0 §4.6.6.7.49 Figure 25 stores eight summary RATIONAL values
+     * followed by one or more sequences of SHORT counts and RATIONAL exposure
+     * times representing the contributing source images.
      */
-    public function sourceExposureTimesOfCompositeImage(): ?array
+    public function sourceExposureTimesOfCompositeImage(): ?SourceExposureTimes
     {
-        $values = $this->rationalList($this->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
+        $payload = $this->rawString($this->exifIfd, ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
 
-        if ($values === null || $values === []) {
+        if ($payload === null || $payload === '') {
             return null;
         }
 
-        return $values;
+        return $this->decodeSourceExposureTimes($payload);
+    }
+
+    /**
+     * Parses the binary layout defined for SourceExposureTimesOfCompositeImage.
+     *
+     * @param string $payload Raw tag payload stored as an UNDEFINED value.
+     */
+    private function decodeSourceExposureTimes(string $payload): ?SourceExposureTimes
+    {
+        $payloadLength = strlen($payload);
+        $offset        = 0;
+
+        $summary = [];
+        for ($i = 0; $i < 8; ++$i) {
+            if (($offset + self::RATIONAL_BYTE_LENGTH) > $payloadLength) {
+                return null;
+            }
+
+            $summary[] = $this->decodeRationalFromBytes(substr($payload, $offset, self::RATIONAL_BYTE_LENGTH));
+            $offset   += self::RATIONAL_BYTE_LENGTH;
+        }
+
+        $sequenceCount = $this->decodeShort($payload, $offset);
+        $offset       += $sequenceCount !== null ? self::SHORT_BYTE_LENGTH : 0;
+
+        $sequences = [];
+
+        if ($sequenceCount !== null) {
+            for ($i = 0; $i < $sequenceCount; ++$i) {
+                $imageCount = $this->decodeShort($payload, $offset);
+
+                if ($imageCount === null) {
+                    break;
+                }
+
+                $offset += self::SHORT_BYTE_LENGTH;
+
+                $sequence = [];
+                for ($image = 0; $image < $imageCount; ++$image) {
+                    if (($offset + self::RATIONAL_BYTE_LENGTH) > $payloadLength) {
+                        break 2;
+                    }
+
+                    $value = $this->decodeRationalFromBytes(substr($payload, $offset, self::RATIONAL_BYTE_LENGTH));
+                    $offset += self::RATIONAL_BYTE_LENGTH;
+
+                    if ($value !== null) {
+                        $sequence[] = $value;
+                    }
+                }
+
+                $sequences[] = $sequence;
+            }
+        }
+
+        return new SourceExposureTimes(
+            totalExposurePeriod: $summary[0] ?? null,
+            usedExposureTimeSum: $summary[1] ?? null,
+            allExposureTimeSum: $summary[2] ?? null,
+            sourceImageCount: $summary[3] ?? null,
+            maxUsedExposureTime: $summary[4] ?? null,
+            minUsedExposureTime: $summary[5] ?? null,
+            longestSourceExposureTime: $summary[6] ?? null,
+            shortestSourceExposureTime: $summary[7] ?? null,
+            sequences: $sequences,
+        );
+    }
+
+    private function decodeShort(string $payload, int $offset): ?int
+    {
+        if (($offset + self::SHORT_BYTE_LENGTH) > strlen($payload)) {
+            return null;
+        }
+
+        $format = $this->byteOrder === Endian::Little ? 'v' : 'n';
+
+        return Unpack::int($format, substr($payload, $offset, self::SHORT_BYTE_LENGTH), 'EXIF composite exposure short');
+    }
+
+    private function decodeRationalFromBytes(string $bytes): ?float
+    {
+        if (strlen($bytes) !== self::RATIONAL_BYTE_LENGTH) {
+            return null;
+        }
+
+        $format    = $this->byteOrder === Endian::Little ? 'V' : 'N';
+        $numerator = Unpack::int($format, substr($bytes, 0, 4), 'EXIF composite exposure numerator');
+        $denom     = Unpack::int($format, substr($bytes, 4, 4), 'EXIF composite exposure denominator');
+
+        if ($denom === 0) {
+            return null;
+        }
+
+        return $numerator / $denom;
     }
 
     /**

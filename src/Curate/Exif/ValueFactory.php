@@ -229,7 +229,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
         $composite = new CompositeImageInfo(
             type: $exifDocument?->compositeImage(),
             counts: $exifDocument?->sourceImageNumberOfCompositeImage(),
-            exposureTimesTotal: $exifDocument?->sourceExposureTimesOfCompositeImage(),
+            sourceExposureTimes: $exifDocument?->sourceExposureTimesOfCompositeImage(),
         );
 
         $exifVersion = $exifDocument?->exifVersion();
