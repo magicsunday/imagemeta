@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
+use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -49,6 +50,7 @@ use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 
 use function array_find;
+use function array_slice;
 use function array_map;
 use function count;
 use function iconv;
@@ -1489,13 +1491,23 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the CFA pattern definition as a list of component identifiers.
+     * Returns the CFA pattern layout when available.
      *
-     * @return list<int>|null
+     * EXIF 3.0 §4.6.6.7.34 (and EXIF 2.32 §4.6.6.7.34) define the payload as two SHORT
+     * repeat units followed by m×n component identifiers describing the colour filter array.
      */
-    public function cfaPattern(): ?array
+    public function cfaPattern(): ?CfaPattern
     {
-        return $this->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
+        $components = $this->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
+        if ($components === null || count($components) < 3) {
+            return null;
+        }
+
+        $horizontalRepeatPixelUnit = $components[0];
+        $verticalRepeatPixelUnit   = $components[1];
+        $patternValues             = array_slice($components, 2);
+
+        return CfaPattern::fromComponents($horizontalRepeatPixelUnit, $verticalRepeatPixelUnit, $patternValues);
     }
 
     /**
@@ -1507,7 +1519,7 @@ final readonly class ParsedExif
     {
         $pattern = $this->cfaPattern();
 
-        return $pattern !== null ? ValueConverters::cfaPatternToColors($pattern) : null;
+        return $pattern?->colors;
     }
 
     /**
