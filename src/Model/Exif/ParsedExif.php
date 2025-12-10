@@ -1098,6 +1098,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the ISO latitude yyy value when present.
+     *
+     * EXIF 3.0 §4.6.6.7.11 (ISOSpeedLatitudeyyy); EXIF 2.32 §4.6.6.7.11.
      */
     public function isoSpeedLatitudeYyy(): ?int
     {
@@ -1106,6 +1108,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the ISO latitude zzz value when present.
+     *
+     * EXIF 3.0 §4.6.6.7.12 (ISOSpeedLatitudezzz); EXIF 2.32 §4.6.6.7.12.
      */
     public function isoSpeedLatitudeZzz(): ?int
     {
@@ -1126,6 +1130,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the APEX shutter speed value when available.
+     *
+     * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue); EXIF 2.32 §4.6.6.7.13.
      */
     public function shutterSpeedValue(): ?float
     {
@@ -1160,6 +1166,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the APEX aperture value when present.
+     *
+     * EXIF 3.0 §4.6.6.7.14 (ApertureValue); EXIF 2.32 §4.6.6.7.14.
      */
     public function apertureValue(): ?float
     {
@@ -1233,6 +1241,8 @@ final readonly class ParsedExif
     /**
      * Returns the exposure bias value in EV if present.
      *
+     * EXIF 3.0 §4.6.6.7.16 (ExposureBiasValue); EXIF 2.32 §4.6.6.7.16.
+     *
      * @return float|null
      */
     public function exposureBias(): ?float
@@ -1243,11 +1253,19 @@ final readonly class ParsedExif
     /**
      * Returns the scene brightness value (APEX) if present.
      *
+     * EXIF 3.0 §4.6.6.7.15 (BrightnessValue); EXIF 2.32 §4.6.6.7.15.
+     *
      * @return float|null
      */
     public function brightnessValue(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+        $value = $this->normalisedValue($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+
+        if ($this->isUnknownBrightness($value)) {
+            return null;
+        }
+
+        return ValueConverters::rationalToFloat($value);
     }
 
     /**
@@ -2663,6 +2681,36 @@ final readonly class ParsedExif
         }
 
         return ValueConverters::rationalToFloat($value);
+    }
+
+    private function isUnknownBrightness(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): bool {
+        if ($value instanceof ExifRational) {
+            return $value->numerator === -1;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            if ($first instanceof ExifRational) {
+                return $first->numerator === -1;
+            }
+
+            return false;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            return $first === -1;
+        }
+
+        if (is_int($value)) {
+            return $value === -1;
+        }
+
+        return false;
     }
 
     /**

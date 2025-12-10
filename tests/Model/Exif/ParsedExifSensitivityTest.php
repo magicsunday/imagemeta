@@ -77,6 +77,22 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame(1600, $parsedExif->iso());
     }
 
+    #[Test]
+    public function returnsIsoLatitudeValues(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::ISO_SPEED_LATITUDE_YYY => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 90),
+            ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 100),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame(90, $parsedExif->isoSpeedLatitudeYyy());
+        self::assertSame(100, $parsedExif->isoSpeedLatitudeZzz());
+        self::assertSame(90, $parsedExif->isoLatitudeYyy());
+        self::assertSame(100, $parsedExif->isoLatitudeZzz());
+    }
+
     /**
      * @return iterable<string, array{sensitivityType: SensitivityType, tagValues: array<int, int>, expected: int}>
      */
