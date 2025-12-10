@@ -1364,7 +1364,7 @@ final readonly class ValueConverters
 
     /**
      * Converts the EXIF flash bit field into a typed value object per
-     * EXIF 2.32 §4.6.4 / EXIF 3.0 §4.6.4 (Flash tag bit layout).
+     * EXIF 3.0 §4.6.6.7.21 (Flash) and EXIF 2.32 §4.6.4 (Flash tag bit layout).
      *
      * @param ExifScalar $value Flash tag value representation.
      */
