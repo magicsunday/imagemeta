@@ -115,6 +115,8 @@ final class ValueConvertersTest extends TestCase
     public static function provideInvalidInputs(): iterable
     {
         yield 'denominator zero' => [new ExifRational(1, 0)];
+        yield 'denominator unknown marker' => [new ExifRational(25, 0xFFFFFFFF)];
+        yield 'denominator signed unknown marker' => [new ExifRational(25, -1)];
         yield 'empty numeric list' => [new ExifNumericList([])];
         yield 'string' => ['invalid'];
         yield 'null' => [null];
@@ -896,7 +898,7 @@ final class ValueConvertersTest extends TestCase
             ValueConverters::subjectAreaToRect([10, 20]),
         );
         self::assertSame(
-            ['x' => 75, 'y' => 95, 'w' => 50, 'h' => 50],
+            ['x' => 100, 'y' => 120, 'w' => 25, 'h' => 25],
             ValueConverters::subjectAreaToRect([100, 120, 25]),
         );
         self::assertSame(
@@ -906,6 +908,7 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::subjectAreaToRect([10]));
         self::assertNull(ValueConverters::subjectAreaToRect([10, 20, -5]));
         self::assertNull(ValueConverters::subjectAreaToRect(['a', 'b']));
+        self::assertNull(ValueConverters::subjectAreaToRect([1, 2, 3, 4, 5]));
     }
 
     #[Test]
@@ -1221,6 +1224,18 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(0.0, $result[0], 0.001);
         self::assertEqualsWithDelta(0.0, $result[1], 0.001);
         self::assertEqualsWithDelta(9.81, $result[2], 0.001);
+    }
+
+    #[Test]
+    public function returnsNullForSrationalTripletWithUnknownDenominator(): void
+    {
+        $list = new ExifRationalList([
+            new ExifRational(10, 100),
+            new ExifRational(20, 0xFFFFFFFF),
+            new ExifRational(-10, 100),
+        ]);
+
+        self::assertNull(ValueConverters::srationalTripletToFloatVector($list));
     }
 
     /**

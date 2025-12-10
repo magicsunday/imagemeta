@@ -14,6 +14,7 @@ namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
@@ -33,6 +34,7 @@ use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesTrait;
@@ -56,6 +58,9 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(GpsMeasureMode::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[CoversClass(Compression::class)]
+#[CoversClass(CustomRendered::class)]
+#[CoversClass(SceneCaptureType::class)]
+#[CoversClass(WhiteBalance::class)]
 final class EnumMappingTest extends TestCase
 {
     /**
@@ -106,6 +111,25 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
+     * Maps shooting-condition enums and rejects reserved payloads.
+     */
+    #[Test]
+    public function mapsShootingConditionEnums(): void
+    {
+        self::assertSame(CustomRendered::NORMAL_PROCESS, CustomRendered::fromExifValue(0));
+        self::assertSame(CustomRendered::CUSTOM_PROCESS, CustomRendered::fromExifValue('1'));
+        self::assertNull(CustomRendered::fromExifValue(5));
+
+        self::assertSame(WhiteBalance::AUTO, WhiteBalance::fromExifValue(0));
+        self::assertSame(WhiteBalance::MANUAL, WhiteBalance::fromExifValue('1'));
+        self::assertNull(WhiteBalance::fromExifValue(2));
+
+        self::assertSame(SceneCaptureType::STANDARD, SceneCaptureType::fromExifValue(0));
+        self::assertSame(SceneCaptureType::PORTRAIT, SceneCaptureType::fromExifValue(2));
+        self::assertNull(SceneCaptureType::fromExifValue(4));
+    }
+
+    /**
      * Returns null for empty or non-numeric payloads that cannot be mapped to an enum.
      */
     #[Test]
@@ -131,6 +155,26 @@ final class EnumMappingTest extends TestCase
     public function returnsNullForOutOfRangeOrientationCodes(): void
     {
         self::assertNull(Orientation::fromExifValue(9));
+    }
+
+    /**
+     * Rejects reserved subject distance range codes outside the defined set.
+     */
+    #[Test]
+    public function returnsNullForReservedSubjectDistanceRanges(): void
+    {
+        self::assertNull(SubjectDistanceRange::fromExifValue(4));
+        self::assertNull(SubjectDistanceRange::fromExifValue('9'));
+    }
+
+    /**
+     * Rejects composite image codes outside the enumerated EXIF range.
+     */
+    #[Test]
+    public function returnsNullForReservedCompositeImageCodes(): void
+    {
+        self::assertNull(CompositeImage::fromExifValue(4));
+        self::assertNull(CompositeImage::fromExifValue('7'));
     }
 
     /**

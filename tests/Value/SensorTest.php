@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Value;
 
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
+use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Sensor;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -40,7 +42,18 @@ final class SensorTest extends TestCase
     #[Test]
     public function constructsWithCFAPattern(): void
     {
-        $cfaPattern = [0, 1, 1, 2]; // Bayer RGGB pattern
+        $cfaPattern = CfaPattern::fromComponents(
+            horizontalRepeatPixelUnit: 2,
+            verticalRepeatPixelUnit: 2,
+            componentIdentifiers: [
+                CfaPatternColor::RED->value,
+                CfaPatternColor::GREEN->value,
+                CfaPatternColor::GREEN->value,
+                CfaPatternColor::BLUE->value,
+            ],
+        );
+
+        self::assertInstanceOf(CfaPattern::class, $cfaPattern);
 
         $sensor = new Sensor(
             pixelPitchUm: null,
@@ -50,6 +63,7 @@ final class SensorTest extends TestCase
         );
 
         self::assertSame($cfaPattern, $sensor->cfaPattern);
+        self::assertSame(CfaPatternColor::RED, $cfaPattern->colors[0]);
     }
 
     #[Test]

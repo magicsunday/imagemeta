@@ -17,6 +17,8 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\CfaPattern;
+use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ResolutionUnit;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -32,7 +34,7 @@ final class SensorFactoryTest extends TestCase
     public function createsFromExifMetadata(): void
     {
         $parsedExif = $this->parsedExif(
-            cfaPattern: [0, 1, 1, 2],
+            cfaPattern: [2, 2, 0, 1, 1, 2],
             spectralSensitivity: 'ISO 12232',
             focalPlaneXResolution: 3000.0,
             focalPlaneYResolution: 3000.0,
@@ -48,7 +50,11 @@ final class SensorFactoryTest extends TestCase
         $factory = new SensorFactory();
         $sensor  = $factory->create($metadata);
 
-        self::assertSame([0, 1, 1, 2], $sensor->cfaPattern);
+        self::assertInstanceOf(CfaPattern::class, $sensor->cfaPattern);
+        self::assertSame([
+            [CfaPatternColor::RED, CfaPatternColor::GREEN],
+            [CfaPatternColor::GREEN, CfaPatternColor::BLUE],
+        ], $sensor->cfaPattern?->grid());
         self::assertSame('ISO 12232', $sensor->spectralSensitivity);
         self::assertSame(3000.0, $sensor->focalPlaneXResolution);
         self::assertSame(3000.0, $sensor->focalPlaneYResolution);

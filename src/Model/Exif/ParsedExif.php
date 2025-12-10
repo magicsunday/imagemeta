@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
+use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -52,6 +53,7 @@ use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 
 use function array_find;
+use function array_slice;
 use function array_map;
 use function count;
 use function iconv;
@@ -71,6 +73,7 @@ use function sqrt;
 use function str_pad;
 use function str_replace;
 use function strlen;
+use function strpos;
 use function strtoupper;
 use function substr;
 use function substr_count;
@@ -922,7 +925,10 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.5.1.6 Table 10.
+     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.6.7.7 Table 14.
+     *
+     * EXIF 2.32 §4.6.6.7.7 introduces SensitivityType to signal which ISO 12232
+     * parameter the PhotographicSensitivity tag represents.
      */
     public function sensitivityType(): ?SensitivityType
     {
@@ -936,7 +942,42 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the standard output sensitivity (SOS) value recorded for the capture.
+     *
+     * EXIF 3.0 §4.6.6.7.8; EXIF 2.32 §4.6.6.7.8.
+     */
+    public function standardOutputSensitivity(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::STANDARD_OUTPUT_SENSITIVITY);
+    }
+
+    /**
+     * Returns the recommended exposure index (REI) value recorded for the capture.
+     *
+     * EXIF 3.0 §4.6.6.7.9; EXIF 2.32 §4.6.6.7.9.
+     */
+    public function recommendedExposureIndex(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::RECOMMENDED_EXPOSURE_INDEX);
+    }
+
+    /**
+     * Returns the ISO speed value when provided separately from photographic sensitivity.
+     *
+     * EXIF 3.0 §4.6.6.7.10; EXIF 2.32 §4.6.6.7.10.
+     */
+    public function isoSpeedValue(): ?int
+    {
+        return $this->int($this->exifIfd, ExifTag::ISO_SPEED);
+    }
+
+    /**
      * Returns the ISO sensitivity value if present.
+     *
+     * EXIF 3.0 §4.6.6.7.7 Table 14 defines how SensitivityType maps the
+     * PhotographicSensitivity tag to ISO 12232 parameters and combinations.
+     * When declared, the photographic sensitivity value must be prioritised for
+     * the selected parameter(s) before falling back to legacy individual tags.
      *
      * @return int|null
      */
@@ -1071,8 +1112,12 @@ final readonly class ParsedExif
     private function sensitivityTagPriority(SensitivityType $type): array
     {
         return match ($type) {
-            SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+            ],
             SensitivityType::RECOMMENDED_EXPOSURE_INDEX  => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
             ],
@@ -1081,26 +1126,27 @@ final readonly class ParsedExif
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::SOS_AND_REI => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
             ],
             SensitivityType::SOS_AND_ISO => [
-                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::REI_AND_ISO => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::SOS_AND_REI_AND_ISO => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::UNKNOWN => [],
@@ -1108,15 +1154,29 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the ISO latitude yyy value when present.
+     * Returns the ISO latitude yyy value when present and paired with ISOSpeed and ISOSpeedLatitudezzz.
+     *
+     * EXIF 3.0 §4.6.6.7.11; EXIF 2.32 §4.6.6.7.11.
      */
     public function isoSpeedLatitudeYyy(): ?int
     {
-        return $this->int($this->exifIfd, ExifTag::ISO_SPEED_LATITUDE_YYY);
+        $latitudeYyy = $this->int($this->exifIfd, ExifTag::ISO_SPEED_LATITUDE_YYY);
+
+        if ($latitudeYyy === null) {
+            return null;
+        }
+
+        if (($this->isoSpeedValue() === null) || ($this->isoSpeedLatitudeZzz() === null)) {
+            return null;
+        }
+
+        return $latitudeYyy;
     }
 
     /**
      * Returns the ISO latitude zzz value when present.
+     *
+     * EXIF 3.0 §4.6.6.7.12 (ISOSpeedLatitudezzz); EXIF 2.32 §4.6.6.7.12.
      */
     public function isoSpeedLatitudeZzz(): ?int
     {
@@ -1137,6 +1197,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the APEX shutter speed value when available.
+     *
+     * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue); EXIF 2.32 §4.6.6.7.13.
      */
     public function shutterSpeedValue(): ?float
     {
@@ -1171,6 +1233,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the APEX aperture value when present.
+     *
+     * EXIF 3.0 §4.6.6.7.14 (ApertureValue); EXIF 2.32 §4.6.6.7.14.
      */
     public function apertureValue(): ?float
     {
@@ -1179,6 +1243,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the focal length in millimetres if available.
+     *
+     * EXIF 3.0 §4.6.6.7.23 (FocalLength); EXIF 2.32 §4.6.6.7.23.
      *
      * @return float|null
      */
@@ -1212,6 +1278,9 @@ final readonly class ParsedExif
     /**
      * Returns the metering mode enumeration if present.
      *
+     * EXIF 3.0 §4.6.6.7.19 (MeteringMode) retains the EXIF 2.32
+     * §4.6.6.7.19 catalogue of camera metering algorithms.
+     *
      * @return MeteringMode|null
      */
     public function meteringMode(): ?MeteringMode
@@ -1232,7 +1301,21 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the flash energy in beam candle power seconds when available.
+     *
+     * EXIF 3.0 §4.6.6.7.24 (FlashEnergy); EXIF 2.32 §4.6.6.7.24.
+     *
+     * @return float|null
+     */
+    public function flashEnergy(): ?float
+    {
+        return $this->rational($this->exifIfd, ExifTag::FLASH_ENERGY);
+    }
+
+    /**
      * Returns the white balance enumeration if present.
+     *
+     * EXIF 3.0 §4.6.6.7.37 (WhiteBalance); EXIF 2.32 §4.6.3.
      */
     public function whiteBalance(): ?WhiteBalance
     {
@@ -1244,6 +1327,8 @@ final readonly class ParsedExif
     /**
      * Returns the exposure bias value in EV if present.
      *
+     * EXIF 3.0 §4.6.6.7.16 (ExposureBiasValue); EXIF 2.32 §4.6.6.7.16.
+     *
      * @return float|null
      */
     public function exposureBias(): ?float
@@ -1254,15 +1339,27 @@ final readonly class ParsedExif
     /**
      * Returns the scene brightness value (APEX) if present.
      *
+     * EXIF 3.0 §4.6.6.7.15 (BrightnessValue); EXIF 2.32 §4.6.6.7.15.
+     *
      * @return float|null
      */
     public function brightnessValue(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+        $value = $this->normalisedValue($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+
+        if ($this->isUnknownBrightness($value)) {
+            return null;
+        }
+
+        return ValueConverters::rationalToFloat($value);
     }
 
     /**
      * Returns the maximum aperture value (APEX) if present.
+     *
+     * EXIF 3.0 §4.6.6.7.17 (MaxApertureValue) preserves the EXIF 2.32
+     * §4.6.6.7.17 encoding of a single RATIONAL representing the lens's
+     * smallest F number expressed as an APEX value.
      *
      * @return float|null
      */
@@ -1272,15 +1369,12 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the flash energy when provided.
-     */
-    public function flashEnergy(): ?float
-    {
-        return $this->rational($this->exifIfd, ExifTag::FLASH_ENERGY);
-    }
-
-    /**
      * Returns the focal plane X resolution.
+     *
+     * EXIF 3.0 §4.6.6.7.26 defines this as the number of pixels in the image
+     * width per {@see ExifTag::FOCAL_PLANE_RESOLUTION_UNIT} on the camera
+     * focal plane. The value refers to the primary image rather than the
+     * physical sensor grid.
      */
     public function focalPlaneXResolution(): ?float
     {
@@ -1289,6 +1383,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the focal plane Y resolution.
+     *
+     * EXIF 3.0 §4.6.6.7.27 records the number of pixels in the image height per
+     * {@see ExifTag::FOCAL_PLANE_RESOLUTION_UNIT} on the camera focal plane,
+     * aligned with the primary image output.
      */
     public function focalPlaneYResolution(): ?float
     {
@@ -1297,6 +1395,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the focal plane resolution unit.
+     *
+     * EXIF 3.0 §4.6.6.7.28 reuses the {@see ResolutionUnit} scale for focal
+     * plane resolution values.
      */
     public function focalPlaneResolutionUnit(): ?int
     {
@@ -1306,15 +1407,30 @@ final readonly class ParsedExif
     /**
      * Returns the subject location coordinates when supplied.
      *
+     * EXIF 3.0 §4.6.6.7.29 stores the unrotated centre pixel of the main
+     * subject as (X, Y) relative to the upper-left corner. The tag always
+     * contains exactly two SHORT values.
+     *
      * @return list<int>|null
      */
     public function subjectLocation(): ?array
     {
-        return $this->numericList($this->exifIfd, ExifTag::SUBJECT_LOCATION);
+        $coordinates = $this->numericList($this->exifIfd, ExifTag::SUBJECT_LOCATION);
+
+        if ($coordinates === null || count($coordinates) !== 2) {
+            return null;
+        }
+
+        return [
+            0 => $coordinates[0],
+            1 => $coordinates[1],
+        ];
     }
 
     /**
      * Returns the exposure index value.
+     *
+     * EXIF 3.0 §4.6.6.7.30 (ExposureIndex); EXIF 2.32 §4.6.6.7.30.
      */
     public function exposureIndex(): ?float
     {
@@ -1345,6 +1461,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the composite image classification when available.
+     *
+     * EXIF 3.0 §4.6.6.7.47 (also EXIF 2.32 §4.6.6.7.47) defines the
+     * CompositeImage tag with four enumerated states, reserving all others.
      */
     public function compositeImage(): ?CompositeImage
     {
@@ -1356,17 +1475,32 @@ final readonly class ParsedExif
     /**
      * Returns the number of source images contributing to the composite result.
      *
+     * EXIF 3.0 §4.6.6.7.48 (EXIF 2.32 §4.6.6.7.48) records both the total number of
+     * captured source images and how many were actually used to assemble the
+     * composite. Figure 24 requires two SHORT values where both counters are at
+     * least two and the used count cannot exceed the captured total.
+     *
      * @return array{0:int,1:int}|null
      */
     public function sourceImageNumberOfCompositeImage(): ?array
     {
         $values = $this->numericList($this->exifIfd, ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
 
-        if ($values === null || count($values) !== 2) {
+        if (($values === null) || (count($values) !== 2)) {
             return null;
         }
 
-        return [$values[0], $values[1]];
+        [$capturedCount, $usedCount] = $values;
+
+        if (($capturedCount < 2) || ($usedCount < 2)) {
+            return null;
+        }
+
+        if ($usedCount > $capturedCount) {
+            return null;
+        }
+
+        return [$capturedCount, $usedCount];
     }
 
     /**
@@ -1482,13 +1616,23 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the CFA pattern definition as a list of component identifiers.
+     * Returns the CFA pattern layout when available.
      *
-     * @return list<int>|null
+     * EXIF 3.0 §4.6.6.7.34 (and EXIF 2.32 §4.6.6.7.34) define the payload as two SHORT
+     * repeat units followed by m×n component identifiers describing the colour filter array.
      */
-    public function cfaPattern(): ?array
+    public function cfaPattern(): ?CfaPattern
     {
-        return $this->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
+        $components = $this->numericList($this->exifIfd, ExifTag::CFA_PATTERN);
+        if ($components === null || count($components) < 3) {
+            return null;
+        }
+
+        $horizontalRepeatPixelUnit = $components[0];
+        $verticalRepeatPixelUnit   = $components[1];
+        $patternValues             = array_slice($components, 2);
+
+        return CfaPattern::fromComponents($horizontalRepeatPixelUnit, $verticalRepeatPixelUnit, $patternValues);
     }
 
     /**
@@ -1500,11 +1644,13 @@ final readonly class ParsedExif
     {
         $pattern = $this->cfaPattern();
 
-        return $pattern !== null ? ValueConverters::cfaPatternToColors($pattern) : null;
+        return $pattern?->colors;
     }
 
     /**
      * Returns the scene type classification when present.
+     *
+     * EXIF 3.0 §4.6.6.7.33 (SceneType); EXIF 2.32 §4.6.6.7.33.
      */
     public function sceneType(): ?SceneType
     {
@@ -1529,6 +1675,8 @@ final readonly class ParsedExif
 
     /**
      * Returns whether a custom rendering process was applied.
+     *
+     * EXIF 3.0 §4.6.6.7.35 (CustomRendered); EXIF 2.32 §4.6.3.
      */
     public function customRendered(): ?CustomRendered
     {
@@ -1539,6 +1687,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the in-camera contrast setting.
+     *
+     * EXIF 3.0 §4.6.6.7.42; EXIF 2.32 §4.6.3.
      */
     public function contrast(): ?Contrast
     {
@@ -1549,6 +1699,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the in-camera saturation setting.
+     *
+     * EXIF 3.0 §4.6.6.7.43; EXIF 2.32 §4.6.3.
      */
     public function saturation(): ?Saturation
     {
@@ -1559,6 +1711,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the in-camera sharpness setting.
+     *
+     * EXIF 3.0 §4.6.6.7.44; EXIF 2.32 §4.6.3.
      */
     public function sharpness(): ?Sharpness
     {
@@ -1587,6 +1741,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the recorded temperature in Celsius.
+     *
+     * EXIF 3.0 §4.6.6.8.2 (Temperature, 0x9400) stores an SRATIONAL in °C with
+     * a denominator of 0xFFFFFFFF indicating an unknown value.
      */
     public function temperatureCelsius(): ?float
     {
@@ -1595,6 +1752,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the relative humidity in percent.
+     *
+     * EXIF 3.0 §4.6.6.8.3 (Humidity, 0x9401) stores a RATIONAL in % with
+     * denominator 0xFFFFFFFF meaning the humidity is unknown.
      */
     public function humidityPercent(): ?float
     {
@@ -1603,6 +1763,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the ambient pressure in hPa.
+     *
+     * EXIF 3.0 §4.6.6.8.4 (Pressure, 0x9402) stores a RATIONAL in hPa and
+     * uses 0xFFFFFFFF as denominator to express unknown values.
      */
     public function pressureHPa(): ?float
     {
@@ -1612,8 +1775,8 @@ final readonly class ParsedExif
     /**
      * Returns the recorded water depth in metres.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: WaterDepth (0x9403) records the depth of the camera
-     * below the water surface, stored as RATIONAL in metres.
+     * EXIF 3.0 §4.6.6.8.5 WaterDepth (0x9403) records the depth of the camera below the
+     * water surface, stored as SRATIONAL in metres with 0xFFFFFFFF indicating unknown.
      *
      * @return float|null Water depth in metres, or null if not present.
      */
@@ -1625,8 +1788,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera acceleration vector in metres per second squared.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) records the 3D acceleration
-     * vector as an SRATIONAL triplet (X, Y, Z components) in m/s².
+     * EXIF 3.0 §4.6.6.8.6 Acceleration (0x9404) records the 3D acceleration vector as an
+     * SRATIONAL triplet (X, Y, Z components) in mGal (10^-5 m/s²). A denominator of
+     * 0xFFFFFFFF marks an unknown component.
      *
      * @return array{0:float,1:float,2:float}|null Three-component acceleration vector, or null if not present.
      */
@@ -1644,8 +1808,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera acceleration in metres per second squared.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) as scalar magnitude.
-     * Computes the Euclidean norm of the acceleration vector: sqrt(x² + y² + z²).
+     * EXIF 3.0 §4.6.6.8.6 Acceleration (0x9404) as scalar magnitude. Computes the
+     * Euclidean norm of the acceleration vector: sqrt(x² + y² + z²). Components with a
+     * denominator of 0xFFFFFFFF are treated as unknown and produce null.
      *
      * @return float|null Acceleration magnitude in m/s², or null if not present.
      */
@@ -1668,8 +1833,9 @@ final readonly class ParsedExif
     /**
      * Returns the camera elevation angle in degrees.
      *
-     * EXIF 3.0 §4.6.6 Table H.1: CameraElevationAngle (0x9405) records the camera's
-     * elevation angle relative to the horizon as SRATIONAL in degrees.
+     * EXIF 3.0 §4.6.6.8.7 CameraElevationAngle (0x9405) records the camera's elevation
+     * angle relative to the horizon as SRATIONAL in degrees, using denominator 0xFFFFFFFF
+     * to denote unknown.
      * Positive values indicate upward tilt, negative values indicate downward tilt.
      *
      * @return float|null Elevation angle in degrees, or null if not present.
@@ -2543,14 +2709,25 @@ final readonly class ParsedExif
 
     /**
      * Returns the digital zoom ratio when encoded by the camera.
+     *
+     * EXIF 3.0 §4.6.6.7.38 (DigitalZoomRatio); EXIF 2.32 §4.6.3.
+     * A ratio with a numerator of zero indicates that digital zoom was not used.
      */
     public function digitalZoomRatio(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO);
+        $ratio = $this->rational($this->exifIfd, ExifTag::DIGITAL_ZOOM_RATIO);
+
+        if ($ratio === 0.0) {
+            return null;
+        }
+
+        return $ratio;
     }
 
     /**
      * Returns the exposure mode enum indicating manual or auto settings.
+     *
+     * EXIF 3.0 §4.6.6.7.36 (ExposureMode); EXIF 2.32 §4.6.3.
      */
     public function exposureMode(): ?ExposureMode
     {
@@ -2561,6 +2738,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the gain control enum describing in-camera amplification.
+     *
+     * EXIF 3.0 §4.6.6.7.41; EXIF 2.32 §4.6.3.
      */
     public function gainControl(): ?GainControl
     {
@@ -2571,6 +2750,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the EXIF file source enum when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.32 (FileSource); EXIF 2.32 §4.6.6.7.32.
      */
     public function fileSource(): ?FileSource
     {
@@ -2605,6 +2786,8 @@ final readonly class ParsedExif
 
     /**
      * Returns the EXIF sensing method enum when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.31 (SensingMethod); EXIF 2.32 §4.6.6.7.31.
      */
     public function sensingMethod(): ?SensingMethod
     {
@@ -2615,6 +2798,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the light source enum describing the scene illumination.
+     *
+     * EXIF 3.0 §4.6.6.7.20 (LightSource) keeps the EXIF 2.32
+     * §4.6.6.7.20 mapping of coded illuminants and their default value of 0
+     * for unknown light sources.
      *
      * @return LightSource|null
      */
@@ -2629,6 +2816,8 @@ final readonly class ParsedExif
     /**
      * Returns the scene capture type enum when recorded.
      *
+     * EXIF 3.0 §4.6.6.7.40 (SceneCaptureType); EXIF 2.32 §4.6.3.
+     *
      * @return SceneCaptureType|null
      */
     public function sceneCaptureType(): ?SceneCaptureType
@@ -2640,6 +2829,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the subject distance range enum when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.46 (retained from EXIF 2.32 §4.6.6.7.46) provides the
+     * four valid SubjectDistanceRange codes; other values are reserved.
      */
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
@@ -2682,17 +2874,38 @@ final readonly class ParsedExif
 
     /**
      * Returns the subject distance in metres when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.18 (SubjectDistance) states that a numerator of
+     * 0xFFFFFFFF indicates infinity, while a numerator of 0 indicates an
+     * unknown distance; both conventions originate from EXIF 2.32
+     * §4.6.6.7.18.
      */
     public function subjectDistance(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::SUBJECT_DISTANCE);
+        $value = $this->normalisedValue($this->exifIfd, ExifTag::SUBJECT_DISTANCE);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $numerator = $this->subjectDistanceNumerator($value);
+
+        if ($numerator === 0) {
+            return null;
+        }
+
+        if ($numerator === 0xFFFFFFFF || $numerator === -1) {
+            return INF;
+        }
+
+        return ValueConverters::rationalToFloat($value);
     }
 
     /**
      * Returns the EXIF subject area as a structured value object.
      *
-     * EXIF 3.0 §4.6.6: SubjectArea tag 0x9214 indicates the location and area of the main subject
-     * in the overall scene.
+     * EXIF 3.0 §4.6.6.7.22: SubjectArea tag 0x9214 indicates the location and area of the main
+     * subject in the overall scene.
      */
     public function subjectArea(): ?SubjectArea
     {
@@ -2753,6 +2966,40 @@ final readonly class ParsedExif
         return $this->coerceIntValue($value);
     }
 
+    private function subjectDistanceNumerator(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?int {
+        if ($value instanceof ExifRational) {
+            return $value->numerator;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            if ($first instanceof ExifRational) {
+                return $first->numerator;
+            }
+
+            return null;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            if (is_int($first) || is_float($first)) {
+                return (int) $first;
+            }
+
+            return null;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (int) $value;
+        }
+
+        return null;
+    }
+
     /**
      * Returns a rational or numeric value converted to float if present in the given IFD.
      *
@@ -2770,6 +3017,36 @@ final readonly class ParsedExif
         }
 
         return ValueConverters::rationalToFloat($value);
+    }
+
+    private function isUnknownBrightness(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): bool {
+        if ($value instanceof ExifRational) {
+            return $value->numerator === -1;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            if ($first instanceof ExifRational) {
+                return $first->numerator === -1;
+            }
+
+            return false;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            return $first === -1;
+        }
+
+        if (is_int($value)) {
+            return $value === -1;
+        }
+
+        return false;
     }
 
     /**
@@ -3161,12 +3438,16 @@ final readonly class ParsedExif
             return false;
         }
 
-        return in_array($compression, [
-            Compression::JPEG,
-            Compression::JPEG_NEW_STYLE,
-            Compression::LOSSY_JPEG,
-            Compression::JPEG_2000,
-        ], true);
+        return in_array(
+            $compression,
+            [
+                Compression::JPEG,
+                Compression::JPEG_NEW_STYLE,
+                Compression::LOSSY_JPEG,
+                Compression::JPEG_2000,
+            ],
+            true
+        );
     }
 
     /**
@@ -3555,7 +3836,7 @@ final readonly class ParsedExif
      * EXIF 3.0 §4.6.6.7.45: The format consists of:
      * - 2 bytes SHORT: Display columns
      * - 2 bytes SHORT: Display rows
-     * - Remaining bytes: Camera settings in Unicode (UTF-16), NULL-terminated
+     * - Remaining bytes: Camera settings in Unicode (UTF-16), NULL-terminated strings
      */
     private function parseDeviceSettingDescription(): ?DeviceSettingDescription
     {
@@ -3587,12 +3868,7 @@ final readonly class ParsedExif
 
         // Extract camera settings (skip the 4-byte header)
         $settingsBytes = substr($raw, 4);
-        $settings      = null;
-
-        if ($settingsBytes !== '') {
-            // Decode UTF-16 to UTF-8
-            $settings = $this->decodeUnicodeComment($settingsBytes);
-        }
+        $settings      = $this->parseDeviceSettingStrings($settingsBytes);
 
         // Validate that columns and rows are reasonable values
         // If they seem invalid, try big-endian
@@ -3629,6 +3905,49 @@ final readonly class ParsedExif
             rows: $rows,
             settings: $settings,
         );
+    }
+
+    /**
+     * Parses UTF-16 encoded camera settings entries following the display grid dimensions.
+     *
+     * EXIF 3.0 §4.6.6.7.45; EXIF 2.32 §4.6.6.7.45.
+     *
+     * @return list<string>
+     */
+    private function parseDeviceSettingStrings(string $payload): array
+    {
+        $length = strlen($payload);
+
+        if ($length === 0) {
+            return [];
+        }
+
+        $settings = [];
+        $offset   = 0;
+
+        while ($offset < $length) {
+            $terminatorPosition = strpos($payload, "\0\0", $offset);
+
+            if ($terminatorPosition === false) {
+                $segment = substr($payload, $offset);
+                $offset  = $length;
+            } else {
+                $segment = substr($payload, $offset, $terminatorPosition - $offset);
+                $offset  = $terminatorPosition + 2;
+            }
+
+            if ($segment === '') {
+                continue;
+            }
+
+            $decoded = $this->decodeUnicodeComment($segment);
+
+            if ($decoded !== null) {
+                $settings[] = $decoded;
+            }
+        }
+
+        return $settings;
     }
 
     /**
@@ -3817,14 +4136,14 @@ final readonly class ParsedExif
     }
 
     /**
-     * Alias for iso() using exact EXIF tag name.
+     * Alias for isoSpeedValue() using exact EXIF tag name.
      * EXIF 3.0 §4.6.3 Tag Support Levels, Table 9 — Tag 0x8833 ISOSpeed.
      *
      * @return int|null ISO speed value
      */
     public function iSOSpeed(): ?int
     {
-        return $this->iso();
+        return $this->isoSpeedValue();
     }
 
     /**
