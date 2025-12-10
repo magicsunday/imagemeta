@@ -26,8 +26,8 @@ final readonly class Sensor
      * @param bool                          $ibis                     Indicates in-body image stabilisation support.
      * @param list<int>|null                $cfaPattern               Colour filter array pattern definition.
      * @param string|null                   $spectralSensitivity      Spectral sensitivity description.
-     * @param Oecf|null                     $oecf                     Opto-electronic conversion function (EXIF 3.0 §4.6.3).
-     * @param SpatialFrequencyResponse|null $spatialFrequencyResponse Spatial frequency response (EXIF 3.0 §4.6.3).
+     * @param Oecf|null                     $oecf                     Opto-electronic conversion function (EXIF 3.0 §4.6.6.7.6).
+     * @param SpatialFrequencyResponse|null $spatialFrequencyResponse Spatial frequency response (EXIF 3.0 §4.6.6.7.25).
      * @param float|null                    $focalPlaneXResolution    Focal plane X resolution.
      * @param float|null                    $focalPlaneYResolution    Focal plane Y resolution.
      * @param ResolutionUnit|null           $focalPlaneResolutionUnit Focal plane resolution unit.

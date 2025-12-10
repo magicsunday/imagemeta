@@ -1321,7 +1321,7 @@ final readonly class ParsedExif
     /**
      * Returns the decoded spatial frequency response table.
      *
-     * EXIF 3.0 §4.6.3 Table 16: SFR records camera and optical system's spatial frequency
+     * EXIF 3.0 §4.6.6.7.25 Table 12: SFR records camera and optical system's spatial frequency
      * response characteristics.
      */
     public function spatialFrequencyResponse(): ?SpatialFrequencyResponse

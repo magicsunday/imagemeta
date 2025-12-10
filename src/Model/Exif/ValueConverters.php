@@ -1035,7 +1035,7 @@ final readonly class ValueConverters
 
     /**
      * Decodes the spatial frequency response payload as defined by
-     * EXIF 3.0 §4.6.3 (figure 14) and the legacy layout retained in
+     * EXIF 3.0 §4.6.6.7.25 (figure 20, table 12) and the legacy layout retained in
      * EXIF 2.32 §4.6.3.
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.

@@ -21,25 +21,29 @@ use function is_string;
  * Spatial Frequency Response (SFR) value object.
  *
  * Matches the binary layout described in EXIF 3.0 §4.6.6.7.25
- * and Figure 20 "Spatial Frequency Response Description":
+ * and Figure 20 "Spatial Frequency Response Description" as well
+ * as the legacy EXIF 2.32 §4.6.3 layout:
  *
  *  - columns (n): number of spatial frequency columns
- *  - rows    (m): number of SFR rows
+ *  - rows    (m): number of SFR rows (directions/colour planes)
  *  - column item names: spatial frequency labels
+ *  - row item names: direction labels (width/height/diagonal)
  *  - m×n RATIONAL values: SFR[row][column]
  */
 final readonly class SpatialFrequencyResponse
 {
     /**
-     * @param int                $columns            Number of frequency columns (n).
-     * @param int                $rows               Number of SFR rows (m).
-     * @param list<string>       $spatialFrequencies Column item names (spatial frequencies).
-     * @param array<list<float>> $values             SFR values matrix [row][column].
+     * @param int                                  $columns            Number of frequency columns (n).
+     * @param int                                  $rows               Number of SFR rows (m).
+     * @param list<string>                         $spatialFrequencies Column item names (spatial frequencies).
+     * @param list<string>                         $directions         Row item names (directions/colour planes).
+     * @param array<int, array<int, float|null>>   $values             SFR values matrix [row][column].
      */
     public function __construct(
         public int $columns,
         public int $rows,
         public array $spatialFrequencies,
+        public array $directions,
         public array $values,
     ) {
     }
@@ -54,8 +58,9 @@ final readonly class SpatialFrequencyResponse
      *     'rows'    => int,                          // m
      *     'labels'  => [
      *         'columns' => list<string>,             // column item names
+     *         'rows'    => list<string>,             // row item names
      *     ],
-     *     'values'  => array<list<float>> // SFR[row][column]
+     *     'values'  => array<list<float|null>>       // SFR[row][column]
      * ]
      *
      * @param array<string, mixed>|null $matrix
@@ -85,13 +90,13 @@ final readonly class SpatialFrequencyResponse
         }
 
         $columnLabels = $labels['columns'] ?? null;
-        if (!is_array($columnLabels)) {
+        $rowLabels    = $labels['rows'] ?? null;
+        if (!is_array($columnLabels) || !is_array($rowLabels)) {
             return null;
         }
 
         // Validate and normalize column item names to list<string>
         $frequencies = [];
-
         foreach ($columnLabels as $label) {
             if (!is_string($label)) {
                 return null;
@@ -100,11 +105,21 @@ final readonly class SpatialFrequencyResponse
             $frequencies[] = $label;
         }
 
-        if (count($frequencies) !== $columns) {
+        // Validate and normalize row item names to list<string>
+        $directions = [];
+        foreach ($rowLabels as $label) {
+            if (!is_string($label)) {
+                return null;
+            }
+
+            $directions[] = $label;
+        }
+
+        if (count($frequencies) !== $columns || count($directions) !== $rows) {
             return null;
         }
 
-        // Validate that values form an exact m×n matrix of float RATIONALs
+        // Validate that values form an exact m×n matrix of RATIONALs (null if denominator was zero)
         if (count($values) !== $rows) {
             return null;
         }
@@ -119,8 +134,8 @@ final readonly class SpatialFrequencyResponse
             $typedRow = [];
 
             foreach ($row as $cell) {
-                // Spec: RATIONAL ⇒ always a numeric value, null is not allowed
-                if (!is_float($cell)) {
+                // Spec: RATIONAL ⇒ numeric value; decoder maps zero denominators to null
+                if (!is_float($cell) && ($cell !== null)) {
                     return null;
                 }
 
@@ -138,6 +153,7 @@ final readonly class SpatialFrequencyResponse
             $columns,
             $rows,
             $frequencies,
+            $directions,
             $typedValues
         );
     }

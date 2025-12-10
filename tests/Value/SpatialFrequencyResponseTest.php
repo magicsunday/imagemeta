@@ -19,11 +19,11 @@ use PHPUnit\Framework\TestCase;
 /**
  * Tests for SpatialFrequencyResponse value object.
  *
- * EXIF 3.0 §4.6.3 Table 16 defines SFR structure:
+ * EXIF 3.0 §4.6.6.7.25 Figure 20/Table 12 defines the SFR structure:
  * - columns: number of spatial frequency columns
- * - rows: number of SFR value rows
+ * - rows: number of SFR value rows (directions/colour planes)
  * - columnLabels: frequency values
- * - rowLabels: direction/color labels
+ * - rowLabels: direction labels
  * - values: matrix of RATIONAL response values
  */
 #[CoversClass(SpatialFrequencyResponse::class)]
@@ -37,6 +37,7 @@ final class SpatialFrequencyResponseTest extends TestCase
             'rows'    => 2,
             'labels'  => [
                 'columns' => ['0.1', '0.2', '0.3'],
+                'rows'    => ['Width', 'Height'],
             ],
             'values' => [
                 [1.00, 0.90, 0.80],
@@ -50,6 +51,7 @@ final class SpatialFrequencyResponseTest extends TestCase
         self::assertSame(3, $sfr->columns);
         self::assertSame(2, $sfr->rows);
         self::assertSame(['0.1', '0.2', '0.3'], $sfr->spatialFrequencies);
+        self::assertSame(['Width', 'Height'], $sfr->directions);
         self::assertSame(
             [
                 [1.00, 0.90, 0.80],
@@ -57,6 +59,27 @@ final class SpatialFrequencyResponseTest extends TestCase
             ],
             $sfr->values
         );
+    }
+
+    #[Test]
+    public function acceptsNullValuesWhenDenominatorMissing(): void
+    {
+        $matrix = [
+            'columns' => 2,
+            'rows'    => 1,
+            'labels'  => [
+                'columns' => ['0.1', '0.2'],
+                'rows'    => ['Diagonal'],
+            ],
+            'values' => [
+                [0.5, null],
+            ],
+        ];
+
+        $sfr = SpatialFrequencyResponse::fromMatrix($matrix);
+
+        self::assertNotNull($sfr);
+        self::assertSame([[0.5, null]], $sfr->values);
     }
 
     #[Test]
@@ -86,13 +109,14 @@ final class SpatialFrequencyResponseTest extends TestCase
             'rows'    => 1,
             'labels'  => [
                 'columns' => ['10'],
+                'rows'    => ['Along Image Width', 'Along Image Height'],
             ],
             'values' => [
                 [1.0, 0.9],
             ],
         ];
 
-        // Column count mismatch (labels has 1, but columns says 2)
+        // Column/row count mismatch compared to declared dimensions
         self::assertNull(SpatialFrequencyResponse::fromMatrix($matrix));
     }
 }
