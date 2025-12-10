@@ -1201,6 +1201,9 @@ final readonly class ParsedExif
     /**
      * Returns the metering mode enumeration if present.
      *
+     * EXIF 3.0 §4.6.6.7.19 (MeteringMode) retains the EXIF 2.32
+     * §4.6.6.7.19 catalogue of camera metering algorithms.
+     *
      * @return MeteringMode|null
      */
     public function meteringMode(): ?MeteringMode
@@ -1252,6 +1255,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the maximum aperture value (APEX) if present.
+     *
+     * EXIF 3.0 §4.6.6.7.17 (MaxApertureValue) preserves the EXIF 2.32
+     * §4.6.6.7.17 encoding of a single RATIONAL representing the lens's
+     * smallest F number expressed as an APEX value.
      *
      * @return float|null
      */
@@ -2509,6 +2516,10 @@ final readonly class ParsedExif
     /**
      * Returns the light source enum describing the scene illumination.
      *
+     * EXIF 3.0 §4.6.6.7.20 (LightSource) keeps the EXIF 2.32
+     * §4.6.6.7.20 mapping of coded illuminants and their default value of 0
+     * for unknown light sources.
+     *
      * @return LightSource|null
      */
     public function lightSource(): ?LightSource
@@ -2575,10 +2586,31 @@ final readonly class ParsedExif
 
     /**
      * Returns the subject distance in metres when provided.
+     *
+     * EXIF 3.0 §4.6.6.7.18 (SubjectDistance) states that a numerator of
+     * 0xFFFFFFFF indicates infinity, while a numerator of 0 indicates an
+     * unknown distance; both conventions originate from EXIF 2.32
+     * §4.6.6.7.18.
      */
     public function subjectDistance(): ?float
     {
-        return $this->rational($this->exifIfd, ExifTag::SUBJECT_DISTANCE);
+        $value = $this->normalisedValue($this->exifIfd, ExifTag::SUBJECT_DISTANCE);
+
+        if ($value === null) {
+            return null;
+        }
+
+        $numerator = $this->subjectDistanceNumerator($value);
+
+        if ($numerator === 0) {
+            return null;
+        }
+
+        if ($numerator === 0xFFFFFFFF || $numerator === -1) {
+            return INF;
+        }
+
+        return ValueConverters::rationalToFloat($value);
     }
 
     /**
@@ -2644,6 +2676,40 @@ final readonly class ParsedExif
         $value = $this->normalisedValue($ifd, $tag);
 
         return $this->coerceIntValue($value);
+    }
+
+    private function subjectDistanceNumerator(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ?int {
+        if ($value instanceof ExifRational) {
+            return $value->numerator;
+        }
+
+        if ($value instanceof ExifRationalList) {
+            $first = $value->values[0] ?? null;
+
+            if ($first instanceof ExifRational) {
+                return $first->numerator;
+            }
+
+            return null;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            $first = $value->values[0] ?? null;
+
+            if (is_int($first) || is_float($first)) {
+                return (int) $first;
+            }
+
+            return null;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (int) $value;
+        }
+
+        return null;
     }
 
     /**
