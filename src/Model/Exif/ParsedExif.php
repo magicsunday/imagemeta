@@ -1354,6 +1354,11 @@ final readonly class ParsedExif
 
     /**
      * Returns the focal plane X resolution.
+     *
+     * EXIF 3.0 §4.6.6.7.26 defines this as the number of pixels in the image
+     * width per {@see ExifTag::FOCAL_PLANE_RESOLUTION_UNIT} on the camera
+     * focal plane. The value refers to the primary image rather than the
+     * physical sensor grid.
      */
     public function focalPlaneXResolution(): ?float
     {
@@ -1362,6 +1367,10 @@ final readonly class ParsedExif
 
     /**
      * Returns the focal plane Y resolution.
+     *
+     * EXIF 3.0 §4.6.6.7.27 records the number of pixels in the image height per
+     * {@see ExifTag::FOCAL_PLANE_RESOLUTION_UNIT} on the camera focal plane,
+     * aligned with the primary image output.
      */
     public function focalPlaneYResolution(): ?float
     {
@@ -1370,6 +1379,9 @@ final readonly class ParsedExif
 
     /**
      * Returns the focal plane resolution unit.
+     *
+     * EXIF 3.0 §4.6.6.7.28 reuses the {@see ResolutionUnit} scale for focal
+     * plane resolution values.
      */
     public function focalPlaneResolutionUnit(): ?int
     {
@@ -1379,11 +1391,24 @@ final readonly class ParsedExif
     /**
      * Returns the subject location coordinates when supplied.
      *
+     * EXIF 3.0 §4.6.6.7.29 stores the unrotated centre pixel of the main
+     * subject as (X, Y) relative to the upper-left corner. The tag always
+     * contains exactly two SHORT values.
+     *
      * @return list<int>|null
      */
     public function subjectLocation(): ?array
     {
-        return $this->numericList($this->exifIfd, ExifTag::SUBJECT_LOCATION);
+        $coordinates = $this->numericList($this->exifIfd, ExifTag::SUBJECT_LOCATION);
+
+        if ($coordinates === null || count($coordinates) !== 2) {
+            return null;
+        }
+
+        return [
+            0 => $coordinates[0],
+            1 => $coordinates[1],
+        ];
     }
 
     /**
