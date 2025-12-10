@@ -21,7 +21,7 @@ use DateTimeImmutable;
  * - Humidity (0x9401): Relative humidity percentage
  * - Pressure (0x9402): Atmospheric pressure in hPa
  * - WaterDepth (0x9403): Depth below water surface in metres
- * - Acceleration (0x9404): Camera acceleration magnitude in m/s²
+ * - Acceleration (0x9404): Camera acceleration magnitude in mGal (10^-5 m/s²)
  * - CameraElevationAngle (0x9405): Elevation angle relative to horizon in degrees
  */
 final readonly class Capture
@@ -34,7 +34,7 @@ final readonly class Capture
      * @param float|null             $humidityPercent         Relative humidity percentage (EXIF 3.0 §4.6.6).
      * @param float|null             $pressureHPa             Ambient pressure in hPa (EXIF 3.0 §4.6.6).
      * @param float|null             $waterDepthM             Water depth in metres (EXIF 3.0 §4.6.6, tag 0x9403).
-     * @param float|null             $accelerationMs2         Camera acceleration magnitude in m/s² (EXIF 3.0 §4.6.6, tag 0x9404).
+     * @param float|null             $accelerationMs2         Camera acceleration magnitude in mGal (EXIF 3.0 §4.6.6.8.6, tag 0x9404).
      * @param float|null             $cameraElevationAngleDeg Camera elevation angle in degrees (EXIF 3.0 §4.6.6, tag 0x9405).
      */
     public function __construct(

@@ -575,32 +575,32 @@ final readonly class ExifTag
     public const int SUB_SEC_TIME_DIGITIZED = 0x9292;
 
     /**
-     * Ambient temperature measured by the GPS unit.
+     * Ambient temperature at capture; EXIF 3.0 §4.6.6.8.2, SRATIONAL °C, 0xFFFFFFFF denominator = unknown.
      */
     public const int TEMPERATURE = 0x9400;
 
     /**
-     * Relative humidity measured by the GPS unit.
+     * Relative humidity at capture; EXIF 3.0 §4.6.6.8.3, RATIONAL %, 0xFFFFFFFF denominator = unknown.
      */
     public const int HUMIDITY = 0x9401;
 
     /**
-     * Atmospheric pressure measured by the GPS unit.
+     * Ambient pressure at capture; EXIF 3.0 §4.6.6.8.4, RATIONAL hPa, 0xFFFFFFFF denominator = unknown.
      */
     public const int PRESSURE = 0x9402;
 
     /**
-     * Water depth below the recording equipment.
+     * Water depth at capture; EXIF 3.0 §4.6.6.8.5, SRATIONAL m, 0xFFFFFFFF denominator = unknown.
      */
     public const int WATER_DEPTH = 0x9403;
 
     /**
-     * Linear acceleration experienced during capture.
+     * Linear acceleration experienced during capture; EXIF 3.0 §4.6.6.8.6, SRATIONAL mGal, 0xFFFFFFFF denominator = unknown.
      */
     public const int ACCELERATION = 0x9404;
 
     /**
-     * Camera elevation angle relative to the horizon.
+     * Camera elevation angle relative to the horizon; EXIF 3.0 §4.6.6.8.7, SRATIONAL degrees, 0xFFFFFFFF denominator = unknown.
      */
     public const int CAMERA_ELEVATION_ANGLE = 0x9405;
 
