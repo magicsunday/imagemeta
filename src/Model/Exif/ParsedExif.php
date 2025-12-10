@@ -20,8 +20,8 @@ use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
-use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\CfaPattern;
+use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
@@ -48,13 +48,13 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\Oecf;
-use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
+use MagicSunday\ImageMeta\Value\SpatialFrequencyResponse;
 use MagicSunday\ImageMeta\Value\SubjectArea;
 
 use function array_find;
-use function array_slice;
 use function array_map;
+use function array_slice;
 use function count;
 use function iconv;
 use function in_array;
@@ -121,7 +121,7 @@ final readonly class ParsedExif
         $rawVersion        = $this->rawString($this->exifIfd, ExifTag::EXIF_VERSION);
         $this->exifVersion = ValueConverters::toExifVersion($rawVersion);
         $this->exifProfile = ExifCapabilities::fromVersion($this->exifVersion);
-        $this->byteOrder = $byteOrder ?? Endian::Little;
+        $this->byteOrder   = $byteOrder ?? Endian::Little;
     }
 
     /**
@@ -387,9 +387,7 @@ final readonly class ParsedExif
             return '1.00';
         }
 
-        $normalized = ValueConverters::toExifVersion($value);
-
-        return $normalized;
+        return ValueConverters::toExifVersion($value);
     }
 
     /**
@@ -1149,7 +1147,7 @@ final readonly class ParsedExif
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
             ],
-            SensitivityType::RECOMMENDED_EXPOSURE_INDEX  => [
+            SensitivityType::RECOMMENDED_EXPOSURE_INDEX => [
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
@@ -1571,11 +1569,11 @@ final readonly class ParsedExif
             }
 
             $summary[] = $this->decodeRationalFromBytes(substr($payload, $offset, self::RATIONAL_BYTE_LENGTH));
-            $offset   += self::RATIONAL_BYTE_LENGTH;
+            $offset += self::RATIONAL_BYTE_LENGTH;
         }
 
         $sequenceCount = $this->decodeShort($payload, $offset);
-        $offset       += $sequenceCount !== null ? self::SHORT_BYTE_LENGTH : 0;
+        $offset += $sequenceCount !== null ? self::SHORT_BYTE_LENGTH : 0;
 
         $sequences = [];
 
@@ -2544,7 +2542,7 @@ final readonly class ParsedExif
     /**
      * Returns the horizontal resolution value expressed in the resolution unit.
      */
-    public function xResolution(): ?float
+    public function xResolution(): float
     {
         // EXIF 3.0 §4.6.5.1.8: Default is 72 dpi when resolution is unknown
         return $this->rational($this->ifd0, ExifTag::X_RESOLUTION) ?? 72.0;
@@ -2553,7 +2551,7 @@ final readonly class ParsedExif
     /**
      * Returns the vertical resolution value expressed in the resolution unit.
      */
-    public function yResolution(): ?float
+    public function yResolution(): float
     {
         $resolution = $this->rational($this->ifd0, ExifTag::Y_RESOLUTION);
 
@@ -3481,7 +3479,7 @@ final readonly class ParsedExif
      */
     private function isJpegCompression(?Compression $compression): bool
     {
-        if ($compression === null) {
+        if (!$compression instanceof Compression) {
             return false;
         }
 
@@ -3592,12 +3590,12 @@ final readonly class ParsedExif
         $photometric = $this->photometric();
         $colorSpace  = $this->colorSpace();
 
-        if (($photometric === null) || ($colorSpace === null) || ($colorSpace === ColorSpace::UNCALIBRATED)) {
+        if ((!$photometric instanceof Photometric) || (!$colorSpace instanceof ColorSpace) || ($colorSpace === ColorSpace::UNCALIBRATED)) {
             return null;
         }
 
         return match ($photometric) {
-            Photometric::RGB => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
+            Photometric::RGB   => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
             Photometric::YCBCR => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
         };
     }
@@ -4116,18 +4114,6 @@ final readonly class ParsedExif
         $dt = DateTimeImmutable::createFromFormat($format, $normalized, $tz);
 
         return $dt !== false ? $dt : null;
-    }
-
-    /**
-     * Detects EXIF DateTime placeholders filled with blanks instead of numeric content.
-     */
-    private function isBlankDateTimeString(string $value): bool
-    {
-        if (trim($value) === '') {
-            return true;
-        }
-
-        return trim(str_replace(':', '', $value)) === '';
     }
 
     // ========================================================================

@@ -74,7 +74,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $packLong     = $endian === Endian::Little ? 'V' : 'N';
         $packRational = $endian === Endian::Little ? 'V2' : 'N2';
 
-        $header       = $endian->value
+        $header = $endian->value
             . pack($packShort, TiffConst::MAGIC_CLASSIC)
             . pack($packLong, 8);
         $gpsIfdOffset  = 26;
@@ -95,12 +95,12 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packLong, $gpsIfdOffset)
             . $ifd0NextOffset;
 
-        $gpsEntryCount = pack($packShort, 6);
+        $gpsEntryCount     = pack($packShort, 6);
         $gpsIfdPlaceholder = $gpsEntryCount
             . str_repeat("\0", 6 * 12)
             . $ifd0NextOffset;
-        $gpsIfdLength   = strlen($gpsIfdPlaceholder);
-        $gpsDataOffset  = strlen($header . $ifd0) + $gpsIfdLength;
+        $gpsIfdLength  = strlen($gpsIfdPlaceholder);
+        $gpsDataOffset = strlen($header . $ifd0) + $gpsIfdLength;
 
         $gpsIfd = $gpsEntryCount
             // GPSLatitudeRef = "S"
@@ -171,13 +171,13 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packLong8, $gpsIfdOffset)
             . $ifd0NextOffset;
 
-        $gpsEntryCount = pack($packLong8, 6);
+        $gpsEntryCount     = pack($packLong8, 6);
         $gpsIfdPlaceholder = $gpsEntryCount
             . str_repeat("\0", 6 * 20)
             . $ifd0NextOffset;
-        $gpsIfdLength   = strlen($gpsIfdPlaceholder);
-        $gpsDataOffset  = strlen($header . $ifd0) + $gpsIfdLength;
-        $lonOffset      = $gpsDataOffset + (3 * 8);
+        $gpsIfdLength  = strlen($gpsIfdPlaceholder);
+        $gpsDataOffset = strlen($header . $ifd0) + $gpsIfdLength;
+        $lonOffset     = $gpsDataOffset + (3 * 8);
 
         $gpsIfd = $gpsEntryCount
             // GPSLatitudeRef = "S" (inline)

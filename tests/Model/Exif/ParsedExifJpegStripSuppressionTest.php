@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model\Exif;
 
+use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -27,11 +27,11 @@ final class ParsedExifJpegStripSuppressionTest extends TestCase
     public function suppressesStripTagsForJpegPrimaryImage(): void
     {
         $ifd0 = new Ifd([
-            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
-            ExifTag::ROWS_PER_STRIP => new IfdEntry(ExifTag::ROWS_PER_STRIP, 4, 1, 8),
-            ExifTag::STRIP_OFFSETS => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 2, [100, 200]),
-            ExifTag::STRIP_BYTE_COUNTS => new IfdEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 2, [50, 50]),
-            ExifTag::JPEG_INTERCHANGE_FORMAT => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 1024),
+            ExifTag::COMPRESSION                    => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::ROWS_PER_STRIP                 => new IfdEntry(ExifTag::ROWS_PER_STRIP, 4, 1, 8),
+            ExifTag::STRIP_OFFSETS                  => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 2, [100, 200]),
+            ExifTag::STRIP_BYTE_COUNTS              => new IfdEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 2, [50, 50]),
+            ExifTag::JPEG_INTERCHANGE_FORMAT        => new IfdEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, 4, 1, 1024),
             ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH => new IfdEntry(
                 ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH,
                 4,
@@ -57,8 +57,8 @@ final class ParsedExifJpegStripSuppressionTest extends TestCase
         ]);
 
         $ifd1 = new Ifd([
-            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
-            ExifTag::STRIP_OFFSETS => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 2, [300, 400]),
+            ExifTag::COMPRESSION       => new IfdEntry(ExifTag::COMPRESSION, 3, 1, Compression::JPEG->value),
+            ExifTag::STRIP_OFFSETS     => new IfdEntry(ExifTag::STRIP_OFFSETS, 4, 2, [300, 400]),
             ExifTag::STRIP_BYTE_COUNTS => new IfdEntry(ExifTag::STRIP_BYTE_COUNTS, 4, 2, [75, 80]),
         ]);
 

@@ -40,7 +40,7 @@ enum ResolutionUnit: int
 
         return match ($resolved) {
             self::INCHES, self::CENTIMETER => $resolved,
-            default                        => null,
+            default => null,
         };
     }
 }

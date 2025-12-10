@@ -35,7 +35,7 @@ final class ParsedExifCfaPatternTest extends TestCase
             new ExifNumericList([2, 2, 0, 1, 2, 1]),
         );
 
-        $exifIfd   = new Ifd([ExifTag::CFA_PATTERN => $cfaPattern]);
+        $exifIfd    = new Ifd([ExifTag::CFA_PATTERN => $cfaPattern]);
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         $pattern = $parsedExif->cfaPattern();
@@ -59,7 +59,7 @@ final class ParsedExifCfaPatternTest extends TestCase
             new ExifNumericList([2, 2, 0, 1]),
         );
 
-        $exifIfd   = new Ifd([ExifTag::CFA_PATTERN => $cfaPattern]);
+        $exifIfd    = new Ifd([ExifTag::CFA_PATTERN => $cfaPattern]);
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
 
         self::assertNull($parsedExif->cfaPattern());

@@ -16,13 +16,12 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
-use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
-use MagicSunday\ImageMeta\Value\Enum\SceneCaptureType;
-use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
+use MagicSunday\ImageMeta\Value\Enum\ExposureProgram;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\SceneType;
 use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
+use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -78,8 +77,8 @@ final class ParsedExifShootingConditionsTest extends TestCase
     public function returnsWhiteBalanceAndExposureModeEnums(): void
     {
         $exifIfd = new Ifd([
-            ExifTag::WHITE_BALANCE  => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, 1),
-            ExifTag::EXPOSURE_MODE  => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, 0),
+            ExifTag::WHITE_BALANCE      => new IfdEntry(ExifTag::WHITE_BALANCE, 3, 1, 1),
+            ExifTag::EXPOSURE_MODE      => new IfdEntry(ExifTag::EXPOSURE_MODE, 3, 1, 0),
             ExifTag::SCENE_CAPTURE_TYPE => new IfdEntry(ExifTag::SCENE_CAPTURE_TYPE, 3, 1, 4),
         ]);
 

@@ -304,7 +304,7 @@ final readonly class ValueConverters
     {
         $subjectArea = SubjectArea::fromComponents(array_values($values));
 
-        if ($subjectArea === null) {
+        if (!$subjectArea instanceof SubjectArea) {
             return null;
         }
 

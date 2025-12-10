@@ -88,9 +88,9 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertNull($parsedExif->isoSpeedLatitudeYyy());
 
         $completeIfd = new Ifd([
-            ExifTag::ISO_SPEED                => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 200),
-            ExifTag::ISO_SPEED_LATITUDE_YYY   => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 20),
-            ExifTag::ISO_SPEED_LATITUDE_ZZZ   => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 30),
+            ExifTag::ISO_SPEED              => new IfdEntry(ExifTag::ISO_SPEED, 4, 1, 200),
+            ExifTag::ISO_SPEED_LATITUDE_YYY => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_YYY, 4, 1, 20),
+            ExifTag::ISO_SPEED_LATITUDE_ZZZ => new IfdEntry(ExifTag::ISO_SPEED_LATITUDE_ZZZ, 4, 1, 30),
         ]);
 
         $parsedWithIso = new ParsedExif(new Ifd([]), $completeIfd, null, null, null);

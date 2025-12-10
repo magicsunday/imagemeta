@@ -54,7 +54,7 @@ final class SensorFactoryTest extends TestCase
         self::assertSame([
             [CfaPatternColor::RED, CfaPatternColor::GREEN],
             [CfaPatternColor::GREEN, CfaPatternColor::BLUE],
-        ], $sensor->cfaPattern?->grid());
+        ], $sensor->cfaPattern->grid());
         self::assertSame('ISO 12232', $sensor->spectralSensitivity);
         self::assertSame(3000.0, $sensor->focalPlaneXResolution);
         self::assertSame(3000.0, $sensor->focalPlaneYResolution);

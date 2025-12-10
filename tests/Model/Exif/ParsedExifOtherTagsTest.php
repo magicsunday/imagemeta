@@ -43,11 +43,11 @@ final class ParsedExifOtherTagsTest extends TestCase
     public function hardwareAttributionTagsReturnExifStrings(): void
     {
         $exifIfd = new Ifd([
-            ExifTag::CAMERA_OWNER_NAME    => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 1, 'Owner'),
-            ExifTag::BODY_SERIAL_NUMBER   => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, '123456789'),
-            ExifTag::LENS_MAKE            => new IfdEntry(ExifTag::LENS_MAKE, 2, 1, 'LensMaker'),
-            ExifTag::LENS_MODEL           => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'Lens Model 12-35mm'),
-            ExifTag::LENS_SERIAL_NUMBER   => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 1, 'LN987654321'),
+            ExifTag::CAMERA_OWNER_NAME  => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 1, 'Owner'),
+            ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, '123456789'),
+            ExifTag::LENS_MAKE          => new IfdEntry(ExifTag::LENS_MAKE, 2, 1, 'LensMaker'),
+            ExifTag::LENS_MODEL         => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'Lens Model 12-35mm'),
+            ExifTag::LENS_SERIAL_NUMBER => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 1, 'LN987654321'),
         ]);
 
         $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);

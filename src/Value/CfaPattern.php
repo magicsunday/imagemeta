@@ -26,9 +26,9 @@ use function count;
 final readonly class CfaPattern
 {
     /**
-     * @param positive-int             $horizontalRepeatPixelUnit Number of lateral pixels before the pattern repeats.
-     * @param positive-int             $verticalRepeatPixelUnit   Number of vertical pixels before the pattern repeats.
-     * @param list<CfaPatternColor>    $colors                    Flattened colour list (row-major, vertical × horizontal).
+     * @param positive-int          $horizontalRepeatPixelUnit Number of lateral pixels before the pattern repeats.
+     * @param positive-int          $verticalRepeatPixelUnit   Number of vertical pixels before the pattern repeats.
+     * @param list<CfaPatternColor> $colors                    Flattened colour list (row-major, vertical × horizontal).
      */
     private function __construct(
         public int $horizontalRepeatPixelUnit,
@@ -40,9 +40,9 @@ final readonly class CfaPattern
     /**
      * Builds a CFA pattern from EXIF component identifiers.
      *
-     * @param int        $horizontalRepeatPixelUnit Number of lateral pixels before the pattern repeats.
-     * @param int        $verticalRepeatPixelUnit   Number of vertical pixels before the pattern repeats.
-     * @param list<int>  $componentIdentifiers      Raw component identifiers from the EXIF tag payload.
+     * @param int       $horizontalRepeatPixelUnit Number of lateral pixels before the pattern repeats.
+     * @param int       $verticalRepeatPixelUnit   Number of vertical pixels before the pattern repeats.
+     * @param list<int> $componentIdentifiers      Raw component identifiers from the EXIF tag payload.
      */
     public static function fromComponents(
         int $horizontalRepeatPixelUnit,

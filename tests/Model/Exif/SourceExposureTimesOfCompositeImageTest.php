@@ -129,8 +129,8 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
     }
 
     /**
-     * @param list<RationalPair>          $summary
-     * @param list<list<float>>           $sequences
+     * @param list<RationalPair> $summary
+     * @param list<list<float>>  $sequences
      */
     private function buildPayload(array $summary, Endian $byteOrder, array $sequences): string
     {
