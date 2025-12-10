@@ -911,7 +911,10 @@ final readonly class ParsedExif
     }
 
     /**
-     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.5.1.6 Table 10.
+     * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.6.7.7 Table 14.
+     *
+     * EXIF 2.32 §4.6.6.7.7 introduces SensitivityType to signal which ISO 12232
+     * parameter the PhotographicSensitivity tag represents.
      */
     public function sensitivityType(): ?SensitivityType
     {
@@ -926,6 +929,11 @@ final readonly class ParsedExif
 
     /**
      * Returns the ISO sensitivity value if present.
+     *
+     * EXIF 3.0 §4.6.6.7.7 Table 14 defines how SensitivityType maps the
+     * PhotographicSensitivity tag to ISO 12232 parameters and combinations.
+     * When declared, the photographic sensitivity value must be prioritised for
+     * the selected parameter(s) before falling back to legacy individual tags.
      *
      * @return int|null
      */
@@ -1060,8 +1068,12 @@ final readonly class ParsedExif
     private function sensitivityTagPriority(SensitivityType $type): array
     {
         return match ($type) {
-            SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [ExifTag::STANDARD_OUTPUT_SENSITIVITY],
+            SensitivityType::STANDARD_OUTPUT_SENSITIVITY => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
+            ],
             SensitivityType::RECOMMENDED_EXPOSURE_INDEX  => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
             ],
@@ -1070,26 +1082,27 @@ final readonly class ParsedExif
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::SOS_AND_REI => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
             ],
             SensitivityType::SOS_AND_ISO => [
-                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::PHOTOGRAPHIC_SENSITIVITY,
+                ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::REI_AND_ISO => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::SOS_AND_REI_AND_ISO => [
+                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::STANDARD_OUTPUT_SENSITIVITY,
                 ExifTag::RECOMMENDED_EXPOSURE_INDEX,
                 ExifTag::EXPOSURE_INDEX,
-                ExifTag::PHOTOGRAPHIC_SENSITIVITY,
                 ExifTag::ISO_SPEED,
             ],
             SensitivityType::UNKNOWN => [],
