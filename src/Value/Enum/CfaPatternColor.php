@@ -15,8 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the colour component codes used by the CFA pattern tag in EXIF 3.0
- * §4.6.2 (image data structure), retaining the definitions introduced in EXIF
- * 2.32 §4.6.2.
+ * §4.6.2 (image data structure).
  */
 enum CfaPatternColor: int
 {

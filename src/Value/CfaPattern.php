@@ -20,8 +20,7 @@ use function count;
  * Represents the colour filter array pattern layout for a one-chip colour area sensor.
  *
  * EXIF 3.0 §4.6.6.7.34 defines the CFA pattern payload as two SHORT repeat units followed
- * by m×n component identifiers (colour values per Table 13). EXIF 2.32 §4.6.6.7.34
- * documents the same layout for earlier revisions.
+ * by m×n component identifiers (colour values per Table 13).
  */
 final readonly class CfaPattern
 {

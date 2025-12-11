@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the flash mode bits carried in the Flash tag according to EXIF 3.0
- * §4.6.6.7.21 (Flash), keeping the interpretations from EXIF 2.32 §4.6.4.
+ * §4.6.6.7.21 (Flash).
  */
 enum FlashMode: int
 {

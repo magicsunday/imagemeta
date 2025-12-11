@@ -15,8 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the CustomRendered tag values documented in EXIF 3.0
- * §4.6.6.7.35 (shooting conditions) with the same semantics as EXIF 2.32
- * §4.6.3.
+ * §4.6.6.7.35 (shooting conditions).
  */
 enum CustomRendered: int
 {

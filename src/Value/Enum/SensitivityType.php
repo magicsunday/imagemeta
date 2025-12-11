@@ -18,8 +18,6 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
  *
  * EXIF 3.0 §4.6.6.7.7 Table 14 defines the SensitivityType tag which indicates
  * which ISO 12232 parameter is encoded by the PhotographicSensitivity tag.
- * EXIF 2.32 §4.6.6.7.7 introduced this mapping to disambiguate ISO speed
- * representations when multiple parameters share identical values.
  *
  * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::SENSITIVITY_TYPE
  * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::PHOTOGRAPHIC_SENSITIVITY

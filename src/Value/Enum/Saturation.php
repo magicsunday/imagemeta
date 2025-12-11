@@ -15,8 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the saturation processing levels associated with the Saturation
- * tag in EXIF 3.0 §4.6.6.7.43 (shooting conditions), identical to EXIF 2.32
- * §4.6.3.
+ * tag in EXIF 3.0 §4.6.6.7.43 (shooting conditions).
  */
 enum Saturation: int
 {

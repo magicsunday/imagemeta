@@ -41,7 +41,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * component when the tag is not present.
      *
      * @see EXIF 3.0 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
-     * @see EXIF 2.32 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
      */
     #[Test]
     public function bitsPerSampleReturnsDefaultWhenMissing(): void
@@ -135,7 +134,6 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * YCbCrPositioning::CENTERED when the tag is not present.
      *
      * @see EXIF 3.0 §4.6.5.1.13: Default value is 1 (centered) if missing
-     * @see EXIF 2.32 §4.6.2
      */
     #[Test]
     public function ycbcrPositioningDefaultsToCenteredWhenMissing(): void
@@ -241,7 +239,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $table = range(0, 767);
 
         $complete = new Ifd([
-            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, count($table), $table),
+            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, \count($table), $table),
         ]);
 
         $parsedExif = new ParsedExif($complete, null, null, null, null);

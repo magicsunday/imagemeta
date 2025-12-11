@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the sensor sampling methods recognised by the SensingMethod tag in
- * EXIF 3.0 §4.6.6.7.31 (SensingMethod), matching the EXIF 2.32 §4.6.6.7.31 list.
+ * EXIF 3.0 §4.6.6.7.31 (SensingMethod).
  */
 enum SensingMethod: int
 {

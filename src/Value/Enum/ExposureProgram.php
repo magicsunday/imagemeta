@@ -16,8 +16,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 /**
  * Exposure program encodings for EXIF tag 0x8822 ExposureProgram.
  *
- * EXIF 3.0 §4.6.6.7.3 aligns with EXIF 2.32 §4.6.6.7.3 and defines values
- * 0–8; all other payloads are reserved and mapped to null.
+ * EXIF 3.0 §4.6.6.7.3 defines values 0–8; all other payloads are reserved and mapped to null.
  */
 enum ExposureProgram: int
 {

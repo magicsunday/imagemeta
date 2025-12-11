@@ -15,8 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the camera exposure mode settings listed for the ExposureMode tag
- * in EXIF 3.0 §4.6.6.7.36 (tags relating to shooting conditions), unchanged
- * from the EXIF 2.32 §4.6.3 definitions.
+ * in EXIF 3.0 §4.6.6.7.36 (tags relating to shooting conditions).
  */
 enum ExposureMode: int
 {

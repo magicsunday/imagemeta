@@ -18,7 +18,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
  *
  * JPEG compressed data uses the JPEG marker instead of this tag. Only RGB (2)
  * and YCbCr (6) values are valid; all other codes are reserved by the
- * specification (EXIF 2.32 §4.6.5.1.5).
+ * specification.
  */
 enum Photometric: int
 {

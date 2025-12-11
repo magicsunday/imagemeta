@@ -46,9 +46,7 @@ use function trim;
  * Extracts EXIF/XMP payloads and QuickTime metadata.
  *
  * EXIF 3.0 §4.8 outlines embedding Exif items in ISO BMFF containers through
- * the `Exif` box and item metadata; EXIF 2.32 §4.8 describes the legacy rules
- * retained for backwards compatibility, while EXIF 2.1 §2.7.3 set the groundwork
- * by defining the FlashPix APP2 interoperability streams used by early containers.
+ * the `Exif` box and item metadata.
  *
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
@@ -81,7 +79,7 @@ final readonly class IsoBmffExtractor
     private const string BOX_UUID = 'uuid';
 
     /**
-     * FourCC for embedded Exif box (EXIF 3.0 §4.8 / EXIF 2.32 §4.8).
+     * FourCC for embedded Exif box (EXIF 3.0 §4.8).
      */
     private const string BOX_EXIF = 'Exif';
 
@@ -706,7 +704,7 @@ final readonly class IsoBmffExtractor
             throw new ParseError('meta box truncated');
         }
 
-        // EXIF 3.0 Annex A.2 and EXIF 2.32 Annex A.2 describe how the `meta` box aggregates
+        // EXIF 3.0 Annex A.2 describes how the `meta` box aggregates
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
         $payloads = $this->collectDirectPayloads($meta);
@@ -719,7 +717,7 @@ final readonly class IsoBmffExtractor
 
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
-        // encoders still include it, so we normalise per the EXIF 2.32 guidance.
+        // encoders still include it, so we normalise accordingly.
         foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...)) as $blob) {
             $exifBlobs[] = $blob;
         }
@@ -830,8 +828,8 @@ final readonly class IsoBmffExtractor
         $xmpItemIds  = [];
 
         // Collect item IDs that advertise EXIF/XMP payloads via their metadata descriptors.
-        // EXIF 3.0 Annex A.2.3 and EXIF 2.32 Annex A.2.3 map item types and MIME hints that
-        // flag Exif or XMP payloads, so we treat those descriptors as authoritative signals.
+        // EXIF 3.0 Annex A.2.3 maps item types and MIME hints that flag Exif or XMP payloads,
+        // so we treat those descriptors as authoritative signals.
         foreach ($itemInfos as $info) {
             if ($this->isExifItem($info)) {
                 $exifItemIds[] = $info['id'];
@@ -931,8 +929,7 @@ final readonly class IsoBmffExtractor
      * Strips redundant Exif signatures so downstream parsers accept the blob.
      *
      * EXIF 3.0 §4.8 requires that ISO BMFF Exif items expose the TIFF header
-     * without the JPEG APP1 "Exif\0\0" signature; EXIF 2.32 §4.8 highlights
-     * this interoperability rule for earlier encoders. Some writers still
+     * without the JPEG APP1 "Exif\0\0" signature. Some writers still
      * prefix the signature, therefore the normaliser trims it.
      *
      * @param string $blob Raw EXIF payload that may still include the "Exif\0\0" signature prefix.
@@ -941,7 +938,7 @@ final readonly class IsoBmffExtractor
      */
     private function normalizeExifBlob(string $blob): string
     {
-        // EXIF 3.0 §4.5.2 and EXIF 2.32 §4.5.2 retain the APP1 "Exif\0\0" signature when the
+        // EXIF 3.0 §4.5.2 retains the APP1 "Exif\0\0" signature when the
         // payload is repackaged into ISO BMFF boxes; the TIFF parser expects the stream to start
         // at the byte-order marker, so we strip the redundant header if present.
         return str_starts_with($blob, "Exif\0\0") ? substr($blob, 6) : $blob;
@@ -962,8 +959,8 @@ final readonly class IsoBmffExtractor
         }
 
         $location = $locations[$itemId];
-        // EXIF 3.0 Annex A.2.4 and EXIF 2.32 Annex A.2.4 confine Exif item data to
-        // self-contained payloads (`construction_method = 0`, `data_reference_index = 0`),
+        // EXIF 3.0 Annex A.2.4 confines Exif item data to self-contained payloads
+        // (`construction_method = 0`, `data_reference_index = 0`),
         // so we discard references that require external resolution.
         if ($location['constructionMethod'] !== ConstructionMethod::FileOffset->value) {
             return null;
@@ -1016,9 +1013,8 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the item information box and returns descriptors for each entry.
      *
-     * EXIF 3.0 Annex A.2.2 and EXIF 2.32 Annex A.2.2 define the `iinf` container
-     * layout for Exif-in-ISO BMFF metadata collections and retain the same child
-     * sequencing requirements across both revisions.
+     * EXIF 3.0 Annex A.2.2 defines the `iinf` container layout for Exif-in-ISO BMFF
+     * metadata collections.
      *
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
@@ -1059,9 +1055,8 @@ final readonly class IsoBmffExtractor
     /**
      * Parses a single item information entry (`infe`).
      *
-     * EXIF 3.0 Annex A.2.3 and EXIF 2.32 Annex A.2.3 describe the item entry fields
-     * and the recommended item type/content type combinations for Exif payloads,
-     * with EXIF 3.0 merely clarifying the existing `Exif` and MIME label guidance.
+     * EXIF 3.0 Annex A.2.3 describes the item entry fields and the recommended
+     * item type/content type combinations for Exif payloads.
      *
      * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
@@ -1113,9 +1108,8 @@ final readonly class IsoBmffExtractor
     /**
      * Parses item locations and returns extent definitions keyed by item id.
      *
-     * EXIF 3.0 Annex A.2.4 and EXIF 2.32 Annex A.2.4 mandate how `iloc` describes
-     * Exif item offsets; EXIF 3.0 adds version 2 support while retaining the 2.32
-     * constraints on base offsets and extent sizing.
+     * EXIF 3.0 Annex A.2.4 mandates how `iloc` describes Exif item offsets; EXIF 3.0
+     * adds version 2 support and constrains base offsets and extent sizing.
      *
      * @param BoxDescriptor $iloc Box descriptor representing the `iloc` payload.
      *
@@ -1196,9 +1190,9 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the primary item box (`pitm`) and returns the referenced item id.
      *
-     * EXIF 3.0 Annex A.2.5 and EXIF 2.32 Annex A.2.5 define how the primary item
-     * identifies the default metadata payload; EXIF 3.0 extends the item identifier
-     * width to 32 bits for version 1 boxes.
+     * EXIF 3.0 Annex A.2.5 defines how the primary item identifies the default
+     * metadata payload and extends the item identifier width to 32 bits for
+     * version 1 boxes.
      *
      * @param BoxDescriptor $pitm Box descriptor containing the primary item payload.
      *

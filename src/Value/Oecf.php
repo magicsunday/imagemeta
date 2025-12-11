@@ -20,8 +20,8 @@ use function is_string;
 /**
  * Opto-Electronic Conversion Function (OECF) data structure.
  *
- * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) and EXIF 2.32 §4.6.3 describe the relationship
- * between the camera's optical input and the image file values. The structure contains:
+ * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) describes the relationship between the camera's
+ * optical input and the image file values. The structure contains:
  * - Dimensions (columns × rows matrix)
  * - Column labels (typically input/pixel values)
  * - Row labels (typically output/luminance values)
@@ -50,8 +50,8 @@ final readonly class Oecf
     /**
      * Creates an OECF from the decoded matrix structure.
      *
-     * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) and EXIF 2.32 §4.6.3: OECF matrix format with
-     * dimensions, labels, and SRATIONAL values.
+     * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11): OECF matrix format with dimensions, labels,
+     * and SRATIONAL values.
      *
      * @param array<string, mixed>|null $matrix Decoded OECF matrix. OECF matrix.
      *

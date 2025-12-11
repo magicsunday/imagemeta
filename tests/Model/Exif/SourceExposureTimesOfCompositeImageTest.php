@@ -52,7 +52,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
                 TiffConst::TYPE_UNDEFINED,
-                strlen($payload),
+                \strlen($payload),
                 $payload,
             ),
         ]);
@@ -96,7 +96,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
                 TiffConst::TYPE_UNDEFINED,
-                strlen($payload),
+                \strlen($payload),
                 $payload,
             ),
         ]);
@@ -118,7 +118,7 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
                 TiffConst::TYPE_UNDEFINED,
-                strlen($payload),
+                \strlen($payload),
                 $payload,
             ),
         ]);
@@ -140,10 +140,10 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
             $payload .= $this->packRational($numerator, $denominator, $byteOrder);
         }
 
-        $payload .= $this->packShort(count($sequences), $byteOrder);
+        $payload .= $this->packShort(\count($sequences), $byteOrder);
 
         foreach ($sequences as $sequence) {
-            $payload .= $this->packShort(count($sequence), $byteOrder);
+            $payload .= $this->packShort(\count($sequence), $byteOrder);
 
             foreach ($sequence as $value) {
                 $payload .= $this->packRational((int) ($value * 1000), 1000, $byteOrder);

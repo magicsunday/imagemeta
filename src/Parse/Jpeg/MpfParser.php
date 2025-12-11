@@ -34,8 +34,8 @@ use function substr;
 /**
  * Parses MPF payloads carried in JPEG APP2 segments.
  *
- * EXIF 3.0 §4.6 describes the Multi-Picture Format container, with the JPEG
- * encapsulation and TIFF header layout retained from EXIF 2.32 §4.6.
+ * EXIF 3.0 §4.6 describes the Multi-Picture Format container and its JPEG
+ * encapsulation and TIFF header layout.
  *
  * @phpstan-type MpfRational array{numerator:int, denominator:int}
  * @phpstan-type MpfValue int|string|list<int>|MpfRational|list<MpfRational>
@@ -81,9 +81,8 @@ final class MpfParser
      * Decodes the MPF payload into a structured document model.
      *
      * The MP Index IFD is a TIFF IFD located at the offset stored after the
-     * TIFF magic in the MPF header (EXIF 3.0 §4.6.2; EXIF 2.32 §4.6.2) and uses
-     * the standard TIFF byte-order indicators (EXIF 3.0 §4.6.1; EXIF 2.32
-     * §4.6.1).
+     * TIFF magic in the MPF header (EXIF 3.0 §4.6.2) and uses the standard
+     * TIFF byte-order indicators (EXIF 3.0 §4.6.1).
      */
     public function parse(string $payload): MpfDocument
     {
@@ -93,8 +92,7 @@ final class MpfParser
         }
 
         $byteOrder = $buffer->read(2);
-        // EXIF 3.0 §4.6.1 (and EXIF 2.32 §4.6.1) restrict MPF to the standard
-        // TIFF byte-order signatures "II" or "MM".
+        // EXIF 3.0 §4.6.1 restricts MPF to the standard TIFF byte-order signatures "II" or "MM".
         $endian = match ($byteOrder) {
             Endian::Little->value => Endian::Little,
             Endian::Big->value    => Endian::Big,
@@ -107,8 +105,7 @@ final class MpfParser
         }
 
         $firstIfdOffset = $this->readU32($buffer, $endian);
-        // The MP Index IFD offset is stored as a 32-bit value relative to the
-        // TIFF header (EXIF 3.0 §4.6.2; EXIF 2.32 §4.6.2).
+        // The MP Index IFD offset is stored as a 32-bit value relative to the TIFF header (EXIF 3.0 §4.6.2).
         if ($firstIfdOffset < 8 || $firstIfdOffset >= $buffer->size()) {
             throw new ParseError('MP Index IFD offset outside payload bounds');
         }
@@ -134,9 +131,7 @@ final class MpfParser
 
         $attributes = null;
         if ($nextIfdOffset !== 0) {
-            // When present, the MP Attribute IFD follows the MP Index IFD and
-            // shares the same offset semantics (EXIF 3.0 §4.6.4; EXIF 2.32
-            // §4.6.4).
+            // When present, the MP Attribute IFD follows the MP Index IFD and shares the same offset semantics (EXIF 3.0 §4.6.4).
             if ($nextIfdOffset >= $buffer->size()) {
                 throw new ParseError('MP Attribute IFD offset outside payload bounds');
             }
@@ -156,8 +151,7 @@ final class MpfParser
     /**
      * Parses an MPF-specific TIFF IFD from the buffer.
      *
-     * Both the MP Index IFD and MP Attribute IFD re-use the classic TIFF IFD
-     * layout (EXIF 3.0 §4.6.2/§4.6.4; EXIF 2.32 §4.6.2/§4.6.4).
+     * Both the MP Index IFD and MP Attribute IFD re-use the classic TIFF IFD layout (EXIF 3.0 §4.6.2/§4.6.4).
      *
      * @return array{0: MpfDirectory, 1: int}
      */
@@ -213,14 +207,13 @@ final class MpfParser
 
         if ($byteCount <= 4) {
             // Inline MPF values use the same in-place storage rule as TIFF IFD
-            // entries (EXIF 3.0 §4.6.2; EXIF 2.32 §4.6.2).
+            // entries (EXIF 3.0 §4.6.2).
             $bytes = $this->packInt($valueOrOffset, $endian);
 
             return substr($bytes, 0, $byteCount);
         }
 
-        // EXIF 3.0 §4.6.2 (and EXIF 2.32 §4.6.2) store larger MPF values out
-        // of line at offsets relative to the MPF TIFF header.
+        // EXIF 3.0 §4.6.2 stores larger MPF values out of line at offsets relative to the MPF TIFF header.
         if ($valueOrOffset < 8 || $valueOrOffset + $byteCount > $buffer->size()) {
             throw new ParseError('MPF value offset outside payload bounds');
         }
@@ -332,8 +325,7 @@ final class MpfParser
      * Parses the MP entry list from the raw MPEntry data.
      *
      * Each MP Entry consumes 16 bytes and carries image attributes as
-     * specified by EXIF 3.0 §4.6.3 (with unchanged semantics from EXIF 2.32
-     * §4.6.3).
+     * specified by EXIF 3.0 §4.6.3.
      *
      * @return list<MpfEntry>
      */
@@ -356,9 +348,7 @@ final class MpfParser
             $dep1       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
             $dep2       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
 
-            // The MP Entry tuple mirrors the Attribute, Size, Offset, and
-            // Dependent image fields mandated by EXIF 3.0 §4.6.3 / EXIF 2.32
-            // §4.6.3.
+            // The MP Entry tuple mirrors the Attribute, Size, Offset, and Dependent image fields mandated by EXIF 3.0 §4.6.3.
             $entries[] = new MpfEntry($attributes, $size, $offset, $dep1, $dep2);
         }
 
@@ -368,8 +358,7 @@ final class MpfParser
     /**
      * Builds the MP attribute structure from the decoded entries.
      *
-     * EXIF 3.0 §4.6.4 defines the optional MP Attribute IFD, retaining the
-     * same tag semantics documented in EXIF 2.32 §4.6.4.
+     * EXIF 3.0 §4.6.4 defines the optional MP Attribute IFD.
      *
      * @param MpfDirectory $entries
      */

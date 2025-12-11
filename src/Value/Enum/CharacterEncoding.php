@@ -14,9 +14,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
 /**
  * Character encoding identifiers used in EXIF fields.
  *
- * EXIF 3.0 §4.6.4 Table 4 and EXIF 2.32 §4.6.6 define the character code headers
- * used in UserComment and GPSProcessingMethod fields. This enum provides type-safe
- * encoding constants for text field interpretation across TIFF/EXIF payloads.
+ * EXIF 3.0 §4.6.4 Table 4 defines the character code headers used in UserComment
+ * and GPSProcessingMethod fields. This enum provides type-safe encoding constants
+ * for text field interpretation across TIFF/EXIF payloads.
  */
 enum CharacterEncoding: string
 {

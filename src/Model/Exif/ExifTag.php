@@ -209,7 +209,7 @@ final readonly class ExifTag
     /**
      * Number of bits for each colour component.
      *
-     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values (Tag 258)
+     * EXIF 3.0 §4.6.5.1.3 defines three SHORT values (Tag 258)
      * with a default of 8 8 8 for RGB components. JPEG compressed data uses the frame
      * header precision instead of this tag.
      */
@@ -371,9 +371,8 @@ final readonly class ExifTag
     /**
      * Pointer to the Exif IFD (Tag 0x8769, type LONG, count 1).
      *
-     * EXIF 3.0 §4.6.3.1.1 and EXIF 2.32 §4.6.3.1 define this pointer to the
-     * dedicated Exif IFD, which mirrors the TIFF IFD structure but does not
-     * carry any image data entries.
+     * EXIF 3.0 §4.6.3.1.1 defines this pointer to the dedicated Exif IFD,
+     * which mirrors the TIFF IFD structure but does not carry any image data entries.
      */
     public const int EXIF_IFD_POINTER = 0x8769;
 
@@ -391,8 +390,7 @@ final readonly class ExifTag
      * Pointer to the GPS Info IFD containing geolocation metadata.
      *
      * EXIF 3.0 §4.6.3.2.1 defines this field as a single LONG value pointing to the GPS Info IFD,
-     * which itself contains no image data. The legacy EXIF 2.32 §4.6.3.2.1 specification retains
-     * the same offset semantics.
+     * which itself contains no image data.
      */
     public const int GPS_IFD_POINTER = 0x8825;
 
@@ -408,43 +406,41 @@ final readonly class ExifTag
 
     /**
      * Type of sensitivity value recorded in ISO tags.
-     *
-     * EXIF 3.0 §4.6.4 Table 10; EXIF 2.32 §4.6.6.
      */
     public const int SENSITIVITY_TYPE = 0x8830;
 
     /**
      * Standard output sensitivity of the camera.
      *
-     * EXIF 3.0 §4.6.6.7.8; EXIF 2.32 §4.6.6.7.8.
+     * EXIF 3.0 §4.6.6.7.8
      */
     public const int STANDARD_OUTPUT_SENSITIVITY = 0x8831;
 
     /**
      * Recommended exposure index for the scene.
      *
-     * EXIF 3.0 §4.6.6.7.9; EXIF 2.32 §4.6.6.7.9.
+     * EXIF 3.0 §4.6.6.7.9
      */
     public const int RECOMMENDED_EXPOSURE_INDEX = 0x8832;
 
     /**
      * Calculated ISO speed value.
      *
-     * EXIF 3.0 §4.6.6.7.10; EXIF 2.32 §4.6.6.7.10.
+     * EXIF 3.0 §4.6.6.7.10
      */
     public const int ISO_SPEED = 0x8833;
 
     /**
      * Latitude component of the ISO speed range (YYY value).
      *
-     * EXIF 3.0 §4.6.6.7.11; EXIF 2.32 §4.6.6.7.11.
+     * EXIF 3.0 §4.6.6.7.11
      */
     public const int ISO_SPEED_LATITUDE_YYY = 0x8834;
 
     /**
      * Latitude component of the ISO speed range (ZZZ value).
      *
-     * EXIF 3.0 §4.6.6.7.12; EXIF 2.32 §4.6.6.7.12.
+     * EXIF 3.0 §4.6.6.7.12
      */
     public const int ISO_SPEED_LATITUDE_ZZZ = 0x8835;
 
@@ -481,16 +477,15 @@ final readonly class ExifTag
     /**
      * Arrangement of colour components in a compressed stream.
      *
-     * EXIF 3.0 §4.6.6.3.3 (and EXIF 2.32 §4.6.6.3.3) defines a four-byte UNDEFINED payload
-     * describing the component order for compressed image data.
+     * EXIF 3.0 §4.6.6.3.3 defines a four-byte UNDEFINED payload describing the component order
+     * for compressed image data.
      */
     public const int COMPONENTS_CONFIGURATION = 0x9101;
 
     /**
      * Compression rate expressed as bits per pixel.
      *
-     * EXIF 3.0 §4.6.6.3.4 (and EXIF 2.32 §4.6.6.3.4) stores the compression mode for compressed
-     * images as a single RATIONAL value.
+     * EXIF 3.0 §4.6.6.3.4 stores the compression mode for compressed images as a single RATIONAL value.
      */
     public const int COMPRESSED_BITS_PER_PIXEL = 0x9102;
 
@@ -617,7 +612,7 @@ final readonly class ExifTag
     /**
      * Valid pixel width of the primary image for compressed data streams.
      *
-     * EXIF 3.0 §4.6.6.3.1 (and EXIF 2.32 §4.6.6.3.1) specify SHORT/LONG width for compressed data
+     * EXIF 3.0 §4.6.6.3.1 specifies SHORT/LONG width for compressed data
      * where padding or restart markers may be present.
      */
     public const int PIXEL_X_DIMENSION = 0xA002;
@@ -625,7 +620,7 @@ final readonly class ExifTag
     /**
      * Valid pixel height of the primary image for compressed data streams.
      *
-     * EXIF 3.0 §4.6.6.3.2 (and EXIF 2.32 §4.6.6.3.2) specify SHORT/LONG height for compressed data,
+     * EXIF 3.0 §4.6.6.3.2 specifies SHORT/LONG height for compressed data,
      * matching the number of lines recorded in the SOF marker.
      */
     public const int PIXEL_Y_DIMENSION = 0xA003;
@@ -638,8 +633,8 @@ final readonly class ExifTag
     /**
      * Offset to the interoperability IFD block (LONG, count 1).
      *
-     * EXIF 3.0 §4.6.3.3.1 and EXIF 2.32 §4.6.3.3.1 define this pointer to an
-     * interoperability IFD that mirrors TIFF directory structure without
+     * EXIF 3.0 §4.6.3.3.1 defines this pointer to an interoperability IFD
+     * that mirrors TIFF directory structure without
      * containing image data payloads.
      */
     public const int INTEROPERABILITY_IFD_POINTER = 0xA005;

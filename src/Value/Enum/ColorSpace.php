@@ -16,7 +16,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 /**
  * Represents the colour space encodings described for the ColorSpace tag.
  *
- * EXIF 3.0 §4.6.6.2.1 (ColorSpace); EXIF 2.32 §4.6.6.2.1.
+ * EXIF 3.0 §4.6.6.2.1 (ColorSpace)
  */
 enum ColorSpace: int
 {

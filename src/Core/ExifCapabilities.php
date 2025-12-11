@@ -19,7 +19,7 @@ use function trim;
 
 /**
  * Derives EXIF capability profiles from version identifiers defined in
- * EXIF 2.32 §4.6.6.1.1 and EXIF 3.0 §4.6.6.1.1 (ExifVersion).
+ * EXIF 3.0 §4.6.6.1.1 (ExifVersion).
  */
 final class ExifCapabilities
 {
@@ -46,8 +46,8 @@ final class ExifCapabilities
             return 'unknown';
         }
 
-        // EXIF 3.0 §4.6.6.1.1 and EXIF 2.32 §4.6.6.1.1 define the canonical ASCII
-        // version identifiers recorded in the ExifVersion tag (0x9000).
+        // EXIF 3.0 §4.6.6.1.1 defines the canonical ASCII version identifiers
+        // recorded in the ExifVersion tag (0x9000).
         $profile = match ($trimmed) {
             '1.00', '1.0' => '1.0',
             '1.10', '1.1' => '1.1',
@@ -77,7 +77,7 @@ final class ExifCapabilities
             }
 
             // Numeric encoders frequently drop the dots while keeping the
-            // zero-padded digits listed in EXIF 3.0 §4.6.8 / EXIF 2.32 §4.6.8.
+            // zero-padded digits listed in EXIF 3.0 §4.6.8.
             $profile = match ($digits) {
                 '0100'  => '1.0',
                 '0110'  => '1.1',

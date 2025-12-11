@@ -75,8 +75,7 @@ use const JSON_THROW_ON_ERROR;
  * Helper methods that translate EXIF/TIFF values into PHP friendly scalars.
  *
  * EXIF 3.0 §4.6 and Annex C define the semantic interpretation of the tag
- * payloads normalised by these converters; EXIF 2.32 §4.6 remains relevant for
- * legacy captures that pre-date the 3.0 additions.
+ * payloads normalised by these converters.
  *
  * @phpstan-type RationalComponent = array<int, int|float|string>
  * @phpstan-type RationalLike = array<int, RationalComponent|ExifRational|int|float|string>
@@ -134,22 +133,22 @@ final readonly class ValueConverters
     private const float FULL_FRAME_CIRCLE_OF_CONFUSION_MM = 0.030;
 
     /**
-     * EXIF 3.0 Annex C.3 keeps the legacy 64×64 SRATIONAL matrix cap from EXIF 2.32 Annex C.3.
+     * EXIF 3.0 Annex C.3: maximum SRATIONAL matrix dimension is 64×64.
      */
     private const int MAX_SRATIONAL_MATRIX_DIMENSION = 64;
 
     /**
-     * EXIF 3.0 Annex C.3 and EXIF 2.32 Annex C.3 limit SRATIONAL matrix labels to 255 bytes.
+     * EXIF 3.0 Annex C.3 limits SRATIONAL matrix labels to 255 bytes.
      */
     private const int MAX_SRATIONAL_MATRIX_LABEL_LENGTH = 255;
 
     /**
-     * SRATIONAL entries use two signed 32-bit integers per EXIF 3.0 Annex C.3 / EXIF 2.32 Annex C.3.
+     * SRATIONAL entries use two signed 32-bit integers per EXIF 3.0 Annex C.3.
      */
     private const int SRATIONAL_VALUE_SIZE = 8;
 
     /**
-     * Epson’s Print Image Matching block allows up to 512 parameters per EXIF 3.0 §4.6.4, unchanged from EXIF 2.32 §4.6.4.
+     * Epson’s Print Image Matching block allows up to 512 parameters per EXIF 3.0 §4.6.4.
      */
     private const int MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
 
@@ -158,7 +157,7 @@ final readonly class ValueConverters
     private const int PRINTABLE_ASCII_MAX = 0x7E;
 
     /**
-     * EXIF 3.0 §4.6.8 (GPSVersionID) preserves the EXIF 2.32 default value of 2.0.0.0 when the field is blank.
+     * EXIF 3.0 §4.6.8 (GPSVersionID) default value when the field is blank.
      */
     private const string DEFAULT_GPS_VERSION = '2.0.0.0';
 
@@ -171,8 +170,7 @@ final readonly class ValueConverters
      * Converts a TIFF RATIONAL or scalar value into a floating point value.
      *
      * EXIF 3.0 §4.6 (Exif IFD attribute information) reiterates that RATIONAL and SRATIONAL
-     * values are stored as numerator/denominator pairs; this implementation keeps the legacy
-     * EXIF 2.32 §4.6 interpretation for earlier encoders and honours EXIF 3.0 §4.6.6.8
+     * values are stored as numerator/denominator pairs; this implementation honours EXIF 3.0 §4.6.6.8
      * "unknown" denominators encoded as 0xFFFFFFFF.
      *
      * @param int|float|string|array<int, int|float|string|UInt64>|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value The value to convert.
@@ -244,8 +242,8 @@ final readonly class ValueConverters
      * Converts a SRATIONAL[3] list into a three-element float vector.
      *
      * EXIF 3.0 §4.6.6 Table H.1: Acceleration (0x9404) uses SRATIONAL triplets for 3D vectors.
-     * EXIF 3.0 §4.6.8 (GPSLatitude/GPSLongitude) and the legacy EXIF 2.32 §4.6.8 definition
-     * require degrees/minutes/seconds triplets encoded as SRATIONAL numerators/denominators.
+     * EXIF 3.0 §4.6.8 (GPSLatitude/GPSLongitude) requires degrees/minutes/seconds triplets encoded
+     * as SRATIONAL numerators/denominators.
      *
      * This method validates that exactly three components are present and that no denominator
      * is zero or the EXIF 3.0 §4.6.6.8 unknown marker 0xFFFFFFFF before converting each
@@ -337,8 +335,7 @@ final readonly class ValueConverters
     /**
      * Converts a rational pair into a white point array.
      *
-     * EXIF 3.0 §4.6.4 (WhitePoint tag) matches EXIF 2.32 §4.6.4 by defining X and Y chromaticity
-     * as two-component rational pairs.
+     * EXIF 3.0 §4.6.4 (WhitePoint tag) defines X and Y chromaticity as two-component rational pairs.
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
      *
@@ -393,8 +390,8 @@ final readonly class ValueConverters
     /**
      * Converts rational chromaticity pairs into a flat float array.
      *
-     * The PrimaryChromaticities tag keeps the EXIF 2.32 §4.6.4 encoding in EXIF 3.0 §4.6.4,
-     * requiring three rational pairs ordered as (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
+     * EXIF 3.0 §4.6.4 (PrimaryChromaticities) requires three rational pairs ordered as
+     * (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
      *
@@ -453,8 +450,7 @@ final readonly class ValueConverters
     /**
      * Serialises a DNG matrix or CFA pattern into a reproducible string representation.
      *
-     * EXIF 3.0 Annex C.3 (SRATIONAL matrices) mirrors the EXIF 2.32 Annex C.3 guidance for
-     * DNG ColorMatrix/ForwardMatrix encodings.
+     * EXIF 3.0 Annex C.3 (SRATIONAL matrices) guidance for DNG ColorMatrix/ForwardMatrix encodings.
      *
      * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $matrix
      *
@@ -520,8 +516,7 @@ final readonly class ValueConverters
 
     /**
      * Converts a textual YCbCr subsampling representation into integer pairs as
-     * described in EXIF 2.32 §4.6.5.1.12 / EXIF 3.0 §4.6.5.1.12 (image data
-     * structure).
+     * described in EXIF 3.0 §4.6.5.1.12 (image data structure).
      *
      * EXIF 3.0 §4.6.5.1.12 (YCbCrSubSampling) defines only [2,1] (YCbCr4:2:2) and
      * [2,2] (YCbCr4:2:0) as legal values. Other combinations are reserved and rejected.
@@ -573,8 +568,8 @@ final readonly class ValueConverters
     /**
      * Normalises a raw EXIF version byte string into a dotted decimal representation.
      *
-     * EXIF 3.0 §4.6.6.1.1 (ExifVersion) / EXIF 2.32 §4.6.6.1.1 require the field to contain
-     * exactly four ASCII digits without a terminating null byte.
+     * EXIF 3.0 §4.6.6.1.1 (ExifVersion) requires the field to contain exactly four ASCII digits
+     * without a terminating null byte.
      */
     public static function toExifVersion(?string $bytes): ?string
     {
@@ -660,7 +655,7 @@ final readonly class ValueConverters
 
     /**
      * Normalises EXIF battery level readings to a percentage following
-     * EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 (BatteryLevel tag semantics).
+     * EXIF 3.0 §4.6.3 (BatteryLevel tag semantics).
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw battery level value.
      */
@@ -727,7 +722,7 @@ final readonly class ValueConverters
 
     /**
      * Converts the maker note safety flag into a boolean representation per
-     * EXIF 2.32 §4.6.8 / EXIF 3.0 §4.6.8 (MakerNoteSafety).
+     * EXIF 3.0 §4.6.8 (MakerNoteSafety).
      *
      * @param ExifNumericList|ExifRationalList|ExifRational|UInt64|int|float|string|null $value Raw maker note safety value.
      */
@@ -1043,8 +1038,7 @@ final readonly class ValueConverters
 
     /**
      * Decodes the spatial frequency response payload as defined by
-     * EXIF 3.0 §4.6.3 (figure 14) and the legacy layout retained in
-     * EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.3 (figure 14).
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
@@ -1057,7 +1051,7 @@ final readonly class ValueConverters
 
     /**
      * Decodes the opto-electronic conversion function payload as defined by
-     * EXIF 3.0 §4.6.6.7.6 (figure 16, table 11) and the earlier EXIF 2.32 §4.6.3 layout.
+     * EXIF 3.0 §4.6.6.7.6 (figure 16, table 11).
      *
      * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
      *
@@ -1275,8 +1269,7 @@ final readonly class ValueConverters
     /**
      * Converts a GPS speed measurement into metres per second.
      *
-     * EXIF 3.0 §4.6.8 (GPSSpeedRef/GPSSpeed) defines the unit codes K, M and N; legacy files
-     * follow the same wording in EXIF 2.32 §4.6.8.
+     * EXIF 3.0 §4.6.8 (GPSSpeedRef/GPSSpeed) defines the unit codes K, M and N.
      *
      * @param string|null $ref   Speed reference (K, M or N).
      * @param ExifScalar  $value The measured value.
@@ -1311,8 +1304,8 @@ final readonly class ValueConverters
     /**
      * Converts a GPS destination distance to metres based on the reference unit.
      *
-     * EXIF 3.0 §4.6.8 (GPSDestDistanceRef/GPSDestDistance) retains the EXIF 2.32 §4.6.8 unit
-     * mapping, so nautical miles, statute miles and kilometres resolve to metres here.
+     * EXIF 3.0 §4.6.8 (GPSDestDistanceRef/GPSDestDistance): nautical miles, statute miles and
+     * kilometres resolve to metres here.
      *
      * @param string|null $ref   Distance reference (K, M or N).
      * @param ExifScalar  $value The measured value.
@@ -1372,7 +1365,7 @@ final readonly class ValueConverters
 
     /**
      * Converts the EXIF flash bit field into a typed value object per
-     * EXIF 3.0 §4.6.6.7.21 (Flash) and EXIF 2.32 §4.6.4 (Flash tag bit layout).
+     * EXIF 3.0 §4.6.6.7.21 (Flash).
      *
      * @param ExifScalar $value Flash tag value representation.
      */
@@ -1415,7 +1408,7 @@ final readonly class ValueConverters
 
     /**
      * Normalises EXIF offset time values to a canonical "+HH:MM" representation
-     * per EXIF 2.32 §4.6.3 / EXIF 3.0 §4.6.3 (OffsetTime tags).
+     * per EXIF 3.0 §4.6.3 (OffsetTime tags).
      *
      * @param int|float|string|ExifRational|ExifRationalList|null $value The raw offset value.
      */
@@ -1558,8 +1551,8 @@ final readonly class ValueConverters
     /**
      * Extracts GPS metadata including position, navigation and timing information from an IFD.
      *
-     * The GPS tag catalogue in EXIF 3.0 §4.6.8 mirrors EXIF 2.32 §4.6.8, so the reader keeps the
-     * legacy field mapping while honouring the 3.0 clarifications around default values.
+     * EXIF 3.0 §4.6.8 defines the GPS tag catalogue; the reader keeps the
+     * field mapping while honouring the 3.0 clarifications around default values.
      *
      * @param Ifd $gps The GPS IFD containing coordinate tags.
      *
@@ -1809,8 +1802,8 @@ final readonly class ValueConverters
     /**
      * Extracts a null-terminated label from the SRATIONAL matrix payload.
      *
-     * SRATIONAL matrix payload layout stems from EXIF 3.0 Annex C.3, unchanged from EXIF 2.32
-     * Annex C.3 where labels precede the signed rational grid.
+     * SRATIONAL matrix payload layout stems from EXIF 3.0 Annex C.3 where labels precede
+     * the signed rational grid.
      *
      * @return array{0:string,1:int}|null
      */
@@ -1840,7 +1833,7 @@ final readonly class ValueConverters
      * Reads a signed 32-bit integer from the SRATIONAL matrix payload.
      *
      * SRATIONAL numerators and denominators remain two’s complement 32-bit integers per
-     * EXIF 3.0 Annex C.3 and EXIF 2.32 Annex C.3.
+     * EXIF 3.0 Annex C.3.
      */
     private static function readSrationalInt32(string $payload, int $offset, int $length): ?int
     {
@@ -1870,7 +1863,7 @@ final readonly class ValueConverters
      * Converts EXIF GPS degrees/minutes/seconds to a float coordinate.
      *
      * EXIF 3.0 §4.6.8 states that GPSLatitude/GPSLongitude are SRATIONAL triplets ordered as
-     * degrees, minutes and seconds; the EXIF 2.32 §4.6.8 wording is followed for legacy data.
+     * degrees, minutes and seconds.
      *
      * @param string|null                           $ref Direction reference (N/E/S/W).
      * @param ExifRationalList|ExifNumericList|null $val Rational or numeric triplet describing the coordinate.
@@ -1929,10 +1922,10 @@ final readonly class ValueConverters
     /**
      * Normalises the GPS altitude reference into a binary sign indicator.
      *
-     * EXIF 3.0 §4.6.8 and EXIF 2.32 §4.6.8 define GPSAltitudeRef as a BYTE flag
-     * where 0 indicates an altitude above sea level and 1 indicates below sea
-     * level. Some encoders store the flag using wider numeric or rational
-     * representations, so the value is coerced into the canonical 0/1 range.
+     * EXIF 3.0 §4.6.8 defines GPSAltitudeRef as a BYTE flag where 0 indicates an
+     * altitude above sea level and 1 indicates below sea level. Some encoders
+     * store the flag using wider numeric or rational representations, so the value
+     * is coerced into the canonical 0/1 range.
      *
      * @return int|null 0 for above sea level, 1 for below, null when unknown.
      */
@@ -1989,8 +1982,8 @@ final readonly class ValueConverters
     /**
      * Converts a GPS version payload into a dotted string.
      *
-     * EXIF 3.0 §4.6.8 clarifies that an empty GPSVersionID must be treated as 2.0.0.0; we keep
-     * the EXIF 2.32 §4.6.8 handling for the byte-packed dotted representation.
+     * EXIF 3.0 §4.6.8 clarifies that an empty GPSVersionID must be treated as 2.0.0.0; this
+     * method also supports the byte-packed dotted representation.
      *
      * @param ExifScalar $value Raw value extracted from the IFD entry.
      *
@@ -2092,8 +2085,8 @@ final readonly class ValueConverters
     /**
      * Decodes undefined GPS ASCII strings with optional encoding prefixes.
      *
-     * EXIF 3.0 §4.6.8 (GPSProcessingMethod/GPSAreaInformation) preserves the EXIF 2.32 §4.6.8
-     * encoding prefixes (ASCII, UNICODE, JIS) for undefined strings.
+     * EXIF 3.0 §4.6.8 (GPSProcessingMethod/GPSAreaInformation) defines encoding prefixes
+     * (ASCII, UNICODE, JIS) for undefined strings.
      *
      * @param ExifScalar $value Raw value extracted from the IFD entry.
      */
@@ -2132,8 +2125,7 @@ final readonly class ValueConverters
     /**
      * Decodes a UTF-16 encoded undefined GPS string into UTF-8.
      *
-     * EXIF 3.0 §4.6.8 reiterates the EXIF 2.32 §4.6.8 requirement that UNICODE payloads use
-     * UTF-16 with null padding removed during interpretation.
+     * EXIF 3.0 §4.6.8 requires UNICODE payloads to use UTF-16 with null padding removed.
      */
     private static function decodeUndefinedUnicode(string $payload): ?string
     {
@@ -2161,8 +2153,7 @@ final readonly class ValueConverters
     /**
      * Decodes a Shift-JIS encoded undefined GPS string into UTF-8.
      *
-     * EXIF 3.0 §4.6.8 continues the EXIF 2.32 §4.6.8 requirement for the "JIS" prefix to
-     * indicate Shift-JIS encoded content.
+     * EXIF 3.0 §4.6.8 uses the "JIS" prefix to indicate Shift-JIS encoded content.
      */
     private static function decodeUndefinedJis(string $payload): ?string
     {
@@ -2181,8 +2172,7 @@ final readonly class ValueConverters
     /**
      * Normalises a GPS date stamp into an ISO 8601 calendar date.
      *
-     * EXIF 3.0 §4.6.8 (GPSDateStamp) continues the EXIF 2.32 §4.6.8 guidance that the value is
-     * a "YYYY:MM:DD" ASCII string in UTC.
+     * EXIF 3.0 §4.6.8 (GPSDateStamp): the value is a "YYYY:MM:DD" ASCII string in UTC.
      *
      * @param ExifScalar $value Raw value extracted from the IFD entry.
      *
@@ -2223,8 +2213,8 @@ final readonly class ValueConverters
     /**
      * Extracts hour, minute and second components from a GPS time stamp list.
      *
-     * EXIF 3.0 §4.6.8 (GPSTimeStamp) retains the EXIF 2.32 §4.6.8 definition of a three element
-     * rational list representing UTC hours, minutes and seconds.
+     * EXIF 3.0 §4.6.8 (GPSTimeStamp): a three-element rational list representing UTC hours,
+     * minutes and seconds.
      *
      * @return array{hours:int, minutes:int, seconds:float}|null
      */
@@ -2253,7 +2243,7 @@ final readonly class ValueConverters
      * Formats GPS time components into a human readable HH:MM:SS(.ffffff) string.
      *
      * Presentation helper for GPSTimeStamp values, aligning with the UTC semantics described in
-     * EXIF 3.0 §4.6.8 / EXIF 2.32 §4.6.8.
+     * EXIF 3.0 §4.6.8.
      *
      * @param array{hours:int, minutes:int, seconds:float}|null $timeParts
      */
@@ -2290,8 +2280,8 @@ final readonly class ValueConverters
     /**
      * Combines a GPS date and time into a UTC timestamp.
      *
-     * EXIF 3.0 §4.6.8 and EXIF 2.32 §4.6.8 specify that GPSDateStamp/GPSTimeStamp encode UTC;
-     * this helper fuses them into a PHP DateTimeImmutable without altering that timezone.
+     * EXIF 3.0 §4.6.8 specifies that GPSDateStamp/GPSTimeStamp encode UTC; this helper fuses
+     * them into a PHP DateTimeImmutable without altering that timezone.
      *
      * @param array{hours:int, minutes:int, seconds:float}|null $timeParts
      */

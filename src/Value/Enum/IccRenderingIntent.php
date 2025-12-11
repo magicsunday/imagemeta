@@ -15,8 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the ICC rendering intents referenced by EXIF 3.0 §4.6.3 (shooting
- * conditions) for embedded profiles, matching the guidance from EXIF 2.32
- * §4.6.3.
+ * conditions) for embedded profiles.
  */
 enum IccRenderingIntent: int
 {

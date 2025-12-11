@@ -39,11 +39,8 @@ use function unpack;
 /**
  * Parses JPEG streams to extract metadata-bearing APP segments.
  *
- * EXIF 3.0 §4.7.2 documents the APP1 encapsulation for Exif payloads and keeps
- * the legacy EXIF 2.32 §4.7.2 marker structure intact; EXIF 2.1 §2.7.2 establishes
- * the original APP1 interoperability framing. The audio APP2 layout is preserved
- * from EXIF 2.32 §4.7.3 and reiterated by EXIF 3.0 §4.7.3, building on the Exif audio
- * encapsulation defined in EXIF 2.1 §3.5.
+ * EXIF 3.0 §4.7.2 documents the APP1 encapsulation for Exif payloads; EXIF 3.0 §4.7.3
+ * defines the audio APP2 layout.
  */
 final class JpegExtractor
 {
@@ -51,7 +48,7 @@ final class JpegExtractor
 
     /**
      * Signatures identifying metadata-bearing APP segments as defined by the
-     * Exif JPEG recording rules (EXIF 3.0 §4.7.2 / EXIF 2.32 §4.7.2 / EXIF 2.1 §2.7.2).
+     * Exif JPEG recording rules (EXIF 3.0 §4.7.2).
      */
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
@@ -60,14 +57,12 @@ final class JpegExtractor
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
 
     /**
-     * Signature identifying MP Index payloads inside APP2 markers
-     * (EXIF 3.0 §4.6.4 / EXIF 2.32 §4.6.4).
+     * Signature identifying MP Index payloads inside APP2 markers (EXIF 3.0 §4.6.4).
      */
     private const string MPF_SIGNATURE = "MPF\0";
 
     /**
-     * Header prefix for Exif audio APP2 payloads (EXIF 3.0 §4.7.3 / EXIF 2.32 §4.7.3 /
-     * EXIF 2.1 §3.5).
+     * Header prefix for Exif audio APP2 payloads (EXIF 3.0 §4.7.3).
      */
     private const string AUDIO_SIGNATURE = "Exif\0\0Audio";
 
@@ -304,7 +299,7 @@ final class JpegExtractor
      *
      * EXIF 3.0 §4.7.1-§4.7.3 require APP1/APP2 metadata segments to reside between the
      * SOI and the first SOS marker while excluding restart and TEM markers from carrying
-     * payloads; EXIF 2.32 §4.7.1-§4.7.3 preserve the same ordering and marker constraints.
+     * payloads.
      */
     private function parseIfNeeded(): void
     {
@@ -346,11 +341,11 @@ final class JpegExtractor
             }
 
             if ($marker === Marker::SOS) {
-                break; // EXIF 3.0 §4.7.1 and EXIF 2.32 §4.7.1 restrict metadata APP markers to precede the first SOS.
+                break; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
             }
 
             if ($marker === Marker::TEM || ($marker >= Marker::RST_FIRST && $marker <= Marker::RST_LAST)) {
-                continue; // EXIF 3.0 §4.7.1 and EXIF 2.32 §4.7.1 treat restart and TEM markers as non-payload markers.
+                continue; // EXIF 3.0 §4.7.1 treats restart and TEM markers as non-payload markers.
             }
 
             $isAppSegment  = $marker >= Marker::APP_FIRST && $marker <= Marker::APP_LAST;
@@ -477,7 +472,7 @@ final class JpegExtractor
         if ($enforceMax) {
             $payloadLength = $length - 2;
             if ($payloadLength > self::MAX_APP_SEGMENT_SIZE) {
-                // EXIF 3.0 §4.5.2 and EXIF 2.32 §4.5.2 keep APP1/APP2 payloads within the JPEG
+                // EXIF 3.0 §4.5.2 keeps APP1/APP2 payloads within the JPEG
                 // 64 KiB segment budget; this wider ceiling rejects obviously pathological blobs
                 // before the TIFF parser is invoked.
                 throw new ParseError(
@@ -524,15 +519,14 @@ final class JpegExtractor
      * Processes APP1 payloads for Exif and XMP signatures.
      *
      * EXIF 3.0 §4.7.2 mandates that Exif data inside APP1 begins with "Exif\0\0"
-     * followed by the TIFF header defined in §4.5; earlier EXIF 2.32 releases
-     * follow the same structure, as did EXIF 2.1 §2.7.2.
+     * followed by the TIFF header defined in §4.5.
      *
      * @param string $payload Raw APP1 payload including leading signature.
      */
     private function handleApp1(string $payload): void
     {
         if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
-            // EXIF 3.0 §4.5.2 and EXIF 2.21 §4.5.2 require APP1 EXIF data to start with
+            // EXIF 3.0 §4.5.2 require APP1 EXIF data to start with
             // "Exif\0\0" before the TIFF stream, so we drop the identifying preamble here.
             $this->exifBlobs[] = substr($payload, strlen(self::EXIF_SIGNATURE));
         } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
@@ -604,9 +598,8 @@ final class JpegExtractor
     /**
      * Processes Exif audio APP2 segments and validates their headers.
      *
-     * EXIF 3.0 §4.7.3 retains the APP2 audio stream format introduced by
-     * EXIF 2.32 §4.7.3, including the four-byte sample rate and two-byte
-     * version fields honoured here, matching the structure described in EXIF 2.1 §3.5.
+     * EXIF 3.0 §4.7.3 defines the APP2 audio stream format, including the
+     * four-byte sample rate and two-byte version fields honoured here.
      *
      * @param string $payload Raw segment payload including signature.
      * @param int    $offset  Offset in the stream where the marker begins.
@@ -707,8 +700,7 @@ final class JpegExtractor
     /**
      * Collects MPF APP2 segments to be parsed after the marker scan completes.
      *
-     * EXIF 3.0 §4.6.4 specifies that Multi-Picture Format data resides in APP2
-     * markers, retaining the layout published in EXIF 2.32 §4.6.4.
+     * EXIF 3.0 §4.6.4 specifies that Multi-Picture Format data resides in APP2 markers.
      */
     private function handleMpfSegment(string $payload, int $offset): void
     {

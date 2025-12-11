@@ -15,8 +15,8 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Enumerates the TIFF/EXIF compression schemes recorded for the Compression tag
- * in EXIF 3.0 §4.6.5.1.4 (image configuration), preserving the mapping defined
- * in EXIF 2.32 §4.6.5.1.4 and the baseline assignments from TIFF 6.0 §8.
+ * in EXIF 3.0 §4.6.5.1.4 (image configuration) and the baseline assignments
+ * from TIFF 6.0 §8.
  *
  * The EXIF specification omits the Compression tag for primary JPEG images; for
  * JPEG thumbnails, the tag shall be recorded with value 6 (JPEG compression).

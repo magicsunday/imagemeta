@@ -127,7 +127,7 @@ final readonly class ParsedExif
     /**
      * Returns the decoded maker note metadata when a decoder is available.
      *
-     * EXIF 3.0 §4.6.6.4.1 and EXIF 2.32 §4.6.6.4.1 reserve MakerNote for manufacturer-specific data.
+     * EXIF 3.0 §4.6.6.4.1 reserves MakerNote for manufacturer-specific data.
      */
     public function makerNotes(): ?MakerNotesRecord
     {
@@ -157,8 +157,8 @@ final readonly class ParsedExif
     /**
      * Returns the camera manufacturer string if present.
      *
-     * EXIF 3.0 §4.6.5.4.2 (Make) and EXIF 2.32 §4.6.5 store the free-form
-     * manufacturer identifier as ASCII or UTF-8 including the terminating NUL.
+     * EXIF 3.0 §4.6.5.4.2 (Make) stores the free-form manufacturer identifier
+     * as ASCII or UTF-8 including the terminating NUL.
      *
      * @return string|null
      */
@@ -170,9 +170,8 @@ final readonly class ParsedExif
     /**
      * Returns the camera model string if present.
      *
-     * EXIF 3.0 §4.6.5.4.3 (Model) and EXIF 2.32 §4.6.5 define the model name
-     * or number as an ASCII or UTF-8 string with the NUL terminator counted in
-     * the tag length.
+     * EXIF 3.0 §4.6.5.4.3 (Model) defines the model name or number as an ASCII
+     * or UTF-8 string with the NUL terminator counted in the tag length.
      *
      * @return string|null
      */
@@ -184,8 +183,7 @@ final readonly class ParsedExif
     /**
      * Returns the lens model string if present.
      *
-     * EXIF 3.0 §4.6.6.9.6 (also EXIF 2.32 §4.6.6.9.6) stores the lens model as
-     * an ASCII or UTF-8 string.
+     * EXIF 3.0 §4.6.6.9.6 stores the lens model as an ASCII or UTF-8 string.
      *
      * @return string|null
      */
@@ -197,8 +195,8 @@ final readonly class ParsedExif
     /**
      * Returns the lens manufacturer string if present.
      *
-     * EXIF 3.0 §4.6.6.9.5 (EXIF 2.32 §4.6.6.9.5) records LensMake as an ASCII or
-     * UTF-8 identifier and expects it to remain stable once captured.
+     * EXIF 3.0 §4.6.6.9.5 records LensMake as an ASCII or UTF-8 identifier and
+     * expects it to remain stable once captured.
      *
      * @return string|null
      */
@@ -210,8 +208,8 @@ final readonly class ParsedExif
     /**
      * Returns the camera owner name if present.
      *
-     * EXIF 3.0 §4.6.6.9.2 (and EXIF 2.32 §4.6.6.9.2) allows ASCII or UTF-8 text
-     * for CameraOwnerName and expects Artist to be populated alongside it.
+     * EXIF 3.0 §4.6.6.9.2 allows ASCII or UTF-8 text for CameraOwnerName and
+     * expects Artist to be populated alongside it.
      *
      * @return string|null
      */
@@ -223,8 +221,7 @@ final readonly class ParsedExif
     /**
      * Returns the camera body serial number if present.
      *
-     * EXIF 3.0 §4.6.6.9.3 (also EXIF 2.32 §4.6.6.9.3) stores the camera body
-     * serial as an ASCII string.
+     * EXIF 3.0 §4.6.6.9.3 stores the camera body serial as an ASCII string.
      *
      * @return string|null
      */
@@ -236,8 +233,8 @@ final readonly class ParsedExif
     /**
      * Returns the lens serial number if present.
      *
-     * EXIF 3.0 §4.6.6.9.7 (also EXIF 2.32 §4.6.6.9.7) defines LensSerialNumber
-     * as a free-form ASCII value that should remain stable across edits.
+     * EXIF 3.0 §4.6.6.9.7 defines LensSerialNumber as a free-form ASCII value
+     * that should remain stable across edits.
      *
      * @return string|null
      */
@@ -249,7 +246,7 @@ final readonly class ParsedExif
     /**
      * Returns the lens specification describing focal and aperture range.
      *
-     * EXIF 3.0 §4.6.6.9.4 (EXIF 2.32 §4.6.6.9.4) stores four RATIONALs: minimum
+     * EXIF 3.0 §4.6.6.9.4 stores four RATIONALs: minimum
      * focal length, maximum focal length, minimum F-number at the minimum focal
      * length, and minimum F-number at the maximum focal length. Unknown
      * apertures are recorded as 0/0.
@@ -293,8 +290,8 @@ final readonly class ParsedExif
     /**
      * Returns the image width, preferring the compressed-specific EXIF tag when applicable.
      *
-     * EXIF 3.0 §4.6.6.3.1 (and EXIF 2.32 §4.6.6.3.1) define PixelXDimension for compressed
-     * image data only; uncompressed images rely on the base ImageWidth tag instead.
+     * EXIF 3.0 §4.6.6.3.1 defines PixelXDimension for compressed image data only;
+     * uncompressed images rely on the base ImageWidth tag instead.
      *
      * EXIF 3.0 §4.6.5.1.1 defines ImageWidth (Tag 0x0100) as a SHORT or LONG with a single
      * value and no default; JPEG-encoded images convey the dimension via JPEG markers
@@ -318,8 +315,8 @@ final readonly class ParsedExif
     /**
      * Returns the image height, preferring the compressed-specific EXIF tag when applicable.
      *
-     * EXIF 3.0 §4.6.6.3.2 (and EXIF 2.32 §4.6.6.3.2) define PixelYDimension for compressed
-     * image data only; uncompressed images rely on the base ImageLength tag instead.
+     * EXIF 3.0 §4.6.6.3.2 defines PixelYDimension for compressed image data only;
+     * uncompressed images rely on the base ImageLength tag instead.
      *
      * EXIF 3.0 §4.6.5.1.2 ImageLength (Tag 0x0101, type SHORT or LONG, count 1; no default; not used for JPEG compressed data).
      *
@@ -341,7 +338,7 @@ final readonly class ParsedExif
     /**
      * Returns the colour space enumeration if present.
      *
-     * EXIF 3.0 §4.6.6.2.1 (ColorSpace); EXIF 2.32 §4.6.6.2.1.
+     * EXIF 3.0 §4.6.6.2.1 (ColorSpace)
      */
     public function colorSpace(): ?ColorSpace
     {
@@ -353,7 +350,7 @@ final readonly class ParsedExif
     /**
      * Returns the image unique identifier if present.
      *
-     * EXIF 3.0 §4.6.6.9.1 (also EXIF 2.32 §4.6.6.9.1) records a 128-bit UUID in
+     * EXIF 3.0 §4.6.6.9.1 records a 128-bit UUID in
      * hexadecimal ASCII with a fixed count of 33 (including the terminator).
      * Version 4 UUIDs are recommended and the value should remain immutable.
      *
@@ -401,8 +398,8 @@ final readonly class ParsedExif
     /**
      * Returns the optional image title string.
      *
-     * EXIF 3.0 §4.6.6.9.8 (EXIF 2.32 §4.6.6.9.8) allows ASCII or UTF-8 text for
-     * ImageTitle and treats blank fields as unknown.
+     * EXIF 3.0 §4.6.6.9.8 allows ASCII or UTF-8 text for ImageTitle and
+     * treats blank fields as unknown.
      */
     public function imageTitle(): ?string
     {
@@ -446,9 +443,8 @@ final readonly class ParsedExif
     /**
      * Returns the EXIF image description when available.
      *
-     * EXIF 3.0 §4.6.5.4.1 (ImageDescription) and EXIF 2.32 §4.6.5 define a
-     * free-form ASCII or UTF-8 description of the image content with the NUL
-     * terminator included in the stored count.
+     * EXIF 3.0 §4.6.5.4.1 (ImageDescription) defines a free-form ASCII or UTF-8
+     * description of the image content with the NUL terminator included in the stored count.
      */
     public function imageDescription(): ?string
     {
@@ -466,9 +462,8 @@ final readonly class ParsedExif
     /**
      * Returns the software or firmware identifier reported by the image source.
      *
-     * EXIF 3.0 §4.6.5.4.4 (Software) and EXIF 2.32 §4.6.5 recommend recording
-     * the generating software name and version in ASCII or UTF-8 with the
-     * terminating NUL accounted for in the count.
+     * EXIF 3.0 §4.6.5.4.4 (Software) recommends recording the generating software
+     * name and version in ASCII or UTF-8 with the terminating NUL accounted for in the count.
      */
     public function software(): ?string
     {
@@ -478,8 +473,8 @@ final readonly class ParsedExif
     /**
      * Returns the photographer name if present.
      *
-     * EXIF 3.0 §4.6.6.9.9 (and EXIF 2.32 §4.6.6.9.9) recommends keeping the
-     * photographer attribution stable and recording Artist alongside it.
+     * EXIF 3.0 §4.6.6.9.9 recommends keeping the photographer attribution stable
+     * and recording Artist alongside it.
      */
     public function photographer(): ?string
     {
@@ -500,8 +495,8 @@ final readonly class ParsedExif
     /**
      * Returns the image editor attribution if present.
      *
-     * EXIF 3.0 §4.6.6.9.10 (EXIF 2.32 §4.6.6.9.10) captures the primary editor
-     * name and expects Artist to be recorded when this tag is present.
+     * EXIF 3.0 §4.6.6.9.10 captures the primary editor name and expects Artist to
+     * be recorded when this tag is present.
      */
     public function imageEditor(): ?string
     {
@@ -564,8 +559,8 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets defined for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.5.2.1 and EXIF 2.32 §4.6.5 define StripOffsets for strip-based image
-     * storage and require the tag to be omitted for JPEG-compressed primary images.
+     * EXIF 3.0 §4.6.5.2.1 defines StripOffsets for strip-based image storage and
+     * requires the tag to be omitted for JPEG-compressed primary images.
      * For thumbnail strip offsets, use thumbnailStripOffsets().
      *
      * @return list<int>|null
@@ -582,8 +577,8 @@ final readonly class ParsedExif
     /**
      * Returns the strip byte counts for the primary image data (IFD0).
      *
-     * EXIF 3.0 §4.6.5.2.3 and EXIF 2.32 §4.6.5 define StripByteCounts for strip-based image
-     * storage and require the tag to be omitted for JPEG-compressed primary images.
+     * EXIF 3.0 §4.6.5.2.3 defines StripByteCounts for strip-based image storage and
+     * requires the tag to be omitted for JPEG-compressed primary images.
      * For thumbnail strip byte counts, use thumbnailStripByteCounts().
      *
      * @return list<int>|null
@@ -600,8 +595,8 @@ final readonly class ParsedExif
     /**
      * Returns the transfer function lookup table when available.
      *
-     * EXIF 3.0 §4.6.5.3.1 and EXIF 2.32 §4.6.5.3.1 define TransferFunction as
-     * a 3×256 table of SHORT values describing the tone reproduction curve.
+     * EXIF 3.0 §4.6.5.3.1 defines TransferFunction as a 3×256 table of SHORT values
+     * describing the tone reproduction curve.
      *
      * @return list<int>|null
      */
@@ -623,8 +618,8 @@ final readonly class ParsedExif
     /**
      * Indicates whether a JPEG thumbnail is referenced by the EXIF structure.
      *
-     * EXIF 3.0 §4.6.5.1.6 and EXIF 2.32 §4.6.4 describe the JPEG thumbnail tags and require
-     * both offset and length to be populated for a valid embedded thumbnail.
+     * EXIF 3.0 §4.6.5.1.6 describes the JPEG thumbnail tags and requires both
+     * offset and length to be populated for a valid embedded thumbnail.
      */
     public function hasThumbnail(): bool
     {
@@ -641,8 +636,8 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail offset from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 document JPEGInterchangeFormat as the byte
-     * offset to embedded JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
+     * EXIF 3.0 §4.6.5.2.4 documents JPEGInterchangeFormat as the byte offset to embedded
+     * JPEG thumbnails stored in IFD1 (the first IFD after IFD0).
      */
     public function thumbnailJpegInterchangeFormat(): ?int
     {
@@ -652,8 +647,8 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG thumbnail byte length from the dedicated thumbnail IFD (IFD1).
      *
-     * EXIF 3.0 §4.6.5.1.6 (Table 3) and EXIF 2.32 §4.6.4 define JPEGInterchangeFormatLength
-     * as the size in bytes of the JPEG thumbnail stream in IFD1.
+     * EXIF 3.0 §4.6.5.1.6 (Table 3) defines JPEGInterchangeFormatLength as the size in bytes
+     * of the JPEG thumbnail stream in IFD1.
      */
     public function thumbnailJpegInterchangeFormatLength(): ?int
     {
@@ -663,8 +658,8 @@ final readonly class ParsedExif
     /**
      * Returns the compression enum describing the JPEG thumbnail stored in IFD1.
      *
-     * EXIF 3.0 §4.6.5.1.4 and EXIF 2.32 §4.6.5.1.4 define Compression value
-     * 6 to designate JPEG-compressed thumbnails stored in IFD1.
+     * EXIF 3.0 §4.6.5.1.4 defines Compression value 6 to designate JPEG-compressed
+     * thumbnails stored in IFD1.
      */
     public function thumbnailCompression(): ?Compression
     {
@@ -718,8 +713,8 @@ final readonly class ParsedExif
     /**
      * Returns the strip offsets for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.5.2.1 and EXIF 2.32 §4.6.5 define StripOffsets for strip-based image
-     * storage and require the tag to be omitted for JPEG-compressed data.
+     * EXIF 3.0 §4.6.5.2.1 defines StripOffsets for strip-based image storage and requires
+     * the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
      */
@@ -735,8 +730,8 @@ final readonly class ParsedExif
     /**
      * Returns the strip byte counts for the thumbnail image when stored using TIFF strips.
      *
-     * EXIF 3.0 §4.6.5.2.3 and EXIF 2.32 §4.6.5 define StripByteCounts for strip-based image
-     * storage and require the tag to be omitted for JPEG-compressed data.
+     * EXIF 3.0 §4.6.5.2.3 defines StripByteCounts for strip-based image storage and requires
+     * the tag to be omitted for JPEG-compressed data.
      *
      * @return list<int>|null
      */
@@ -752,8 +747,7 @@ final readonly class ParsedExif
     /**
      * Returns the reference black and white point values as floating point numbers.
      *
-     * EXIF 3.0 §4.6.5.3.5 and EXIF 2.32 §4.6.5 describe defaults when the
-     * colour space is declared.
+     * EXIF 3.0 §4.6.5.3.5 describes defaults when the colour space is declared.
      *
      * @return list<float>|null
      */
@@ -771,8 +765,7 @@ final readonly class ParsedExif
     /**
      * Returns the copyright notice string when present.
      *
-     * EXIF 3.0 §4.6.5.4.7 and EXIF 2.32 §4.6.5.4.7 represent empty or
-     * blank-filled copyright fields as unknown values.
+     * EXIF 3.0 §4.6.5.4.7 represents empty or blank-filled copyright fields as unknown values.
      */
     public function copyright(): ?string
     {
@@ -782,8 +775,7 @@ final readonly class ParsedExif
     /**
      * Returns the components configuration array when present.
      *
-     * EXIF 3.0 §4.6.6.3.3 (and EXIF 2.32 §4.6.6.3.3) describe the four-byte component order
-     * for compressed image data.
+     * EXIF 3.0 §4.6.6.3.3 describes the four-byte component order for compressed image data.
      *
      * @return list<int>|null
      */
@@ -797,8 +789,7 @@ final readonly class ParsedExif
     /**
      * Returns the component configuration labels in human readable form.
      *
-     * EXIF 3.0 §4.6.6.3.3 (and EXIF 2.32 §4.6.6.3.3) document the channel identifiers for
-     * compressed data streams.
+     * EXIF 3.0 §4.6.6.3.3 documents the channel identifiers for compressed data streams.
      *
      * @return list<string>|null
      */
@@ -822,8 +813,8 @@ final readonly class ParsedExif
     /**
      * Returns the compressed bits per pixel ratio.
      *
-     * EXIF 3.0 §4.6.6.3.4 (and EXIF 2.32 §4.6.6.3.4) define this rational value for compressed
-     * imagery to indicate the effective compression mode.
+     * EXIF 3.0 §4.6.6.3.4 defines this rational value for compressed imagery to indicate
+     * the effective compression mode.
      */
     public function compressedBitsPerPixel(): ?float
     {
@@ -833,8 +824,8 @@ final readonly class ParsedExif
     /**
      * Returns the user comment string after decoding the EXIF prefix.
      *
-     * EXIF 3.0 §4.6.6.4.2 and EXIF 2.32 §4.6.6.4.2 define the multicode-compatible prefix (see §4.6.4)
-     * that annotates the UserComment character code.
+     * EXIF 3.0 §4.6.6.4.2 defines the multicode-compatible prefix (see §4.6.4) that annotates
+     * the UserComment character code.
      */
     public function userComment(): ?string
     {
@@ -922,7 +913,7 @@ final readonly class ParsedExif
     /**
      * Returns the spectral sensitivity description.
      *
-     * EXIF 3.0 §4.6.6.7.4 (SpectralSensitivity); EXIF 2.32 §4.6.6.7.4.
+     * EXIF 3.0 §4.6.6.7.4 (SpectralSensitivity)
      */
     public function spectralSensitivity(): ?string
     {
@@ -932,8 +923,8 @@ final readonly class ParsedExif
     /**
      * Returns the opto-electronic conversion function data.
      *
-     * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) and EXIF 2.32 §4.6.3: OECF describes the
-     * relationship between camera's optical input and the image file values.
+     * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) describes the relationship between
+     * the camera's optical input and the image file values.
      */
     public function oecf(): ?Oecf
     {
@@ -958,8 +949,7 @@ final readonly class ParsedExif
     /**
      * Returns the declared EXIF sensitivity type as defined by EXIF 3.0 §4.6.6.7.7 Table 14.
      *
-     * EXIF 2.32 §4.6.6.7.7 introduces SensitivityType to signal which ISO 12232
-     * parameter the PhotographicSensitivity tag represents.
+     * Signals which ISO 12232 parameter the PhotographicSensitivity tag represents.
      */
     public function sensitivityType(): ?SensitivityType
     {
@@ -975,7 +965,7 @@ final readonly class ParsedExif
     /**
      * Returns the standard output sensitivity (SOS) value recorded for the capture.
      *
-     * EXIF 3.0 §4.6.6.7.8; EXIF 2.32 §4.6.6.7.8.
+     * EXIF 3.0 §4.6.6.7.8
      */
     public function standardOutputSensitivity(): ?int
     {
@@ -985,7 +975,7 @@ final readonly class ParsedExif
     /**
      * Returns the recommended exposure index (REI) value recorded for the capture.
      *
-     * EXIF 3.0 §4.6.6.7.9; EXIF 2.32 §4.6.6.7.9.
+     * EXIF 3.0 §4.6.6.7.9
      */
     public function recommendedExposureIndex(): ?int
     {
@@ -995,7 +985,7 @@ final readonly class ParsedExif
     /**
      * Returns the ISO speed value when provided separately from photographic sensitivity.
      *
-     * EXIF 3.0 §4.6.6.7.10; EXIF 2.32 §4.6.6.7.10.
+     * EXIF 3.0 §4.6.6.7.10
      */
     public function isoSpeedValue(): ?int
     {
@@ -1187,7 +1177,7 @@ final readonly class ParsedExif
     /**
      * Returns the ISO latitude yyy value when present and paired with ISOSpeed and ISOSpeedLatitudezzz.
      *
-     * EXIF 3.0 §4.6.6.7.11; EXIF 2.32 §4.6.6.7.11.
+     * EXIF 3.0 §4.6.6.7.11
      */
     public function isoSpeedLatitudeYyy(): ?int
     {
@@ -1207,7 +1197,7 @@ final readonly class ParsedExif
     /**
      * Returns the ISO latitude zzz value when present.
      *
-     * EXIF 3.0 §4.6.6.7.12 (ISOSpeedLatitudezzz); EXIF 2.32 §4.6.6.7.12.
+     * EXIF 3.0 §4.6.6.7.12 (ISOSpeedLatitudezzz)
      */
     public function isoSpeedLatitudeZzz(): ?int
     {
@@ -1217,7 +1207,7 @@ final readonly class ParsedExif
     /**
      * Returns the exposure time in seconds if available.
      *
-     * EXIF 3.0 §4.6.6.7.1 (ExposureTime); EXIF 2.32 §4.6.6.7.1.
+     * EXIF 3.0 §4.6.6.7.1 (ExposureTime)
      *
      * @return float|null
      */
@@ -1229,7 +1219,7 @@ final readonly class ParsedExif
     /**
      * Returns the APEX shutter speed value when available.
      *
-     * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue); EXIF 2.32 §4.6.6.7.13.
+     * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue)
      */
     public function shutterSpeedValue(): ?float
     {
@@ -1253,7 +1243,7 @@ final readonly class ParsedExif
     /**
      * Returns the aperture (f-number) if available.
      *
-     * EXIF 3.0 §4.6.6.7.2 (FNumber); EXIF 2.32 §4.6.6.7.2.
+     * EXIF 3.0 §4.6.6.7.2 (FNumber)
      *
      * @return float|null
      */
@@ -1265,7 +1255,7 @@ final readonly class ParsedExif
     /**
      * Returns the APEX aperture value when present.
      *
-     * EXIF 3.0 §4.6.6.7.14 (ApertureValue); EXIF 2.32 §4.6.6.7.14.
+     * EXIF 3.0 §4.6.6.7.14 (ApertureValue)
      */
     public function apertureValue(): ?float
     {
@@ -1275,7 +1265,7 @@ final readonly class ParsedExif
     /**
      * Returns the focal length in millimetres if available.
      *
-     * EXIF 3.0 §4.6.6.7.23 (FocalLength); EXIF 2.32 §4.6.6.7.23.
+     * EXIF 3.0 §4.6.6.7.23 (FocalLength)
      *
      * @return float|null
      */
@@ -1297,7 +1287,7 @@ final readonly class ParsedExif
     /**
      * Returns the camera exposure program enumeration if present.
      *
-     * EXIF 3.0 §4.6.6.7.3 (ExposureProgram); EXIF 2.32 §4.6.6.7.3.
+     * EXIF 3.0 §4.6.6.7.3 (ExposureProgram)
      */
     public function exposureProgram(): ?ExposureProgram
     {
@@ -1309,8 +1299,7 @@ final readonly class ParsedExif
     /**
      * Returns the metering mode enumeration if present.
      *
-     * EXIF 3.0 §4.6.6.7.19 (MeteringMode) retains the EXIF 2.32
-     * §4.6.6.7.19 catalogue of camera metering algorithms.
+     * EXIF 3.0 §4.6.6.7.19 (MeteringMode) catalogue of camera metering algorithms.
      *
      * @return MeteringMode|null
      */
@@ -1334,7 +1323,7 @@ final readonly class ParsedExif
     /**
      * Returns the flash energy in beam candle power seconds when available.
      *
-     * EXIF 3.0 §4.6.6.7.24 (FlashEnergy); EXIF 2.32 §4.6.6.7.24.
+     * EXIF 3.0 §4.6.6.7.24 (FlashEnergy)
      *
      * @return float|null
      */
@@ -1346,7 +1335,7 @@ final readonly class ParsedExif
     /**
      * Returns the white balance enumeration if present.
      *
-     * EXIF 3.0 §4.6.6.7.37 (WhiteBalance); EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.37 (WhiteBalance)
      */
     public function whiteBalance(): ?WhiteBalance
     {
@@ -1358,7 +1347,7 @@ final readonly class ParsedExif
     /**
      * Returns the exposure bias value in EV if present.
      *
-     * EXIF 3.0 §4.6.6.7.16 (ExposureBiasValue); EXIF 2.32 §4.6.6.7.16.
+     * EXIF 3.0 §4.6.6.7.16 (ExposureBiasValue)
      *
      * @return float|null
      */
@@ -1370,7 +1359,7 @@ final readonly class ParsedExif
     /**
      * Returns the scene brightness value (APEX) if present.
      *
-     * EXIF 3.0 §4.6.6.7.15 (BrightnessValue); EXIF 2.32 §4.6.6.7.15.
+     * EXIF 3.0 §4.6.6.7.15 (BrightnessValue)
      *
      * @return float|null
      */
@@ -1388,9 +1377,8 @@ final readonly class ParsedExif
     /**
      * Returns the maximum aperture value (APEX) if present.
      *
-     * EXIF 3.0 §4.6.6.7.17 (MaxApertureValue) preserves the EXIF 2.32
-     * §4.6.6.7.17 encoding of a single RATIONAL representing the lens's
-     * smallest F number expressed as an APEX value.
+     * EXIF 3.0 §4.6.6.7.17 (MaxApertureValue) encodes a single RATIONAL representing
+     * the lens's smallest F number expressed as an APEX value.
      *
      * @return float|null
      */
@@ -1461,7 +1449,7 @@ final readonly class ParsedExif
     /**
      * Returns the exposure index value.
      *
-     * EXIF 3.0 §4.6.6.7.30 (ExposureIndex); EXIF 2.32 §4.6.6.7.30.
+     * EXIF 3.0 §4.6.6.7.30 (ExposureIndex)
      */
     public function exposureIndex(): ?float
     {
@@ -1493,8 +1481,8 @@ final readonly class ParsedExif
     /**
      * Returns the composite image classification when available.
      *
-     * EXIF 3.0 §4.6.6.7.47 (also EXIF 2.32 §4.6.6.7.47) defines the
-     * CompositeImage tag with four enumerated states, reserving all others.
+     * EXIF 3.0 §4.6.6.7.47 defines the CompositeImage tag with four enumerated
+     * states, reserving all others.
      */
     public function compositeImage(): ?CompositeImage
     {
@@ -1506,8 +1494,8 @@ final readonly class ParsedExif
     /**
      * Returns the number of source images contributing to the composite result.
      *
-     * EXIF 3.0 §4.6.6.7.48 (EXIF 2.32 §4.6.6.7.48) records both the total number of
-     * captured source images and how many were actually used to assemble the
+     * EXIF 3.0 §4.6.6.7.48 records both the total number of captured source images
+     * and how many were actually used to assemble the
      * composite. Figure 24 requires two SHORT values where both counters are at
      * least two and the used count cannot exceed the captured total.
      *
@@ -1649,8 +1637,8 @@ final readonly class ParsedExif
     /**
      * Returns the CFA pattern layout when available.
      *
-     * EXIF 3.0 §4.6.6.7.34 (and EXIF 2.32 §4.6.6.7.34) define the payload as two SHORT
-     * repeat units followed by m×n component identifiers describing the colour filter array.
+     * EXIF 3.0 §4.6.6.7.34 defines the payload as two SHORT repeat units followed by m×n
+     * component identifiers describing the colour filter array.
      */
     public function cfaPattern(): ?CfaPattern
     {
@@ -1681,7 +1669,7 @@ final readonly class ParsedExif
     /**
      * Returns the scene type classification when present.
      *
-     * EXIF 3.0 §4.6.6.7.33 (SceneType); EXIF 2.32 §4.6.6.7.33.
+     * EXIF 3.0 §4.6.6.7.33 (SceneType)
      */
     public function sceneType(): ?SceneType
     {
@@ -1707,7 +1695,7 @@ final readonly class ParsedExif
     /**
      * Returns whether a custom rendering process was applied.
      *
-     * EXIF 3.0 §4.6.6.7.35 (CustomRendered); EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.35 (CustomRendered)
      */
     public function customRendered(): ?CustomRendered
     {
@@ -1719,7 +1707,7 @@ final readonly class ParsedExif
     /**
      * Returns the in-camera contrast setting.
      *
-     * EXIF 3.0 §4.6.6.7.42; EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.42
      */
     public function contrast(): ?Contrast
     {
@@ -1731,7 +1719,7 @@ final readonly class ParsedExif
     /**
      * Returns the in-camera saturation setting.
      *
-     * EXIF 3.0 §4.6.6.7.43; EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.43
      */
     public function saturation(): ?Saturation
     {
@@ -1743,7 +1731,7 @@ final readonly class ParsedExif
     /**
      * Returns the in-camera sharpness setting.
      *
-     * EXIF 3.0 §4.6.6.7.44; EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.44
      */
     public function sharpness(): ?Sharpness
     {
@@ -1879,9 +1867,8 @@ final readonly class ParsedExif
     /**
      * Returns the camera firmware string when present.
      *
-     * EXIF 3.0 §4.6.6.9.11 (EXIF 2.32 §4.6.6.9.11) captures the camera firmware
-     * name/version in ASCII or UTF-8 and expects the Software tag to be present
-     * alongside it.
+     * EXIF 3.0 §4.6.6.9.11 captures the camera firmware name/version in ASCII or UTF-8
+     * and expects the Software tag to be present alongside it.
      */
     public function cameraFirmware(): ?string
     {
@@ -1891,8 +1878,8 @@ final readonly class ParsedExif
     /**
      * Returns the raw developing software string.
      *
-     * EXIF 3.0 §4.6.6.9.12 (EXIF 2.32 §4.6.6.9.12) stores RAWDevelopingSoftware
-     * to document the RAW processor and requires Software to be recorded too.
+     * EXIF 3.0 §4.6.6.9.12 stores RAWDevelopingSoftware to document the RAW
+     * processor and requires Software to be recorded too.
      */
     public function rawDevelopingSoftware(): ?string
     {
@@ -1902,8 +1889,8 @@ final readonly class ParsedExif
     /**
      * Returns the image editing software string.
      *
-     * EXIF 3.0 §4.6.6.9.13 (EXIF 2.32 §4.6.6.9.13) lists the primary image
-     * editing software and expects the Software tag to accompany it.
+     * EXIF 3.0 §4.6.6.9.13 lists the primary image editing software and expects
+     * the Software tag to accompany it.
      */
     public function imageEditingSoftware(): ?string
     {
@@ -1913,9 +1900,8 @@ final readonly class ParsedExif
     /**
      * Returns the metadata editing software string.
      *
-     * EXIF 3.0 §4.6.6.9.14 (EXIF 2.32 §4.6.6.9.14) records the tool used to edit
-     * metadata without changing pixels and likewise expects Software to be
-     * filled.
+     * EXIF 3.0 §4.6.6.9.14 records the tool used to edit metadata without changing
+     * pixels and likewise expects Software to be filled.
      */
     public function metadataEditingSoftware(): ?string
     {
@@ -2387,9 +2373,8 @@ final readonly class ParsedExif
     /**
      * Returns the ModifyDate/DateTime tag combined with its optional offset.
      *
-     * EXIF 3.0 §4.6.5.4.5 (and EXIF 2.32 §4.6.5.4.5) define DateTime as
-     * "YYYY:MM:DD HH:MM:SS" with blank-filled placeholders treated as
-     * unknown values.
+     * EXIF 3.0 §4.6.5.4.5 defines DateTime as "YYYY:MM:DD HH:MM:SS" with
+     * blank-filled placeholders treated as unknown values.
      *
      * @return DateTimeImmutable|null
      */
@@ -2405,10 +2390,9 @@ final readonly class ParsedExif
     /**
      * Returns the artist tag value when present.
      *
-     * EXIF 3.0 §4.6.5.4.6 (also EXIF 2.32 §4.6.5.4.6) requires Artist to be
-     * populated alongside CameraOwnerName, Photographer, or ImageEditor. The
-     * closest available attribution is returned when the primary tag is
-     * missing.
+     * EXIF 3.0 §4.6.5.4.6 requires Artist to be populated alongside
+     * CameraOwnerName, Photographer, or ImageEditor. The closest available
+     * attribution is returned when the primary tag is missing.
      */
     public function artist(): ?string
     {
@@ -2433,9 +2417,9 @@ final readonly class ParsedExif
     /**
      * Returns the bits per sample defined for the primary image.
      *
-     * EXIF 3.0 §4.6.5.1.3 (EXIF 2.32 §4.6.5.1.3) defines three SHORT values with a
-     * default of 8 8 8 for RGB components. JPEG compressed data relies on the frame
-     * header precision instead of this tag.
+     * EXIF 3.0 §4.6.5.1.3 defines three SHORT values with a default of 8 8 8 for
+     * RGB components. JPEG compressed data relies on the frame header precision
+     * instead of this tag.
      *
      * @return int
      */
@@ -2464,8 +2448,8 @@ final readonly class ParsedExif
     /**
      * Returns the rows per strip value when the image data is organized in strips.
      *
-     * EXIF 3.0 §4.6.5.2.2 and EXIF 2.32 §4.6.5 define RowsPerStrip for strip-based images
-     * and require the tag to be omitted for JPEG-compressed primary images.
+     * EXIF 3.0 §4.6.5.2.2 defines RowsPerStrip for strip-based images and
+     * requires the tag to be omitted for JPEG-compressed primary images.
      */
     public function rowsPerStrip(): ?int
     {
@@ -2567,7 +2551,6 @@ final readonly class ParsedExif
      * Returns the YCbCr positioning enum describing the chroma siting.
      *
      * @see EXIF 3.0 §4.6.5.1.13: Default to centered positioning when tag is absent
-     * @see EXIF 2.32 §4.6.2
      */
     public function ycbcrPositioning(): ?YCbCrPositioning
     {
@@ -2612,9 +2595,8 @@ final readonly class ParsedExif
     /**
      * Returns the YCbCr conversion coefficients when provided.
      *
-     * EXIF 3.0 §4.6.5.3.4 (and EXIF 2.32 §4.6.5.3.4) defines three rational
-     * coefficients for RGB→YCbCr conversion, defaulting to Annex D values when
-     * the tag is absent.
+     * EXIF 3.0 §4.6.5.3.4 defines three rational coefficients for RGB→YCbCr
+     * conversion, defaulting to Annex D values when the tag is absent.
      *
      * @return array{0:float,1:float,2:float}|null
      */
@@ -2662,8 +2644,8 @@ final readonly class ParsedExif
     /**
      * Returns the normalized white point coordinates.
      *
-     * EXIF 3.0 §4.6.5.3.2 (WhitePoint) and EXIF 2.32 §4.6.5.3.2 encode the
-     * chromaticity of the white point as exactly two rational values (X,Y).
+     * EXIF 3.0 §4.6.5.3.2 (WhitePoint) encodes the chromaticity of the white
+     * point as exactly two rational values (X,Y).
      *
      * @return array{0:float,1:float}|null
      */
@@ -2679,8 +2661,8 @@ final readonly class ParsedExif
     /**
      * Returns the primary chromaticities ordered as R,G,B.
      *
-     * EXIF 3.0 §4.6.5.3.3 (PrimaryChromaticities) and EXIF 2.32 §4.6.5.3.3
-     * define three rational pairs (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
+     * EXIF 3.0 §4.6.5.3.3 (PrimaryChromaticities) defines three rational pairs
+     * (RedX, RedY, GreenX, GreenY, BlueX, BlueY).
      *
      * @return array{0:float,1:float,2:float,3:float,4:float,5:float}|null
      */
@@ -2707,8 +2689,8 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG interchange format offset for legacy thumbnails.
      *
-     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 note that this tag shall not be recorded
-     * for primary images encoded with JPEG compression.
+     * EXIF 3.0 §4.6.5.2.4 notes that this tag shall not be recorded for primary
+     * images encoded with JPEG compression.
      */
     public function jpegInterchangeFormat(): ?int
     {
@@ -2722,8 +2704,8 @@ final readonly class ParsedExif
     /**
      * Returns the JPEG interchange format length for legacy thumbnails.
      *
-     * EXIF 3.0 §4.6.5.2.4 and EXIF 2.32 §4.6.5 note that this tag shall not be recorded
-     * for primary images encoded with JPEG compression.
+     * EXIF 3.0 §4.6.5.2.4 notes that this tag shall not be recorded for primary
+     * images encoded with JPEG compression.
      */
     public function jpegInterchangeFormatLength(): ?int
     {
@@ -2745,7 +2727,7 @@ final readonly class ParsedExif
     /**
      * Returns the gamma correction value when provided.
      *
-     * EXIF 3.0 §4.6.6.2.2 (Gamma); EXIF 2.32 §4.6.6.2.2.
+     * EXIF 3.0 §4.6.6.2.2 (Gamma)
      */
     public function gamma(): ?float
     {
@@ -2755,7 +2737,7 @@ final readonly class ParsedExif
     /**
      * Returns the digital zoom ratio when encoded by the camera.
      *
-     * EXIF 3.0 §4.6.6.7.38 (DigitalZoomRatio); EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.38 (DigitalZoomRatio)
      * A ratio with a numerator of zero indicates that digital zoom was not used.
      */
     public function digitalZoomRatio(): ?float
@@ -2772,7 +2754,7 @@ final readonly class ParsedExif
     /**
      * Returns the exposure mode enum indicating manual or auto settings.
      *
-     * EXIF 3.0 §4.6.6.7.36 (ExposureMode); EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.36 (ExposureMode)
      */
     public function exposureMode(): ?ExposureMode
     {
@@ -2784,7 +2766,7 @@ final readonly class ParsedExif
     /**
      * Returns the gain control enum describing in-camera amplification.
      *
-     * EXIF 3.0 §4.6.6.7.41; EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.41
      */
     public function gainControl(): ?GainControl
     {
@@ -2796,7 +2778,7 @@ final readonly class ParsedExif
     /**
      * Returns the EXIF file source enum when provided.
      *
-     * EXIF 3.0 §4.6.6.7.32 (FileSource); EXIF 2.32 §4.6.6.7.32.
+     * EXIF 3.0 §4.6.6.7.32 (FileSource)
      */
     public function fileSource(): ?FileSource
     {
@@ -2832,7 +2814,7 @@ final readonly class ParsedExif
     /**
      * Returns the EXIF sensing method enum when provided.
      *
-     * EXIF 3.0 §4.6.6.7.31 (SensingMethod); EXIF 2.32 §4.6.6.7.31.
+     * EXIF 3.0 §4.6.6.7.31 (SensingMethod)
      */
     public function sensingMethod(): ?SensingMethod
     {
@@ -2844,9 +2826,8 @@ final readonly class ParsedExif
     /**
      * Returns the light source enum describing the scene illumination.
      *
-     * EXIF 3.0 §4.6.6.7.20 (LightSource) keeps the EXIF 2.32
-     * §4.6.6.7.20 mapping of coded illuminants and their default value of 0
-     * for unknown light sources.
+     * EXIF 3.0 §4.6.6.7.20 (LightSource) mapping of coded illuminants and
+     * default value 0 for unknown light sources.
      *
      * @return LightSource|null
      */
@@ -2861,7 +2842,7 @@ final readonly class ParsedExif
     /**
      * Returns the scene capture type enum when recorded.
      *
-     * EXIF 3.0 §4.6.6.7.40 (SceneCaptureType); EXIF 2.32 §4.6.3.
+     * EXIF 3.0 §4.6.6.7.40 (SceneCaptureType)
      *
      * @return SceneCaptureType|null
      */
@@ -2875,8 +2856,8 @@ final readonly class ParsedExif
     /**
      * Returns the subject distance range enum when provided.
      *
-     * EXIF 3.0 §4.6.6.7.46 (retained from EXIF 2.32 §4.6.6.7.46) provides the
-     * four valid SubjectDistanceRange codes; other values are reserved.
+     * EXIF 3.0 §4.6.6.7.46 provides the four valid SubjectDistanceRange codes;
+     * other values are reserved.
      */
     public function subjectDistanceRange(): ?SubjectDistanceRange
     {
@@ -2922,8 +2903,7 @@ final readonly class ParsedExif
      *
      * EXIF 3.0 §4.6.6.7.18 (SubjectDistance) states that a numerator of
      * 0xFFFFFFFF indicates infinity, while a numerator of 0 indicates an
-     * unknown distance; both conventions originate from EXIF 2.32
-     * §4.6.6.7.18.
+     * unknown distance.
      */
     public function subjectDistance(): ?float
     {
@@ -3955,7 +3935,7 @@ final readonly class ParsedExif
     /**
      * Parses UTF-16 encoded camera settings entries following the display grid dimensions.
      *
-     * EXIF 3.0 §4.6.6.7.45; EXIF 2.32 §4.6.6.7.45.
+     * EXIF 3.0 §4.6.6.7.45
      *
      * @return list<string>
      */
@@ -4159,7 +4139,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for iso() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.6.7.5 (PhotographicSensitivity); EXIF 2.32 §4.6.6.7.5.
+     * EXIF 3.0 §4.6.6.7.5 (PhotographicSensitivity)
      *
      * @return int|null ISO sensitivity value
      */
