@@ -92,6 +92,46 @@ final class TiffExifReader implements ExifReaderInterface
         ExifTag::JPEG_INTERCHANGE_FORMAT,
     ];
 
+    /**
+     * Fixed-length tags that must contain exactly four bytes.
+     *
+     * EXIF 3.0 §4.6.6.1.1 (ExifVersion), §4.6.6.1.2 (FlashpixVersion),
+     * §4.6.6.1.3 (ComponentsConfiguration), and §4.6.8 (GPSVersionID) mandate
+     * four-byte payloads. The requirements are unchanged in EXIF 2.32 for these tags.
+     *
+     * @var array<int, array{name: string, count: int, type: int, typeName: string, spec: string}>
+     */
+    private const array FIXED_LENGTH_TAGS = [
+        ExifTag::EXIF_VERSION => [
+            'name' => 'ExifVersion',
+            'count' => 4,
+            'type' => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec' => 'EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1',
+        ],
+        ExifTag::FLASHPIX_VERSION => [
+            'name' => 'FlashpixVersion',
+            'count' => 4,
+            'type' => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec' => 'EXIF 3.0 §4.6.6.1.2; EXIF 2.32 §4.6.6.1.2',
+        ],
+        ExifTag::COMPONENTS_CONFIGURATION => [
+            'name' => 'ComponentsConfiguration',
+            'count' => 4,
+            'type' => TiffConst::TYPE_UNDEFINED,
+            'typeName' => 'UNDEFINED',
+            'spec' => 'EXIF 3.0 §4.6.6.1.3; EXIF 2.32 §4.6.6.1.3',
+        ],
+        ExifTag::GPS_VERSION_ID => [
+            'name' => 'GPSVersionID',
+            'count' => 4,
+            'type' => TiffConst::TYPE_BYTE,
+            'typeName' => 'BYTE',
+            'spec' => 'EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8',
+        ],
+    ];
+
     private const int ASCII_PRINTABLE_MIN = 0x20;
 
     private const int ASCII_PRINTABLE_MAX = 0x7E;
@@ -348,6 +388,8 @@ final class TiffExifReader implements ExifReaderInterface
         $type = $this->readU16();
         $cnt  = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
 
+        $this->validateFixedLengthTagLayout($tag, $type, $cnt);
+
         if ($this->bigTiff) {
             // BigTIFF stores the inline value/offset field as an 8- or 16-byte
             // quantity (EXIF 3.0 §4.5.2 BigTIFF note) with inline payloads padded
@@ -379,6 +421,36 @@ final class TiffExifReader implements ExifReaderInterface
         }
 
         return [$tag => new IfdEntry($tag, $type, $cnt, $value)];
+    }
+
+    /**
+     * Validates tag layouts with fixed byte counts mandated by EXIF.
+     */
+    private function validateFixedLengthTagLayout(int $tag, int $type, int $count): void
+    {
+        if (!isset(self::FIXED_LENGTH_TAGS[$tag])) {
+            return;
+        }
+
+        $rule = self::FIXED_LENGTH_TAGS[$tag];
+
+        if ($count !== $rule['count']) {
+            throw new ParseError(sprintf(
+                '%s must contain exactly %d bytes per %s.',
+                $rule['name'],
+                $rule['count'],
+                $rule['spec'],
+            ));
+        }
+
+        if ($type !== $rule['type']) {
+            throw new ParseError(sprintf(
+                '%s must use TIFF type %s per %s.',
+                $rule['name'],
+                $rule['typeName'],
+                $rule['spec'],
+            ));
+        }
     }
 
     /**
