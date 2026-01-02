@@ -28,11 +28,15 @@ use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function pack;
+use function strlen;
+use function str_pad;
+use function substr;
 
 /**
  * Negative tests for TiffExifReader focusing on malformed and corrupted TIFF/EXIF data.
@@ -322,6 +326,31 @@ final class TiffExifReaderNegativeTest extends TestCase
     }
 
     /**
+     * Ensures fixed-length EXIF tags reject invalid counts.
+     *
+     * EXIF 3.0 §4.6.6.1.1-§4.6.6.1.3 and §4.6.8 require four-byte payloads for
+     * ExifVersion, FlashpixVersion, ComponentsConfiguration, and GPSVersionID.
+     */
+    #[Test]
+    #[DataProvider('invalidFixedLengthTagProvider')]
+    public function rejectsFixedLengthTagsWithInvalidCounts(
+        int $tag,
+        int $type,
+        int $count,
+        string $valueBytes,
+        string $expectedMessage,
+    ): void {
+        $blob = $this->buildClassicTiffWithEntry($tag, $type, $count, $valueBytes);
+
+        $reader = new TiffExifReader();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
      * Builds a minimal valid TIFF blob with a RATIONAL value.
      *
      * @param int $numerator   Numerator for the rational.
@@ -446,5 +475,91 @@ final class TiffExifReaderNegativeTest extends TestCase
         $blob .= pack('V', 0);  // Next IFD
 
         return $blob;
+    }
+
+    /**
+     * @return array<string, array{0:int,1:int,2:int,3:string,4:string}>
+     */
+    public static function invalidFixedLengthTagProvider(): array
+    {
+        return [
+            'ExifVersion expects 4 ASCII bytes' => [
+                ExifTag::EXIF_VERSION,
+                TiffConst::TYPE_ASCII,
+                3,
+                '010',
+                'ExifVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1.',
+            ],
+            'FlashpixVersion expects 4 ASCII bytes' => [
+                ExifTag::FLASHPIX_VERSION,
+                TiffConst::TYPE_ASCII,
+                3,
+                '010',
+                'FlashpixVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.2; EXIF 2.32 §4.6.6.1.2.',
+            ],
+            'ComponentsConfiguration expects 4 bytes' => [
+                ExifTag::COMPONENTS_CONFIGURATION,
+                TiffConst::TYPE_UNDEFINED,
+                3,
+                "\x01\x02\x03",
+                'ComponentsConfiguration must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.3; EXIF 2.32 §4.6.6.1.3.',
+            ],
+            'GPSVersionID expects 4 bytes' => [
+                ExifTag::GPS_VERSION_ID,
+                TiffConst::TYPE_BYTE,
+                3,
+                "\x02\x03\x00",
+                'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8.',
+            ],
+        ];
+    }
+
+    private function buildClassicTiffWithEntry(int $tag, int $type, int $count, string $valueBytes): string
+    {
+        $ifdOffset = 8;
+        $blob      = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset);
+
+        $blob .= pack('v', 1);
+
+        $componentSize = $this->bytesPerComponent($type);
+        $dataSize      = $componentSize * $count;
+
+        if (strlen($valueBytes) < $dataSize) {
+            $valueBytes = str_pad($valueBytes, $dataSize, "\0");
+        }
+
+        if ($dataSize <= 4) {
+            $inlineBytes = str_pad(substr($valueBytes, 0, $dataSize), 4, "\0");
+
+            $blob .= pack('v', $tag)
+                . pack('v', $type)
+                . pack('V', $count)
+                . $inlineBytes
+                . pack('V', 0);
+
+            return $blob;
+        }
+
+        $valueOffset = $ifdOffset + 2 + 12 + 4;
+
+        $blob .= pack('v', $tag)
+            . pack('v', $type)
+            . pack('V', $count)
+            . pack('V', $valueOffset)
+            . pack('V', 0);
+
+        return $blob . substr($valueBytes, 0, $dataSize);
+    }
+
+    private function bytesPerComponent(int $type): int
+    {
+        return match ($type) {
+            TiffConst::TYPE_ASCII,
+            TiffConst::TYPE_BYTE,
+            TiffConst::TYPE_UNDEFINED => 1,
+            default => 1,
+        };
     }
 }
