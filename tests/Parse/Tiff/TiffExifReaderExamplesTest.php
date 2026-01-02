@@ -14,6 +14,8 @@ namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -72,6 +74,29 @@ final class TiffExifReaderExamplesTest extends TestCase
 
         $this->assertCommonExifValues($result);
         $this->assertGpsValues($result);
+    }
+
+    /**
+     * EXIF 3.0 §4.5.2 outlines the IFD chaining rules, §4.6.3.3.1 defines the
+     * Interoperability IFD pointer, and §4.6.5.2.4 plus §4.6.5.1.6 (Table 3)
+     * describe the JPEG thumbnail tags stored in IFD1.
+     */
+    #[Test]
+    public function parsesClassicInteropAndThumbnailExample(): void
+    {
+        $reader  = new TiffExifReader();
+        $payload = $this->buildClassicExampleWithInteropAndThumbnail(Endian::Little);
+        $result  = $reader->parseFromBlob($payload['blob']);
+
+        self::assertSame('R98', $result->interopIndex());
+        self::assertTrue($result->hasThumbnail());
+        self::assertSame($payload['jpegOffset'], $result->thumbnailJpegInterchangeFormat());
+        self::assertSame($payload['jpegLength'], $result->thumbnailJpegInterchangeFormatLength());
+        self::assertSame(Compression::JPEG, $result->thumbnailCompression());
+        self::assertSame(160, $result->thumbnailTileWidth());
+        self::assertSame(120, $result->thumbnailTileLength());
+        self::assertSame($payload['tileOffsets'], $result->thumbnailTileOffsets());
+        self::assertSame($payload['tileByteCounts'], $result->thumbnailTileByteCounts());
     }
 
     private function assertCommonExifValues(ParsedExif $result): void
@@ -211,6 +236,118 @@ final class TiffExifReaderExamplesTest extends TestCase
             . pack($packRational, 550, 1);
 
         return $header . $ifd0 . $exifIfd . $exifData . $gpsIfd . $gpsData;
+    }
+
+
+    /**
+     * Builds a classic TIFF blob with Exif/Interop IFD chaining and a thumbnail IFD1.
+     *
+     * EXIF 3.0 §4.5.2 describes the classic TIFF directory layout, §4.6.3.3.1
+     * specifies the Interoperability IFD pointer field, and §4.6.5.2.4 plus
+     * §4.6.5.1.6 (Table 3) document JPEG thumbnail tags in IFD1.
+     *
+     * @return array{blob: string, jpegOffset: int, jpegLength: int, tileOffsets: list<int>, tileByteCounts: list<int>}
+     */
+    private function buildClassicExampleWithInteropAndThumbnail(Endian $endian): array
+    {
+        $packShort = $endian === Endian::Little ? 'v' : 'n';
+        $packLong  = $endian === Endian::Little ? 'V' : 'N';
+
+        $ifd0EntryCount       = 1;
+        $exifIfdEntryCount    = 1;
+        $interopIfdEntryCount = 1;
+        $ifd1EntryCount       = 7;
+
+        $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
+        $exifIfdSize    = 2 + (12 * $exifIfdEntryCount) + 4;
+        $interopIfdSize = 2 + (12 * $interopIfdEntryCount) + 4;
+        $ifd1Size       = 2 + (12 * $ifd1EntryCount) + 4;
+
+        $header        = $endian->value
+            . pack($packShort, TiffConst::MAGIC_CLASSIC)
+            . pack($packLong, 8);
+        $exifIfdOffset = 8 + $ifd0Size;
+        $interopOffset = $exifIfdOffset + $exifIfdSize;
+        $ifd1Offset    = $interopOffset + $interopIfdSize;
+        $ifd1DataStart = $ifd1Offset + $ifd1Size;
+
+        $tileOffsets      = [$ifd1DataStart + 16, $ifd1DataStart + 20];
+        $tileByteCounts   = [4, 6];
+        $tileOffsetsStart = $ifd1DataStart;
+        $tileCountsStart  = $tileOffsetsStart + 8;
+        $jpegOffset       = $tileCountsStart + 8;
+        $jpegLength       = 10;
+
+        $ifd0 = pack($packShort, $ifd0EntryCount)
+            . pack($packShort, ExifTag::EXIF_IFD_POINTER)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, $exifIfdOffset)
+            . pack($packLong, $ifd1Offset);
+
+        $exifIfd = pack($packShort, $exifIfdEntryCount)
+            // EXIF 3.0 §4.6.3.3.1 requires a single LONG offset to the Interoperability IFD.
+            . pack($packShort, ExifTag::INTEROPERABILITY_IFD_POINTER)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, $interopOffset)
+            . pack($packLong, 0);
+
+        $interopIfd = pack($packShort, $interopIfdEntryCount)
+            . pack($packShort, ExifTag::INTEROPERABILITY_INDEX)
+            . pack($packShort, TiffConst::TYPE_ASCII)
+            . pack($packLong, 4)
+            . pack('A4', 'R98')
+            . pack($packLong, 0);
+
+        $ifd1 = pack($packShort, $ifd1EntryCount)
+            // EXIF 3.0 §4.6.5.1.4 defines Compression=6 for JPEG thumbnails.
+            . pack($packShort, ExifTag::COMPRESSION)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, Compression::JPEG->value)
+            . pack($packShort, 0)
+            // EXIF 3.0 §4.6.5.2.4 (JPEGInterchangeFormat) and §4.6.5.1.6 (Table 3).
+            . pack($packShort, ExifTag::JPEG_INTERCHANGE_FORMAT)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, $jpegOffset)
+            . pack($packShort, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, $jpegLength)
+            . pack($packShort, TiffTag::TILE_WIDTH)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, 160)
+            . pack($packShort, TiffTag::TILE_LENGTH)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, 120)
+            . pack($packShort, TiffTag::TILE_OFFSETS)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 2)
+            . pack($packLong, $tileOffsetsStart)
+            . pack($packShort, TiffTag::TILE_BYTE_COUNTS)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 2)
+            . pack($packLong, $tileCountsStart)
+            . pack($packLong, 0);
+
+        $ifd1Data = pack($packLong, $tileOffsets[0])
+            . pack($packLong, $tileOffsets[1])
+            . pack($packLong, $tileByteCounts[0])
+            . pack($packLong, $tileByteCounts[1]);
+
+        $jpegData = str_repeat('J', $jpegLength);
+
+        return [
+            'blob' => $header . $ifd0 . $exifIfd . $interopIfd . $ifd1 . $ifd1Data . $jpegData,
+            'jpegOffset' => $jpegOffset,
+            'jpegLength' => $jpegLength,
+            'tileOffsets' => $tileOffsets,
+            'tileByteCounts' => $tileByteCounts,
+        ];
     }
 
     private function buildBigTiffExample(Endian $endian): string
