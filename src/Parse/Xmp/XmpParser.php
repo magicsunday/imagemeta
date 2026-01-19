@@ -12,13 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use XMLReader;
 
 use function array_filter;
 use function array_key_exists;
 use function array_values;
 use function in_array;
-use function is_array;
 use function sprintf;
 use function trim;
 
@@ -322,32 +322,7 @@ final class XmpParser
      */
     private function storeValue(array &$data, string $key, array|string $value): void
     {
-        if (!array_key_exists($key, $data)) {
-            $data[$key] = $value;
-
-            return;
-        }
-
-        $existing = $data[$key];
-
-        if (is_array($existing)) {
-            if (is_array($value)) {
-                $data[$key] = [...$existing, ...$value];
-            } else {
-                $existing[] = $value;
-                $data[$key] = $existing;
-            }
-
-            return;
-        }
-
-        if (is_array($value)) {
-            $data[$key] = [$existing, ...$value];
-
-            return;
-        }
-
-        $data[$key] = [$existing, $value];
+        XmpValueAccumulator::merge($data, $key, $value);
     }
 
     /**
