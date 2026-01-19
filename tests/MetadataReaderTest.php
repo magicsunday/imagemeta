@@ -233,7 +233,7 @@ final class MetadataReaderTest extends TestCase
 
         $structured = $metadata->structured();
 
-        /** @var array<string, callable(): mixed> $componentAccessors */
+        /** @var array{file: callable(): FileValue, container: callable(): Container, camera: callable(): Camera, lens: callable(): Lens, derived: callable(): Derived, exposure: callable(): Exposure, thumbnail: callable(): Thumbnail, rights: callable(): Rights} $componentAccessors */
         $componentAccessors = [
             'file'      => static fn (): FileValue => $structured->file,
             'container' => static fn (): Container => $structured->container,

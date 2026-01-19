@@ -42,6 +42,10 @@ use function pack;
 use function str_repeat;
 use function strlen;
 
+/**
+ * @phpstan-type NativePlistValue array<string, NativePlistValue>|array<int, NativePlistValue>|bool|float|int|string|null
+ * @phpstan-type NativePlistDictionary array<string, NativePlistValue>
+ */
 #[CoversClass(AppleDecoder::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(ApplePlistArray::class)]
@@ -90,7 +94,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         $decoder = new AppleDecoder();
         $method  = new ReflectionMethod(AppleDecoder::class, 'decodeBinaryPropertyList');
 
-        /** @var array<int|string, mixed>|bool|float|int|string|null $result */
+        /** @var NativePlistValue $result */
         $result = $method->invoke($decoder, $raw);
 
         self::assertIsArray($result);
@@ -128,7 +132,7 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
             'PayloadVersion' => 1,
         ];
 
-        /** @var array<int|string, mixed>|null $result */
+        /** @var NativePlistDictionary|null $result */
         $result = $method->invoke($decoder, $wrapper);
 
         self::assertIsArray($result);
