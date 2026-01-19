@@ -36,7 +36,7 @@ final readonly class MotionFactory
         $apple = $metadata->makerNotes?->apple;
 
         if (!$apple instanceof AppleMakerNotes) {
-            $apple = $this->emptyAppleMakerNotes();
+            $apple = AppleMakerNotes::empty();
         }
 
         return $this->buildMotion($exif, $apple);
@@ -74,37 +74,5 @@ final readonly class MotionFactory
             $accelZ,
         );
     }
-
-    private function emptyAppleMakerNotes(): AppleMakerNotes
-    {
-        /** @var AppleMakerNotes|null $empty */
-        static $empty = null;
-
-        if ($empty === null) {
-            $empty = new AppleMakerNotes(
-                contentIdentifier: null,
-                cameraType: null,
-                hdrHeadroom: null,
-                hdrGain: null,
-                snr: null,
-                aeStable: null,
-                aeTarget: null,
-                aeAverage: null,
-                afStable: null,
-                afPerformance: null,
-                signalToNoiseRatioType: null,
-                luminanceNoiseAmplitude: null,
-                focusPosition: null,
-                livePhotoIndex: null,
-                colorTemperature: null,
-                semanticStylePreset: null,
-                semanticStyleWarmth: null,
-                semanticStyleTone: null,
-                flags: [],
-                accelerationVector: null,
-            );
-        }
-
-        return $empty;
-    }
 }
+
