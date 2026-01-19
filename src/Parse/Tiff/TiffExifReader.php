@@ -103,32 +103,32 @@ final class TiffExifReader implements ExifReaderInterface
      */
     private const array FIXED_LENGTH_TAGS = [
         ExifTag::EXIF_VERSION => [
-            'name' => 'ExifVersion',
-            'count' => 4,
-            'type' => TiffConst::TYPE_ASCII,
+            'name'     => 'ExifVersion',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_ASCII,
             'typeName' => 'ASCII',
-            'spec' => 'EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1',
+            'spec'     => 'EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1',
         ],
         ExifTag::FLASHPIX_VERSION => [
-            'name' => 'FlashpixVersion',
-            'count' => 4,
-            'type' => TiffConst::TYPE_ASCII,
+            'name'     => 'FlashpixVersion',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_ASCII,
             'typeName' => 'ASCII',
-            'spec' => 'EXIF 3.0 §4.6.6.1.2; EXIF 2.32 §4.6.6.1.2',
+            'spec'     => 'EXIF 3.0 §4.6.6.1.2; EXIF 2.32 §4.6.6.1.2',
         ],
         ExifTag::COMPONENTS_CONFIGURATION => [
-            'name' => 'ComponentsConfiguration',
-            'count' => 4,
-            'type' => TiffConst::TYPE_UNDEFINED,
+            'name'     => 'ComponentsConfiguration',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_UNDEFINED,
             'typeName' => 'UNDEFINED',
-            'spec' => 'EXIF 3.0 §4.6.6.1.3; EXIF 2.32 §4.6.6.1.3',
+            'spec'     => 'EXIF 3.0 §4.6.6.1.3; EXIF 2.32 §4.6.6.1.3',
         ],
         ExifTag::GPS_VERSION_ID => [
-            'name' => 'GPSVersionID',
-            'count' => 4,
-            'type' => TiffConst::TYPE_BYTE,
+            'name'     => 'GPSVersionID',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_BYTE,
             'typeName' => 'BYTE',
-            'spec' => 'EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8',
+            'spec'     => 'EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8',
         ],
     ];
 

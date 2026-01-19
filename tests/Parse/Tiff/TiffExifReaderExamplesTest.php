@@ -15,9 +15,9 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -238,7 +238,6 @@ final class TiffExifReaderExamplesTest extends TestCase
         return $header . $ifd0 . $exifIfd . $exifData . $gpsIfd . $gpsData;
     }
 
-
     /**
      * Builds a classic TIFF blob with Exif/Interop IFD chaining and a thumbnail IFD1.
      *
@@ -263,7 +262,7 @@ final class TiffExifReaderExamplesTest extends TestCase
         $interopIfdSize = 2 + (12 * $interopIfdEntryCount) + 4;
         $ifd1Size       = 2 + (12 * $ifd1EntryCount) + 4;
 
-        $header        = $endian->value
+        $header = $endian->value
             . pack($packShort, TiffConst::MAGIC_CLASSIC)
             . pack($packLong, 8);
         $exifIfdOffset = 8 + $ifd0Size;
@@ -342,10 +341,10 @@ final class TiffExifReaderExamplesTest extends TestCase
         $jpegData = str_repeat('J', $jpegLength);
 
         return [
-            'blob' => $header . $ifd0 . $exifIfd . $interopIfd . $ifd1 . $ifd1Data . $jpegData,
-            'jpegOffset' => $jpegOffset,
-            'jpegLength' => $jpegLength,
-            'tileOffsets' => $tileOffsets,
+            'blob'           => $header . $ifd0 . $exifIfd . $interopIfd . $ifd1 . $ifd1Data . $jpegData,
+            'jpegOffset'     => $jpegOffset,
+            'jpegLength'     => $jpegLength,
+            'tileOffsets'    => $tileOffsets,
             'tileByteCounts' => $tileByteCounts,
         ];
     }

@@ -26,6 +26,8 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function count;
+
 /**
  * Tests for TIFF 6.0 and EXIF 3.0 default values in ParsedExif.
  *
@@ -239,7 +241,7 @@ final class ParsedExifDefaultValuesTest extends TestCase
         $table = range(0, 767);
 
         $complete = new Ifd([
-            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, \count($table), $table),
+            ExifTag::TRANSFER_FUNCTION => new IfdEntry(ExifTag::TRANSFER_FUNCTION, 3, count($table), $table),
         ]);
 
         $parsedExif = new ParsedExif($complete, null, null, null, null);

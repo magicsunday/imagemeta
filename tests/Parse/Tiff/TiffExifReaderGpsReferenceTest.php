@@ -21,6 +21,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function strlen;
+
 /**
  * GPS reference handling derived from EXIF 3.0 §4.6.6 (GPS tag examples)
  * and EXIF 2.32 §4.6.6 for backward-compatible hemisphere/altitude signs.
@@ -85,8 +87,8 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $ifd0EntryCount = pack($packShort, 1);
         $ifd0NextOffset = pack($packLong, 0);
 
-        $ifd0Length   = \strlen($ifd0EntryCount) + 12 + \strlen($ifd0NextOffset);
-        $gpsIfdOffset = \strlen($header) + $ifd0Length;
+        $ifd0Length   = strlen($ifd0EntryCount) + 12 + strlen($ifd0NextOffset);
+        $gpsIfdOffset = strlen($header) + $ifd0Length;
 
         $ifd0 = $ifd0EntryCount
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
@@ -99,8 +101,8 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $gpsIfdPlaceholder = $gpsEntryCount
             . str_repeat("\0", 6 * 12)
             . $ifd0NextOffset;
-        $gpsIfdLength  = \strlen($gpsIfdPlaceholder);
-        $gpsDataOffset = \strlen($header . $ifd0) + $gpsIfdLength;
+        $gpsIfdLength  = strlen($gpsIfdPlaceholder);
+        $gpsDataOffset = strlen($header . $ifd0) + $gpsIfdLength;
 
         $gpsIfd = $gpsEntryCount
             // GPSLatitudeRef = "S"
@@ -161,7 +163,7 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $ifd0EntryCount = pack($packLong8, 1);
         $ifd0NextOffset = pack($packLong8, 0);
 
-        $ifd0Length   = \strlen($ifd0EntryCount) + 20 + \strlen($ifd0NextOffset);
+        $ifd0Length   = strlen($ifd0EntryCount) + 20 + strlen($ifd0NextOffset);
         $gpsIfdOffset = 16 + $ifd0Length;
 
         $ifd0 = $ifd0EntryCount
@@ -175,8 +177,8 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
         $gpsIfdPlaceholder = $gpsEntryCount
             . str_repeat("\0", 6 * 20)
             . $ifd0NextOffset;
-        $gpsIfdLength  = \strlen($gpsIfdPlaceholder);
-        $gpsDataOffset = \strlen($header . $ifd0) + $gpsIfdLength;
+        $gpsIfdLength  = strlen($gpsIfdPlaceholder);
+        $gpsDataOffset = strlen($header . $ifd0) + $gpsIfdLength;
         $lonOffset     = $gpsDataOffset + (3 * 8);
 
         $gpsIfd = $gpsEntryCount

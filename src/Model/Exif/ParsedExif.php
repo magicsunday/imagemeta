@@ -4143,7 +4143,7 @@ final readonly class ParsedExif
 
     /**
      * Alias for iso() using exact EXIF tag name.
-     * EXIF 3.0 §4.6.6.7.5 (PhotographicSensitivity)
+     * EXIF 3.0 §4.6.6.7.5 (PhotographicSensitivity).
      *
      * @return int|null ISO sensitivity value
      */

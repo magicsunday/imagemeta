@@ -33,8 +33,8 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function pack;
-use function strlen;
 use function str_pad;
+use function strlen;
 use function substr;
 
 #[CoversClass(TiffExifReader::class)]
@@ -148,7 +148,7 @@ final class TiffExifReaderFixedLengthTest extends TestCase
             TiffConst::TYPE_ASCII,
             TiffConst::TYPE_BYTE,
             TiffConst::TYPE_UNDEFINED => 1,
-            default => 1,
+            default                   => 1,
         };
     }
 }
