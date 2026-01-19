@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
+use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
+
 use function array_filter;
 use function array_find;
 use function array_key_exists;
@@ -88,34 +90,7 @@ final readonly class XmpDocument
      */
     private static function accumulateValue(array &$data, string $key, array|string $value): void
     {
-        if (!array_key_exists($key, $data)) {
-            $data[$key] = $value;
-
-            return;
-        }
-
-        $existing = $data[$key];
-
-        if (is_array($existing)) {
-            if (is_array($value)) {
-                $data[$key] = [...$existing, ...$value];
-
-                return;
-            }
-
-            $existing[] = $value;
-            $data[$key] = $existing;
-
-            return;
-        }
-
-        if (is_array($value)) {
-            $data[$key] = [$existing, ...$value];
-
-            return;
-        }
-
-        $data[$key] = [$existing, $value];
+        XmpValueAccumulator::merge($data, $key, $value);
     }
 
     /**
