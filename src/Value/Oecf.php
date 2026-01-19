@@ -11,12 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use function count;
-use function is_array;
-use function is_float;
-use function is_int;
-use function is_string;
-
 /**
  * Opto-Electronic Conversion Function (OECF) data structure.
  *
@@ -53,105 +47,27 @@ final readonly class Oecf
      * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11): OECF matrix format with dimensions, labels,
      * and SRATIONAL values.
      *
-     * @param array<string, mixed>|null $matrix Decoded OECF matrix. OECF matrix.
+     * @param array<string, array|int>|null $matrix Decoded OECF matrix. OECF matrix.
      *
      * @return self|null OECF value object or null if matrix is invalid.
      */
     public static function fromMatrix(?array $matrix): ?self
     {
-        if ($matrix === null) {
+        $parts = MatrixValidator::validateMatrix($matrix, true, true);
+        if ($parts === null) {
             return null;
         }
 
-        $columns = $matrix['columns'] ?? null;
-        $rows    = $matrix['rows'] ?? null;
-        $labels  = $matrix['labels'] ?? null;
-        $values  = $matrix['values'] ?? null;
-
-        if (
-            !is_int($columns)
-            || !is_int($rows)
-            || !is_array($labels)
-            || !is_array($values)
-        ) {
-            return null;
-        }
-
-        if ($columns <= 0 || $rows <= 0) {
-            return null;
-        }
-
-        $columnLabels = $labels['columns'] ?? null;
-        $rowLabels    = $labels['rows'] ?? null;
-
-        if (
-            !is_array($columnLabels)
-            || !is_array($rowLabels)
-        ) {
-            return null;
-        }
-
-        // Validate dimensions match label counts
-        $normalizedColumnLabels = [];
-        foreach ($columnLabels as $label) {
-            if (!is_string($label)) {
-                return null;
-            }
-
-            $normalizedColumnLabels[] = $label;
-        }
-
-        $normalizedRowLabels = [];
-        foreach ($rowLabels as $label) {
-            if (!is_string($label)) {
-                return null;
-            }
-
-            $normalizedRowLabels[] = $label;
-        }
-
-        $normalizedValues = [];
-        foreach ($values as $row) {
-            if (!is_array($row)) {
-                return null;
-            }
-
-            $normalizedRow = [];
-            foreach ($row as $cell) {
-                if (
-                    !is_float($cell)
-                    && ($cell !== null)
-                ) {
-                    return null;
-                }
-
-                $normalizedRow[] = $cell;
-            }
-
-            if (count($normalizedRow) !== $columns) {
-                return null;
-            }
-
-            $normalizedValues[] = $normalizedRow;
-        }
-
-        if (
-            (count($normalizedColumnLabels) !== $columns)
-            || (count($normalizedRowLabels) !== $rows)
-        ) {
-            return null;
-        }
-
-        if (count($normalizedValues) !== $rows) {
+        if ($parts->rowLabels === null) {
             return null;
         }
 
         return new self(
-            $columns,
-            $rows,
-            $normalizedColumnLabels,
-            $normalizedRowLabels,
-            $normalizedValues
+            $parts->columns,
+            $parts->rows,
+            $parts->columnLabels,
+            $parts->rowLabels,
+            $parts->values
         );
     }
 }

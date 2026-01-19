@@ -11,12 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
-use function count;
-use function is_array;
-use function is_float;
-use function is_int;
-use function is_string;
-
 /**
  * Spatial Frequency Response (SFR) value object.
  *
@@ -58,87 +52,22 @@ final readonly class SpatialFrequencyResponse
      *     'values'  => array<list<float>> // SFR[row][column]
      * ]
      *
-     * @param array<string, mixed>|null $matrix
+     * @param array<string, array|int>|null $matrix
      *
      * @return self|null
      */
     public static function fromMatrix(?array $matrix): ?self
     {
-        if ($matrix === null) {
+        $parts = MatrixValidator::validateMatrix($matrix, false, false);
+        if ($parts === null) {
             return null;
-        }
-
-        $columns = $matrix['columns'] ?? null;
-        $rows    = $matrix['rows'] ?? null;
-        $labels  = $matrix['labels'] ?? null;
-        $values  = $matrix['values'] ?? null;
-
-        if (
-            !is_int($columns)
-            || ($columns <= 0)
-            || !is_int($rows)
-            || ($rows <= 0)
-            || !is_array($labels)
-            || !is_array($values)
-        ) {
-            return null;
-        }
-
-        $columnLabels = $labels['columns'] ?? null;
-        if (!is_array($columnLabels)) {
-            return null;
-        }
-
-        // Validate and normalize column item names to list<string>
-        $frequencies = [];
-
-        foreach ($columnLabels as $label) {
-            if (!is_string($label)) {
-                return null;
-            }
-
-            $frequencies[] = $label;
-        }
-
-        if (count($frequencies) !== $columns) {
-            return null;
-        }
-
-        // Validate that values form an exact m×n matrix of float RATIONALs
-        if (count($values) !== $rows) {
-            return null;
-        }
-
-        $typedValues = [];
-
-        foreach ($values as $rowIndex => $row) {
-            if (!is_array($row)) {
-                return null;
-            }
-
-            $typedRow = [];
-
-            foreach ($row as $cell) {
-                // Spec: RATIONAL ⇒ always a numeric value, null is not allowed
-                if (!is_float($cell)) {
-                    return null;
-                }
-
-                $typedRow[] = $cell;
-            }
-
-            if (count($typedRow) !== $columns) {
-                return null;
-            }
-
-            $typedValues[$rowIndex] = $typedRow;
         }
 
         return new self(
-            $columns,
-            $rows,
-            $frequencies,
-            $typedValues
+            $parts->columns,
+            $parts->rows,
+            $parts->columnLabels,
+            $parts->values
         );
     }
 }
