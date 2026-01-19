@@ -81,8 +81,6 @@ final class TiffExifReaderGpsReferenceTest extends TestCase
             . pack($packLong, 8);
         $gpsIfdOffset  = 26;
         $gpsDataOffset = $gpsIfdOffset + 2 + (6 * 12) + 4;
-        $lonOffset     = $gpsDataOffset + (3 * 8);
-        $altOffset     = $lonOffset + (3 * 8);
 
         $ifd0EntryCount = pack($packShort, 1);
         $ifd0NextOffset = pack($packLong, 0);

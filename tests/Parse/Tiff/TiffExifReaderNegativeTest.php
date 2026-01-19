@@ -197,7 +197,7 @@ final class TiffExifReaderNegativeTest extends TestCase
         $blob = $this->buildMinimalTiffWithRational(100, 0);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -214,7 +214,7 @@ final class TiffExifReaderNegativeTest extends TestCase
         $blob = $this->buildMinimalTiffWithSRational(-2147483648, 2147483647);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -258,7 +258,7 @@ final class TiffExifReaderNegativeTest extends TestCase
             . pack('V', $ifdOffset); // Next IFD points back to offset 8 (cycle)
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
 
@@ -533,13 +533,7 @@ final class TiffExifReaderNegativeTest extends TestCase
         if ($dataSize <= 4) {
             $inlineBytes = str_pad(substr($valueBytes, 0, $dataSize), 4, "\0");
 
-            $blob .= pack('v', $tag)
-                . pack('v', $type)
-                . pack('V', $count)
-                . $inlineBytes
-                . pack('V', 0);
-
-            return $blob;
+            return $blob . (pack('v', $tag) . pack('v', $type) . pack('V', $count) . $inlineBytes . pack('V', 0));
         }
 
         $valueOffset = $ifdOffset + 2 + 12 + 4;

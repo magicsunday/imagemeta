@@ -194,7 +194,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob .= "TestData\0\0";
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
 
@@ -210,7 +210,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob = $this->buildTiffWithRational(0, 0);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -224,7 +224,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob = $this->buildTiffWithRational(0xFFFFFFFF, 0xFFFFFFFF);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -238,7 +238,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob = $this->buildTiffWithSRational(-12345, 67890);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -252,7 +252,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob = $this->buildTiffWithSRational(12345, -67890);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -266,7 +266,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob = $this->buildTiffWithSRational(-12345, -67890);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -321,7 +321,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob .= $asciiData;
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -346,7 +346,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob .= pack('V', 0);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -372,7 +372,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob .= pack('V', 0);
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }
@@ -402,7 +402,7 @@ final class TiffExifReaderFuzzTest extends TestCase
         $blob .= $undefinedData;
 
         $reader = new TiffExifReader();
-        $result = $reader->parseFromBlob($blob);
+        $reader->parseFromBlob($blob);
 
         $this->addToAssertionCount(1);
     }

@@ -79,9 +79,7 @@ return static function (RectorConfig $rectorConfig): void {
         NewMethodCallWithoutParenthesesRector::class,
         RemoveDeadZeroAndOneOperationRector::class,
         RemoveUnreachableStatementRector::class,
-        RemoveUnusedVariableAssignRector::class,
         RemoveUselessParamTagRector::class,
         RemoveUselessReturnTagRector::class,
-        SimplifyUselessVariableRector::class,
     ]);
 };

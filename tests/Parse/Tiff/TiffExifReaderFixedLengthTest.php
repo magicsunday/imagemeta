@@ -122,13 +122,7 @@ final class TiffExifReaderFixedLengthTest extends TestCase
         if ($dataSize <= 4) {
             $inlineBytes = str_pad(substr($valueBytes, 0, $dataSize), 4, "\0");
 
-            $blob .= pack('v', $tag)
-                . pack('v', $type)
-                . pack('V', $count)
-                . $inlineBytes
-                . pack('V', 0);
-
-            return $blob;
+            return $blob . (pack('v', $tag) . pack('v', $type) . pack('V', $count) . $inlineBytes . pack('V', 0));
         }
 
         $valueOffset = $ifdOffset + 2 + 12 + 4;

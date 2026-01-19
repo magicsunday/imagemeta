@@ -352,7 +352,6 @@ final class TiffExifReaderExamplesTest extends TestCase
     private function buildBigTiffExample(Endian $endian): string
     {
         $packShort    = $endian === Endian::Little ? 'v' : 'n';
-        $packLong     = $endian === Endian::Little ? 'V' : 'N';
         $packRational = $endian === Endian::Little ? 'V2' : 'N2';
         $header       = $endian->value
             . pack($packShort, TiffConst::MAGIC_BIG)
