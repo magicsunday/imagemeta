@@ -434,20 +434,24 @@ final class TiffExifReader implements ExifReaderInterface
 
         $rule = self::FIXED_LENGTH_TAGS[$tag];
 
+        if ($type !== $rule['type']) {
+            if (($type === TiffConst::TYPE_UNDEFINED) && ($rule['type'] === TiffConst::TYPE_ASCII)) {
+                return;
+            }
+
+            throw new ParseError(sprintf(
+                '%s must use TIFF type %s per %s.',
+                $rule['name'],
+                $rule['typeName'],
+                $rule['spec'],
+            ));
+        }
+
         if ($count !== $rule['count']) {
             throw new ParseError(sprintf(
                 '%s must contain exactly %d bytes per %s.',
                 $rule['name'],
                 $rule['count'],
-                $rule['spec'],
-            ));
-        }
-
-        if ($type !== $rule['type']) {
-            throw new ParseError(sprintf(
-                '%s must use TIFF type %s per %s.',
-                $rule['name'],
-                $rule['typeName'],
                 $rule['spec'],
             ));
         }

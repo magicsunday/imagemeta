@@ -1187,7 +1187,7 @@ final readonly class ParsedExif
             return null;
         }
 
-        if (($this->isoSpeedValue() === null) || ($this->isoSpeedLatitudeZzz() === null)) {
+        if ($this->isoSpeedLatitudeZzz() === null) {
             return null;
         }
 
@@ -2967,7 +2967,7 @@ final readonly class ParsedExif
             return null;
         }
 
-        $trimmed = rtrim($value, "\0");
+        $trimmed = rtrim($value, "\0 ");
 
         if ($trimmed === '') {
             return null;
