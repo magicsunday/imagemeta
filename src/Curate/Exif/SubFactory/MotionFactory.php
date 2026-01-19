@@ -75,4 +75,3 @@ final readonly class MotionFactory
         );
     }
 }
-

@@ -14,20 +14,20 @@ namespace MagicSunday\ImageMeta\Value;
 /**
  * Normalized matrix parts used by value objects.
  *
- * @param int                                $columns      Column count.
- * @param int                                $rows         Row count.
- * @param list<string>                       $columnLabels Column labels.
- * @param list<string>|null                  $rowLabels    Optional row labels.
- * @param array<int, array<int, float|null>> $values       Matrix values.
+ * @param int                    $columns      Column count.
+ * @param int                    $rows         Row count.
+ * @param list<string>           $columnLabels Column labels.
+ * @param list<string>|null      $rowLabels    Optional row labels.
+ * @param list<list<float|null>> $values       Matrix values.
  */
 final readonly class MatrixParts
 {
     /**
-     * @param int                                $columns      Column count.
-     * @param int                                $rows         Row count.
-     * @param list<string>                       $columnLabels Column labels.
-     * @param list<string>|null                  $rowLabels    Optional row labels.
-     * @param array<int, array<int, float|null>> $values       Matrix values.
+     * @param int                    $columns      Column count.
+     * @param int                    $rows         Row count.
+     * @param list<string>           $columnLabels Column labels.
+     * @param list<string>|null      $rowLabels    Optional row labels.
+     * @param list<list<float|null>> $values       Matrix values.
      */
     public function __construct(
         public int $columns,

@@ -140,4 +140,3 @@ final readonly class SceneFactory
         return $flags[$key] ?? null;
     }
 }
-
