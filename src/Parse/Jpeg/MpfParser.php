@@ -495,7 +495,7 @@ final class MpfParser
 
         return !array_any(
             $value,
-            fn (mixed $item): bool => !is_array($item) || !$this->isRational($item)
+            fn (int|string|array $item): bool => !is_array($item) || !$this->isRational($item)
         );
     }
 
