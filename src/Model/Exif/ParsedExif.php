@@ -1187,6 +1187,10 @@ final readonly class ParsedExif
             return null;
         }
 
+        if ($this->isoSpeedValue() === null) {
+            return null;
+        }
+
         if ($this->isoSpeedLatitudeZzz() === null) {
             return null;
         }
