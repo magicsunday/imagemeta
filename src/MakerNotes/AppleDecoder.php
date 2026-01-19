@@ -55,6 +55,9 @@ use function trim;
 
 /**
  * Decoder that extracts structured metadata from Apple maker note payloads.
+ *
+ * @phpstan-type NativePlistValue array<string, NativePlistValue>|array<int, NativePlistValue>|bool|float|int|string|null
+ * @phpstan-type NativePlistDictionary array<string, NativePlistValue>
  */
 final class AppleDecoder implements MakerNotesDecoderInterface
 {
@@ -95,7 +98,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        /** @var array<int|string, mixed> $dictionary */
+        /** @var NativePlistDictionary $dictionary */
         $dictionary = $decoded;
 
         $decoded = $this->resolveKeyedArchiveDictionary($dictionary);
@@ -111,7 +114,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param string $raw Raw maker note data stream.
      *
-     * @return array<int|string, mixed>|bool|float|int|string|null
+     * @return NativePlistValue
      */
     private function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
@@ -141,7 +144,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @param string $raw Raw maker note data stream.
      *
-     * @return array<int|string, mixed>|null
+     * @return NativePlistDictionary|null
      */
     private function parseRawDictionaryPayload(string $raw): ?array
     {
@@ -170,7 +173,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Parses a dictionary section from the textual representation.
      *
-     * @return array<int|string, mixed>
+     * @return NativePlistDictionary
      */
     private function parseDictionary(string $raw, int &$offset, int $length): array
     {
@@ -234,7 +237,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Parses a single value from the textual dictionary representation.
      *
-     * @return array<int|string, mixed>|bool|float|int|string|null
+     * @return NativePlistValue
      */
     private function parseValue(string $raw, int &$offset, int $length): array|bool|float|int|string|null
     {
@@ -292,9 +295,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param int    $offset Current parsing offset (modified by reference).
      * @param int    $length Total payload length.
      *
-     * @return array<int, array<int|string, mixed>|bool|float|int|string|null> Parsed array values.
+     * @return array<int, NativePlistValue> Parsed array values.
      *
-     * @phpstan-return array<int, array<int|string, mixed>|bool|float|int|string|null>
+     * @phpstan-return array<int, NativePlistValue>
      *
      * @throws ParseError If array syntax is invalid.
      */
@@ -305,7 +308,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         ++$offset;
-        /** @var array<int, array<int|string, mixed>|bool|float|int|string|null> $values */
+        /** @var array<int, NativePlistValue> $values */
         $values = [];
 
         while (true) {
@@ -337,7 +340,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
         }
 
-        /** @var array<int, array<int|string, mixed>|bool|float|int|string|null> $values */
+        /** @var array<int, NativePlistValue> $values */
         return $values;
     }
 
@@ -574,9 +577,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Unarchives a normalized keyed archive dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Normalized keyed archive structure.
+     * @param NativePlistDictionary $dictionary Normalized keyed archive structure.
      *
-     * @return array<int|string, mixed>|null Unarchived dictionary or null if invalid.
+     * @return NativePlistDictionary|null Unarchived dictionary or null if invalid.
      */
     private function unarchiveNormalisedKeyedArchive(array $dictionary): ?array
     {
@@ -598,7 +601,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Converts a property list value into native PHP types.
      *
-     * @return array<int|string, mixed>|bool|float|int|string|null
+     * @return NativePlistValue
      */
     private function plistValueToPhp(ApplePlistValue $value): array|string|int|float|bool|null
     {
@@ -625,7 +628,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         throw new ParseError('Unsupported property list value.');
     }
 
-    private function nativeToPlistValue(mixed $value): ApplePlistValue
+    /**
+     * @param NativePlistValue $value
+     */
+    private function nativeToPlistValue(array|bool|float|int|string|null $value): ApplePlistValue
     {
         if (!is_array($value)) {
             if (is_bool($value) || is_int($value) || is_float($value) || is_string($value) || $value === null) {
@@ -659,9 +665,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Normalizes a keyed archive dictionary to standard structure.
      *
-     * @param array<int|string, mixed> $dictionary Raw keyed archive dictionary.
+     * @param NativePlistDictionary $dictionary Raw keyed archive dictionary.
      *
-     * @return array<int|string, mixed>|null Normalized structure or null if invalid.
+     * @return NativePlistDictionary|null Normalized structure or null if invalid.
      */
     private function normaliseKeyedArchive(array $dictionary): ?array
     {
@@ -710,7 +716,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Returns the first existing key from a prioritized list.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
      * @return string|null First matching key or null if none exist.
@@ -726,15 +732,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Builds an AppleMakerNotes value object from decoded dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Decoded maker notes dictionary.
+     * @param NativePlistDictionary $dictionary Decoded maker notes dictionary.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return AppleMakerNotes|null Apple maker notes object or null if invalid.
      */
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
-        /** @var array<int|string, mixed> $dictionary */
+        /** @var NativePlistDictionary $dictionary */
         $semanticStyleCompact = null;
         if (
             !array_key_exists('SemanticStylePreset', $dictionary)
