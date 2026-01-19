@@ -253,7 +253,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             cameraElevationAngleDeg: $exifDocument?->cameraElevationAngleDeg(),
         );
 
-        $apple = $appleMakerNotes ?? $this->emptyAppleMakerNotes();
+        $apple = $appleMakerNotes ?? AppleMakerNotes::empty();
         $xmp   = new Xmp($xmpDocument);
 
         $file = new File(
@@ -493,39 +493,6 @@ final readonly class ValueFactory implements ValueFactoryInterface
         }
 
         return $count > 0 ? $count : null;
-    }
-
-    private function emptyAppleMakerNotes(): AppleMakerNotes
-    {
-        /** @var AppleMakerNotes|null $empty */
-        static $empty = null;
-
-        if ($empty === null) {
-            $empty = new AppleMakerNotes(
-                contentIdentifier: null,
-                cameraType: null,
-                hdrHeadroom: null,
-                hdrGain: null,
-                snr: null,
-                aeStable: null,
-                aeTarget: null,
-                aeAverage: null,
-                afStable: null,
-                afPerformance: null,
-                signalToNoiseRatioType: null,
-                luminanceNoiseAmplitude: null,
-                focusPosition: null,
-                livePhotoIndex: null,
-                colorTemperature: null,
-                semanticStylePreset: null,
-                semanticStyleWarmth: null,
-                semanticStyleTone: null,
-                flags: [],
-                accelerationVector: null,
-            );
-        }
-
-        return $empty;
     }
 
     /**

@@ -18,6 +18,39 @@ use MagicSunday\ImageMeta\Value\RunTime;
  */
 final readonly class AppleMakerNotes
 {
+    public static function empty(): self
+    {
+        /** @var self|null $empty */
+        static $empty = null;
+
+        if ($empty === null) {
+            $empty = new self(
+                contentIdentifier: null,
+                cameraType: null,
+                hdrHeadroom: null,
+                hdrGain: null,
+                snr: null,
+                aeStable: null,
+                aeTarget: null,
+                aeAverage: null,
+                afStable: null,
+                afPerformance: null,
+                signalToNoiseRatioType: null,
+                luminanceNoiseAmplitude: null,
+                focusPosition: null,
+                livePhotoIndex: null,
+                colorTemperature: null,
+                semanticStylePreset: null,
+                semanticStyleWarmth: null,
+                semanticStyleTone: null,
+                flags: [],
+                accelerationVector: null,
+            );
+        }
+
+        return $empty;
+    }
+
     /**
      * @param string|null         $contentIdentifier       Unique content identifier assigned by Apple platforms.
      * @param string|int|null     $cameraType              Describes the hardware camera (e.g. "Wide", "Tele").

@@ -42,7 +42,7 @@ final readonly class SceneFactory
         $appleMakerNote = $metadata->makerNotes?->apple;
 
         if (!$appleMakerNote instanceof AppleMakerNotes) {
-            $appleMakerNote = $this->emptyAppleMakerNotes();
+            $appleMakerNote = AppleMakerNotes::empty();
         }
 
         return $this->buildScene($exif, $quickTime, $appleMakerNote, $faceCount);
@@ -139,37 +139,5 @@ final readonly class SceneFactory
     {
         return $flags[$key] ?? null;
     }
-
-    private function emptyAppleMakerNotes(): AppleMakerNotes
-    {
-        /** @var AppleMakerNotes|null $empty */
-        static $empty = null;
-
-        if ($empty === null) {
-            $empty = new AppleMakerNotes(
-                contentIdentifier: null,
-                cameraType: null,
-                hdrHeadroom: null,
-                hdrGain: null,
-                snr: null,
-                aeStable: null,
-                aeTarget: null,
-                aeAverage: null,
-                afStable: null,
-                afPerformance: null,
-                signalToNoiseRatioType: null,
-                luminanceNoiseAmplitude: null,
-                focusPosition: null,
-                livePhotoIndex: null,
-                colorTemperature: null,
-                semanticStylePreset: null,
-                semanticStyleWarmth: null,
-                semanticStyleTone: null,
-                flags: [],
-                accelerationVector: null,
-            );
-        }
-
-        return $empty;
-    }
 }
+
