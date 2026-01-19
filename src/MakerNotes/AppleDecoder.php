@@ -443,7 +443,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Checks if a dictionary represents an NSKeyedArchive structure.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to check.
+     * @param NativePlistDictionary $dictionary Dictionary to check.
      *
      * @return bool True if dictionary is a keyed archive.
      */
@@ -469,7 +469,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Recursively checks if a value contains UID references.
      *
-     * @param array<int|string, mixed> $value Value to inspect.
+     * @param array<int|string, NativePlistValue> $value Value to inspect.
      *
      * @return bool True if value or nested values contain CF$UID keys.
      */
@@ -485,9 +485,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Resolves and unarchives a keyed archive dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Raw dictionary from binary plist.
+     * @param NativePlistDictionary $dictionary Raw dictionary from binary plist.
      *
-     * @return array<int|string, mixed>|null Unarchived dictionary or null if not a keyed archive.
+     * @return NativePlistDictionary|null Unarchived dictionary or null if not a keyed archive.
      */
     private function resolveKeyedArchiveDictionary(array $dictionary): ?array
     {
@@ -513,9 +513,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Recursively searches for and resolves nested keyed archive structures.
      *
-     * @param array<int|string, mixed> $value Value that may contain nested keyed archives.
+     * @param array<int|string, NativePlistValue> $value Value that may contain nested keyed archives.
      *
-     * @return array<int|string, mixed>|null Resolved archive or null if not found.
+     * @return NativePlistDictionary|null Resolved archive or null if not found.
      */
     private function resolveNestedKeyedArchive(array $value): ?array
     {
@@ -556,9 +556,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Unarchives an NSKeyedArchive dictionary to plain dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Keyed archive structure.
+     * @param array<int|string, NativePlistValue> $dictionary Keyed archive structure.
      *
-     * @return array<int|string, mixed>|null Unarchived dictionary or null if invalid.
+     * @return NativePlistDictionary|null Unarchived dictionary or null if invalid.
      */
     private function unarchiveKeyedArchive(array $dictionary): ?array
     {
@@ -923,10 +923,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a RunTime value from dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary containing runtime data.
+     * @param NativePlistDictionary $dictionary Dictionary containing runtime data.
      * @param string                   $key        Key to look up.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return RunTime|null RunTime value object or null if not found.
      */
@@ -941,7 +941,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        /** @var array<int|string, mixed> $value */
+        /** @var array<int|string, NativePlistValue> $value */
         $epoch     = $this->intValue($value, 'epoch', 'Epoch');
         $timescale = $this->intValue($value, 'timescale', 'Timescale');
         $rawValue  = $this->intValue($value, 'value', 'Value');
@@ -957,10 +957,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a boolean value from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return bool|null Boolean value if found, null otherwise.
      */
@@ -971,7 +971,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate = $dictionary[$key];
             $value     = $this->boolValue($candidate);
             if ($value !== null) {
@@ -985,10 +985,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a rational float value from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return float|null Rational float value if found, null otherwise.
      */
@@ -999,7 +999,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate = $dictionary[$key];
             $float     = $this->normaliseRationalFloat($candidate);
             if ($float !== null) {
@@ -1013,7 +1013,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Normalizes a rational value to float representation.
      *
-     * @param string|int|float|bool|array<int|string, mixed>|null $value Raw value to normalize.
+     * @param string|int|float|bool|array<int|string, NativePlistValue>|null $value Raw value to normalize.
      *
      * @return float|null Normalized float value or null if invalid.
      */
@@ -1077,7 +1077,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         foreach (['value', 'Value', 'data', 'Data', 'ratio', 'Ratio'] as $key) {
             if (array_key_exists($key, $value)) {
-                /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+                /** @var NativePlistValue $candidate */
                 $candidate = $value[$key];
                 $nested    = $this->normaliseRationalFloat($candidate);
                 if ($nested !== null) {
@@ -1087,7 +1087,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         if (array_key_exists('values', $value) && is_array($value['values'])) {
-            /** @var array<int|string, mixed> $candidate */
+            /** @var array<int|string, NativePlistValue> $candidate */
             $candidate = $value['values'];
             $nested    = $this->normaliseRationalFloat($candidate);
             if ($nested !== null) {
@@ -1111,11 +1111,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $count = count($value);
         if ($count >= 2) {
-            /** @var array<int|string, mixed>|bool|float|int|string|null $component */
+            /** @var NativePlistValue $component */
             $component = $value[0];
             $num       = $this->numericScalarValue($component);
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $component */
+            /** @var NativePlistValue $component */
             $component = $value[1];
             $den       = $this->numericScalarValue($component);
             if ($num !== null && $den !== null && $den !== 0.0) {
@@ -1124,7 +1124,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         foreach ($value as $entry) {
-            /** @var array<int|string, mixed>|bool|float|int|string|null $entryValue */
+            /** @var NativePlistValue $entryValue */
             $entryValue = $entry;
             $float      = $this->normaliseRationalFloat($entryValue);
             if ($float !== null) {
@@ -1138,10 +1138,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a numeric component from an array using prioritized keys.
      *
-     * @param array<int|string, mixed> $value   Array containing numeric components.
+     * @param array<int|string, NativePlistValue> $value   Array containing numeric components.
      * @param string                   ...$keys Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $value
+     * @phpstan-param array<int|string, NativePlistValue> $value
      *
      * @return float|null Numeric component value or null if not found.
      */
@@ -1152,7 +1152,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate = $value[$key];
             $numeric   = $this->numericScalarValue($candidate);
             if ($numeric !== null) {
@@ -1166,7 +1166,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Normalizes a scalar value to numeric representation.
      *
-     * @param string|int|float|bool|array<int|string, mixed>|null $value Raw scalar value.
+     * @param string|int|float|bool|array<int|string, NativePlistValue>|null $value Raw scalar value.
      *
      * @return float|null Numeric value or null if invalid.
      */
@@ -1203,10 +1203,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a string or integer value from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return string|int|null String or integer value if found, null otherwise.
      */
@@ -1252,10 +1252,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts an identifier value from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return string|int|null Identifier value if found, null otherwise.
      */
@@ -1333,10 +1333,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a string value from dictionary for a specific key.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   $key        Key to look up.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return string|null String value if found, null otherwise.
      */
@@ -1359,10 +1359,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a float value from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return float|null Float value if found, null otherwise.
      */
@@ -1389,10 +1389,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts an integer value from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return int|null Integer value if found, null otherwise.
      */
@@ -1419,10 +1419,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a list of float values from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return list<float>|null List of float values if found, null otherwise.
      * @return list<float>|null
@@ -1479,9 +1479,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts focus distance range from dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary containing focus distance data.
+     * @param NativePlistDictionary $dictionary Dictionary containing focus distance data.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return list<float>|null Focus distance range [near, far] or null if not found.
      * @return list<float>|null
@@ -1521,10 +1521,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts maker note version string from dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   $key        Key to look up.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return string|null Version string if found, null otherwise.
      */
@@ -1554,7 +1554,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $components = [];
         foreach ($value as $entry) {
-            /** @var array<int|string, mixed>|bool|float|int|string|null $entry */
+            /** @var NativePlistValue $entry */
             if (is_int($entry)) {
                 $components[] = (string) $entry;
                 continue;
@@ -1589,10 +1589,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a string or numeric value from dictionary using prioritized keys.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return string|null String representation of value if found, null otherwise.
      */
@@ -1603,7 +1603,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate = $dictionary[$key];
             if (is_string($candidate)) {
                 $trimmed = trim($candidate);
@@ -1623,7 +1623,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts an enumerated string value from dictionary using a mapping table.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary to search.
+     * @param NativePlistDictionary $dictionary Dictionary to search.
      * @param array<int, string>       $map        Mapping from numeric codes to string labels.
      * @param string                   ...$keys    Priority-ordered keys to check.
      *
@@ -1636,7 +1636,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate = $dictionary[$key];
             if (is_string($candidate)) {
                 $trimmed = trim($candidate);
@@ -1670,9 +1670,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts boolean flags from dictionary.
      *
-     * @param array<int|string, mixed> $dictionary Dictionary containing flag data.
+     * @param NativePlistDictionary $dictionary Dictionary containing flag data.
      *
-     * @phpstan-param array<int|string, mixed> $dictionary
+     * @phpstan-param NativePlistDictionary $dictionary
      *
      * @return array<string, bool> Dictionary of flag names to boolean values.
      * @return array<string, bool>
@@ -1685,7 +1685,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate = $dictionary[$makerKey];
             $bool      = $this->boolValue($candidate);
             if ($bool === null) {
@@ -1700,7 +1700,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 continue;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate     = $dictionary[$makerKey];
             $enabledBits   = $this->bitPositions($candidate);
             $enabledLookup = $enabledBits === null ? null : array_flip($enabledBits);
@@ -1735,7 +1735,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * as ordered collections enumerating the zero-based bit positions that are enabled.
      * Nested collections can appear under helper keys such as "values" or "Flags".
      *
-     * @param string|int|float|bool|array<int|string, mixed>|null $value
+     * @param string|int|float|bool|array<int|string, NativePlistValue>|null $value
      *
      * @return list<int>|null Zero-based bit positions detected in the value or null when the value does not encode a bit mask.
      */
@@ -1782,7 +1782,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         if (!array_is_list($value)) {
             foreach (['flags', 'Flags', 'value', 'Value', 'mask', 'Mask', 'bitPositions', 'BitPositions'] as $key) {
                 if (array_key_exists($key, $value)) {
-                    /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+                    /** @var NativePlistValue $candidate */
                     $candidate = $value[$key];
 
                     return $this->bitPositions($candidate);
@@ -1793,7 +1793,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 return null;
             }
 
-            /** @var array<int|string, mixed>|bool|float|int|string|null $candidate */
+            /** @var NativePlistValue $candidate */
             $candidate = $value['values'];
 
             return $this->bitPositions($candidate);
@@ -1802,7 +1802,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $positions = [];
         $hasEntry  = false;
         foreach ($value as $entry) {
-            /** @var array<int|string, mixed>|bool|float|int|string|null $entry */
+            /** @var NativePlistValue $entry */
             if (is_int($entry) || is_float($entry) || (is_string($entry) && is_numeric($entry))) {
                 $position = (int) $entry;
                 if ($position >= 0) {
@@ -1869,9 +1869,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Normalizes a value to boolean representation.
      *
-     * @param string|int|float|bool|array<int|string, mixed>|null $value Raw value to normalize.
+     * @param string|int|float|bool|array<int|string, NativePlistValue>|null $value Raw value to normalize.
      *
-     * @phpstan-param string|int|float|bool|null|array<int|string, mixed> $value
+     * @phpstan-param string|int|float|bool|null|array<int|string, NativePlistValue> $value
      *
      * @return bool|null Boolean value or null if invalid.
      */
