@@ -18,14 +18,7 @@ use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsDifferential;
-use MagicSunday\ImageMeta\Value\Enum\GpsDirectionRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsDistanceRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsMeasureMode;
-use MagicSunday\ImageMeta\Value\Enum\GpsSpeedRef;
-use MagicSunday\ImageMeta\Value\Enum\GpsStatus;
+use MagicSunday\ImageMeta\Value\Enum as GpsEnum;
 use MagicSunday\ImageMeta\Value\Gps;
 
 use function array_any;
@@ -609,9 +602,9 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsLatLonRef(?string $value): ?GpsLatLonRef
+    private function toGpsLatLonRef(?string $value): ?GpsEnum\GpsLatLonRef
     {
-        return GpsLatLonRef::fromExifValue($value);
+        return GpsEnum\GpsLatLonRef::fromExifValue($value);
     }
 
     /**
@@ -619,9 +612,9 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsAltitudeRef(?int $value): ?GpsAltitudeRef
+    private function toGpsAltitudeRef(?int $value): ?GpsEnum\GpsAltitudeRef
     {
-        return GpsAltitudeRef::fromExifValue($value);
+        return GpsEnum\GpsAltitudeRef::fromExifValue($value);
     }
 
     /**
@@ -629,9 +622,9 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsStatus(?string $value): ?GpsStatus
+    private function toGpsStatus(?string $value): ?GpsEnum\GpsStatus
     {
-        return GpsStatus::fromExifValue($value);
+        return GpsEnum\GpsStatus::fromExifValue($value);
     }
 
     /**
@@ -639,9 +632,9 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsMeasureMode(?string $value): ?GpsMeasureMode
+    private function toGpsMeasureMode(?string $value): ?GpsEnum\GpsMeasureMode
     {
-        return GpsMeasureMode::fromExifValue($value);
+        return GpsEnum\GpsMeasureMode::fromExifValue($value);
     }
 
     /**
@@ -649,9 +642,9 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsSpeedRef(?string $value): ?GpsSpeedRef
+    private function toGpsSpeedRef(?string $value): ?GpsEnum\GpsSpeedRef
     {
-        return GpsSpeedRef::fromExifValue($value);
+        return GpsEnum\GpsSpeedRef::fromExifValue($value);
     }
 
     /**
@@ -659,9 +652,9 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsDirectionRef(?string $value): ?GpsDirectionRef
+    private function toGpsDirectionRef(?string $value): ?GpsEnum\GpsDirectionRef
     {
-        return GpsDirectionRef::fromExifValue($value);
+        return GpsEnum\GpsDirectionRef::fromExifValue($value);
     }
 
     /**
@@ -669,9 +662,9 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsDistanceRef(?string $value): ?GpsDistanceRef
+    private function toGpsDistanceRef(?string $value): ?GpsEnum\GpsDistanceRef
     {
-        return GpsDistanceRef::fromExifValue($value);
+        return GpsEnum\GpsDistanceRef::fromExifValue($value);
     }
 
     /**
@@ -679,8 +672,8 @@ final readonly class GpsFactory
      *
      * EXIF 3.0 §4.6.6 Table 27.
      */
-    private function toGpsDifferential(?int $value): ?GpsDifferential
+    private function toGpsDifferential(?int $value): ?GpsEnum\GpsDifferential
     {
-        return GpsDifferential::fromExifValue($value);
+        return GpsEnum\GpsDifferential::fromExifValue($value);
     }
 }
