@@ -1,5 +1,5 @@
 {
-    "generated": "2025-12-07T12:44:43+00:00",
+    "generated": "2026-01-19T16:47:48+00:00",
     "summary": {
         "total_spec_tags": 227,
         "implemented": 227,
@@ -590,6 +590,7 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
+                    "software",
                     "rawDevelopingSoftware",
                     "imageEditingSoftware",
                     "metadataEditingSoftware"
@@ -1438,6 +1439,7 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
+                    "software",
                     "rawDevelopingSoftware",
                     "imageEditingSoftware",
                     "metadataEditingSoftware"
@@ -2501,6 +2503,7 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
+                    "recommendedExposureIndex",
                     "exposureIndex"
                 ],
                 "notes": []

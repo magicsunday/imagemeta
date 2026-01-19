@@ -21,14 +21,16 @@ namespace MagicSunday\ImageMeta\Value;
  *  - rows    (m): number of SFR rows
  *  - column item names: spatial frequency labels
  *  - m×n RATIONAL values: SFR[row][column]
+ *
+ * @phpstan-type DecodedMatrix array{columns?:scalar|null, rows?:scalar|null, labels?:array{columns?:array<int, scalar|null>|scalar|null, rows?:array<int, scalar|null>|scalar|null}|null, values?:array<int, array<int, scalar|null>|scalar|null>|null}|null
  */
 final readonly class SpatialFrequencyResponse
 {
     /**
-     * @param int                $columns            Number of frequency columns (n).
-     * @param int                $rows               Number of SFR rows (m).
-     * @param list<string>       $spatialFrequencies Column item names (spatial frequencies).
-     * @param array<list<float>> $values             SFR values matrix [row][column].
+     * @param int               $columns            Number of frequency columns (n).
+     * @param int               $rows               Number of SFR rows (m).
+     * @param list<string>      $spatialFrequencies Column item names (spatial frequencies).
+     * @param list<list<float>> $values             SFR values matrix [row][column].
      */
     public function __construct(
         public int $columns,
@@ -49,25 +51,36 @@ final readonly class SpatialFrequencyResponse
      *     'labels'  => [
      *         'columns' => list<string>,             // column item names
      *     ],
-     *     'values'  => array<list<float>> // SFR[row][column]
+     *     'values'  => list<list<float>> // SFR[row][column]
      * ]
      *
-     * @param array<string, array|int>|null $matrix
+     * @param DecodedMatrix $matrix
      *
      * @return self|null
      */
     public static function fromMatrix(?array $matrix): ?self
     {
         $parts = MatrixValidator::validateMatrix($matrix, false, false);
-        if ($parts === null) {
+        if (!$parts instanceof MatrixParts) {
             return null;
         }
+
+        foreach ($parts->values as $row) {
+            foreach ($row as $cell) {
+                if ($cell === null) {
+                    return null;
+                }
+            }
+        }
+
+        /** @var list<list<float>> $values */
+        $values = $parts->values;
 
         return new self(
             $parts->columns,
             $parts->rows,
             $parts->columnLabels,
-            $parts->values
+            $values
         );
     }
 }

@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
-use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
-
 use function array_filter;
 use function array_find;
 use function array_key_exists;

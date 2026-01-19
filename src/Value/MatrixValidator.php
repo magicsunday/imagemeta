@@ -19,20 +19,22 @@ use function is_string;
 
 /**
  * Validates and normalizes decoded matrix structures.
+ *
+ * @phpstan-type DecodedMatrix array{columns?:scalar|null, rows?:scalar|null, labels?:array{columns?:array<int, scalar|null>|scalar|null, rows?:array<int, scalar|null>|scalar|null}|null, values?:array<int, array<int, scalar|null>|scalar|null>|null}|null
  */
 final class MatrixValidator
 {
     /**
-     * @param array<string, array|int>|null $matrix            Decoded matrix payload.
-     * @param bool                          $requireRowLabels  Whether row labels are mandatory.
-     * @param bool                          $allowNullValues   Whether null values are permitted.
+     * @param DecodedMatrix $matrix           Decoded matrix payload.
+     * @param bool          $requireRowLabels Whether row labels are mandatory.
+     * @param bool          $allowNullValues  Whether null values are permitted.
      *
      * @return MatrixParts|null Normalized matrix parts or null when invalid.
      */
     public static function validateMatrix(
         ?array $matrix,
         bool $requireRowLabels,
-        bool $allowNullValues
+        bool $allowNullValues,
     ): ?MatrixParts {
         if ($matrix === null) {
             return null;
@@ -77,12 +79,12 @@ final class MatrixValidator
         }
 
         $normalizedColumnLabels = [];
-        foreach ($columnLabels as $label) {
-            if (!is_string($label)) {
+        foreach ($columnLabels as $columnLabel) {
+            if (!is_string($columnLabel)) {
                 return null;
             }
 
-            $normalizedColumnLabels[] = $label;
+            $normalizedColumnLabels[] = $columnLabel;
         }
 
         if (count($normalizedColumnLabels) !== $columns) {
@@ -92,12 +94,12 @@ final class MatrixValidator
         $normalizedRowLabels = null;
         if ($rowLabels !== null) {
             $normalizedRowLabels = [];
-            foreach ($rowLabels as $label) {
-                if (!is_string($label)) {
+            foreach ($rowLabels as $rowLabel) {
+                if (!is_string($rowLabel)) {
                     return null;
                 }
 
-                $normalizedRowLabels[] = $label;
+                $normalizedRowLabels[] = $rowLabel;
             }
 
             if (count($normalizedRowLabels) !== $rows) {

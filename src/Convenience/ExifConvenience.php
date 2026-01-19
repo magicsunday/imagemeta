@@ -227,8 +227,8 @@ final class ExifConvenience
     /**
      * Checks if the parts array contains an equivalent focal length string.
      *
-     * @param list<string> $parts      Array of lens descriptor parts.
-     * @param int          $equivalent Equivalent focal length value to search for.
+     * @param list<string|int> $parts      Array of lens descriptor parts.
+     * @param int              $equivalent Equivalent focal length value to search for.
      *
      * @return bool True if the equivalent focal length is found.
      */
@@ -236,7 +236,7 @@ final class ExifConvenience
     {
         $needle = sprintf('%d mm eq', $equivalent);
 
-        return array_any($parts, fn ($part): bool => strcasecmp($part, $needle) === 0);
+        return array_any($parts, fn ($part): bool => strcasecmp((string) $part, $needle) === 0);
     }
 
     private static function formatExposureTime(float $seconds): string
