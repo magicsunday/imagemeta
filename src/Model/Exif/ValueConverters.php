@@ -1575,8 +1575,8 @@ final readonly class ValueConverters
         $result['lat_ref'] = is_string($latRef) ? strtoupper(trim($latRef)) : null;
         $result['lon_ref'] = is_string($lonRef) ? strtoupper(trim($lonRef)) : null;
 
-        $latPairs = $latVal instanceof ExifRationalList ? $latVal : ($latVal instanceof ExifNumericList ? $latVal : null);
-        $lonPairs = $lonVal instanceof ExifRationalList ? $lonVal : ($lonVal instanceof ExifNumericList ? $lonVal : null);
+        $latPairs = self::resolveCoordinatePairs($latVal);
+        $lonPairs = self::resolveCoordinatePairs($lonVal);
 
         $result['lat'] = self::dmsToFloat($result['lat_ref'], $latPairs);
         $result['lon'] = self::dmsToFloat($result['lon_ref'], $lonPairs);
@@ -1870,6 +1870,19 @@ final readonly class ValueConverters
      *
      * @return float|null
      */
+    private static function resolveCoordinatePairs(?object $value): ExifRationalList|ExifNumericList|null
+    {
+        if ($value instanceof ExifRationalList) {
+            return $value;
+        }
+
+        if ($value instanceof ExifNumericList) {
+            return $value;
+        }
+
+        return null;
+    }
+
     private static function dmsToFloat(?string $ref, ExifRationalList|ExifNumericList|null $val): ?float
     {
         if (!is_string($ref) || $val === null) {
