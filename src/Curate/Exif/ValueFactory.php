@@ -30,42 +30,7 @@ use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
-use MagicSunday\ImageMeta\Value\Audio;
-use MagicSunday\ImageMeta\Value\AudioClips;
-use MagicSunday\ImageMeta\Value\Author;
-use MagicSunday\ImageMeta\Value\Camera;
-use MagicSunday\ImageMeta\Value\Capture;
-use MagicSunday\ImageMeta\Value\ColorProfile;
-use MagicSunday\ImageMeta\Value\CompositeImageInfo;
-use MagicSunday\ImageMeta\Value\Container;
-use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Device;
-use MagicSunday\ImageMeta\Value\Exposure;
-use MagicSunday\ImageMeta\Value\File;
-use MagicSunday\ImageMeta\Value\FlashPix;
-use MagicSunday\ImageMeta\Value\Focus;
-use MagicSunday\ImageMeta\Value\Gps;
-use MagicSunday\ImageMeta\Value\Image;
-use MagicSunday\ImageMeta\Value\Integrity;
-use MagicSunday\ImageMeta\Value\Interop;
-use MagicSunday\ImageMeta\Value\Keywords;
-use MagicSunday\ImageMeta\Value\Lens;
-use MagicSunday\ImageMeta\Value\Motion;
-use MagicSunday\ImageMeta\Value\MultiPicture;
-use MagicSunday\ImageMeta\Value\ProcessingSettings;
-use MagicSunday\ImageMeta\Value\Regions;
-use MagicSunday\ImageMeta\Value\Regions\RegionType;
-use MagicSunday\ImageMeta\Value\RelatedAssets;
-use MagicSunday\ImageMeta\Value\Rights;
-use MagicSunday\ImageMeta\Value\Scene;
-use MagicSunday\ImageMeta\Value\Sensor;
-use MagicSunday\ImageMeta\Value\Standards;
-use MagicSunday\ImageMeta\Value\Temporal;
-use MagicSunday\ImageMeta\Value\Thumbnail;
-use MagicSunday\ImageMeta\Value\TiffData;
-use MagicSunday\ImageMeta\Value\Video;
-use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
-use MagicSunday\ImageMeta\Value\Xmp;
+use MagicSunday\ImageMeta\Value as Value;
 
 use function count;
 
@@ -113,41 +78,41 @@ final readonly class ValueFactory implements ValueFactoryInterface
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
      * @return array{
-     *     audio: Audio,
-     *     author: Author,
-     *     camera: Camera,
-     *     capture: Capture,
-     *     colorProfile: ColorProfile,
-     *     composite: CompositeImageInfo,
-     *     container: Container,
-     *     derived: Derived,
-     *     device: Device,
-     *     embeddedAudio: AudioClips,
-     *     exposure: Exposure,
-     *     file: File,
-     *     flashPix: FlashPix,
-     *     focus: Focus,
-     *     gps: Gps,
-     *     image: Image,
-     *     integrity: Integrity,
-     *     interop: Interop,
-     *     keywords: Keywords,
-     *     lens: Lens,
-     *     motion: Motion,
-     *     multiPicture: MultiPicture,
-     *     processing: ProcessingSettings,
-     *     regions: Regions,
-     *     related: RelatedAssets,
-     *     rights: Rights,
-     *     scene: Scene,
-     *     sensor: Sensor,
-     *     standards: Standards,
-     *     temporal: Temporal,
-     *     thumbnail: Thumbnail,
-     *     tiff: TiffData,
-     *     video: Video,
-     *     whiteBalance: WhiteBalanceDetails,
-     *     xmp: Xmp,
+     *     audio: Value\Audio,
+     *     author: Value\Author,
+     *     camera: Value\Camera,
+     *     capture: Value\Capture,
+     *     colorProfile: Value\ColorProfile,
+     *     composite: Value\CompositeImageInfo,
+     *     container: Value\Container,
+     *     derived: Value\Derived,
+     *     device: Value\Device,
+     *     embeddedAudio: Value\AudioClips,
+     *     exposure: Value\Exposure,
+     *     file: Value\File,
+     *     flashPix: Value\FlashPix,
+     *     focus: Value\Focus,
+     *     gps: Value\Gps,
+     *     image: Value\Image,
+     *     integrity: Value\Integrity,
+     *     interop: Value\Interop,
+     *     keywords: Value\Keywords,
+     *     lens: Value\Lens,
+     *     motion: Value\Motion,
+     *     multiPicture: Value\MultiPicture,
+     *     processing: Value\ProcessingSettings,
+     *     regions: Value\Regions,
+     *     related: Value\RelatedAssets,
+     *     rights: Value\Rights,
+     *     scene: Value\Scene,
+     *     sensor: Value\Sensor,
+     *     standards: Value\Standards,
+     *     temporal: Value\Temporal,
+     *     thumbnail: Value\Thumbnail,
+     *     tiff: Value\TiffData,
+     *     video: Value\Video,
+     *     whiteBalance: Value\WhiteBalanceDetails,
+     *     xmp: Value\Xmp,
      *     makerNotesApple: AppleMakerNotes|null,
      * }
      */
@@ -174,7 +139,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
         $quickTimeLookup = new QuickTimeLookup($quickTimeMeta);
         $appleMakerNotes = $metadata->makerNotes?->apple;
 
-        $interop = new Interop(
+        $interop = new Value\Interop(
             index: $exifDocument?->interopIndex(),
         );
 
@@ -198,7 +163,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             }
         }
 
-        $tiff = new TiffData(
+        $tiff = new Value\TiffData(
             samplesPerPixel: $exifDocument?->samplesPerPixel(),
             bitsPerSample: $bitsPerSample,
             rowsPerStrip: $exifDocument?->rowsPerStrip(),
@@ -226,7 +191,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             copyright: $exifDocument?->copyright(),
         );
 
-        $composite = new CompositeImageInfo(
+        $composite = new Value\CompositeImageInfo(
             type: $exifDocument?->compositeImage(),
             counts: $exifDocument?->sourceImageNumberOfCompositeImage(),
             sourceExposureTimes: $exifDocument?->sourceExposureTimesOfCompositeImage(),
@@ -235,15 +200,15 @@ final readonly class ValueFactory implements ValueFactoryInterface
         $exifVersion = $exifDocument?->exifVersion();
         $profile     = $exifDocument?->exifProfile() ?? 'unknown';
 
-        $standards = new Standards(
+        $standards = new Value\Standards(
             exifVersion: $exifVersion,
             profile: $profile,
             flashpixVersion: $exifDocument?->flashpixVersion(),
         );
 
-        $flashPix = new FlashPix($metadata->flashPixStreams);
+        $flashPix = new Value\FlashPix($metadata->flashPixStreams);
 
-        $capture = new Capture(
+        $capture = new Value\Capture(
             dateTime: $exifDocument?->captureDateTime(),
             temperatureC: $exifDocument?->temperatureCelsius(),
             humidityPercent: $exifDocument?->humidityPercent(),
@@ -254,9 +219,9 @@ final readonly class ValueFactory implements ValueFactoryInterface
         );
 
         $apple = $appleMakerNotes ?? AppleMakerNotes::empty();
-        $xmp   = new Xmp($xmpDocument);
+        $xmp   = new Value\Xmp($xmpDocument);
 
-        $file = new File(
+        $file = new Value\File(
             $metadata->mimeType,
             $metadata->fileSize,
             $metadata->extension,
@@ -264,7 +229,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             $metadata->digestMd5,
         );
 
-        $container = new Container(
+        $container = new Value\Container(
             format: $quickTimeLookup->string(QuickTimeMeta::MAJOR_BRAND_KEY),
             encoder: $quickTimeLookup->string('com.apple.quicktime.encoder',
                 'Encoder',
@@ -287,7 +252,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
         $thumbnailTileWidth    = $exifDocument?->thumbnailTileWidth();
         $thumbnailTileLength   = $exifDocument?->thumbnailTileLength();
 
-        $thumbnail = new Thumbnail(
+        $thumbnail = new Value\Thumbnail(
             hasThumbnail: $exifDocument?->hasThumbnail() ?? false,
             thumbnailOffset: $exifDocument?->thumbnailJpegInterchangeFormat(),
             thumbnailLength: $exifDocument?->thumbnailJpegInterchangeFormatLength(),
@@ -300,7 +265,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             thumbnailStripByteCounts: $thumbnailStripCounts,
         );
 
-        $video = new Video(
+        $video = new Value\Video(
             durationSec: $quickTimeLookup->float('com.apple.quicktime.duration'),
             frameRate: $quickTimeLookup->float('com.apple.quicktime.videoFrameRate'),
             width: $quickTimeLookup->int(QuickTimeMeta::VIDEO_WIDTH_KEY),
@@ -313,7 +278,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             colorPrimaries: $quickTimeLookup->string('com.apple.quicktime.colorPrimaries'),
         );
 
-        $audio = new Audio(
+        $audio = new Value\Audio(
             channels: $quickTimeLookup->int(QuickTimeMeta::AUDIO_CHANNELS_KEY),
             sampleRate: $quickTimeLookup->int(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY),
             codec: $quickTimeLookup->string(QuickTimeMeta::AUDIO_FORMAT_KEY,
@@ -322,14 +287,14 @@ final readonly class ValueFactory implements ValueFactoryInterface
             bitDepth: $quickTimeLookup->int(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY),
         );
 
-        $embeddedAudio = AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
+        $embeddedAudio = Value\AudioClips::fromJpegAudioStreams($metadata->jpegAudioStreams);
 
         $iccData = null;
         if ($metadata->iccProfile !== null || $metadata->iccSegments !== []) {
             $iccData = (new IccDecoder())->decode($metadata->iccProfile, $metadata->iccSegments);
         }
 
-        $colorProfile = new ColorProfile(
+        $colorProfile = new Value\ColorProfile(
             profileName: $iccData['description'] ?? null,
             profileVersion: $iccData['version'] ?? null,
             pcs: $iccData['pcs'] ?? null,
@@ -338,7 +303,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             profileId: $iccData['profileId'] ?? null,
         );
 
-        $processing = new ProcessingSettings(
+        $processing = new Value\ProcessingSettings(
             sharpness: $exifDocument?->sharpness(),
             contrast: $exifDocument?->contrast(),
             saturation: $exifDocument?->saturation(),
@@ -353,7 +318,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             $whiteBalanceKelvin = $quickTimeLookup->int('ColorTemperature');
         }
 
-        $whiteBalanceDetails = new WhiteBalanceDetails(
+        $whiteBalanceDetails = new Value\WhiteBalanceDetails(
             mode: $exposure->whiteBalance,
             kelvin: $whiteBalanceKelvin,
             rgGain: null,
@@ -362,7 +327,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
 
         $subjectArea = $exifDocument?->subjectArea();
 
-        $focus = new Focus(
+        $focus = new Value\Focus(
             subjectDistanceM: $exifDocument?->subjectDistance(),
             subjectArea: $subjectArea,
             afMode: null,
@@ -371,19 +336,19 @@ final readonly class ValueFactory implements ValueFactoryInterface
         $flatKeywords         = $xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'subject') ?? [];
         $hierarchicalKeywords = $xmpDocument?->stringList('http://ns.adobe.com/lightroom/1.0/', 'hierarchicalSubject') ?? [];
 
-        $keywords = new Keywords(
+        $keywords = new Value\Keywords(
             flat: $flatKeywords,
             hierarchical: $hierarchicalKeywords !== [] ? $hierarchicalKeywords : null,
         );
 
-        $rights = new Rights(
+        $rights = new Value\Rights(
             copyright: $exifDocument?->copyright(),
             usageTerms: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'UsageTerms'),
             licenseUrl: $xmpDocument?->string('http://ns.adobe.com/xap/1.0/rights/', 'WebStatement'),
             creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
         );
 
-        $author = new Author(
+        $author = new Value\Author(
             artist: $exifDocument?->artist(),
             ownerName: $exifDocument?->ownerName(),
             creator: $this->firstListValue($xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'creator') ?? []),
@@ -397,7 +362,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             ? ValueConverters::calcCircleOfConfusionMm($cropFactor)
             : null;
 
-        $derived = new Derived(
+        $derived = new Value\Derived(
             ev100: ValueConverters::calcEv100(
                 $exposure->exposureTimeSec,
                 $exposure->fNumber,
@@ -417,7 +382,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
         );
 
         $panoramaFlag = $xmpDocument?->bool('http://ns.google.com/photos/1.0/panorama/', 'UsePanoramaViewer');
-        $related      = new RelatedAssets(
+        $related      = new Value\RelatedAssets(
             livePhotoPairId: $metadata->quickTime?->contentIdentifier(),
             burstId: $quickTimeLookup->string('BurstUUID'),
             isPrimaryInBurst: $quickTimeLookup->bool('BurstSelected') ?? false,
@@ -428,7 +393,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
 
         $hasHistory = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
 
-        $integrity = new Integrity(
+        $integrity = new Value\Integrity(
             originalFileName: $xmpDocument?->string('http://ns.adobe.com/tiff/1.0/', 'OriginalFileName'),
             originalDigest: null,
             edited: $hasHistory ? true : null,
@@ -478,16 +443,16 @@ final readonly class ValueFactory implements ValueFactoryInterface
     /**
      * Counts the number of face regions detected in the supplied region aggregate.
      *
-     * @param Regions $regions Region aggregate containing detected regions.
+     * @param Value\Regions $regions Region aggregate containing detected regions.
      *
      * @return int|null Number of face regions or null when no face region exists.
      */
-    private function countFaceRegions(Regions $regions): ?int
+    private function countFaceRegions(Value\Regions $regions): ?int
     {
         $count = 0;
 
         foreach ($regions->items as $region) {
-            if ($region->type === RegionType::FACE) {
+            if ($region->type === Value\Regions\RegionType::FACE) {
                 ++$count;
             }
         }
