@@ -76,7 +76,7 @@ final readonly class SubjectArea
             return null;
         }
 
-        if (array_any($values, static fn (mixed $component): bool => !is_numeric($component))) {
+        if (array_any($values, static fn (int|float|string $component): bool => !is_numeric($component))) {
             return null;
         }
 

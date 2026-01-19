@@ -794,7 +794,7 @@ final readonly class ValueConverters
             return null;
         }
 
-        if (array_any($bytes, static fn (mixed $byte): bool => !is_int($byte))) {
+        if (array_any($bytes, static fn (int|float|string $byte): bool => !is_int($byte))) {
             return null;
         }
 
