@@ -27,6 +27,10 @@ use function bin2hex;
 use function explode;
 use function iconv;
 use function implode;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_numeric;
 use function is_string;
 use function preg_match;
 use function round;
@@ -184,6 +188,21 @@ final readonly class IsoBmffExtractor
     private const int DATA_TYPE_MAC_ROMAN = 7;
 
     /**
+     * QuickTime `data` box type code for signed 32-bit integer payloads.
+     */
+    private const int DATA_TYPE_INT32 = 0x15;
+
+    /**
+     * QuickTime `data` box type code for 32-bit floating point payloads.
+     */
+    private const int DATA_TYPE_FLOAT32 = 0x16;
+
+    /**
+     * QuickTime `data` box type code for 64-bit floating point payloads.
+     */
+    private const int DATA_TYPE_FLOAT64 = 0x17;
+
+    /**
      * FourCC for QuickTime mean payload in free-form metadata.
      */
     private const string FREEFORM_MEAN = 'mean';
@@ -217,6 +236,15 @@ final readonly class IsoBmffExtractor
      * Maximum number of sample entries in an stsd box to prevent DoS attacks.
      */
     private const int MAX_STSD_ENTRIES = 100;
+
+    /**
+     * QuickTime metadata keys that should be coerced into non-string value types.
+     *
+     * @var array<string, string>
+     */
+    private const array QUICKTIME_KEY_TYPES = [
+        'com.apple.quicktime.videoOrientation' => 'int',
+    ];
 
     /**
      * Initialises the extractor with the source stream that contains the ISO BMFF structure.
@@ -1284,7 +1312,8 @@ final readonly class IsoBmffExtractor
 
             foreach ($this->walkChildren($entry) as $sub) {
                 if ($sub->type === self::BOX_DATA) {
-                    $result[$keyName] = $this->parseDataBox($sub);
+                    $value            = $this->parseDataBox($sub);
+                    $result[$keyName] = $this->coerceQuickTimeValue($keyName, $value);
                 }
             }
         }
@@ -1329,9 +1358,9 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor $data Box descriptor for the `data` box.
      *
-     * @return string
+     * @return QuickTimeValue
      */
-    private function parseDataBox(BoxDescriptor $data): string
+    private function parseDataBox(BoxDescriptor $data): string|int|float|bool
     {
         $win = $data->window;
         $win->seek(0);
@@ -1371,7 +1400,140 @@ final readonly class IsoBmffExtractor
             return $trimmed;
         }
 
+        if ($type === self::DATA_TYPE_INT32) {
+            if ($payloadSize < 4) {
+                throw new ParseError('data box int payload too small');
+            }
+
+            $unsigned = Unpack::int('N', substr($payload, 0, 4), 'QuickTime int32 payload');
+
+            return $unsigned >= 0x80000000 ? $unsigned - 0x100000000 : $unsigned;
+        }
+
+        if ($type === self::DATA_TYPE_FLOAT32) {
+            if ($payloadSize < 4) {
+                throw new ParseError('data box float payload too small');
+            }
+
+            return Unpack::float('G', substr($payload, 0, 4), 'QuickTime float32 payload');
+        }
+
+        if ($type === self::DATA_TYPE_FLOAT64) {
+            if ($payloadSize < 8) {
+                throw new ParseError('data box float64 payload too small');
+            }
+
+            return Unpack::float('E', substr($payload, 0, 8), 'QuickTime float64 payload');
+        }
+
         return $payload;
+    }
+
+    /**
+     * Coerces QuickTime metadata values into expected value types when possible.
+     *
+     * @param string         $key
+     * @param QuickTimeValue $value
+     *
+     * @return QuickTimeValue
+     */
+    private function coerceQuickTimeValue(string $key, string|int|float|bool $value): string|int|float|bool
+    {
+        $targetType = self::QUICKTIME_KEY_TYPES[$key] ?? null;
+        if ($targetType === null) {
+            return $value;
+        }
+
+        return match ($targetType) {
+            'int' => $this->parseQuickTimeInt($value) ?? $value,
+            'float' => $this->parseQuickTimeFloat($value) ?? $value,
+            'bool' => $this->parseQuickTimeBool($value) ?? $value,
+            default => $value,
+        };
+    }
+
+    /**
+     * Converts QuickTime metadata values into integers when possible.
+     *
+     * @param QuickTimeValue $value
+     *
+     * @return int|null
+     */
+    private function parseQuickTimeInt(string|int|float|bool $value): ?int
+    {
+        if (is_int($value)) {
+            return $value;
+        }
+
+        if (is_bool($value)) {
+            return $value ? 1 : 0;
+        }
+
+        if (is_float($value)) {
+            $intValue = (int) $value;
+
+            return (float) $intValue === $value ? $intValue : null;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts QuickTime metadata values into floats when possible.
+     *
+     * @param QuickTimeValue $value
+     *
+     * @return float|null
+     */
+    private function parseQuickTimeFloat(string|int|float|bool $value): ?float
+    {
+        if (is_float($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return (float) $value;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
+
+    /**
+     * Converts QuickTime metadata values into booleans when possible.
+     *
+     * @param QuickTimeValue $value
+     *
+     * @return bool|null
+     */
+    private function parseQuickTimeBool(string|int|float|bool $value): ?bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value) || is_float($value)) {
+            return (bool) $value;
+        }
+
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+
+            return match ($normalized) {
+                'true', '1' => true,
+                'false', '0' => false,
+                default => null,
+            };
+        }
+
+        return null;
     }
 
     /**
@@ -1506,7 +1668,15 @@ final readonly class IsoBmffExtractor
      */
     private function isPrintableFourcc(string $fourcc): bool
     {
-        return strlen($fourcc) === 4 && preg_match('/^[\x20-\x7E]{4}$/', $fourcc) === 1;
+        if (strlen($fourcc) !== 4) {
+            return false;
+        }
+
+        if (preg_match('/^[\x20-\x7E]{4}$/', $fourcc) === 1) {
+            return true;
+        }
+
+        return preg_match('/^\xA9[\x20-\x7E]{3}$/', $fourcc) === 1;
     }
 
     /**
