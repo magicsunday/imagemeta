@@ -30,6 +30,13 @@ final class AuthorTest extends TestCase
             ownerName: null,
             creator: null,
             creatorEmail: null,
+            creatorPhone: null,
+            creatorAddress: null,
+            creatorCity: null,
+            creatorRegion: null,
+            creatorPostalCode: null,
+            creatorCountry: null,
+            creatorUrl: null,
             photographer: null,
             imageEditor: null,
         );
@@ -45,6 +52,13 @@ final class AuthorTest extends TestCase
             ownerName: 'Camera Owner',
             creator: 'J. Smith',
             creatorEmail: 'jane@example.com',
+            creatorPhone: '+49 30 555',
+            creatorAddress: 'Main Street 1',
+            creatorCity: 'Berlin',
+            creatorRegion: 'BE',
+            creatorPostalCode: '10115',
+            creatorCountry: 'DE',
+            creatorUrl: 'https://example.com',
             photographer: 'Jane Smith Photography',
             imageEditor: 'Jane Smith',
         );
@@ -53,6 +67,13 @@ final class AuthorTest extends TestCase
         self::assertSame('Camera Owner', $author->ownerName);
         self::assertSame('J. Smith', $author->creator);
         self::assertSame('jane@example.com', $author->creatorEmail);
+        self::assertSame('+49 30 555', $author->creatorPhone);
+        self::assertSame('Main Street 1', $author->creatorAddress);
+        self::assertSame('Berlin', $author->creatorCity);
+        self::assertSame('BE', $author->creatorRegion);
+        self::assertSame('10115', $author->creatorPostalCode);
+        self::assertSame('DE', $author->creatorCountry);
+        self::assertSame('https://example.com', $author->creatorUrl);
         self::assertSame('Jane Smith Photography', $author->photographer);
         self::assertSame('Jane Smith', $author->imageEditor);
     }
@@ -65,6 +86,13 @@ final class AuthorTest extends TestCase
             ownerName: null,
             creator: null,
             creatorEmail: null,
+            creatorPhone: null,
+            creatorAddress: null,
+            creatorCity: null,
+            creatorRegion: null,
+            creatorPostalCode: null,
+            creatorCountry: null,
+            creatorUrl: null,
             photographer: null,
             imageEditor: null,
         );
@@ -73,6 +101,13 @@ final class AuthorTest extends TestCase
         self::assertNull($author->ownerName);
         self::assertNull($author->creator);
         self::assertNull($author->creatorEmail);
+        self::assertNull($author->creatorPhone);
+        self::assertNull($author->creatorAddress);
+        self::assertNull($author->creatorCity);
+        self::assertNull($author->creatorRegion);
+        self::assertNull($author->creatorPostalCode);
+        self::assertNull($author->creatorCountry);
+        self::assertNull($author->creatorUrl);
         self::assertNull($author->photographer);
         self::assertNull($author->imageEditor);
     }

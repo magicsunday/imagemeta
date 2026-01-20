@@ -126,7 +126,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
         $exposure     = $this->exposureFactory->create($metadata);
         $sensor       = $this->sensorFactory->create($metadata);
         $device       = $this->deviceFactory->create($metadata);
-        $image        = $this->imageFactory->create($metadata);
+        $image        = $this->imageFactory->create($metadata, $xmpDocument);
         $motion       = $this->motionFactory->create($metadata);
         $temporal     = $this->temporalFactory->create($metadata);
         $regions      = $this->regionsFactory->create($metadata);
@@ -347,11 +347,20 @@ final readonly class ValueFactory implements ValueFactoryInterface
             creditLine: $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Credit'),
         );
 
+        $iptcNamespace = 'http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/';
+
         $author = new Author(
             artist: $exifDocument?->artist(),
             ownerName: $exifDocument?->ownerName(),
             creator: $this->firstListValue($xmpDocument?->stringList('http://purl.org/dc/elements/1.1/', 'creator') ?? []),
-            creatorEmail: $xmpDocument?->string('http://iptc.org/std/Iptc4xmpCore/1.0/xmlns/', 'CreatorContactInfo/Iptc4xmpCore:CiEmailWork'),
+            creatorEmail: $xmpDocument?->string($iptcNamespace, 'CiEmailWork'),
+            creatorPhone: $xmpDocument?->string($iptcNamespace, 'CiTelWork'),
+            creatorAddress: $xmpDocument?->string($iptcNamespace, 'CiAdrExtadr'),
+            creatorCity: $xmpDocument?->string($iptcNamespace, 'CiAdrCity'),
+            creatorRegion: $xmpDocument?->string($iptcNamespace, 'CiAdrRegion'),
+            creatorPostalCode: $xmpDocument?->string($iptcNamespace, 'CiAdrPcode'),
+            creatorCountry: $xmpDocument?->string($iptcNamespace, 'CiAdrCtry'),
+            creatorUrl: $xmpDocument?->string($iptcNamespace, 'CiUrlWork'),
             photographer: $exifDocument?->photographer(),
             imageEditor: $exifDocument?->imageEditor(),
         );
