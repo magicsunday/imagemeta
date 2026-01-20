@@ -32,6 +32,7 @@ use function bin2hex;
 use function explode;
 use function iconv;
 use function implode;
+use function in_array;
 use function is_bool;
 use function is_float;
 use function is_int;
@@ -808,12 +809,12 @@ final readonly class IsoBmffExtractor
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalise accordingly.
-        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
+        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $payloads['itemReferences'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
             $exifBlobs[] = $blob;
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], null, $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
+        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], $payloads['itemReferences'], null, $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
@@ -831,7 +832,7 @@ final readonly class IsoBmffExtractor
     /**
      * @return array{
      *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
-     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>,
+     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}>,
      *     itemReferences: array<int, list<IsoBmffItemReference>>,
      *     dataReferences: array<int, IsoBmffDataReference>,
      *     primaryItemId: ?int,
@@ -847,7 +848,7 @@ final readonly class IsoBmffExtractor
     {
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos = [];
-        /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations */
+        /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations */
         $locations      = [];
         /** @var array<int, list<IsoBmffItemReference>> $itemReferences */
         $itemReferences = [];
@@ -974,7 +975,8 @@ final readonly class IsoBmffExtractor
      * Resolves queued item IDs to their payload data.
      *
      * @param list<int>                                                                                                                     $itemIds         Item IDs to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations       Item location metadata.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations       Item location metadata.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                         $itemReferences  Parsed item references for construction_method=2 extents.
      * @param (callable(string):string)|null                                                                                                $transform       Optional transform function.
      * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences  Parsed data references for the current meta box.
      * @param string|null                                                                                                                    $idatPayload     Cached idat payload for construction_method=1 extents.
@@ -982,14 +984,14 @@ final readonly class IsoBmffExtractor
      *
      * @return list<string> List of resolved item payloads.
      */
-    private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform, array $dataReferences, ?string $idatPayload, array &$unresolvedItems): array
+    private function resolveQueuedItems(array $itemIds, array $locations, array $itemReferences, ?callable $transform, array $dataReferences, ?string $idatPayload, array &$unresolvedItems): array
     {
         /** @var list<string> $resolved */
         $resolved = [];
 
         // Pull data for each referenced item and optionally transform the payload.
         foreach ($itemIds as $itemId) {
-            $data = $this->resolveItemData($itemId, $locations, $dataReferences, $idatPayload, $unresolvedItems);
+            $data = $this->resolveItemData($itemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems);
             if ($data !== null) {
                 $resolved[] = $transform !== null ? $transform($data) : $data;
             }
@@ -1212,20 +1214,27 @@ final readonly class IsoBmffExtractor
      * Resolves metadata item references described by an `iloc` box.
      *
      * @param int                                                                                                                           $itemId         Identifier of the item to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
+     * @param array<int, list<IsoBmffItemReference>>                                                                                         $itemReferences
      * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences
      * @param string|null                                                                                                                    $idatPayload
      * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems
+     * @param list<int>                                                                                                                      $visitedItemIds
      *
      * @return string|null
      */
-    private function resolveItemData(int $itemId, array $locations, array $dataReferences, ?string $idatPayload, array &$unresolvedItems): ?string
+    private function resolveItemData(int $itemId, array $locations, array $itemReferences, array $dataReferences, ?string $idatPayload, array &$unresolvedItems, array $visitedItemIds = []): ?string
     {
         if (!isset($locations[$itemId])) {
             return null;
         }
 
         $location = $locations[$itemId];
+        if (in_array($itemId, $visitedItemIds, true)) {
+            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+            return null;
+        }
+
         // EXIF 3.0 Annex A.2.4 confines Exif item data to self-contained payloads.
         // We only resolve items with local data references; other sources are tracked
         // as unresolved for the caller to decide how to handle them.
@@ -1322,6 +1331,74 @@ final readonly class IsoBmffExtractor
             return $blob === '' ? null : $blob;
         }
 
+        if ($location['constructionMethod'] === ConstructionMethod::ItemOffset->value) {
+            $references = $itemReferences[$itemId] ?? [];
+            if ($references === []) {
+                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                return null;
+            }
+
+            // ISO/IEC 14496-12 §8.11.3.2 ties construction_method=2 extents to item references.
+            $blob  = '';
+            $total = 0;
+            foreach ($location['extents'] as $extent) {
+                $length = $extent['length'];
+                if ($length === 0) {
+                    continue;
+                }
+
+                if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                    throw new ParseError('iloc item payload exceeds configured limit');
+                }
+
+                // extent_index is optional; treat it as zero-based with a one-based fallback.
+                $referencePosition = $extent['index'] ?? 0;
+                if (!isset($references[$referencePosition]) && ($referencePosition > 0) && isset($references[$referencePosition - 1])) {
+                    $referencePosition -= 1;
+                }
+
+                if (!isset($references[$referencePosition])) {
+                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                    return null;
+                }
+
+                $referenceItemId = $references[$referencePosition]->toItemId;
+                $nextVisited     = $visitedItemIds;
+                $nextVisited[]   = $itemId;
+                if (in_array($referenceItemId, $nextVisited, true)) {
+                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                    return null;
+                }
+
+                $referenceData = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $nextVisited);
+                if ($referenceData === null) {
+                    $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                    return null;
+                }
+
+                $referenceSize = strlen($referenceData);
+                $baseOffset    = $location['baseOffset'];
+                $extentOffset  = $extent['offset'];
+                if ($baseOffset < 0 || $extentOffset < 0) {
+                    throw new ParseError('iloc negative offset');
+                }
+
+                if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+                    throw new ParseError('iloc offset overflow');
+                }
+
+                $offset = $baseOffset + $extentOffset;
+                if ($offset > $referenceSize - $length) {
+                    throw new ParseError('iloc extent outside referenced item');
+                }
+
+                $blob  .= substr($referenceData, $offset, $length);
+                $total += $length;
+            }
+
+            return $blob === '' ? null : $blob;
+        }
+
         $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
         return null;
     }
@@ -1330,7 +1407,7 @@ final readonly class IsoBmffExtractor
      * Records an unresolved item payload for external references.
      *
      * @param int                                                                                                                           $itemId
-     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}           $location
+     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}           $location
      * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences
      * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems
      */
@@ -1455,7 +1532,7 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor $iloc Box descriptor representing the `iloc` payload.
      *
-     * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>
+     * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}>
      */
     private function parseIloc(BoxDescriptor $iloc): array
     {
@@ -1505,17 +1582,18 @@ final readonly class IsoBmffExtractor
             $dataReferenceIndex = $win->readU16BE();
             $baseOffset         = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
             $extentCount        = $win->readU16BE();
-            /** @var list<array{offset:int,length:int}> $extents */
+            /** @var list<array{offset:int,length:int,index:?int}> $extents */
             $extents = [];
 
             for ($j = 0; $j < $extentCount; ++$j) {
+                $extentIndex = null;
                 if ($indexSize > 0) {
-                    $this->readUInt($win, $indexSize); // extent_index, ignored
+                    $extentIndex = $this->readUInt($win, $indexSize);
                 }
 
                 $extentOffset = $offsetSize > 0 ? $this->readUInt($win, $offsetSize) : 0;
                 $extentLength = $lengthSize > 0 ? $this->readUInt($win, $lengthSize) : 0;
-                $extents[]    = ['offset' => $extentOffset, 'length' => $extentLength];
+                $extents[]    = ['offset' => $extentOffset, 'length' => $extentLength, 'index' => $extentIndex];
             }
 
             $locations[$itemId] = [
