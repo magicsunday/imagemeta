@@ -1090,6 +1090,7 @@ final class TiffExifReader implements ExifReaderInterface
             $metadata->length,
             $metadata->sha1,
             $metadata->apple,
+            $metadata->samsung,
         );
     }
 

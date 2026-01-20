@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\MakerNotes;
 
 use InvalidArgumentException;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
+use MagicSunday\ImageMeta\MakerNotes\Samsung\SamsungMakerNotes;
 
 use function preg_match;
 
@@ -22,16 +23,18 @@ use function preg_match;
 final readonly class MakerNotesRecord
 {
     /**
-     * @param string               $vendor Vendor responsible for the maker note payload. Must not be empty.
-     * @param int                  $length Number of bytes contained in the payload. Must be zero or positive.
-     * @param string               $sha1   Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
-     * @param AppleMakerNotes|null $apple  Additional Apple specific maker note data.
+     * @param string                 $vendor  Vendor responsible for the maker note payload. Must not be empty.
+     * @param int                    $length  Number of bytes contained in the payload. Must be zero or positive.
+     * @param string                 $sha1    Lowercase hexadecimal SHA-1 digest of the payload. Must be 40 characters long.
+     * @param AppleMakerNotes|null   $apple   Additional Apple specific maker note data.
+     * @param SamsungMakerNotes|null $samsung Additional Samsung specific maker note data.
      */
     public function __construct(
         public string $vendor,
         public int $length,
         public string $sha1,
         public ?AppleMakerNotes $apple = null,
+        public ?SamsungMakerNotes $samsung = null,
     ) {
         if ($this->vendor === '') {
             throw new InvalidArgumentException('The vendor must not be empty.');

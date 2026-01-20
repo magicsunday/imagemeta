@@ -53,6 +53,7 @@ final class AppleMakerNotesMerger
                 $makerNotes->length,
                 $makerNotes->sha1,
                 $apple,
+                $makerNotes->samsung,
             );
         }
 
@@ -61,7 +62,8 @@ final class AppleMakerNotesMerger
                 'Apple',
                 0,
                 str_repeat('0', 40),
-                $apple
+                $apple,
+                null,
             );
         }
 
