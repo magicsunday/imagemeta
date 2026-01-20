@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Curate\Exif\SubFactory;
 
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Image;
 
@@ -27,11 +28,12 @@ final readonly class ImageFactory
     /**
      * Creates an Image value object from EXIF metadata.
      *
-     * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param Metadata         $metadata    Metadata container with decoded EXIF, XMP and QuickTime data.
+     * @param XmpDocument|null $xmpDocument Parsed XMP document for title/description overrides.
      *
      * @return Image Normalised image metadata aggregate.
      */
-    public function create(Metadata $metadata): Image
+    public function create(Metadata $metadata, ?XmpDocument $xmpDocument = null): Image
     {
         $exifDocument = $metadata->exifDoc;
 
@@ -39,6 +41,10 @@ final readonly class ImageFactory
         $height        = $exifDocument?->imageHeight() ?? $metadata->jpegFrameHeight;
         $orientation   = $exifDocument?->orientation();
         $bitsPerSample = $exifDocument?->bitsPerSample() ?? $metadata->jpegBitsPerSample;
+
+        $xmpTitle       = $xmpDocument?->string('http://purl.org/dc/elements/1.1/', 'title');
+        $xmpHeadline    = $xmpDocument?->string('http://ns.adobe.com/photoshop/1.0/', 'Headline');
+        $xmpDescription = $xmpDocument?->string('http://purl.org/dc/elements/1.1/', 'description');
 
         return new Image(
             width: $width,
@@ -48,8 +54,8 @@ final readonly class ImageFactory
             colorSpace: $this->normalizedColorSpace($exifDocument),
             imageUniqueId: $exifDocument?->imageUniqueId(),
             documentName: $exifDocument?->documentName(),
-            description: $exifDocument?->imageDescription(),
-            title: $exifDocument?->imageTitle(),
+            description: $xmpDescription ?? $exifDocument?->imageDescription(),
+            title: $xmpTitle ?? $xmpHeadline ?? $exifDocument?->imageTitle(),
             componentsConfiguration: $exifDocument?->componentsConfiguration(),
             compressedBitsPerPixel: $exifDocument?->compressedBitsPerPixel(),
             userComment: $exifDocument?->userComment(),
