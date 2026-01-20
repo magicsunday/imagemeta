@@ -103,6 +103,11 @@ final readonly class IsoBmffExtractor
     private const string BOX_ILOC = 'iloc';
 
     /**
+     * FourCC for item data box.
+     */
+    private const string BOX_IDAT = 'idat';
+
+    /**
      * FourCC for primary item box.
      */
     private const string BOX_PITM = 'pitm';
@@ -792,6 +797,7 @@ final readonly class IsoBmffExtractor
         $payloads = $this->collectDirectPayloads($meta);
         $itemReferences = $this->mergeItemReferences($itemReferences, $payloads['itemReferences']);
         $dataReferences = $this->mergeDataReferences($dataReferences, $payloads['dataReferences']);
+        $idatPayload    = $payloads['idatPayload'];
 
         foreach ($payloads['directExif'] as $blob) {
             $exifBlobs[] = $blob;
@@ -802,12 +808,12 @@ final readonly class IsoBmffExtractor
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalise accordingly.
-        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $unresolvedItems) as $blob) {
+        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
             $exifBlobs[] = $blob;
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], null, $payloads['dataReferences'], $unresolvedItems) as $blob) {
+        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], null, $payloads['dataReferences'], $idatPayload, $unresolvedItems) as $blob) {
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
@@ -832,6 +838,7 @@ final readonly class IsoBmffExtractor
      *     directXmp: list<string>,
      *     uuidXmp: list<string>,
      *     directExif: list<string>,
+     *     idatPayload: ?string,
      *     keysMaps: list<array<int, string>>,
      *     ilstBoxes: list<BoxDescriptor>
      * }
@@ -848,8 +855,9 @@ final readonly class IsoBmffExtractor
         $dataReferences = [];
         $primaryItemId  = null;
         $directXmp      = [];
-        $uuidXmp       = [];
-        $directExif    = [];
+        $uuidXmp        = [];
+        $directExif     = [];
+        $idatPayload    = null;
         /** @var list<array<int, string>> $keysMaps */
         $keysMaps = [];
         /** @var list<BoxDescriptor> $ilstBoxes */
@@ -870,6 +878,16 @@ final readonly class IsoBmffExtractor
                     break;
                 case self::BOX_ILOC:
                     $locations = $this->parseIloc($child);
+                    break;
+                case self::BOX_IDAT:
+                    if ($idatPayload === null) {
+                        if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
+                            throw new ParseError('idat payload exceeds configured limit');
+                        }
+
+                        $idatPayload = $this->readAll($child->window);
+                    }
+
                     break;
                 case self::BOX_PITM:
                     $primaryItemId = $this->parsePitm($child);
@@ -905,10 +923,11 @@ final readonly class IsoBmffExtractor
             'dataReferences' => $dataReferences,
             'primaryItemId'  => $primaryItemId,
             'directXmp'      => $directXmp,
-            'uuidXmp'       => $uuidXmp,
-            'directExif'    => $directExif,
-            'keysMaps'      => $keysMaps,
-            'ilstBoxes'     => $ilstBoxes,
+            'uuidXmp'        => $uuidXmp,
+            'directExif'     => $directExif,
+            'idatPayload'    => $idatPayload,
+            'keysMaps'       => $keysMaps,
+            'ilstBoxes'      => $ilstBoxes,
         ];
     }
 
@@ -958,18 +977,19 @@ final readonly class IsoBmffExtractor
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations       Item location metadata.
      * @param (callable(string):string)|null                                                                                                $transform       Optional transform function.
      * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences  Parsed data references for the current meta box.
+     * @param string|null                                                                                                                    $idatPayload     Cached idat payload for construction_method=1 extents.
      * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems Accumulator for unresolved item payloads.
      *
      * @return list<string> List of resolved item payloads.
      */
-    private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform, array $dataReferences, array &$unresolvedItems): array
+    private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform, array $dataReferences, ?string $idatPayload, array &$unresolvedItems): array
     {
         /** @var list<string> $resolved */
         $resolved = [];
 
         // Pull data for each referenced item and optionally transform the payload.
         foreach ($itemIds as $itemId) {
-            $data = $this->resolveItemData($itemId, $locations, $dataReferences, $unresolvedItems);
+            $data = $this->resolveItemData($itemId, $locations, $dataReferences, $idatPayload, $unresolvedItems);
             if ($data !== null) {
                 $resolved[] = $transform !== null ? $transform($data) : $data;
             }
@@ -1194,68 +1214,116 @@ final readonly class IsoBmffExtractor
      * @param int                                                                                                                           $itemId         Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
      * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences
+     * @param string|null                                                                                                                    $idatPayload
      * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems
      *
      * @return string|null
      */
-    private function resolveItemData(int $itemId, array $locations, array $dataReferences, array &$unresolvedItems): ?string
+    private function resolveItemData(int $itemId, array $locations, array $dataReferences, ?string $idatPayload, array &$unresolvedItems): ?string
     {
         if (!isset($locations[$itemId])) {
             return null;
         }
 
         $location = $locations[$itemId];
-        // EXIF 3.0 Annex A.2.4 confines Exif item data to self-contained payloads
-        // (`construction_method = 0`, `data_reference_index = 0`). When files
-        // reference external payloads we keep a record of the unresolved item.
-        if ($location['constructionMethod'] !== ConstructionMethod::FileOffset->value) {
-            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
-            return null;
-        }
-
+        // EXIF 3.0 Annex A.2.4 confines Exif item data to self-contained payloads.
+        // We only resolve items with local data references; other sources are tracked
+        // as unresolved for the caller to decide how to handle them.
         if ($location['dataReferenceIndex'] !== 0) {
             $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
             return null;
         }
 
-        $blob     = '';
-        $total    = 0;
-        $fileSize = $this->stream->size();
-        foreach ($location['extents'] as $extent) {
-            $length = $extent['length'];
-            if ($length === 0) {
-                continue;
+        if ($location['constructionMethod'] === ConstructionMethod::FileOffset->value) {
+            $blob     = '';
+            $total    = 0;
+            $fileSize = $this->stream->size();
+            foreach ($location['extents'] as $extent) {
+                $length = $extent['length'];
+                if ($length === 0) {
+                    continue;
+                }
+
+                if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                    throw new ParseError('iloc item payload exceeds configured limit');
+                }
+
+                if ($length > $fileSize - $total) {
+                    throw new ParseError('iloc extent length exceeds file size');
+                }
+
+                $total += $length;
+
+                $baseOffset   = $location['baseOffset'];
+                $extentOffset = $extent['offset'];
+                if ($baseOffset < 0 || $extentOffset < 0) {
+                    throw new ParseError('iloc negative offset');
+                }
+
+                if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+                    throw new ParseError('iloc offset overflow');
+                }
+
+                $offset = $baseOffset + $extentOffset;
+                if ($offset > $fileSize - $length) {
+                    throw new ParseError('iloc extent outside file');
+                }
+
+                $blob .= $this->readAll($this->stream->window($offset, $length));
             }
 
-            if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
-                throw new ParseError('iloc item payload exceeds configured limit');
-            }
-
-            if ($length > $fileSize - $total) {
-                throw new ParseError('iloc extent length exceeds file size');
-            }
-
-            $total += $length;
-
-            $baseOffset   = $location['baseOffset'];
-            $extentOffset = $extent['offset'];
-            if ($baseOffset < 0 || $extentOffset < 0) {
-                throw new ParseError('iloc negative offset');
-            }
-
-            if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                throw new ParseError('iloc offset overflow');
-            }
-
-            $offset = $baseOffset + $extentOffset;
-            if ($offset > $fileSize - $length) {
-                throw new ParseError('iloc extent outside file');
-            }
-
-            $blob .= $this->readAll($this->stream->window($offset, $length));
+            return $blob === '' ? null : $blob;
         }
 
-        return $blob === '' ? null : $blob;
+        if ($location['constructionMethod'] === ConstructionMethod::IdatOffset->value) {
+            if ($idatPayload === null) {
+                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+                return null;
+            }
+
+            // ISO/IEC 14496-12 §8.11.3.2 defines construction_method=1 offsets as idat-relative.
+            $blob     = '';
+            $total    = 0;
+            $idatSize = strlen($idatPayload);
+            foreach ($location['extents'] as $extent) {
+                $length = $extent['length'];
+                if ($length === 0) {
+                    continue;
+                }
+
+                if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                    throw new ParseError('iloc item payload exceeds configured limit');
+                }
+
+                if ($length > $idatSize - $total) {
+                    throw new ParseError('iloc extent length exceeds idat payload');
+                }
+
+                $total += $length;
+
+                $baseOffset   = $location['baseOffset'];
+                $extentOffset = $extent['offset'];
+                if ($baseOffset < 0 || $extentOffset < 0) {
+                    throw new ParseError('iloc negative offset');
+                }
+
+                if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+                    throw new ParseError('iloc offset overflow');
+                }
+
+                $offset = $baseOffset + $extentOffset;
+                if ($offset > $idatSize - $length) {
+                    throw new ParseError('iloc extent outside idat payload');
+                }
+
+                $blob .= substr($idatPayload, $offset, $length);
+            }
+
+            return $blob === '' ? null : $blob;
+        }
+
+        $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+        return null;
     }
 
     /**
