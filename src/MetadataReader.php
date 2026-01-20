@@ -177,7 +177,7 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        [$exifBlobs, $xmpBlobs, $qt] = (new IsoBmffExtractor($stream))->extract();
+        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences] = (new IsoBmffExtractor($stream))->extract();
 
         $exifDoc    = null;
         $xmpDoc     = null;
@@ -220,6 +220,7 @@ final readonly class MetadataReader
             $extension,
             $digestSha1,
             $digestMd5,
+            isoBmffItemReferences: $isoBmffItemReferences,
         );
     }
 

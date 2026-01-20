@@ -16,6 +16,8 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
@@ -101,6 +103,11 @@ final readonly class IsoBmffExtractor
      * FourCC for primary item box.
      */
     private const string BOX_PITM = 'pitm';
+
+    /**
+     * FourCC for item reference box.
+     */
+    private const string BOX_IREF = 'iref';
 
     /**
      * FourCC for embedded XMP metadata box.
@@ -228,6 +235,11 @@ final readonly class IsoBmffExtractor
     private const int MAX_IINF_ENTRIES = 10000;
 
     /**
+     * Maximum number of item references allowed per iref entry.
+     */
+    private const int MAX_IREF_REFERENCES = 10000;
+
+    /**
      * Maximum number of keys in a keys box to prevent DoS attacks.
      */
     private const int MAX_KEYS_ENTRIES = 1000;
@@ -258,23 +270,24 @@ final readonly class IsoBmffExtractor
     /**
      * Extracts EXIF blobs, XMP packets, and QuickTime metadata from the stream.
      *
-     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta}
+     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta, 3: ?IsoBmffItemReferenceMap}
      */
     public function extract(): array
     {
-        $exifBlobs     = [];
-        $xmpBlobs      = [];
-        $qtKeys        = [];
-        $queuedUuidXmp = [];
-        $xmpHashes     = [];
+        $exifBlobs       = [];
+        $xmpBlobs        = [];
+        $qtKeys          = [];
+        $queuedUuidXmp   = [];
+        $xmpHashes       = [];
+        $itemReferences  = [];
 
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === self::BOX_FTYP) {
                 $qtKeys = $this->mergeAssociative($qtKeys, $this->parseFtyp($box));
             } elseif ($box->type === self::BOX_META) {
-                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
+                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
             } elseif ($box->type === self::BOX_MOOV) {
-                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
+                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
             } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
                 $queuedUuidXmp[] = $this->readAll($box->window);
             }
@@ -284,9 +297,10 @@ final readonly class IsoBmffExtractor
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
-        $qt = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
+        $qt                 = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
+        $itemReferenceMap = $itemReferences === [] ? null : new IsoBmffItemReferenceMap($itemReferences);
 
-        return [$exifBlobs, $xmpBlobs, $qt];
+        return [$exifBlobs, $xmpBlobs, $qt, $itemReferenceMap];
     }
 
     /**
@@ -315,17 +329,18 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor       $moov      Box descriptor for the movie box.
      * @param list<string>        $exifBlobs
-     * @param list<string>        $xmpBlobs
-     * @param array<string, bool> $xmpHashes
-     * @param QuickTimeKeyMap     $qtKeys
+     * @param list<string>                             $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>>     $itemReferences
+     * @param array<string, bool>                        $xmpHashes
+     * @param QuickTimeKeyMap                            $qtKeys
      */
-    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
+    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$xmpHashes): void
     {
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
             } elseif ($child->type === self::BOX_UDTA) {
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
             } elseif ($child->type === self::BOX_TRAK) {
                 $qtKeys = $this->mergeAssociative($qtKeys, $this->parseTrak($child));
             }
@@ -368,15 +383,16 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor       $udta      Box descriptor for the user data box.
      * @param list<string>        $exifBlobs
-     * @param list<string>        $xmpBlobs
-     * @param array<string, bool> $xmpHashes
-     * @param QuickTimeKeyMap     $qtKeys
+     * @param list<string>                             $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>>     $itemReferences
+     * @param array<string, bool>                        $xmpHashes
+     * @param QuickTimeKeyMap                            $qtKeys
      */
-    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
+    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$xmpHashes): void
     {
         foreach ($this->walkChildren($udta) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $xmpHashes);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
             }
         }
     }
@@ -722,11 +738,12 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor       $meta      Box descriptor for the metadata box.
      * @param list<string>        $exifBlobs
-     * @param list<string>        $xmpBlobs
-     * @param array<string, bool> $xmpHashes
-     * @param QuickTimeKeyMap     $qtKeys
+     * @param list<string>                             $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>>     $itemReferences
+     * @param array<string, bool>                        $xmpHashes
+     * @param QuickTimeKeyMap                            $qtKeys
      */
-    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$xmpHashes): void
+    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$xmpHashes): void
     {
         if ($meta->contentSize < 4) {
             throw new ParseError('meta box truncated');
@@ -736,6 +753,7 @@ final readonly class IsoBmffExtractor
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
         $payloads = $this->collectDirectPayloads($meta);
+        $itemReferences = $this->mergeItemReferences($itemReferences, $payloads['itemReferences']);
 
         foreach ($payloads['directExif'] as $blob) {
             $exifBlobs[] = $blob;
@@ -770,6 +788,7 @@ final readonly class IsoBmffExtractor
      * @return array{
      *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
      *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>,
+     *     itemReferences: array<int, list<IsoBmffItemReference>>,
      *     primaryItemId: ?int,
      *     directXmp: list<string>,
      *     uuidXmp: list<string>,
@@ -783,9 +802,11 @@ final readonly class IsoBmffExtractor
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos = [];
         /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations */
-        $locations     = [];
-        $primaryItemId = null;
-        $directXmp     = [];
+        $locations      = [];
+        /** @var array<int, list<IsoBmffItemReference>> $itemReferences */
+        $itemReferences = [];
+        $primaryItemId  = null;
+        $directXmp      = [];
         $uuidXmp       = [];
         $directExif    = [];
         /** @var list<array<int, string>> $keysMaps */
@@ -812,6 +833,9 @@ final readonly class IsoBmffExtractor
                 case self::BOX_PITM:
                     $primaryItemId = $this->parsePitm($child);
                     break;
+                case self::BOX_IREF:
+                    $itemReferences = $this->mergeItemReferences($itemReferences, $this->parseIref($child));
+                    break;
                 case self::BOX_XMP:
                     $directXmp[] = $this->readAll($child->window);
                     break;
@@ -831,10 +855,11 @@ final readonly class IsoBmffExtractor
         }
 
         return [
-            'itemInfos'     => $itemInfos,
-            'locations'     => $locations,
-            'primaryItemId' => $primaryItemId,
-            'directXmp'     => $directXmp,
+            'itemInfos'      => $itemInfos,
+            'locations'      => $locations,
+            'itemReferences' => $itemReferences,
+            'primaryItemId'  => $primaryItemId,
+            'directXmp'      => $directXmp,
             'uuidXmp'       => $uuidXmp,
             'directExif'    => $directExif,
             'keysMaps'      => $keysMaps,
@@ -948,6 +973,30 @@ final readonly class IsoBmffExtractor
         // Merge all ilst entries into the cumulative QuickTime metadata set.
         foreach ($ilstBoxes as $ilst) {
             $existing = $this->mergeAssociative($existing, $this->parseIlst($ilst, $keyIndex));
+        }
+
+        return $existing;
+    }
+
+    /**
+     * Merges ISO BMFF item reference mappings.
+     *
+     * @param array<int, list<IsoBmffItemReference>> $existing
+     * @param array<int, list<IsoBmffItemReference>> $incoming
+     *
+     * @return array<int, list<IsoBmffItemReference>>
+     */
+    private function mergeItemReferences(array $existing, array $incoming): array
+    {
+        foreach ($incoming as $fromId => $references) {
+            if (!isset($existing[$fromId])) {
+                $existing[$fromId] = $references;
+                continue;
+            }
+
+            foreach ($references as $reference) {
+                $existing[$fromId][] = $reference;
+            }
         }
 
         return $existing;
@@ -1235,6 +1284,103 @@ final readonly class IsoBmffExtractor
         $this->readUInt24($win);
 
         return $version === 0 ? $win->readU16BE() : $win->readU32BE();
+    }
+
+    /**
+     * Parses an item reference box (`iref`) and returns the referenced item ids.
+     *
+     * ISO/IEC 14496-12 §8.11.12 defines the structure of item reference
+     * collections and their single-item reference entries.
+     *
+     * @param BoxDescriptor $iref Box descriptor containing item references.
+     *
+     * @return array<int, list<IsoBmffItemReference>>
+     */
+    private function parseIref(BoxDescriptor $iref): array
+    {
+        $win = $iref->window;
+        $win->seek(0);
+
+        if ($iref->contentSize < 4) {
+            throw new ParseError('iref box truncated');
+        }
+
+        $version = $win->readU8();
+        $this->readUInt24($win); // flags
+
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError('unsupported iref box version');
+        }
+
+        $references = [];
+
+        foreach ($this->walkChildren($iref, 4) as $child) {
+            $entry = $this->parseSingleItemReference($child);
+            $references = $this->mergeItemReferences($references, [
+                $entry['fromItemId'] => $entry['references'],
+            ]);
+        }
+
+        return $references;
+    }
+
+    /**
+     * Parses a single item reference box inside an `iref` container.
+     *
+     * @param BoxDescriptor $entry Box descriptor describing the reference entry.
+     *
+     * @return array{fromItemId:int, references:list<IsoBmffItemReference>}
+     */
+    private function parseSingleItemReference(BoxDescriptor $entry): array
+    {
+        $win = $entry->window;
+        $win->seek(0);
+
+        if ($entry->contentSize < 6) {
+            throw new ParseError('iref entry truncated');
+        }
+
+        $version = $win->readU8();
+        $this->readUInt24($win); // flags
+
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError('unsupported iref entry version');
+        }
+
+        $idSize = $version === 0 ? 2 : 4;
+
+        if ($entry->contentSize < 4 + $idSize + 2) {
+            throw new ParseError('iref entry truncated');
+        }
+
+        $fromItemId = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
+        $referenceCount = $win->readU16BE();
+
+        if ($referenceCount > self::MAX_IREF_REFERENCES) {
+            throw new ParseError('iref reference count exceeds maximum allowed');
+        }
+
+        $remaining = $entry->contentSize - $win->tell();
+        $expected = $referenceCount * $idSize;
+        if ($remaining < $expected) {
+            throw new ParseError('iref entry truncated');
+        }
+
+        $relation = $this->normaliseFourcc($entry->type);
+        $references = [];
+        for ($i = 0; $i < $referenceCount; ++$i) {
+            $toItemId = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
+            $references[] = new IsoBmffItemReference($relation, $toItemId);
+        }
+
+        if ($win->tell() !== $entry->contentSize) {
+            throw new ParseError('iref entry size mismatch');
+        }
+
+        return [
+            'fromItemId' => $fromItemId,
+            'references' => $references,
+        ];
     }
 
     /**

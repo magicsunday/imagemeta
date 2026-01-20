@@ -23,6 +23,8 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
@@ -78,6 +80,8 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Ifd::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(QuickTimeMeta::class)]
+#[UsesClass(IsoBmffItemReference::class)]
+#[UsesClass(IsoBmffItemReferenceMap::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesClass(ExifCapabilities::class)]
@@ -156,6 +160,10 @@ final class MetadataTest extends TestCase
             '{http://ns.adobe.com/photoshop/1.0/}DateCreated' => '2024-05-01',
         ]);
 
+        $itemReferences = new IsoBmffItemReferenceMap([
+            1 => [new IsoBmffItemReference('cdsc', 2)],
+        ]);
+
         $iccProfile  = 'icc-profile';
         $iccSegments = ['seg-1', 'seg-2'];
         $sampling    = [
@@ -184,6 +192,7 @@ final class MetadataTest extends TestCase
             digestMd5: 'def456',
             jpegFrameWidth: 4096,
             jpegFrameHeight: 2730,
+            isoBmffItemReferences: $itemReferences,
         );
 
         self::assertSame($exifBlobs, $metadata->exifBlobs);
@@ -203,6 +212,7 @@ final class MetadataTest extends TestCase
         self::assertSame('def456', $metadata->digestMd5);
         self::assertSame(4096, $metadata->jpegFrameWidth);
         self::assertSame(2730, $metadata->jpegFrameHeight);
+        self::assertSame($itemReferences, $metadata->isoBmffItemReferences);
     }
 
     /**
@@ -218,6 +228,7 @@ final class MetadataTest extends TestCase
         self::assertNull($metadata->exifDoc);
         self::assertSame([], $metadata->xmpBlobs);
         self::assertNull($metadata->xmpDoc);
+        self::assertNull($metadata->isoBmffItemReferences);
         self::assertNull($metadata->jpegBitsPerSample);
         self::assertNull($metadata->jpegFrameSamplingFactors);
         self::assertNull($metadata->jpegYCbCrSubSampling);
