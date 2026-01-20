@@ -39,6 +39,7 @@ use MagicSunday\ImageMeta\Value\ColorProfile as ValueColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File as ValueFile;
@@ -112,7 +113,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: Regions, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
+     * @return array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, depthMap: DepthMap, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: Regions, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
      */
     public function createComponents(Metadata $metadata): array
     {
@@ -389,6 +390,14 @@ final readonly class ValueFactory implements ValueFactoryInterface
             relatedSoundFile: $exifDocument?->relatedSoundFile(),
         );
 
+        $depthMapNamespace = 'http://ns.google.com/photos/1.0/depthmap/';
+        $depthMap          = new DepthMap(
+            data: $xmpDocument?->string($depthMapNamespace, 'Data'),
+            mime: $xmpDocument?->string($depthMapNamespace, 'Mime'),
+            near: $xmpDocument?->float($depthMapNamespace, 'Near'),
+            far: $xmpDocument?->float($depthMapNamespace, 'Far'),
+        );
+
         $hasHistory = $xmpDocument?->has('http://ns.adobe.com/xap/1.0/mm/', 'History') ?? false;
 
         $integrity = new Integrity(
@@ -407,6 +416,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             'composite'       => $composite,
             'container'       => $container,
             'derived'         => $derived,
+            'depthMap'        => $depthMap,
             'device'          => $device,
             'embeddedAudio'   => $embeddedAudio,
             'exposure'        => $exposure,

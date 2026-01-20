@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Value\ColorProfile;
 use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Device;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
@@ -63,6 +64,7 @@ final readonly class StructuredMetadata
         public CompositeImageInfo $composite,
         public Container $container,
         public Derived $derived,
+        public DepthMap $depthMap,
         public Device $device,
         public Exposure $exposure,
         public File $file,
