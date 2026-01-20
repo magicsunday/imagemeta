@@ -284,12 +284,17 @@ final readonly class IsoBmffExtractor
     private const int MAX_STSD_ENTRIES = 100;
 
     /**
-     * QuickTime metadata keys that should be coerced into non-string value types.
+     * QuickTime metadata keys that should be coerced into expected value types.
      *
      * @var array<string, string>
      */
     private const array QUICKTIME_KEY_TYPES = [
         'com.apple.quicktime.videoOrientation' => 'int',
+        'com.apple.quicktime.location.accuracy.horizontal' => 'float',
+        'com.apple.quicktime.location.accuracy.vertical' => 'float',
+        'com.apple.quicktime.isHDRVideo' => 'bool',
+        'com.apple.quicktime.make' => 'string',
+        'com.apple.quicktime.software' => 'string',
     ];
 
     /**
@@ -1937,6 +1942,7 @@ final readonly class IsoBmffExtractor
             'int' => $this->parseQuickTimeInt($value) ?? $value,
             'float' => $this->parseQuickTimeFloat($value) ?? $value,
             'bool' => $this->parseQuickTimeBool($value) ?? $value,
+            'string' => is_string($value) ? $value : (string) $value,
             default => $value,
         };
     }
