@@ -39,6 +39,8 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
@@ -132,6 +134,8 @@ use function unlink;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesClass(IsoBmffItemReference::class)]
+#[UsesClass(IsoBmffItemReferenceMap::class)]
 #[UsesClass(Metadata::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(StructuredMetadataCache::class)]
@@ -344,9 +348,11 @@ final class MetadataReaderTest extends TestCase
             . '</x:xmpmeta>';
         $identifier = 'qt-meta-identifier';
 
-        $ftyp       = $this->box('ftyp', 'isom');
-        $meta       = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp));
-        $moov       = $this->quickTimeMoov($identifier);
+        $ftyp      = $this->box('ftyp', 'isom');
+        $irefEntry = $this->fullBox('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
+        $iref      = $this->fullBox('iref', $irefEntry);
+        $meta      = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp) . $iref);
+        $moov      = $this->quickTimeMoov($identifier);
         $isoPayload = $ftyp . $meta . $moov;
 
         $path = $this->writeTempFile($isoPayload);
@@ -361,6 +367,11 @@ final class MetadataReaderTest extends TestCase
         self::assertSame([$xmp], $metadata->xmpBlobs);
         self::assertInstanceOf(QuickTimeMeta::class, $metadata->quickTime);
         self::assertSame($identifier, $metadata->quickTime->contentIdentifier());
+        self::assertInstanceOf(IsoBmffItemReferenceMap::class, $metadata->isoBmffItemReferences);
+        $itemReferences = $metadata->isoBmffItemReferences->referencesFor(2);
+        self::assertCount(1, $itemReferences);
+        self::assertSame('cdsc', $itemReferences[0]->relation);
+        self::assertSame(3, $itemReferences[0]->toItemId);
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
