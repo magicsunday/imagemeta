@@ -419,8 +419,10 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function iptcIsCollectedRaw(): void
     {
-        $iptcOne = self::IPTC_SIGNATURE . 'payload-one';
-        $iptcTwo = self::IPTC_SIGNATURE . 'payload-two';
+        $iimOne  = self::iimDataset(2, 5, 'Object One');
+        $iimTwo  = self::iimDataset(2, 5, 'Object Two');
+        $iptcOne = self::IPTC_SIGNATURE . self::resourceBlock(0x0404, $iimOne);
+        $iptcTwo = self::IPTC_SIGNATURE . self::resourceBlock(0x0404, $iimTwo);
 
         $jpeg = $this->jpeg(self::segment(self::MARKER_APP13, $iptcOne), self::segment(self::MARKER_APP13, $iptcTwo));
 
@@ -691,6 +693,32 @@ final class JpegExtractorTest extends TestCase
     private static function segment(int $marker, string $payload): string
     {
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
+    }
+
+    private static function resourceBlock(int $resourceId, string $data, string $name = ''): string
+    {
+        $nameLength = strlen($name);
+        $nameField  = chr($nameLength) . $name;
+        if ((strlen($nameField) % 2) !== 0) {
+            $nameField .= "\0";
+        }
+
+        $block = '8BIM'
+            . pack('n', $resourceId)
+            . $nameField
+            . pack('N', strlen($data))
+            . $data;
+
+        if ((strlen($data) % 2) !== 0) {
+            $block .= "\0";
+        }
+
+        return $block;
+    }
+
+    private static function iimDataset(int $record, int $dataset, string $value): string
+    {
+        return "\x1C" . chr($record) . chr($dataset) . pack('n', strlen($value)) . $value;
     }
 
     /**

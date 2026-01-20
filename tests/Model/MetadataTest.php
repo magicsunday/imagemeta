@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
@@ -78,6 +79,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
+#[UsesClass(IptcDocument::class)]
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(IsoBmffItemReference::class)]
@@ -364,6 +366,37 @@ XML;
         $metadata = new Metadata([], null, null, [], $xmpDoc);
 
         self::assertSame($xmpDoc, $metadata->selectiveXmpDocument());
+    }
+
+    /**
+     * Ensures IPTC payloads are parsed when no document is pre-populated.
+     */
+    #[Test]
+    public function exposesSelectiveIptcDocumentWhenUnavailable(): void
+    {
+        $iimData = "\x1C" . chr(2) . chr(5) . pack('n', 11) . 'Object Name';
+        $nameField = "\0\0";
+        $resourceBlock = '8BIM'
+            . pack('n', 0x0404)
+            . $nameField
+            . pack('N', strlen($iimData))
+            . $iimData;
+        if ((strlen($iimData) % 2) !== 0) {
+            $resourceBlock .= "\0";
+        }
+
+        $payload = "Photoshop 3.0\0" . $resourceBlock;
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            iptcBlobs: [$payload],
+        );
+
+        $document = $metadata->selectiveIptcDocument();
+
+        self::assertInstanceOf(IptcDocument::class, $document);
+        self::assertSame('Object Name', $document->first(2, 5));
     }
 
     /**

@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop;
+use MagicSunday\ImageMeta\Value\Iptc;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
@@ -74,6 +75,7 @@ final readonly class StructuredMetadata
         public Image $image,
         public Integrity $integrity,
         public Interop $interop,
+        public Iptc $iptc,
         public Keywords $keywords,
         public Lens $lens,
         public Motion $motion,

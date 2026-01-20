@@ -14,12 +14,14 @@ namespace MagicSunday\ImageMeta\Model;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
 /**
@@ -57,6 +59,8 @@ final readonly class Metadata
      * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences    ISO BMFF item references extracted from metadata boxes.
      * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences    ISO BMFF data references extracted from metadata boxes.
      * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems   ISO BMFF item payloads that could not be resolved.
+     * @param list<string>                                         $iptcBlobs                IPTC payloads captured from JPEG APP13 segments.
+     * @param IptcDocument|null                                    $iptcDoc                  Parsed IPTC IIM datasets from APP13 payloads.
      */
     public function __construct(
         public array $exifBlobs,
@@ -83,6 +87,8 @@ final readonly class Metadata
         public ?IsoBmffItemReferenceMap $isoBmffItemReferences = null,
         public ?IsoBmffDataReferenceMap $isoBmffDataReferences = null,
         public array $isoBmffUnresolvedItems = [],
+        public array $iptcBlobs = [],
+        public ?IptcDocument $iptcDoc = null,
     ) {
         $this->structuredCache = new StructuredMetadataCache();
     }
@@ -113,6 +119,29 @@ final readonly class Metadata
         }
 
         return XmpDocument::merge(...$documents);
+    }
+
+    /**
+     * Returns the primary IPTC document, parsing IPTC payloads when needed.
+     */
+    public function selectiveIptcDocument(): ?IptcDocument
+    {
+        if ($this->iptcDoc instanceof IptcDocument) {
+            return $this->iptcDoc;
+        }
+
+        if ($this->iptcBlobs === []) {
+            return null;
+        }
+
+        $parser    = new IptcParser();
+        $documents = [];
+
+        foreach ($this->iptcBlobs as $blob) {
+            $documents[] = $parser->parse($blob);
+        }
+
+        return IptcDocument::merge(...$documents);
     }
 
     /**
