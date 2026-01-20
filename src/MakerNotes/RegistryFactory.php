@@ -26,6 +26,7 @@ final class RegistryFactory
         $appleDecoder = new AppleDecoder();
         $canonDecoder = new CanonDecoder();
         $nikonDecoder = new NikonDecoder();
+        $samsungDecoder = new SamsungDecoder();
         $sonyDecoder  = new SonyDecoder();
 
         $registry->register('Apple', $appleDecoder);
@@ -34,6 +35,9 @@ final class RegistryFactory
         $registry->register('Canon Inc.', $canonDecoder);
         $registry->register('Nikon', $nikonDecoder);
         $registry->register('Nikon Corporation', $nikonDecoder);
+        $registry->register('Samsung', $samsungDecoder);
+        $registry->register('SAMSUNG', $samsungDecoder);
+        $registry->register('Samsung Electronics', $samsungDecoder);
         $registry->register('Sony', $sonyDecoder);
         $registry->register('Sony Corporation', $sonyDecoder);
 

@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\NikonDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
+use MagicSunday\ImageMeta\MakerNotes\SamsungDecoder;
 use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -110,6 +111,7 @@ final class RegistryTest extends TestCase
 
         self::assertInstanceOf(CanonDecoder::class, $registry->find('Canon Inc.'));
         self::assertInstanceOf(NikonDecoder::class, $registry->find('Nikon Corporation'));
+        self::assertInstanceOf(SamsungDecoder::class, $registry->find('SAMSUNG'));
         self::assertInstanceOf(SonyDecoder::class, $registry->find('Sony Corporation'));
     }
 }
