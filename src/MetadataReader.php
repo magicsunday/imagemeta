@@ -19,8 +19,10 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
+use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
@@ -44,6 +46,7 @@ final readonly class MetadataReader
         private TiffExifReader $tiffReader = new TiffExifReader(),
         private AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
         private XmpParser $xmpParser = new XmpParser(),
+        private IptcParser $iptcParser = new IptcParser(),
     ) {
     }
 
@@ -102,6 +105,7 @@ final readonly class MetadataReader
         $flashPixStreams = $jpeg->getFlashPixStreams();
         $audioStreams    = $jpeg->getAudioStreams();
         $mpfDocument     = $jpeg->getMpfDocument();
+        $iptcBlobs       = $jpeg->getIptcPayloads();
         $bitsPerSample   = $jpeg->getFrameSamplePrecision();
         $frameHeight     = $jpeg->getFrameHeight();
         $frameWidth      = $jpeg->getFrameWidth();
@@ -131,6 +135,17 @@ final readonly class MetadataReader
             $xmpDoc = XmpDocument::merge(...$documents);
         }
 
+        $iptcDoc = null;
+        if ($iptcBlobs !== []) {
+            $documents = [];
+
+            foreach ($iptcBlobs as $blob) {
+                $documents[] = $this->iptcParser->parse($blob);
+            }
+
+            $iptcDoc = IptcDocument::merge(...$documents);
+        }
+
         // Assemble the final metadata aggregate with container context.
         return new Metadata(
             $exifBlobs,
@@ -154,6 +169,8 @@ final readonly class MetadataReader
             digestMd5: $digestMd5,
             jpegFrameWidth: $frameWidth,
             jpegFrameHeight: $frameHeight,
+            iptcBlobs: $iptcBlobs,
+            iptcDoc: $iptcDoc,
         );
     }
 

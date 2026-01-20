@@ -15,19 +15,27 @@ use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\DepthMap;
 use MagicSunday\ImageMeta\Value\Image;
+use MagicSunday\ImageMeta\Value\Iptc;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+use function chr;
+use function pack;
+use function strlen;
+
 #[CoversClass(ValueFactory::class)]
 #[UsesClass(Author::class)]
 #[UsesClass(ExifAssembler::class)]
 #[UsesClass(Image::class)]
+#[UsesClass(Iptc::class)]
+#[UsesClass(IptcDocument::class)]
 #[UsesClass(StructuredMetadata::class)]
 #[UsesClass(DepthMap::class)]
 final class ValueFactoryTest extends TestCase
@@ -114,5 +122,50 @@ XML;
         self::assertSame('10115', $structured->author->creatorPostalCode);
         self::assertSame('DE', $structured->author->creatorCountry);
         self::assertSame('https://example.com', $structured->author->creatorUrl);
+    }
+
+    #[Test]
+    public function exposesParsedIptcDatasets(): void
+    {
+        $iimData = self::iimDataset(2, 5, 'Object Name');
+        $payload = self::PHOTOSHOP_SIGNATURE . self::resourceBlock(0x0404, $iimData);
+
+        $metadata = new Metadata(
+            exifBlobs: [],
+            quickTime: null,
+            iptcBlobs: [$payload],
+        );
+
+        $structured = (new ExifAssembler())->assemble($metadata);
+
+        self::assertSame('Object Name', $structured->iptc->document?->first(2, 5));
+    }
+
+    private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";
+
+    private static function resourceBlock(int $resourceId, string $data, string $name = ''): string
+    {
+        $nameLength = strlen($name);
+        $nameField  = chr($nameLength) . $name;
+        if ((strlen($nameField) % 2) !== 0) {
+            $nameField .= "\0";
+        }
+
+        $block = '8BIM'
+            . pack('n', $resourceId)
+            . $nameField
+            . pack('N', strlen($data))
+            . $data;
+
+        if ((strlen($data) % 2) !== 0) {
+            $block .= "\0";
+        }
+
+        return $block;
+    }
+
+    private static function iimDataset(int $record, int $dataset, string $value): string
+    {
+        return "\x1C" . chr($record) . chr($dataset) . pack('n', strlen($value)) . $value;
     }
 }

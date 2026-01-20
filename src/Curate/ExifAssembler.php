@@ -53,6 +53,7 @@ final readonly class ExifAssembler implements StructuredAssemblerInterface
             image: $components['image'],
             integrity: $components['integrity'],
             interop: $components['interop'],
+            iptc: $components['iptc'],
             keywords: $components['keywords'],
             lens: $components['lens'],
             motion: $components['motion'],

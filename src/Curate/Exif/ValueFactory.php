@@ -49,6 +49,7 @@ use MagicSunday\ImageMeta\Value\Gps;
 use MagicSunday\ImageMeta\Value\Image;
 use MagicSunday\ImageMeta\Value\Integrity;
 use MagicSunday\ImageMeta\Value\Interop as ValueInterop;
+use MagicSunday\ImageMeta\Value\Iptc as ValueIptc;
 use MagicSunday\ImageMeta\Value\Keywords;
 use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
@@ -113,11 +114,12 @@ final readonly class ValueFactory implements ValueFactoryInterface
      *
      * @param Metadata $metadata Metadata container with decoded EXIF, XMP and QuickTime data.
      *
-     * @return array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, depthMap: DepthMap, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: Regions, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
+     * @return array{audio: ValueAudio, author: Author, camera: Camera, capture: Capture, colorProfile: ValueColorProfile, composite: CompositeImageInfo, container: Container, derived: Derived, depthMap: DepthMap, device: Device, embeddedAudio: AudioClips, exposure: Exposure, file: ValueFile, flashPix: FlashPix, focus: Focus, gps: Gps, image: Image, integrity: Integrity, interop: ValueInterop, iptc: ValueIptc, keywords: Keywords, lens: Lens, motion: Motion, multiPicture: MultiPicture, processing: ValueProcessingSettings, regions: Regions, related: RelatedAssets, rights: Rights, scene: Scene, sensor: Sensor, standards: ValueStandards, temporal: Temporal, thumbnail: Thumbnail, tiff: TiffData, video: Video, whiteBalance: WhiteBalanceDetails, xmp: ValueXmp, makerNotesApple: AppleMakerNotes|null}
      */
     public function createComponents(Metadata $metadata): array
     {
-        $xmpDocument = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $xmpDocument  = $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
+        $iptcDocument = $metadata->iptcDoc ?? $metadata->selectiveIptcDocument();
 
         // Use sub-factories for modular metadata creation
         $gps          = $this->gpsFactory->create($metadata);
@@ -219,6 +221,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
 
         $apple = $appleMakerNotes ?? AppleMakerNotes::empty();
         $xmp   = new ValueXmp($xmpDocument);
+        $iptc  = new ValueIptc($iptcDocument);
 
         $file = new ValueFile(
             $metadata->mimeType,
@@ -436,6 +439,7 @@ final readonly class ValueFactory implements ValueFactoryInterface
             'image'           => $image,
             'integrity'       => $integrity,
             'interop'         => $interop,
+            'iptc'            => $iptc,
             'keywords'        => $keywords,
             'lens'            => $lens,
             'motion'          => $motion,
