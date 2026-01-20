@@ -16,8 +16,11 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
@@ -108,6 +111,26 @@ final readonly class IsoBmffExtractor
      * FourCC for item reference box.
      */
     private const string BOX_IREF = 'iref';
+
+    /**
+     * FourCC for data information box.
+     */
+    private const string BOX_DINF = 'dinf';
+
+    /**
+     * FourCC for data reference box.
+     */
+    private const string BOX_DREF = 'dref';
+
+    /**
+     * FourCC for URL data references.
+     */
+    private const string BOX_URL = 'url ';
+
+    /**
+     * FourCC for URN data references.
+     */
+    private const string BOX_URN = 'urn ';
 
     /**
      * FourCC for embedded XMP metadata box.
@@ -240,6 +263,11 @@ final readonly class IsoBmffExtractor
     private const int MAX_IREF_REFERENCES = 10000;
 
     /**
+     * Maximum number of data references allowed per dref entry.
+     */
+    private const int MAX_DREF_ENTRIES = 1000;
+
+    /**
      * Maximum number of keys in a keys box to prevent DoS attacks.
      */
     private const int MAX_KEYS_ENTRIES = 1000;
@@ -270,7 +298,7 @@ final readonly class IsoBmffExtractor
     /**
      * Extracts EXIF blobs, XMP packets, and QuickTime metadata from the stream.
      *
-     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta, 3: ?IsoBmffItemReferenceMap}
+     * @return array{0: list<string>, 1: list<string>, 2: ?QuickTimeMeta, 3: ?IsoBmffItemReferenceMap, 4: ?IsoBmffDataReferenceMap, 5: list<IsoBmffUnresolvedItem>}
      */
     public function extract(): array
     {
@@ -280,14 +308,16 @@ final readonly class IsoBmffExtractor
         $queuedUuidXmp   = [];
         $xmpHashes       = [];
         $itemReferences  = [];
+        $dataReferences  = [];
+        $unresolvedItems = [];
 
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === self::BOX_FTYP) {
                 $qtKeys = $this->mergeAssociative($qtKeys, $this->parseFtyp($box));
             } elseif ($box->type === self::BOX_META) {
-                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
+                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
             } elseif ($box->type === self::BOX_MOOV) {
-                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
+                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
             } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
                 $queuedUuidXmp[] = $this->readAll($box->window);
             }
@@ -297,10 +327,11 @@ final readonly class IsoBmffExtractor
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
-        $qt                 = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
+        $qt               = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
         $itemReferenceMap = $itemReferences === [] ? null : new IsoBmffItemReferenceMap($itemReferences);
+        $dataReferenceMap = $dataReferences === [] ? null : new IsoBmffDataReferenceMap($dataReferences);
 
-        return [$exifBlobs, $xmpBlobs, $qt, $itemReferenceMap];
+        return [$exifBlobs, $xmpBlobs, $qt, $itemReferenceMap, $dataReferenceMap, $unresolvedItems];
     }
 
     /**
@@ -331,16 +362,18 @@ final readonly class IsoBmffExtractor
      * @param list<string>        $exifBlobs
      * @param list<string>                             $xmpBlobs
      * @param array<int, list<IsoBmffItemReference>>     $itemReferences
+     * @param array<int, IsoBmffDataReference>           $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                $unresolvedItems
      * @param array<string, bool>                        $xmpHashes
      * @param QuickTimeKeyMap                            $qtKeys
      */
-    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$xmpHashes): void
+    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
     {
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
             } elseif ($child->type === self::BOX_UDTA) {
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
             } elseif ($child->type === self::BOX_TRAK) {
                 $qtKeys = $this->mergeAssociative($qtKeys, $this->parseTrak($child));
             }
@@ -385,14 +418,16 @@ final readonly class IsoBmffExtractor
      * @param list<string>        $exifBlobs
      * @param list<string>                             $xmpBlobs
      * @param array<int, list<IsoBmffItemReference>>     $itemReferences
+     * @param array<int, IsoBmffDataReference>           $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                $unresolvedItems
      * @param array<string, bool>                        $xmpHashes
      * @param QuickTimeKeyMap                            $qtKeys
      */
-    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$xmpHashes): void
+    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
     {
         foreach ($this->walkChildren($udta) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $xmpHashes);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
             }
         }
     }
@@ -740,10 +775,12 @@ final readonly class IsoBmffExtractor
      * @param list<string>        $exifBlobs
      * @param list<string>                             $xmpBlobs
      * @param array<int, list<IsoBmffItemReference>>     $itemReferences
+     * @param array<int, IsoBmffDataReference>           $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                $unresolvedItems
      * @param array<string, bool>                        $xmpHashes
      * @param QuickTimeKeyMap                            $qtKeys
      */
-    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$xmpHashes): void
+    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
     {
         if ($meta->contentSize < 4) {
             throw new ParseError('meta box truncated');
@@ -754,6 +791,7 @@ final readonly class IsoBmffExtractor
         // channel before normalising the referenced data.
         $payloads = $this->collectDirectPayloads($meta);
         $itemReferences = $this->mergeItemReferences($itemReferences, $payloads['itemReferences']);
+        $dataReferences = $this->mergeDataReferences($dataReferences, $payloads['dataReferences']);
 
         foreach ($payloads['directExif'] as $blob) {
             $exifBlobs[] = $blob;
@@ -764,12 +802,12 @@ final readonly class IsoBmffExtractor
         // Resolve EXIF item payloads and normalize leading headers.
         // EXIF 3.0 §4.8 notes that item payloads omit the APP1 signature; some
         // encoders still include it, so we normalise accordingly.
-        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...)) as $blob) {
+        foreach ($this->resolveQueuedItems($exifItemIds, $payloads['locations'], $this->normalizeExifBlob(...), $payloads['dataReferences'], $unresolvedItems) as $blob) {
             $exifBlobs[] = $blob;
         }
 
         // Resolve referenced XMP payloads in declared priority order.
-        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], null) as $blob) {
+        foreach ($this->resolveQueuedItems($xmpItemIds, $payloads['locations'], null, $payloads['dataReferences'], $unresolvedItems) as $blob) {
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
@@ -789,6 +827,7 @@ final readonly class IsoBmffExtractor
      *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
      *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}>,
      *     itemReferences: array<int, list<IsoBmffItemReference>>,
+     *     dataReferences: array<int, IsoBmffDataReference>,
      *     primaryItemId: ?int,
      *     directXmp: list<string>,
      *     uuidXmp: list<string>,
@@ -805,6 +844,8 @@ final readonly class IsoBmffExtractor
         $locations      = [];
         /** @var array<int, list<IsoBmffItemReference>> $itemReferences */
         $itemReferences = [];
+        /** @var array<int, IsoBmffDataReference> $dataReferences */
+        $dataReferences = [];
         $primaryItemId  = null;
         $directXmp      = [];
         $uuidXmp       = [];
@@ -836,6 +877,9 @@ final readonly class IsoBmffExtractor
                 case self::BOX_IREF:
                     $itemReferences = $this->mergeItemReferences($itemReferences, $this->parseIref($child));
                     break;
+                case self::BOX_DINF:
+                    $dataReferences = $this->mergeDataReferences($dataReferences, $this->parseDinf($child));
+                    break;
                 case self::BOX_XMP:
                     $directXmp[] = $this->readAll($child->window);
                     break;
@@ -858,6 +902,7 @@ final readonly class IsoBmffExtractor
             'itemInfos'      => $itemInfos,
             'locations'      => $locations,
             'itemReferences' => $itemReferences,
+            'dataReferences' => $dataReferences,
             'primaryItemId'  => $primaryItemId,
             'directXmp'      => $directXmp,
             'uuidXmp'       => $uuidXmp,
@@ -909,20 +954,22 @@ final readonly class IsoBmffExtractor
     /**
      * Resolves queued item IDs to their payload data.
      *
-     * @param list<int>                                                                                                                     $itemIds   Item IDs to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations Item location metadata.
-     * @param (callable(string):string)|null                                                                                                $transform Optional transform function.
+     * @param list<int>                                                                                                                     $itemIds         Item IDs to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations       Item location metadata.
+     * @param (callable(string):string)|null                                                                                                $transform       Optional transform function.
+     * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences  Parsed data references for the current meta box.
+     * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems Accumulator for unresolved item payloads.
      *
      * @return list<string> List of resolved item payloads.
      */
-    private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform): array
+    private function resolveQueuedItems(array $itemIds, array $locations, ?callable $transform, array $dataReferences, array &$unresolvedItems): array
     {
         /** @var list<string> $resolved */
         $resolved = [];
 
         // Pull data for each referenced item and optionally transform the payload.
         foreach ($itemIds as $itemId) {
-            $data = $this->resolveItemData($itemId, $locations);
+            $data = $this->resolveItemData($itemId, $locations, $dataReferences, $unresolvedItems);
             if ($data !== null) {
                 $resolved[] = $transform !== null ? $transform($data) : $data;
             }
@@ -1003,6 +1050,126 @@ final readonly class IsoBmffExtractor
     }
 
     /**
+     * Merges ISO BMFF data reference mappings.
+     *
+     * @param array<int, IsoBmffDataReference> $existing
+     * @param array<int, IsoBmffDataReference> $incoming
+     *
+     * @return array<int, IsoBmffDataReference>
+     */
+    private function mergeDataReferences(array $existing, array $incoming): array
+    {
+        foreach ($incoming as $index => $reference) {
+            $existing[$index] = $reference;
+        }
+
+        return $existing;
+    }
+
+    /**
+     * Parses the data information box (`dinf`) for data reference entries.
+     *
+     * ISO/IEC 14496-12 §8.7.1 defines the data information box and its
+     * contained data reference box.
+     *
+     * @param BoxDescriptor $dinf Box descriptor representing the data information box.
+     *
+     * @return array<int, IsoBmffDataReference>
+     */
+    private function parseDinf(BoxDescriptor $dinf): array
+    {
+        $references = [];
+
+        foreach ($this->walkChildren($dinf) as $child) {
+            if ($child->type === self::BOX_DREF) {
+                $references = $this->mergeDataReferences($references, $this->parseDref($child));
+            }
+        }
+
+        return $references;
+    }
+
+    /**
+     * Parses a data reference box (`dref`) into data reference entries.
+     *
+     * ISO/IEC 14496-12 §8.7.2 defines the dref structure and entry indexing.
+     *
+     * @param BoxDescriptor $dref Box descriptor representing the data reference box.
+     *
+     * @return array<int, IsoBmffDataReference>
+     */
+    private function parseDref(BoxDescriptor $dref): array
+    {
+        $win = $dref->window;
+        $win->seek(0);
+
+        if ($dref->contentSize < 8) {
+            throw new ParseError('dref box truncated');
+        }
+
+        $win->read(4); // version/flags
+        $entryCount = $win->readU32BE();
+
+        if ($entryCount > self::MAX_DREF_ENTRIES) {
+            throw new ParseError('dref entry count exceeds maximum allowed');
+        }
+
+        $references = [];
+        $index      = 0;
+
+        foreach ($this->walkChildren($dref, 8) as $child) {
+            ++$index;
+            $references[$index] = $this->parseDataReferenceEntry($child, $index);
+            if ($index >= $entryCount) {
+                break;
+            }
+        }
+
+        if ($index !== $entryCount) {
+            throw new ParseError('dref entry count mismatch');
+        }
+
+        return $references;
+    }
+
+    /**
+     * Parses a single data reference entry from a dref container.
+     *
+     * @param BoxDescriptor $entry Data reference entry descriptor.
+     * @param int           $index One-based index of the reference.
+     */
+    private function parseDataReferenceEntry(BoxDescriptor $entry, int $index): IsoBmffDataReference
+    {
+        $win = $entry->window;
+        $win->seek(0);
+
+        if ($entry->contentSize < 4) {
+            throw new ParseError('dref entry truncated');
+        }
+
+        $win->readU8(); // version
+        $flags = $this->readUInt24($win);
+
+        $payloadSize = $entry->contentSize - 4;
+        $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
+        $uri         = null;
+
+        if ($entry->type === self::BOX_URL || $entry->type === self::BOX_URN) {
+            $trimmed = rtrim($payload, "\0");
+            $uri = $trimmed !== '' ? $trimmed : null;
+        }
+
+        $selfContained = ($flags & BitMask::BIT_0) !== 0;
+
+        return new IsoBmffDataReference(
+            $index,
+            $this->normaliseFourcc($entry->type),
+            $uri,
+            $selfContained,
+        );
+    }
+
+    /**
      * Strips redundant Exif signatures so downstream parsers accept the blob.
      *
      * EXIF 3.0 §4.8 requires that ISO BMFF Exif items expose the TIFF header
@@ -1024,12 +1191,14 @@ final readonly class IsoBmffExtractor
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                           $itemId    Identifier of the item to resolve.
+     * @param int                                                                                                                           $itemId         Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}> $locations
+     * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems
      *
      * @return string|null
      */
-    private function resolveItemData(int $itemId, array $locations): ?string
+    private function resolveItemData(int $itemId, array $locations, array $dataReferences, array &$unresolvedItems): ?string
     {
         if (!isset($locations[$itemId])) {
             return null;
@@ -1037,13 +1206,15 @@ final readonly class IsoBmffExtractor
 
         $location = $locations[$itemId];
         // EXIF 3.0 Annex A.2.4 confines Exif item data to self-contained payloads
-        // (`construction_method = 0`, `data_reference_index = 0`),
-        // so we discard references that require external resolution.
+        // (`construction_method = 0`, `data_reference_index = 0`). When files
+        // reference external payloads we keep a record of the unresolved item.
         if ($location['constructionMethod'] !== ConstructionMethod::FileOffset->value) {
+            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
             return null;
         }
 
         if ($location['dataReferenceIndex'] !== 0) {
+            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
             return null;
         }
 
@@ -1085,6 +1256,32 @@ final readonly class IsoBmffExtractor
         }
 
         return $blob === '' ? null : $blob;
+    }
+
+    /**
+     * Records an unresolved item payload for external references.
+     *
+     * @param int                                                                                                                           $itemId
+     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int}>}           $location
+     * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems
+     */
+    private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems): void
+    {
+        $dataReference = null;
+        $dataReferenceIndex = $location['dataReferenceIndex'];
+        if ($dataReferenceIndex > 0 && isset($dataReferences[$dataReferenceIndex])) {
+            $dataReference = $dataReferences[$dataReferenceIndex];
+        }
+
+        $constructionMethod = ConstructionMethod::tryFrom($location['constructionMethod']);
+
+        $unresolvedItems[] = new IsoBmffUnresolvedItem(
+            $itemId,
+            $dataReferenceIndex,
+            $constructionMethod,
+            $dataReference,
+        );
     }
 
     /**

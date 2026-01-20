@@ -14,7 +14,9 @@ namespace MagicSunday\ImageMeta\Model;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
@@ -53,6 +55,8 @@ final readonly class Metadata
      * @param string|null                                          $digestSha1               Lowercase hexadecimal SHA-1 digest of the payload.
      * @param string|null                                          $digestMd5                Lowercase hexadecimal MD5 digest of the payload.
      * @param IsoBmffItemReferenceMap|null                         $isoBmffItemReferences    ISO BMFF item references extracted from metadata boxes.
+     * @param IsoBmffDataReferenceMap|null                         $isoBmffDataReferences    ISO BMFF data references extracted from metadata boxes.
+     * @param list<IsoBmffUnresolvedItem>                          $isoBmffUnresolvedItems   ISO BMFF item payloads that could not be resolved.
      */
     public function __construct(
         public array $exifBlobs,
@@ -77,6 +81,8 @@ final readonly class Metadata
         public ?int $jpegFrameWidth = null,
         public ?int $jpegFrameHeight = null,
         public ?IsoBmffItemReferenceMap $isoBmffItemReferences = null,
+        public ?IsoBmffDataReferenceMap $isoBmffDataReferences = null,
+        public array $isoBmffUnresolvedItems = [],
     ) {
         $this->structuredCache = new StructuredMetadataCache();
     }

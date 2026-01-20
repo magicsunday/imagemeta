@@ -39,8 +39,11 @@ use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
+use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
@@ -134,8 +137,11 @@ use function unlink;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ValueConverters::class)]
+#[UsesClass(IsoBmffDataReference::class)]
+#[UsesClass(IsoBmffDataReferenceMap::class)]
 #[UsesClass(IsoBmffItemReference::class)]
 #[UsesClass(IsoBmffItemReferenceMap::class)]
+#[UsesClass(IsoBmffUnresolvedItem::class)]
 #[UsesClass(Metadata::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(StructuredMetadataCache::class)]
@@ -372,6 +378,8 @@ final class MetadataReaderTest extends TestCase
         self::assertCount(1, $itemReferences);
         self::assertSame('cdsc', $itemReferences[0]->relation);
         self::assertSame(3, $itemReferences[0]->toItemId);
+        self::assertNull($metadata->isoBmffDataReferences);
+        self::assertSame([], $metadata->isoBmffUnresolvedItems);
         self::assertInstanceOf(ParsedExif::class, $metadata->exifDoc);
         self::assertInstanceOf(XmpDocument::class, $metadata->xmpDoc);
         self::assertInstanceOf(MakerNotesRecord::class, $metadata->makerNotes);
