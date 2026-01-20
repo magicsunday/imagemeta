@@ -506,4 +506,33 @@ XML;
         self::assertArrayHasKey(self::DC_NS, $document->namespacePrefixes);
         self::assertSame('dc', $document->namespacePrefixes[self::DC_NS]);
     }
+
+    /**
+     * Ensures depth map properties from the Google depthmap namespace are parsed.
+     */
+    #[Test]
+    public function parseExtractsDepthMapProperties(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:GDepth="http://ns.google.com/photos/1.0/depthmap/">
+  <rdf:Description
+    GDepth:Data="ZGVwdGg="
+    GDepth:Mime="image/png"
+    GDepth:Near="0.25"
+    GDepth:Far="10.5"
+  />
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        $depthNs = 'http://ns.google.com/photos/1.0/depthmap/';
+
+        self::assertSame('ZGVwdGg=', $document->get($depthNs, 'Data'));
+        self::assertSame('image/png', $document->get($depthNs, 'Mime'));
+        self::assertSame('0.25', $document->get($depthNs, 'Near'));
+        self::assertSame('10.5', $document->get($depthNs, 'Far'));
+    }
 }

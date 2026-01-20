@@ -43,6 +43,7 @@ final readonly class ExifAssembler implements StructuredAssemblerInterface
             composite: $components['composite'],
             container: $components['container'],
             derived: $components['derived'],
+            depthMap: $components['depthMap'],
             device: $components['device'],
             exposure: $components['exposure'],
             file: $components['file'],
