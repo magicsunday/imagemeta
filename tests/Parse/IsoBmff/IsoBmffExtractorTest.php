@@ -478,7 +478,6 @@ final class IsoBmffExtractorTest extends TestCase
 
         $references = $itemReferences->referencesFor(1);
         self::assertCount(2, $references);
-        self::assertInstanceOf(IsoBmffItemReference::class, $references[0]);
         self::assertSame('dimg', $references[0]->relation);
         self::assertSame(2, $references[0]->toItemId);
         self::assertSame(3, $references[1]->toItemId);

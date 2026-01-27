@@ -29,9 +29,7 @@ final readonly class ExifNumericList
     public array $values;
 
     /**
-     * @param list<int|float|UInt64> $values Ordered list of numeric components.
-     *
-     * @psalm-param list<int|float|UInt64> $values
+     * @param array<int|string, bool|float|int|string|UInt64> $values Ordered list of numeric components.
      */
     public function __construct(array $values)
     {
@@ -51,7 +49,7 @@ final readonly class ExifNumericList
     }
 
     /**
-     * @param list<int|float|UInt64> $values
+     * @param array<int|string, bool|float|int|string|UInt64> $values
      *
      * @phpstan-assert list<int|float|UInt64> $values
      */
@@ -67,7 +65,7 @@ final readonly class ExifNumericList
     /**
      * Validates that all values are numeric (int, float, or UInt64).
      *
-     * @param list<int|float|UInt64> $values
+     * @param list<bool|float|int|string|UInt64> $values
      */
     private function assertNumericValues(array $values): void
     {

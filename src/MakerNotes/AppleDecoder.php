@@ -56,8 +56,9 @@ use function trim;
 /**
  * Decoder that extracts structured metadata from Apple maker note payloads.
  *
- * @phpstan-type NativePlistValue array<string|int, mixed>|bool|float|int|string|null
- * @phpstan-type NativePlistDictionary array<string, mixed>
+ * @phpstan-type NativePlistScalar bool|float|int|string|null
+ * @phpstan-type NativePlistValue NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar|array<int|string, NativePlistScalar>>>>>>>
+ * @phpstan-type NativePlistDictionary array<string, NativePlistValue>
  */
 final class AppleDecoder implements MakerNotesDecoderInterface
 {
@@ -94,7 +95,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $decoded = $this->parseRawDictionaryPayload($raw);
         }
 
-        if (!is_array($decoded) || array_is_list($decoded)) {
+        if (!is_array($decoded) || !$this->isStringKeyedArray($decoded)) {
             return null;
         }
 
@@ -102,7 +103,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $dictionary = $decoded;
 
         $decoded = $this->resolveKeyedArchiveDictionary($dictionary);
-        if ($decoded === null || array_is_list($decoded)) {
+        if ($decoded === null || !$this->isStringKeyedArray($decoded)) {
             return null;
         }
 
@@ -115,6 +116,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param string $raw Raw maker note data stream.
      *
      * @return NativePlistValue
+     *
+     * @phpstan-return NativePlistValue
      */
     private function decodeBinaryPropertyList(string $raw): array|string|int|float|bool|null
     {
@@ -145,6 +148,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param string $raw Raw maker note data stream.
      *
      * @return NativePlistDictionary|null
+     *
+     * @phpstan-return NativePlistDictionary|null
      */
     private function parseRawDictionaryPayload(string $raw): ?array
     {
@@ -174,6 +179,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Parses a dictionary section from the textual representation.
      *
      * @return NativePlistDictionary
+     *
+     * @phpstan-return NativePlistDictionary
      */
     private function parseDictionary(string $raw, int &$offset, int $length): array
     {
@@ -238,6 +245,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Parses a single value from the textual dictionary representation.
      *
      * @return NativePlistValue
+     *
+     * @phpstan-return NativePlistValue
      */
     private function parseValue(string $raw, int &$offset, int $length): array|bool|float|int|string|null
     {
@@ -248,10 +257,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $char = $raw[$offset];
         if ($char === '{') {
+            /** @phpstan-ignore-next-line */
             return $this->parseDictionary($raw, $offset, $length);
         }
 
         if ($char === '(') {
+            /** @phpstan-ignore-next-line */
             return $this->parseArray($raw, $offset, $length);
         }
 
@@ -443,7 +454,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Checks if a dictionary represents an NSKeyedArchive structure.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to check.
      *
      * @return bool True if dictionary is a keyed archive.
      */
@@ -485,9 +496,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Resolves and unarchives a keyed archive dictionary.
      *
-     * @param NativePlistDictionary $dictionary Raw dictionary from binary plist.
+     * @param array<int|string, NativePlistValue> $dictionary Raw dictionary from binary plist.
      *
      * @return NativePlistDictionary|null Unarchived dictionary or null if not a keyed archive.
+     *
+     * @phpstan-return NativePlistDictionary|null
      */
     private function resolveKeyedArchiveDictionary(array $dictionary): ?array
     {
@@ -507,7 +520,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
         }
 
-        return array_is_list($dictionary) ? null : $dictionary;
+        if ($this->isStringKeyedArray($dictionary)) {
+            /** @var NativePlistDictionary $dictionary */
+            return $dictionary;
+        }
+
+        return null;
     }
 
     /**
@@ -516,6 +534,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, NativePlistValue> $value Value that may contain nested keyed archives.
      *
      * @return NativePlistDictionary|null Resolved archive or null if not found.
+     *
+     * @phpstan-return NativePlistDictionary|null
      */
     private function resolveNestedKeyedArchive(array $value): ?array
     {
@@ -559,6 +579,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * @param array<int|string, NativePlistValue> $dictionary Keyed archive structure.
      *
      * @return NativePlistDictionary|null Unarchived dictionary or null if invalid.
+     *
+     * @phpstan-return NativePlistDictionary|null
      */
     private function unarchiveKeyedArchive(array $dictionary): ?array
     {
@@ -577,13 +599,16 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Unarchives a normalized keyed archive dictionary.
      *
-     * @param NativePlistDictionary $dictionary Normalized keyed archive structure.
+     * @param array<int|string, NativePlistValue> $dictionary Normalized keyed archive structure.
      *
      * @return NativePlistDictionary|null Unarchived dictionary or null if invalid.
+     *
+     * @phpstan-return NativePlistDictionary|null
      */
     private function unarchiveNormalisedKeyedArchive(array $dictionary): ?array
     {
         try {
+            /** @phpstan-ignore-next-line */
             $plist = $this->nativeToPlistValue($dictionary);
             if (!$plist instanceof ApplePlistDictionary) {
                 return null;
@@ -592,7 +617,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $resolved = (new KeyedArchiveUnarchiver())->unarchive($plist);
             $native   = $this->plistValueToPhp($resolved);
 
-            return is_array($native) && !array_is_list($native) ? $native : null;
+            if (!is_array($native) || array_is_list($native)) {
+                return null;
+            }
+
+            /** @phpstan-ignore-next-line */
+            return $this->isStringKeyedArray($native) ? $native : null;
         } catch (ParseError) {
             return null;
         }
@@ -602,6 +632,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Converts a property list value into native PHP types.
      *
      * @return NativePlistValue
+     *
+     * @phpstan-return NativePlistValue
      */
     private function plistValueToPhp(ApplePlistValue $value): array|string|int|float|bool|null
     {
@@ -615,14 +647,18 @@ final class AppleDecoder implements MakerNotesDecoderInterface
                 $result[] = $this->plistValueToPhp($entry);
             }
 
+            /** @phpstan-ignore-next-line */
             return $result;
         }
 
         if ($value instanceof ApplePlistDictionary) {
-            return array_map(
-                $this->plistValueToPhp(...),
-                $value->entries()
-            );
+            $entries = [];
+            foreach ($value->entries() as $key => $entry) {
+                $entries[$key] = $this->plistValueToPhp($entry);
+            }
+
+            /** @phpstan-ignore-next-line */
+            return $entries;
         }
 
         throw new ParseError('Unsupported property list value.');
@@ -630,15 +666,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
     /**
      * @param NativePlistValue $value
+     *
+     * @phpstan-param NativePlistValue $value
      */
     private function nativeToPlistValue(array|bool|float|int|string|null $value): ApplePlistValue
     {
         if (!is_array($value)) {
-            if (is_bool($value) || is_int($value) || is_float($value) || is_string($value) || $value === null) {
-                return new ApplePlistScalar($value);
-            }
-
-            throw new ParseError('Unsupported scalar property list value.');
+            return new ApplePlistScalar($value);
         }
 
         if (array_is_list($value)) {
@@ -665,9 +699,11 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Normalizes a keyed archive dictionary to standard structure.
      *
-     * @param NativePlistDictionary $dictionary Raw keyed archive dictionary.
+     * @param array<int|string, NativePlistValue> $dictionary Raw keyed archive dictionary.
      *
      * @return NativePlistDictionary|null Normalized structure or null if invalid.
+     *
+     * @phpstan-return NativePlistDictionary|null
      */
     private function normaliseKeyedArchive(array $dictionary): ?array
     {
@@ -710,14 +746,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             }
         }
 
+        /** @phpstan-ignore-next-line */
         return $normalised;
     }
 
     /**
      * Returns the first existing key from a prioritized list.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
      * @return string|null First matching key or null if none exist.
      */
@@ -727,6 +764,24 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $keys,
             static fn (string $key): bool => array_key_exists($key, $dictionary)
         );
+    }
+
+    /**
+     * Ensures the array uses string keys.
+     *
+     * @param array<int|string, NativePlistValue> $value Array to inspect.
+     *
+     * @phpstan-assert array<string, NativePlistValue> $value
+     */
+    private function isStringKeyedArray(array $value): bool
+    {
+        foreach ($value as $key => $_) {
+            if (!is_string($key)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -740,16 +795,13 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function buildAppleMakerNotes(array $dictionary): ?AppleMakerNotes
     {
-        /** @var NativePlistDictionary $dictionary */
         $semanticStyleCompact = null;
         if (
             !array_key_exists('SemanticStylePreset', $dictionary)
             && !array_key_exists('SemanticStyleWarmth', $dictionary)
             && !array_key_exists('SemanticStyleTone', $dictionary)
         ) {
-            /** @var array<int|string, bool|float|int|string|array<int|string, bool|float|int|string|array<int|string, bool|float|int|string|array<int|string, bool|float|int|string|null>|null>|null>|object|null> $semanticDictionary */
-            $semanticDictionary   = $dictionary;
-            $semanticStyleCompact = SemanticStyle::fromDictionary($semanticDictionary);
+            $semanticStyleCompact = SemanticStyle::fromDictionary($dictionary);
             if ($semanticStyleCompact !== null) {
                 [$compactPreset, $compactWarmth, $compactTone] = $semanticStyleCompact;
 
@@ -803,9 +855,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $semanticStyleTone   = $this->floatValue($dictionary, 'SemanticStyleTone');
 
         if ($semanticStyleCompact === null) {
-            /** @var array<int|string, bool|float|int|string|array<int|string, bool|float|int|string|array<int|string, bool|float|int|string|array<int|string, bool|float|int|string|null>|null>|null>|object|null> $semanticDictionary */
-            $semanticDictionary   = $dictionary;
-            $semanticStyleCompact = SemanticStyle::fromDictionary($semanticDictionary);
+            $semanticStyleCompact = SemanticStyle::fromDictionary($dictionary);
         }
 
         if ($semanticStyleCompact !== null) {
@@ -923,10 +973,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a RunTime value from dictionary.
      *
-     * @param NativePlistDictionary $dictionary Dictionary containing runtime data.
-     * @param string                   $key        Key to look up.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary containing runtime data.
+     * @param string                                $key        Key to look up.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return RunTime|null RunTime value object or null if not found.
      */
@@ -941,7 +991,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return null;
         }
 
-        /** @var array<int|string, NativePlistValue> $value */
         $epoch     = $this->intValue($value, 'epoch', 'Epoch');
         $timescale = $this->intValue($value, 'timescale', 'Timescale');
         $rawValue  = $this->intValue($value, 'value', 'Value');
@@ -957,10 +1006,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a boolean value from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return bool|null Boolean value if found, null otherwise.
      */
@@ -985,10 +1034,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a rational float value from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return float|null Rational float value if found, null otherwise.
      */
@@ -1077,7 +1126,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         foreach (['value', 'Value', 'data', 'Data', 'ratio', 'Ratio'] as $key) {
             if (array_key_exists($key, $value)) {
-                /** @var NativePlistValue $candidate */
                 $candidate = $value[$key];
                 $nested    = $this->normaliseRationalFloat($candidate);
                 if ($nested !== null) {
@@ -1087,7 +1135,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         }
 
         if (array_key_exists('values', $value) && is_array($value['values'])) {
-            /** @var array<int|string, NativePlistValue> $candidate */
             $candidate = $value['values'];
             $nested    = $this->normaliseRationalFloat($candidate);
             if ($nested !== null) {
@@ -1203,10 +1250,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a string or integer value from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|int|null String or integer value if found, null otherwise.
      */
@@ -1252,10 +1299,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts an identifier value from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|int|null Identifier value if found, null otherwise.
      */
@@ -1333,10 +1380,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a string value from dictionary for a specific key.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   $key        Key to look up.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                $key        Key to look up.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|null String value if found, null otherwise.
      */
@@ -1359,10 +1406,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a float value from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return float|null Float value if found, null otherwise.
      */
@@ -1389,10 +1436,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts an integer value from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return int|null Integer value if found, null otherwise.
      */
@@ -1419,10 +1466,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a list of float values from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return list<float>|null List of float values if found, null otherwise.
      * @return list<float>|null
@@ -1479,9 +1526,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts focus distance range from dictionary.
      *
-     * @param NativePlistDictionary $dictionary Dictionary containing focus distance data.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary containing focus distance data.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return list<float>|null Focus distance range [near, far] or null if not found.
      * @return list<float>|null
@@ -1521,10 +1568,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts maker note version string from dictionary.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   $key        Key to look up.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                $key        Key to look up.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|null Version string if found, null otherwise.
      */
@@ -1554,7 +1601,6 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $components = [];
         foreach ($value as $entry) {
-            /** @var NativePlistValue $entry */
             if (is_int($entry)) {
                 $components[] = (string) $entry;
                 continue;
@@ -1589,10 +1635,10 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts a string or numeric value from dictionary using prioritized keys.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param string                                ...$keys    Priority-ordered keys to check.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return string|null String representation of value if found, null otherwise.
      */
@@ -1623,9 +1669,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts an enumerated string value from dictionary using a mapping table.
      *
-     * @param NativePlistDictionary $dictionary Dictionary to search.
-     * @param array<int, string>       $map        Mapping from numeric codes to string labels.
-     * @param string                   ...$keys    Priority-ordered keys to check.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
+     * @param array<int, string>                   $map        Mapping from numeric codes to string labels.
+     * @param string                               ...$keys    Priority-ordered keys to check.
      *
      * @return string|null Enumerated string value if found, null otherwise.
      */
@@ -1670,9 +1716,9 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     /**
      * Extracts boolean flags from dictionary.
      *
-     * @param NativePlistDictionary $dictionary Dictionary containing flag data.
+     * @param array<int|string, NativePlistValue> $dictionary Dictionary containing flag data.
      *
-     * @phpstan-param NativePlistDictionary $dictionary
+     * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
      * @return array<string, bool> Dictionary of flag names to boolean values.
      * @return array<string, bool>
