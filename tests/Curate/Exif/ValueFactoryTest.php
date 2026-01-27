@@ -63,6 +63,7 @@ XML;
 
         $structured = (new ExifAssembler())->assemble($metadata);
 
+        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
         self::assertInstanceOf(DepthMap::class, $structured->depthMap);
         self::assertSame('ZGVwdGg=', $structured->depthMap->data);
         self::assertSame('image/png', $structured->depthMap->mime);

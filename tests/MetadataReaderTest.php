@@ -268,6 +268,7 @@ final class MetadataReaderTest extends TestCase
 
         foreach ($componentAccessors as $name => $accessor) {
             $value = $accessor();
+            /** @phpstan-ignore staticMethod.alreadyNarrowedType */
             self::assertInstanceOf($expectedClasses[$name], $value);
         }
 
@@ -355,7 +356,8 @@ final class MetadataReaderTest extends TestCase
         $identifier = 'qt-meta-identifier';
 
         $ftyp      = $this->box('ftyp', 'isom');
-        $irefEntry = $this->fullBox('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
+        // SingleItemTypeReferenceBox is a plain Box, not a FullBox
+        $irefEntry = $this->box('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
         $iref      = $this->fullBox('iref', $irefEntry);
         $meta      = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp) . $iref);
         $moov      = $this->quickTimeMoov($identifier);

@@ -56,8 +56,8 @@ use function trim;
 /**
  * Decoder that extracts structured metadata from Apple maker note payloads.
  *
- * @phpstan-type NativePlistValue array<string, NativePlistValue>|array<int, NativePlistValue>|bool|float|int|string|null
- * @phpstan-type NativePlistDictionary array<string, NativePlistValue>
+ * @phpstan-type NativePlistValue array<string|int, mixed>|bool|float|int|string|null
+ * @phpstan-type NativePlistDictionary array<string, mixed>
  */
 final class AppleDecoder implements MakerNotesDecoderInterface
 {

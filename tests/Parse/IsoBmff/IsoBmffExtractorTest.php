@@ -84,7 +84,7 @@ final class IsoBmffExtractorTest extends TestCase
     #[Test]
     public function resolveIlocMultiExtent(): void
     {
-        $exifBlob = 'Exif\0\0segment-onesegment-two';
+        $exifBlob = "Exif\0\0segment-onesegment-two";
         $part1    = substr($exifBlob, 0, 10);
         $part2    = substr($exifBlob, 10);
 
@@ -124,6 +124,60 @@ final class IsoBmffExtractorTest extends TestCase
         [$exifs]   = $extractor->extract();
 
         self::assertSame(['segment-onesegment-two'], $exifs);
+    }
+
+    /**
+     * Verifies iloc version 1 parsing handles index_size nibble correctly.
+     *
+     * Version 1 iloc boxes pack base_offset_size and index_size in a single byte
+     * (high and low nibbles respectively). This test ensures the parser reads
+     * the nibbles from the same byte rather than consuming an extra byte.
+     */
+    #[Test]
+    public function resolveIlocVersion1(): void
+    {
+        $exifBlob = "Exif\0\0version-one-data";
+
+        // Build infe for Exif item (version 2 infe with item_ID as 16-bit)
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
+        $iinf        = $this->box('iinf', $iinfPayload);
+
+        // Build version 1 iloc box
+        $ilocBuilder = function (int $offset, int $length): string {
+            $payload = "\x01\0\0\0"; // version=1, flags=0
+            $payload .= "\x44";      // offset_size=4, length_size=4
+            $payload .= "\x00";      // base_offset_size=0 (high nibble), index_size=0 (low nibble)
+            $payload .= pack('n', 1); // item_count = 1
+
+            // Item entry for version 1:
+            $payload .= pack('n', 1);    // item_id = 1
+            $payload .= pack('n', 0);    // construction_method (high 4 bits) + reserved (v1/v2)
+            $payload .= pack('n', 0);    // data_reference_index = 0
+            $payload .= pack('n', 1);    // extent_count = 1
+            // No extent_index since index_size=0
+            $payload .= pack('N', $offset); // extent_offset
+            $payload .= pack('N', $length); // extent_length
+
+            return $this->box('iloc', $payload);
+        };
+
+        // Calculate layout
+        $metaPayload = $iinf . $ilocBuilder(0, strlen($exifBlob));
+        $meta        = $this->fullBox('meta', $metaPayload);
+        $ftyp        = $this->box('ftyp', 'heic');
+        $mdat        = $this->box('mdat', $exifBlob);
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8; // mdat payload starts after header
+        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta       = $this->fullBox('meta', $iinf . $iloc);
+        $data       = $ftyp . $meta . $mdat;
+
+        $extractor = $this->createExtractor($data);
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(['version-one-data'], $exifs);
     }
 
     /**
@@ -363,6 +417,7 @@ final class IsoBmffExtractorTest extends TestCase
 
         self::assertCount(1, $unresolvedItems);
         $unresolved = $unresolvedItems[0];
+        /** @phpstan-ignore staticMethod.alreadyNarrowedType */
         self::assertInstanceOf(IsoBmffUnresolvedItem::class, $unresolved);
         self::assertSame(1, $unresolved->itemId);
         self::assertSame(1, $unresolved->dataReferenceIndex);
@@ -408,8 +463,9 @@ final class IsoBmffExtractorTest extends TestCase
     #[Test]
     public function parseIrefRelationships(): void
     {
+        // SingleItemTypeReferenceBox is a plain Box, not a FullBox (no version/flags)
         $entryPayload = pack('n', 1) . pack('n', 2) . pack('n', 2) . pack('n', 3);
-        $entry        = $this->fullBox('dimg', $entryPayload);
+        $entry        = $this->box('dimg', $entryPayload);
         $iref         = $this->fullBox('iref', $entry);
         $meta         = $this->fullBox('meta', $iref);
         $ftyp         = $this->box('ftyp', 'isom');
@@ -439,16 +495,16 @@ final class IsoBmffExtractorTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        $payload  = "\x44";
-        $payload .= "\0";
-        $payload .= "\0";
-        $payload .= pack('n', 1);
-        $payload .= pack('n', 1);
-        $payload .= pack('n', 0x1000);
-        $payload .= pack('n', 0);
-        $payload .= pack('n', 1);
-        $payload .= pack('N', 0);
-        $payload .= pack('N', strlen($exifPayload));
+        // iloc v1: offset_size(4)|length_size(4), base_offset_size(0)|index_size(0) in ONE byte
+        $payload  = "\x44";       // offset_size=4, length_size=4
+        $payload .= "\x00";       // base_offset_size=0 (high nibble), index_size=0 (low nibble)
+        $payload .= pack('n', 1); // item_count = 1
+        $payload .= pack('n', 1); // item_id = 1
+        $payload .= pack('n', 0x1000); // construction_method=1 (high 4 bits)
+        $payload .= pack('n', 0); // data_reference_index = 0
+        $payload .= pack('n', 1); // extent_count = 1
+        $payload .= pack('N', 0); // extent_offset = 0
+        $payload .= pack('N', strlen($exifPayload)); // extent_length
         $iloc = $this->fullBox('iloc', $payload, 1, 0);
 
         $idat = $this->box('idat', $exifPayload);
@@ -476,16 +532,16 @@ final class IsoBmffExtractorTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        $payload  = "\x44";
-        $payload .= "\0";
-        $payload .= "\0";
-        $payload .= pack('n', 1);
-        $payload .= pack('n', 1);
-        $payload .= pack('n', 0x1000);
-        $payload .= pack('n', 0);
-        $payload .= pack('n', 1);
-        $payload .= pack('N', 0);
-        $payload .= pack('N', strlen($exifPayload) + 1);
+        // iloc v1: base_offset_size and index_size share ONE byte
+        $payload  = "\x44";       // offset_size=4, length_size=4
+        $payload .= "\x00";       // base_offset_size=0, index_size=0
+        $payload .= pack('n', 1); // item_count = 1
+        $payload .= pack('n', 1); // item_id = 1
+        $payload .= pack('n', 0x1000); // construction_method=1
+        $payload .= pack('n', 0); // data_reference_index = 0
+        $payload .= pack('n', 1); // extent_count = 1
+        $payload .= pack('N', 0); // extent_offset = 0
+        $payload .= pack('N', strlen($exifPayload) + 1); // extent_length (too large!)
         $iloc = $this->fullBox('iloc', $payload, 1, 0);
 
         $idat = $this->box('idat', $exifPayload);
@@ -507,14 +563,15 @@ final class IsoBmffExtractorTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        $irefEntry = $this->fullBox('dimg', pack('n', 1) . pack('n', 1) . pack('n', 2));
+        // SingleItemTypeReferenceBox is a plain Box, not a FullBox
+        $irefEntry = $this->box('dimg', pack('n', 1) . pack('n', 1) . pack('n', 2));
         $iref      = $this->fullBox('iref', $irefEntry);
 
+        // iloc v1: base_offset_size and index_size share ONE byte
         $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
-            $payload  = "\x44";
-            $payload .= "\0";
-            $payload .= "\x02";
-            $payload .= pack('n', 2);
+            $payload  = "\x44"; // offset_size=4, length_size=4
+            $payload .= "\x02"; // base_offset_size=0 (high nibble), index_size=2 (low nibble)
+            $payload .= pack('n', 2); // item_count = 2
 
             $payload .= pack('n', 1);
             $payload .= pack('n', 0x2000);
@@ -564,14 +621,15 @@ final class IsoBmffExtractorTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        $irefEntry = $this->fullBox('dimg', pack('n', 1) . pack('n', 1) . pack('n', 2));
+        // SingleItemTypeReferenceBox is a plain Box, not a FullBox
+        $irefEntry = $this->box('dimg', pack('n', 1) . pack('n', 1) . pack('n', 2));
         $iref      = $this->fullBox('iref', $irefEntry);
 
+        // iloc v1: base_offset_size and index_size share ONE byte
         $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
-            $payload  = "\x44";
-            $payload .= "\0";
-            $payload .= "\x02";
-            $payload .= pack('n', 2);
+            $payload  = "\x44"; // offset_size=4, length_size=4
+            $payload .= "\x02"; // base_offset_size=0 (high nibble), index_size=2 (low nibble)
+            $payload .= pack('n', 2); // item_count = 2
 
             $payload .= pack('n', 1);
             $payload .= pack('n', 0x2000);
@@ -614,16 +672,16 @@ final class IsoBmffExtractorTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        $payload  = "\x44";
-        $payload .= "\0";
-        $payload .= "\0";
-        $payload .= pack('n', 1);
-        $payload .= pack('n', 1);
-        $payload .= pack('n', 0x0000);
-        $payload .= pack('n', 1);
-        $payload .= pack('n', 1);
-        $payload .= pack('N', 0);
-        $payload .= pack('N', 4);
+        // iloc v1: base_offset_size and index_size share ONE byte
+        $payload  = "\x44";       // offset_size=4, length_size=4
+        $payload .= "\x00";       // base_offset_size=0, index_size=0
+        $payload .= pack('n', 1); // item_count = 1
+        $payload .= pack('n', 1); // item_id = 1
+        $payload .= pack('n', 0x0000); // construction_method=0
+        $payload .= pack('n', 1); // data_reference_index = 1 (external)
+        $payload .= pack('n', 1); // extent_count = 1
+        $payload .= pack('N', 0); // extent_offset = 0
+        $payload .= pack('N', 4); // extent_length = 4
         $iloc = $this->fullBox('iloc', $payload, 1, 0);
 
         $drefEntry = $this->fullBox('url ', 'https://example.test/exif');
@@ -660,8 +718,9 @@ final class IsoBmffExtractorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iref reference count exceeds maximum allowed');
 
+        // SingleItemTypeReferenceBox is a plain Box, not a FullBox
         $entryPayload = pack('n', 1) . pack('n', 10001);
-        $entry        = $this->fullBox('dimg', $entryPayload);
+        $entry        = $this->box('dimg', $entryPayload);
         $iref         = $this->fullBox('iref', $entry);
         $meta         = $this->fullBox('meta', $iref);
         $ftyp         = $this->box('ftyp', 'isom');

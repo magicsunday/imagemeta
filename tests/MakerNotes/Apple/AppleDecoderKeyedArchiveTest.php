@@ -43,8 +43,8 @@ use function str_repeat;
 use function strlen;
 
 /**
- * @phpstan-type NativePlistValue array<string, NativePlistValue>|array<int, NativePlistValue>|bool|float|int|string|null
- * @phpstan-type NativePlistDictionary array<string, NativePlistValue>
+ * @phpstan-type NativePlistValue array<string|int, mixed>|bool|float|int|string|null
+ * @phpstan-type NativePlistDictionary array<string, mixed>
  */
 #[CoversClass(AppleDecoder::class)]
 #[UsesClass(AppleMakerNotes::class)]

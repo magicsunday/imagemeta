@@ -1197,22 +1197,39 @@ final readonly class IsoBmffExtractor
     }
 
     /**
-     * Strips redundant Exif signatures so downstream parsers accept the blob.
+     * Strips HEIF/HEIC Exif offset prefix and redundant signatures so downstream parsers accept the blob.
      *
-     * EXIF 3.0 §4.8 requires that ISO BMFF Exif items expose the TIFF header
-     * without the JPEG APP1 "Exif\0\0" signature. Some writers still
-     * prefix the signature, therefore the normaliser trims it.
+     * ISO 14496-12 / HEIF: Exif items in ISO BMFF containers start with a 4-byte
+     * unsigned integer indicating the offset to the TIFF header (relative to the
+     * end of this 4-byte field). This offset typically skips an "Exif\0\0" signature.
      *
-     * @param string $blob Raw EXIF payload that may still include the "Exif\0\0" signature prefix.
+     * @param string $blob Raw EXIF payload from ISO BMFF container.
      *
-     * @return string EXIF payload trimmed to the TIFF header when a redundant signature is detected.
+     * @return string EXIF payload trimmed to the TIFF header.
      */
     private function normalizeExifBlob(string $blob): string
     {
-        // EXIF 3.0 §4.5.2 retains the APP1 "Exif\0\0" signature when the
-        // payload is repackaged into ISO BMFF boxes; the TIFF parser expects the stream to start
-        // at the byte-order marker, so we strip the redundant header if present.
-        return str_starts_with($blob, "Exif\0\0") ? substr($blob, 6) : $blob;
+        if (strlen($blob) < 4) {
+            return $blob;
+        }
+
+        // ISO 14496-12: Exif items start with a 4-byte big-endian offset to the TIFF header
+        $unpacked = unpack('N', substr($blob, 0, 4));
+        if ($unpacked !== false && isset($unpacked[1])) {
+            $offset = (int) $unpacked[1];
+
+            // Validate offset and skip to TIFF header
+            if ($offset >= 0 && 4 + $offset <= strlen($blob)) {
+                return substr($blob, 4 + $offset);
+            }
+        }
+
+        // Fallback: check for Exif\0\0 signature directly (legacy/non-conformant writers)
+        if (str_starts_with($blob, "Exif\0\0")) {
+            return substr($blob, 6);
+        }
+
+        return $blob;
     }
 
     /**
@@ -1512,7 +1529,9 @@ final readonly class IsoBmffExtractor
             ];
         }
 
-        $id = ($flags & BitMask::BIT_0) !== 0 ? $win->readU32BE() : $win->readU16BE();
+        // ISO 14496-12: Version 2 uses 16-bit item_ID, version 3+ uses 32-bit.
+        // Note: flags bit 0 indicates hidden_item, not item_ID size.
+        $id = $version >= 3 ? $win->readU32BE() : $win->readU16BE();
         $win->readU16BE(); // protection index
         $itemType    = $win->read(4);
         $remaining   = $infe->contentSize - $win->tell();
@@ -1555,9 +1574,9 @@ final readonly class IsoBmffExtractor
         // ISO/IEC 14496-12 §8.11.3: base_offset_size in high nibble, index_size_size in low nibble (v1/v2)
         $baseField      = $win->readU8();
         $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & BitMask::LOW_NIBBLE);
-        $indexSize      = 0;
+        $indexSize = 0;
         if ($version === 1 || $version === 2) {
-            $indexSize = $this->validateSizeNibble($win->readU8() & BitMask::LOW_NIBBLE);
+            $indexSize = $this->validateSizeNibble($baseField & BitMask::LOW_NIBBLE);
         }
 
         $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
@@ -1663,7 +1682,7 @@ final readonly class IsoBmffExtractor
         $references = [];
 
         foreach ($this->walkChildren($iref, 4) as $child) {
-            $entry = $this->parseSingleItemReference($child);
+            $entry = $this->parseSingleItemReference($child, $version);
             $references = $this->mergeItemReferences($references, [
                 $entry['fromItemId'] => $entry['references'],
             ]);
@@ -1675,29 +1694,25 @@ final readonly class IsoBmffExtractor
     /**
      * Parses a single item reference box inside an `iref` container.
      *
-     * @param BoxDescriptor $entry Box descriptor describing the reference entry.
+     * ISO 14496-12: SingleItemTypeReferenceBox (iref v0) uses 16-bit IDs,
+     * SingleItemTypeReferenceBoxLarge (iref v1) uses 32-bit IDs.
+     * These are plain Boxes, not FullBoxes (no version/flags).
+     *
+     * @param BoxDescriptor $entry       Box descriptor describing the reference entry.
+     * @param int           $irefVersion Version of the parent iref box (0 or 1).
      *
      * @return array{fromItemId:int, references:list<IsoBmffItemReference>}
      */
-    private function parseSingleItemReference(BoxDescriptor $entry): array
+    private function parseSingleItemReference(BoxDescriptor $entry, int $irefVersion): array
     {
         $win = $entry->window;
         $win->seek(0);
 
-        if ($entry->contentSize < 6) {
-            throw new ParseError('iref entry truncated');
-        }
+        // ID size is determined by iref version, not by each child box
+        // iref v0: 16-bit IDs, iref v1: 32-bit IDs
+        $idSize = $irefVersion === 0 ? 2 : 4;
 
-        $version = $win->readU8();
-        $this->readUInt24($win); // flags
-
-        if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported iref entry version');
-        }
-
-        $idSize = $version === 0 ? 2 : 4;
-
-        if ($entry->contentSize < 4 + $idSize + 2) {
+        if ($entry->contentSize < $idSize + 2) {
             throw new ParseError('iref entry truncated');
         }
 

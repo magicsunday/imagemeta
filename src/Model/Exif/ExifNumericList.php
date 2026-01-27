@@ -36,24 +36,7 @@ final readonly class ExifNumericList
     public function __construct(array $values)
     {
         $this->assertList($values);
-
-        foreach ($values as $value) {
-            if ($value instanceof UInt64) {
-                continue;
-            }
-
-            if (is_int($value)) {
-                continue;
-            }
-
-            if (is_float($value)) {
-                continue;
-            }
-
-            throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
-        }
-
-        /** @var list<int|float|UInt64> $values */
+        $this->assertNumericValues($values);
         $this->values = $values;
     }
 
@@ -79,5 +62,19 @@ final readonly class ExifNumericList
         }
 
         throw new InvalidArgumentException('Numeric EXIF values must form a list.');
+    }
+
+    /**
+     * Validates that all values are numeric (int, float, or UInt64).
+     *
+     * @param list<int|float|UInt64> $values
+     */
+    private function assertNumericValues(array $values): void
+    {
+        foreach ($values as $value) {
+            if (!is_int($value) && !is_float($value) && !$value instanceof UInt64) {
+                throw new InvalidArgumentException('Numeric EXIF lists may only contain integers, floats, or UInt64 values.');
+            }
+        }
     }
 }
