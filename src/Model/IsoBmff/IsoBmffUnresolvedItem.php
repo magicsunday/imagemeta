@@ -19,10 +19,10 @@ use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 final readonly class IsoBmffUnresolvedItem
 {
     /**
-     * @param int                        $itemId             Item identifier.
-     * @param int                        $dataReferenceIndex Data reference index used by the item.
-     * @param ConstructionMethod|null    $constructionMethod Construction method declared by iloc.
-     * @param IsoBmffDataReference|null  $dataReference      Parsed data reference when available.
+     * @param int                       $itemId             Item identifier.
+     * @param int                       $dataReferenceIndex Data reference index used by the item.
+     * @param ConstructionMethod|null   $constructionMethod Construction method declared by iloc.
+     * @param IsoBmffDataReference|null $dataReference      Parsed data reference when available.
      */
     public function __construct(
         public int $itemId,

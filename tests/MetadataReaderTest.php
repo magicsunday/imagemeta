@@ -355,12 +355,12 @@ final class MetadataReaderTest extends TestCase
             . '</x:xmpmeta>';
         $identifier = 'qt-meta-identifier';
 
-        $ftyp      = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom');
         // SingleItemTypeReferenceBox is a plain Box, not a FullBox
-        $irefEntry = $this->box('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
-        $iref      = $this->fullBox('iref', $irefEntry);
-        $meta      = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp) . $iref);
-        $moov      = $this->quickTimeMoov($identifier);
+        $irefEntry  = $this->box('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
+        $iref       = $this->fullBox('iref', $irefEntry);
+        $meta       = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp) . $iref);
+        $moov       = $this->quickTimeMoov($identifier);
         $isoPayload = $ftyp . $meta . $moov;
 
         $path = $this->writeTempFile($isoPayload);

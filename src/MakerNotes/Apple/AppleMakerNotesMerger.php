@@ -63,7 +63,6 @@ final class AppleMakerNotesMerger
                 0,
                 str_repeat('0', 40),
                 $apple,
-                null,
             );
         }
 

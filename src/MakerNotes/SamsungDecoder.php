@@ -32,14 +32,19 @@ use function trim;
 final class SamsungDecoder implements MakerNotesDecoderInterface
 {
     private const int TIFF_MAGIC = 0x2A;
+
     private const string SAMSUNG_SIGNATURE = "SAMSUNG\0";
 
     private const int TAG_MAKER_NOTE_VERSION = 0x0001;
+
     private const int TAG_DEVICE_TYPE = 0x0002;
+
     private const int TAG_MODEL_ID = 0x0003;
 
     private const int TYPE_ASCII = 2;
+
     private const int TYPE_SHORT = 3;
+
     private const int TYPE_LONG = 4;
 
     /**
@@ -107,14 +112,14 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
             }
 
             $makerNoteVersion = null;
-            $deviceType = null;
-            $modelId = null;
+            $deviceType       = null;
+            $modelId          = null;
 
             for ($index = 0; $index < $entryCount; ++$index) {
                 $entryOffset = $ifdStart + 2 + ($index * 12);
-                $tag = $this->readU16($raw, $entryOffset, $endian, 'Samsung IFD tag');
-                $type = $this->readU16($raw, $entryOffset + 2, $endian, 'Samsung IFD type');
-                $count = $this->readU32($raw, $entryOffset + 4, $endian, 'Samsung IFD count');
+                $tag         = $this->readU16($raw, $entryOffset, $endian, 'Samsung IFD tag');
+                $type        = $this->readU16($raw, $entryOffset + 2, $endian, 'Samsung IFD type');
+                $count       = $this->readU32($raw, $entryOffset + 4, $endian, 'Samsung IFD count');
                 $valueOffset = $this->readU32($raw, $entryOffset + 8, $endian, 'Samsung IFD value offset');
 
                 $valueBytes = $this->resolveValueBytes(
@@ -163,8 +168,8 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
     {
         return match ($endian) {
             Endian::Little->value => Endian::Little,
-            Endian::Big->value => Endian::Big,
-            default => null,
+            Endian::Big->value    => Endian::Big,
+            default               => null,
         };
     }
 
@@ -226,8 +231,8 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
         return match ($type) {
             self::TYPE_ASCII => 1,
             self::TYPE_SHORT => 2,
-            self::TYPE_LONG => 4,
-            default => 0,
+            self::TYPE_LONG  => 4,
+            default          => 0,
         };
     }
 

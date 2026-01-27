@@ -419,10 +419,10 @@ final class JpegExtractorTest extends TestCase
     #[Test]
     public function iptcIsCollectedRaw(): void
     {
-        $iimOne  = self::iimDataset(2, 5, 'Object One');
-        $iimTwo  = self::iimDataset(2, 5, 'Object Two');
-        $iptcOne = self::IPTC_SIGNATURE . self::resourceBlock(0x0404, $iimOne);
-        $iptcTwo = self::IPTC_SIGNATURE . self::resourceBlock(0x0404, $iimTwo);
+        $iimOne  = $this->iimDataset(2, 5, 'Object One');
+        $iimTwo  = $this->iimDataset(2, 5, 'Object Two');
+        $iptcOne = self::IPTC_SIGNATURE . $this->resourceBlock(0x0404, $iimOne);
+        $iptcTwo = self::IPTC_SIGNATURE . $this->resourceBlock(0x0404, $iimTwo);
 
         $jpeg = $this->jpeg(self::segment(self::MARKER_APP13, $iptcOne), self::segment(self::MARKER_APP13, $iptcTwo));
 
@@ -695,7 +695,7 @@ final class JpegExtractorTest extends TestCase
         return "\xFF" . chr($marker) . pack('n', strlen($payload) + 2) . $payload;
     }
 
-    private static function resourceBlock(int $resourceId, string $data, string $name = ''): string
+    private function resourceBlock(int $resourceId, string $data, string $name = ''): string
     {
         $nameLength = strlen($name);
         $nameField  = chr($nameLength) . $name;
@@ -716,7 +716,7 @@ final class JpegExtractorTest extends TestCase
         return $block;
     }
 
-    private static function iimDataset(int $record, int $dataset, string $value): string
+    private function iimDataset(int $record, int $dataset, string $value): string
     {
         return "\x1C" . chr($record) . chr($dataset) . pack('n', strlen($value)) . $value;
     }

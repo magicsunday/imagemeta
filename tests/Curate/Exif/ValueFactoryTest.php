@@ -14,8 +14,8 @@ namespace MagicSunday\ImageMeta\Tests\Curate\Exif;
 use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Curate\ExifAssembler;
 use MagicSunday\ImageMeta\Curate\StructuredMetadata;
-use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
+use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Author;
 use MagicSunday\ImageMeta\Value\DepthMap;
@@ -128,8 +128,8 @@ XML;
     #[Test]
     public function exposesParsedIptcDatasets(): void
     {
-        $iimData = self::iimDataset(2, 5, 'Object Name');
-        $payload = self::PHOTOSHOP_SIGNATURE . self::resourceBlock(0x0404, $iimData);
+        $iimData = $this->iimDataset(2, 5, 'Object Name');
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
         $metadata = new Metadata(
             exifBlobs: [],
@@ -144,7 +144,7 @@ XML;
 
     private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";
 
-    private static function resourceBlock(int $resourceId, string $data, string $name = ''): string
+    private function resourceBlock(int $resourceId, string $data, string $name = ''): string
     {
         $nameLength = strlen($name);
         $nameField  = chr($nameLength) . $name;
@@ -165,7 +165,7 @@ XML;
         return $block;
     }
 
-    private static function iimDataset(int $record, int $dataset, string $value): string
+    private function iimDataset(int $record, int $dataset, string $value): string
     {
         return "\x1C" . chr($record) . chr($dataset) . pack('n', strlen($value)) . $value;
     }

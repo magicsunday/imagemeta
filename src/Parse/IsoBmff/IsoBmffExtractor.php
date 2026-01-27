@@ -290,12 +290,12 @@ final readonly class IsoBmffExtractor
      * @var array<string, 'int'|'float'|'bool'|'string'>
      */
     private const array QUICKTIME_KEY_TYPES = [
-        'com.apple.quicktime.videoOrientation' => 'int',
+        'com.apple.quicktime.videoOrientation'             => 'int',
         'com.apple.quicktime.location.accuracy.horizontal' => 'float',
-        'com.apple.quicktime.location.accuracy.vertical' => 'float',
-        'com.apple.quicktime.isHDRVideo' => 'bool',
-        'com.apple.quicktime.make' => 'string',
-        'com.apple.quicktime.software' => 'string',
+        'com.apple.quicktime.location.accuracy.vertical'   => 'float',
+        'com.apple.quicktime.isHDRVideo'                   => 'bool',
+        'com.apple.quicktime.make'                         => 'string',
+        'com.apple.quicktime.software'                     => 'string',
     ];
 
     /**
@@ -370,14 +370,14 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the `moov` box, collecting nested metadata boxes of interest.
      *
-     * @param BoxDescriptor       $moov      Box descriptor for the movie box.
-     * @param list<string>        $exifBlobs
-     * @param list<string>                             $xmpBlobs
-     * @param array<int, list<IsoBmffItemReference>>     $itemReferences
-     * @param array<int, IsoBmffDataReference>           $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                $unresolvedItems
-     * @param array<string, bool>                        $xmpHashes
-     * @param QuickTimeKeyMap                            $qtKeys
+     * @param BoxDescriptor                          $moov            Box descriptor for the movie box.
+     * @param list<string>                           $exifBlobs
+     * @param list<string>                           $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>> $itemReferences
+     * @param array<int, IsoBmffDataReference>       $dataReferences
+     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
+     * @param array<string, bool>                    $xmpHashes
+     * @param QuickTimeKeyMap                        $qtKeys
      */
     private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
     {
@@ -426,14 +426,14 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param BoxDescriptor       $udta      Box descriptor for the user data box.
-     * @param list<string>        $exifBlobs
-     * @param list<string>                             $xmpBlobs
-     * @param array<int, list<IsoBmffItemReference>>     $itemReferences
-     * @param array<int, IsoBmffDataReference>           $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                $unresolvedItems
-     * @param array<string, bool>                        $xmpHashes
-     * @param QuickTimeKeyMap                            $qtKeys
+     * @param BoxDescriptor                          $udta            Box descriptor for the user data box.
+     * @param list<string>                           $exifBlobs
+     * @param list<string>                           $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>> $itemReferences
+     * @param array<int, IsoBmffDataReference>       $dataReferences
+     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
+     * @param array<string, bool>                    $xmpHashes
+     * @param QuickTimeKeyMap                        $qtKeys
      */
     private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
     {
@@ -783,14 +783,14 @@ final readonly class IsoBmffExtractor
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param BoxDescriptor       $meta      Box descriptor for the metadata box.
-     * @param list<string>        $exifBlobs
-     * @param list<string>                             $xmpBlobs
-     * @param array<int, list<IsoBmffItemReference>>     $itemReferences
-     * @param array<int, IsoBmffDataReference>           $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                $unresolvedItems
-     * @param array<string, bool>                        $xmpHashes
-     * @param QuickTimeKeyMap                            $qtKeys
+     * @param BoxDescriptor                          $meta            Box descriptor for the metadata box.
+     * @param list<string>                           $exifBlobs
+     * @param list<string>                           $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>> $itemReferences
+     * @param array<int, IsoBmffDataReference>       $dataReferences
+     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
+     * @param array<string, bool>                    $xmpHashes
+     * @param QuickTimeKeyMap                        $qtKeys
      */
     private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
     {
@@ -801,7 +801,7 @@ final readonly class IsoBmffExtractor
         // EXIF 3.0 Annex A.2 describes how the `meta` box aggregates
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
-        $payloads = $this->collectDirectPayloads($meta);
+        $payloads       = $this->collectDirectPayloads($meta);
         $itemReferences = $this->mergeItemReferences($itemReferences, $payloads['itemReferences']);
         $dataReferences = $this->mergeDataReferences($dataReferences, $payloads['dataReferences']);
         $idatPayload    = $payloads['idatPayload'];
@@ -855,7 +855,7 @@ final readonly class IsoBmffExtractor
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos = [];
         /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations */
-        $locations      = [];
+        $locations = [];
         /** @var array<int, list<IsoBmffItemReference>> $itemReferences */
         $itemReferences = [];
         /** @var array<int, IsoBmffDataReference> $dataReferences */
@@ -980,13 +980,13 @@ final readonly class IsoBmffExtractor
     /**
      * Resolves queued item IDs to their payload data.
      *
-     * @param list<int>                                                                                                                     $itemIds         Item IDs to resolve.
+     * @param list<int>                                                                                                                                $itemIds         Item IDs to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations       Item location metadata.
-     * @param array<int, list<IsoBmffItemReference>>                                                                                         $itemReferences  Parsed item references for construction_method=2 extents.
-     * @param (callable(string):string)|null                                                                                                $transform       Optional transform function.
-     * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences  Parsed data references for the current meta box.
-     * @param string|null                                                                                                                    $idatPayload     Cached idat payload for construction_method=1 extents.
-     * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems Accumulator for unresolved item payloads.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                   $itemReferences  Parsed item references for construction_method=2 extents.
+     * @param (callable(string):string)|null                                                                                                           $transform       Optional transform function.
+     * @param array<int, IsoBmffDataReference>                                                                                                         $dataReferences  Parsed data references for the current meta box.
+     * @param string|null                                                                                                                              $idatPayload     Cached idat payload for construction_method=1 extents.
+     * @param list<IsoBmffUnresolvedItem>                                                                                                              $unresolvedItems Accumulator for unresolved item payloads.
      *
      * @return list<string> List of resolved item payloads.
      */
@@ -1184,7 +1184,7 @@ final readonly class IsoBmffExtractor
 
         if ($entry->type === self::BOX_URL || $entry->type === self::BOX_URN) {
             $trimmed = rtrim($payload, "\0");
-            $uri = $trimmed !== '' ? $trimmed : null;
+            $uri     = $trimmed !== '' ? $trimmed : null;
         }
 
         $selfContained = ($flags & BitMask::BIT_0) !== 0;
@@ -1236,13 +1236,13 @@ final readonly class IsoBmffExtractor
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                           $itemId         Identifier of the item to resolve.
+     * @param int                                                                                                                                      $itemId          Identifier of the item to resolve.
      * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                         $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences
-     * @param string|null                                                                                                                    $idatPayload
-     * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems
-     * @param list<int>                                                                                                                      $visitedItemIds
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                   $itemReferences
+     * @param array<int, IsoBmffDataReference>                                                                                                         $dataReferences
+     * @param string|null                                                                                                                              $idatPayload
+     * @param list<IsoBmffUnresolvedItem>                                                                                                              $unresolvedItems
+     * @param list<int>                                                                                                                                $visitedItemIds
      *
      * @return string|null
      */
@@ -1255,6 +1255,7 @@ final readonly class IsoBmffExtractor
         $location = $locations[$itemId];
         if (in_array($itemId, $visitedItemIds, true)) {
             $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
             return null;
         }
 
@@ -1263,6 +1264,7 @@ final readonly class IsoBmffExtractor
         // as unresolved for the caller to decide how to handle them.
         if ($location['dataReferenceIndex'] !== 0) {
             $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
             return null;
         }
 
@@ -1310,6 +1312,7 @@ final readonly class IsoBmffExtractor
         if ($location['constructionMethod'] === ConstructionMethod::IdatOffset->value) {
             if ($idatPayload === null) {
                 $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
                 return null;
             }
 
@@ -1358,6 +1361,7 @@ final readonly class IsoBmffExtractor
             $references = $itemReferences[$itemId] ?? [];
             if ($references === []) {
                 $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
                 return null;
             }
 
@@ -1377,11 +1381,12 @@ final readonly class IsoBmffExtractor
                 // extent_index is optional; treat it as zero-based with a one-based fallback.
                 $referencePosition = $extent['index'] ?? 0;
                 if (!isset($references[$referencePosition]) && ($referencePosition > 0) && isset($references[$referencePosition - 1])) {
-                    $referencePosition -= 1;
+                    --$referencePosition;
                 }
 
                 if (!isset($references[$referencePosition])) {
                     $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
                     return null;
                 }
 
@@ -1390,12 +1395,14 @@ final readonly class IsoBmffExtractor
                 $nextVisited[]   = $itemId;
                 if (in_array($referenceItemId, $nextVisited, true)) {
                     $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
                     return null;
                 }
 
                 $referenceData = $this->resolveItemData($referenceItemId, $locations, $itemReferences, $dataReferences, $idatPayload, $unresolvedItems, $nextVisited);
                 if ($referenceData === null) {
                     $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
                     return null;
                 }
 
@@ -1415,7 +1422,7 @@ final readonly class IsoBmffExtractor
                     throw new ParseError('iloc extent outside referenced item');
                 }
 
-                $blob  .= substr($referenceData, $offset, $length);
+                $blob .= substr($referenceData, $offset, $length);
                 $total += $length;
             }
 
@@ -1423,20 +1430,21 @@ final readonly class IsoBmffExtractor
         }
 
         $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
         return null;
     }
 
     /**
      * Records an unresolved item payload for external references.
      *
-     * @param int                                                                                                                           $itemId
-     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}           $location
-     * @param array<int, IsoBmffDataReference>                                                                                               $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                                                                                                    $unresolvedItems
+     * @param int                                                                                                                          $itemId
+     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>} $location
+     * @param array<int, IsoBmffDataReference>                                                                                             $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                                                                                                  $unresolvedItems
      */
     private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems): void
     {
-        $dataReference = null;
+        $dataReference      = null;
         $dataReferenceIndex = $location['dataReferenceIndex'];
         if ($dataReferenceIndex > 0 && isset($dataReferences[$dataReferenceIndex])) {
             $dataReference = $dataReferences[$dataReferenceIndex];
@@ -1510,7 +1518,7 @@ final readonly class IsoBmffExtractor
         $win->seek(0);
 
         $version = $win->readU8();
-        $flags   = $this->readUInt24($win);
+        $this->readUInt24($win);
 
         if ($version === 0 || $version === 1) {
             $itemId = $win->readU16BE();
@@ -1575,7 +1583,7 @@ final readonly class IsoBmffExtractor
         // ISO/IEC 14496-12 §8.11.3: base_offset_size in high nibble, index_size_size in low nibble (v1/v2)
         $baseField      = $win->readU8();
         $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & BitMask::LOW_NIBBLE);
-        $indexSize = 0;
+        $indexSize      = 0;
         if ($version === 1 || $version === 2) {
             $indexSize = $this->validateSizeNibble($baseField & BitMask::LOW_NIBBLE);
         }
@@ -1683,7 +1691,7 @@ final readonly class IsoBmffExtractor
         $references = [];
 
         foreach ($this->walkChildren($iref, 4) as $child) {
-            $entry = $this->parseSingleItemReference($child, $version);
+            $entry      = $this->parseSingleItemReference($child, $version);
             $references = $this->mergeItemReferences($references, [
                 $entry['fromItemId'] => $entry['references'],
             ]);
@@ -1717,7 +1725,7 @@ final readonly class IsoBmffExtractor
             throw new ParseError('iref entry truncated');
         }
 
-        $fromItemId = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
+        $fromItemId     = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
         $referenceCount = $win->readU16BE();
 
         if ($referenceCount > self::MAX_IREF_REFERENCES) {
@@ -1725,15 +1733,15 @@ final readonly class IsoBmffExtractor
         }
 
         $remaining = $entry->contentSize - $win->tell();
-        $expected = $referenceCount * $idSize;
+        $expected  = $referenceCount * $idSize;
         if ($remaining < $expected) {
             throw new ParseError('iref entry truncated');
         }
 
-        $relation = $this->normaliseFourcc($entry->type);
+        $relation   = $this->normaliseFourcc($entry->type);
         $references = [];
         for ($i = 0; $i < $referenceCount; ++$i) {
-            $toItemId = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
+            $toItemId     = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
             $references[] = new IsoBmffItemReference($relation, $toItemId);
         }
 
@@ -1956,9 +1964,9 @@ final readonly class IsoBmffExtractor
         }
 
         return match ($targetType) {
-            'int' => $this->parseQuickTimeInt($value) ?? $value,
+            'int'   => $this->parseQuickTimeInt($value) ?? $value,
             'float' => $this->parseQuickTimeFloat($value) ?? $value,
-            'bool' => $this->parseQuickTimeBool($value) ?? $value,
+            'bool'  => $this->parseQuickTimeBool($value) ?? $value,
             default => is_string($value) ? $value : (string) $value,
         };
     }

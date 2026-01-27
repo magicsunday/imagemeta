@@ -754,7 +754,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Returns the first existing key from a prioritized list.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @return string|null First matching key or null if none exist.
      */
@@ -775,13 +775,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      */
     private function isStringKeyedArray(array $value): bool
     {
-        foreach ($value as $key => $_) {
-            if (!is_string($key)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all(array_keys($value), fn ($key): bool => is_string($key));
     }
 
     /**
@@ -974,7 +968,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a RunTime value from dictionary.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary containing runtime data.
-     * @param string                                $key        Key to look up.
+     * @param string                              $key        Key to look up.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1007,7 +1001,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a boolean value from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1035,7 +1029,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a rational float value from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1186,7 +1180,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a numeric component from an array using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $value   Array containing numeric components.
-     * @param string                   ...$keys Priority-ordered keys to check.
+     * @param string                              ...$keys Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $value
      *
@@ -1251,7 +1245,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a string or integer value from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1300,7 +1294,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts an identifier value from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1381,7 +1375,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a string value from dictionary for a specific key.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                $key        Key to look up.
+     * @param string                              $key        Key to look up.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1407,7 +1401,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a float value from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1437,7 +1431,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts an integer value from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1467,7 +1461,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a list of float values from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1569,7 +1563,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts maker note version string from dictionary.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                $key        Key to look up.
+     * @param string                              $key        Key to look up.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1636,7 +1630,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts a string or numeric value from dictionary using prioritized keys.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param string                                ...$keys    Priority-ordered keys to check.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @phpstan-param array<int|string, NativePlistValue> $dictionary
      *
@@ -1670,8 +1664,8 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      * Extracts an enumerated string value from dictionary using a mapping table.
      *
      * @param array<int|string, NativePlistValue> $dictionary Dictionary to search.
-     * @param array<int, string>                   $map        Mapping from numeric codes to string labels.
-     * @param string                               ...$keys    Priority-ordered keys to check.
+     * @param array<int, string>                  $map        Mapping from numeric codes to string labels.
+     * @param string                              ...$keys    Priority-ordered keys to check.
      *
      * @return string|null Enumerated string value if found, null otherwise.
      */

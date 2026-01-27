@@ -19,7 +19,6 @@ use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
-use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
@@ -317,10 +316,10 @@ final class IsoBmffExtractorTest extends TestCase
     #[Test]
     public function decodeInt32DataBoxPayload(): void
     {
-        $key      = 'com.apple.quicktime.videoOrientation';
-        $payload  = pack('N', 90);
-        $file     = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
-        $extractor = $this->createExtractor($file);
+        $key          = 'com.apple.quicktime.videoOrientation';
+        $payload      = pack('N', 90);
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x15, $payload);
+        $extractor    = $this->createExtractor($file);
         [, , $qtMeta] = $extractor->extract();
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
@@ -333,10 +332,10 @@ final class IsoBmffExtractorTest extends TestCase
     #[Test]
     public function coerceQuickTimeStringValuesToInt(): void
     {
-        $key      = 'com.apple.quicktime.videoOrientation';
-        $payload  = '180';
-        $file     = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
-        $extractor = $this->createExtractor($file);
+        $key          = 'com.apple.quicktime.videoOrientation';
+        $payload      = '180';
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
+        $extractor    = $this->createExtractor($file);
         [, , $qtMeta] = $extractor->extract();
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
@@ -349,10 +348,10 @@ final class IsoBmffExtractorTest extends TestCase
     #[Test]
     public function coerceQuickTimeStringValuesToFloat(): void
     {
-        $key       = 'com.apple.quicktime.location.accuracy.horizontal';
-        $payload   = '12.5';
-        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
-        $extractor = $this->createExtractor($file);
+        $key          = 'com.apple.quicktime.location.accuracy.horizontal';
+        $payload      = '12.5';
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
+        $extractor    = $this->createExtractor($file);
         [, , $qtMeta] = $extractor->extract();
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
@@ -365,10 +364,10 @@ final class IsoBmffExtractorTest extends TestCase
     #[Test]
     public function coerceQuickTimeStringValuesToBool(): void
     {
-        $key       = 'com.apple.quicktime.isHDRVideo';
-        $payload   = 'true';
-        $file      = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
-        $extractor = $this->createExtractor($file);
+        $key          = 'com.apple.quicktime.isHDRVideo';
+        $payload      = 'true';
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 1, $payload);
+        $extractor    = $this->createExtractor($file);
         [, , $qtMeta] = $extractor->extract();
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
@@ -386,9 +385,9 @@ final class IsoBmffExtractorTest extends TestCase
         $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
         $iinf        = $this->box('iinf', $iinfPayload);
 
-        $drefEntry  = $this->fullBox('url ', 'file://example');
-        $dref       = $this->fullBox('dref', pack('N', 1) . $drefEntry);
-        $dinf       = $this->box('dinf', $dref);
+        $drefEntry = $this->fullBox('url ', 'file://example');
+        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf      = $this->box('dinf', $dref);
 
         $payload = "\0\0\0\0";
         $payload .= "\x44";
@@ -404,7 +403,7 @@ final class IsoBmffExtractorTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom');
         $data = $ftyp . $meta;
 
-        $extractor = $this->createExtractor($data);
+        $extractor                                        = $this->createExtractor($data);
         [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
 
         self::assertSame([], $exifs);
@@ -470,7 +469,7 @@ final class IsoBmffExtractorTest extends TestCase
         $meta         = $this->fullBox('meta', $iref);
         $ftyp         = $this->box('ftyp', 'isom');
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor              = $this->createExtractor($ftyp . $meta);
         [, , , $itemReferences] = $extractor->extract();
 
         self::assertInstanceOf(IsoBmffItemReferenceMap::class, $itemReferences);
@@ -495,7 +494,7 @@ final class IsoBmffExtractorTest extends TestCase
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // iloc v1: offset_size(4)|length_size(4), base_offset_size(0)|index_size(0) in ONE byte
-        $payload  = "\x44";       // offset_size=4, length_size=4
+        $payload = "\x44";       // offset_size=4, length_size=4
         $payload .= "\x00";       // base_offset_size=0 (high nibble), index_size=0 (low nibble)
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
@@ -510,7 +509,7 @@ final class IsoBmffExtractorTest extends TestCase
         $meta = $this->fullBox('meta', $iinf . $iloc . $idat);
         $ftyp = $this->box('ftyp', 'isom');
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor                         = $this->createExtractor($ftyp . $meta);
         [$exifs, , , , , $unresolvedItems] = $extractor->extract();
 
         self::assertSame(['idat-exif'], $exifs);
@@ -532,7 +531,7 @@ final class IsoBmffExtractorTest extends TestCase
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // iloc v1: base_offset_size and index_size share ONE byte
-        $payload  = "\x44";       // offset_size=4, length_size=4
+        $payload = "\x44";       // offset_size=4, length_size=4
         $payload .= "\x00";       // base_offset_size=0, index_size=0
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
@@ -568,7 +567,7 @@ final class IsoBmffExtractorTest extends TestCase
 
         // iloc v1: base_offset_size and index_size share ONE byte
         $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
-            $payload  = "\x44"; // offset_size=4, length_size=4
+            $payload = "\x44"; // offset_size=4, length_size=4
             $payload .= "\x02"; // base_offset_size=0 (high nibble), index_size=2 (low nibble)
             $payload .= pack('n', 2); // item_count = 2
 
@@ -626,7 +625,7 @@ final class IsoBmffExtractorTest extends TestCase
 
         // iloc v1: base_offset_size and index_size share ONE byte
         $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
-            $payload  = "\x44"; // offset_size=4, length_size=4
+            $payload = "\x44"; // offset_size=4, length_size=4
             $payload .= "\x02"; // base_offset_size=0 (high nibble), index_size=2 (low nibble)
             $payload .= pack('n', 2); // item_count = 2
 
@@ -672,7 +671,7 @@ final class IsoBmffExtractorTest extends TestCase
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
         // iloc v1: base_offset_size and index_size share ONE byte
-        $payload  = "\x44";       // offset_size=4, length_size=4
+        $payload = "\x44";       // offset_size=4, length_size=4
         $payload .= "\x00";       // base_offset_size=0, index_size=0
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
@@ -690,7 +689,7 @@ final class IsoBmffExtractorTest extends TestCase
         $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
         $ftyp = $this->box('ftyp', 'isom');
 
-        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor                                        = $this->createExtractor($ftyp . $meta);
         [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
 
         self::assertSame([], $exifs);

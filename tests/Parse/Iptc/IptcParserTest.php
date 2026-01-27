@@ -34,11 +34,11 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function parsesIimDatasetsFromApp13Payload(): void
     {
-        $iimData = self::iimDataset(2, 5, 'Object Name')
-            . self::iimDataset(2, 25, 'keyword-one')
-            . self::iimDataset(2, 25, 'keyword-two');
+        $iimData = $this->iimDataset(2, 5, 'Object Name')
+            . $this->iimDataset(2, 25, 'keyword-one')
+            . $this->iimDataset(2, 25, 'keyword-two');
 
-        $payload = self::PHOTOSHOP_SIGNATURE . self::resourceBlock(0x0404, $iimData);
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
         $document = (new IptcParser())->parse($payload);
 
@@ -50,8 +50,8 @@ final class IptcParserTest extends TestCase
     public function parsesExtendedLengthDatasets(): void
     {
         $value   = str_repeat('A', 300);
-        $iimData = self::iimDatasetExtended(2, 120, $value, 2);
-        $payload = self::PHOTOSHOP_SIGNATURE . self::resourceBlock(0x0404, $iimData);
+        $iimData = $this->iimDatasetExtended(2, 120, $value, 2);
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
 
         $document = (new IptcParser())->parse($payload);
 
@@ -61,8 +61,8 @@ final class IptcParserTest extends TestCase
     #[Test]
     public function rejectsTruncatedResourceBlocks(): void
     {
-        $iimData = self::iimDataset(2, 5, 'Title');
-        $block   = self::resourceBlock(0x0404, $iimData);
+        $iimData = $this->iimDataset(2, 5, 'Title');
+        $block   = $this->resourceBlock(0x0404, $iimData);
 
         $payload = self::PHOTOSHOP_SIGNATURE . substr($block, 0, -2);
 
@@ -71,7 +71,7 @@ final class IptcParserTest extends TestCase
         (new IptcParser())->parse($payload);
     }
 
-    private static function resourceBlock(int $resourceId, string $data, string $name = ''): string
+    private function resourceBlock(int $resourceId, string $data, string $name = ''): string
     {
         $nameLength = strlen($name);
         $nameField  = chr($nameLength) . $name;
@@ -92,15 +92,15 @@ final class IptcParserTest extends TestCase
         return $block;
     }
 
-    private static function iimDataset(int $record, int $dataset, string $value): string
+    private function iimDataset(int $record, int $dataset, string $value): string
     {
         return "\x1C" . chr($record) . chr($dataset) . pack('n', strlen($value)) . $value;
     }
 
-    private static function iimDatasetExtended(int $record, int $dataset, string $value, int $lengthBytes): string
+    private function iimDatasetExtended(int $record, int $dataset, string $value, int $lengthBytes): string
     {
-        $length = strlen($value);
-        $lengthField = 0x8000 | $lengthBytes;
+        $length           = strlen($value);
+        $lengthField      = 0x8000 | $lengthBytes;
         $lengthBytesValue = '';
         for ($index = $lengthBytes - 1; $index >= 0; --$index) {
             $shift = $index * 8;

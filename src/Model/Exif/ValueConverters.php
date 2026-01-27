@@ -1870,9 +1870,8 @@ final readonly class ValueConverters
      * @return ExifRationalList|ExifNumericList|null
      */
     private static function resolveCoordinatePairs(
-        int|float|string|UInt64|ExifRational|ExifRationalList|ExifNumericList|null $value
-    ): ExifRationalList|ExifNumericList|null
-    {
+        int|float|string|UInt64|ExifRational|ExifRationalList|ExifNumericList|null $value,
+    ): ExifRationalList|ExifNumericList|null {
         if ($value instanceof ExifRationalList) {
             return $value;
         }

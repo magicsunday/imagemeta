@@ -19,8 +19,8 @@ use function array_key_exists;
 use function is_array;
 use function ord;
 use function sprintf;
-use function strlen;
 use function str_starts_with;
+use function strlen;
 use function substr;
 use function unpack;
 
@@ -72,7 +72,7 @@ final class IptcParser
             }
 
             $signature = substr($payload, $offset, 4);
-            $offset   += 4;
+            $offset += 4;
 
             if ($signature !== self::RESOURCE_SIGNATURE) {
                 throw new ParseError(sprintf('Unexpected resource signature "%s" in APP13 payload.', $signature));
@@ -83,14 +83,14 @@ final class IptcParser
             }
 
             $resourceId = $this->readUnsignedShort($payload, $offset);
-            $offset    += 2;
+            $offset += 2;
 
             if (($length - $offset) < 1) {
                 throw new BoundsError('APP13 resource name exceeds payload length.');
             }
 
             $nameLength = ord($payload[$offset]);
-            $offset    += 1;
+            ++$offset;
 
             if (($length - $offset) < $nameLength) {
                 throw new BoundsError('APP13 resource name exceeds payload length.');
@@ -104,7 +104,7 @@ final class IptcParser
                     throw new BoundsError('APP13 resource name padding exceeds payload length.');
                 }
 
-                $offset += 1;
+                ++$offset;
             }
 
             if (($length - $offset) < 4) {
@@ -112,7 +112,7 @@ final class IptcParser
             }
 
             $resourceSize = $this->readUnsignedLong($payload, $offset);
-            $offset      += 4;
+            $offset += 4;
 
             if (($length - $offset) < $resourceSize) {
                 throw new BoundsError('APP13 resource data exceeds payload length.');
@@ -121,10 +121,8 @@ final class IptcParser
             $data = substr($payload, $offset, $resourceSize);
             $offset += $resourceSize;
 
-            if ($resourceSize % 2 !== 0) {
-                if (($length - $offset) > 0) {
-                    $offset += 1;
-                }
+            if ($resourceSize % 2 !== 0 && $length - $offset > 0) {
+                ++$offset;
             }
 
             if ($resourceId === self::IPTC_RESOURCE_ID) {
@@ -138,7 +136,7 @@ final class IptcParser
     /**
      * Parses IPTC IIM data sets into the dataset map.
      *
-     * @param string                    $data     Raw IPTC IIM data.
+     * @param string                      $data     Raw IPTC IIM data.
      * @param array<string, list<string>> $datasets Map to accumulate into.
      */
     private function parseIimData(string $data, array &$datasets): void
@@ -158,7 +156,7 @@ final class IptcParser
             $recordNumber  = ord($data[$offset + 1]);
             $datasetNumber = ord($data[$offset + 2]);
             $lengthField   = $this->readUnsignedShort($data, $offset + 3);
-            $offset       += 5;
+            $offset += 5;
 
             $valueLength = $lengthField;
             if (($lengthField & 0x8000) !== 0) {

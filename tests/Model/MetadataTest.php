@@ -374,8 +374,8 @@ XML;
     #[Test]
     public function exposesSelectiveIptcDocumentWhenUnavailable(): void
     {
-        $iimData = "\x1C" . chr(2) . chr(5) . pack('n', 11) . 'Object Name';
-        $nameField = "\0\0";
+        $iimData       = "\x1C" . chr(2) . chr(5) . pack('n', 11) . 'Object Name';
+        $nameField     = "\0\0";
         $resourceBlock = '8BIM'
             . pack('n', 0x0404)
             . $nameField
