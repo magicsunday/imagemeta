@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 
 use function array_key_exists;
+use function is_array;
 use function ord;
 use function sprintf;
 use function strlen;
@@ -192,9 +193,9 @@ final class IptcParser
 
     private function readUnsignedShort(string $data, int $offset): int
     {
-        $unpacked = unpack('nvalue', substr($data, $offset, 2));
+        $unpacked = @unpack('nvalue', substr($data, $offset, 2));
 
-        if ($unpacked === false || !isset($unpacked['value'])) {
+        if (!is_array($unpacked) || !isset($unpacked['value']) || !is_int($unpacked['value'])) {
             throw new ParseError('Unable to read IPTC short value.');
         }
 
@@ -203,9 +204,9 @@ final class IptcParser
 
     private function readUnsignedLong(string $data, int $offset): int
     {
-        $unpacked = unpack('Nvalue', substr($data, $offset, 4));
+        $unpacked = @unpack('Nvalue', substr($data, $offset, 4));
 
-        if ($unpacked === false || !isset($unpacked['value'])) {
+        if (!is_array($unpacked) || !isset($unpacked['value']) || !is_int($unpacked['value'])) {
             throw new ParseError('Unable to read IPTC long value.');
         }
 

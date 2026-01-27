@@ -33,6 +33,7 @@ use function explode;
 use function iconv;
 use function implode;
 use function in_array;
+use function is_array;
 use function is_bool;
 use function is_float;
 use function is_int;
@@ -286,7 +287,7 @@ final readonly class IsoBmffExtractor
     /**
      * QuickTime metadata keys that should be coerced into expected value types.
      *
-     * @var array<string, string>
+     * @var array<string, 'int'|'float'|'bool'|'string'>
      */
     private const array QUICKTIME_KEY_TYPES = [
         'com.apple.quicktime.videoOrientation' => 'int',
@@ -1214,9 +1215,9 @@ final readonly class IsoBmffExtractor
         }
 
         // ISO 14496-12: Exif items start with a 4-byte big-endian offset to the TIFF header
-        $unpacked = unpack('N', substr($blob, 0, 4));
-        if ($unpacked !== false && isset($unpacked[1])) {
-            $offset = (int) $unpacked[1];
+        $unpacked = @unpack('Noffset', substr($blob, 0, 4));
+        if (is_array($unpacked) && isset($unpacked['offset']) && is_int($unpacked['offset'])) {
+            $offset = $unpacked['offset'];
 
             // Validate offset and skip to TIFF header
             if ($offset >= 0 && 4 + $offset <= strlen($blob)) {
@@ -1867,9 +1868,9 @@ final readonly class IsoBmffExtractor
      *
      * @param BoxDescriptor $data Box descriptor for the `data` box.
      *
-     * @return QuickTimeValue
+     * @return string|int|float
      */
-    private function parseDataBox(BoxDescriptor $data): string|int|float|bool
+    private function parseDataBox(BoxDescriptor $data): string|int|float
     {
         $win = $data->window;
         $win->seek(0);
@@ -1948,6 +1949,7 @@ final readonly class IsoBmffExtractor
      */
     private function coerceQuickTimeValue(string $key, string|int|float|bool $value): string|int|float|bool
     {
+        /** @var 'int'|'float'|'bool'|'string'|null $targetType */
         $targetType = self::QUICKTIME_KEY_TYPES[$key] ?? null;
         if ($targetType === null) {
             return $value;
@@ -1957,8 +1959,7 @@ final readonly class IsoBmffExtractor
             'int' => $this->parseQuickTimeInt($value) ?? $value,
             'float' => $this->parseQuickTimeFloat($value) ?? $value,
             'bool' => $this->parseQuickTimeBool($value) ?? $value,
-            'string' => is_string($value) ? $value : (string) $value,
-            default => $value,
+            default => is_string($value) ? $value : (string) $value,
         };
     }
 
@@ -2033,17 +2034,13 @@ final readonly class IsoBmffExtractor
             return (bool) $value;
         }
 
-        if (is_string($value)) {
-            $normalized = strtolower(trim($value));
+        $normalized = strtolower(trim($value));
 
-            return match ($normalized) {
-                'true', '1' => true,
-                'false', '0' => false,
-                default => null,
-            };
-        }
-
-        return null;
+        return match ($normalized) {
+            'true', '1' => true,
+            'false', '0' => false,
+            default => null,
+        };
     }
 
     /**

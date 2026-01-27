@@ -1860,17 +1860,18 @@ final readonly class ValueConverters
     }
 
     /**
-     * Converts EXIF GPS degrees/minutes/seconds to a float coordinate.
+     * Resolves EXIF GPS degrees/minutes/seconds into a numeric list.
      *
      * EXIF 3.0 §4.6.8 states that GPSLatitude/GPSLongitude are SRATIONAL triplets ordered as
      * degrees, minutes and seconds.
      *
-     * @param string|null                           $ref Direction reference (N/E/S/W).
-     * @param ExifRationalList|ExifNumericList|null $val Rational or numeric triplet describing the coordinate.
+     * @param int|float|string|UInt64|ExifRational|ExifRationalList|ExifNumericList|null $value
      *
-     * @return float|null
+     * @return ExifRationalList|ExifNumericList|null
      */
-    private static function resolveCoordinatePairs(?object $value): ExifRationalList|ExifNumericList|null
+    private static function resolveCoordinatePairs(
+        int|float|string|UInt64|ExifRational|ExifRationalList|ExifNumericList|null $value
+    ): ExifRationalList|ExifNumericList|null
     {
         if ($value instanceof ExifRationalList) {
             return $value;
