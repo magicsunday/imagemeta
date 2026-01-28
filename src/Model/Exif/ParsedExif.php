@@ -288,6 +288,18 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the orientation as a human-readable rotation description.
+     *
+     * EXIF 3.0 §4.6.5.1.6 defines eight orientation states. This method
+     * returns descriptions like "Rotate 180", "Rotate 90 CW", or
+     * "Mirror horizontal" as commonly displayed by ExifTool.
+     */
+    public function orientationDescription(): string
+    {
+        return $this->orientation()->rotationDescription();
+    }
+
+    /**
      * Returns the image width, preferring the compressed-specific EXIF tag when applicable.
      *
      * EXIF 3.0 §4.6.6.3.1 defines PixelXDimension for compressed image data only;
@@ -1221,6 +1233,19 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the exposure time as a human-readable string like "1/50".
+     *
+     * EXIF 3.0 §4.6.6.7.1 (ExposureTime) stores exposure as RATIONAL seconds.
+     * Formats short exposures as fractions and longer exposures as decimal seconds.
+     */
+    public function exposureTimeFormatted(): ?string
+    {
+        $seconds = $this->exposureTime();
+
+        return ValueConverters::formatExposureTime($seconds);
+    }
+
+    /**
      * Returns the APEX shutter speed value when available.
      *
      * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue)
@@ -1245,6 +1270,23 @@ final readonly class ParsedExif
     }
 
     /**
+     * Returns the APEX shutter speed as a human-readable string like "1/20".
+     *
+     * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue) stores APEX shutter speed.
+     * This converts the APEX value to a fraction or decimal seconds format.
+     */
+    public function shutterSpeedFormatted(): ?string
+    {
+        $raw = $this->normalisedValue($this->exifIfd, ExifTag::SHUTTER_SPEED_VALUE);
+
+        if ($raw === null) {
+            return null;
+        }
+
+        return ValueConverters::formatShutterSpeedFromApex($raw);
+    }
+
+    /**
      * Returns the aperture (f-number) if available.
      *
      * EXIF 3.0 §4.6.6.7.2 (FNumber)
@@ -1264,6 +1306,23 @@ final readonly class ParsedExif
     public function apertureValue(): ?float
     {
         return $this->rational($this->exifIfd, ExifTag::APERTURE_VALUE);
+    }
+
+    /**
+     * Returns the APEX aperture value as a human-readable f-number string like "f/1.9".
+     *
+     * EXIF 3.0 §4.6.6.7.14 (ApertureValue) stores APEX aperture.
+     * This converts the APEX value to an f-number display format.
+     */
+    public function apertureValueFormatted(): ?string
+    {
+        $raw = $this->normalisedValue($this->exifIfd, ExifTag::APERTURE_VALUE);
+
+        if ($raw === null) {
+            return null;
+        }
+
+        return ValueConverters::formatApertureFromApex($raw);
     }
 
     /**
@@ -1376,6 +1435,23 @@ final readonly class ParsedExif
         }
 
         return ValueConverters::rationalToFloat($value);
+    }
+
+    /**
+     * Returns the APEX brightness value as a human-readable decimal string.
+     *
+     * EXIF 3.0 §4.6.6.7.15 (BrightnessValue) stores APEX brightness.
+     * This converts the APEX value to a simple decimal format like "-2.21".
+     */
+    public function brightnessValueFormatted(): ?string
+    {
+        $value = $this->normalisedValue($this->exifIfd, ExifTag::BRIGHTNESS_VALUE);
+
+        if ($this->isUnknownBrightness($value)) {
+            return null;
+        }
+
+        return ValueConverters::formatBrightnessValue($value);
     }
 
     /**
@@ -1686,7 +1762,11 @@ final readonly class ParsedExif
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
 
-            return is_int($first) ? SceneType::fromExifValue($first) : null;
+            if (is_int($first)) {
+                return SceneType::fromExifValue($first);
+            }
+
+            return null;
         }
 
         if (is_string($value) && $value !== '') {
@@ -2613,16 +2693,10 @@ final readonly class ParsedExif
 
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
-                    if (!$component->fitsSignedInt()) {
-                        return null;
-                    }
-
-                    $coeffs[] = (float) $component->toInt('YCbCr coefficient component');
-
-                    continue;
+                    $coeffs[] = (float) $component->toInt('YCbCrCoefficients');
+                } else {
+                    $coeffs[] = (float) $component;
                 }
-
-                $coeffs[] = (float) $component;
             }
 
             return count($coeffs) === 3 ? $coeffs : null;
@@ -2941,20 +3015,15 @@ final readonly class ParsedExif
         $value = $this->normalisedValue($this->exifIfd, ExifTag::SUBJECT_AREA);
 
         if ($value instanceof ExifNumericList) {
+            /** @var list<int> $components */
             $components = [];
 
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
-                    if (!$component->fitsSignedInt()) {
-                        return null;
-                    }
-
-                    $components[] = $component->toInt('EXIF subject area component');
-
-                    continue;
+                    $components[] = $component->toInt('SubjectArea');
+                } else {
+                    $components[] = (int) $component;
                 }
-
-                $components[] = (int) $component;
             }
 
             return SubjectArea::fromComponents($components);
@@ -3019,6 +3088,10 @@ final readonly class ParsedExif
                 return (int) $first;
             }
 
+            if ($first instanceof UInt64) {
+                return $first->toInt('SubjectDistance numerator');
+            }
+
             return null;
         }
 
@@ -3067,6 +3140,10 @@ final readonly class ParsedExif
 
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
+
+            if ($first instanceof UInt64) {
+                return $first->toInt('BrightnessValue') === -1;
+            }
 
             return $first === -1;
         }
@@ -3248,20 +3325,15 @@ final readonly class ParsedExif
         $value = $this->value($ifd, $tag);
 
         if ($value instanceof ExifNumericList) {
+            /** @var list<int|float> $components */
             $components = [];
 
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
-                    if (!$component->fitsSignedInt()) {
-                        return null;
-                    }
-
-                    $components[] = $component->toInt('EXIF components configuration');
-
-                    continue;
+                    $components[] = $component->toInt('ComponentsConfiguration');
+                } else {
+                    $components[] = $component;
                 }
-
-                $components[] = $component;
             }
 
             return $components;
@@ -3286,11 +3358,7 @@ final readonly class ParsedExif
         }
 
         if ($value instanceof UInt64) {
-            if (!$value->fitsSignedInt()) {
-                return null;
-            }
-
-            return $value->toInt('EXIF components configuration');
+            return $this->componentsInputFromScalar($value->toInt('ComponentsConfiguration'));
         }
 
         return $this->componentsInputFromScalar($value);

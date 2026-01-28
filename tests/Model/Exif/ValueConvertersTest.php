@@ -218,33 +218,6 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * @param ExifRational|string|null $value    Raw battery level value.
-     * @param float|null               $expected Normalised percentage value.
-     */
-    #[Test]
-    #[DataProvider('provideBatteryLevelValues')]
-    public function normalisesBatteryLevelToPercent(ExifRational|string|null $value, ?float $expected): void
-    {
-        self::assertSame($expected, ValueConverters::batteryLevelToPercent($value));
-    }
-
-    /**
-     * @return iterable<string, array{ExifRational|string|null, float|null}>
-     */
-    public static function provideBatteryLevelValues(): iterable
-    {
-        yield 'rational fraction' => [new ExifRational(1, 2), 50.0];
-        yield 'rational percent' => [new ExifRational(75, 1), 75.0];
-        yield 'string fraction' => ['1/4', 25.0];
-        yield 'string percent' => ['80%', 80.0];
-        yield 'ratio string' => ['0.2', 20.0];
-        yield 'numeric percent string' => ['55.5', 55.5];
-        yield 'invalid string' => ['battery low', null];
-        yield 'empty string' => ['', null];
-        yield 'null value' => [null, null];
-    }
-
-    /**
      * @param string|null         $ref      The speed reference.
      * @param ExifRational|string $value    The raw speed value.
      * @param float|null          $expected The expected metres per second.
@@ -1317,5 +1290,126 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(-0.3, $result[0], 0.001);
         self::assertEqualsWithDelta(-0.5, $result[1], 0.001);
         self::assertEqualsWithDelta(-0.2, $result[2], 0.001);
+    }
+
+    /**
+     * Tests that exposure time is formatted correctly.
+     */
+    #[Test]
+    #[DataProvider('provideExposureTimeValues')]
+    public function formatsExposureTime(?float $seconds, ?string $expected): void
+    {
+        self::assertSame($expected, ValueConverters::formatExposureTime($seconds));
+    }
+
+    /**
+     * @return iterable<string, array{?float, ?string}>
+     */
+    public static function provideExposureTimeValues(): iterable
+    {
+        yield 'null input' => [null, null];
+        yield 'zero' => [0.0, null];
+        yield 'negative' => [-0.1, null];
+        yield '1/50 second' => [0.02, '1/50'];
+        yield '1/20 second' => [0.05, '1/20'];
+        yield '1/100 second' => [0.01, '1/100'];
+        yield '1/1000 second' => [0.001, '1/1000'];
+        yield '1/4 second' => [0.25, '1/4'];
+        yield '0.5 second' => [0.5, '0.5'];
+        yield '1 second' => [1.0, '1'];
+        yield '2 seconds' => [2.0, '2'];
+        yield '1.5 seconds' => [1.5, '1.5'];
+    }
+
+    /**
+     * Tests that APEX shutter speed is formatted correctly.
+     */
+    #[Test]
+    public function formatsShutterSpeedFromApex(): void
+    {
+        // APEX value 4.32 => 2^(-4.32) ≈ 0.05 seconds => "1/20"
+        $apexValue = new ExifRational(64736, 14979);
+        $formatted = ValueConverters::formatShutterSpeedFromApex($apexValue);
+
+        self::assertSame('1/20', $formatted);
+
+        // APEX value 6.64 => 2^(-6.64) ≈ 0.01 seconds => "1/100"
+        $apexValue2 = new ExifRational(664, 100);
+        $formatted2 = ValueConverters::formatShutterSpeedFromApex($apexValue2);
+
+        self::assertSame('1/100', $formatted2);
+    }
+
+    /**
+     * Tests that f-number is formatted correctly.
+     */
+    #[Test]
+    #[DataProvider('provideFNumberValues')]
+    public function formatsFNumber(?float $fNumber, ?string $expected): void
+    {
+        self::assertSame($expected, ValueConverters::formatFNumber($fNumber));
+    }
+
+    /**
+     * @return iterable<string, array{?float, ?string}>
+     */
+    public static function provideFNumberValues(): iterable
+    {
+        yield 'null input' => [null, null];
+        yield 'zero' => [0.0, null];
+        yield 'negative' => [-1.0, null];
+        yield 'f/1.8' => [1.8, 'f/1.8'];
+        yield 'f/1.9' => [1.9, 'f/1.9'];
+        yield 'f/2' => [2.0, 'f/2'];
+        yield 'f/2.8' => [2.8, 'f/2.8'];
+        yield 'f/4' => [4.0, 'f/4'];
+        yield 'f/5.6' => [5.6, 'f/5.6'];
+        yield 'f/8' => [8.0, 'f/8'];
+        yield 'f/11' => [11.0, 'f/11'];
+        yield 'f/16' => [16.0, 'f/16'];
+        yield 'f/22' => [22.0, 'f/22'];
+    }
+
+    /**
+     * Tests that APEX aperture is formatted correctly.
+     */
+    #[Test]
+    public function formatsApertureFromApex(): void
+    {
+        // APEX value 1.85 => 2^(1.85/2) ≈ 1.9 => "f/1.9"
+        $apexValue = new ExifRational(16384, 8847);
+        $formatted = ValueConverters::formatApertureFromApex($apexValue);
+
+        self::assertSame('f/1.9', $formatted);
+
+        // APEX value 3.0 => 2^(3/2) ≈ 2.83 => "f/2.8"
+        $apexValue2 = new ExifRational(3, 1);
+        $formatted2 = ValueConverters::formatApertureFromApex($apexValue2);
+
+        self::assertSame('f/2.8', $formatted2);
+    }
+
+    /**
+     * Tests that brightness value is formatted correctly.
+     */
+    #[Test]
+    #[DataProvider('provideBrightnessValues')]
+    public function formatsBrightnessValue(ExifRational|float|null $value, ?string $expected): void
+    {
+        self::assertSame($expected, ValueConverters::formatBrightnessValue($value));
+    }
+
+    /**
+     * @return iterable<string, array{ExifRational|float|null, ?string}>
+     */
+    public static function provideBrightnessValues(): iterable
+    {
+        yield 'null input' => [null, null];
+        yield 'positive rational' => [new ExifRational(530, 100), '5.3'];
+        yield 'negative rational' => [new ExifRational(-221, 100), '-2.21'];
+        yield 'integer value' => [new ExifRational(5, 1), '5'];
+        yield 'zero value' => [new ExifRational(0, 1), '0'];
+        yield 'positive float' => [3.5, '3.5'];
+        yield 'negative float' => [-2.21, '-2.21'];
     }
 }

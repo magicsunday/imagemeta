@@ -45,7 +45,7 @@ final class KeyedArchiveUnarchiver
     public function unarchive(ApplePlistDictionary $archive): ApplePlistDictionary
     {
         $objectsValue = $archive->get('$objects');
-        if (!$objectsValue instanceof ApplePlistArray || $objectsValue->isEmpty()) {
+        if (!($objectsValue instanceof ApplePlistArray) || $objectsValue->isEmpty()) {
             throw new ParseError('The keyed archive object table is malformed.');
         }
 

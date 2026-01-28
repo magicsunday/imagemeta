@@ -581,7 +581,7 @@ final class MetadataFormatter
 
         // GPS section
         if ($metadata->exifDoc instanceof ParsedExif && $metadata->exifDoc->gpsIfd instanceof Ifd) {
-            $this->printGpsSection($metadata->exifDoc->gpsIfd);
+            $this->printGpsSection($metadata->exifDoc->gpsIfd, $metadata->exifDoc);
         }
 
         // InteropIFD section
@@ -976,6 +976,26 @@ final class MetadataFormatter
             // EXIF 3.0 §4.6.6.7.45
             ExifTag::DEVICE_SETTING_DESCRIPTION => $exifDoc->deviceSettingDescription(),
 
+            // Orientation - Use rotation description instead of enum name
+            // EXIF 3.0 §4.6.5.1.6
+            ExifTag::ORIENTATION => $exifDoc->orientationDescription(),
+
+            // ShutterSpeedValue - Convert APEX value to human-readable fraction
+            // EXIF 3.0 §4.6.6.7.13
+            ExifTag::SHUTTER_SPEED_VALUE => $exifDoc->shutterSpeedFormatted(),
+
+            // ApertureValue - Convert APEX value to f-number
+            // EXIF 3.0 §4.6.6.7.14
+            ExifTag::APERTURE_VALUE => $exifDoc->apertureValueFormatted(),
+
+            // BrightnessValue - Convert APEX value to decimal EV
+            // EXIF 3.0 §4.6.6.7.15
+            ExifTag::BRIGHTNESS_VALUE => $exifDoc->brightnessValueFormatted(),
+
+            // ExposureTime - Format as human-readable fraction
+            // EXIF 3.0 §4.6.6.7.1
+            ExifTag::EXPOSURE_TIME => $exifDoc->exposureTimeFormatted(),
+
             // No special accessor available
             default => null,
         };
@@ -1202,14 +1222,28 @@ final class MetadataFormatter
 
     /**
      * Prints the GPS section.
+     *
+     * @param Ifd|null       $gpsIfd  GPS IFD containing raw GPS tag entries.
+     * @param ParsedExif|null $exifDoc ParsedExif document for formatted accessor methods.
      */
-    private function printGpsSection(?Ifd $gpsIfd): void
+    private function printGpsSection(?Ifd $gpsIfd, ?ParsedExif $exifDoc = null): void
     {
         $data = [];
 
         // Collect GPS tags
         if (($gpsIfd instanceof Ifd) && isset($gpsIfd->entries)) {
             foreach ($gpsIfd->entries as $tagId => $entry) {
+                // GPS TimeStamp - format as HH:MM:SS.s instead of raw rationals
+                // EXIF 3.0 §4.6.6 Table 27
+                if (($tagId === ExifTag::GPS_TIME_STAMP) && ($exifDoc instanceof ParsedExif)) {
+                    $formatted = $exifDoc->gpsTimeStampString();
+                    if ($formatted !== null) {
+                        $data[$tagId] = $formatted;
+
+                        continue;
+                    }
+                }
+
                 // Convert raw value to enum if applicable
                 $data[$tagId] = $this->convertToEnumIfApplicable($tagId, $entry->value);
             }

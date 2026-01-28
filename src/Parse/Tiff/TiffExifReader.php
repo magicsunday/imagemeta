@@ -255,14 +255,14 @@ final class TiffExifReader implements ExifReaderInterface
             $nextIfd          = $this->readIfd($nextOffset);
             $additionalIfds[] = $nextIfd;
 
-            if (!($ifd1 instanceof Ifd)) {
+            if (!$ifd1 instanceof Ifd) {
                 $ifd1 = $nextIfd;
             }
 
             $nextOffset = $nextIfd->nextIfdOffset;
         }
 
-        if (!$interopIfd instanceof Ifd && $additionalIfds !== []) {
+        if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
         }
 
@@ -493,6 +493,10 @@ final class TiffExifReader implements ExifReaderInterface
                 if (is_float($first)) {
                     return (int) $first;
                 }
+
+                if ($first instanceof UInt64) {
+                    return $first->toInt('counted image data field');
+                }
             }
 
             if (is_int($value)) {
@@ -501,6 +505,10 @@ final class TiffExifReader implements ExifReaderInterface
 
             if (is_float($value)) {
                 return (int) $value;
+            }
+
+            if ($value instanceof UInt64) {
+                return $value->toInt('counted image data field');
             }
 
             $components = $this->decodeCountedComponents($tag, $type, $rawBytes, $count);
@@ -514,11 +522,11 @@ final class TiffExifReader implements ExifReaderInterface
             foreach ($value->values as $component) {
                 if (is_int($component)) {
                     $normalised[] = $component;
-                    continue;
-                }
-
-                if (is_float($component)) {
+                } elseif (is_float($component)) {
                     $normalised[] = (int) $component;
+                } else {
+                    // UInt64 (BigTIFF) - convert to int
+                    $normalised[] = $component->toInt('counted image data field');
                 }
             }
 
@@ -1044,7 +1052,7 @@ final class TiffExifReader implements ExifReaderInterface
             return null;
         }
 
-        if (!$registry instanceof Registry || !$exifIfd instanceof Ifd) {
+        if (!($registry instanceof Registry) || !($exifIfd instanceof Ifd)) {
             return $this->makerNotesDigest();
         }
 

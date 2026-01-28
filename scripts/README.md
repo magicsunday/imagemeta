@@ -41,7 +41,7 @@ The script organizes metadata into sections similar to exiftool:
 - **ExifIFD** - EXIF-specific tags (with hex tag IDs)
 - **Apple** - Apple MakerNotes data (for Apple devices)
 - **GPS** - GPS location data (with hex tag IDs)
-- **XMP-*** - XMP metadata grouped by namespace
+- **XMP** - XMP metadata grouped by namespace
 - **ICC-header** - ICC color profile information
 - **Composite** - Derived/calculated values
 

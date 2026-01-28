@@ -407,7 +407,7 @@ final readonly class GpsFactory
             if ($deg !== null && $min !== null && $sec !== null) {
                 $sign = $this->coordinateSign($ref);
 
-                $coordinate = $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+                $coordinate = $sign * ($deg + ($min / 60.0) + ($sec / 3600.0));
 
                 return round($coordinate, 6);
             }

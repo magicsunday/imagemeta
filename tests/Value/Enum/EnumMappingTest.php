@@ -241,4 +241,58 @@ final class EnumMappingTest extends TestCase
         self::assertNull(GpsDistanceRef::fromExifValue('Y'));
         self::assertNull(GpsMeasureMode::fromExifValue('5'));
     }
+
+    /**
+     * Verifies orientation rotation descriptions match ExifTool output.
+     *
+     * EXIF 3.0 §4.6.5.1.6 defines eight orientation states; these descriptions
+     * align with the common ExifTool output format.
+     */
+    #[Test]
+    public function mapsOrientationToRotationDescription(): void
+    {
+        self::assertSame('Unknown', Orientation::UNKNOWN->rotationDescription());
+        self::assertSame('Horizontal (normal)', Orientation::TOP_LEFT->rotationDescription());
+        self::assertSame('Mirror horizontal', Orientation::TOP_RIGHT->rotationDescription());
+        self::assertSame('Rotate 180', Orientation::BOTTOM_RIGHT->rotationDescription());
+        self::assertSame('Mirror vertical', Orientation::BOTTOM_LEFT->rotationDescription());
+        self::assertSame('Mirror horizontal and rotate 270 CW', Orientation::LEFT_TOP->rotationDescription());
+        self::assertSame('Rotate 90 CW', Orientation::RIGHT_TOP->rotationDescription());
+        self::assertSame('Mirror horizontal and rotate 90 CW', Orientation::RIGHT_BOTTOM->rotationDescription());
+        self::assertSame('Rotate 270 CW', Orientation::LEFT_BOTTOM->rotationDescription());
+    }
+
+    /**
+     * Verifies orientation rotation degrees are calculated correctly.
+     */
+    #[Test]
+    public function mapsOrientationToRotationDegrees(): void
+    {
+        self::assertSame(0, Orientation::UNKNOWN->rotationDegrees());
+        self::assertSame(0, Orientation::TOP_LEFT->rotationDegrees());
+        self::assertSame(0, Orientation::TOP_RIGHT->rotationDegrees());
+        self::assertSame(180, Orientation::BOTTOM_RIGHT->rotationDegrees());
+        self::assertSame(0, Orientation::BOTTOM_LEFT->rotationDegrees());
+        self::assertSame(180, Orientation::LEFT_TOP->rotationDegrees());
+        self::assertSame(90, Orientation::RIGHT_TOP->rotationDegrees());
+        self::assertSame(90, Orientation::RIGHT_BOTTOM->rotationDegrees());
+        self::assertSame(270, Orientation::LEFT_BOTTOM->rotationDegrees());
+    }
+
+    /**
+     * Verifies orientation mirrored flag is set correctly.
+     */
+    #[Test]
+    public function mapsOrientationToMirroredFlag(): void
+    {
+        self::assertFalse(Orientation::UNKNOWN->isMirrored());
+        self::assertFalse(Orientation::TOP_LEFT->isMirrored());
+        self::assertTrue(Orientation::TOP_RIGHT->isMirrored());
+        self::assertFalse(Orientation::BOTTOM_RIGHT->isMirrored());
+        self::assertTrue(Orientation::BOTTOM_LEFT->isMirrored());
+        self::assertTrue(Orientation::LEFT_TOP->isMirrored());
+        self::assertFalse(Orientation::RIGHT_TOP->isMirrored());
+        self::assertTrue(Orientation::RIGHT_BOTTOM->isMirrored());
+        self::assertFalse(Orientation::LEFT_BOTTOM->isMirrored());
+    }
 }

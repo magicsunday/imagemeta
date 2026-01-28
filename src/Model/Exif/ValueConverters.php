@@ -18,7 +18,6 @@ use Exception;
 use JsonException;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
-use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use MagicSunday\ImageMeta\Value\Enum\SubjectAreaType;
 use MagicSunday\ImageMeta\Value\ExifFlash;
@@ -33,7 +32,6 @@ use function array_map;
 use function array_slice;
 use function array_values;
 use function atan;
-use function chr;
 use function count;
 use function ctype_digit;
 use function explode;
@@ -148,15 +146,6 @@ final readonly class ValueConverters
     private const int SRATIONAL_VALUE_SIZE = 8;
 
     /**
-     * Epson’s Print Image Matching block allows up to 512 parameters per EXIF 3.0 §4.6.4.
-     */
-    private const int MAX_PRINT_IMAGE_MATCHING_PARAMETERS = 512;
-
-    private const int PRINTABLE_ASCII_MIN = 0x20;
-
-    private const int PRINTABLE_ASCII_MAX = 0x7E;
-
-    /**
      * EXIF 3.0 §4.6.8 (GPSVersionID) default value when the field is blank.
      */
     private const string DEFAULT_GPS_VERSION = '2.0.0.0';
@@ -226,6 +215,10 @@ final readonly class ValueConverters
             $first = $value->values[0] ?? null;
             if (is_int($first) || is_float($first)) {
                 return (float) $first;
+            }
+
+            if ($first instanceof UInt64) {
+                return (float) self::uint64ToInt($first, 'rationalToFloat');
             }
 
             return null;
@@ -654,80 +647,13 @@ final readonly class ValueConverters
     }
 
     /**
-     * Normalises EXIF battery level readings to a percentage following
-     * EXIF 3.0 §4.6.3 (BatteryLevel tag semantics).
-     *
-     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw battery level value.
-     */
-    public static function batteryLevelToPercent(
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
-    ): ?float {
-        if ($value instanceof UInt64) {
-            $intValue = self::uint64ToInt($value, 'BatteryLevel');
-            if ($intValue === null) {
-                return null;
-            }
-
-            $value = $intValue;
-        }
-
-        if ($value === null) {
-            return null;
-        }
-
-        $numeric = self::rationalToFloat($value);
-        if ($numeric !== null) {
-            return self::normaliseBatteryPercent($numeric);
-        }
-
-        if (!is_string($value)) {
-            return null;
-        }
-
-        $normalized = trim($value);
-        if ($normalized === '') {
-            return null;
-        }
-
-        if (preg_match('/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/', $normalized, $matches) === 1) {
-            $denominator = (float) $matches[2];
-            if ($denominator === 0.0) {
-                return null;
-            }
-
-            return self::normaliseBatteryPercent((float) $matches[1] / $denominator);
-        }
-
-        if ($normalized[strlen($normalized) - 1] === '%') {
-            $numericPart = rtrim(substr($normalized, 0, -1));
-            if ($numericPart === '') {
-                return null;
-            }
-
-            if (preg_match('/^(-?\d+(?:\.\d+)?)$/', $numericPart, $matches) !== 1) {
-                return null;
-            }
-
-            return (float) $matches[1];
-        }
-
-        if (preg_match('/^(-?\d+(?:\.\d+)?)$/', $normalized, $matches) === 1) {
-            $numericValue = (float) $matches[1];
-
-            return self::normaliseBatteryPercent($numericValue);
-        }
-
-        return null;
-    }
-
-    /**
      * Converts the maker note safety flag into a boolean representation per
      * EXIF 3.0 §4.6.8 (MakerNoteSafety).
      *
-     * @param ExifNumericList|ExifRationalList|ExifRational|UInt64|int|float|string|null $value Raw maker note safety value.
+     * @param ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value Raw maker note safety value.
      */
     public static function makerNoteSafety(
-        ExifNumericList|ExifRationalList|ExifRational|UInt64|int|float|string|null $value,
+        ExifNumericList|ExifRationalList|ExifRational|int|float|string|null $value,
     ): ?bool {
         if ($value instanceof ExifNumericList) {
             $value = $value->values[0] ?? null;
@@ -739,15 +665,6 @@ final readonly class ValueConverters
 
         if ($value instanceof ExifRational) {
             $value = self::rationalToFloat($value);
-        }
-
-        if ($value instanceof UInt64) {
-            $intValue = self::uint64ToInt($value, 'MakerNoteSafety');
-            if ($intValue === null) {
-                return null;
-            }
-
-            $value = $intValue;
         }
 
         if ($value === null) {
@@ -775,91 +692,6 @@ final readonly class ValueConverters
             1       => true,
             default => null,
         };
-    }
-
-    /**
-     * Normalises the TIFF/EP standard identifier to both byte and string representations.
-     *
-     * @param array<int, int|float|string>|null $bytes Raw TIFF/EP identifier bytes.
-     *
-     * @return array{bytes:list<int>, string:?string}|null
-     */
-    public static function tiffEpStandardId(?array $bytes): ?array
-    {
-        if ($bytes === null) {
-            return null;
-        }
-
-        if ($bytes === []) {
-            return null;
-        }
-
-        if (array_any($bytes, static fn (int|float|string $byte): bool => !is_int($byte))) {
-            return null;
-        }
-
-        /** @var list<int> $normalised */
-        $normalised = array_values($bytes);
-
-        if (array_any(
-            $normalised,
-            static fn (int $byte): bool => $byte < 0 || $byte > BitMask::LOW_BYTE
-        )) {
-            return null;
-        }
-
-        return [
-            'bytes'  => $normalised,
-            'string' => self::formatTiffEpStandardIdString($normalised),
-        ];
-    }
-
-    /**
-     * Formats the TIFF/EP identifier bytes into a readable representation.
-     *
-     * @param list<int> $bytes
-     */
-    private static function formatTiffEpStandardIdString(array $bytes): ?string
-    {
-        $hasPrintable = true;
-
-        foreach ($bytes as $byte) {
-            if ($byte === 0) {
-                break;
-            }
-
-            if ($byte < self::PRINTABLE_ASCII_MIN || $byte > self::PRINTABLE_ASCII_MAX) {
-                $hasPrintable = false;
-                break;
-            }
-        }
-
-        if ($hasPrintable) {
-            $string = '';
-            foreach ($bytes as $byte) {
-                if ($byte === 0) {
-                    break;
-                }
-
-                $string .= chr($byte);
-            }
-
-            return $string === '' ? null : $string;
-        }
-
-        return implode('.', array_map(static fn (int $component): string => (string) $component, $bytes));
-    }
-
-    /**
-     * Scales ratios to percentages when battery readings are encoded as fractions.
-     */
-    private static function normaliseBatteryPercent(float $value): float
-    {
-        if ($value >= -1.0 && $value <= 1.0) {
-            return $value * 100.0;
-        }
-
-        return $value;
     }
 
     /**
@@ -902,6 +734,133 @@ final readonly class ValueConverters
         }
 
         return 2 ** (-$apex);
+    }
+
+    /**
+     * Formats an APEX shutter speed value as a human-readable fraction.
+     *
+     * EXIF 3.0 §4.6.6.7.13 (ShutterSpeedValue) stores the APEX value.
+     * This method converts it to display format like "1/20" or "2".
+     *
+     * @param ExifScalar $value The APEX value to format.
+     */
+    public static function formatShutterSpeedFromApex(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?string {
+        $seconds = self::apexShutterSpeedToSeconds($value);
+
+        if ($seconds === null) {
+            return null;
+        }
+
+        return self::formatExposureTime($seconds);
+    }
+
+    /**
+     * Formats exposure time in seconds as a human-readable string.
+     *
+     * EXIF 3.0 §4.6.6.7.1 (ExposureTime) stores exposure in seconds as RATIONAL.
+     * For times less than 0.5 seconds, displays as "1/x" fraction.
+     * For times >= 0.5 seconds, displays as decimal seconds.
+     *
+     * @param float|null $seconds Exposure time in seconds.
+     */
+    public static function formatExposureTime(?float $seconds): ?string
+    {
+        if ($seconds === null || $seconds <= 0.0) {
+            return null;
+        }
+
+        // For exposures >= 0.5 seconds, show as decimal seconds
+        if ($seconds >= 0.5) {
+            $rounded = round($seconds, 1);
+            if (fmod($rounded, 1.0) === 0.0) {
+                return sprintf('%d', (int) $rounded);
+            }
+
+            return sprintf('%.1f', $rounded);
+        }
+
+        // For shorter exposures, show as fraction 1/x
+        $reciprocal = 1.0 / $seconds;
+
+        // Round to common denominator values
+        $rounded = (int) round($reciprocal);
+
+        return sprintf('1/%d', $rounded);
+    }
+
+    /**
+     * Formats an APEX aperture value as a human-readable f-number string.
+     *
+     * EXIF 3.0 §4.6.6.7.14 (ApertureValue) stores the APEX value.
+     * This method converts it to display format like "f/1.9" or "f/2.8".
+     *
+     * @param ExifScalar $value The APEX value to format.
+     */
+    public static function formatApertureFromApex(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?string {
+        $fNumber = self::apexToFNumber($value);
+
+        if ($fNumber === null) {
+            return null;
+        }
+
+        return self::formatFNumber($fNumber);
+    }
+
+    /**
+     * Formats an f-number as a human-readable string.
+     *
+     * Displays as "f/x.x" with one decimal place when needed,
+     * or "f/x" for whole numbers.
+     *
+     * @param float|null $fNumber The f-number to format.
+     */
+    public static function formatFNumber(?float $fNumber): ?string
+    {
+        if ($fNumber === null || $fNumber <= 0.0) {
+            return null;
+        }
+
+        $rounded = round($fNumber, 1);
+
+        if (fmod($rounded, 1.0) === 0.0) {
+            return sprintf('f/%d', (int) $rounded);
+        }
+
+        return sprintf('f/%.1f', $rounded);
+    }
+
+    /**
+     * Formats an APEX brightness value as a human-readable EV string.
+     *
+     * EXIF 3.0 §4.6.6.7.15 (BrightnessValue) stores the APEX value.
+     * This method converts it to display format like "-2.21" or "5.3".
+     *
+     * @param ExifScalar $value The APEX value to format.
+     */
+    public static function formatBrightnessValue(
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?string {
+        $brightness = self::rationalToFloat($value);
+
+        if ($brightness === null && is_string($value) && is_numeric($value)) {
+            $brightness = (float) $value;
+        }
+
+        if ($brightness === null) {
+            return null;
+        }
+
+        $rounded = round($brightness, 2);
+
+        // Remove trailing zeros after decimal point
+        $formatted = sprintf('%.2f', $rounded);
+        $formatted = rtrim($formatted, '0');
+
+        return rtrim($formatted, '.');
     }
 
     /**
@@ -1239,34 +1198,6 @@ final readonly class ValueConverters
     }
 
     /**
-     * Converts a CFA pattern definition into typed colour enums.
-     *
-     * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF representation.
-     *
-     * @return list<CfaPatternColor>|null
-     */
-    public static function cfaPatternToColors(
-        array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
-    ): ?array {
-        $components = self::toIntList($value);
-        if ($components === null || $components === []) {
-            return null;
-        }
-
-        $colors = [];
-        foreach ($components as $component) {
-            $color = CfaPatternColor::fromExifValue($component);
-            if (!$color instanceof CfaPatternColor) {
-                return null;
-            }
-
-            $colors[] = $color;
-        }
-
-        return $colors;
-    }
-
-    /**
      * Converts a GPS speed measurement into metres per second.
      *
      * EXIF 3.0 §4.6.8 (GPSSpeedRef/GPSSpeed) defines the unit codes K, M and N.
@@ -1367,10 +1298,12 @@ final readonly class ValueConverters
      * Converts the EXIF flash bit field into a typed value object per
      * EXIF 3.0 §4.6.6.7.21 (Flash).
      *
-     * @param ExifScalar $value Flash tag value representation.
+     * Flash is a SHORT (EXIF 3.0 §4.6.6.7.21), so UInt64 cannot occur.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Flash tag value representation.
      */
     public static function flashFromShort(
-        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
     ): ?FlashInfo {
         if ($value instanceof ExifNumericList) {
             $first = $value->values[0] ?? null;
@@ -1708,98 +1641,6 @@ final readonly class ValueConverters
     }
 
     /**
-     * Decodes the Epson Print Image Matching parameter block stored in tag ExifTag::PRINT_IMAGE_MATCHING.
-     *
-     * EXIF 3.0 §4.6.4 documents the same PrintIM header layout and parameter bounds introduced in
-     * EXIF 2.21/2.32 §4.6.4, so the parser keeps the legacy guard rails while accepting the 3.0
-     * clarification that absent padding must be ignored.
-     *
-     * @param string|null $payload Raw UNDEFINED payload captured from the EXIF tag.
-     *
-     * @return array{header:string, version:string, parameters:list<array{id:int, value:int}>}|null
-     */
-    public static function decodePrintImageMatching(?string $payload): ?array
-    {
-        if ($payload === null || $payload === '') {
-            return null;
-        }
-
-        $length = strlen($payload);
-        if ($length < 14) {
-            return null;
-        }
-
-        $header = substr($payload, 0, 8);
-        if (!str_starts_with($header, 'PrintIM')) {
-            return null;
-        }
-
-        $versionRaw = substr($payload, 8, 4);
-        $countBytes = substr($payload, 12, 2);
-
-        if (strlen($countBytes) !== 2) {
-            return null;
-        }
-
-        $countData = @unpack('ncount', $countBytes);
-        if (!is_array($countData)) {
-            return null;
-        }
-
-        $countRaw = $countData['count'] ?? null;
-        if (!is_int($countRaw)) {
-            return null;
-        }
-
-        $count = $countRaw;
-        if ($count < 0 || $count > self::MAX_PRINT_IMAGE_MATCHING_PARAMETERS) {
-            return null;
-        }
-
-        $required = 14 + ($count * 6);
-        if ($required > $length) {
-            return null;
-        }
-
-        $parameters = [];
-        $offset     = 14;
-        for ($i = 0; $i < $count; ++$i) {
-            if ($offset + 6 > $length) {
-                return null;
-            }
-
-            $entryData = substr($payload, $offset, 6);
-            if (strlen($entryData) !== 6) {
-                return null;
-            }
-
-            $entry = @unpack('nid/Nvalue', $entryData);
-            if (!is_array($entry) || !isset($entry['id'], $entry['value'])) {
-                return null;
-            }
-
-            $idRaw    = $entry['id'];
-            $valueRaw = $entry['value'];
-            if (!is_int($idRaw) || !is_int($valueRaw)) {
-                return null;
-            }
-
-            $parameters[] = [
-                'id'    => $idRaw,
-                'value' => $valueRaw,
-            ];
-
-            $offset += 6;
-        }
-
-        return [
-            'header'     => rtrim($header, "\0"),
-            'version'    => rtrim($versionRaw, "\0"),
-            'parameters' => $parameters,
-        ];
-    }
-
-    /**
      * Extracts a null-terminated label from the SRATIONAL matrix payload.
      *
      * SRATIONAL matrix payload layout stems from EXIF 3.0 Annex C.3 where labels precede
@@ -1965,15 +1806,6 @@ final readonly class ValueConverters
             return $numeric === null ? null : self::normaliseGpsAltitudeRef($numeric);
         }
 
-        if ($value instanceof UInt64) {
-            $intValue = self::uint64ToInt($value, 'GPSAltitudeRef');
-            if ($intValue === null) {
-                return null;
-            }
-
-            return self::normaliseGpsAltitudeRef($intValue);
-        }
-
         if (is_string($value)) {
             $clean = trim($value);
             if ($clean === '' || !is_numeric($clean)) {
@@ -1998,32 +1830,30 @@ final readonly class ValueConverters
      * EXIF 3.0 §4.6.8 clarifies that an empty GPSVersionID must be treated as 2.0.0.0; this
      * method also supports the byte-packed dotted representation.
      *
-     * @param ExifScalar $value Raw value extracted from the IFD entry.
+     * GPSVersionID is BYTE[4] per EXIF 3.0 §4.6.8; UInt64 is accepted via
+     * IfdEntry::$value union but converted to int for display.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value extracted from the IFD entry.
      *
      * @return array{normalized: ?string, raw: ?string}
      */
     private static function formatGpsVersion(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): array {
+        if ($value instanceof UInt64) {
+            $value = self::uint64ToInt($value, 'GPSVersionID');
+        }
+
         $raw = is_string($value) ? $value : null;
 
         if ($value instanceof ExifNumericList) {
             $components = [];
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
-                    $converted = self::uint64ToInt($component, 'GPSVersionID');
-                    if ($converted === null) {
-                        return [
-                            'normalized' => null,
-                            'raw'        => $raw,
-                        ];
-                    }
-
-                    $components[] = $converted;
-                    continue;
+                    $components[] = $component->toInt('GPSVersionID component');
+                } else {
+                    $components[] = (int) $component;
                 }
-
-                $components[] = (int) $component;
             }
 
             $normalized = implode('.', $components);
@@ -2627,8 +2457,9 @@ final readonly class ValueConverters
     /**
      * Converts an unsigned 64-bit value into a signed integer when possible.
      *
-     * EXIF 3.0 §4.6 mandates that fields mapped to signed integer semantics must fit the
-     * platform range; values outside that range are treated as invalid for the conversion.
+     * BigTIFF uses LONG8 (64-bit) types for offset and count fields. When converting
+     * to a native PHP integer, values must fit the platform's signed integer range;
+     * values outside that range are treated as invalid for the conversion.
      */
     private static function uint64ToInt(UInt64 $value, string $context): ?int
     {
