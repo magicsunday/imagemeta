@@ -191,7 +191,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
             throw new BoundsError($message . ': ' . $offset);
         }
 
-        if ($offset > $this->size() - $length) {
+        if (($length > $this->size()) || ($offset > ($this->size() - $length))) {
             throw new BoundsError($message . ': ' . $offset);
         }
 
@@ -237,7 +237,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
 
         $intValue = $value->toInt($message);
 
-        if ($intValue > $this->size() - $padding) {
+        if ($intValue > ($this->size() - $padding)) {
             throw new BoundsError($message . ': ' . $value->toHex());
         }
 

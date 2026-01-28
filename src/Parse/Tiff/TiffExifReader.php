@@ -255,7 +255,7 @@ final class TiffExifReader implements ExifReaderInterface
             $nextIfd          = $this->readIfd($nextOffset);
             $additionalIfds[] = $nextIfd;
 
-            if (!$ifd1 instanceof Ifd) {
+            if (!($ifd1 instanceof Ifd)) {
                 $ifd1 = $nextIfd;
             }
 
@@ -962,7 +962,7 @@ final class TiffExifReader implements ExifReaderInterface
 
         $offsetInt = $offset->toInt($context);
 
-        if ($length > 0 && $offsetInt > $size - $length) {
+        if (($length > 0) && ($offsetInt > ($size - $length))) {
             throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
         }
     }

@@ -1135,7 +1135,7 @@ final readonly class ValueConverters
         }
 
         $required = $cells * self::SRATIONAL_VALUE_SIZE;
-        if ($required > $length - $offset) {
+        if ($required > ($length - $offset)) {
             return null;
         }
 

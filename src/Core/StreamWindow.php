@@ -89,7 +89,7 @@ final class StreamWindow implements BinaryReadAccessInterface
 
         $len = $this->normaliseReadLength($length, 'window read length out of range');
 
-        if ($this->cursor + $len > $this->length) {
+        if (($this->cursor + $len) > $this->length) {
             throw new BoundsError('window read out of range');
         }
 

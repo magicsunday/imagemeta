@@ -892,7 +892,7 @@ final class JpegExtractor
             $vertical   = min($vertical, $component['vertical']);
         }
 
-        if ($luma['horizontal'] % $horizontal !== 0 || $luma['vertical'] % $vertical !== 0) {
+        if ((($luma['horizontal'] % $horizontal) !== 0) || (($luma['vertical'] % $vertical) !== 0)) {
             return null;
         }
 

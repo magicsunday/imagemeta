@@ -214,7 +214,7 @@ final class MpfParser
         }
 
         // EXIF 3.0 §4.6.2 stores larger MPF values out of line at offsets relative to the MPF TIFF header.
-        if ($valueOrOffset < 8 || $valueOrOffset + $byteCount > $buffer->size()) {
+        if (($valueOrOffset < 8) || (($valueOrOffset + $byteCount) > $buffer->size())) {
             throw new ParseError('MPF value offset outside payload bounds');
         }
 
@@ -333,7 +333,7 @@ final class MpfParser
     {
         $entrySize = 16;
         $length    = strlen($data);
-        if ($length === 0 || $length % $entrySize !== 0) {
+        if (($length === 0) || (($length % $entrySize) !== 0)) {
             throw new ParseError('MPEntry data length is not a multiple of 16 bytes');
         }
 

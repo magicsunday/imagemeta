@@ -120,7 +120,7 @@ final class Stream implements BinaryReadAccessInterface
 
         $len = $this->normaliseReadLength($length, 'stream read length out of range');
 
-        if ($this->pos + $len > $this->size) {
+        if (($this->pos + $len) > $this->size) {
             throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size);
         }
 
@@ -139,7 +139,7 @@ final class Stream implements BinaryReadAccessInterface
      */
     public function window(int $offset, int $length): StreamWindow
     {
-        if ($offset < 0 || $length < 0 || $offset + $length > $this->size) {
+        if (($offset < 0) || ($length < 0) || (($offset + $length) > $this->size)) {
             throw new BoundsError('window out of range');
         }
 

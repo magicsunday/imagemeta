@@ -699,7 +699,7 @@ final readonly class IsoBmffExtractor
             $entrySize = $win->readU32BE();
             $format    = $win->read(4);
 
-            if ($entrySize < 16 || $pos + $entrySize > $stsd->contentSize) {
+            if (($entrySize < 16) || (($pos + $entrySize) > $stsd->contentSize)) {
                 throw new ParseError('invalid stsd entry size');
             }
 
@@ -1220,7 +1220,7 @@ final readonly class IsoBmffExtractor
             $offset = $unpacked['offset'];
 
             // Validate offset and skip to TIFF header
-            if ($offset >= 0 && 4 + $offset <= strlen($blob)) {
+            if (($offset >= 0) && ((4 + $offset) <= strlen($blob))) {
                 return substr($blob, 4 + $offset);
             }
         }
@@ -1282,7 +1282,7 @@ final readonly class IsoBmffExtractor
                     throw new ParseError('iloc item payload exceeds configured limit');
                 }
 
-                if ($length > $fileSize - $total) {
+                if (($total > $fileSize) || ($length > ($fileSize - $total))) {
                     throw new ParseError('iloc extent length exceeds file size');
                 }
 
@@ -1299,7 +1299,7 @@ final readonly class IsoBmffExtractor
                 }
 
                 $offset = $baseOffset + $extentOffset;
-                if ($offset > $fileSize - $length) {
+                if (($length > $fileSize) || ($offset > ($fileSize - $length))) {
                     throw new ParseError('iloc extent outside file');
                 }
 
@@ -1330,7 +1330,7 @@ final readonly class IsoBmffExtractor
                     throw new ParseError('iloc item payload exceeds configured limit');
                 }
 
-                if ($length > $idatSize - $total) {
+                if (($total > $idatSize) || ($length > ($idatSize - $total))) {
                     throw new ParseError('iloc extent length exceeds idat payload');
                 }
 
@@ -1347,7 +1347,7 @@ final readonly class IsoBmffExtractor
                 }
 
                 $offset = $baseOffset + $extentOffset;
-                if ($offset > $idatSize - $length) {
+                if (($length > $idatSize) || ($offset > ($idatSize - $length))) {
                     throw new ParseError('iloc extent outside idat payload');
                 }
 
@@ -1418,7 +1418,7 @@ final readonly class IsoBmffExtractor
                 }
 
                 $offset = $baseOffset + $extentOffset;
-                if ($offset > $referenceSize - $length) {
+                if (($length > $referenceSize) || ($offset > ($referenceSize - $length))) {
                     throw new ParseError('iloc extent outside referenced item');
                 }
 
@@ -1786,7 +1786,7 @@ final readonly class IsoBmffExtractor
             $win->seek($pos);
             $size      = $win->readU32BE();
             $namespace = $win->read(4);
-            if ($size < 8 || $pos + $size > $keys->contentSize) {
+            if (($size < 8) || (($pos + $size) > $keys->contentSize)) {
                 throw new ParseError('invalid keys entry size');
             }
 

@@ -100,7 +100,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
             $ifdOffset = $this->readU32($raw, $headerOffset + 4, $endian, 'Samsung IFD offset');
             $ifdStart  = $headerOffset + $ifdOffset;
 
-            if ($ifdOffset < 8 || $ifdStart + 2 > $length) {
+            if (($ifdOffset < 8) || (($ifdStart + 2) > $length)) {
                 return null;
             }
 
@@ -216,7 +216,7 @@ final class SamsungDecoder implements MakerNotesDecoderInterface
         }
 
         $dataOffset = $headerOffset + $valueOffset;
-        if ($dataOffset < 0 || $dataOffset + $dataSize > $length) {
+        if (($dataOffset < 0) || (($dataOffset + $dataSize) > $length)) {
             return null;
         }
 

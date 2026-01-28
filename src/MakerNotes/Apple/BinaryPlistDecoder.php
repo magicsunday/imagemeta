@@ -630,7 +630,7 @@ final class BinaryPlistDecoder
         }
 
         $payloadOffset = $offset + $header;
-        if ($payloadOffset + $size > $this->length) {
+        if (($payloadOffset + $size) > $this->length) {
             throw new ParseError('Incomplete UID payload.');
         }
 
@@ -723,7 +723,7 @@ final class BinaryPlistDecoder
 
         $refsOffset = $offset + $header;
         $bytes      = $count * $this->objectRefSize;
-        if ($refsOffset + $bytes > $this->length) {
+        if (($refsOffset + $bytes) > $this->length) {
             throw new ParseError('Array references exceed payload bounds.');
         }
 
@@ -756,7 +756,7 @@ final class BinaryPlistDecoder
 
         $refsOffset = $offset + $header;
         $bytes      = $count * $this->objectRefSize * 2;
-        if ($refsOffset + $bytes > $this->length) {
+        if (($refsOffset + $bytes) > $this->length) {
             throw new ParseError('Dictionary references exceed payload bounds.');
         }
 
@@ -853,7 +853,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Cannot read zero length integers.');
         }
 
-        if ($offset < 0 || $offset + $length > $this->length) {
+        if (($offset < 0) || (($offset + $length) > $this->length)) {
             throw new ParseError('Attempted to read outside of the payload.');
         }
 
