@@ -74,6 +74,7 @@ return (new PhpCsFixer\Config())
             'ensure_single_space' => true,
         ],
         'single_line_throw'               => false,
+        'single_import_per_statement'     => false,
         'self_accessor'                   => false,
         'global_namespace_import'         => [
             'import_classes'   => true,

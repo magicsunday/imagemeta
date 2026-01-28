@@ -1,5 +1,5 @@
 {
-    "generated": "2026-01-19T17:02:59+00:00",
+    "generated": "2026-01-28T20:25:29+00:00",
     "summary": {
         "total_spec_tags": 227,
         "implemented": 227,
@@ -271,7 +271,8 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "orientation"
+                    "orientation",
+                    "orientationDescription"
                 ],
                 "notes": []
             },
@@ -1302,7 +1303,8 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "orientation"
+                    "orientation",
+                    "orientationDescription"
                 ],
                 "notes": []
             },
@@ -1660,6 +1662,7 @@
                 "getter_method_exists": true,
                 "getter_methods": [
                     "exposureTime",
+                    "exposureTimeFormatted",
                     "sourceExposureTimesOfCompositeImage"
                 ],
                 "notes": []
@@ -1991,7 +1994,8 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "apertureValue"
+                    "apertureValue",
+                    "apertureValueFormatted"
                 ],
                 "notes": []
             },
@@ -2006,7 +2010,8 @@
                 "constant_defined": true,
                 "getter_method_exists": true,
                 "getter_methods": [
-                    "brightnessValue"
+                    "brightnessValue",
+                    "brightnessValueFormatted"
                 ],
                 "notes": []
             },

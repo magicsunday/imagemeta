@@ -78,6 +78,55 @@ final class IsoBmffExtractorTest extends TestCase
     }
 
     /**
+     * Ensures QuickTime meta boxes without a full box header are parsed correctly.
+     */
+    #[Test]
+    public function extractExifFromNonFullMetaBox(): void
+    {
+        $exifPayload = "Exif\0\0quicktime-exif";
+        $meta        = $this->box('meta', $this->box('Exif', $exifPayload));
+        $ftyp        = $this->box('ftyp', 'qt  ');
+        $data        = $ftyp . $meta;
+
+        $extractor           = $this->createExtractor($data);
+        [$exifs, $xmps, $qt] = $extractor->extract();
+
+        self::assertSame(['quicktime-exif'], $exifs);
+        self::assertSame([], $xmps);
+        self::assertNull($qt);
+    }
+
+    /**
+     * Ensures short numeric payloads in QuickTime data boxes are tolerated.
+     */
+    #[Test]
+    public function tolerateShortNumericQuickTimePayloads(): void
+    {
+        $keyName = 'com.apple.quicktime.live-photo.auto';
+
+        $keysPayload = pack('N', 1);
+        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= 'mdta';
+        $keysPayload .= $keyName;
+        $keys = $this->fullBox('keys', $keysPayload);
+
+        $dataPayload = pack('N', 0x16) . pack('N', 0) . "\x01";
+        $data        = $this->box('data', $dataPayload);
+        $entry       = $this->box(pack('N', 1), $data);
+        $ilst        = $this->box('ilst', $entry);
+
+        $meta = $this->fullBox('meta', $keys . $ilst);
+        $ftyp = $this->box('ftyp', 'qt  ');
+
+        $extractor       = $this->createExtractor($ftyp . $meta);
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertArrayHasKey($keyName, $quickTime->keys);
+        self::assertSame("\x01", $quickTime->keys[$keyName]);
+    }
+
+    /**
      * Verifies fragmented EXIF data referenced via iloc extents is reassembled.
      */
     #[Test]

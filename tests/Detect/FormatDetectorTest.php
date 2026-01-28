@@ -65,6 +65,19 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Ensures that QuickTime files with a leading wide padding box are recognised as ISO BMFF.
+     */
+    #[Test]
+    public function detectRecognisesQuickTimeWideBox(): void
+    {
+        $stream = $this->createStream("\x00\x00\x00\x08wide\x00\x00\x00\x08mdat");
+
+        $detected = FormatDetector::detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
      * Ensures that an unsupported signature results in a parse error.
      */
     #[Test]

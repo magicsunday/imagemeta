@@ -1,5 +1,5 @@
 ---
-generated: "2026-01-19T17:02:59+00:00"
+generated: "2026-01-28T20:25:29+00:00"
 summary:
   total_spec_tags: 227
   implemented: 227
@@ -238,6 +238,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - orientation
+      - orientationDescription
       notes: []
     277:
       tag_id: "0x0115"
@@ -1134,6 +1135,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - orientation
+      - orientationDescription
       notes: []
     277:
       tag_id: "0x0115"
@@ -1445,6 +1447,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - exposureTime
+      - exposureTimeFormatted
       - sourceExposureTimesOfCompositeImage
       notes: []
     33437:
@@ -1735,6 +1738,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - apertureValue
+      - apertureValueFormatted
       notes: []
     37379:
       tag_id: "0x9203"
@@ -1748,6 +1752,7 @@ categories:
       getter_method_exists: true
       getter_methods:
       - brightnessValue
+      - brightnessValueFormatted
       notes: []
     37380:
       tag_id: "0x9204"

@@ -870,7 +870,8 @@ final readonly class IsoBmffExtractor
         /** @var list<BoxDescriptor> $ilstBoxes */
         $ilstBoxes = [];
 
-        foreach ($this->walkChildren($meta, 4) as $child) {
+        $childOffset = $this->detectMetaChildOffset($meta);
+        foreach ($this->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
                 case self::BOX_EXIF:
                     // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalise deviations.
@@ -936,6 +937,73 @@ final readonly class IsoBmffExtractor
             'keysMaps'       => $keysMaps,
             'ilstBoxes'      => $ilstBoxes,
         ];
+    }
+
+    /**
+     * Determines whether the meta box includes a full box header (version/flags).
+     */
+    private function detectMetaChildOffset(BoxDescriptor $meta): int
+    {
+        // ISO/IEC 14496-12 §8.11.1 defines `meta` as a FullBox, but some QuickTime
+        // files omit the version/flags header, so probe for the first child box.
+        if ($meta->contentSize < 8) {
+            return 0;
+        }
+
+        $window = $meta->window;
+        $window->seek(0);
+
+        $peekLength = $meta->contentSize < 12 ? $meta->contentSize : 12;
+        $peek       = $window->read($peekLength);
+        $peekSize   = strlen($peek);
+
+        if ($peekSize >= 8) {
+            $size = $this->readU32FromBytes($peek, 0, 'meta child size');
+            $type = substr($peek, 4, 4);
+
+            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($size, $meta->contentSize)) {
+                return 0;
+            }
+        }
+
+        if ($peekSize >= 12) {
+            $size = $this->readU32FromBytes($peek, 4, 'meta child size');
+            $type = substr($peek, 8, 4);
+
+            if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($size, $meta->contentSize - 4)) {
+                return 4;
+            }
+        }
+
+        return 4;
+    }
+
+    /**
+     * Reads a big-endian 32-bit unsigned integer from a byte sequence.
+     */
+    private function readU32FromBytes(string $bytes, int $offset, string $context): int
+    {
+        if ($offset < 0 || ($offset + 4) > strlen($bytes)) {
+            throw new ParseError('Insufficient bytes for ' . $context . '.');
+        }
+
+        return Unpack::int('N', substr($bytes, $offset, 4), $context);
+    }
+
+    /**
+     * Checks if a box size value is plausible for the provided container size.
+     */
+    private function isPlausibleBoxSize(int $size, int $limit): bool
+    {
+        if ($size === 0 || $size === 1) {
+            return true;
+        }
+
+        if ($size < 8) {
+            return false;
+        }
+
+        return $size <= $limit;
     }
 
     /**
@@ -1920,7 +1988,7 @@ final readonly class IsoBmffExtractor
 
         if ($type === self::DATA_TYPE_INT32) {
             if ($payloadSize < 4) {
-                throw new ParseError('data box int payload too small');
+                return $payload;
             }
 
             $unsigned = Unpack::int('N', substr($payload, 0, 4), 'QuickTime int32 payload');
@@ -1930,7 +1998,7 @@ final readonly class IsoBmffExtractor
 
         if ($type === self::DATA_TYPE_FLOAT32) {
             if ($payloadSize < 4) {
-                throw new ParseError('data box float payload too small');
+                return $payload;
             }
 
             return Unpack::float('G', substr($payload, 0, 4), 'QuickTime float32 payload');
@@ -1938,7 +2006,7 @@ final readonly class IsoBmffExtractor
 
         if ($type === self::DATA_TYPE_FLOAT64) {
             if ($payloadSize < 8) {
-                throw new ParseError('data box float64 payload too small');
+                return $payload;
             }
 
             return Unpack::float('E', substr($payload, 0, 8), 'QuickTime float64 payload');
