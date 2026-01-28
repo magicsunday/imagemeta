@@ -127,6 +127,36 @@ final class IsoBmffExtractorTest extends TestCase
     }
 
     /**
+     * Ensures short int payloads in QuickTime data boxes are tolerated.
+     */
+    #[Test]
+    public function tolerateShortIntegerQuickTimePayloads(): void
+    {
+        $keyName = 'com.apple.quicktime.live-photo.auto';
+
+        $keysPayload = pack('N', 1);
+        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= 'mdta';
+        $keysPayload .= $keyName;
+        $keys = $this->fullBox('keys', $keysPayload);
+
+        $dataPayload = pack('N', 0x15) . pack('N', 0) . "\x01";
+        $data        = $this->box('data', $dataPayload);
+        $entry       = $this->box(pack('N', 1), $data);
+        $ilst        = $this->box('ilst', $entry);
+
+        $meta = $this->fullBox('meta', $keys . $ilst);
+        $ftyp = $this->box('ftyp', 'qt  ');
+
+        $extractor       = $this->createExtractor($ftyp . $meta);
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertArrayHasKey($keyName, $quickTime->keys);
+        self::assertSame("\x01", $quickTime->keys[$keyName]);
+    }
+
+    /**
      * Verifies fragmented EXIF data referenced via iloc extents is reassembled.
      */
     #[Test]

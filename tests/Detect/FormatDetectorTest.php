@@ -78,6 +78,19 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
+     * Ensures that padding boxes like free/skip do not block ISO BMFF detection.
+     */
+    #[Test]
+    public function detectRecognisesIsoBmffAfterFreePadding(): void
+    {
+        $stream = $this->createStream("\x00\x00\x00\x08free\x00\x00\x00\x18ftypqt  ");
+
+        $detected = FormatDetector::detect($stream);
+
+        self::assertSame(ContainerType::ISOBMFF, $detected);
+    }
+
+    /**
      * Ensures that an unsupported signature results in a parse error.
      */
     #[Test]
