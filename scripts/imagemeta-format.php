@@ -550,6 +550,11 @@ final class MetadataFormatter
             exit(1);
         }
 
+        if (is_dir($filePath)) {
+            echo sprintf('Error: Path is a directory, not a file: %s%s', $filePath, PHP_EOL);
+            exit(1);
+        }
+
         $reader   = new MetadataReader();
         $metadata = $reader->read($filePath, withDigests: true);
 

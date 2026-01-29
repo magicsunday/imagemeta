@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
-use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;

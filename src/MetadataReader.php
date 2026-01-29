@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta;
 
 use finfo;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
@@ -22,9 +23,9 @@ use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 
 use function class_exists;
@@ -43,7 +44,7 @@ use const PATHINFO_EXTENSION;
 final readonly class MetadataReader
 {
     public function __construct(
-        private TiffExifReader $tiffReader = new TiffExifReader(),
+        private TiffExifParser $tiffReader = new TiffExifParser(),
         private AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
         private XmpParser $xmpParser = new XmpParser(),
         private IptcParser $iptcParser = new IptcParser(),
@@ -61,6 +62,10 @@ final readonly class MetadataReader
      */
     public function read(string $path, bool $withDigests = false): Metadata
     {
+        if (is_dir($path)) {
+            throw new ParseError(sprintf('Path is a directory, not a file: %s', $path));
+        }
+
         $mimeType  = $this->detectMimeType($path);
         $fileSize  = $this->detectFileSize($path);
         $extension = $this->detectExtension($path);
@@ -96,7 +101,7 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        $jpeg = new JpegExtractor($stream);
+        $jpeg = new JpegParser($stream);
         // Extract the JPEG segments along with frame and auxiliary stream data.
         $exifBlobs       = $jpeg->extractExifBlobs();
         $xmpBlobs        = $jpeg->extractXmpPackets();
@@ -194,7 +199,7 @@ final readonly class MetadataReader
         ?string $digestSha1,
         ?string $digestMd5,
     ): Metadata {
-        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems] = (new IsoBmffExtractor($stream))->extract();
+        [$exifBlobs, $xmpBlobs, $qt, $isoBmffItemReferences, $isoBmffDataReferences, $isoBmffUnresolvedItems] = (new IsoBmffParser($stream))->extract();
 
         $exifDoc    = null;
         $xmpDoc     = null;

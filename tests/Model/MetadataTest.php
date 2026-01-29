@@ -12,10 +12,10 @@ declare(strict_types=1);
 namespace MagicSunday\imagemeta\tests\Model;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
-use MagicSunday\ImageMeta\Curate\ExifAssembler;
-use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Factory\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;

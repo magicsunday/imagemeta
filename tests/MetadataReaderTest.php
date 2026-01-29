@@ -18,11 +18,11 @@ use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
-use MagicSunday\ImageMeta\Curate\Exif\ValueFactory;
-use MagicSunday\ImageMeta\Curate\ExifAssembler;
-use MagicSunday\ImageMeta\Curate\StructuredMetadata;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
 use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
+use MagicSunday\ImageMeta\Factory\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\StructuredMetadata;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -49,9 +49,9 @@ use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
-use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffExtractor;
-use MagicSunday\ImageMeta\Parse\Jpeg\JpegExtractor;
-use MagicSunday\ImageMeta\Parse\Tiff\TiffExifReader;
+use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
+use MagicSunday\ImageMeta\Parse\Jpeg\JpegParser;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
@@ -147,9 +147,9 @@ use function unlink;
 #[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(BoxDescriptor::class)]
-#[UsesClass(IsoBmffExtractor::class)]
-#[UsesClass(JpegExtractor::class)]
-#[UsesClass(TiffExifReader::class)]
+#[UsesClass(IsoBmffParser::class)]
+#[UsesClass(JpegParser::class)]
+#[UsesClass(TiffExifParser::class)]
 #[UsesClass(XmpParser::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(Audio::class)]

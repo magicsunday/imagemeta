@@ -15,10 +15,10 @@ This directory contains comprehensive negative and fuzz tests for the TIFF/EXIF 
 
 | File | Tests | Focus Area |
 |------|-------|------------|
-| `TiffExifReaderNegativeTest.php` | 12 | General malformed structures |
-| `TiffExifReaderBigTiffTest.php` | 11 | BigTIFF 64-bit edge cases |
-| `TiffExifReaderFuzzTest.php` | 17 | Fuzz-style random inputs |
-| `TiffExifReaderUserCommentTest.php` | 12 | Encoding and special fields |
+| `TiffExifParserNegativeTest.php` | 12 | General malformed structures |
+| `TiffExifParserBigTiffTest.php` | 11 | BigTIFF 64-bit edge cases |
+| `TiffExifParserFuzzTest.php` | 17 | Fuzz-style random inputs |
+| `TiffExifParserUserCommentTest.php` | 12 | Encoding and special fields |
 | **Total** | **52** | |
 
 ### Documentation
@@ -78,7 +78,7 @@ composer ci:test:php:unit
 ### Run Specific Test File
 
 ```bash
-./build/bin/phpunit tests/Parse/Tiff/TiffExifReaderNegativeTest.php
+./build/bin/phpunit tests/Parse/Tiff/TiffExifParserNegativeTest.php
 ```
 
 ### Check Coverage
@@ -87,7 +87,7 @@ composer ci:test:php:unit
 composer ci:test:php:unit:coverage
 ```
 
-Expected: ≥90% coverage for TiffExifReader
+Expected: ≥90% coverage for TiffExifParser
 
 ## 📖 Documentation
 
@@ -190,7 +190,7 @@ Total                            6         2,150       1,850         300
 
 ## 🤝 Contributing
 
-When modifying TiffExifReader:
+When modifying TiffExifParser:
 
 1. Run existing negative tests to ensure error handling works
 2. Add tests for new error conditions  

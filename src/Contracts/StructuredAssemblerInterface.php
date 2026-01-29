@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Contracts;
 
-use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadata;
 use MagicSunday\ImageMeta\Model\Metadata;
 
 /**

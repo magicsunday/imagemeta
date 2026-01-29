@@ -12,7 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Curate\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\ExifAssembler;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;

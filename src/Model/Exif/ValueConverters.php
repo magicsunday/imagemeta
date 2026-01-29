@@ -146,9 +146,9 @@ final readonly class ValueConverters
     private const int SRATIONAL_VALUE_SIZE = 8;
 
     /**
-     * EXIF 3.0 §4.6.8 (GPSVersionID) default value when the field is blank.
+     * EXIF 3.0 §4.6.7.1.1 (GPSVersionID) default value when the field is blank.
      */
-    private const string DEFAULT_GPS_VERSION = '2.0.0.0';
+    private const string DEFAULT_GPS_VERSION = '2.4.0.0';
 
     /**
      * EXIF 3.0 §4.6.6.8 defines 0xFFFFFFFF as "unknown" for shooting situation rationals.
@@ -1525,7 +1525,8 @@ final readonly class ValueConverters
         if ($altEntry instanceof IfdEntry) {
             $alt = self::rationalToFloat($altEntry->value);
 
-            if ($alt !== null && $result['alt_ref'] === 1) {
+            // EXIF 3.0 §4.6.7.1.6: Values 1 (below ellipsoidal) and 3 (below sea level) indicate negative altitude
+            if ($alt !== null && ($result['alt_ref'] === 1 || $result['alt_ref'] === 3)) {
                 $alt = -$alt;
             }
 
@@ -1818,7 +1819,12 @@ final readonly class ValueConverters
         if (is_int($value) || is_float($value)) {
             $normalized = (int) round((float) $value);
 
-            return $normalized > 0 ? 1 : 0;
+            // EXIF 3.0 §4.6.7.1.6: Valid values are 0-3
+            if ($normalized < 0 || $normalized > 3) {
+                return null;
+            }
+
+            return $normalized;
         }
 
         return null;
@@ -1827,7 +1833,7 @@ final readonly class ValueConverters
     /**
      * Converts a GPS version payload into a dotted string.
      *
-     * EXIF 3.0 §4.6.8 clarifies that an empty GPSVersionID must be treated as 2.0.0.0; this
+     * EXIF 3.0 §4.6.7.1.1 clarifies that an empty GPSVersionID must be treated as 2.4.0.0; this
      * method also supports the byte-packed dotted representation.
      *
      * GPSVersionID is BYTE[4] per EXIF 3.0 §4.6.8; UInt64 is accepted via

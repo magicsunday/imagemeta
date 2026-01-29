@@ -11,8 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
-use MagicSunday\ImageMeta\Curate\ExifAssembler;
-use MagicSunday\ImageMeta\Curate\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\StructuredMetadata;
 
 /**
  * Lazily assembles and caches structured metadata derived from the aggregate.

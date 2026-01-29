@@ -15,7 +15,6 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
-use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
@@ -350,7 +349,7 @@ final class ExifConvenience
 
         $reference = $gps->altitudeRef;
 
-        if ($reference === GpsAltitudeRef::BELOW_SEA_LEVEL) {
+        if ($reference !== null && $reference->isBelow()) {
             return -$altitude;
         }
 

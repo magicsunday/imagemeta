@@ -29,10 +29,10 @@ composer ci:test:php:unit
 - No warnings or notices
 
 **Verification Points:**
-- [ ] TiffExifReaderNegativeTest: 15/15 tests pass
-- [ ] TiffExifReaderBigTiffTest: 11/11 tests pass  
-- [ ] TiffExifReaderFuzzTest: 16/16 tests pass
-- [ ] TiffExifReaderUserCommentTest: 13/13 tests pass
+- [ ] TiffExifParserNegativeTest: 15/15 tests pass
+- [ ] TiffExifParserBigTiffTest: 11/11 tests pass  
+- [ ] TiffExifParserFuzzTest: 16/16 tests pass
+- [ ] TiffExifParserUserCommentTest: 13/13 tests pass
 - [ ] No regressions in existing tests
 
 ### 2. Coverage Analysis
@@ -42,12 +42,12 @@ composer ci:test:php:unit:coverage
 ```
 
 **Expected Result:**
-- Coverage for TiffExifReader error paths: ≥90%
+- Coverage for TiffExifParser error paths: ≥90%
 - Overall project coverage: maintained or improved
 
 **Verification Points:**
 - [ ] Coverage report generated in `.build/coverage/`
-- [ ] TiffExifReader.php coverage ≥90%
+- [ ] TiffExifParser.php coverage ≥90%
 - [ ] Error handling paths covered:
   - [ ] ParseError branches
   - [ ] BoundsError branches

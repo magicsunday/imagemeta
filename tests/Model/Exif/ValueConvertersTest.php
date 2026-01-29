@@ -769,7 +769,7 @@ final class ValueConvertersTest extends TestCase
 
         $result = ValueConverters::gpsFromIfd($gps);
 
-        self::assertSame('2.0.0.0', $result['version']);
+        self::assertSame('2.4.0.0', $result['version']);
         self::assertNull($result['version_raw']);
     }
 
@@ -782,7 +782,7 @@ final class ValueConvertersTest extends TestCase
 
         $result = ValueConverters::gpsFromIfd($gps);
 
-        self::assertSame('2.0.0.0', $result['version']);
+        self::assertSame('2.4.0.0', $result['version']);
         self::assertSame("\0\0\0\0", $result['version_raw']);
     }
 

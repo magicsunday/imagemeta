@@ -8,7 +8,7 @@ The test suite adds **55 comprehensive negative tests** across four test classes
 
 ## Test Files
 
-### 1. TiffExifReaderNegativeTest.php (15 tests)
+### 1. TiffExifParserNegativeTest.php (15 tests)
 
 Tests for fundamental TIFF structure violations and error handling.
 
@@ -38,7 +38,7 @@ $this->expectException(BoundsError::class);
 $reader->parseFromBlob($blob);
 ```
 
-### 2. TiffExifReaderBigTiffTest.php (11 tests)
+### 2. TiffExifParserBigTiffTest.php (11 tests)
 
 BigTIFF-specific edge cases and 64-bit handling.
 
@@ -73,7 +73,7 @@ $blob .= pack('v', 0x0100)               // Tag
     . pack('P', 1920);                   // Value (inline, 64-bit)
 ```
 
-### 3. TiffExifReaderFuzzTest.php (16 tests)
+### 3. TiffExifParserFuzzTest.php (16 tests)
 
 Fuzz-style tests simulating corrupted or malicious inputs.
 
@@ -108,7 +108,7 @@ $blob = $this->buildTiffWithRational(0, 0);
 $result = $reader->parseFromBlob($blob);  // Should not throw
 ```
 
-### 4. TiffExifReaderUserCommentTest.php (13 tests)
+### 4. TiffExifParserUserCommentTest.php (13 tests)
 
 UserComment encoding and special EXIF field edge cases.
 
@@ -195,7 +195,7 @@ composer ci:test:php:unit
 
 ### Specific Test File
 ```bash
-./build/bin/phpunit tests/Parse/Tiff/TiffExifReaderNegativeTest.php
+./build/bin/phpunit tests/Parse/Tiff/TiffExifParserNegativeTest.php
 ```
 
 ### With Coverage
@@ -203,7 +203,7 @@ composer ci:test:php:unit
 composer ci:test:php:unit:coverage
 ```
 
-Expected coverage: ≥90% for TiffExifReader error paths.
+Expected coverage: ≥90% for TiffExifParser error paths.
 
 ## Extending the Tests
 
@@ -252,7 +252,7 @@ public function handlesRationalWithNegativeNumerator(): void
     // RATIONAL should only have unsigned values, but test parsing
     $blob = $this->buildTiffWithRational(-100, 200);
     
-    $reader = new TiffExifReader();
+    $reader = new TiffExifParser();
     $result = $reader->parseFromBlob($blob);
     
     // Verify it parses (values will be reinterpreted as unsigned)
@@ -312,7 +312,7 @@ Potential areas for expansion:
 
 ## Maintenance
 
-When updating TiffExifReader:
+When updating TiffExifParser:
 
 1. Run negative tests to ensure error handling still works
 2. Add tests for new error conditions

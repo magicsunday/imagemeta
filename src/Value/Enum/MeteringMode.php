@@ -15,7 +15,7 @@ use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 
 /**
  * Defines the metering modes listed for the MeteringMode tag in EXIF 3.0
- * §4.6.3 (shooting conditions).
+ * §4.6.6.7.19 (MeteringMode).
  */
 enum MeteringMode: int
 {
