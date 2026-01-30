@@ -24,21 +24,41 @@ trait ReadsBinaryPrimitives
      */
     abstract protected function byteReader(): ByteReader;
 
+    /**
+     * Reads an unsigned 8-bit integer from the underlying source.
+     *
+     * @return int Unsigned 8-bit integer value.
+     */
     public function readU8(): int
     {
         return $this->byteReader()->readU8();
     }
 
+    /**
+     * Reads an unsigned 16-bit big-endian integer from the underlying source.
+     *
+     * @return int Unsigned 16-bit integer value.
+     */
     public function readU16BE(): int
     {
         return $this->byteReader()->readU16BE();
     }
 
+    /**
+     * Reads an unsigned 32-bit big-endian integer from the underlying source.
+     *
+     * @return int Unsigned 32-bit integer value.
+     */
     public function readU32BE(): int
     {
         return $this->byteReader()->readU32BE();
     }
 
+    /**
+     * Reads an unsigned 64-bit big-endian integer from the underlying source.
+     *
+     * @return UInt64 Unsigned 64-bit integer value.
+     */
     public function readU64BE(): UInt64
     {
         return $this->byteReader()->readU64BE();

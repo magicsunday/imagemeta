@@ -33,6 +33,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Exposure::class)]
 final class ExposureTest extends TestCase
 {
+    /**
+     * Verifies that $exposure->iso equals 200.
+     *
+     * @return void
+     */
     #[Test]
     public function storesMeasurementAndEnumValues(): void
     {

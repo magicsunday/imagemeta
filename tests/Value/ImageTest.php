@@ -21,6 +21,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Image::class)]
 final class ImageTest extends TestCase
 {
+    /**
+     * Verifies that $image->width equals 6000.
+     *
+     * @return void
+     */
     #[Test]
     public function providesDimensionAndMetadataValues(): void
     {

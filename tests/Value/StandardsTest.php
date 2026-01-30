@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Standards::class)]
 final class StandardsTest extends TestCase
 {
+    /**
+     * Verifies that $standards->exifVersion equals '3.00'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithExifVersion(): void
     {
@@ -34,6 +39,11 @@ final class StandardsTest extends TestCase
         self::assertSame('3.00', $standards->exifVersion);
     }
 
+    /**
+     * Verifies that $standards->exifVersion equals '2.32'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllFields(): void
     {
@@ -48,6 +58,11 @@ final class StandardsTest extends TestCase
         self::assertSame('1.00', $standards->flashpixVersion);
     }
 
+    /**
+     * Verifies that $standards->exifVersion is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

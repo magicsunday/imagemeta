@@ -65,10 +65,9 @@ use function substr;
 final class TiffExifParserNegativeTest extends TestCase
 {
     /**
-     * Tests that an invalid byte order marker triggers a ParseError.
+     * Verifies that invalid byte order markers raise ParseError.
      *
-     * EXIF 3.0 §4.5.1 specifies that only "II" (little-endian) and "MM" (big-endian)
-     * are valid byte order markers.
+     * @return void
      */
     #[Test]
     public function rejectsInvalidByteOrderMarker(): void
@@ -84,9 +83,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests that an invalid magic number triggers a ParseError.
+     * Verifies that unknown TIFF magic values raise ParseError.
      *
-     * EXIF 3.0 §4.5.1 recognizes only 0x002A (classic TIFF) and 0x002B (BigTIFF).
+     * @return void
      */
     #[Test]
     public function rejectsInvalidMagicNumber(): void
@@ -102,10 +101,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests that an IFD offset pointing beyond the blob size triggers a BoundsError.
+     * Verifies that out-of-range IFD offsets raise BoundsError.
      *
-     * EXIF 3.0 §4.5.2 requires that IFD offsets point to valid locations within
-     * the TIFF blob.
+     * @return void
      */
     #[Test]
     public function rejectsIfdOffsetBeyondBlobSize(): void
@@ -121,9 +119,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests that truncated TIFF data (missing IFD) triggers an error.
+     * Verifies that truncated IFD headers raise BoundsError.
      *
-     * EXIF 3.0 §4.5.2 defines the IFD structure which must be complete.
+     * @return void
      */
     #[Test]
     public function rejectsTruncatedIfdHeader(): void
@@ -139,9 +137,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests that a BigTIFF header with invalid offset size triggers a ParseError.
+     * Verifies that invalid BigTIFF offset sizes raise ParseError.
      *
-     * EXIF 3.0 §4.5.1 restricts BigTIFF offset sizes to 8 or 16 bytes.
+     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithInvalidOffsetSize(): void
@@ -162,9 +160,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests that a BigTIFF header with non-zero reserved field triggers a ParseError.
+     * Verifies that non-zero BigTIFF reserved fields raise ParseError.
      *
-     * EXIF 3.0 §4.5.1 requires the reserved field to be zero.
+     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithNonZeroReserved(): void
@@ -185,10 +183,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests handling of RATIONAL with zero denominator.
+     * Verifies that RATIONAL values with zero denominators are tolerated.
      *
-     * EXIF 3.0 §4.5.2 defines RATIONAL as two LONGs (numerator/denominator).
-     * Division by zero is a special case that should be handled gracefully.
+     * @return void
      */
     #[Test]
     public function handlesRationalWithZeroDenominator(): void
@@ -203,9 +200,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests handling of SRATIONAL with extreme values.
+     * Verifies that SRATIONAL extreme values are tolerated.
      *
-     * EXIF 3.0 §4.5.2 defines SRATIONAL as two signed LONGs.
+     * @return void
      */
     #[Test]
     public function handlesSrationalWithExtremeValues(): void
@@ -220,9 +217,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests that an IFD entry count causing overflow is rejected.
+     * Verifies that excessive IFD entry counts raise BoundsError.
      *
-     * EXIF 3.0 §4.5.2 specifies the IFD entry count format.
+     * @return void
      */
     #[Test]
     public function rejectsIfdWithHugeEntryCount(): void
@@ -241,10 +238,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests detection of cyclic IFD chains (IFD pointing back to itself).
+     * Verifies that cyclic IFD chains are detected without infinite loops.
      *
-     * EXIF 3.0 §4.5.2 describes IFD chaining via nextIfdOffset but doesn't
-     * allow cycles.
+     * @return void
      */
     #[Test]
     public function detectsCyclicIfdChain(): void
@@ -266,9 +262,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests that unsupported TIFF type codes are rejected.
+     * Verifies that unsupported TIFF field types raise ParseError.
      *
-     * EXIF 3.0 §4.5.2 Table 3 lists the valid TIFF types.
+     * @return void
      */
     #[Test]
     public function rejectsUnsupportedTiffType(): void
@@ -284,9 +280,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Tests truncated IFD entry data.
+     * Verifies that truncated IFD entries raise BoundsError.
      *
-     * EXIF 3.0 §4.5.2 requires complete IFD entries.
+     * @return void
      */
     #[Test]
     public function rejectsTruncatedIfdEntry(): void
@@ -307,10 +303,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Ensures interoperability IFD pointers follow the single LONG layout mandated by EXIF.
+     * Verifies that malformed interoperability pointers raise ParseError.
      *
-     * EXIF 3.0 §4.6.3.3.1 and EXIF 2.32 §4.6.3.3.1 define the interoperability IFD pointer
-     * as a LONG with count 1 referencing another TIFF-structured IFD without image payloads.
+     * @return void
      */
     #[Test]
     public function rejectsInteropPointerWithInvalidLayout(): void
@@ -326,10 +321,9 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Ensures fixed-length EXIF tags reject invalid counts.
+     * Verifies that fixed-length tags with invalid counts raise ParseError.
      *
-     * EXIF 3.0 §4.6.6.1.1-§4.6.6.1.3 and §4.6.8 require four-byte payloads for
-     * ExifVersion, FlashpixVersion, ComponentsConfiguration, and GPSVersionID.
+     * @return void
      */
     #[Test]
     #[DataProvider('invalidFixedLengthTagProvider')]

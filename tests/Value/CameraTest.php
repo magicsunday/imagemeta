@@ -21,6 +21,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Camera::class)]
 final class CameraTest extends TestCase
 {
+    /**
+     * Verifies that $camera->make equals 'Canon'.
+     *
+     * @return void
+     */
     #[Test]
     public function exposesConstructorState(): void
     {

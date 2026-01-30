@@ -48,6 +48,11 @@ final class BitMaskTest extends TestCase
         yield 'uint32 base' => ['constant' => 'UINT32_BASE', 'hex' => '1_0000_0000'];
     }
 
+    /**
+     * Verifies that BitMask::{$constant} equals $this->fromHex($hex).
+     *
+     * @return void
+     */
     #[DataProvider('bitMaskValueProvider')]
     #[Test]
     public function bitMaskConstantsMatchExpectedHexValues(string $constant, string $hex): void
@@ -85,7 +90,13 @@ final class BitMaskTest extends TestCase
         ];
     }
 
-    /** @param array<int, string> $bits */
+    /**
+     * Verifies that $this->bitMaskValue($expected) equals $mask.
+     *
+     * @param array<int, string> $bits
+     *
+     * @return void
+     */
     #[DataProvider('bitCombinationProvider')]
     #[Test]
     public function bitCombinationsMatchExpectedMasks(string $expected, array $bits): void
@@ -107,6 +118,11 @@ final class BitMaskTest extends TestCase
         ];
     }
 
+    /**
+     * Verifies that $this->bitMaskValue($expected) equals $shifted.
+     *
+     * @return void
+     */
     #[DataProvider('shiftedMaskProvider')]
     #[Test]
     public function shiftedMasksMatchExpectedValue(string $source, int $shift, string $expected): void
@@ -131,6 +147,11 @@ final class BitMaskTest extends TestCase
         ];
     }
 
+    /**
+     * Verifies that $this->bitMaskValue($expected) equals $incremented.
+     *
+     * @return void
+     */
     #[DataProvider('incrementedMaskProvider')]
     #[Test]
     public function incrementedMasksMatchExpectedValue(string $source, string $expected): void
@@ -155,6 +176,11 @@ final class BitMaskTest extends TestCase
         ];
     }
 
+    /**
+     * Verifies that $this->bitMaskValue($expected) equals $halved.
+     *
+     * @return void
+     */
     #[DataProvider('halvedMaskProvider')]
     #[Test]
     public function halvedMasksMatchExpectedValue(string $source, string $expected): void
@@ -164,6 +190,11 @@ final class BitMaskTest extends TestCase
         self::assertSame($halved, $this->bitMaskValue($expected));
     }
 
+    /**
+     * Verifies that $this->bitMaskValue('INT31_MAX') equals $decremented.
+     *
+     * @return void
+     */
     #[Test]
     public function int31MaxIsSignBit32MinusOne(): void
     {

@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Author::class)]
 final class AuthorTest extends TestCase
 {
+    /**
+     * Verifies that $author->artist equals 'John Doe'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithArtistName(): void
     {
@@ -44,6 +49,11 @@ final class AuthorTest extends TestCase
         self::assertSame('John Doe', $author->artist);
     }
 
+    /**
+     * Verifies that $author->artist equals 'Jane Smith'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllAuthorInfo(): void
     {
@@ -78,6 +88,11 @@ final class AuthorTest extends TestCase
         self::assertSame('Jane Smith', $author->imageEditor);
     }
 
+    /**
+     * Verifies that $author->artist is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

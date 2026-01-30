@@ -36,6 +36,9 @@ final class ExifFlash
 
     private const int RED_EYE_MASK = 0x40;
 
+    /**
+     * Prevents instantiation of the utility class.
+     */
     private function __construct()
     {
     }

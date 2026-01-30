@@ -30,6 +30,11 @@ use function is_string;
  */
 final readonly class EnumConverter
 {
+    /**
+     * Creates the converter with its rational dependency.
+     *
+     * @param RationalConverter $rationalConverter Dependency for rational conversions.
+     */
     public function __construct(
         private RationalConverter $rationalConverter,
     ) {

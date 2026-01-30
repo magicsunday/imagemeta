@@ -36,7 +36,9 @@ final class StreamTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Ensures sequential big-endian integer reads advance the cursor as expected.
+     * Verifies that $stream->tell() equals 0.
+     *
+     * @return void
      */
     #[Test]
     public function readsUnsignedIntegersSequentially(): void
@@ -57,7 +59,9 @@ final class StreamTest extends TestCase
     }
 
     /**
-     * Verifies chunked reads return the requested bytes and update the position.
+     * Verifies that $chunk equals 'Magic'.
+     *
+     * @return void
      */
     #[Test]
     public function readReturnsRequestedBytesAndAdvancesCursor(): void
@@ -77,7 +81,9 @@ final class StreamTest extends TestCase
     }
 
     /**
-     * Checks that requesting bytes past the end raises a BoundsError exception.
+     * Verifies that BoundsError::class is thrown.
+     *
+     * @return void
      */
     #[Test]
     public function readThrowsBoundsErrorWhenRequestCrossesEnd(): void
@@ -93,7 +99,9 @@ final class StreamTest extends TestCase
     }
 
     /**
-     * Asserts seeking beyond the declared length triggers a BoundsError exception.
+     * Verifies that BoundsError::class is thrown.
+     *
+     * @return void
      */
     #[Test]
     public function seekThrowsBoundsErrorWhenOffsetIsOutsideStream(): void

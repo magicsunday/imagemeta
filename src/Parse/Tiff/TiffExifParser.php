@@ -644,6 +644,13 @@ final class TiffExifParser implements ExifParserInterface
         return $value->toInt(sprintf('IFD tag 0x%04X value', $tag));
     }
 
+    /**
+     * Indicates whether the tag points to another IFD location.
+     *
+     * @param int $tag Tag identifier.
+     *
+     * @return bool True when the tag represents an IFD pointer.
+     */
     private function isPointerTag(int $tag): bool
     {
         return in_array($tag, self::POINTER_TAGS, true);

@@ -31,6 +31,11 @@ use function strlen;
 #[CoversClass(ImageFactory::class)]
 final class ImageFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $image->width equals 6000.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -75,6 +80,11 @@ final class ImageFactoryTest extends TestCase
         self::assertSame(CharacterEncoding::ASCII->value, $image->userCommentEncoding);
     }
 
+    /**
+     * Verifies that $image->width equals 1920.
+     *
+     * @return void
+     */
     #[Test]
     public function fallsBackToJpegDimensions(): void
     {
@@ -103,6 +113,11 @@ final class ImageFactoryTest extends TestCase
         self::assertNull($image->colorSpace);
     }
 
+    /**
+     * Verifies that $image->colorSpace equals ColorSpace::SRGB.
+     *
+     * @return void
+     */
     #[Test]
     public function normalizesColorSpaceFromInterop(): void
     {
@@ -135,6 +150,11 @@ final class ImageFactoryTest extends TestCase
         self::assertSame(ColorSpace::SRGB, $image->colorSpace);
     }
 
+    /**
+     * Verifies that $image->colorSpace equals ColorSpace::UNCALIBRATED.
+     *
+     * @return void
+     */
     #[Test]
     public function keepsUncalibratedWhenInteropHintsNonSrgb(): void
     {
@@ -167,6 +187,11 @@ final class ImageFactoryTest extends TestCase
         self::assertSame(ColorSpace::UNCALIBRATED, $image->colorSpace);
     }
 
+    /**
+     * Verifies that $image->width is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullExifDoc(): void
     {

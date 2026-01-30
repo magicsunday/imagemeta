@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExifRationalList::class)]
 final class ExifRationalListTest extends TestCase
 {
+    /**
+     * Verifies that $list->toArray() equals $values.
+     *
+     * @return void
+     */
     #[Test]
     public function acceptsListOfExifRationalValues(): void
     {
@@ -36,6 +41,11 @@ final class ExifRationalListTest extends TestCase
         self::assertSame($values, $list->toArray());
     }
 
+    /**
+     * Verifies that InvalidArgumentException::class is thrown with message 'Rational EXIF values must form a list.'.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsNonListInput(): void
     {
@@ -50,6 +60,11 @@ final class ExifRationalListTest extends TestCase
         new ExifRationalList($values);
     }
 
+    /**
+     * Verifies that InvalidArgumentException::class is thrown with message 'Rational EXIF lists may only contain ExifRational instances.'.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsNonExifRationalElements(): void
     {

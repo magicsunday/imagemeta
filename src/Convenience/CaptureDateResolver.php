@@ -68,11 +68,25 @@ final readonly class CaptureDateResolver
         return null;
     }
 
+    /**
+     * Returns the capture timestamp from structured capture metadata.
+     *
+     * @param Capture $capture Structured capture data.
+     *
+     * @return DateTimeImmutable|null Capture timestamp or null.
+     */
     private function captureDate(Capture $capture): ?DateTimeImmutable
     {
         return $capture->dateTime;
     }
 
+    /**
+     * Returns the first temporal timestamp candidate when available.
+     *
+     * @param Temporal $temporal Structured temporal data.
+     *
+     * @return DateTimeImmutable|null Temporal fallback timestamp or null.
+     */
     private function temporalFallback(Temporal $temporal): ?DateTimeImmutable
     {
         $candidates = [
@@ -87,6 +101,13 @@ final readonly class CaptureDateResolver
         );
     }
 
+    /**
+     * Returns the GPS timestamp as a fallback candidate.
+     *
+     * @param Gps $gps Structured GPS data.
+     *
+     * @return DateTimeImmutable|null GPS timestamp or null.
+     */
     private function gpsFallback(Gps $gps): ?DateTimeImmutable
     {
         return $gps->timestamp;

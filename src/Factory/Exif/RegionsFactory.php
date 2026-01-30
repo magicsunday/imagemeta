@@ -59,6 +59,13 @@ final readonly class RegionsFactory
         return $this->resolveRegions($xmpDocument);
     }
 
+    /**
+     * Builds region metadata from an XMP document when present.
+     *
+     * @param XmpDocument|null $document XMP document to inspect.
+     *
+     * @return Regions Resolved regions collection.
+     */
     private function resolveRegions(?XmpDocument $document): Regions
     {
         if (!$document instanceof XmpDocument) {

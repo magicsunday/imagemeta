@@ -35,16 +35,29 @@ final class ApplePlistArray implements ApplePlistValue
         return $this->values;
     }
 
+    /**
+     * Indicates whether the array is empty.
+     */
     public function isEmpty(): bool
     {
         return $this->values === [];
     }
 
+    /**
+     * Returns the number of entries in the array.
+     */
     public function count(): int
     {
         return count($this->values);
     }
 
+    /**
+     * Returns the value at the specified index, if present.
+     *
+     * @param int $index Zero-based index.
+     *
+     * @return ApplePlistValue|null Value at index or null.
+     */
     public function get(int $index): ?ApplePlistValue
     {
         return $this->values[$index] ?? null;

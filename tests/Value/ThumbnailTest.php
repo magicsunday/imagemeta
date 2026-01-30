@@ -20,6 +20,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Thumbnail::class)]
 final class ThumbnailTest extends TestCase
 {
+    /**
+     * Verifies that $thumbnail->hasThumbnail is true.
+     *
+     * @return void
+     */
     #[Test]
     public function exposesThumbnailDetails(): void
     {

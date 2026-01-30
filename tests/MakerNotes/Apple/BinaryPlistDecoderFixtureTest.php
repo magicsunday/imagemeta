@@ -37,6 +37,11 @@ final class BinaryPlistDecoderFixtureTest extends TestCase
         return $data;
     }
 
+    /**
+     * Verifies that $root is instance of ApplePlistDictionary::class.
+     *
+     * @return void
+     */
     #[Test]
     public function itDecodesFixtureAndMatchesExpectedValues(): void
     {

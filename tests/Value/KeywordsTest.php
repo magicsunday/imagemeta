@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Keywords::class)]
 final class KeywordsTest extends TestCase
 {
+    /**
+     * Verifies that $keywords->flat equals ['landscape', 'mountain', 'nature'].
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithFlatKeywords(): void
     {
@@ -34,6 +39,11 @@ final class KeywordsTest extends TestCase
         self::assertNull($keywords->hierarchical);
     }
 
+    /**
+     * Verifies that $keywords->flat equals ['landscape', 'mountain'].
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithHierarchicalKeywords(): void
     {
@@ -46,6 +56,11 @@ final class KeywordsTest extends TestCase
         self::assertSame(['Nature|Landscape|Mountain', 'Places|Europe|Alps'], $keywords->hierarchical);
     }
 
+    /**
+     * Verifies that $keywords->flat equals [].
+     *
+     * @return void
+     */
     #[Test]
     public function handlesEmptyKeywordList(): void
     {

@@ -25,6 +25,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(TiffData::class)]
 final class TiffDataTest extends TestCase
 {
+    /**
+     * Verifies that $tiff->samplesPerPixel equals 3.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithBasicImageStructure(): void
     {
@@ -66,6 +71,11 @@ final class TiffDataTest extends TestCase
         self::assertSame(300.0, $tiff->yResolution);
     }
 
+    /**
+     * Verifies that $tiff->tileWidth equals 256.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithTiledImage(): void
     {
@@ -104,6 +114,11 @@ final class TiffDataTest extends TestCase
         self::assertSame([1024, 2048], $tiff->tileOffsets);
     }
 
+    /**
+     * Verifies that $tiff->samplesPerPixel is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

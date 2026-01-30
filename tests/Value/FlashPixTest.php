@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(FlashPix::class)]
 final class FlashPixTest extends TestCase
 {
+    /**
+     * Verifies that $flashPix->streams equals [1 => 'stream_data_1', 2 => 'stream_data_2'].
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithStreams(): void
     {
@@ -35,6 +40,11 @@ final class FlashPixTest extends TestCase
         self::assertSame([1 => 'stream_data_1', 2 => 'stream_data_2'], $flashPix->streams);
     }
 
+    /**
+     * Verifies that $flashPix->streams equals [].
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithEmptyStreams(): void
     {
@@ -43,6 +53,11 @@ final class FlashPixTest extends TestCase
         self::assertSame([], $flashPix->streams);
     }
 
+    /**
+     * Verifies that $flashPix->streams contains key 10.
+     *
+     * @return void
+     */
     #[Test]
     public function preservesStreamKeys(): void
     {

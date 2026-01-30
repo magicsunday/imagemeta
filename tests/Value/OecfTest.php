@@ -29,6 +29,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Oecf::class)]
 final class OecfTest extends TestCase
 {
+    /**
+     * Verifies that $oecf is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function createOecfFromDecodedMatrix(): void
     {
@@ -63,6 +68,11 @@ final class OecfTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that $oecf is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function createOecfWithNullValues(): void
     {
@@ -84,6 +94,11 @@ final class OecfTest extends TestCase
         self::assertSame([[null, 1.0]], $oecf->values);
     }
 
+    /**
+     * Verifies that Oecf::fromMatrix(null) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function invalidMatrixReturnsNull(): void
     {
@@ -92,6 +107,11 @@ final class OecfTest extends TestCase
         self::assertNull(Oecf::fromMatrix(['columns' => 0]));
     }
 
+    /**
+     * Verifies that Oecf::fromMatrix($incomplete) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function missingRequiredFieldsReturnsNull(): void
     {
@@ -103,6 +123,11 @@ final class OecfTest extends TestCase
         self::assertNull(Oecf::fromMatrix($incomplete));
     }
 
+    /**
+     * Verifies that Oecf::fromMatrix($matrix) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function invalidDimensionsReturnsNull(): void
     {
@@ -122,6 +147,11 @@ final class OecfTest extends TestCase
         self::assertNull(Oecf::fromMatrix($matrix));
     }
 
+    /**
+     * Verifies that Oecf::fromMatrix($matrix) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function mismatchingValueRowCountReturnsNull(): void
     {
@@ -140,6 +170,11 @@ final class OecfTest extends TestCase
         self::assertNull(Oecf::fromMatrix($matrix));
     }
 
+    /**
+     * Verifies that Oecf::fromMatrix($matrix) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function mismatchingValueColumnsReturnNull(): void
     {

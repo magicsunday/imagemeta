@@ -135,6 +135,9 @@ final class TiffConst
      */
     public const int TYPE_IFD8 = 18;
 
+    /**
+     * Prevents instantiation of the constants-only utility class.
+     */
     private function __construct()
     {
     }

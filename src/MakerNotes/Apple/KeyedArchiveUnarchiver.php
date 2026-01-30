@@ -42,6 +42,13 @@ final class KeyedArchiveUnarchiver
      */
     private array $inProgress = [];
 
+    /**
+     * Unarchives a keyed plist dictionary into a resolved dictionary tree.
+     *
+     * @param ApplePlistDictionary $archive Root keyed archive dictionary.
+     *
+     * @return ApplePlistDictionary Resolved root dictionary.
+     */
     public function unarchive(ApplePlistDictionary $archive): ApplePlistDictionary
     {
         $objectsValue = $archive->get('$objects');
@@ -135,6 +142,13 @@ final class KeyedArchiveUnarchiver
         throw new ParseError('Unsupported keyed archive value encountered.');
     }
 
+    /**
+     * Determines whether a dictionary is a CF$UID reference.
+     *
+     * @param ApplePlistDictionary $reference Dictionary to inspect.
+     *
+     * @return bool True when the dictionary is a UID reference.
+     */
     private function isUidReference(ApplePlistDictionary $reference): bool
     {
         $entries = $reference->entries();

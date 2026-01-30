@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(WhiteBalanceDetails::class)]
 final class WhiteBalanceDetailsTest extends TestCase
 {
+    /**
+     * Verifies that $wb->mode equals WhiteBalance::AUTO.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithMode(): void
     {
@@ -36,6 +41,11 @@ final class WhiteBalanceDetailsTest extends TestCase
         self::assertSame(WhiteBalance::AUTO, $wb->mode);
     }
 
+    /**
+     * Verifies that $wb->mode equals WhiteBalance::MANUAL.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithColorTemperature(): void
     {
@@ -52,6 +62,11 @@ final class WhiteBalanceDetailsTest extends TestCase
         self::assertSame(0.8, $wb->bgGain);
     }
 
+    /**
+     * Verifies that $wb->mode is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

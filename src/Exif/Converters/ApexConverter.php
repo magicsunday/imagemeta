@@ -29,6 +29,11 @@ use function sprintf;
  */
 final readonly class ApexConverter
 {
+    /**
+     * Creates the converter with its rational dependency.
+     *
+     * @param RationalConverter $rationalConverter Dependency for rational conversions.
+     */
     public function __construct(
         private RationalConverter $rationalConverter,
     ) {

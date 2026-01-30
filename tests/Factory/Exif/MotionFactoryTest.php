@@ -29,6 +29,11 @@ use function str_repeat;
 #[CoversClass(MotionFactory::class)]
 final class MotionFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $motion->accelX equals 0.1.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromAppleMakerNotes(): void
     {
@@ -76,6 +81,11 @@ final class MotionFactoryTest extends TestCase
         self::assertSame(0.98, $motion->accelZ);
     }
 
+    /**
+     * Verifies that $motion->accelX equals -0.1.
+     *
+     * @return void
+     */
     #[Test]
     public function fallsBackToExifDataWhenAppleVectorMissing(): void
     {
@@ -95,6 +105,11 @@ final class MotionFactoryTest extends TestCase
         self::assertSame(-0.98, $motion->accelZ);
     }
 
+    /**
+     * Verifies that $motion->accelX equals 0.5.
+     *
+     * @return void
+     */
     #[Test]
     public function prefersAppleOverExifAccelerationVector(): void
     {
@@ -145,6 +160,11 @@ final class MotionFactoryTest extends TestCase
         self::assertSame(0.7, $motion->accelZ);
     }
 
+    /**
+     * Verifies that $motion->accelX is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullMetadata(): void
     {
@@ -161,6 +181,11 @@ final class MotionFactoryTest extends TestCase
         self::assertNull($motion->accelZ);
     }
 
+    /**
+     * Verifies that $motion->accelX equals 0.1.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesPartialAccelerationVectorFromApple(): void
     {

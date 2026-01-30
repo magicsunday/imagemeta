@@ -31,6 +31,11 @@ final class IptcParserTest extends TestCase
 {
     private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";
 
+    /**
+     * Verifies that IPTC datasets are extracted from an APP13 Photoshop block.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesIimDatasetsFromApp13Payload(): void
     {
@@ -46,6 +51,11 @@ final class IptcParserTest extends TestCase
         self::assertSame(['keyword-one', 'keyword-two'], $document->values(2, 25));
     }
 
+    /**
+     * Verifies that extended-length IPTC datasets decode to full string values.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesExtendedLengthDatasets(): void
     {
@@ -58,6 +68,11 @@ final class IptcParserTest extends TestCase
         self::assertSame($value, $document->first(2, 120));
     }
 
+    /**
+     * Verifies that truncated Photoshop resource blocks raise BoundsError.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsTruncatedResourceBlocks(): void
     {

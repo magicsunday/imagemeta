@@ -39,7 +39,9 @@ use function strlen;
 final class FormatDetectorTest extends TestCase
 {
     /**
-     * Ensures that a JPEG SOI header is detected as a JPEG container.
+     * Verifies that $detected equals ContainerType::JPEG.
+     *
+     * @return void
      */
     #[Test]
     public function detectRecognisesJpegSignature(): void
@@ -52,7 +54,9 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Ensures that an ISO BMFF brand at offset four triggers detection of the ISOBMFF container type.
+     * Verifies that $detected equals ContainerType::ISOBMFF.
+     *
+     * @return void
      */
     #[Test]
     public function detectRecognisesIsoBmffBrand(): void
@@ -65,7 +69,9 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Ensures that QuickTime files with a leading wide padding box are recognised as ISO BMFF.
+     * Verifies that $detected equals ContainerType::ISOBMFF.
+     *
+     * @return void
      */
     #[Test]
     public function detectRecognisesQuickTimeWideBox(): void
@@ -78,7 +84,9 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Ensures that padding boxes like free/skip do not block ISO BMFF detection.
+     * Verifies that $detected equals ContainerType::ISOBMFF.
+     *
+     * @return void
      */
     #[Test]
     public function detectRecognisesIsoBmffAfterFreePadding(): void
@@ -91,7 +99,9 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Ensures that an unsupported signature results in a parse error.
+     * Verifies that ParseError::class is thrown.
+     *
+     * @return void
      */
     #[Test]
     public function detectThrowsForUnsupportedSignature(): void
@@ -104,9 +114,11 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Ensures that too short streams raise a parse error because the signature cannot be read.
+     * Verifies that ParseError::class is thrown with message 'Unable to read container signature'.
      *
      * @param string $bytes byte sequence to test
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('tooShortStreamProvider')]

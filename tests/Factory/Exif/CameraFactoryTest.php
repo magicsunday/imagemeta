@@ -26,6 +26,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(CameraFactory::class)]
 final class CameraFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $camera->make equals 'Canon'.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -55,6 +60,11 @@ final class CameraFactoryTest extends TestCase
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $camera->sensingMethod);
     }
 
+    /**
+     * Verifies that $camera->make is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullExifDoc(): void
     {
@@ -74,6 +84,11 @@ final class CameraFactoryTest extends TestCase
         self::assertNull($camera->sensingMethod);
     }
 
+    /**
+     * Verifies that $camera->make equals 'Nikon'.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithPartialExifData(): void
     {

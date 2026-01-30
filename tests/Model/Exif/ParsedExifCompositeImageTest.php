@@ -26,6 +26,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifCompositeImageTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->sourceImageNumberOfCompositeImage() equals [6, 4].
+     *
+     * @return void
+     */
     #[Test]
     public function returnsCountsWhenValuesMeetSpecRequirements(): void
     {
@@ -44,6 +49,11 @@ final class ParsedExifCompositeImageTest extends TestCase
         self::assertSame([6, 4], $parsedExif->sourceImageNumberOfCompositeImage());
     }
 
+    /**
+     * Verifies that $parsedExif->sourceImageNumberOfCompositeImage() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenCountsAreBelowMinimum(): void
     {
@@ -62,6 +72,11 @@ final class ParsedExifCompositeImageTest extends TestCase
         self::assertNull($parsedExif->sourceImageNumberOfCompositeImage());
     }
 
+    /**
+     * Verifies that $parsedExif->sourceImageNumberOfCompositeImage() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenUsedCountExceedsCapturedTotal(): void
     {

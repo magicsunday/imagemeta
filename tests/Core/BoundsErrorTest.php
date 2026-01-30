@@ -37,7 +37,9 @@ final class BoundsErrorTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Attempts to read beyond the declared stream length to ensure the guard throws a descriptive BoundsError.
+     * Verifies that BoundsError::class is thrown with message 'read beyond EOF: 4+1 > 4'.
+     *
+     * @return void
      */
     #[Test]
     public function streamReadBeyondEndReportsContextInBoundsError(): void
@@ -55,7 +57,9 @@ final class BoundsErrorTest extends TestCase
     }
 
     /**
-     * Seeks outside the memory buffer to verify the resulting BoundsError contains the attempted offset.
+     * Verifies that BoundsError::class is thrown with message 'MemoryBuffer seek out of range: 6'.
+     *
+     * @return void
      */
     #[Test]
     public function memoryBufferSeekOutsideRangeReportsAttemptedOffset(): void

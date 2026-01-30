@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExifCapabilities::class)]
 final class ExifCapabilitiesTest extends TestCase
 {
+    /**
+     * Verifies that ExifCapabilities::fromVersion($input) equals $expected.
+     *
+     * @return void
+     */
     #[Test]
     #[DataProvider('exifVersionProvider')]
     public function mapsExifVersionToCapabilityProfile(string $expected, ?string $input): void

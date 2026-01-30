@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifApexExamplesTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->maxApertureApex() matches 2.97 within delta 0.0001.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsMaxApertureApexFromSpecExample(): void
     {
@@ -40,6 +45,11 @@ final class ParsedExifApexExamplesTest extends TestCase
         self::assertEqualsWithDelta(2.97, $parsedExif->maxApertureApex(), 0.0001);
     }
 
+    /**
+     * Verifies that $parsedExif->exposureBias() equals -1.0.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsExposureBiasFromSpecExample(): void
     {
@@ -57,6 +67,11 @@ final class ParsedExifApexExamplesTest extends TestCase
         self::assertSame(-1.0, $parsedExif->exposureBias());
     }
 
+    /**
+     * Verifies that $parsedExif->shutterSpeedSeconds() equals 4.0.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsShutterSpeedSecondsFromSpecExample(): void
     {
@@ -74,6 +89,11 @@ final class ParsedExifApexExamplesTest extends TestCase
         self::assertSame(4.0, $parsedExif->shutterSpeedSeconds());
     }
 
+    /**
+     * Verifies that $parsedExif->brightnessValue() matches 76.0 within delta 0.0001.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsBrightnessValueFromSpecRange(): void
     {
@@ -91,6 +111,11 @@ final class ParsedExifApexExamplesTest extends TestCase
         self::assertEqualsWithDelta(76.0, $parsedExif->brightnessValue(), 0.0001);
     }
 
+    /**
+     * Verifies that $parsedExif->brightnessValue() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenBrightnessValueIsUnknown(): void
     {
@@ -108,6 +133,11 @@ final class ParsedExifApexExamplesTest extends TestCase
         self::assertNull($parsedExif->brightnessValue());
     }
 
+    /**
+     * Verifies that $parsedExif->apertureValue() equals 5.0.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsApertureFromSpecExample(): void
     {
@@ -125,6 +155,11 @@ final class ParsedExifApexExamplesTest extends TestCase
         self::assertSame(5.0, $parsedExif->apertureValue());
     }
 
+    /**
+     * Verifies that $parsedExif->fNumber() equals 2.8.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsFNumberFromSpecExample(): void
     {
@@ -142,6 +177,11 @@ final class ParsedExifApexExamplesTest extends TestCase
         self::assertSame(2.8, $parsedExif->fNumber());
     }
 
+    /**
+     * Verifies that $parsedExif->exposureTime() matches 0.0025 within delta 0.0000001.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsExposureTimeFromSpecExample(): void
     {

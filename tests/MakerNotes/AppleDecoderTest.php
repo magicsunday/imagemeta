@@ -50,7 +50,9 @@ use function strlen;
 final class AppleDecoderTest extends TestCase
 {
     /**
-     * Ensures keyed archive payloads map integer camera type codes to descriptive labels.
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
      */
     #[Test]
     public function decodeMapsCameraTypeCodeFromKeyedArchive(): void
@@ -79,7 +81,9 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Ensures the decoder resolves keyed archive maker note data into structured metadata.
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
      */
     #[Test]
     public function decodeUnarchivesKeyedArchivePayload(): void
@@ -134,6 +138,11 @@ final class AppleDecoderTest extends TestCase
         self::assertFalse($apple->flags['petInPhoto']);
     }
 
+    /**
+     * Verifies that $metadata->vendor equals 'Apple'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeParsesAppleMakerNotes(): void
     {
@@ -165,6 +174,11 @@ final class AppleDecoderTest extends TestCase
         self::assertFalse($apple->flags['nightMode']);
     }
 
+    /**
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeAcceptsPaddedDictionaryPayload(): void
     {
@@ -180,6 +194,11 @@ final class AppleDecoderTest extends TestCase
         self::assertTrue($apple->flags['livePhotoAuto']);
     }
 
+    /**
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeRecordsDisabledFlagsFromZeroBitMasks(): void
     {
@@ -208,6 +227,11 @@ final class AppleDecoderTest extends TestCase
         self::assertFalse($apple->flags['petInPhoto']);
     }
 
+    /**
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeResolvesLivePhotoMovieIndex(): void
     {
@@ -221,6 +245,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(2, $apple->livePhotoIndex);
     }
 
+    /**
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeMapsSemanticStyleFromCompactArray(): void
     {
@@ -237,6 +266,11 @@ final class AppleDecoderTest extends TestCase
         self::assertEqualsWithDelta(-0.1, $apple->semanticStyleTone, 1e-12);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesExtractsAdditionalFields(): void
     {
@@ -272,7 +306,11 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
      * @param array<int, int>|array{values: list<int>}|int $makerNoteVersion
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('makerNoteVersionProvider')]
@@ -301,6 +339,11 @@ final class AppleDecoderTest extends TestCase
         yield 'scalar integer' => [7, '7'];
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesCombinesFocusDistanceNearAndFar(): void
     {
@@ -322,6 +365,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame('Portrait', $notes->imageCaptureType);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesHandlesFocusDistanceNearOnly(): void
     {
@@ -338,6 +386,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame([0.42], $notes->focusDistanceRange);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesHandlesFocusDistanceFarOnly(): void
     {
@@ -354,6 +407,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame([1.75], $notes->focusDistanceRange);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesKeepsUnknownEnumerations(): void
     {
@@ -372,6 +430,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame('42', $notes->imageCaptureType);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     #[DataProvider('hdrImageTypeProvider')]
     public function buildAppleMakerNotesMapsHdrImageTypeCodes(int $code, string $label): void
@@ -401,6 +464,11 @@ final class AppleDecoderTest extends TestCase
         yield 'Original Image' => [4, 'Original Image'];
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     #[DataProvider('imageCaptureTypeProvider')]
     public function buildAppleMakerNotesMapsImageCaptureTypeCodes(int $code, string $label): void
@@ -435,6 +503,11 @@ final class AppleDecoderTest extends TestCase
         yield 'Scene' => [12, 'Scene'];
     }
 
+    /**
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeParsesAdditionalMakerNoteFields(): void
     {
@@ -461,6 +534,11 @@ final class AppleDecoderTest extends TestCase
         self::assertEqualsWithDelta(0.65, $apple->afConfidence, 1e-12);
     }
 
+    /**
+     * Verifies that $mapped is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesHandlesCameraTypeCodes(): void
     {
@@ -483,6 +561,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(42, $unknown->cameraType);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesFallsBackToSemanticStyleDictionary(): void
     {
@@ -506,6 +589,11 @@ final class AppleDecoderTest extends TestCase
         self::assertEqualsWithDelta(-0.25, $notes->semanticStyleTone, 1e-12);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesParsesRunTime(): void
     {
@@ -536,6 +624,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame(5, $runTime->flags);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesExtractsExtendedTags(): void
     {
@@ -570,6 +663,11 @@ final class AppleDecoderTest extends TestCase
         self::assertSame([1.0, 0.5, 0.25], $notes->colorCorrectionMatrix);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     #[DataProvider('stabilityFlagProvider')]
     public function buildAppleMakerNotesParsesStabilityFlags(string $makerKey, string|int $value, string $expectedFlag, bool $expected): void
@@ -611,6 +709,11 @@ final class AppleDecoderTest extends TestCase
         return (string) hex2bin($hex);
     }
 
+    /**
+     * Verifies that $metadata->apple is null.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeIgnoresUnsupportedPropertyListFormat(): void
     {
@@ -620,6 +723,11 @@ final class AppleDecoderTest extends TestCase
         self::assertNull($metadata->apple);
     }
 
+    /**
+     * Verifies that $scalarNotes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function flagMasksMirrorScalarInputs(): void
     {
@@ -684,6 +792,11 @@ final class AppleDecoderTest extends TestCase
         self::assertFalse($scalarFlags['afStable']);
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function explicitFlagValuesOverrideMasks(): void
     {
@@ -715,6 +828,11 @@ final class AppleDecoderTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that $notes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function flagMasksAcceptBitPositionLists(): void
     {

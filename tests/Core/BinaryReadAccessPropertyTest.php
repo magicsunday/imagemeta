@@ -43,6 +43,11 @@ final class BinaryReadAccessPropertyTest extends TestCase
 {
     use CreatesTempStream;
 
+    /**
+     * Verifies that $this->consumeReader($stream) equals $this->consumeReader($buffer).
+     *
+     * @return void
+     */
     #[Test]
     public function memoryBufferAndStreamBehaveIdenticallyForRandomPayloads(): void
     {
@@ -60,6 +65,11 @@ final class BinaryReadAccessPropertyTest extends TestCase
         }
     }
 
+    /**
+     * Verifies that $this->consumeReader($window) equals $this->consumeReader($buffer).
+     *
+     * @return void
+     */
     #[Test]
     public function streamWindowMatchesBufferViewForRandomSlices(): void
     {

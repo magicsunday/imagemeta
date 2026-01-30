@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifOtherTagsTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->imageUniqueId() equals '00112233445566778899aabbccddeeff'.
+     *
+     * @return void
+     */
     #[Test]
     public function imageUniqueIdReturnsHexUuidString(): void
     {
@@ -39,6 +44,11 @@ final class ParsedExifOtherTagsTest extends TestCase
         self::assertSame('00112233445566778899aabbccddeeff', $parsedExif->imageUniqueId());
     }
 
+    /**
+     * Verifies that $parsedExif->ownerName() equals 'Owner'.
+     *
+     * @return void
+     */
     #[Test]
     public function hardwareAttributionTagsReturnExifStrings(): void
     {
@@ -59,6 +69,11 @@ final class ParsedExifOtherTagsTest extends TestCase
         self::assertSame('LN987654321', $parsedExif->lensSerialNumber());
     }
 
+    /**
+     * Verifies that $parsedExif->lensSpecification() equals [24.0, 70.0, 2.8, 2.8].
+     *
+     * @return void
+     */
     #[Test]
     public function lensSpecificationParsesFourRationals(): void
     {
@@ -81,6 +96,11 @@ final class ParsedExifOtherTagsTest extends TestCase
         self::assertSame([24.0, 70.0, 2.8, 2.8], $parsedExif->lensSpecification());
     }
 
+    /**
+     * Verifies that $parsedExif->cameraFirmware() equals 'Firmware 1.2.3'.
+     *
+     * @return void
+     */
     #[Test]
     public function softwarePipelineTagsReturnExifStrings(): void
     {

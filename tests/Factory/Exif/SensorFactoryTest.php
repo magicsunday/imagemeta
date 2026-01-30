@@ -30,6 +30,11 @@ use function strlen;
 #[CoversClass(SensorFactory::class)]
 final class SensorFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $sensor->cfaPattern is instance of CfaPattern::class.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -64,6 +69,11 @@ final class SensorFactoryTest extends TestCase
         self::assertFalse($sensor->ibis);
     }
 
+    /**
+     * Verifies that $sensor->pixelPitchUm is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullExifDoc(): void
     {
@@ -87,6 +97,11 @@ final class SensorFactoryTest extends TestCase
         self::assertNull($sensor->focalPlaneResolutionUnit);
     }
 
+    /**
+     * Verifies that $sensor->focalPlaneResolutionUnit is null.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesInvalidResolutionUnit(): void
     {
@@ -113,6 +128,11 @@ final class SensorFactoryTest extends TestCase
         self::assertSame(2000.0, $sensor->focalPlaneYResolution);
     }
 
+    /**
+     * Verifies that $sensor->focalPlaneResolutionUnit equals ResolutionUnit::CENTIMETER.
+     *
+     * @return void
+     */
     #[Test]
     public function convertsResolutionUnitCmToEnum(): void
     {

@@ -25,6 +25,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExposureFactory::class)]
 final class ExposureFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $exposure->iso equals 100.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -44,6 +49,11 @@ final class ExposureFactoryTest extends TestCase
         self::assertTrue($exposure->flash->fired);
     }
 
+    /**
+     * Verifies that $exposure->iso is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullExifDoc(): void
     {
@@ -60,6 +70,11 @@ final class ExposureFactoryTest extends TestCase
         self::assertFalse($exposure->flash->fired);
     }
 
+    /**
+     * Verifies that $exposure->iso is null.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesFlashInformation(): void
     {

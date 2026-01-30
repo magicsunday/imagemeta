@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use JsonException;
 use MagicSunday\ImageMeta\Core\BitMask;
+use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
 use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
@@ -58,6 +59,11 @@ final readonly class MatrixConverter
      */
     private const int SRATIONAL_VALUE_SIZE = 8;
 
+    /**
+     * Creates the converter with its rational dependency.
+     *
+     * @param RationalConverter $rationalConverter Dependency for rational conversions.
+     */
     public function __construct(
         private RationalConverter $rationalConverter,
     ) {
@@ -74,34 +80,9 @@ final readonly class MatrixConverter
      */
     public function toWhitePoint(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
-        if ($rational === null) {
-            return null;
-        }
+        $values = $this->normaliseRationalValues($rational);
 
-        if ($rational instanceof ExifRationalList || $rational instanceof ExifNumericList) {
-            $values = $rational->values;
-        } else {
-            $values = [];
-            foreach ($rational as $component) {
-                if (is_array($component)) {
-                    /** @var array<int, int|float|string> $pair */
-                    $pair     = array_values($component);
-                    $values[] = $pair;
-                } elseif (is_int($component) || is_float($component)) {
-                    $values[] = $component;
-                } else {
-                    // string type
-                    if (!is_numeric($component)) {
-                        return null;
-                    }
-
-                    $values[] = (float) $component;
-                }
-            }
-        }
-
-        /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
-        if (count($values) !== 2) {
+        if ($values === null || count($values) !== 2) {
             return null;
         }
 
@@ -127,34 +108,9 @@ final readonly class MatrixConverter
      */
     public function toPrimaryChromaticities(ExifRationalList|ExifNumericList|array|null $rational): ?array
     {
-        if ($rational === null) {
-            return null;
-        }
+        $values = $this->normaliseRationalValues($rational);
 
-        if ($rational instanceof ExifRationalList || $rational instanceof ExifNumericList) {
-            $values = $rational->values;
-        } else {
-            $values = [];
-            foreach ($rational as $component) {
-                if (is_array($component)) {
-                    /** @var array<int, int|float|string> $pair */
-                    $pair     = array_values($component);
-                    $values[] = $pair;
-                } elseif (is_int($component) || is_float($component)) {
-                    $values[] = $component;
-                } else {
-                    // string type
-                    if (!is_numeric($component)) {
-                        return null;
-                    }
-
-                    $values[] = (float) $component;
-                }
-            }
-        }
-
-        /** @var list<array<int, int|float|string>|int|float|ExifRational> $values */
-        if (count($values) !== 6) {
+        if ($values === null || count($values) !== 6) {
             return null;
         }
 
@@ -170,6 +126,44 @@ final readonly class MatrixConverter
 
         /** @var array{0:float,1:float,2:float,3:float,4:float,5:float} $result */
         return $result;
+    }
+
+    /**
+     * Normalises a rational payload into a value list for conversion.
+     *
+     * @param array<int, int|float|string|array<int, int|float|string>>|ExifRationalList|ExifNumericList|null $rational
+     *
+     * @return list<array<int, int|float|string>|int|float|ExifRational|UInt64>|null
+     */
+    private function normaliseRationalValues(ExifRationalList|ExifNumericList|array|null $rational): ?array
+    {
+        if ($rational === null) {
+            return null;
+        }
+
+        if ($rational instanceof ExifRationalList || $rational instanceof ExifNumericList) {
+            return $rational->values;
+        }
+
+        $values = [];
+        foreach ($rational as $component) {
+            if (is_array($component)) {
+                /** @var array<int, int|float|string> $pair */
+                $pair     = array_values($component);
+                $values[] = $pair;
+            } elseif (is_int($component) || is_float($component)) {
+                $values[] = $component;
+            } else {
+                // string type
+                if (!is_numeric($component)) {
+                    return null;
+                }
+
+                $values[] = (float) $component;
+            }
+        }
+
+        return $values;
     }
 
     /**

@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(UInt64::class)]
 final class UInt64Test extends TestCase
 {
+    /**
+     * Verifies that $value->high() equals 0x12345678.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsFromHighAndLowParts(): void
     {
@@ -32,6 +37,11 @@ final class UInt64Test extends TestCase
         self::assertSame(0x9ABCDEF0, $value->low());
     }
 
+    /**
+     * Verifies that $value->high() equals 0x00000001.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromTwoUnsigned32BitParts(): void
     {
@@ -41,6 +51,11 @@ final class UInt64Test extends TestCase
         self::assertSame(0x00000000, $value->low());
     }
 
+    /**
+     * Verifies that $value->high() equals 1.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromNonNegativeInteger(): void
     {
@@ -50,6 +65,11 @@ final class UInt64Test extends TestCase
         self::assertSame(0, $value->low());
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'Cannot create UInt64 from a negative integer.'.
+     *
+     * @return void
+     */
     #[Test]
     public function throwsExceptionForNegativeInteger(): void
     {
@@ -59,6 +79,11 @@ final class UInt64Test extends TestCase
         UInt64::fromInt(-1);
     }
 
+    /**
+     * Verifies that $value->toInt('test') equals 12345.
+     *
+     * @return void
+     */
     #[Test]
     public function convertsSmallValueToInt(): void
     {
@@ -67,6 +92,11 @@ final class UInt64Test extends TestCase
         self::assertSame(12345, $value->toInt('test'));
     }
 
+    /**
+     * Verifies that $zero->isZero() is true.
+     *
+     * @return void
+     */
     #[Test]
     public function detectsZeroValue(): void
     {
@@ -77,6 +107,11 @@ final class UInt64Test extends TestCase
         self::assertFalse($nonZero->isZero());
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'test exceeds supported integer range.'.
+     *
+     * @return void
+     */
     #[Test]
     public function throwsParseErrorWhenConvertingLargeValueToInt(): void
     {
@@ -88,6 +123,11 @@ final class UInt64Test extends TestCase
         $value->toInt('test');
     }
 
+    /**
+     * Verifies that (string) $value->low() equals '12345'.
+     *
+     * @return void
+     */
     #[Test]
     public function convertsToString(): void
     {
@@ -96,6 +136,11 @@ final class UInt64Test extends TestCase
         self::assertSame('12345', (string) $value->low());
     }
 
+    /**
+     * Verifies that $result->high() equals 0.
+     *
+     * @return void
+     */
     #[Test]
     public function addsUnsignedInteger(): void
     {
@@ -106,6 +151,11 @@ final class UInt64Test extends TestCase
         self::assertSame(150, $result->low());
     }
 
+    /**
+     * Verifies that $result->high() equals 1.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesOverflowInAddition(): void
     {
@@ -116,6 +166,11 @@ final class UInt64Test extends TestCase
         self::assertSame(1, $result->low());
     }
 
+    /**
+     * Verifies that $smaller->compare($larger) < 0 is true.
+     *
+     * @return void
+     */
     #[Test]
     public function comparesWithOtherUInt64(): void
     {
@@ -131,6 +186,11 @@ final class UInt64Test extends TestCase
         self::assertFalse($smaller->compare($equal) > 0);
     }
 
+    /**
+     * Verifies that $smaller->compare($larger) < 0 is true.
+     *
+     * @return void
+     */
     #[Test]
     public function comparesHighPartFirst(): void
     {

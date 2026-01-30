@@ -20,11 +20,21 @@ final class StructuredMetadataCache
 {
     private ?StructuredMetadataFactory $structured = null;
 
+    /**
+     * @param ExifAssembler $assembler Assembler used to build structured metadata.
+     */
     public function __construct(
         private readonly ExifAssembler $assembler = new ExifAssembler(),
     ) {
     }
 
+    /**
+     * Returns a cached structured metadata instance, assembling on first access.
+     *
+     * @param Metadata $metadata Source metadata aggregate.
+     *
+     * @return StructuredMetadataFactory Structured metadata container.
+     */
     public function resolve(Metadata $metadata): StructuredMetadataFactory
     {
         if (!$this->structured instanceof StructuredMetadataFactory) {

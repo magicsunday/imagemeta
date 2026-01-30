@@ -59,7 +59,9 @@ use function substr;
 final class IsoBmffParserTest extends TestCase
 {
     /**
-     * Ensures EXIF blobs embedded directly in the meta box are returned.
+     * Verifies that EXIF bytes are extracted from a full meta Exif box.
+     *
+     * @return void
      */
     #[Test]
     public function extractExifFromExifBox(): void
@@ -78,7 +80,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures QuickTime meta boxes without a full box header are parsed correctly.
+     * Verifies that EXIF bytes are extracted from a QuickTime meta box.
+     *
+     * @return void
      */
     #[Test]
     public function extractExifFromNonFullMetaBox(): void
@@ -97,7 +101,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures short numeric payloads in QuickTime data boxes are tolerated.
+     * Verifies that short numeric QuickTime payloads are accepted as raw bytes.
+     *
+     * @return void
      */
     #[Test]
     public function tolerateShortNumericQuickTimePayloads(): void
@@ -127,7 +133,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures short int payloads in QuickTime data boxes are tolerated.
+     * Verifies that short integer QuickTime payloads are accepted as raw bytes.
+     *
+     * @return void
      */
     #[Test]
     public function tolerateShortIntegerQuickTimePayloads(): void
@@ -157,7 +165,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies fragmented EXIF data referenced via iloc extents is reassembled.
+     * Verifies that multiple iloc extents are concatenated into one EXIF payload.
+     *
+     * @return void
      */
     #[Test]
     public function resolveIlocMultiExtent(): void
@@ -205,11 +215,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies iloc version 1 parsing handles index_size nibble correctly.
+     * Verifies that iloc version 1 entries resolve EXIF item data.
      *
-     * Version 1 iloc boxes pack base_offset_size and index_size in a single byte
-     * (high and low nibbles respectively). This test ensures the parser reads
-     * the nibbles from the same byte rather than consuming an extra byte.
+     * @return void
      */
     #[Test]
     public function resolveIlocVersion1(): void
@@ -259,7 +267,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures XMP payloads are collected from uuid boxes and item locations.
+     * Verifies that XMP is collected from uuid, XMP box, and iloc item sources.
+     *
+     * @return void
      */
     #[Test]
     public function extractXmpFromUuidAndItem(): void
@@ -310,7 +320,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Confirms QuickTime identifiers are populated from keys and mdta boxes.
+     * Verifies that content identifiers are read from keys or mdta metadata.
+     *
+     * @return void
      */
     #[Test]
     public function readContentIdentifierFromKeysOrMdta(): void
@@ -334,7 +346,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies UTF-16BE QuickTime data payloads are converted to UTF-8.
+     * Verifies that UTF-16BE data boxes decode to UTF-8 identifiers.
+     *
+     * @return void
      */
     #[Test]
     public function decodeUtf16DataBoxToUtf8(): void
@@ -352,7 +366,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies MacRoman QuickTime data payloads are converted to UTF-8.
+     * Verifies that MacRoman data boxes decode to UTF-8 identifiers.
+     *
+     * @return void
      */
     #[Test]
     public function decodeMacRomanDataBoxToUtf8(): void
@@ -368,7 +384,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies legacy QuickTime four-character metadata tags are accepted.
+     * Verifies that legacy fourcc tags are exposed in QuickTime keys.
+     *
+     * @return void
      */
     #[Test]
     public function readLegacyFourCcTag(): void
@@ -390,7 +408,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies integer QuickTime data payloads are decoded as integers.
+     * Verifies that int32 data box payloads decode to integers.
+     *
+     * @return void
      */
     #[Test]
     public function decodeInt32DataBoxPayload(): void
@@ -406,7 +426,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies string QuickTime metadata values can be coerced to integers.
+     * Verifies that numeric QuickTime strings are coerced to integers.
+     *
+     * @return void
      */
     #[Test]
     public function coerceQuickTimeStringValuesToInt(): void
@@ -422,7 +444,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies QuickTime string values are coerced into floats when configured.
+     * Verifies that numeric QuickTime strings are coerced to floats.
+     *
+     * @return void
      */
     #[Test]
     public function coerceQuickTimeStringValuesToFloat(): void
@@ -438,7 +462,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies QuickTime string values are coerced into booleans when configured.
+     * Verifies that QuickTime boolean strings are coerced to booleans.
+     *
+     * @return void
      */
     #[Test]
     public function coerceQuickTimeStringValuesToBool(): void
@@ -454,7 +480,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures external data references are captured as unresolved items.
+     * Verifies that external data references produce unresolved item entries.
+     *
+     * @return void
      */
     #[Test]
     public function collectsUnresolvedExternalItemReferences(): void
@@ -504,7 +532,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies invalid extent definitions trigger a parse error.
+     * Verifies that invalid iloc extents trigger ParseError.
+     *
+     * @return void
      */
     #[Test]
     public function invalidBoxSizesThrowParseError(): void
@@ -536,7 +566,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Confirms item reference entries are mapped into relationships.
+     * Verifies that iref relationships are mapped to item references.
+     *
+     * @return void
      */
     #[Test]
     public function parseIrefRelationships(): void
@@ -562,7 +594,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures iloc construction_method=1 resolves offsets relative to idat data.
+     * Verifies that iloc construction_method=1 uses idat payload data.
+     *
+     * @return void
      */
     #[Test]
     public function resolveIlocIdatConstructionMethod(): void
@@ -596,7 +630,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies idat-relative iloc extents are bounds-checked.
+     * Verifies that idat extents larger than the payload raise ParseError.
+     *
+     * @return void
      */
     #[Test]
     public function rejectIlocIdatExtentOutsidePayload(): void
@@ -630,7 +666,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures iloc construction_method=2 resolves via item references and extent indices.
+     * Verifies that iloc extents can reference other item data via extent_index.
+     *
+     * @return void
      */
     #[Test]
     public function resolveIlocItemOffsetWithExtentIndex(): void
@@ -685,7 +723,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures construction_method=2 extents outside referenced items raise ParseError.
+     * Verifies that iloc extents exceeding referenced items raise ParseError.
+     *
+     * @return void
      */
     #[Test]
     public function rejectIlocItemOffsetExtentOutsideReference(): void
@@ -741,7 +781,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Ensures non-zero data_reference_index entries are tracked as unresolved.
+     * Verifies that external data references are tracked without resolution.
+     *
+     * @return void
      */
     #[Test]
     public function trackExternalDataReferenceWithoutResolving(): void
@@ -787,7 +829,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies iref reference counts exceeding the maximum are rejected.
+     * Verifies that oversized iref reference counts are rejected.
+     *
+     * @return void
      */
     #[Test]
     public function rejectExcessiveIrefReferenceCount(): void
@@ -877,7 +921,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that excessive iloc item counts trigger a ParseError.
+     * Verifies that oversized iloc item counts are rejected.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsExcessiveIlocItemCount(): void
@@ -901,7 +947,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that excessive iinf entry counts trigger a ParseError.
+     * Verifies that oversized iinf entry counts are rejected.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsExcessiveIinfEntryCount(): void
@@ -920,7 +968,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that excessive keys entry counts trigger a ParseError.
+     * Verifies that oversized keys entry counts are rejected.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsExcessiveKeysEntryCount(): void
@@ -940,7 +990,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that excessive stsd entry counts trigger a ParseError.
+     * Verifies that oversized stsd entry counts are rejected.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsExcessiveStsdEntryCount(): void

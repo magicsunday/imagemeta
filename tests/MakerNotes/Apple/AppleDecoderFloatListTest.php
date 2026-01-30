@@ -21,7 +21,9 @@ use ReflectionMethod;
 final class AppleDecoderFloatListTest extends TestCase
 {
     /**
-     * Ensures scalar HDR gain values are normalised to single element lists.
+     * Verifies that $result equals [1.25].
+     *
+     * @return void
      */
     #[Test]
     public function floatListReturnsScalarValuesAsLists(): void
@@ -35,7 +37,9 @@ final class AppleDecoderFloatListTest extends TestCase
     }
 
     /**
-     * Ensures list HDR gain payloads keep their existing normalisation.
+     * Verifies that $result equals [1.0, 2.5, 3.75].
+     *
+     * @return void
      */
     #[Test]
     public function floatListNormalisesArrayPayloads(): void

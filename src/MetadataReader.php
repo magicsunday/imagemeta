@@ -44,6 +44,13 @@ use const PATHINFO_EXTENSION;
  */
 final readonly class MetadataReader
 {
+    /**
+     * @param TiffExifParser          $tiffReader     TIFF/EXIF parser instance.
+     * @param AppleMakerNotesMerger   $appleMerger    Apple maker notes merger.
+     * @param XmpParser               $xmpParser      XMP parser instance.
+     * @param IptcParser              $iptcParser     IPTC parser instance.
+     * @param FormatDetectorInterface $formatDetector Container format detector.
+     */
     public function __construct(
         private TiffExifParser $tiffReader = new TiffExifParser(),
         private AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),

@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Container::class)]
 final class ContainerTest extends TestCase
 {
+    /**
+     * Verifies that $container->format equals 'JPEG'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithFormat(): void
     {
@@ -36,6 +41,11 @@ final class ContainerTest extends TestCase
         self::assertSame('JPEG', $container->format);
     }
 
+    /**
+     * Verifies that $container->format equals 'MP4'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithVideoMetadata(): void
     {
@@ -54,6 +64,11 @@ final class ContainerTest extends TestCase
         self::assertSame('AAC', $container->audioCodec);
     }
 
+    /**
+     * Verifies that $container->format is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

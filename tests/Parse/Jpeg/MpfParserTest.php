@@ -72,6 +72,11 @@ final class MpfParserTest extends TestCase
 
     private const int TYPE_BYTE = 1;
 
+    /**
+     * Verifies that MPF index and attribute IFDs map to a complete document.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesCompleteMpfPayloadWithAttributes(): void
     {
@@ -132,6 +137,11 @@ final class MpfParserTest extends TestCase
         self::assertEquals($expected, $document);
     }
 
+    /**
+     * Verifies that imageCount defaults to MP entry count when missing.
+     *
+     * @return void
+     */
     #[Test]
     public function defaultsImageCountWhenTagMissing(): void
     {
@@ -152,6 +162,11 @@ final class MpfParserTest extends TestCase
         self::assertCount(2, $document->entries);
     }
 
+    /**
+     * Verifies that invalid MP entry byte lengths raise ParseError.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsMpEntryDataWithInvalidLength(): void
     {

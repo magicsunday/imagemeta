@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Motion::class)]
 final class MotionTest extends TestCase
 {
+    /**
+     * Verifies that $motion->accelX equals 0.5.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAcceleration(): void
     {
@@ -36,6 +41,11 @@ final class MotionTest extends TestCase
         self::assertSame(9.8, $motion->accelZ);
     }
 
+    /**
+     * Verifies that $motion->accelX is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {
@@ -51,7 +61,9 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Tests EXIF 3.0 Acceleration vector (0x9404) with gravity-like values.
+     * Verifies that $motion->accelX equals 0.0.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithGravityVector(): void
@@ -69,7 +81,9 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Tests acceleration vector with all negative components.
+     * Verifies that $motion->accelX equals -1.5.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithNegativeAcceleration(): void
@@ -86,7 +100,9 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Tests acceleration vector with large values (high-speed motion).
+     * Verifies that $motion->accelX equals 150.0.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithLargeAcceleration(): void
@@ -104,7 +120,9 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Tests acceleration vector with very small values (near stationary).
+     * Verifies that $motion->accelX equals 0.001.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithSmallAcceleration(): void
@@ -121,7 +139,9 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Tests mixed positive and negative components in acceleration vector.
+     * Verifies that $motion->accelX equals 5.0.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithMixedSignAcceleration(): void
@@ -138,7 +158,9 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Tests partial null values in acceleration vector.
+     * Verifies that $motion->accelX equals 1.0.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithPartialNullValues(): void

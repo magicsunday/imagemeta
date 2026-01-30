@@ -47,10 +47,12 @@ use function substr;
 final class ValueConvertersTest extends TestCase
 {
     /**
-     * Ensures rational values represented as numerator/denominator pairs or lists are converted to floats.
+     * Verifies that ValueConverters::rationalToFloat($value) equals $expected.
      *
      * @param ExifRational|ExifRationalList $value    The rational value to convert.
      * @param float                         $expected The expected float representation.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideValidRationals')]
@@ -76,10 +78,12 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures scalar values fall back to float conversion when no rational pair is provided.
+     * Verifies that ValueConverters::rationalToFloat($value) equals $expected.
      *
      * @param int|float $value    The scalar input value.
      * @param float     $expected The expected float representation.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideScalarInputs')]
@@ -98,9 +102,11 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures invalid values cannot be converted and return null instead.
+     * Verifies that ValueConverters::rationalToFloat($value) is null.
      *
      * @param ExifRational|ExifNumericList|string|null $value The invalid rational input to convert.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidInputs')]
@@ -123,8 +129,12 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Verifies that $result is null.
+     *
      * @param ExifRational|string $value    The APEX encoded value.
      * @param float|null          $expected The expected f-number.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideApexValues')]
@@ -143,7 +153,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures APEX shutter speed values are converted into seconds.
+     * Verifies that ValueConverters::apexShutterSpeedToSeconds(new ExifRational(7, 1)) matches 1 / 128 within delta 0.0000001.
+     *
+     * @return void
      */
     #[Test]
     public function convertsApexShutterSpeedToSeconds(): void
@@ -155,7 +167,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures components configuration values convert to labelled channels.
+     * Verifies that ValueConverters::componentsConfigurationLabels($values) equals ['Y', 'Cb', 'Cr', '-'].
+     *
+     * @return void
      */
     #[Test]
     public function formatsComponentsConfiguration(): void
@@ -168,7 +182,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures components configuration payloads normalise to integer component lists.
+     * Verifies that ValueConverters::componentsConfiguration($values) equals [1, 2, 3, 0].
+     *
+     * @return void
      */
     #[Test]
     public function normalisesComponentsConfigurationPayloads(): void
@@ -182,7 +198,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures reserved component identifiers result in null outputs.
+     * Verifies that ValueConverters::componentsConfigurationLabels($values) is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullForReservedComponentIdentifiers(): void
@@ -194,7 +212,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures maker note safety flags convert to booleans.
+     * Verifies that ValueConverters::makerNoteSafety(1) is true.
+     *
+     * @return void
      */
     #[Test]
     public function convertsMakerNoteSafetyFlags(): void
@@ -218,9 +238,13 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Verifies that $result is null.
+     *
      * @param string|null         $ref      The speed reference.
      * @param ExifRational|string $value    The raw speed value.
      * @param float|null          $expected The expected metres per second.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideGpsSpeedValues')]
@@ -253,7 +277,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures flash bit fields are converted into value objects.
+     * Verifies that $info is instance of FlashInfo::class.
+     *
+     * @return void
      */
     #[Test]
     public function convertsFlashShortToValueObject(): void
@@ -269,7 +295,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures invalid flash values return null to avoid runtime errors.
+     * Verifies that ValueConverters::flashFromShort(new ExifRational(1, 0)) is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullForInvalidFlashValue(): void
@@ -279,8 +307,12 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Verifies that ValueConverters::parseOffsetString($value) equals $expected.
+     *
      * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset representation.
      * @param string|null                                         $expected The expected canonical offset string.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideOffsetStrings')]
@@ -305,8 +337,12 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
+     * Verifies that ValueConverters::offsetToMinutes($value) equals $expected.
+     *
      * @param int|float|string|ExifRational|ExifRationalList|null $value    The raw offset value.
      * @param int|null                                            $expected Expected minutes from UTC.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideOffsetMinutes')]
@@ -334,7 +370,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures GPS coordinates are converted to floats using degree-minute-second rationals with a positive altitude.
+     * Verifies that $result['lat'] matches 51.5 within delta 0.000001.
+     *
+     * @return void
      */
     #[Test]
     public function extractsGpsCoordinatesWithPositiveAltitude(): void
@@ -379,7 +417,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures GPS coordinates honour southern and western references and invert the altitude when required.
+     * Verifies that $result['lat'] matches -33.255 within delta 0.000001.
+     *
+     * @return void
      */
     #[Test]
     public function extractsGpsCoordinatesWithNegativeHemisphereAndAltitude(): void
@@ -424,7 +464,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures missing altitude entries result in a null altitude while still returning latitude and longitude.
+     * Verifies that $result['lat'] matches 10.0 within delta 0.000001.
+     *
+     * @return void
      */
     #[Test]
     public function extractsGpsCoordinatesWithoutAltitude(): void
@@ -461,6 +503,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull($result['alt']);
     }
 
+    /**
+     * Verifies that $result['lat'] ?? 0.0 matches 40.504166 within delta 1e-6.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesGpsCoordinatesWithNumericListComponents(): void
     {
@@ -495,6 +542,11 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(250.0, $result['alt'] ?? 0.0, 1e-6);
     }
 
+    /**
+     * Verifies that $result['lat'] ?? 0.0 matches -33.0 within delta 1e-6.
+     *
+     * @return void
+     */
     #[Test]
     public function altitudeReferenceAcceptsStringFlag(): void
     {
@@ -538,6 +590,11 @@ final class ValueConvertersTest extends TestCase
         self::assertSame(1, $result['alt_ref']);
     }
 
+    /**
+     * Verifies that $result['lat'] is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullForGpsCoordinateWithInvalidSeconds(): void
     {
@@ -573,7 +630,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Ensures EXIF 3.0 GPS tags are decoded into a rich metadata map including temporal and navigation fields.
+     * Verifies that $result['lat'] matches 51.5 within delta 0.000001.
+     *
+     * @return void
      */
     #[Test]
     public function extractsExtendedGpsMetadata(): void
@@ -703,6 +762,11 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(1.5, $result['h_positioning_error'], 0.000001);
     }
 
+    /**
+     * Verifies that $result['processing_method'] equals '測位方式'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodesGpsUndefinedStringsWithEncodings(): void
     {
@@ -730,6 +794,11 @@ final class ValueConvertersTest extends TestCase
         self::assertSame('東京', $result['area_information']);
     }
 
+    /**
+     * Verifies that $result['processing_method'] is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenGpsUndefinedStringEmptyAfterDecoding(): void
     {
@@ -749,6 +818,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull($result['processing_method']);
     }
 
+    /**
+     * Verifies that $result['version'] equals '2.3.4.5'.
+     *
+     * @return void
+     */
     #[Test]
     public function formatsGpsVersionFromNumericList(): void
     {
@@ -762,6 +836,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull($result['version_raw']);
     }
 
+    /**
+     * Verifies that $result['version'] equals '2.4.0.0'.
+     *
+     * @return void
+     */
     #[Test]
     public function defaultsGpsVersionWhenEntryMissing(): void
     {
@@ -773,6 +852,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull($result['version_raw']);
     }
 
+    /**
+     * Verifies that $result['version'] equals '2.4.0.0'.
+     *
+     * @return void
+     */
     #[Test]
     public function defaultsGpsVersionWhenStringPayloadEmpty(): void
     {
@@ -786,6 +870,11 @@ final class ValueConvertersTest extends TestCase
         self::assertSame("\0\0\0\0", $result['version_raw']);
     }
 
+    /**
+     * Verifies that $result is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeSpatialFrequencyResponseReturnsLabels(): void
     {
@@ -801,6 +890,11 @@ final class ValueConvertersTest extends TestCase
         self::assertSame(['Beta'], $result['labels']['rows']);
     }
 
+    /**
+     * Verifies that $result is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeSpatialFrequencyResponseParsesTable(): void
     {
@@ -821,6 +915,11 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(0.55, $result['values'][1][2] ?? 0.0, 0.0001);
     }
 
+    /**
+     * Verifies that ValueConverters::decodeSpatialFrequencyResponse($payload) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeSpatialFrequencyResponseRejectsInvalidPayload(): void
     {
@@ -829,6 +928,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::decodeSpatialFrequencyResponse($payload));
     }
 
+    /**
+     * Verifies that ValueConverters::rationalToFloat([1, 2]) equals 0.5.
+     *
+     * @return void
+     */
     #[Test]
     public function convertsRationalsAndApexValues(): void
     {
@@ -836,6 +940,11 @@ final class ValueConvertersTest extends TestCase
         self::assertSame(2.8284271247461903, ValueConverters::apexToFNumber(3.0));
     }
 
+    /**
+     * Verifies that ValueConverters::toExifVersion('0100') equals '1.00'.
+     *
+     * @return void
+     */
     #[Test]
     public function normalisesExifVersionAndFlash(): void
     {
@@ -856,6 +965,11 @@ final class ValueConvertersTest extends TestCase
         self::assertSame(FlashReturn::NO_STROBE_DETECTION, $flash->returnDetection);
     }
 
+    /**
+     * Verifies that ValueConverters::parseOffset('+01:00')?->getName() equals '+01:00'.
+     *
+     * @return void
+     */
     #[Test]
     public function normalisesOffsetsAndSubjectAreas(): void
     {
@@ -884,6 +998,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::subjectAreaToRect([1, 2, 3, 4, 5]));
     }
 
+    /**
+     * Verifies that ValueConverters::ycbcrSubSamplingToPair('2 2') equals [2, 2].
+     *
+     * @return void
+     */
     #[Test]
     public function parsesSamplingAndChromaticities(): void
     {
@@ -902,10 +1021,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Validates legal YCbCr subsampling values per EXIF 3.0 §4.6.5.1.12.
+     * Verifies that ValueConverters::ycbcrSubSamplingToPair('2 1') equals [2, 1].
      *
-     * Legal values are: [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0).
-     * Other values are reserved.
+     * @return void
      */
     #[Test]
     public function acceptsLegalYCbCrSubSamplingValues(): void
@@ -920,9 +1038,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Rejects illegal YCbCr subsampling values per EXIF 3.0 §4.6.5.1.12.
+     * Verifies that ValueConverters::ycbcrSubSamplingToPair('4 1') is null.
      *
-     * Only [2,1] and [2,2] are defined; all other values are reserved.
+     * @return void
      */
     #[Test]
     public function rejectsIllegalYCbCrSubSamplingValues(): void
@@ -958,6 +1076,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::ycbcrSubSamplingToPair('2 2 2'));
     }
 
+    /**
+     * Verifies that ValueConverters::dngMatrixToString($matrix) equals '[1.0,0.5,0.25]'.
+     *
+     * @return void
+     */
     #[Test]
     public function serialisesMatrices(): void
     {
@@ -970,6 +1093,11 @@ final class ValueConvertersTest extends TestCase
         self::assertSame('[1.0,0.5,0.25]', ValueConverters::dngMatrixToString($matrix));
     }
 
+    /**
+     * Verifies that ValueConverters::toWhitePoint($whitePoint) equals [0.3127, 0.329].
+     *
+     * @return void
+     */
     #[Test]
     public function convertsWhitePointAndEnums(): void
     {
@@ -987,6 +1115,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::toEnumOrNull(ResolutionUnit::class, null));
     }
 
+    /**
+     * Verifies that ValueConverters::toWhitePoint($whitePoint) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsInvalidWhitePointAndChromaticityLengths(): void
     {
@@ -1008,6 +1141,11 @@ final class ValueConvertersTest extends TestCase
         self::assertNull(ValueConverters::toPrimaryChromaticities($chromaticities));
     }
 
+    /**
+     * Verifies that $cropFactor matches 1.5 within delta 1e-12.
+     *
+     * @return void
+     */
     #[Test]
     public function calculatesFieldOfViewAndHyperfocalMetrics(): void
     {
@@ -1028,6 +1166,11 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(10.0, ValueConverters::calcEv100(1.0 / 1024.0, 1.0, 100), 1e-12);
     }
 
+    /**
+     * Verifies that $cropFactor matches $expectedCropFactor within delta 1e-9.
+     *
+     * @return void
+     */
     #[Test]
     #[DataProvider('opticalDatasetProvider')]
     public function calculatesOpticalMetricsAcrossSensorFormats(
@@ -1158,9 +1301,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests conversion of EXIF 3.0 acceleration triplets to float vectors.
+     * Verifies that the expected assertion passes.
      *
-     * EXIF 3.0 §4.6.6 Acceleration (0x9404): SRATIONAL triplet for 3D acceleration vector.
+     * @return void
      */
     #[Test]
     public function convertsSrationalTripletToFloatVector(): void
@@ -1180,7 +1323,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that triplet conversion handles zero acceleration components.
+     * Verifies that the expected assertion passes.
+     *
+     * @return void
      */
     #[Test]
     public function convertsSrationalTripletWithZeroComponents(): void
@@ -1199,6 +1344,11 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(9.81, $result[2], 0.001);
     }
 
+    /**
+     * Verifies that ValueConverters::srationalTripletToFloatVector($list) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullForSrationalTripletWithUnknownDenominator(): void
     {
@@ -1212,7 +1362,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that triplet conversion rejects lists with wrong component count.
+     * Verifies that ValueConverters::srationalTripletToFloatVector($listWithTwo) is null.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsSrationalListWithWrongComponentCount(): void
@@ -1235,7 +1387,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that triplet conversion rejects lists with zero denominators.
+     * Verifies that $result is null.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsSrationalTripletWithZeroDenominator(): void
@@ -1252,7 +1406,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests conversion with large acceleration values.
+     * Verifies that the expected assertion passes.
+     *
+     * @return void
      */
     #[Test]
     public function convertsSrationalTripletWithLargeValues(): void
@@ -1273,7 +1429,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests conversion with negative values in all components.
+     * Verifies that the expected assertion passes.
+     *
+     * @return void
      */
     #[Test]
     public function convertsSrationalTripletWithAllNegativeValues(): void
@@ -1293,7 +1451,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that exposure time is formatted correctly.
+     * Verifies that ValueConverters::formatExposureTime($seconds) equals $expected.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideExposureTimeValues')]
@@ -1322,7 +1482,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that APEX shutter speed is formatted correctly.
+     * Verifies that $formatted equals '1/20'.
+     *
+     * @return void
      */
     #[Test]
     public function formatsShutterSpeedFromApex(): void
@@ -1341,7 +1503,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that f-number is formatted correctly.
+     * Verifies that ValueConverters::formatFNumber($fNumber) equals $expected.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideFNumberValues')]
@@ -1371,7 +1535,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that APEX aperture is formatted correctly.
+     * Verifies that $formatted equals 'f/1.9'.
+     *
+     * @return void
      */
     #[Test]
     public function formatsApertureFromApex(): void
@@ -1390,7 +1556,9 @@ final class ValueConvertersTest extends TestCase
     }
 
     /**
-     * Tests that brightness value is formatted correctly.
+     * Verifies that ValueConverters::formatBrightnessValue($value) equals $expected.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideBrightnessValues')]

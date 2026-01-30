@@ -24,6 +24,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(CompositeImageInfo::class)]
 final class CompositeImageInfoTest extends TestCase
 {
+    /**
+     * Verifies that $info->type equals CompositeImage::GENERAL_COMPOSITE.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithCompositeType(): void
     {
@@ -36,6 +41,11 @@ final class CompositeImageInfoTest extends TestCase
         self::assertSame(CompositeImage::GENERAL_COMPOSITE, $info->type);
     }
 
+    /**
+     * Verifies that $info->counts equals [5, 3].
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithSourceCounts(): void
     {
@@ -48,6 +58,11 @@ final class CompositeImageInfoTest extends TestCase
         self::assertSame([5, 3], $info->counts);
     }
 
+    /**
+     * Verifies that $info->sourceExposureTimes equals $exposures.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithExposureTimes(): void
     {
@@ -73,6 +88,11 @@ final class CompositeImageInfoTest extends TestCase
         self::assertSame([3, 3], $info->counts);
     }
 
+    /**
+     * Verifies that $info->type is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

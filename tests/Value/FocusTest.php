@@ -24,6 +24,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Focus::class)]
 final class FocusTest extends TestCase
 {
+    /**
+     * Verifies that $focus->subjectDistanceM equals 2.5.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithFocusDistance(): void
     {
@@ -36,6 +41,11 @@ final class FocusTest extends TestCase
         self::assertSame(2.5, $focus->subjectDistanceM);
     }
 
+    /**
+     * Verifies that $focus->subjectArea is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithSubjectArea(): void
     {
@@ -60,6 +70,11 @@ final class FocusTest extends TestCase
         self::assertSame(75, $focus->subjectArea->height);
     }
 
+    /**
+     * Verifies that $focus->afMode equals 'Continuous'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAFMode(): void
     {
@@ -72,6 +87,11 @@ final class FocusTest extends TestCase
         self::assertSame('Continuous', $focus->afMode);
     }
 
+    /**
+     * Verifies that $focus->subjectDistanceM is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

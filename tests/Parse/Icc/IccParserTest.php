@@ -32,6 +32,11 @@ use function substr_replace;
 #[CoversClass(IccParser::class)]
 final class IccParserTest extends TestCase
 {
+    /**
+     * Verifies that decoding a minimal ICC profile yields header metadata fields.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeExtractsHeaderFields(): void
     {
@@ -48,6 +53,11 @@ final class IccParserTest extends TestCase
         self::assertSame('00112233445566778899AABBCCDDEEFF', $result['profileId']);
     }
 
+    /**
+     * Verifies that ICC profile fragments are reassembled before decoding.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeReassemblesSegments(): void
     {
@@ -70,6 +80,11 @@ final class IccParserTest extends TestCase
         self::assertSame('00112233445566778899AABBCCDDEEFF', $result['profileId']);
     }
 
+    /**
+     * Verifies that truncated ICC data and single fragments return null.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeReturnsNullForTruncatedData(): void
     {
@@ -79,6 +94,11 @@ final class IccParserTest extends TestCase
         self::assertNull($decoder->decode(null, [$this->createSegment(1, 2, 'payload')]));
     }
 
+    /**
+     * Verifies that out-of-order ICC fragments are sorted by sequence index.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeHandlesOutOfOrderSegments(): void
     {
@@ -98,6 +118,11 @@ final class IccParserTest extends TestCase
         self::assertSame('4.2.1', $result['version']);
     }
 
+    /**
+     * Verifies that missing ICC fragments abort decoding.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeRejectsIncompleteSegmentSequences(): void
     {
@@ -114,6 +139,11 @@ final class IccParserTest extends TestCase
         self::assertNull($decoder->decode(null, $segments));
     }
 
+    /**
+     * Verifies that legacy ICC version bytes are parsed into a dotted version string.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeExtractsLegacyVersionEncoding(): void
     {

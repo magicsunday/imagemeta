@@ -58,6 +58,9 @@ final class BitMask
 
     public const int UINT32_BASE = 0x1_0000_0000;
 
+    /**
+     * Prevents instantiation of the constants-only utility class.
+     */
     private function __construct()
     {
     }

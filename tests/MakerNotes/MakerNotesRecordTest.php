@@ -25,7 +25,9 @@ use PHPUnit\Framework\TestCase;
 final class MakerNotesRecordTest extends TestCase
 {
     /**
-     * Ensures the metadata value object accepts valid arguments and exposes the expected values.
+     * Verifies that $metadata->vendor equals 'Contoso'.
+     *
+     * @return void
      */
     #[Test]
     public function constructorAcceptsValidArguments(): void
@@ -54,11 +56,13 @@ final class MakerNotesRecordTest extends TestCase
     }
 
     /**
-     * Ensures invalid constructor arguments raise an InvalidArgumentException.
+     * Verifies that InvalidArgumentException::class is thrown.
      *
      * @param string $vendor Vendor name provided to the constructor.
      * @param int    $length Payload length provided to the constructor.
      * @param string $sha1   SHA-1 digest provided to the constructor.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('invalidConstructorArguments')]

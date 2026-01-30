@@ -48,9 +48,9 @@ use function strlen;
 final class TiffExifParserUserCommentTest extends TestCase
 {
     /**
-     * Tests UserComment with ASCII encoding prefix.
+     * Verifies that UserComment with ASCII prefix is accepted.
      *
-     * EXIF 3.0 §4.6.6.4.2 Table 11 defines "ASCII\0\0\0" as the ASCII character code as noted in §4.6.4.
+     * @return void
      */
     #[Test]
     public function parsesUserCommentWithAsciiEncoding(): void
@@ -65,9 +65,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with JIS encoding prefix.
+     * Verifies that UserComment with JIS prefix is accepted.
      *
-     * EXIF 3.0 §4.6.6.4.2 Table 11 defines "JIS\0\0\0\0\0" for JIS character code per §4.6.4 prefix rules.
+     * @return void
      */
     #[Test]
     public function parsesUserCommentWithJisEncoding(): void
@@ -82,9 +82,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with UNICODE encoding prefix.
+     * Verifies that UserComment with UNICODE prefix is accepted.
      *
-     * EXIF 3.0 §4.6.6.4.2 Table 11 defines "UNICODE\0" for Unicode character code per §4.6.4 prefix rules.
+     * @return void
      */
     #[Test]
     public function parsesUserCommentWithUnicodeEncoding(): void
@@ -99,9 +99,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with undefined encoding (no prefix).
+     * Verifies that UserComment without a defined prefix is accepted.
      *
-     * EXIF 3.0 §4.6.6.4.2 allows undefined character codes (8 bytes of 0x00).
+     * @return void
      */
     #[Test]
     public function parsesUserCommentWithUndefinedEncoding(): void
@@ -116,7 +116,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with truncated encoding prefix.
+     * Verifies that truncated UserComment prefixes do not break parsing.
+     *
+     * @return void
      */
     #[Test]
     public function handlesUserCommentTruncatedPrefix(): void
@@ -132,7 +134,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with invalid encoding marker.
+     * Verifies that unknown UserComment prefixes do not break parsing.
+     *
+     * @return void
      */
     #[Test]
     public function handlesUserCommentInvalidEncoding(): void
@@ -147,7 +151,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment that is empty.
+     * Verifies that empty UserComment payloads are accepted.
+     *
+     * @return void
      */
     #[Test]
     public function handlesEmptyUserComment(): void
@@ -161,7 +167,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with only the encoding prefix and no actual comment.
+     * Verifies that encoding-only UserComment payloads are accepted.
+     *
+     * @return void
      */
     #[Test]
     public function handlesUserCommentEncodingOnly(): void
@@ -176,7 +184,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with non-printable characters.
+     * Verifies that non-printable UserComment payloads are accepted.
+     *
+     * @return void
      */
     #[Test]
     public function handlesUserCommentWithNonPrintable(): void
@@ -191,7 +201,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests UserComment with maximum length data.
+     * Verifies that large UserComment payloads are accepted.
+     *
+     * @return void
      */
     #[Test]
     public function handlesUserCommentMaxLength(): void
@@ -207,9 +219,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests MakerNote field handling.
+     * Verifies that MakerNote payloads are accepted in ExifIFD.
      *
-     * EXIF 3.0 §4.6.6.4.1 (Table 4) and EXIF 2.32 §4.6.6.4.1 define the MakerNote tag for manufacturer-specific data.
+     * @return void
      */
     #[Test]
     public function parsesMakerNote(): void
@@ -224,7 +236,9 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Tests empty MakerNote.
+     * Verifies that empty MakerNote payloads are accepted.
+     *
+     * @return void
      */
     #[Test]
     public function handlesEmptyMakerNote(): void

@@ -21,6 +21,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(IsoBmffItemReferenceMap::class)]
 final class IsoBmffItemReferenceMapTest extends TestCase
 {
+    /**
+     * Verifies that $map->fromItemIds() equals [5].
+     *
+     * @return void
+     */
     #[Test]
     public function mapProvidesReferencesBySourceId(): void
     {
@@ -33,6 +38,11 @@ final class IsoBmffItemReferenceMapTest extends TestCase
         self::assertFalse($map->isEmpty());
     }
 
+    /**
+     * Verifies that $map->fromItemIds() equals [].
+     *
+     * @return void
+     */
     #[Test]
     public function emptyMapReportsNoReferences(): void
     {

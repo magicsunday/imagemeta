@@ -24,6 +24,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MultiPictureFactory::class)]
 final class MultiPictureFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $multiPicture->version equals '0100'.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromMpfDocument(): void
     {
@@ -78,6 +83,11 @@ final class MultiPictureFactoryTest extends TestCase
         self::assertSame('uid-1,uid-2', $multiPicture->imageUidList);
     }
 
+    /**
+     * Verifies that $multiPicture->version is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullMpfDocument(): void
     {

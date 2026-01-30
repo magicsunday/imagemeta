@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Device::class)]
 final class DeviceTest extends TestCase
 {
+    /**
+     * Verifies that $device->software equals 'Adobe Photoshop 2024'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithSoftwareVersion(): void
     {
@@ -35,6 +40,11 @@ final class DeviceTest extends TestCase
         self::assertSame('Adobe Photoshop 2024', $device->software);
     }
 
+    /**
+     * Verifies that $device->software equals 'Capture One 23'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllDeviceInfo(): void
     {
@@ -51,6 +61,11 @@ final class DeviceTest extends TestCase
         self::assertSame('ExifTool 12.50', $device->metadataEditingSoftware);
     }
 
+    /**
+     * Verifies that $device->software is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

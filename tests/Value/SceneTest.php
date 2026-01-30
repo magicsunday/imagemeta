@@ -26,6 +26,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Scene::class)]
 final class SceneTest extends TestCase
 {
+    /**
+     * Verifies that $scene->type equals SceneCaptureType::STANDARD.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithSceneCaptureType(): void
     {
@@ -42,6 +47,11 @@ final class SceneTest extends TestCase
         self::assertSame(SceneCaptureType::STANDARD, $scene->type);
     }
 
+    /**
+     * Verifies that $scene->type equals SceneCaptureType::NIGHT_SCENE.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllSceneMetadata(): void
     {
@@ -64,6 +74,11 @@ final class SceneTest extends TestCase
         self::assertSame(SubjectDistanceRange::CLOSE, $scene->subjectDistanceRange);
     }
 
+    /**
+     * Verifies that $scene->type is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

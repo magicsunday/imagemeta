@@ -38,6 +38,11 @@ final readonly class RationalConverter
      */
     private const int UNKNOWN_DENOMINATOR = 0xFFFFFFFF;
 
+    /**
+     * Creates the converter with its numeric dependency.
+     *
+     * @param NumericConverter $numericConverter Dependency for numeric conversions.
+     */
     public function __construct(
         private NumericConverter $numericConverter,
     ) {

@@ -32,6 +32,11 @@ use function str_replace;
  */
 final readonly class ComponentsConverter
 {
+    /**
+     * Creates the converter with its numeric dependency.
+     *
+     * @param NumericConverter $numericConverter Dependency for numeric conversions.
+     */
     public function __construct(
         private NumericConverter $numericConverter,
     ) {

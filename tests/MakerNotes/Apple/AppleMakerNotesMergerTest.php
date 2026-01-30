@@ -32,6 +32,11 @@ use function str_repeat;
 #[UsesClass(QuickTimeMeta::class)]
 final class AppleMakerNotesMergerTest extends TestCase
 {
+    /**
+     * Verifies that $mapped is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function mergePrefersMakerNotesValues(): void
     {
@@ -115,6 +120,11 @@ final class AppleMakerNotesMergerTest extends TestCase
         self::assertSame('maker-burst', $apple->burstUuid);
     }
 
+    /**
+     * Verifies that $mapped is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function mergeFillsMissingValuesFromQuickTime(): void
     {
@@ -205,6 +215,11 @@ final class AppleMakerNotesMergerTest extends TestCase
         self::assertSame(0.6, $apple->afConfidence);
     }
 
+    /**
+     * Verifies that $mapped is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function mergeCreatesMetadataFromQuickTimeWhenAbsent(): void
     {
@@ -229,6 +244,11 @@ final class AppleMakerNotesMergerTest extends TestCase
         self::assertSame('HDR', $apple->hdrImageType);
     }
 
+    /**
+     * Verifies that $mapped is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function mergeMergesQuickTimeFlags(): void
     {

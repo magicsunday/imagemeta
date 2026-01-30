@@ -39,7 +39,9 @@ final class ParseErrorTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Declares a stream size larger than the written payload to force a short read ParseError.
+     * Verifies that ParseError::class is thrown with message 'short read'.
+     *
+     * @return void
      */
     #[Test]
     public function streamReadThrowsParseErrorOnShortRead(): void
@@ -53,7 +55,9 @@ final class ParseErrorTest extends TestCase
     }
 
     /**
-     * Attempts to open a non-existent file path using Stream::fromPath to verify the error message.
+     * Verifies that ParseError::class is thrown with message 'Cannot open: ' . $path.
+     *
+     * @return void
      */
     #[Test]
     public function streamFromPathThrowsParseErrorWhenFileMissing(): void

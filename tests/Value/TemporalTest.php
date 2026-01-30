@@ -24,6 +24,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Temporal::class)]
 final class TemporalTest extends TestCase
 {
+    /**
+     * Verifies that $temporal->original equals $dateTime.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithOriginalDateTime(): void
     {
@@ -46,6 +51,11 @@ final class TemporalTest extends TestCase
         self::assertSame($dateTime, $temporal->original);
     }
 
+    /**
+     * Verifies that $temporal->create equals $create.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllDateTimeFields(): void
     {
@@ -77,6 +87,11 @@ final class TemporalTest extends TestCase
         self::assertSame('500', $temporal->subSecTime);
     }
 
+    /**
+     * Verifies that $temporal->create is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

@@ -27,6 +27,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifSensitivityTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->sensitivityType() equals SensitivityType::SOS_AND_REI.
+     *
+     * @return void
+     */
     #[Test]
     public function sensitivityTypeReturnsEnumForNumericStrings(): void
     {
@@ -39,6 +44,11 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame(SensitivityType::SOS_AND_REI, $parsedExif->sensitivityType());
     }
 
+    /**
+     * Verifies that $parsedExif->standardOutputSensitivity() equals 80.
+     *
+     * @return void
+     */
     #[Test]
     public function standardOutputSensitivityReturnsValue(): void
     {
@@ -51,6 +61,11 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame(80, $parsedExif->standardOutputSensitivity());
     }
 
+    /**
+     * Verifies that $parsedExif->recommendedExposureIndex() equals 160.
+     *
+     * @return void
+     */
     #[Test]
     public function recommendedExposureIndexReturnsValue(): void
     {
@@ -63,6 +78,11 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame(160, $parsedExif->recommendedExposureIndex());
     }
 
+    /**
+     * Verifies that $parsedExif->isoSpeedValue() equals 400.
+     *
+     * @return void
+     */
     #[Test]
     public function isoSpeedValueReturnsValue(): void
     {
@@ -75,6 +95,11 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame(400, $parsedExif->isoSpeedValue());
     }
 
+    /**
+     * Verifies that $parsedExif->isoSpeedLatitudeYyy() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function isoSpeedLatitudeYyyRequiresRelatedTags(): void
     {
@@ -99,7 +124,11 @@ final class ParsedExifSensitivityTest extends TestCase
     }
 
     /**
+     * Verifies that $parsedExif->iso() equals $expected.
+     *
      * @param array<int, int> $tagValues
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('isoSensitivityPriorityProvider')]
@@ -123,6 +152,11 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame($expected, $parsedExif->iso());
     }
 
+    /**
+     * Verifies that $parsedExif->iso() equals 1600.
+     *
+     * @return void
+     */
     #[Test]
     public function isoFallsBackWhenSensitivityTypeValueIsUnknown(): void
     {
@@ -136,6 +170,11 @@ final class ParsedExifSensitivityTest extends TestCase
         self::assertSame(1600, $parsedExif->iso());
     }
 
+    /**
+     * Verifies that $parsedExif->isoSpeedLatitudeYyy() equals 90.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsIsoLatitudeValues(): void
     {

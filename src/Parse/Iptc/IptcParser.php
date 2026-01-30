@@ -189,6 +189,14 @@ final class IptcParser
         }
     }
 
+    /**
+     * Reads a big-endian unsigned 16-bit integer from the payload.
+     *
+     * @param string $data   Raw IPTC payload.
+     * @param int    $offset Offset within the payload.
+     *
+     * @return int Unsigned 16-bit integer value.
+     */
     private function readUnsignedShort(string $data, int $offset): int
     {
         $unpacked = @unpack('nvalue', substr($data, $offset, 2));
@@ -200,6 +208,14 @@ final class IptcParser
         return $unpacked['value'];
     }
 
+    /**
+     * Reads a big-endian unsigned 32-bit integer from the payload.
+     *
+     * @param string $data   Raw IPTC payload.
+     * @param int    $offset Offset within the payload.
+     *
+     * @return int Unsigned 32-bit integer value.
+     */
     private function readUnsignedLong(string $data, int $offset): int
     {
         $unpacked = @unpack('Nvalue', substr($data, $offset, 4));

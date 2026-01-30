@@ -31,6 +31,11 @@ use function strlen;
 #[CoversClass(ParsedExif::class)]
 final class SourceExposureTimesOfCompositeImageTest extends TestCase
 {
+    /**
+     * Verifies that $result is instance of SourceExposureTimes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodesCompositeExposureMetadata(): void
     {
@@ -76,6 +81,11 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
         self::assertSame([[0.1, 0.2], [0.5]], $result->sequences);
     }
 
+    /**
+     * Verifies that $result is instance of SourceExposureTimes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function honoursBigEndianPayloads(): void
     {
@@ -113,6 +123,11 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
         self::assertSame([[0.25, 0.5]], $result->sequences);
     }
 
+    /**
+     * Verifies that $parsed->sourceExposureTimesOfCompositeImage() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullForTruncatedPayload(): void
     {

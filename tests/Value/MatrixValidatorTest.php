@@ -21,6 +21,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(MatrixParts::class)]
 final class MatrixValidatorTest extends TestCase
 {
+    /**
+     * Verifies that $parts is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function validateMatrixWithRequiredRowLabels(): void
     {
@@ -53,6 +58,11 @@ final class MatrixValidatorTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that $parts is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function validateMatrixAllowsMissingRowLabelsWhenOptional(): void
     {
@@ -75,6 +85,11 @@ final class MatrixValidatorTest extends TestCase
         self::assertSame([[0.9], [0.8]], $parts->values);
     }
 
+    /**
+     * Verifies that MatrixValidator::validateMatrix($matrix, false, false) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function validateMatrixRejectsNullValuesWhenNotAllowed(): void
     {
@@ -92,6 +107,11 @@ final class MatrixValidatorTest extends TestCase
         self::assertNull(MatrixValidator::validateMatrix($matrix, false, false));
     }
 
+    /**
+     * Verifies that $parts is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function validateMatrixAllowsNullValuesWhenConfigured(): void
     {
@@ -113,6 +133,11 @@ final class MatrixValidatorTest extends TestCase
         self::assertSame([[null]], $parts->values);
     }
 
+    /**
+     * Verifies that MatrixValidator::validateMatrix($matrix, true, true) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function validateMatrixRequiresRowLabelsWhenConfigured(): void
     {

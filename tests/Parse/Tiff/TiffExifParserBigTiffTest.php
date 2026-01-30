@@ -56,9 +56,9 @@ use function pack;
 final class TiffExifParserBigTiffTest extends TestCase
 {
     /**
-     * Tests that BigTIFF with offset size 16 is accepted.
+     * Verifies that BigTIFF headers accept offset size 16.
      *
-     * EXIF 3.0 §4.5.1 allows offset sizes of 8 or 16 bytes.
+     * @return void
      */
     #[Test]
     public function acceptsBigTiffWithOffsetSize16(): void
@@ -72,9 +72,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests rejection of BigTIFF with offset size other than 8 or 16.
+     * Verifies that unsupported BigTIFF offset sizes are rejected.
      *
-     * EXIF 3.0 §4.5.1 restricts offset sizes to 8 or 16.
+     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithOffsetSize12(): void
@@ -90,9 +90,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests that zero first IFD offset in BigTIFF creates empty IFD.
+     * Verifies that a zero first-IFD offset yields an empty IFD.
      *
-     * EXIF 3.0 §4.5.2 Note 1 states that a zero pointer indicates an absent directory.
+     * @return void
      */
     #[Test]
     public function handlesZeroFirstIfdOffsetInBigTiff(): void
@@ -107,10 +107,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests BigTIFF IFD with 64-bit entry count.
+     * Verifies that 64-bit entry counts parse inline ASCII values in BigTIFF.
      *
-     * EXIF 3.0 §4.5.2 specifies that BigTIFF uses 64-bit (8-byte) entry counts
-     * instead of 16-bit counts in classic TIFF.
+     * @return void
      */
     #[Test]
     public function parsesBigTiffWithLargeEntryCount(): void
@@ -147,9 +146,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests BigTIFF with LONG8 (64-bit unsigned integer) type.
+     * Verifies that BigTIFF LONG8 values are read inline.
      *
-     * EXIF 3.0 §4.5.2 Table 3 defines TYPE_LONG8 (16) for BigTIFF.
+     * @return void
      */
     #[Test]
     public function parsesBigTiffWithLong8Type(): void
@@ -179,9 +178,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests BigTIFF with SLONG8 (64-bit signed integer) type.
+     * Verifies that BigTIFF SLONG8 values preserve signed values.
      *
-     * EXIF 3.0 §4.5.2 Table 3 defines TYPE_SLONG8 (17) for BigTIFF.
+     * @return void
      */
     #[Test]
     public function parsesBigTiffWithSlong8Type(): void
@@ -209,9 +208,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests BigTIFF with IFD8 pointer type.
+     * Verifies that BigTIFF IFD8 pointer entries are parsed.
      *
-     * EXIF 3.0 §4.5.2 Table 3 defines TYPE_IFD8 (18) as 64-bit IFD offset.
+     * @return void
      */
     #[Test]
     public function parsesBigTiffWithIfd8PointerType(): void
@@ -239,9 +238,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests that BigTIFF offset pointing beyond blob size triggers BoundsError.
+     * Verifies that out-of-range BigTIFF offsets raise BoundsError.
      *
-     * EXIF 3.0 §4.5.2 requires offsets to be within the file.
+     * @return void
      */
     #[Test]
     public function rejectsBigTiffOffsetBeyondBlob(): void
@@ -261,10 +260,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests BigTIFF with entry value offset beyond 4 GiB boundary.
+     * Verifies that rejects big TIFF value offset beyond 4 gb.
      *
-     * BigTIFF allows offsets ≥ 4 GiB but our test blob is smaller, so this
-     * should trigger a bounds error.
+     * @return void
      */
     #[Test]
     public function rejectsBigTiffValueOffsetBeyond4GB(): void
@@ -293,9 +291,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests BigTIFF IFD with truncated entry data.
+     * Verifies that rejects big TIFF truncated entry.
      *
-     * EXIF 3.0 §4.5.2 requires complete BigTIFF entries (20 bytes each).
+     * @return void
      */
     #[Test]
     public function rejectsBigTiffTruncatedEntry(): void
@@ -318,10 +316,9 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Tests that extremely large BigTIFF entry count is rejected.
+     * Verifies that rejects big TIFF with huge entry count.
      *
-     * While BigTIFF uses 64-bit counts, unreasonably large values should
-     * be rejected to prevent memory exhaustion.
+     * @return void
      */
     #[Test]
     public function rejectsBigTiffWithHugeEntryCount(): void

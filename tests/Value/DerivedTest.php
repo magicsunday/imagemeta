@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Derived::class)]
 final class DerivedTest extends TestCase
 {
+    /**
+     * Verifies that $derived->ev100 equals 10.5.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithExposureValue(): void
     {
@@ -39,6 +44,11 @@ final class DerivedTest extends TestCase
         self::assertSame(10.5, $derived->ev100);
     }
 
+    /**
+     * Verifies that $derived->ev100 equals 12.0.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllDerivedMetrics(): void
     {
@@ -63,6 +73,11 @@ final class DerivedTest extends TestCase
         self::assertSame(1.5, $derived->cropFactor);
     }
 
+    /**
+     * Verifies that $derived->ev100 is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {
@@ -85,6 +100,11 @@ final class DerivedTest extends TestCase
         self::assertNull($derived->cropFactor);
     }
 
+    /**
+     * Verifies that $derived->equivalent35mm equals 50.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesFullFrameEquivalent(): void
     {

@@ -135,6 +135,11 @@ final class CaptureDateResolverTest extends TestCase
 {
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';
 
+    /**
+     * Verifies that $result is instance of DateTimeImmutable::class.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsXmpCreateDateWhenExifIsMissing(): void
     {
@@ -154,6 +159,11 @@ final class CaptureDateResolverTest extends TestCase
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
     }
 
+    /**
+     * Verifies that (new CaptureDateResolver())->bestCaptureDateTime($metadata) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function ignoresNonIsoCreateDateValues(): void
     {
@@ -170,6 +180,11 @@ final class CaptureDateResolverTest extends TestCase
         self::assertNull((new CaptureDateResolver())->bestCaptureDateTime($metadata));
     }
 
+    /**
+     * Verifies that $result is instance of DateTimeImmutable::class.
+     *
+     * @return void
+     */
     #[Test]
     public function acceptsFirstArrayElementWhenIsoString(): void
     {
@@ -192,6 +207,11 @@ final class CaptureDateResolverTest extends TestCase
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
     }
 
+    /**
+     * Verifies that $result is instance of DateTimeImmutable::class.
+     *
+     * @return void
+     */
     #[Test]
     public function prefersExifCaptureDateWhenAvailable(): void
     {
@@ -229,6 +249,11 @@ final class CaptureDateResolverTest extends TestCase
         self::assertSame('2024-04-05T01:02:03+01:00', $result->format(DATE_ATOM));
     }
 
+    /**
+     * Verifies that $result is instance of DateTimeImmutable::class.
+     *
+     * @return void
+     */
     #[Test]
     public function usesGpsTimestampWhenCaptureDateMissing(): void
     {

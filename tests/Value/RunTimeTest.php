@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RunTime::class)]
 final class RunTimeTest extends TestCase
 {
+    /**
+     * Verifies that $runTime->epoch equals 0.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithTimescaleAndValue(): void
     {
@@ -38,6 +43,11 @@ final class RunTimeTest extends TestCase
         self::assertSame(1, $runTime->flags);
     }
 
+    /**
+     * Verifies that $runTime->epoch is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {
@@ -54,6 +64,11 @@ final class RunTimeTest extends TestCase
         self::assertNull($runTime->flags);
     }
 
+    /**
+     * Verifies that $runTime->timescale equals 600.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesVariousTimescales(): void
     {

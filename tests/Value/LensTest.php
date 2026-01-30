@@ -19,6 +19,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Lens::class)]
 final class LensTest extends TestCase
 {
+    /**
+     * Verifies that $lens->lensMake equals 'Canon'.
+     *
+     * @return void
+     */
     #[Test]
     public function exposesSpecificationAndHelpers(): void
     {

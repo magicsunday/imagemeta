@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Integrity::class)]
 final class IntegrityTest extends TestCase
 {
+    /**
+     * Verifies that $integrity->originalFileName equals 'IMG_1234.JPG'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithOriginalFileName(): void
     {
@@ -35,6 +40,11 @@ final class IntegrityTest extends TestCase
         self::assertSame('IMG_1234.JPG', $integrity->originalFileName);
     }
 
+    /**
+     * Verifies that $integrity->originalFileName equals 'IMG_1234.JPG'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithEditingHistory(): void
     {
@@ -51,6 +61,11 @@ final class IntegrityTest extends TestCase
         self::assertSame('Adobe Photoshop 2024', $integrity->historyLastSoftware);
     }
 
+    /**
+     * Verifies that $integrity->originalFileName is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

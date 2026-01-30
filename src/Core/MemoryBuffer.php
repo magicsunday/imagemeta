@@ -163,11 +163,24 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         return $this->size();
     }
 
+    /**
+     * Returns the ByteReader that delegates primitive reads to this buffer.
+     *
+     * @return ByteReader Shared reader instance.
+     */
     protected function byteReader(): ByteReader
     {
         return $this->byteReader;
     }
 
+    /**
+     * Applies a seek operation within the buffer bounds.
+     *
+     * @param int|UInt64 $offset Offset to seek to.
+     * @param int        $whence Seek origin constant.
+     *
+     * @return void
+     */
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {
@@ -180,6 +193,17 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         $this->pos = $target;
     }
 
+    /**
+     * Normalises an absolute offset and validates it against the buffer size.
+     *
+     * @param int|UInt64 $offset  Offset to validate.
+     * @param int        $length  Required byte count from the offset.
+     * @param string     $message Error context for bounds violations.
+     *
+     * @return int Validated absolute offset.
+     *
+     * @throws BoundsError When the offset would exceed buffer bounds.
+     */
     private function normaliseOffset(int|UInt64 $offset, int $length, string $message): int
     {
         if ($offset instanceof UInt64) {
@@ -228,6 +252,17 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         return $length;
     }
 
+    /**
+     * Converts a UInt64 offset into a bounded integer.
+     *
+     * @param UInt64 $value   Offset to validate.
+     * @param int    $padding Minimum remaining space required from the offset.
+     * @param string $message Error context for bounds violations.
+     *
+     * @return int Validated absolute offset.
+     *
+     * @throws BoundsError When the offset would exceed buffer bounds.
+     */
     private function normaliseUInt64(UInt64 $value, int $padding, string $message): int
     {
         if ($value->compareInt($this->size()) > 0) {

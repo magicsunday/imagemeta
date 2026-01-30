@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifColorSpaceAndGammaTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->colorSpace() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function colorSpaceIsNullForReservedValues(): void
     {
@@ -34,6 +39,11 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
         self::assertNull($parsedExif->colorSpace());
     }
 
+    /**
+     * Verifies that $parsedExif->gamma() equals 2.2.
+     *
+     * @return void
+     */
     #[Test]
     public function gammaReturnsRationalValue(): void
     {
@@ -46,6 +56,11 @@ final class ParsedExifColorSpaceAndGammaTest extends TestCase
         self::assertSame(2.2, $parsedExif->gamma());
     }
 
+    /**
+     * Verifies that $parsedExif->gamma() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function gammaReturnsNullWhenMissing(): void
     {

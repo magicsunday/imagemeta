@@ -53,6 +53,11 @@ use function substr;
 #[UsesClass(TiffConst::class)]
 final class TiffExifParserFixedLengthTest extends TestCase
 {
+    /**
+     * Verifies that fixed-length tags accept only the specification-defined counts.
+     *
+     * @return void
+     */
     #[Test]
     #[DataProvider('validFixedLengthTagProvider')]
     public function acceptsFixedLengthTagsWithValidCounts(

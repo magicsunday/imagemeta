@@ -90,11 +90,13 @@ final class JpegParserTest extends TestCase
     private const int MARKER_SOF2 = 0xC2;
 
     /**
-     * Verifies APP1 segments yield EXIF and XMP payloads regardless of ordering.
+     * Verifies that EXIF blobs and XMP packets are extracted regardless of APP1 order.
      *
      * @param list<string> $segments
      * @param list<string> $expectedExif
      * @param list<string> $expectedXmp
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideApp1Variants')]
@@ -150,7 +152,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures multiple EXIF segments larger than 64KB are collected as-is.
+     * Verifies that multiple large EXIF APP1 segments are all collected.
+     *
+     * @return void
      */
     #[Test]
     public function largeExifOver64KbIsHandled(): void
@@ -168,7 +172,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures duplicate XMP APP1 segments are ignored while keeping order stable.
+     * Verifies that identical XMP packets are deduplicated to unique entries.
+     *
+     * @return void
      */
     #[Test]
     public function duplicateXmpSegmentsAreDeduplicated(): void
@@ -192,7 +198,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures unknown vendor APPn markers are skipped without interrupting metadata extraction.
+     * Verifies that unknown APP markers do not prevent EXIF and XMP extraction.
+     *
+     * @return void
      */
     #[Test]
     public function skipsUnknownAppMarkersWhileExtractingKnownMetadata(): void
@@ -216,7 +224,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Confirms ICC profile fragments are reordered and merged into a single profile.
+     * Verifies that multi-part ICC segments are merged into a single profile blob.
+     *
+     * @return void
      */
     #[Test]
     public function iccProfileSegmentsAreMerged(): void
@@ -235,7 +245,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Confirms FlashPix APP2 segments are reordered and merged per stream identifier.
+     * Verifies that FlashPix segments are concatenated into a single stream.
+     *
+     * @return void
      */
     #[Test]
     public function flashPixSegmentsAreMerged(): void
@@ -255,7 +267,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures multiple FlashPix streams are merged independently and keyed by identifier.
+     * Verifies that FlashPix segments are grouped by stream identifier.
+     *
+     * @return void
      */
     #[Test]
     public function flashPixMultipleStreamsAreHandled(): void
@@ -276,7 +290,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures EXIF audio APP2 segments are decoded and exposed with metadata.
+     * Verifies that EXIF audio APP2 segments decode into audio stream metadata.
+     *
+     * @return void
      */
     #[Test]
     public function audioSegmentsAreCollected(): void
@@ -310,7 +326,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures unsupported sampling rates raise parse errors for audio APP2 segments.
+     * Verifies that unsupported PCM sample rates raise ParseError.
+     *
+     * @return void
      */
     #[Test]
     public function audioSegmentWithUnsupportedSampleRateThrows(): void
@@ -326,7 +344,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures μ-law APP2 segments only accept 8 kHz sampling rate.
+     * Verifies that mu-law audio rejects sample rates other than 8 kHz.
+     *
+     * @return void
      */
     #[Test]
     public function muLawAudioSegmentWithNonEightKilohertzSampleRateThrows(): void
@@ -342,7 +362,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures MPF APP2 payloads are buffered across segments and decoded.
+     * Verifies that split MPF segments are buffered and parsed into a document.
+     *
+     * @return void
      */
     #[Test]
     public function mpfSegmentsAreBufferedAndParsed(): void
@@ -382,7 +404,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures MPF segments missing payload raise a parse error.
+     * Verifies that empty MPF segments trigger ParseError.
+     *
+     * @return void
      */
     #[Test]
     public function mpfSegmentWithoutPayloadThrowsParseError(): void
@@ -398,7 +422,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures inconsistent FlashPix sequence counts discard accumulated fragments.
+     * Verifies that inconsistent FlashPix sequence metadata discards the stream.
+     *
+     * @return void
      */
     #[Test]
     public function flashPixInvalidSequenceDiscardsStream(): void
@@ -414,7 +440,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures APP13 segments with the Photoshop signature are stored verbatim.
+     * Verifies that raw IPTC APP13 resource blocks are collected.
+     *
+     * @return void
      */
     #[Test]
     public function iptcIsCollectedRaw(): void
@@ -431,6 +459,11 @@ final class JpegParserTest extends TestCase
         self::assertSame([$iptcOne, $iptcTwo], $extractor->getIptcPayloads());
     }
 
+    /**
+     * Verifies that file-backed streams yield EXIF and XMP segments.
+     *
+     * @return void
+     */
     #[Test]
     public function extractsAppSegmentsFromFilesystemStream(): void
     {
@@ -463,9 +496,11 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures SOF markers expose precision and component sampling factors.
+     * Verifies that SOF payloads provide precision, size, and sampling factors.
      *
      * @param int $marker
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideSofMarkers')]
@@ -494,11 +529,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Validates derived YCbCr subsampling values against legal values per
-     * EXIF 3.0 §4.6.5.1.12.
+     * Verifies that illegal or reserved YCbCr subsampling values are rejected.
      *
-     * Legal values are: [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0).
-     * Other values are reserved.
+     * @return void
      */
     #[Test]
     public function derivedYCbCrSubSamplingRejectsIllegalValues(): void
@@ -579,10 +612,12 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Ensures invalid segment lengths and truncated payloads raise ParseError.
+     * Verifies that invalid segment lengths and truncation raise ParseError.
      *
      * @param string $jpeg           Binary JPEG fixture provided by the data set.
      * @param string $messagePattern Regular expression expected in the error message.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidSegments')]
@@ -597,7 +632,9 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies scanning stops at SOS and ignores restart markers during search.
+     * Verifies that parsing stops at SOS and ignores restart markers afterward.
+     *
+     * @return void
      */
     #[Test]
     public function stopsAtSosIgnoresRestartMarkers(): void
@@ -623,6 +660,11 @@ final class JpegParserTest extends TestCase
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
     }
 
+    /**
+     * Verifies that segments after EOI are ignored.
+     *
+     * @return void
+     */
     #[Test]
     public function ignoresSegmentsAfterEoi(): void
     {
@@ -649,6 +691,11 @@ final class JpegParserTest extends TestCase
         self::assertSame($iccProfile, $extractor->getIccProfile());
     }
 
+    /**
+     * Verifies that malformed bytes after EOI are skipped without affecting results.
+     *
+     * @return void
+     */
     #[Test]
     public function skipsMalformedTrailingDataAfterEoi(): void
     {

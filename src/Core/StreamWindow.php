@@ -107,11 +107,24 @@ final class StreamWindow implements BinaryReadAccessInterface
         return $this->length;
     }
 
+    /**
+     * Returns the ByteReader that delegates primitive reads to this window.
+     *
+     * @return ByteReader Shared reader instance.
+     */
     protected function byteReader(): ByteReader
     {
         return $this->byteReader;
     }
 
+    /**
+     * Resolves and applies a seek operation within the window bounds.
+     *
+     * @param int|UInt64 $offset Offset to seek to.
+     * @param int        $whence Seek origin constant.
+     *
+     * @return void
+     */
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {

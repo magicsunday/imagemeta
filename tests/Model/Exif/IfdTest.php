@@ -26,7 +26,9 @@ use PHPUnit\Framework\TestCase;
 final class IfdTest extends TestCase
 {
     /**
-     * Ensures the constructor exposes the provided entries and optional next IFD offset.
+     * Verifies that $ifd->entries equals [$entry->tag => $entry].
+     *
+     * @return void
      */
     #[Test]
     public function constructorStoresEntriesAndNextOffset(): void
@@ -39,7 +41,9 @@ final class IfdTest extends TestCase
     }
 
     /**
-     * Verifies that the next IFD offset defaults to null when it is omitted.
+     * Verifies that $ifd->entries equals [$entry->tag => $entry].
+     *
+     * @return void
      */
     #[Test]
     public function constructorDefaultsNextOffsetToNull(): void
@@ -52,7 +56,9 @@ final class IfdTest extends TestCase
     }
 
     /**
-     * Ensures that get() returns the entry associated with a known tag identifier.
+     * Verifies that $ifd->get(0x013B) equals $artistEntry.
+     *
+     * @return void
      */
     #[Test]
     public function getReturnsEntryForKnownTag(): void
@@ -69,7 +75,9 @@ final class IfdTest extends TestCase
     }
 
     /**
-     * Ensures that get() returns null when the tag identifier is not present in the directory.
+     * Verifies that $ifd->get(0x010F) is null.
+     *
+     * @return void
      */
     #[Test]
     public function getReturnsNullForUnknownTag(): void

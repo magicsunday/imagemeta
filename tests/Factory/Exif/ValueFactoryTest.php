@@ -40,6 +40,11 @@ use function strlen;
 #[UsesClass(DepthMap::class)]
 final class ValueFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $structured->depthMap is instance of DepthMap::class.
+     *
+     * @return void
+     */
     #[Test]
     public function assemblesDepthMapFromXmpPacket(): void
     {
@@ -71,6 +76,11 @@ XML;
         self::assertSame(10.5, $structured->depthMap->far);
     }
 
+    /**
+     * Verifies that $structured->image->title equals 'Sample Title'.
+     *
+     * @return void
+     */
     #[Test]
     public function mapsXmpCreatorContactInfoAndTitles(): void
     {
@@ -125,6 +135,11 @@ XML;
         self::assertSame('https://example.com', $structured->author->creatorUrl);
     }
 
+    /**
+     * Verifies that $structured->iptc->document?->first(2, 5) equals 'Object Name'.
+     *
+     * @return void
+     */
     #[Test]
     public function exposesParsedIptcDatasets(): void
     {

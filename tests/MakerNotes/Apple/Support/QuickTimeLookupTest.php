@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(QuickTimeMeta::class)]
 final class QuickTimeLookupTest extends TestCase
 {
+    /**
+     * Verifies that $lookup->string('Primary', 'Secondary') equals 'value'.
+     *
+     * @return void
+     */
     #[Test]
     public function stringReturnsFirstNonEmptyCandidate(): void
     {
@@ -35,6 +40,11 @@ final class QuickTimeLookupTest extends TestCase
         self::assertSame('value', $lookup->string('Primary', 'Secondary'));
     }
 
+    /**
+     * Verifies that $lookup->string('Primary', 'Secondary') is null.
+     *
+     * @return void
+     */
     #[Test]
     public function stringReturnsNullWhenCandidatesAreEmpty(): void
     {
@@ -48,6 +58,11 @@ final class QuickTimeLookupTest extends TestCase
         self::assertNull($lookup->string('Primary', 'Secondary'));
     }
 
+    /**
+     * Verifies that $lookup->float('First', 'Second') equals 42.5.
+     *
+     * @return void
+     */
     #[Test]
     public function floatFallsBackToNumericString(): void
     {
@@ -61,6 +76,11 @@ final class QuickTimeLookupTest extends TestCase
         self::assertSame(42.5, $lookup->float('First', 'Second'));
     }
 
+    /**
+     * Verifies that $lookup->int('Missing') is null.
+     *
+     * @return void
+     */
     #[Test]
     public function intReturnsNullWhenMissing(): void
     {
@@ -69,6 +89,11 @@ final class QuickTimeLookupTest extends TestCase
         self::assertNull($lookup->int('Missing'));
     }
 
+    /**
+     * Verifies that $lookup->bool('Primary') is false.
+     *
+     * @return void
+     */
     #[Test]
     public function boolReturnsFirstResolvableValue(): void
     {

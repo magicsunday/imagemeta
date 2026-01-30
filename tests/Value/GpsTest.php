@@ -28,6 +28,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Gps::class)]
 final class GpsTest extends TestCase
 {
+    /**
+     * Verifies that $gps->latitude equals 1.23.
+     *
+     * @return void
+     */
     #[Test]
     public function exposesGpsProperties(): void
     {
@@ -64,6 +69,11 @@ final class GpsTest extends TestCase
         self::assertSame(GpsDistanceRef::NAUTICAL_MILES, $gps->destinationDistanceOriginalRef);
     }
 
+    /**
+     * Verifies that $gps->latitudeSigned equals -12.5.
+     *
+     * @return void
+     */
     #[Test]
     public function calculatesSignedCoordinates(): void
     {
@@ -90,6 +100,11 @@ final class GpsTest extends TestCase
         self::assertSame('7.5° W', (string) $longitudeCoordinate);
     }
 
+    /**
+     * Verifies that $utcTimestamp is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsUtcTimestamp(): void
     {

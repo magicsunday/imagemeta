@@ -24,6 +24,11 @@ use ReflectionClass;
 #[CoversClass(SemanticStyle::class)]
 final class SemanticStyleTest extends TestCase
 {
+    /**
+     * Verifies that SemanticStyle::fromQuickTime($meta) equals ['Vivid', 0.15, 0.25].
+     *
+     * @return void
+     */
     #[Test]
     public function fromQuickTimeParsesModernStructure(): void
     {
@@ -36,6 +41,11 @@ final class SemanticStyleTest extends TestCase
         self::assertSame(['Vivid', 0.15, 0.25], SemanticStyle::fromQuickTime($meta));
     }
 
+    /**
+     * Verifies that SemanticStyle::fromDictionary($dictionary) equals ['Warm', 0.5, 0.75].
+     *
+     * @return void
+     */
     #[Test]
     public function fromDictionaryParsesLegacyStructure(): void
     {
@@ -52,6 +62,11 @@ final class SemanticStyleTest extends TestCase
         self::assertSame(['Warm', 0.5, 0.75], SemanticStyle::fromDictionary($dictionary));
     }
 
+    /**
+     * Verifies that SemanticStyle::fromValue($payload) equals ['Cinematic', 0.45, 0.67].
+     *
+     * @return void
+     */
     #[Test]
     public function fromValueNormalisesDeeplyNestedStructure(): void
     {
@@ -60,6 +75,11 @@ final class SemanticStyleTest extends TestCase
         self::assertSame(['Cinematic', 0.45, 0.67], SemanticStyle::fromValue($payload));
     }
 
+    /**
+     * Verifies that SemanticStyle::fromValue(['values' => []]) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function fromValueReturnsNullWhenNoComponents(): void
     {

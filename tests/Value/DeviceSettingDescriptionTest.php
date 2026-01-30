@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(DeviceSettingDescription::class)]
 final class DeviceSettingDescriptionTest extends TestCase
 {
+    /**
+     * Verifies that $desc->columns equals 5.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithBasicInfo(): void
     {
@@ -36,6 +41,11 @@ final class DeviceSettingDescriptionTest extends TestCase
         self::assertSame([], $desc->settings);
     }
 
+    /**
+     * Verifies that $desc->columns equals 3.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithFullInfo(): void
     {
@@ -50,6 +60,11 @@ final class DeviceSettingDescriptionTest extends TestCase
         self::assertSame(['ISO:100 WB:Auto Sharpness:Normal'], $desc->settings);
     }
 
+    /**
+     * Verifies that $desc->columns equals 1.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesNullSettings(): void
     {

@@ -39,10 +39,11 @@ use function count;
 final class ParsedExifDefaultValuesTest extends TestCase
 {
     /**
-     * Verifies that bitsPerSample() returns the EXIF 3.0 default value of 8 per
-     * component when the tag is not present.
+     * Verifies that $parsedExif->bitsPerSample() equals 8.
      *
      * @see EXIF 3.0 §4.6.5.1.3: BitsPerSample default is 8 8 8 (RGB)
+     *
+     * @return void
      */
     #[Test]
     public function bitsPerSampleReturnsDefaultWhenMissing(): void
@@ -54,10 +55,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that samplesPerPixel() returns the EXIF 3.0 default value of 3
-     * when the tag is not present.
+     * Verifies that $parsedExif->samplesPerPixel() equals 3.
      *
      * @see EXIF 3.0 §4.6.5.1.7: SamplesPerPixel defaults to 3 for RGB/YCbCr
+     *
+     * @return void
      */
     #[Test]
     public function samplesPerPixelReturnsDefaultWhenMissing(): void
@@ -69,10 +71,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that compression() returns the TIFF 6.0 default value of
-     * Compression::UNCOMPRESSED when the tag is not present.
+     * Verifies that $parsedExif->compression() equals Compression::UNCOMPRESSED.
      *
      * @see TIFF 6.0 §8: Compression default is 1 (no compression)
+     *
+     * @return void
      */
     #[Test]
     public function compressionReturnsDefaultWhenMissing(): void
@@ -84,11 +87,12 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that orientation() returns the TIFF 6.0/EXIF 3.0 default value
-     * of Orientation::TOP_LEFT when the tag is not present.
+     * Verifies that $parsedExif->orientation() equals Orientation::TOP_LEFT.
      *
      * @see TIFF 6.0 §8: Orientation default is 1 (top-left)
      * @see EXIF 3.0 §4.6.5.1.6: Orientation default is 1
+     *
+     * @return void
      */
     #[Test]
     public function orientationReturnsDefaultWhenMissing(): void
@@ -100,11 +104,12 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that planarConfiguration() returns the TIFF 6.0/EXIF 3.0 default
-     * value of PlanarConfiguration::CHUNKY when the tag is not present.
+     * Verifies that $parsedExif->planarConfiguration() equals PlanarConfiguration::CHUNKY.
      *
      * @see TIFF 6.0 §8: PlanarConfiguration default is 1 (chunky format)
      * @see EXIF 3.0 §4.6.5.1.10: PlanarConfiguration default is 1
+     *
+     * @return void
      */
     #[Test]
     public function planarConfigurationReturnsDefaultWhenMissing(): void
@@ -116,11 +121,12 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that resolutionUnit() returns the TIFF 6.0/EXIF 3.0 default
-     * value of ResolutionUnit::INCHES when the tag is not present.
+     * Verifies that $parsedExif->resolutionUnit() equals ResolutionUnit::INCHES.
      *
      * @see TIFF 6.0 §8: ResolutionUnit default is 2 (inches)
      * @see EXIF 3.0 §4.6.5.1.11: ResolutionUnit default is 2
+     *
+     * @return void
      */
     #[Test]
     public function resolutionUnitReturnsDefaultWhenMissing(): void
@@ -132,10 +138,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that ycbcrPositioning() returns the EXIF 3.0 default value of
-     * YCbCrPositioning::CENTERED when the tag is not present.
+     * Verifies that $parsedExif->ycbcrPositioning() equals YCbCrPositioning::CENTERED.
      *
      * @see EXIF 3.0 §4.6.5.1.13: Default value is 1 (centered) if missing
+     *
+     * @return void
      */
     #[Test]
     public function ycbcrPositioningDefaultsToCenteredWhenMissing(): void
@@ -147,8 +154,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that ReferenceBlackWhite returns the EXIF 3.0 §4.6.5.3.5 default
-     * when the colour space is defined and the photometric interpretation is RGB.
+     * Verifies that $parsedExif->referenceBlackWhite() equals [0.0, 255.0, 0.0, 255.0, 0.0, 255.0].
+     *
+     * @return void
      */
     #[Test]
     public function referenceBlackWhiteDefaultsForRgb(): void
@@ -175,8 +183,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Verifies that ReferenceBlackWhite returns the EXIF 3.0 §4.6.5.3.5 default
-     * when the colour space is defined and the photometric interpretation is YCbCr.
+     * Verifies that $parsedExif->referenceBlackWhite() equals [0.0, 255.0, 128.0, 128.0, 128.0, 128.0].
+     *
+     * @return void
      */
     #[Test]
     public function referenceBlackWhiteDefaultsForYCbCr(): void
@@ -203,8 +212,9 @@ final class ParsedExifDefaultValuesTest extends TestCase
     }
 
     /**
-     * Ensures no default ReferenceBlackWhite is applied when the colour space
-     * is uncalibrated even if the photometric interpretation is RGB.
+     * Verifies that $parsedExif->referenceBlackWhite() is null.
+     *
+     * @return void
      */
     #[Test]
     public function referenceBlackWhiteDefaultsAreSuppressedForUncalibratedColorSpace(): void
@@ -227,6 +237,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
         self::assertNull($parsedExif->referenceBlackWhite());
     }
 
+    /**
+     * Verifies that $parsedExif->transferFunction() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function transferFunctionRequiresCompleteLut(): void
     {
@@ -249,6 +264,11 @@ final class ParsedExifDefaultValuesTest extends TestCase
         self::assertSame($table, $parsedExif->transferFunction());
     }
 
+    /**
+     * Verifies that $parsedExif->ycbcrCoefficients() equals [0.299, 0.587, 0.114].
+     *
+     * @return void
+     */
     #[Test]
     public function ycbcrCoefficientsDefaultToAnnexDWhenMissing(): void
     {

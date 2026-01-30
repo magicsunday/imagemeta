@@ -36,6 +36,11 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(TiffConst::class)]
 final class TiffExifParserExamplesTest extends TestCase
 {
+    /**
+     * Verifies that classic little-endian EXIF examples parse common EXIF/GPS values.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesClassicLittleEndianExample(): void
     {
@@ -46,6 +51,11 @@ final class TiffExifParserExamplesTest extends TestCase
         $this->assertGpsValues($result);
     }
 
+    /**
+     * Verifies that classic big-endian EXIF examples parse common EXIF/GPS values.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesClassicBigEndianExample(): void
     {
@@ -56,6 +66,11 @@ final class TiffExifParserExamplesTest extends TestCase
         $this->assertGpsValues($result);
     }
 
+    /**
+     * Verifies that BigTIFF little-endian examples parse common EXIF/GPS values.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesBigTiffLittleEndianExample(): void
     {
@@ -66,6 +81,11 @@ final class TiffExifParserExamplesTest extends TestCase
         $this->assertGpsValues($result);
     }
 
+    /**
+     * Verifies that BigTIFF big-endian examples parse common EXIF/GPS values.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesBigTiffBigEndianExample(): void
     {
@@ -77,9 +97,9 @@ final class TiffExifParserExamplesTest extends TestCase
     }
 
     /**
-     * EXIF 3.0 §4.5.2 outlines the IFD chaining rules, §4.6.3.3.1 defines the
-     * Interoperability IFD pointer, and §4.6.5.2.4 plus §4.6.5.1.6 (Table 3)
-     * describe the JPEG thumbnail tags stored in IFD1.
+     * Verifies that interop and thumbnail IFDs expose offsets, lengths, and compression.
+     *
+     * @return void
      */
     #[Test]
     public function parsesClassicInteropAndThumbnailExample(): void

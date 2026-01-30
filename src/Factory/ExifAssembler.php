@@ -19,6 +19,9 @@ use MagicSunday\ImageMeta\Model\Metadata;
  */
 final readonly class ExifAssembler implements StructuredAssemblerInterface
 {
+    /**
+     * @param ValueFactory $valueFactory Factory used to build structured components.
+     */
     public function __construct(private ValueFactory $valueFactory = new ValueFactory())
     {
     }

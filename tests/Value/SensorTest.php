@@ -25,6 +25,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Sensor::class)]
 final class SensorTest extends TestCase
 {
+    /**
+     * Verifies that $sensor->pixelPitchUm equals 3.76.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithBasicSensorInfo(): void
     {
@@ -39,6 +44,11 @@ final class SensorTest extends TestCase
         self::assertTrue($sensor->ibis);
     }
 
+    /**
+     * Verifies that $cfaPattern is instance of CfaPattern::class.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithCFAPattern(): void
     {
@@ -66,6 +76,11 @@ final class SensorTest extends TestCase
         self::assertSame(CfaPatternColor::RED, $cfaPattern->colors[0]);
     }
 
+    /**
+     * Verifies that $sensor->focalPlaneXResolution equals 3000.0.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithFocalPlaneResolution(): void
     {
@@ -87,6 +102,11 @@ final class SensorTest extends TestCase
         self::assertSame(ResolutionUnit::CENTIMETER, $sensor->focalPlaneResolutionUnit);
     }
 
+    /**
+     * Verifies that $sensor->pixelPitchUm is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

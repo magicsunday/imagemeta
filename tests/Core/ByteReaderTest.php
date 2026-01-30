@@ -57,6 +57,11 @@ final class ByteReaderTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that $reader->readU8() equals 255.
+     *
+     * @return void
+     */
     #[Test]
     public function readsUnsigned8BitInteger(): void
     {
@@ -65,6 +70,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(255, $reader->readU8());
     }
 
+    /**
+     * Verifies that $reader->readU16BE() equals 0x1234.
+     *
+     * @return void
+     */
     #[Test]
     public function readsUnsigned16BitBigEndianInteger(): void
     {
@@ -73,6 +83,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(0x1234, $reader->readU16BE());
     }
 
+    /**
+     * Verifies that $reader->readU16LE() equals 0x1234.
+     *
+     * @return void
+     */
     #[Test]
     public function readsUnsigned16BitLittleEndianInteger(): void
     {
@@ -81,6 +96,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(0x1234, $reader->readU16LE());
     }
 
+    /**
+     * Verifies that $reader->readU32BE() equals 0x12345678.
+     *
+     * @return void
+     */
     #[Test]
     public function readsUnsigned32BitBigEndianInteger(): void
     {
@@ -89,6 +109,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(0x12345678, $reader->readU32BE());
     }
 
+    /**
+     * Verifies that $reader->readU32LE() equals 0x12345678.
+     *
+     * @return void
+     */
     #[Test]
     public function readsUnsigned32BitLittleEndianInteger(): void
     {
@@ -97,6 +122,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(0x12345678, $reader->readU32LE());
     }
 
+    /**
+     * Verifies that $result->high() equals 0x00000001.
+     *
+     * @return void
+     */
     #[Test]
     public function readsUnsigned64BitBigEndianInteger(): void
     {
@@ -110,6 +140,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(0x23456789, $result->low());
     }
 
+    /**
+     * Verifies that $result->high() equals 0x00000001.
+     *
+     * @return void
+     */
     #[Test]
     public function readsUnsigned64BitLittleEndianInteger(): void
     {
@@ -123,6 +158,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(0x23456789, $result->low());
     }
 
+    /**
+     * Verifies that $reader->tell() equals 0.
+     *
+     * @return void
+     */
     #[Test]
     public function tellReportsCurrentPosition(): void
     {
@@ -135,6 +175,11 @@ final class ByteReaderTest extends TestCase
         self::assertSame(3, $reader->tell());
     }
 
+    /**
+     * Verifies that $reader->readU8() equals 0xBB.
+     *
+     * @return void
+     */
     #[Test]
     public function seekChangesPosition(): void
     {

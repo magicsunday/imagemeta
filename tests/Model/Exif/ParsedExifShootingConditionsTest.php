@@ -29,6 +29,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifShootingConditionsTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->exposureProgram() equals ExposureProgram::SHUTTER_PRIORITY.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsExposureProgramEnumFromExifValue(): void
     {
@@ -41,6 +46,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(ExposureProgram::SHUTTER_PRIORITY, $parsedExif->exposureProgram());
     }
 
+    /**
+     * Verifies that $parsedExif->customRendered() equals CustomRendered::CUSTOM_PROCESS.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsCustomRenderedValue(): void
     {
@@ -53,6 +63,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(CustomRendered::CUSTOM_PROCESS, $parsedExif->customRendered());
     }
 
+    /**
+     * Verifies that $parsedExif->digitalZoomRatio() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function normalizesDigitalZoomRatioAndTreatsZeroAsMissing(): void
     {
@@ -73,6 +88,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(1.5, $parsedExif->digitalZoomRatio());
     }
 
+    /**
+     * Verifies that $parsedExif->whiteBalance() equals WhiteBalance::MANUAL.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsWhiteBalanceAndExposureModeEnums(): void
     {
@@ -89,6 +109,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertNull($parsedExif->sceneCaptureType());
     }
 
+    /**
+     * Verifies that $parsedExif->exposureProgram() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullForReservedExposureProgramValue(): void
     {
@@ -101,6 +126,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertNull($parsedExif->exposureProgram());
     }
 
+    /**
+     * Verifies that $parsedExif->spectralSensitivity() equals 'ISO 12232 SOS'.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsSpectralSensitivityString(): void
     {
@@ -114,6 +144,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame('ISO 12232 SOS', $parsedExif->spectralSensitivity());
     }
 
+    /**
+     * Verifies that $parsedExif->photographicSensitivity() equals 640.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsPhotographicSensitivityViaAlias(): void
     {
@@ -126,6 +161,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(640, $parsedExif->photographicSensitivity());
     }
 
+    /**
+     * Verifies that $parsedExif->exposureIndex() equals 160.0.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsExposureIndexFromRational(): void
     {
@@ -138,6 +178,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(160.0, $parsedExif->exposureIndex());
     }
 
+    /**
+     * Verifies that $parsedExif->sensingMethod() equals SensingMethod::ONE_CHIP_COLOR_AREA.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsSensingMethodEnum(): void
     {
@@ -150,6 +195,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(SensingMethod::ONE_CHIP_COLOR_AREA, $parsedExif->sensingMethod());
     }
 
+    /**
+     * Verifies that $parsedExif->sensingMethod() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function ignoresReservedSensingMethodCodes(): void
     {
@@ -162,6 +212,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertNull($parsedExif->sensingMethod());
     }
 
+    /**
+     * Verifies that $parsedExif->fileSource() equals FileSource::DIGITAL_CAMERA.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsFileSourceFromUndefinedByte(): void
     {
@@ -174,6 +229,11 @@ final class ParsedExifShootingConditionsTest extends TestCase
         self::assertSame(FileSource::DIGITAL_CAMERA, $parsedExif->fileSource());
     }
 
+    /**
+     * Verifies that $parsedExif->sceneType() equals SceneType::DIRECTLY_PHOTOGRAPHED_IMAGE.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsSceneTypeFromUndefinedByte(): void
     {

@@ -29,6 +29,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SpatialFrequencyResponse::class)]
 final class SpatialFrequencyResponseTest extends TestCase
 {
+    /**
+     * Verifies that $sfr is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function createSfrFromDecodedMatrix(): void
     {
@@ -59,6 +64,11 @@ final class SpatialFrequencyResponseTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that SpatialFrequencyResponse::fromMatrix(null) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function invalidMatrixReturnsNull(): void
     {
@@ -67,6 +77,11 @@ final class SpatialFrequencyResponseTest extends TestCase
         self::assertNull(SpatialFrequencyResponse::fromMatrix(['columns' => 0]));
     }
 
+    /**
+     * Verifies that SpatialFrequencyResponse::fromMatrix($incomplete) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function missingRequiredFieldsReturnsNull(): void
     {
@@ -78,6 +93,11 @@ final class SpatialFrequencyResponseTest extends TestCase
         self::assertNull(SpatialFrequencyResponse::fromMatrix($incomplete));
     }
 
+    /**
+     * Verifies that SpatialFrequencyResponse::fromMatrix($matrix) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function invalidDimensionsReturnsNull(): void
     {

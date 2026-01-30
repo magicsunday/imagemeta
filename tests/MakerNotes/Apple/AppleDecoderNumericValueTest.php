@@ -20,6 +20,11 @@ use ReflectionMethod;
 #[CoversClass(AppleDecoder::class)]
 final class AppleDecoderNumericValueTest extends TestCase
 {
+    /**
+     * Verifies that $result is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function rationalFloatValueNormalisesWhitespaceSeparatedPairs(): void
     {
@@ -36,6 +41,11 @@ final class AppleDecoderNumericValueTest extends TestCase
         self::assertEqualsWithDelta(44 / 1610612736, $result, 1e-12);
     }
 
+    /**
+     * Verifies that $result is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function numericScalarValueParsesWhitespaceSeparatedPairs(): void
     {

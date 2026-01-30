@@ -64,7 +64,9 @@ use PHPUnit\Framework\TestCase;
 final class EnumMappingTest extends TestCase
 {
     /**
-     * Ensures enums convert canonical integer encodings into typed values.
+     * Verifies that Compression::fromExifValue(6) equals Compression::JPEG.
+     *
+     * @return void
      */
     #[Test]
     public function mapsCommonEnumValues(): void
@@ -86,7 +88,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Normalises numeric-string payloads emitted by some encoders.
+     * Verifies that Compression::fromExifValue('6') equals Compression::JPEG.
+     *
+     * @return void
      */
     #[Test]
     public function normalizesStringInputs(): void
@@ -98,7 +102,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Converts camera orientation, metering and scene capture enums when delivered as numeric strings.
+     * Verifies that Orientation::fromExifValue('6') equals Orientation::RIGHT_TOP.
+     *
+     * @return void
      */
     #[Test]
     public function mapsSceneAndMeteringEnumsFromStringPayloads(): void
@@ -111,7 +117,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Maps shooting-condition enums and rejects reserved payloads.
+     * Verifies that CustomRendered::fromExifValue(0) equals CustomRendered::NORMAL_PROCESS.
+     *
+     * @return void
      */
     #[Test]
     public function mapsShootingConditionEnums(): void
@@ -130,7 +138,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Returns null for empty or non-numeric payloads that cannot be mapped to an enum.
+     * Verifies that Compression::fromExifValue('') is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullForEmptyOrNonNumericStrings(): void
@@ -140,7 +150,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Ignores vendor specific file source values outside of the EXIF specification.
+     * Verifies that FileSource::fromExifValue(0x8000) is null.
+     *
+     * @return void
      */
     #[Test]
     public function ignoresVendorSpecificFileSource(): void
@@ -149,7 +161,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Rejects orientation codes that fall outside the EXIF defined range.
+     * Verifies that Orientation::fromExifValue(9) is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullForOutOfRangeOrientationCodes(): void
@@ -158,7 +172,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Rejects reserved subject distance range codes outside the defined set.
+     * Verifies that SubjectDistanceRange::fromExifValue(4) is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullForReservedSubjectDistanceRanges(): void
@@ -168,7 +184,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Rejects composite image codes outside the enumerated EXIF range.
+     * Verifies that CompositeImage::fromExifValue(4) is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullForReservedCompositeImageCodes(): void
@@ -178,9 +196,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Rejects reserved photometric interpretations outside the EXIF allowed set.
+     * Verifies that Photometric::fromExifValue(0) is null.
      *
-     * EXIF 3.0 §4.6.5.1.5 limits PhotometricInterpretation to RGB (2) and YCbCr (6).
+     * @return void
      */
     #[Test]
     public function returnsNullForReservedPhotometricCodes(): void
@@ -191,10 +209,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Maps GPS string-backed enums correctly.
+     * Verifies that GpsSpeedRef::fromExifValue('K') equals GpsSpeedRef::KILOMETERS_PER_HOUR.
      *
-     * EXIF 3.0 §4.6.6 Table 27 defines GPS reference tags using single-character
-     * string values (e.g., 'K', 'M', 'N' for speed reference, 'T', 'M' for direction).
+     * @return void
      */
     #[Test]
     public function mapsGpsStringBackedEnums(): void
@@ -229,7 +246,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Returns null for invalid GPS string values.
+     * Verifies that GpsSpeedRef::fromExifValue('X') is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullForInvalidGpsStrings(): void
@@ -243,10 +262,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies orientation rotation descriptions match ExifTool output.
+     * Verifies that Orientation::UNKNOWN->rotationDescription() equals 'Unknown'.
      *
-     * EXIF 3.0 §4.6.5.1.6 defines eight orientation states; these descriptions
-     * align with the common ExifTool output format.
+     * @return void
      */
     #[Test]
     public function mapsOrientationToRotationDescription(): void
@@ -263,7 +281,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies orientation rotation degrees are calculated correctly.
+     * Verifies that Orientation::UNKNOWN->rotationDegrees() equals 0.
+     *
+     * @return void
      */
     #[Test]
     public function mapsOrientationToRotationDegrees(): void
@@ -280,7 +300,9 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies orientation mirrored flag is set correctly.
+     * Verifies that Orientation::UNKNOWN->isMirrored() is false.
+     *
+     * @return void
      */
     #[Test]
     public function mapsOrientationToMirroredFlag(): void

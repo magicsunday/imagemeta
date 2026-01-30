@@ -153,11 +153,24 @@ final class Stream implements BinaryReadAccessInterface
         return $this->size;
     }
 
+    /**
+     * Returns the ByteReader that delegates primitive reads to this stream.
+     *
+     * @return ByteReader Shared reader instance.
+     */
     protected function byteReader(): ByteReader
     {
         return $this->byteReader;
     }
 
+    /**
+     * Resolves and applies the seek operation against the underlying stream.
+     *
+     * @param int|UInt64 $offset Offset to seek to.
+     * @param int        $whence Seek origin constant.
+     *
+     * @return void
+     */
     private function seekInternal(int|UInt64 $offset, int $whence): void
     {
         $target = match ($whence) {

@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Video::class)]
 final class VideoTest extends TestCase
 {
+    /**
+     * Verifies that $video->durationSec equals 120.5.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithBasicVideoInfo(): void
     {
@@ -40,6 +45,11 @@ final class VideoTest extends TestCase
         self::assertSame(1080, $video->height);
     }
 
+    /**
+     * Verifies that $video->codec equals 'H.265'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithHDRInfo(): void
     {
@@ -60,6 +70,11 @@ final class VideoTest extends TestCase
         self::assertSame('BT.2020', $video->colorPrimaries);
     }
 
+    /**
+     * Verifies that $video->durationSec is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

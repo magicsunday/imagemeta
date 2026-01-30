@@ -36,6 +36,11 @@ use function strlen;
 #[CoversClass(DeviceSettingDescription::class)]
 final class DeviceSettingDescriptionParsingTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->deviceSettingDescription() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenTagMissing(): void
     {
@@ -45,6 +50,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertNull($parsedExif->deviceSettingDescription());
     }
 
+    /**
+     * Verifies that $parsedExif->deviceSettingDescription() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenDataTooShort(): void
     {
@@ -63,6 +73,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertNull($parsedExif->deviceSettingDescription());
     }
 
+    /**
+     * Verifies that $result is instance of DeviceSettingDescription::class.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesLittleEndianWithoutSettings(): void
     {
@@ -86,6 +101,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertSame([], $result->settings);
     }
 
+    /**
+     * Verifies that $result is instance of DeviceSettingDescription::class.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesBigEndianWithoutSettings(): void
     {
@@ -111,6 +131,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertSame([], $result->settings);
     }
 
+    /**
+     * Verifies that $result is instance of DeviceSettingDescription::class.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesWithUtf16LESettings(): void
     {
@@ -135,6 +160,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertSame(['Test'], $result->settings);
     }
 
+    /**
+     * Verifies that $result is instance of DeviceSettingDescription::class.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesWithUtf16BESettings(): void
     {
@@ -159,6 +189,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertSame(['Test'], $result->settings);
     }
 
+    /**
+     * Verifies that $result is instance of DeviceSettingDescription::class.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesComplexSettings(): void
     {
@@ -185,6 +220,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertSame([$settingsText], $result->settings);
     }
 
+    /**
+     * Verifies that $result is instance of DeviceSettingDescription::class.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesEmptySettingsGracefully(): void
     {
@@ -209,6 +249,11 @@ final class DeviceSettingDescriptionParsingTest extends TestCase
         self::assertSame([], $result->settings);
     }
 
+    /**
+     * Verifies that $result is instance of DeviceSettingDescription::class.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesMultipleSettingsStrings(): void
     {

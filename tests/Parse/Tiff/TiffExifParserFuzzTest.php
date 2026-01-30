@@ -62,7 +62,9 @@ use function strlen;
 final class TiffExifParserFuzzTest extends TestCase
 {
     /**
-     * Tests parsing with empty blob.
+     * Verifies that empty input raises BoundsError.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsEmptyBlob(): void
@@ -75,7 +77,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests parsing with blob containing only header bytes (too short).
+     * Verifies that too-short headers raise BoundsError.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsTooShortBlob(): void
@@ -90,7 +94,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests parsing with random garbage data.
+     * Verifies that random bytes raise ParseError.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsRandomGarbage(): void
@@ -105,7 +111,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests parsing with null bytes only.
+     * Verifies that all-null payloads raise ParseError.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsNullBytes(): void
@@ -120,7 +128,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests valid header but truncated after first IFD offset.
+     * Verifies that headers without IFD offsets raise BoundsError.
+     *
+     * @return void
      */
     #[Test]
     public function rejectsHeaderOnlyBlob(): void
@@ -136,9 +146,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests IFD entry with count causing integer overflow.
+     * Verifies that oversized entry counts raise BoundsError.
      *
-     * EXIF 3.0 §4.5.2 specifies count limits.
+     * @return void
      */
     #[Test]
     public function rejectsEntryWithOverflowCount(): void
@@ -165,7 +175,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests IFD with entries pointing to overlapping data regions.
+     * Verifies that overlapping entry offsets are tolerated.
+     *
+     * @return void
      */
     #[Test]
     public function handlesOverlappingEntryData(): void
@@ -202,7 +214,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests RATIONAL with both numerator and denominator as zero.
+     * Verifies that 0/0 RATIONAL values do not crash parsing.
+     *
+     * @return void
      */
     #[Test]
     public function handlesRationalBothZero(): void
@@ -216,7 +230,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests RATIONAL with maximum unsigned 32-bit values.
+     * Verifies that maximum RATIONAL values do not crash parsing.
+     *
+     * @return void
      */
     #[Test]
     public function handlesRationalMaxValues(): void
@@ -230,7 +246,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests SRATIONAL with negative numerator and positive denominator.
+     * Verifies that SRATIONAL values allow negative numerators.
+     *
+     * @return void
      */
     #[Test]
     public function handlesSrationalNegativeNumerator(): void
@@ -244,7 +262,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests SRATIONAL with positive numerator and negative denominator.
+     * Verifies that SRATIONAL values allow negative denominators.
+     *
+     * @return void
      */
     #[Test]
     public function handlesSrationalNegativeDenominator(): void
@@ -258,7 +278,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests SRATIONAL with both values negative.
+     * Verifies that SRATIONAL values allow both parts negative.
+     *
+     * @return void
      */
     #[Test]
     public function handlesSrationalBothNegative(): void
@@ -272,7 +294,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests IFD chain with maximum safe depth.
+     * Verifies that deep IFD chains resolve subsequent offsets.
+     *
+     * @return void
      */
     #[Test]
     public function handlesDeepIfdChain(): void
@@ -299,7 +323,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests ASCII string with embedded nulls.
+     * Verifies that ASCII values containing embedded nulls are accepted.
+     *
+     * @return void
      */
     #[Test]
     public function handlesAsciiWithEmbeddedNulls(): void
@@ -327,7 +353,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests entry with zero count.
+     * Verifies that zero-count entries are accepted without error.
+     *
+     * @return void
      */
     #[Test]
     public function handlesEntryWithZeroCount(): void
@@ -352,7 +380,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests mix of little-endian header with big-endian-looking data.
+     * Verifies that byte order follows the header endianness marker.
+     *
+     * @return void
      */
     #[Test]
     public function parsesMixedEndianness(): void
@@ -378,9 +408,9 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
-     * Tests UNDEFINED type with various byte patterns.
+     * Verifies that undefined-type byte arrays are accepted as-is.
      *
-     * EXIF 3.0 §4.5.2 defines TYPE_UNDEFINED as arbitrary bytes.
+     * @return void
      */
     #[Test]
     public function handlesUndefinedTypeWithRandomBytes(): void

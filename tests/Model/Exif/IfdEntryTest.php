@@ -28,7 +28,9 @@ use function count;
 final class IfdEntryTest extends TestCase
 {
     /**
-     * Ensures the constructor assigns the provided scalar values to the exposed properties.
+     * Verifies that $entry->tag equals 0x010F.
+     *
+     * @return void
      */
     #[Test]
     public function constructorAssignsScalarValues(): void
@@ -42,7 +44,9 @@ final class IfdEntryTest extends TestCase
     }
 
     /**
-     * Verifies that complex values such as arrays are exposed unchanged.
+     * Verifies that $entry->tag equals 0x8769.
+     *
+     * @return void
      */
     #[Test]
     public function constructorPreservesArrayValues(): void

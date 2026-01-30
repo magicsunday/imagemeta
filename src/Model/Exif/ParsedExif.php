@@ -1687,6 +1687,14 @@ final readonly class ParsedExif
         );
     }
 
+    /**
+     * Reads a SHORT value from a composite exposure payload.
+     *
+     * @param string $payload Raw payload bytes.
+     * @param int    $offset  Offset within the payload.
+     *
+     * @return int|null Decoded value or null when out of range.
+     */
     private function decodeShort(string $payload, int $offset): ?int
     {
         if (($offset + self::SHORT_BYTE_LENGTH) > strlen($payload)) {
@@ -1698,12 +1706,20 @@ final readonly class ParsedExif
         return Unpack::int($format, substr($payload, $offset, self::SHORT_BYTE_LENGTH), 'EXIF composite exposure short');
     }
 
+    /**
+     * Decodes a RATIONAL value from an 8-byte payload.
+     *
+     * @param string $bytes Raw 8-byte rational value.
+     *
+     * @return float|null Decoded float value or null when invalid.
+     */
     private function decodeRationalFromBytes(string $bytes): ?float
     {
         if (strlen($bytes) !== self::RATIONAL_BYTE_LENGTH) {
             return null;
         }
 
+        // RATIONAL values are stored as numerator/denominator pairs.
         $format    = $this->byteOrder === Endian::Little ? 'V' : 'N';
         $numerator = Unpack::int($format, substr($bytes, 0, 4), 'EXIF composite exposure numerator');
         $denom     = Unpack::int($format, substr($bytes, 4, 4), 'EXIF composite exposure denominator');
@@ -3033,6 +3049,14 @@ final readonly class ParsedExif
         return null;
     }
 
+    /**
+     * Returns a trimmed string value for the given IFD tag.
+     *
+     * @param Ifd|null $ifd IFD to inspect.
+     * @param int      $tag Tag identifier.
+     *
+     * @return string|null Normalised string or null.
+     */
     private function str(?Ifd $ifd, int $tag): ?string
     {
         $value = $this->normalisedValue($ifd, $tag);
@@ -3065,6 +3089,13 @@ final readonly class ParsedExif
         return $this->coerceIntValue($value);
     }
 
+    /**
+     * Extracts the numerator component from a subject distance value.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value.
+     *
+     * @return int|null Numerator value or null.
+     */
     private function subjectDistanceNumerator(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
     ): ?int {
@@ -3122,6 +3153,13 @@ final readonly class ParsedExif
         return ValueConverters::rationalToFloat($value);
     }
 
+    /**
+     * Indicates whether a brightness value is marked as unknown.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value Raw value.
+     *
+     * @return bool True when the value is the "unknown" sentinel.
+     */
     private function isUnknownBrightness(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|null $value,
     ): bool {
@@ -3204,6 +3242,14 @@ final readonly class ParsedExif
         return $ifd->get($tag)?->value;
     }
 
+    /**
+     * Reads and normalises a scalar tag value from an IFD.
+     *
+     * @param Ifd|null $ifd IFD to inspect.
+     * @param int      $tag Tag identifier.
+     *
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalised value.
+     */
     private function normalisedValue(
         ?Ifd $ifd,
         int $tag,
@@ -3213,10 +3259,18 @@ final readonly class ParsedExif
         return $this->normaliseScalarValue($value);
     }
 
+    /**
+     * Normalises scalar EXIF values, converting UInt64 when possible.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
+     *
+     * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|null Normalised value.
+     */
     private function normaliseScalarValue(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): int|float|string|ExifRational|ExifRationalList|ExifNumericList|null {
         if ($value instanceof UInt64) {
+            // Only expose UInt64 values that fit into the platform signed integer range.
             if (!$value->fitsSignedInt()) {
                 return null;
             }
@@ -3230,6 +3284,7 @@ final readonly class ParsedExif
 
             foreach ($value->values as $component) {
                 if ($component instanceof UInt64) {
+                    // Convert list components to integers when safe.
                     if (!$component->fitsSignedInt()) {
                         return null;
                     }
@@ -3253,6 +3308,14 @@ final readonly class ParsedExif
         return $value;
     }
 
+    /**
+     * Returns a scalar value suitable for enum conversion.
+     *
+     * @param Ifd|null $ifd IFD to inspect.
+     * @param int      $tag Tag identifier.
+     *
+     * @return int|string|null Normalised enum scalar.
+     */
     private function enumValue(?Ifd $ifd, int $tag): int|string|null
     {
         $value = $this->value($ifd, $tag);
@@ -3260,22 +3323,32 @@ final readonly class ParsedExif
         return $this->normaliseEnumScalar($value);
     }
 
+    /**
+     * Normalises a mixed EXIF value to an enum-compatible scalar.
+     *
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
+     *
+     * @return int|string|null Enum-compatible scalar value.
+     */
     private function normaliseEnumScalar(
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): int|string|null {
         if ($value instanceof ExifNumericList) {
+            // Only the first entry is relevant for enum conversion.
             $first = $value->values[0] ?? null;
 
             return $this->normaliseEnumScalar($first);
         }
 
         if ($value instanceof ExifRationalList) {
+            // Only the first entry is relevant for enum conversion.
             $first = $value->values[0] ?? null;
 
             return $this->normaliseEnumScalar($first);
         }
 
         if ($value instanceof ExifRational) {
+            // Reduce rationals to a rounded integer for enum lookups.
             $float = ValueConverters::rationalToFloat($value);
 
             return $float === null ? null : $this->normaliseEnumScalar($float);

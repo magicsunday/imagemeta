@@ -31,10 +31,9 @@ final class XmpParserCompleteExtractionTest extends TestCase
     private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
 
     /**
-     * Tests that all properties from multiple rdf:Description elements are extracted.
+     * Verifies that EXIF/TIFF properties are extracted across multiple rdf:Description nodes.
      *
-     * Regression test for issue where tiff namespace properties after Make
-     * (Model, Orientation, XResolution, YResolution, ResolutionUnit) were missing.
+     * @return void
      */
     #[Test]
     public function parseExtractsAllPropertiesFromMultipleDescriptions(): void
@@ -103,7 +102,9 @@ XML;
     }
 
     /**
-     * Tests that xmptk attribute from x:xmpmeta element is extracted.
+     * Verifies that x:xmptk metadata attributes are captured on the document.
+     *
+     * @return void
      */
     #[Test]
     public function parseExtractsXmpMetaAttributes(): void
@@ -126,7 +127,9 @@ XML;
     }
 
     /**
-     * Tests extraction with properties containing decimal values.
+     * Verifies that decimal values are preserved as strings during extraction.
+     *
+     * @return void
      */
     #[Test]
     public function parseExtractsDecimalValues(): void

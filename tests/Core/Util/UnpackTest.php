@@ -28,6 +28,11 @@ use function chr;
 #[UsesClass(UInt64::class)]
 final class UnpackTest extends TestCase
 {
+    /**
+     * Verifies that $result equals 0x1234.
+     *
+     * @return void
+     */
     #[Test]
     public function unpacksIntegerValue(): void
     {
@@ -38,6 +43,11 @@ final class UnpackTest extends TestCase
         self::assertSame(0x1234, $result);
     }
 
+    /**
+     * Verifies that $result matches 3.14 within delta 0.01.
+     *
+     * @return void
+     */
     #[Test]
     public function unpacksFloatValue(): void
     {
@@ -48,6 +58,11 @@ final class UnpackTest extends TestCase
         self::assertEqualsWithDelta(3.14, $result, 0.01);
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'Failed to unpack test'.
+     *
+     * @return void
+     */
     #[Test]
     public function throwsParseErrorOnInvalidFormat(): void
     {
@@ -57,6 +72,11 @@ final class UnpackTest extends TestCase
         Unpack::int('invalid', '', 'test');
     }
 
+    /**
+     * Verifies that $result->high() equals 0x12345678.
+     *
+     * @return void
+     */
     #[Test]
     public function combinesTwoUint32Values(): void
     {
@@ -66,6 +86,11 @@ final class UnpackTest extends TestCase
         self::assertSame(0x9ABCDEF0, $result->low());
     }
 
+    /**
+     * Verifies that $result->high() equals 0x12345678.
+     *
+     * @return void
+     */
     #[Test]
     public function unpacksUint64BigEndian(): void
     {
@@ -77,6 +102,11 @@ final class UnpackTest extends TestCase
         self::assertSame(0x9ABCDEF0, $result->low());
     }
 
+    /**
+     * Verifies that $result->high() equals 0x12345678.
+     *
+     * @return void
+     */
     #[Test]
     public function unpacksUint64LittleEndian(): void
     {
@@ -88,6 +118,11 @@ final class UnpackTest extends TestCase
         self::assertSame(0x9ABCDEF0, $result->low());
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'Failed to unpack test'.
+     *
+     * @return void
+     */
     #[Test]
     public function throwsParseErrorOnInvalidUint64Bytes(): void
     {

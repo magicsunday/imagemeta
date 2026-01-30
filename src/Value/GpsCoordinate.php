@@ -24,6 +24,11 @@ final readonly class GpsCoordinate implements Stringable
 
     public ?string $reference;
 
+    /**
+     * @param float       $value      Coordinate value.
+     * @param string|null $reference  Hemisphere reference.
+     * @param bool        $isLatitude True when latitude, false when longitude.
+     */
     public function __construct(
         public float $value,
         ?string $reference,
@@ -33,6 +38,9 @@ final readonly class GpsCoordinate implements Stringable
         $this->signed    = $this->calculateSigned($this->value, $this->reference, $this->isLatitude);
     }
 
+    /**
+     * Formats the coordinate as a human-readable string.
+     */
     public function __toString(): string
     {
         $signed = $this->signed;
@@ -46,6 +54,13 @@ final readonly class GpsCoordinate implements Stringable
         return sprintf('%s° %s', $formattedValue, $this->reference);
     }
 
+    /**
+     * Normalises the hemisphere reference to a single uppercase character.
+     *
+     * @param string|null $reference Raw reference value.
+     *
+     * @return string|null Normalised reference or null.
+     */
     private function normaliseReference(?string $reference): ?string
     {
         if ($reference === null || $reference === '') {
@@ -57,6 +72,15 @@ final readonly class GpsCoordinate implements Stringable
         return $normalized[0] ?? null;
     }
 
+    /**
+     * Computes a signed coordinate value from the reference.
+     *
+     * @param float       $value      Coordinate magnitude.
+     * @param string|null $reference  Hemisphere reference.
+     * @param bool        $isLatitude True when latitude, false when longitude.
+     *
+     * @return float Signed coordinate value.
+     */
     private function calculateSigned(float $value, ?string $reference, bool $isLatitude): float
     {
         if ($reference === null) {
@@ -88,6 +112,13 @@ final readonly class GpsCoordinate implements Stringable
         return $value;
     }
 
+    /**
+     * Formats a coordinate value with fixed decimal precision.
+     *
+     * @param float $value Coordinate value.
+     *
+     * @return string Formatted decimal string.
+     */
     private function formatDecimal(float $value): string
     {
         $formatted = sprintf('%.6F', $value);

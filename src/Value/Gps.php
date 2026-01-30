@@ -134,6 +134,13 @@ final readonly class Gps
         $this->destinationLongitudeCoordinate = $this->createCoordinate($this->destinationLongitude, $this->destinationLongitudeRef, false);
     }
 
+    /**
+     * Normalises the GPS timestamp to UTC when present.
+     *
+     * @param DateTimeImmutable|null $timestamp Timestamp to normalise.
+     *
+     * @return DateTimeImmutable|null Normalised timestamp or null.
+     */
     private function normaliseTimestamp(?DateTimeImmutable $timestamp): ?DateTimeImmutable
     {
         if (!$timestamp instanceof DateTimeImmutable) {
@@ -147,6 +154,15 @@ final readonly class Gps
         return $timestamp->setTimezone(new DateTimeZone('UTC'));
     }
 
+    /**
+     * Builds a coordinate value object when a value is available.
+     *
+     * @param float|null        $value      Coordinate value.
+     * @param GpsLatLonRef|null $reference  Hemisphere reference.
+     * @param bool              $isLatitude True when latitude, false when longitude.
+     *
+     * @return GpsCoordinate|null Coordinate object or null.
+     */
     private function createCoordinate(?float $value, ?GpsLatLonRef $reference, bool $isLatitude): ?GpsCoordinate
     {
         if ($value === null) {
@@ -156,6 +172,16 @@ final readonly class Gps
         return new GpsCoordinate($value, $reference?->value, $isLatitude);
     }
 
+    /**
+     * Applies the hemisphere reference to compute a signed coordinate.
+     *
+     * @param float|null        $value             Coordinate value.
+     * @param GpsLatLonRef|null $reference         Hemisphere reference.
+     * @param GpsLatLonRef      $negativeReference Reference representing negative values.
+     * @param GpsLatLonRef      $positiveReference Reference representing positive values.
+     *
+     * @return float|null Signed coordinate or null.
+     */
     private function signedCoordinate(?float $value, ?GpsLatLonRef $reference, GpsLatLonRef $negativeReference, GpsLatLonRef $positiveReference): ?float
     {
         if ($value === null || !$reference instanceof GpsLatLonRef) {

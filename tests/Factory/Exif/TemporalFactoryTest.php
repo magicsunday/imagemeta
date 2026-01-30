@@ -29,6 +29,11 @@ use function strlen;
 #[CoversClass(TemporalFactory::class)]
 final class TemporalFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $temporal->create is instance of DateTimeImmutable::class.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -62,6 +67,11 @@ final class TemporalFactoryTest extends TestCase
         self::assertSame('500', $temporal->subSecTimeDigitized);
     }
 
+    /**
+     * Verifies that $temporal->create is instance of DateTimeImmutable::class.
+     *
+     * @return void
+     */
     #[Test]
     public function fallsBackToXmpTimestamps(): void
     {
@@ -86,6 +96,11 @@ final class TemporalFactoryTest extends TestCase
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
     }
 
+    /**
+     * Verifies that $temporal->create is instance of DateTimeImmutable::class.
+     *
+     * @return void
+     */
     #[Test]
     public function fallsBackToQuickTimeTimestamps(): void
     {
@@ -109,6 +124,11 @@ final class TemporalFactoryTest extends TestCase
         self::assertInstanceOf(DateTimeImmutable::class, $temporal->modify);
     }
 
+    /**
+     * Verifies that $temporal->subSecTime equals '005'.
+     *
+     * @return void
+     */
     #[Test]
     public function sanitizesSubSeconds(): void
     {
@@ -132,6 +152,11 @@ final class TemporalFactoryTest extends TestCase
         self::assertSame('500', $temporal->subSecTimeDigitized);
     }
 
+    /**
+     * Verifies that $temporal->create is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullMetadata(): void
     {

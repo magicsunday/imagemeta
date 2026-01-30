@@ -499,16 +499,39 @@ final class MpfParser
         );
     }
 
+    /**
+     * Reads a 16-bit unsigned integer using the specified byte order.
+     *
+     * @param MemoryBuffer $buffer Source buffer.
+     * @param Endian       $endian Byte order to use.
+     *
+     * @return int Unsigned 16-bit integer.
+     */
     private function readU16(MemoryBuffer $buffer, Endian $endian): int
     {
         return $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
     }
 
+    /**
+     * Reads a 32-bit unsigned integer using the specified byte order.
+     *
+     * @param MemoryBuffer $buffer Source buffer.
+     * @param Endian       $endian Byte order to use.
+     *
+     * @return int Unsigned 32-bit integer.
+     */
     private function readU32(MemoryBuffer $buffer, Endian $endian): int
     {
         return $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
     }
 
+    /**
+     * Returns the byte size for a given MPF field type.
+     *
+     * @param int $type MPF field type identifier.
+     *
+     * @return int|null Byte size or null for unknown types.
+     */
     private function typeSize(int $type): ?int
     {
         return match ($type) {
@@ -520,6 +543,14 @@ final class MpfParser
         };
     }
 
+    /**
+     * Packs an unsigned 32-bit integer with the requested byte order.
+     *
+     * @param int    $value  Value to pack.
+     * @param Endian $endian Byte order to use.
+     *
+     * @return string Packed 4-byte string.
+     */
     private function packInt(int $value, Endian $endian): string
     {
         return pack($endian === Endian::Little ? 'V' : 'N', $value);

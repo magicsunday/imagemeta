@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifImageDimensionsTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->imageWidth() equals 800.
+     *
+     * @return void
+     */
     #[Test]
     public function prefersCompressedPixelDimensionsWhenAvailable(): void
     {
@@ -43,6 +48,11 @@ final class ParsedExifImageDimensionsTest extends TestCase
         self::assertSame(600, $parsedExif->imageHeight());
     }
 
+    /**
+     * Verifies that $parsedExif->imageWidth() equals 1024.
+     *
+     * @return void
+     */
     #[Test]
     public function ignoresCompressedDimensionsForUncompressedImages(): void
     {

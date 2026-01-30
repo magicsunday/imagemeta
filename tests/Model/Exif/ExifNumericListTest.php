@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExifNumericList::class)]
 final class ExifNumericListTest extends TestCase
 {
+    /**
+     * Verifies that $list->toArray() equals $values.
+     *
+     * @return void
+     */
     #[Test]
     public function acceptsListOfNumericValues(): void
     {
@@ -37,6 +42,11 @@ final class ExifNumericListTest extends TestCase
         self::assertSame($values, $list->toArray());
     }
 
+    /**
+     * Verifies that InvalidArgumentException::class is thrown with message 'Numeric EXIF values must form a list.'.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsNonListInput(): void
     {
@@ -50,6 +60,11 @@ final class ExifNumericListTest extends TestCase
         new ExifNumericList($values);
     }
 
+    /**
+     * Verifies that InvalidArgumentException::class is thrown with message 'Numeric EXIF lists may only contain integers, floats, or UInt64 values.'.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsUnsupportedComponents(): void
     {

@@ -34,6 +34,11 @@ use function strlen;
 #[CoversClass(GpsFactory::class)]
 final class GpsFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $gps->latitude equals 52.520008.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -94,6 +99,11 @@ final class GpsFactoryTest extends TestCase
         self::assertSame(3.0, $gps->horizontalPositioningError);
     }
 
+    /**
+     * Verifies that $gps->latitude is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsEmptyGpsWithNullExifDoc(): void
     {
@@ -109,6 +119,11 @@ final class GpsFactoryTest extends TestCase
         self::assertNull($gps->longitude);
     }
 
+    /**
+     * Verifies that $gps->speedRef equals GpsSpeedRef::KILOMETERS_PER_HOUR.
+     *
+     * @return void
+     */
     #[Test]
     public function convertsSpeedToMetresPerSecond(): void
     {
@@ -149,6 +164,11 @@ final class GpsFactoryTest extends TestCase
         self::assertSame(36.0 / 3.6, $gps->speedMs);
     }
 
+    /**
+     * Verifies that $gps->date equals '2023-06-15'.
+     *
+     * @return void
+     */
     #[Test]
     public function normalizesDateFormat(): void
     {

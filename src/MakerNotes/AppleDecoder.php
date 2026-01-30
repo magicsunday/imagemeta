@@ -355,6 +355,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return $values;
     }
 
+    /**
+     * Parses a quoted string value, honoring backslash escapes.
+     *
+     * @param string $raw    Raw payload buffer.
+     * @param int    $offset Current offset, advanced past the parsed string.
+     * @param int    $length Total payload length.
+     *
+     * @return string Parsed string value.
+     */
     private function parseQuotedString(string $raw, int &$offset, int $length): string
     {
         if ($raw[$offset] !== '"') {
@@ -394,6 +403,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         throw new ParseError('Unterminated quoted string.');
     }
 
+    /**
+     * Parses an unquoted word token from the payload.
+     *
+     * @param string $raw    Raw payload buffer.
+     * @param int    $offset Current offset, advanced past the token.
+     * @param int    $length Total payload length.
+     *
+     * @return string Parsed token.
+     */
     private function parseWord(string $raw, int &$offset, int $length): string
     {
         $start = $offset;
@@ -413,6 +431,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return substr($raw, $start, $offset - $start);
     }
 
+    /**
+     * Parses a dictionary key, supporting quoted and unquoted forms.
+     *
+     * @param string $raw    Raw payload buffer.
+     * @param int    $offset Current offset, advanced past the key.
+     * @param int    $length Total payload length.
+     *
+     * @return string Parsed key.
+     */
     private function parseKey(string $raw, int &$offset, int $length): string
     {
         $this->skipWhitespace($raw, $offset, $length);
@@ -432,6 +459,15 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return $key;
     }
 
+    /**
+     * Advances the offset past whitespace and null bytes.
+     *
+     * @param string $raw    Raw payload buffer.
+     * @param int    $offset Current offset, advanced past whitespace.
+     * @param int    $length Total payload length.
+     *
+     * @return void
+     */
     private function skipWhitespace(string $raw, int &$offset, int $length): void
     {
         while ($offset < $length) {
@@ -1332,11 +1368,25 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         return null;
     }
 
+    /**
+     * Checks whether a string contains a signed integer representation.
+     *
+     * @param string $value String to test.
+     *
+     * @return bool True when the string is an integer literal.
+     */
     private function isIntegerString(string $value): bool
     {
         return preg_match('/^-?\d+$/', $value) === 1;
     }
 
+    /**
+     * Checks if a numeric string fits into the platform integer range.
+     *
+     * @param string $value Numeric string to validate.
+     *
+     * @return bool True when the value fits into a signed int.
+     */
     private function stringWithinIntRange(string $value): bool
     {
         $negative = $value !== '' && $value[0] === '-';

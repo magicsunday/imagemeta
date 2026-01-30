@@ -28,6 +28,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SubjectArea::class)]
 final class SubjectAreaTest extends TestCase
 {
+    /**
+     * Verifies that $area is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function createPoint(): void
     {
@@ -43,6 +48,11 @@ final class SubjectAreaTest extends TestCase
         self::assertNull($area->height);
     }
 
+    /**
+     * Verifies that $area is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function createCircle(): void
     {
@@ -58,6 +68,11 @@ final class SubjectAreaTest extends TestCase
         self::assertNull($area->height);
     }
 
+    /**
+     * Verifies that $area is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function createRectangle(): void
     {
@@ -73,6 +88,11 @@ final class SubjectAreaTest extends TestCase
         self::assertSame(120, $area->height);
     }
 
+    /**
+     * Verifies that SubjectArea::fromComponents([]) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function invalidComponentCountReturnsNull(): void
     {
@@ -81,12 +101,22 @@ final class SubjectAreaTest extends TestCase
         self::assertNull(SubjectArea::fromComponents([100, 200, 50, 60, 70]));
     }
 
+    /**
+     * Verifies that SubjectArea::fromComponents(null) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function nullInputReturnsNull(): void
     {
         self::assertNull(SubjectArea::fromComponents(null));
     }
 
+    /**
+     * Verifies that SubjectArea::fromComponents([-1, 10]) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function rejectsNegativeOrNonNumericValues(): void
     {

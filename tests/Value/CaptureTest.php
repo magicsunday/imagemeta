@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Capture::class)]
 final class CaptureTest extends TestCase
 {
+    /**
+     * Verifies that $capture->dateTime equals $dateTime.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithDateTime(): void
     {
@@ -41,6 +46,11 @@ final class CaptureTest extends TestCase
         self::assertSame($dateTime, $capture->dateTime);
     }
 
+    /**
+     * Verifies that $capture->temperatureC equals 22.5.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithEnvironmentalData(): void
     {
@@ -62,6 +72,11 @@ final class CaptureTest extends TestCase
         self::assertSame(15.5, $capture->cameraElevationAngleDeg);
     }
 
+    /**
+     * Verifies that $capture->dateTime is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {
@@ -85,7 +100,9 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Tests EXIF 3.0 WaterDepth tag (0x9403) with deep underwater values.
+     * Verifies that $capture->waterDepthM equals 100.5.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithDeepWaterDepth(): void
@@ -104,7 +121,9 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Tests EXIF 3.0 WaterDepth tag with zero depth (surface level).
+     * Verifies that $capture->waterDepthM equals 0.0.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithZeroWaterDepth(): void
@@ -123,7 +142,9 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Tests EXIF 3.0 Acceleration tag (0x9404) with various magnitudes.
+     * Verifies that $capture1->accelerationMs2 equals 9.81.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithVariousAccelerationMagnitudes(): void
@@ -169,7 +190,9 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Tests EXIF 3.0 CameraElevationAngle tag (0x9405) with various angles.
+     * Verifies that $capture1->cameraElevationAngleDeg equals 45.0.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithVariousCameraElevationAngles(): void
@@ -228,7 +251,9 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Tests all EXIF 3.0 environmental tags together.
+     * Verifies that $capture->dateTime is instance of DateTimeImmutable::class.
+     *
+     * @return void
      */
     #[Test]
     public function constructsWithAllExif30EnvironmentalTags(): void

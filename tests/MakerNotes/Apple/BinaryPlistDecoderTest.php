@@ -36,6 +36,11 @@ use function substr;
 #[UsesClass(ApplePlistScalar::class)]
 final class BinaryPlistDecoderTest extends TestCase
 {
+    /**
+     * Verifies that ParseError::class is thrown with message 'must not be empty'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeThrowsOnEmptyPayload(): void
     {
@@ -45,6 +50,11 @@ final class BinaryPlistDecoderTest extends TestCase
         $decoder->decode('');
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'Unsupported property list format'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeThrowsOnUnsupportedFormat(): void
     {
@@ -54,6 +64,11 @@ final class BinaryPlistDecoderTest extends TestCase
         $decoder->decode('not-a-plist');
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'offset table offset is invalid'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeRejectsOffsetTableBeforeHeader(): void
     {
@@ -70,6 +85,11 @@ final class BinaryPlistDecoderTest extends TestCase
         $decoder->decode($payload);
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'offset table exceeds payload bounds'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeRejectsOffsetTableOverlappingTrailer(): void
     {
@@ -91,6 +111,11 @@ final class BinaryPlistDecoderTest extends TestCase
         $decoder->decode($payload);
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'outside of the object table range'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeRejectsObjectOffsetOutsideTableRange(): void
     {
@@ -109,6 +134,11 @@ final class BinaryPlistDecoderTest extends TestCase
         $decoder->decode($payload);
     }
 
+    /**
+     * Verifies that ParseError::class is thrown with message 'Top level object index is out of range'.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeRejectsTopObjectIndexOutOfRange(): void
     {
@@ -130,6 +160,11 @@ final class BinaryPlistDecoderTest extends TestCase
         $decoder->decode($payload);
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeAsciiString(): void
     {
@@ -144,6 +179,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('Hi', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeInteger(): void
     {
@@ -158,6 +198,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame(42, $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeDateEpoch(): void
     {
@@ -173,6 +218,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('2001-01-01T00:00:00+00:00', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeDateNonZeroSeconds(): void
     {
@@ -187,6 +237,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('2001-01-01T00:01:00+00:00', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeDateNegativeSeconds(): void
     {
@@ -201,6 +256,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('2000-12-31T23:59:00+00:00', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeDateSubSecondAfterEpoch(): void
     {
@@ -215,6 +275,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('2001-01-01T00:00:00.500000+00:00', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeDateSubSecondBeforeEpoch(): void
     {
@@ -229,6 +294,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('2000-12-31T23:59:59.500000+00:00', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeUnicodeString(): void
     {
@@ -244,6 +314,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('Ä', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistScalar::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeUidLargerThanPhpIntSize(): void
     {
@@ -261,6 +336,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('18446744073709551616', $result->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistArray::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeArrayOfValues(): void
     {
@@ -291,6 +371,11 @@ final class BinaryPlistDecoderTest extends TestCase
         self::assertSame('Hi', $values[1]->value());
     }
 
+    /**
+     * Verifies that $result is instance of ApplePlistDictionary::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeDictionaryWithTwoEntries(): void
     {

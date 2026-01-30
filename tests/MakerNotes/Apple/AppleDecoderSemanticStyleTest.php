@@ -25,6 +25,11 @@ use ReflectionMethod;
 #[UsesClass(SemanticStyle::class)]
 final class AppleDecoderSemanticStyleTest extends TestCase
 {
+    /**
+     * Verifies that $makerNotes is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function buildAppleMakerNotesExtractsSemanticStyleDictionary(): void
     {

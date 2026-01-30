@@ -43,6 +43,11 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Lens::class)]
 final class ExifConvenienceTest extends TestCase
 {
+    /**
+     * Verifies that $summary equals '1/2 s · f/1.8 · ISO 200 · 50 mm'.
+     *
+     * @return void
+     */
     #[Test]
     public function exposureSummaryFormatsValues(): void
     {
@@ -90,6 +95,15 @@ final class ExifConvenienceTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->exposureSummary(
+     * $exposure,
+     * null,
+     * $derived
+     * ) equals '75 mm eq'.
+     *
+     * @return void
+     */
     #[Test]
     public function exposureSummaryIncludes35MmEquivalent(): void
     {
@@ -138,6 +152,11 @@ final class ExifConvenienceTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->exposureSummary($exposure) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function exposureSummaryReturnsNullWhenNoValues(): void
     {
@@ -168,6 +187,11 @@ final class ExifConvenienceTest extends TestCase
         self::assertNull((new ExifConvenience())->exposureSummary($exposure));
     }
 
+    /**
+     * Verifies that $formatted equals '51.500° N, 0.125° E (45 m)'.
+     *
+     * @return void
+     */
     #[Test]
     public function gpsStringFormatsCoordinates(): void
     {
@@ -192,6 +216,11 @@ final class ExifConvenienceTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->gpsString($gps) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function gpsStringReturnsNullWithoutCoordinates(): void
     {
@@ -200,6 +229,11 @@ final class ExifConvenienceTest extends TestCase
         self::assertNull((new ExifConvenience())->gpsString($gps));
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->imageDimensions($image) equals '6000×4000 px'.
+     *
+     * @return void
+     */
     #[Test]
     public function imageDimensionsFormatsString(): void
     {
@@ -225,6 +259,11 @@ final class ExifConvenienceTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->imageDimensions($image) is null.
+     *
+     * @return void
+     */
     #[Test]
     public function imageDimensionsReturnsNullWhenIncomplete(): void
     {
@@ -247,6 +286,11 @@ final class ExifConvenienceTest extends TestCase
         self::assertNull((new ExifConvenience())->imageDimensions($image));
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->captureDateTimeString($capture) equals '2024-05-01T12:34:56+02:00'.
+     *
+     * @return void
+     */
     #[Test]
     public function captureDateTimeStringFormatsTimestamp(): void
     {
@@ -266,6 +310,14 @@ final class ExifConvenienceTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->cameraDescription(
+     * $camera,
+     * $lens
+     * ) equals 'Canon EOS R6 · RF 24-70mm'.
+     *
+     * @return void
+     */
     #[Test]
     public function cameraDescriptionAvoidsDuplicateMake(): void
     {
@@ -295,6 +347,18 @@ final class ExifConvenienceTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that (new ExifConvenience())->toArray(
+     * $camera,
+     * $lens,
+     * $image,
+     * $capture,
+     * $exposure,
+     * $gps
+     * ) equals $expected.
+     *
+     * @return void
+     */
     #[Test]
     public function toArrayReturnsNormalisedShape(): void
     {

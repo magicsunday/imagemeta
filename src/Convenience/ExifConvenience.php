@@ -239,6 +239,13 @@ final readonly class ExifConvenience
         return array_any($parts, fn ($part): bool => strcasecmp((string) $part, $needle) === 0);
     }
 
+    /**
+     * Formats an exposure time value as a display string.
+     *
+     * @param float $seconds Exposure time in seconds.
+     *
+     * @return string Formatted exposure time.
+     */
     private function formatExposureTime(float $seconds): string
     {
         if ($seconds <= 0.0) {
@@ -262,21 +269,50 @@ final readonly class ExifConvenience
         return $this->formatNumber($seconds, 3) . ' s';
     }
 
+    /**
+     * Formats an f-number as a display string.
+     *
+     * @param float $fNumber F-number value.
+     *
+     * @return string Formatted f-number.
+     */
     private function formatFNumber(float $fNumber): string
     {
         return 'f/' . $this->formatNumber($fNumber, 1);
     }
 
+    /**
+     * Formats an ISO speed value as a display string.
+     *
+     * @param int $iso ISO value.
+     *
+     * @return string Formatted ISO string.
+     */
     private function formatIso(int $iso): string
     {
         return 'ISO ' . $iso;
     }
 
+    /**
+     * Formats a focal length value as a display string.
+     *
+     * @param float $focalLength Focal length in millimetres.
+     *
+     * @return string Formatted focal length.
+     */
     private function formatFocalLength(float $focalLength): string
     {
         return $this->formatNumber($focalLength, 1) . ' mm';
     }
 
+    /**
+     * Formats a GPS coordinate with the specified precision.
+     *
+     * @param float $value     Coordinate value.
+     * @param int   $precision Number of decimal places.
+     *
+     * @return string Formatted coordinate string.
+     */
     private function formatCoordinate(float $value, int $precision): string
     {
         if ($precision < 0) {
@@ -288,6 +324,14 @@ final readonly class ExifConvenience
         return sprintf($format, $value);
     }
 
+    /**
+     * Formats a floating point value with a trimmed decimal fraction.
+     *
+     * @param float $value     Value to format.
+     * @param int   $precision Decimal precision.
+     *
+     * @return string Trimmed formatted number.
+     */
     private function formatNumber(float $value, int $precision): string
     {
         $precision = max(0, $precision);
@@ -298,6 +342,13 @@ final readonly class ExifConvenience
         return rtrim(rtrim($formatted, '0'), '.');
     }
 
+    /**
+     * Normalises a string value by trimming whitespace and collapsing empties to null.
+     *
+     * @param string|null $value Raw string value.
+     *
+     * @return string|null Normalised string or null when empty.
+     */
     private function normalise(?string $value): ?string
     {
         if ($value === null) {
@@ -309,6 +360,14 @@ final readonly class ExifConvenience
         return $normalised === '' ? null : $normalised;
     }
 
+    /**
+     * Determines whether a string starts with a prefix, case-insensitive.
+     *
+     * @param string $haystack Full string to inspect.
+     * @param string $needle   Prefix to match.
+     *
+     * @return bool True when the prefix matches.
+     */
     private function startsWithCaseInsensitive(string $haystack, string $needle): bool
     {
         $needleLength = strlen($needle);
@@ -319,6 +378,14 @@ final readonly class ExifConvenience
         return strncmp(strtolower($haystack), strtolower($needle), $needleLength) === 0;
     }
 
+    /**
+     * Resolves the latitude reference for a GPS coordinate.
+     *
+     * @param Gps   $gps      GPS data container.
+     * @param float $latitude Latitude value used to infer ref when missing.
+     *
+     * @return string Latitude reference ("N" or "S").
+     */
     private function resolveLatitudeRef(Gps $gps, float $latitude): string
     {
         $ref = $gps->latitudeRef;
@@ -330,6 +397,14 @@ final readonly class ExifConvenience
         return $latitude >= 0.0 ? 'N' : 'S';
     }
 
+    /**
+     * Resolves the longitude reference for a GPS coordinate.
+     *
+     * @param Gps   $gps       GPS data container.
+     * @param float $longitude Longitude value used to infer ref when missing.
+     *
+     * @return string Longitude reference ("E" or "W").
+     */
     private function resolveLongitudeRef(Gps $gps, float $longitude): string
     {
         $ref = $gps->longitudeRef;
@@ -341,6 +416,13 @@ final readonly class ExifConvenience
         return $longitude >= 0.0 ? 'E' : 'W';
     }
 
+    /**
+     * Applies the GPS altitude reference to produce a signed altitude.
+     *
+     * @param Gps $gps GPS data container.
+     *
+     * @return float|null Signed altitude value or null when absent.
+     */
     private function resolveAltitude(Gps $gps): ?float
     {
         $altitude = $gps->altitude;

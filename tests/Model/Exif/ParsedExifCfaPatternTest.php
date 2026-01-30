@@ -25,6 +25,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifCfaPatternTest extends TestCase
 {
+    /**
+     * Verifies that $pattern is instance of CfaPattern::class.
+     *
+     * @return void
+     */
     #[Test]
     public function parsesCfaPatternWithRepeatUnits(): void
     {
@@ -49,6 +54,11 @@ final class ParsedExifCfaPatternTest extends TestCase
         ], $pattern->grid());
     }
 
+    /**
+     * Verifies that $parsedExif->cfaPattern() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenPatternIsIncomplete(): void
     {

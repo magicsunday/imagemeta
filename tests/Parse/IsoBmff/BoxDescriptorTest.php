@@ -34,6 +34,11 @@ use function strlen;
 #[UsesClass(StreamWindow::class)]
 final class BoxDescriptorTest extends TestCase
 {
+    /**
+     * Verifies that the box descriptor exposes constructor inputs as properties.
+     *
+     * @return void
+     */
     #[Test]
     public function constructorAssignsValuesVerbatim(): void
     {
@@ -58,6 +63,11 @@ final class BoxDescriptorTest extends TestCase
         self::assertSame('abcd1234ef567890abcd1234ef567890', $descriptor->userType);
     }
 
+    /**
+     * Verifies that distinct descriptors keep independent state.
+     *
+     * @return void
+     */
     #[Test]
     public function descriptorsDoNotShareStateAccidentally(): void
     {

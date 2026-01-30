@@ -23,7 +23,9 @@ use PHPUnit\Framework\TestCase;
 final class QuickTimeMetaTest extends TestCase
 {
     /**
-     * Ensures that the stored content identifier value is returned unchanged.
+     * Verifies that $meta->contentIdentifier() equals $identifier.
+     *
+     * @return void
      */
     #[Test]
     public function returnsStoredContentIdentifier(): void
@@ -40,7 +42,9 @@ final class QuickTimeMetaTest extends TestCase
     }
 
     /**
-     * Ensures null is returned when the content identifier key is absent.
+     * Verifies that $meta->contentIdentifier() is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullWhenContentIdentifierIsMissing(): void
@@ -53,7 +57,9 @@ final class QuickTimeMetaTest extends TestCase
     }
 
     /**
-     * Ensures typed accessors resolve aliases and normalise values.
+     * Verifies that $meta->stringValue(QuickTimeMeta::COMPRESSOR_NAME_KEY) equals 'H.265'.
+     *
+     * @return void
      */
     #[Test]
     public function typedAccessorsResolveAliases(): void
@@ -74,7 +80,9 @@ final class QuickTimeMetaTest extends TestCase
     }
 
     /**
-     * Ensures non-matching keys yield null across accessor types.
+     * Verifies that $meta->stringValue('UnknownKey') is null.
+     *
+     * @return void
      */
     #[Test]
     public function typedAccessorsReturnNullForMissingKeys(): void

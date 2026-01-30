@@ -31,6 +31,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(SceneFactory::class)]
 final class SceneFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $scene->type equals SceneCaptureType::STANDARD.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -57,6 +62,11 @@ final class SceneFactoryTest extends TestCase
         self::assertSame(SubjectDistanceRange::CLOSE, $scene->subjectDistanceRange);
     }
 
+    /**
+     * Verifies that $scene->hdrScene is true.
+     *
+     * @return void
+     */
     #[Test]
     public function detectsHdrSceneFromAppleHeadroom(): void
     {
@@ -102,6 +112,11 @@ final class SceneFactoryTest extends TestCase
         self::assertTrue($scene->hdrScene);
     }
 
+    /**
+     * Verifies that $scene->nightMode is true.
+     *
+     * @return void
+     */
     #[Test]
     public function detectsNightModeFromQuickTime(): void
     {
@@ -120,6 +135,11 @@ final class SceneFactoryTest extends TestCase
         self::assertTrue($scene->nightMode);
     }
 
+    /**
+     * Verifies that $scene->hdrScene is true.
+     *
+     * @return void
+     */
     #[Test]
     public function detectsHdrFromAppleFlags(): void
     {
@@ -165,6 +185,11 @@ final class SceneFactoryTest extends TestCase
         self::assertTrue($scene->hdrScene);
     }
 
+    /**
+     * Verifies that $scene->type is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullMetadata(): void
     {

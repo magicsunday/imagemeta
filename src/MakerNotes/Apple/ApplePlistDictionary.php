@@ -25,11 +25,25 @@ final class ApplePlistDictionary implements ApplePlistValue
     {
     }
 
+    /**
+     * Indicates whether a key exists in the dictionary.
+     *
+     * @param string $key Dictionary key.
+     *
+     * @return bool True when the key exists.
+     */
     public function has(string $key): bool
     {
         return array_key_exists($key, $this->values);
     }
 
+    /**
+     * Returns a dictionary value for the given key.
+     *
+     * @param string $key Dictionary key.
+     *
+     * @return ApplePlistValue|null Value at key or null when missing.
+     */
     public function get(string $key): ?ApplePlistValue
     {
         return $this->values[$key] ?? null;
@@ -45,6 +59,14 @@ final class ApplePlistDictionary implements ApplePlistValue
         return $this->values;
     }
 
+    /**
+     * Returns a cloned dictionary with an additional entry.
+     *
+     * @param string          $key   Dictionary key.
+     * @param ApplePlistValue $value Value to add.
+     *
+     * @return self Updated dictionary.
+     */
     public function with(string $key, ApplePlistValue $value): self
     {
         $clone               = clone $this;

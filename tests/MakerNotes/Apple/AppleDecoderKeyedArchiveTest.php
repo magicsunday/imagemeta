@@ -58,6 +58,11 @@ use function strlen;
 #[UsesClass(RunTime::class)]
 final class AppleDecoderKeyedArchiveTest extends TestCase
 {
+    /**
+     * Verifies that $apple is instance of AppleMakerNotes::class.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeResolvesNsKeyedArchivePayload(): void
     {
@@ -85,6 +90,11 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         self::assertSame(3, $runTime->flags);
     }
 
+    /**
+     * Verifies that the expected assertion passes.
+     *
+     * @return void
+     */
     #[Test]
     public function decodeBinaryPropertyListSkipsLeadingPadding(): void
     {
@@ -101,6 +111,11 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
         self::assertArrayHasKey('archiver', $result);
     }
 
+    /**
+     * Verifies that the expected assertion passes.
+     *
+     * @return void
+     */
     #[Test]
     public function resolveKeyedArchiveDictionaryUnwrapsNestedArchive(): void
     {

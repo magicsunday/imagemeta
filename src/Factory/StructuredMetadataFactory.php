@@ -57,6 +57,46 @@ use MagicSunday\ImageMeta\Value\{
  */
 final readonly class StructuredMetadataFactory
 {
+    /**
+     * @param Audio                $audio
+     * @param AudioClips           $embeddedAudio
+     * @param Author               $author
+     * @param Camera               $camera
+     * @param Capture              $capture
+     * @param ColorProfile         $colorProfile
+     * @param CompositeImageInfo   $composite
+     * @param Container            $container
+     * @param Derived              $derived
+     * @param DepthMap             $depthMap
+     * @param Device               $device
+     * @param Exposure             $exposure
+     * @param File                 $file
+     * @param FlashPix             $flashPix
+     * @param Focus                $focus
+     * @param Gps                  $gps
+     * @param Image                $image
+     * @param Integrity            $integrity
+     * @param Interop              $interop
+     * @param Iptc                 $iptc
+     * @param Keywords             $keywords
+     * @param Lens                 $lens
+     * @param Motion               $motion
+     * @param MultiPicture         $multiPicture
+     * @param ProcessingSettings   $processing
+     * @param Regions              $regions
+     * @param RelatedAssets        $related
+     * @param Rights               $rights
+     * @param Scene                $scene
+     * @param Sensor               $sensor
+     * @param Standards            $standards
+     * @param Temporal             $temporal
+     * @param Thumbnail            $thumbnail
+     * @param TiffData             $tiff
+     * @param Video                $video
+     * @param WhiteBalanceDetails  $whiteBalance
+     * @param Xmp                  $xmp
+     * @param AppleMakerNotes|null $makerNotesApple
+     */
     public function __construct(
         public Audio $audio,
         public AudioClips $embeddedAudio,

@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(RegionsFactory::class)]
 final class RegionsFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $regions->items equals [].
+     *
+     * @return void
+     */
     #[Test]
     public function createsEmptyRegionsWithNullXmpDoc(): void
     {
@@ -36,6 +41,11 @@ final class RegionsFactoryTest extends TestCase
         self::assertSame([], $regions->items);
     }
 
+    /**
+     * Verifies that $regions->items contains 1 items.
+     *
+     * @return void
+     */
     #[Test]
     public function extractsMwgRegions(): void
     {
@@ -80,6 +90,11 @@ final class RegionsFactoryTest extends TestCase
         self::assertEqualsWithDelta(0.95, $region->confidence, 1e-6);
     }
 
+    /**
+     * Verifies that $regions->items contains 1 items.
+     *
+     * @return void
+     */
     #[Test]
     public function extractsAppleFaceRegions(): void
     {
@@ -125,6 +140,11 @@ final class RegionsFactoryTest extends TestCase
         self::assertEqualsWithDelta(0.5 - 0.1, $region->y, 1e-6);
     }
 
+    /**
+     * Verifies that $regions->items contains 1 items.
+     *
+     * @return void
+     */
     #[Test]
     public function mergesOverlappingRegions(): void
     {

@@ -197,7 +197,9 @@ final class MetadataReaderTest extends TestCase
     private const int MARKER_APP1 = 0xE1;
 
     /**
-     * Ensures JPEG detection extracts EXIF and XMP payloads with parsed documents.
+     * Verifies that JPEG input populates EXIF/XMP blobs, maker notes, and structured values.
+     *
+     * @return void
      */
     #[Test]
     public function readJpegPopulatesMetadata(): void
@@ -280,7 +282,9 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Ensures optional digest calculation provides SHA-1 and MD5 for JPEG payloads.
+     * Verifies that digest flags populate SHA1/MD5 on metadata and structured file.
+     *
+     * @return void
      */
     #[Test]
     public function readJpegWithDigestsPopulatesChecksums(): void
@@ -312,7 +316,9 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Ensures the structured image aggregate falls back to the SOF precision when EXIF lacks the tag.
+     * Verifies that SOF precision drives bits-per-sample fallback for structured images.
+     *
+     * @return void
      */
     #[Test]
     public function structuredImageBitsPerSampleFallbacksToFramePrecision(): void
@@ -341,7 +347,9 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Ensures ISO BMFF detection populates EXIF/XMP blobs and QuickTime metadata.
+     * Verifies that ISO BMFF input populates EXIF/XMP, QuickTime, and item references.
+     *
+     * @return void
      */
     #[Test]
     public function readIsoBmffPopulatesMetadata(): void
@@ -392,6 +400,11 @@ final class MetadataReaderTest extends TestCase
         self::assertSame([], $metadata->iccSegments);
     }
 
+    /**
+     * Verifies that duplicate XMP packets are deduplicated by content hash.
+     *
+     * @return void
+     */
     #[Test]
     public function deduplicatesXmpPacketsByHash(): void
     {

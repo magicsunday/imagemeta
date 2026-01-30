@@ -80,6 +80,14 @@ final readonly class IptcDocument
         return array_key_exists($this->key($record, $dataset), $this->datasets);
     }
 
+    /**
+     * Builds the composite array key for a record/dataset pair.
+     *
+     * @param int $record  IPTC record number.
+     * @param int $dataset IPTC dataset number.
+     *
+     * @return string Composite key.
+     */
     private function key(int $record, int $dataset): string
     {
         return $record . ':' . $dataset;

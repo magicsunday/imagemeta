@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Interop::class)]
 final class InteropTest extends TestCase
 {
+    /**
+     * Verifies that $interop->index equals 'R98'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithInteropIndex(): void
     {
@@ -32,6 +37,11 @@ final class InteropTest extends TestCase
         self::assertSame('R98', $interop->index);
     }
 
+    /**
+     * Verifies that $interop->index is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

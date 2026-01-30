@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifSubjectDistanceTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->subjectDistance() equals 2.0.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsSubjectDistanceFromSpecExample(): void
     {
@@ -40,6 +45,11 @@ final class ParsedExifSubjectDistanceTest extends TestCase
         self::assertSame(2.0, $parsedExif->subjectDistance());
     }
 
+    /**
+     * Verifies that $parsedExif->subjectDistance() equals INF.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsInfinityWhenSubjectDistanceRecordsInfinity(): void
     {
@@ -57,6 +67,11 @@ final class ParsedExifSubjectDistanceTest extends TestCase
         self::assertSame(INF, $parsedExif->subjectDistance());
     }
 
+    /**
+     * Verifies that $parsedExif->subjectDistance() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function returnsNullWhenSubjectDistanceIsUnknown(): void
     {

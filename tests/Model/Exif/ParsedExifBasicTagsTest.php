@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifBasicTagsTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->imageDescription() equals '1988 company picnic'.
+     *
+     * @return void
+     */
     #[Test]
     public function imageDescriptionTrimsNullPadding(): void
     {
@@ -40,6 +45,11 @@ final class ParsedExifBasicTagsTest extends TestCase
         self::assertSame('1988 company picnic', $parsedExif->imageDescription());
     }
 
+    /**
+     * Verifies that $parsedExif->cameraMake() equals 'Magic'.
+     *
+     * @return void
+     */
     #[Test]
     public function cameraMakeAndModelReturnStrings(): void
     {
@@ -54,6 +64,11 @@ final class ParsedExifBasicTagsTest extends TestCase
         self::assertSame('PhotonPro', $parsedExif->cameraModel());
     }
 
+    /**
+     * Verifies that $parsedExif->software() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function softwareReturnsNullForEmptyString(): void
     {

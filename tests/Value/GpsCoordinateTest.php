@@ -19,6 +19,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(GpsCoordinate::class)]
 final class GpsCoordinateTest extends TestCase
 {
+    /**
+     * Verifies that $coordinate->value equals 15.75.
+     *
+     * @return void
+     */
     #[Test]
     public function keepsRawValueWhenReferenceMissing(): void
     {
@@ -29,6 +34,11 @@ final class GpsCoordinateTest extends TestCase
         self::assertSame('15.75°', (string) $coordinate);
     }
 
+    /**
+     * Verifies that $coordinate->value equals 42.0.
+     *
+     * @return void
+     */
     #[Test]
     public function normalisesReferenceAndFormats(): void
     {

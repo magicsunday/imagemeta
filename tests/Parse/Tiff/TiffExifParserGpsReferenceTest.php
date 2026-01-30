@@ -32,6 +32,11 @@ use function strlen;
 #[UsesClass(TiffConst::class)]
 final class TiffExifParserGpsReferenceTest extends TestCase
 {
+    /**
+     * Verifies that S/W references flip classic TIFF GPS signs (lat/lon/alt).
+     *
+     * @return void
+     */
     #[Test]
     public function parsesSouthAndWestCoordinatesFromClassicTiff(): void
     {
@@ -51,6 +56,11 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         self::assertEqualsWithDelta(-5.5, $gps['alt'], 0.000001);
     }
 
+    /**
+     * Verifies that S/W references flip BigTIFF GPS signs (lat/lon/alt).
+     *
+     * @return void
+     */
     #[Test]
     public function parsesSouthAndWestCoordinatesFromBigTiff(): void
     {

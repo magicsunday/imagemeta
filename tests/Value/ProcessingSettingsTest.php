@@ -26,6 +26,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ProcessingSettings::class)]
 final class ProcessingSettingsTest extends TestCase
 {
+    /**
+     * Verifies that $settings->sharpness equals Sharpness::NORMAL.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithBasicSettings(): void
     {
@@ -44,6 +49,11 @@ final class ProcessingSettingsTest extends TestCase
         self::assertSame(Saturation::NORMAL, $settings->saturation);
     }
 
+    /**
+     * Verifies that $settings->sharpness equals Sharpness::HARD.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllProcessingInfo(): void
     {
@@ -72,6 +82,11 @@ final class ProcessingSettingsTest extends TestCase
         self::assertSame($deviceDesc, $settings->deviceSettingDescription);
     }
 
+    /**
+     * Verifies that $settings->sharpness is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

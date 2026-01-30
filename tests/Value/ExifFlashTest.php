@@ -26,7 +26,9 @@ use PHPUnit\Framework\TestCase;
 final class ExifFlashTest extends TestCase
 {
     /**
-     * Ensures flash bit fields are decoded into typed information.
+     * Verifies that $info is not null.
+     *
+     * @return void
      */
     #[Test]
     public function createsInstanceFromExifBitField(): void
@@ -42,7 +44,9 @@ final class ExifFlashTest extends TestCase
     }
 
     /**
-     * Ensures reserved return bits are surfaced instead of discarded.
+     * Verifies that $info is not null.
+     *
+     * @return void
      */
     #[Test]
     public function exposesReservedReturnDetection(): void
@@ -58,7 +62,9 @@ final class ExifFlashTest extends TestCase
     }
 
     /**
-     * Ensures null is returned when no value is supplied.
+     * Verifies that ExifFlash::fromExifValue(null) is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullWhenNoValueIsProvided(): void

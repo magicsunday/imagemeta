@@ -122,6 +122,9 @@ final class Marker
 
     public const int APP_LAST = self::APP15;
 
+    /**
+     * Prevents instantiation of the constants-only utility class.
+     */
     private function __construct()
     {
     }

@@ -35,12 +35,9 @@ final class XmpParserTest extends TestCase
     private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
 
     /**
-     * Ensures attributes on rdf:Description are captured as properties.
+     * Verifies that rdf:Description attributes are captured as properties.
      *
-     * XMP Specification Part 1 §7.9.2.2 allows properties to be encoded as
-     * attributes on rdf:Description elements, which is commonly used for simple
-     * scalar values. This test validates that such attributes are correctly
-     * extracted and stored using Clark notation.
+     * @return void
      */
     #[Test]
     public function parseExtractsAttributeProperties(): void
@@ -69,10 +66,9 @@ XML;
     }
 
     /**
-     * Ensures namespace declaration attributes (xmlns:*) are not captured as properties.
+     * Verifies that xmlns declarations are ignored as properties.
      *
-     * XMP Specification Part 1 §7.2 defines namespace declarations as XML metadata
-     * that should not be treated as XMP properties.
+     * @return void
      */
     #[Test]
     public function parseIgnoresNamespaceDeclarations(): void
@@ -96,10 +92,9 @@ XML;
     }
 
     /**
-     * Ensures rdf:about and similar RDF structural attributes are not captured.
+     * Verifies that rdf:about is ignored while dc:title is captured.
      *
-     * XMP Specification Part 1 §7.9.2.2 specifies that rdf:about, rdf:ID, and
-     * rdf:nodeID are RDF structural attributes that should not be treated as XMP properties.
+     * @return void
      */
     #[Test]
     public function parseIgnoresRdfStructuralAttributes(): void
@@ -122,10 +117,9 @@ XML;
     }
 
     /**
-     * Ensures attributes from custom namespaces (like drone-dji) are captured correctly.
+     * Verifies that custom namespace attributes are captured.
      *
-     * This test validates real-world XMP data from DJI drones, which store extensive
-     * metadata as attributes in custom namespaces.
+     * @return void
      */
     #[Test]
     public function parseExtractsCustomNamespaceAttributes(): void
@@ -154,10 +148,9 @@ XML;
     }
 
     /**
-     * Ensures both attribute and element child values coexist correctly.
+     * Verifies that attribute and element values are both extracted.
      *
-     * XMP Specification Part 1 §7.9.2.2 allows mixing attribute and element
-     * representations within the same rdf:Description.
+     * @return void
      */
     #[Test]
     public function parseExtractsMixedAttributesAndElements(): void
@@ -185,9 +178,9 @@ XML;
     }
 
     /**
-     * Ensures rdf:value structured properties are flattened to scalar values.
+     * Verifies that rdf:value elements are used for resource and bag entries.
      *
-     * XMP Specification Part 1 §7.9.3 describes qualified properties that declare their primary value via rdf:value.
+     * @return void
      */
     #[Test]
     public function parseExtractsValuesFromRdfValueElements(): void
@@ -225,7 +218,9 @@ XML;
     }
 
     /**
-     * Ensures all EXIF and TIFF values from a Samsung sample are captured.
+     * Verifies that a full EXIF/TIFF sample extracts all expected tags and prefixes.
+     *
+     * @return void
      */
     #[Test]
     public function parseExtractsCompleteExifAndTiffSample(): void
@@ -318,7 +313,9 @@ XML;
     }
 
     /**
-     * Ensures scalar properties and rdf:Bag containers are extracted correctly.
+     * Verifies that scalar values and rdf:Bag lists are extracted.
+     *
+     * @return void
      */
     #[Test]
     public function parseExtractsScalarAndBagValues(): void
@@ -363,7 +360,9 @@ XML;
     }
 
     /**
-     * Ensures malformed or unsupported XML fragments result in an empty document.
+     * Verifies that invalid XML yields an empty XMP document.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('provideInvalidXmpFragments')]
@@ -386,7 +385,9 @@ XML;
     }
 
     /**
-     * Ensures elements from arbitrary namespaces are preserved using Clark notation.
+     * Verifies that default-namespace elements are captured.
+     *
+     * @return void
      */
     #[Test]
     public function parseCapturesValuesFromGenericNamespaces(): void
@@ -399,7 +400,9 @@ XML;
     }
 
     /**
-     * Ensures mixed text nodes and CDATA sections are concatenated verbatim.
+     * Verifies that mixed text and CDATA content are concatenated.
+     *
+     * @return void
      */
     #[Test]
     public function parsePreservesMixedTextAndCdata(): void
@@ -417,12 +420,9 @@ XML;
     }
 
     /**
-     * Ensures multiple custom namespaces (drone-dji, Camera, crs, GPano) are extracted correctly.
+     * Verifies that multiple custom namespaces and prefixes are extracted.
      *
-     * This test validates XMP data from various sources including DJI drones, Pix4D camera data,
-     * Adobe Camera Raw settings, and Google Panorama metadata. All should be captured with their
-     * full namespace URIs in Clark notation, and namespace prefixes should be extracted from
-     * xmlns declarations.
+     * @return void
      */
     #[Test]
     public function parseExtractsMultipleCustomNamespaces(): void
@@ -508,7 +508,9 @@ XML;
     }
 
     /**
-     * Ensures depth map properties from the Google depthmap namespace are parsed.
+     * Verifies that Google depth map attributes are extracted.
+     *
+     * @return void
      */
     #[Test]
     public function parseExtractsDepthMapProperties(): void

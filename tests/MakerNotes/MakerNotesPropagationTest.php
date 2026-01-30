@@ -42,7 +42,9 @@ use function str_repeat;
 final class MakerNotesPropagationTest extends TestCase
 {
     /**
-     * Ensures the EXIF document exposes the provided maker notes metadata.
+     * Verifies that $document->makerNotes() equals $makerNotes.
+     *
+     * @return void
      */
     #[Test]
     public function exifDocumentReturnsMakerNotes(): void
@@ -54,7 +56,9 @@ final class MakerNotesPropagationTest extends TestCase
     }
 
     /**
-     * Ensures the aggregate metadata object stores the optional maker notes metadata.
+     * Verifies that $metadata->makerNotes equals $makerNotes.
+     *
+     * @return void
      */
     #[Test]
     public function metadataAggregateCarriesMakerNotes(): void

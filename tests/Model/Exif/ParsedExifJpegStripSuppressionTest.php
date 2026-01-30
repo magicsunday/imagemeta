@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifJpegStripSuppressionTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->rowsPerStrip() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function suppressesStripTagsForJpegPrimaryImage(): void
     {
@@ -49,6 +54,11 @@ final class ParsedExifJpegStripSuppressionTest extends TestCase
         self::assertNull($parsedExif->jpegInterchangeFormatLength());
     }
 
+    /**
+     * Verifies that $parsedExif->thumbnailStripOffsets() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function suppressesStripTagsForJpegThumbnail(): void
     {

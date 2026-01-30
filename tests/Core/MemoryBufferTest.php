@@ -87,8 +87,9 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Seeks to a position inside the buffer and verifies that the cursor reflects the move and
-         * subsequent reads advance it as expected.
+         * Verifies that $buffer->tell() equals 3.
+         *
+         * @return void
          */
         #[Test]
         public function seekMovesCursorWithinBounds(): void
@@ -102,7 +103,9 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Attempts to seek beyond the available bytes to ensure a BoundsError is raised.
+         * Verifies that BoundsError::class is thrown.
+         *
+         * @return void
          */
         #[Test]
         public function seekThrowsBoundsErrorOutsideBuffer(): void
@@ -114,8 +117,9 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Reads sequential slices and confirms both the returned data and cursor position match the
-         * requested byte count.
+         * Verifies that $buffer->read(5) equals 'Magic'.
+         *
+         * @return void
          */
         #[Test]
         public function readReturnsRequestedBytes(): void
@@ -129,7 +133,9 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Ensures that reading past the end of the buffer throws a BoundsError.
+         * Verifies that BoundsError::class is thrown.
+         *
+         * @return void
          */
         #[Test]
         public function readThrowsBoundsErrorWhenLengthTooLarge(): void
@@ -143,8 +149,9 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Forces the proxy \substr implementation to perform a short read so MemoryBuffer raises a
-         * ParseError as expected for truncated data.
+         * Verifies that ParseError::class is thrown.
+         *
+         * @return void
          */
         #[Test]
         public function readThrowsParseErrorOnShortRead(): void
@@ -158,8 +165,9 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Reads unsigned integers of varying widths to confirm endian-specific helpers decode the
-         * packed payload and advance the cursor correctly.
+         * Verifies that $buffer->readU8() equals 0x7F.
+         *
+         * @return void
          */
         #[Test]
         public function readUnsignedIntegersRespectEndianness(): void

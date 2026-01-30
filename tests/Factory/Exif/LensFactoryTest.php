@@ -26,6 +26,11 @@ use function strlen;
 #[CoversClass(LensFactory::class)]
 final class LensFactoryTest extends TestCase
 {
+    /**
+     * Verifies that $lens->lensMake equals 'Canon'.
+     *
+     * @return void
+     */
     #[Test]
     public function createsFromExifMetadata(): void
     {
@@ -57,6 +62,11 @@ final class LensFactoryTest extends TestCase
         self::assertSame([24.0, 70.0, 2.8, 2.8], $lens->lensSpecification);
     }
 
+    /**
+     * Verifies that $lens->lensMake is null.
+     *
+     * @return void
+     */
     #[Test]
     public function createsWithNullExifDoc(): void
     {
@@ -77,6 +87,11 @@ final class LensFactoryTest extends TestCase
         self::assertNull($lens->lensSpecification);
     }
 
+    /**
+     * Verifies that $lens->maxApertureFNumber is not null.
+     *
+     * @return void
+     */
     #[Test]
     public function calculatesMaxApertureFromApex(): void
     {
@@ -103,6 +118,11 @@ final class LensFactoryTest extends TestCase
         self::assertEqualsWithDelta(1.4142135, $lens->maxApertureFNumber, 0.0001);
     }
 
+    /**
+     * Verifies that $lens->lensMake equals 'Sony'.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesNullMaxApertureApex(): void
     {

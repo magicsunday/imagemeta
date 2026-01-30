@@ -19,6 +19,15 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(XmpDocument::class)]
 final class XmpDocumentTest extends TestCase
 {
+    /**
+     * Verifies that $merged->data equals [
+     * '{ns1}PropA' => ['ValueA', 'ValueB'],
+     * '{ns2}List'  => ['One', 'Two'],
+     * '{ns3}PropC' => 'C',
+     * ].
+     *
+     * @return void
+     */
     #[Test]
     public function mergeAggregatesValuesAndPrefixes(): void
     {
@@ -65,6 +74,11 @@ final class XmpDocumentTest extends TestCase
         );
     }
 
+    /**
+     * Verifies that $merged->data equals [].
+     *
+     * @return void
+     */
     #[Test]
     public function mergeWithNoDocumentsReturnsEmptyDocument(): void
     {

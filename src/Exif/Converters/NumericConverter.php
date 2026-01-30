@@ -32,6 +32,11 @@ use function strlen;
  */
 final readonly class NumericConverter
 {
+    /**
+     * Creates the converter with an optional rational dependency.
+     *
+     * @param RationalConverter|null $rationalConverter Dependency for rational conversions.
+     */
     public function __construct(
         private ?RationalConverter $rationalConverter = null,
     ) {

@@ -135,7 +135,9 @@ use PHPUnit\Framework\TestCase;
 final class MetadataTest extends TestCase
 {
     /**
-     * Ensures that every provided metadata component is exposed unchanged.
+     * Verifies that $metadata->exifBlobs equals $exifBlobs.
+     *
+     * @return void
      */
     #[Test]
     public function storesProvidedMetadataComponents(): void
@@ -218,7 +220,9 @@ final class MetadataTest extends TestCase
     }
 
     /**
-     * Ensures the optional metadata components default to null or empty values.
+     * Verifies that $metadata->exifBlobs equals [].
+     *
+     * @return void
      */
     #[Test]
     public function appliesNullAndEmptyDefaults(): void
@@ -244,7 +248,9 @@ final class MetadataTest extends TestCase
     }
 
     /**
-     * Demonstrates a typical consumer flow where typed metadata is accessed via the aggregates.
+     * Verifies that $metadata->exifBlobs[0] equals 'primary-exif-blob'.
+     *
+     * @return void
      */
     #[Test]
     public function allowsConsumingAggregatedMetadata(): void
@@ -287,7 +293,9 @@ final class MetadataTest extends TestCase
     }
 
     /**
-     * Ensures consumers can obtain a selectively parsed XMP document without pre-populating it.
+     * Verifies that $document is instance of XmpDocument::class.
+     *
+     * @return void
      */
     #[Test]
     public function exposesSelectiveXmpDocumentWhenUnavailable(): void
@@ -321,7 +329,9 @@ XML;
     }
 
     /**
-     * Ensures all available XMP blobs are merged when lazily parsing the document.
+     * Verifies that $document is instance of XmpDocument::class.
+     *
+     * @return void
      */
     #[Test]
     public function mergesAllXmpBlobsWhenSelectingDocument(): void
@@ -356,7 +366,9 @@ XML;
     }
 
     /**
-     * Ensures the already supplied XMP document is reused without invoking the parser again.
+     * Verifies that $metadata->selectiveXmpDocument() equals $xmpDoc.
+     *
+     * @return void
      */
     #[Test]
     public function reusesExistingXmpDocument(): void
@@ -369,7 +381,9 @@ XML;
     }
 
     /**
-     * Ensures IPTC payloads are parsed when no document is pre-populated.
+     * Verifies that $document is instance of IptcDocument::class.
+     *
+     * @return void
      */
     #[Test]
     public function exposesSelectiveIptcDocumentWhenUnavailable(): void
@@ -400,7 +414,9 @@ XML;
     }
 
     /**
-     * Ensures structured metadata is computed lazily and cached for repeated lookups.
+     * Verifies that $second equals $first.
+     *
+     * @return void
      */
     #[Test]
     public function cachesStructuredAggregate(): void

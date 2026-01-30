@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(File::class)]
 final class FileTest extends TestCase
 {
+    /**
+     * Verifies that $file->mimeType equals 'image/jpeg'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithBasicFileInformation(): void
     {
@@ -38,6 +43,11 @@ final class FileTest extends TestCase
         self::assertSame(1024, $file->fileSize);
     }
 
+    /**
+     * Verifies that $file->mimeType is null.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithNullValues(): void
     {
@@ -54,6 +64,11 @@ final class FileTest extends TestCase
         self::assertNull($file->fileSize);
     }
 
+    /**
+     * Verifies that $file->mimeType equals 'image/heic'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithHeicMimeType(): void
     {

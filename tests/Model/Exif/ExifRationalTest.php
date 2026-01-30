@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ExifRational::class)]
 final class ExifRationalTest extends TestCase
 {
+    /**
+     * Verifies that $rational->numerator equals 3.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithNumeratorAndDenominator(): void
     {
@@ -31,6 +36,11 @@ final class ExifRationalTest extends TestCase
         self::assertSame(2, $rational->denominator);
     }
 
+    /**
+     * Verifies that $rational->numerator equals 0.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesZeroNumerator(): void
     {
@@ -40,6 +50,11 @@ final class ExifRationalTest extends TestCase
         self::assertSame(1, $rational->denominator);
     }
 
+    /**
+     * Verifies that $rational->numerator equals -3.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesNegativeValues(): void
     {
@@ -49,6 +64,11 @@ final class ExifRationalTest extends TestCase
         self::assertSame(2, $rational->denominator);
     }
 
+    /**
+     * Verifies that $rational->numerator equals 10.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesWholeNumbers(): void
     {
@@ -58,6 +78,11 @@ final class ExifRationalTest extends TestCase
         self::assertSame(1, $rational->denominator);
     }
 
+    /**
+     * Verifies that $rational->numerator equals 1.
+     *
+     * @return void
+     */
     #[Test]
     public function handlesLargeDenominator(): void
     {

@@ -38,7 +38,9 @@ final class StreamWindowTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Verifies that the window reports its configured length and initial cursor position.
+     * Verifies that $window->size() equals 5.
+     *
+     * @return void
      */
     #[Test]
     public function sizeReportsConfiguredLengthAndCursorStartsAtZero(): void
@@ -50,8 +52,9 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Seeks around inside the configured span and ensures the cursor reflects the requested
-     * positions.
+     * Verifies that $window->tell() equals 3.
+     *
+     * @return void
      */
     #[Test]
     public function seekMovesCursorWithinWindowBounds(): void
@@ -66,7 +69,9 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Attempts to seek beyond the window size to confirm a BoundsError is thrown.
+     * Verifies that BoundsError::class is thrown.
+     *
+     * @return void
      */
     #[Test]
     public function seekThrowsBoundsErrorOutsideWindow(): void
@@ -78,7 +83,9 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Reads bytes through the window and checks both the returned data and cursor advancement.
+     * Verifies that $window->read(6) equals 'Sunday'.
+     *
+     * @return void
      */
     #[Test]
     public function readReturnsRequestedBytesAndAdvancesCursor(): void
@@ -90,7 +97,9 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Ensures that read requests crossing the end of the window trigger a BoundsError.
+     * Verifies that BoundsError::class is thrown.
+     *
+     * @return void
      */
     #[Test]
     public function readThrowsBoundsErrorWhenRequestCrossesEnd(): void
@@ -102,8 +111,9 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Reads sequential unsigned integers to verify the helpers decode packed big-endian values and
-     * advance the cursor appropriately.
+     * Verifies that $window->readU8() equals 0xAA.
+     *
+     * @return void
      */
     #[Test]
     public function unsignedIntegerHelpersReadSequentially(): void
@@ -123,7 +133,9 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Confirms that insufficient remaining bytes cause the integer helper to raise a BoundsError.
+     * Verifies that BoundsError::class is thrown.
+     *
+     * @return void
      */
     #[Test]
     public function unsignedIntegerHelpersThrowBoundsErrorOnShortData(): void

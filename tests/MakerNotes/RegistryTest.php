@@ -45,9 +45,11 @@ final class RegistryTest extends TestCase
     }
 
     /**
-     * Ensures the registered decoder can be found for matching prefixes regardless of case.
+     * Verifies that $registry->find($make) equals $decoder.
      *
      * @param string $make The make string used during lookup.
+     *
+     * @return void
      */
     #[Test]
     #[DataProvider('matchingMakeProvider')]
@@ -76,7 +78,9 @@ final class RegistryTest extends TestCase
     }
 
     /**
-     * Ensures null is returned when no registered prefix matches the provided make string.
+     * Verifies that $registry->find('Nikon Corporation') is null.
+     *
+     * @return void
      */
     #[Test]
     public function returnsNullWhenNoPrefixMatches(): void
@@ -102,7 +106,9 @@ final class RegistryTest extends TestCase
     }
 
     /**
-     * Ensures the factory registers the built-in decoders for common vendor prefixes.
+     * Verifies that $registry->find('Canon Inc.') is instance of CanonDecoder::class.
+     *
+     * @return void
      */
     #[Test]
     public function factoryRegistersBuiltInDecoders(): void

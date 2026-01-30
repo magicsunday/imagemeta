@@ -27,6 +27,7 @@ use function count;
 use function floor;
 use function iconv;
 use function implode;
+use function is_callable;
 use function is_float;
 use function is_int;
 use function is_numeric;
@@ -96,6 +97,13 @@ final readonly class GpsConverter
      */
     private const string DEFAULT_GPS_VERSION = '2.4.0.0';
 
+    /**
+     * Creates the converter with its numeric, string, and rational dependencies.
+     *
+     * @param RationalConverter $rationalConverter Dependency for rational conversions.
+     * @param StringConverter   $stringConverter   Dependency for string conversions.
+     * @param NumericConverter  $numericConverter  Dependency for numeric conversions.
+     */
     public function __construct(
         private RationalConverter $rationalConverter,
         private StringConverter $stringConverter,
@@ -325,24 +333,11 @@ final readonly class GpsConverter
         ?string $ref,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        if (!is_string($ref)) {
-            return null;
-        }
-
-        $numeric = $this->rationalConverter->toFloat($value);
-
-        if ($numeric === null) {
-            return null;
-        }
-
-        $normalizedRef = strtoupper(trim($ref));
-
-        return match ($normalizedRef) {
-            'K'     => $numeric / 3.6,
-            'M'     => $numeric * 0.44704,
-            'N'     => $numeric * 0.5144444444444444,
-            default => null,
-        };
+        return $this->convertReferencedValue($ref, $value, [
+            'K' => static fn (float $numeric): float => $numeric / 3.6,
+            'M' => static fn (float $numeric): float => $numeric * 0.44704,
+            'N' => static fn (float $numeric): float => $numeric * 0.5144444444444444,
+        ]);
     }
 
     /**
@@ -358,24 +353,11 @@ final readonly class GpsConverter
         ?string $ref,
         int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?float {
-        if (!is_string($ref)) {
-            return null;
-        }
-
-        $numeric = $this->rationalConverter->toFloat($value);
-
-        if ($numeric === null) {
-            return null;
-        }
-
-        $normalizedRef = strtoupper(trim($ref));
-
-        return match ($normalizedRef) {
-            'K'     => $numeric * 1000.0,
-            'M'     => $numeric * 1609.344,
-            'N'     => $numeric * 1852.0,
-            default => null,
-        };
+        return $this->convertReferencedValue($ref, $value, [
+            'K' => static fn (float $numeric): float => $numeric * 1000.0,
+            'M' => static fn (float $numeric): float => $numeric * 1609.344,
+            'N' => static fn (float $numeric): float => $numeric * 1852.0,
+        ]);
     }
 
     /**
@@ -402,6 +384,65 @@ final readonly class GpsConverter
         }
 
         return $bearing;
+    }
+
+    /**
+     * Normalises a numeric GPS value and its reference string.
+     *
+     * @param string|null                                                                $ref   Reference string.
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw numeric value.
+     *
+     * @return array{ref:string, value:float}|null Normalised reference/value pair or null.
+     */
+    private function resolveNumericReference(
+        ?string $ref,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+    ): ?array {
+        if (!is_string($ref)) {
+            return null;
+        }
+
+        $numeric = $this->rationalConverter->toFloat($value);
+        if ($numeric === null) {
+            return null;
+        }
+
+        $normalizedRef = strtoupper(trim($ref));
+        if ($normalizedRef === '') {
+            return null;
+        }
+
+        return [
+            'ref'   => $normalizedRef,
+            'value' => $numeric,
+        ];
+    }
+
+    /**
+     * Converts a referenced numeric value using a unit conversion map.
+     *
+     * @param string|null                                                                $ref         Reference unit.
+     * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value       Raw value.
+     * @param array<string, callable(float): float>                                      $conversions Unit conversion callbacks.
+     *
+     * @return float|null Converted value or null when conversion fails.
+     */
+    private function convertReferencedValue(
+        ?string $ref,
+        int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
+        array $conversions,
+    ): ?float {
+        $resolved = $this->resolveNumericReference($ref, $value);
+        if ($resolved === null) {
+            return null;
+        }
+
+        $conversion = $conversions[$resolved['ref']] ?? null;
+        if (!is_callable($conversion)) {
+            return null;
+        }
+
+        return $conversion($resolved['value']);
     }
 
     /**

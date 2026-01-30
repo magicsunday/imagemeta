@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifStringTagsTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->dateTime() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function dateTimeTreatsBlankPlaceholderAsUnknown(): void
     {
@@ -39,6 +44,11 @@ final class ParsedExifStringTagsTest extends TestCase
         self::assertNull($parsedExif->dateTime());
     }
 
+    /**
+     * Verifies that $parsedExif->artist() equals 'Camera Owner'.
+     *
+     * @return void
+     */
     #[Test]
     public function artistFallsBackToRelatedAttributionTags(): void
     {
@@ -71,6 +81,11 @@ final class ParsedExifStringTagsTest extends TestCase
         self::assertSame('Camera Owner', $parsedExif->artist());
     }
 
+    /**
+     * Verifies that $parsedExif->copyright() is null.
+     *
+     * @return void
+     */
     #[Test]
     public function copyrightTreatsBlankFilledFieldAsUnknown(): void
     {

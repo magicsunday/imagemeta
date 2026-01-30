@@ -367,6 +367,14 @@ final class AppleMakerNotesMerger
         return $values !== [] ? $values : null;
     }
 
+    /**
+     * Resolves the first QuickTime metadata value as a string, coercing numeric values.
+     *
+     * @param QuickTimeLookup $lookup  Lookup helper for QuickTime keys.
+     * @param string          ...$keys Candidate keys to inspect in order.
+     *
+     * @return string|null Resolved string value or null.
+     */
     private function quickTimeStringOrNumeric(QuickTimeLookup $lookup, string ...$keys): ?string
     {
         foreach ($keys as $key) {

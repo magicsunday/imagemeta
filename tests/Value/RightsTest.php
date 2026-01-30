@@ -22,6 +22,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(Rights::class)]
 final class RightsTest extends TestCase
 {
+    /**
+     * Verifies that $rights->copyright equals '© 2024 John Doe'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithCopyright(): void
     {
@@ -35,6 +40,11 @@ final class RightsTest extends TestCase
         self::assertSame('© 2024 John Doe', $rights->copyright);
     }
 
+    /**
+     * Verifies that $rights->copyright equals '© 2024 Jane Smith'.
+     *
+     * @return void
+     */
     #[Test]
     public function constructsWithAllRightsInfo(): void
     {
@@ -51,6 +61,11 @@ final class RightsTest extends TestCase
         self::assertSame('Photo by Jane Smith', $rights->creditLine);
     }
 
+    /**
+     * Verifies that $rights->copyright is null.
+     *
+     * @return void
+     */
     #[Test]
     public function allowsNullValues(): void
     {

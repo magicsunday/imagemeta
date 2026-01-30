@@ -23,6 +23,11 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(ParsedExif::class)]
 final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
 {
+    /**
+     * Verifies that $parsedExif->focalPlaneXResolution() equals 3000.0.
+     *
+     * @return void
+     */
     #[Test]
     public function focalPlaneResolutionConvertsRationals(): void
     {
@@ -54,6 +59,11 @@ final class ParsedExifFocalPlaneAndSubjectLocationTest extends TestCase
         self::assertSame(3, $parsedExif->focalPlaneResolutionUnit());
     }
 
+    /**
+     * Verifies that $parsedExif->subjectLocation() equals [1200, 800].
+     *
+     * @return void
+     */
     #[Test]
     public function subjectLocationRequiresTwoCoordinates(): void
     {

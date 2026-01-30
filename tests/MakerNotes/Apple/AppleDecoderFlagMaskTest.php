@@ -20,6 +20,11 @@ use ReflectionMethod;
 #[CoversClass(AppleDecoder::class)]
 final class AppleDecoderFlagMaskTest extends TestCase
 {
+    /**
+     * Verifies that the expected assertion passes.
+     *
+     * @return void
+     */
     #[Test]
     public function extractFlagsDerivesNormalizedFlagsFromBitMasks(): void
     {
@@ -51,6 +56,11 @@ final class AppleDecoderFlagMaskTest extends TestCase
         self::assertSame($expected, $result);
     }
 
+    /**
+     * Verifies that the expected assertion passes.
+     *
+     * @return void
+     */
     #[Test]
     public function extractFlagsAssignsFalseDefaultsWhenNoMappedBitsEnabled(): void
     {

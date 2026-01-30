@@ -53,6 +53,11 @@ final class TiffConstTest extends TestCase
         yield 'type ifd8' => ['TYPE_IFD8', 18];
     }
 
+    /**
+     * Verifies that each TIFF constant matches its specification-defined value.
+     *
+     * @return void
+     */
     #[Test]
     #[DataProvider('constantProvider')]
     public function itExposesExpectedConstantValues(string $constantName, int $expectedValue): void
