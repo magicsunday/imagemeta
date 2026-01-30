@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-
 /**
  * PhotometricInterpretation tag as defined in EXIF 3.0 §4.6.5.1.5.
  *

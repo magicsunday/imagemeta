@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory;
 
-use MagicSunday\ImageMeta\Contracts\StructuredAssemblerInterface;
 use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Model\Metadata;
 
@@ -27,13 +26,13 @@ final readonly class ExifAssembler implements StructuredAssemblerInterface
     /**
      * Assembles the structured metadata aggregate from the supplied metadata container.
      */
-    public function assemble(Metadata $metadata): StructuredMetadata
+    public function assemble(Metadata $metadata): StructuredMetadataFactory
     {
         $components = $this->valueFactory->createComponents(
             metadata: $metadata,
         );
 
-        return new StructuredMetadata(
+        return new StructuredMetadataFactory(
             audio: $components['audio'],
             embeddedAudio: $components['embeddedAudio'],
             author: $components['author'],

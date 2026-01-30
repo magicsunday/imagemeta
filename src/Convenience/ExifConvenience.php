@@ -15,6 +15,7 @@ use DateTimeImmutable;
 use MagicSunday\ImageMeta\Value\Camera;
 use MagicSunday\ImageMeta\Value\Capture;
 use MagicSunday\ImageMeta\Value\Derived;
+use MagicSunday\ImageMeta\Value\Enum\GpsAltitudeRef;
 use MagicSunday\ImageMeta\Value\Enum\GpsLatLonRef;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\Gps;
@@ -37,12 +38,12 @@ use const DATE_ATOM;
 /**
  * Presentation helpers that format value objects for UI consumption.
  */
-final class ExifConvenience
+final readonly class ExifConvenience
 {
     /**
      * Returns the capture timestamp value from the capture metadata.
      */
-    public static function captureDateTime(Capture $capture): ?DateTimeImmutable
+    public function captureDateTime(Capture $capture): ?DateTimeImmutable
     {
         return $capture->dateTime;
     }
@@ -50,7 +51,7 @@ final class ExifConvenience
     /**
      * Formats the capture timestamp as a string using the supplied format.
      */
-    public static function captureDateTimeString(Capture $capture, string $format = DATE_ATOM): ?string
+    public function captureDateTimeString(Capture $capture, string $format = DATE_ATOM): ?string
     {
         $dateTime = $capture->dateTime;
 
@@ -64,20 +65,20 @@ final class ExifConvenience
     /**
      * Builds a compact camera and lens description string.
      */
-    public static function cameraDescription(Camera $camera, ?Lens $lens = null): ?string
+    public function cameraDescription(Camera $camera, ?Lens $lens = null): ?string
     {
-        $make  = self::normalise($camera->make);
-        $model = self::normalise($camera->model);
+        $make  = $this->normalise($camera->make);
+        $model = $this->normalise($camera->model);
 
         $cameraLabel = null;
 
         if ($make !== null && $model !== null) {
-            $cameraLabel = self::startsWithCaseInsensitive($model, $make) ? $model : $make . ' ' . $model;
+            $cameraLabel = $this->startsWithCaseInsensitive($model, $make) ? $model : $make . ' ' . $model;
         } elseif ($make !== null || $model !== null) {
             $cameraLabel = $make ?? $model;
         }
 
-        $lensLabel = self::normalise($lens?->lensModel);
+        $lensLabel = $this->normalise($lens?->lensModel);
 
         $parts = [];
         if ($cameraLabel !== null) {
@@ -98,32 +99,32 @@ final class ExifConvenience
     /**
      * Formats the exposure metadata into a readable summary string.
      */
-    public static function exposureSummary(Exposure $exposure, ?Lens $lens = null, ?Derived $derived = null): ?string
+    public function exposureSummary(Exposure $exposure, ?Lens $lens = null, ?Derived $derived = null): ?string
     {
         $parts = [];
 
         $seconds = $exposure->exposureTimeSec;
         if ($seconds !== null) {
-            $parts[] = self::formatExposureTime($seconds);
+            $parts[] = $this->formatExposureTime($seconds);
         }
 
         $fNumber = $exposure->fNumber;
         if ($fNumber !== null) {
-            $parts[] = self::formatFNumber($fNumber);
+            $parts[] = $this->formatFNumber($fNumber);
         }
 
         $iso = $exposure->iso;
         if ($iso !== null) {
-            $parts[] = self::formatIso($iso);
+            $parts[] = $this->formatIso($iso);
         }
 
         $focalLength = $lens?->focalLengthMm;
         if ($focalLength !== null) {
-            $parts[] = self::formatFocalLength($focalLength);
+            $parts[] = $this->formatFocalLength($focalLength);
         }
 
         $equivalent = $derived?->equivalent35mm;
-        if ($equivalent !== null && !self::containsEquivalent($parts, $equivalent)) {
+        if ($equivalent !== null && !$this->containsEquivalent($parts, $equivalent)) {
             $parts[] = sprintf('%d mm eq', $equivalent);
         }
 
@@ -137,7 +138,7 @@ final class ExifConvenience
     /**
      * Formats the image dimensions into a `WIDTH×HEIGHT px` string.
      */
-    public static function imageDimensions(Image $image): ?string
+    public function imageDimensions(Image $image): ?string
     {
         $width  = $image->width;
         $height = $image->height;
@@ -152,7 +153,7 @@ final class ExifConvenience
     /**
      * Formats the primary GPS coordinates and optionally altitude.
      */
-    public static function gpsString(Gps $gps, int $precision = 6, bool $includeAltitude = false): ?string
+    public function gpsString(Gps $gps, int $precision = 6, bool $includeAltitude = false): ?string
     {
         $latitude  = $gps->latitude;
         $longitude = $gps->longitude;
@@ -161,18 +162,18 @@ final class ExifConvenience
             return null;
         }
 
-        $latitudeRef  = self::resolveLatitudeRef($gps, $latitude);
-        $longitudeRef = self::resolveLongitudeRef($gps, $longitude);
+        $latitudeRef  = $this->resolveLatitudeRef($gps, $latitude);
+        $longitudeRef = $this->resolveLongitudeRef($gps, $longitude);
 
-        $latValue = self::formatCoordinate(abs($latitude), $precision) . '° ' . $latitudeRef;
-        $lonValue = self::formatCoordinate(abs($longitude), $precision) . '° ' . $longitudeRef;
+        $latValue = $this->formatCoordinate(abs($latitude), $precision) . '° ' . $latitudeRef;
+        $lonValue = $this->formatCoordinate(abs($longitude), $precision) . '° ' . $longitudeRef;
 
         $result = $latValue . ', ' . $lonValue;
 
         if ($includeAltitude) {
-            $altitude = self::resolveAltitude($gps);
+            $altitude = $this->resolveAltitude($gps);
             if ($altitude !== null) {
-                $result .= ' (' . self::formatNumber($altitude, 1) . ' m)';
+                $result .= ' (' . $this->formatNumber($altitude, 1) . ' m)';
             }
         }
 
@@ -197,7 +198,7 @@ final class ExifConvenience
      *     gps_alt:?float
      * }
      */
-    public static function toArray(
+    public function toArray(
         Camera $camera,
         Lens $lens,
         Image $image,
@@ -208,9 +209,9 @@ final class ExifConvenience
         $capturedAt = $capture->dateTime;
 
         return [
-            'make'        => self::normalise($camera->make),
-            'model'       => self::normalise($camera->model),
-            'lens'        => self::normalise($lens->lensModel),
+            'make'        => $this->normalise($camera->make),
+            'model'       => $this->normalise($camera->model),
+            'lens'        => $this->normalise($lens->lensModel),
             'orientation' => $image->orientation?->value,
             'captured_at' => $capturedAt?->format(DATE_ATOM),
             'exposure_s'  => $exposure->exposureTimeSec,
@@ -219,7 +220,7 @@ final class ExifConvenience
             'iso'         => $exposure->iso,
             'gps_lat'     => $gps->latitude,
             'gps_lon'     => $gps->longitude,
-            'gps_alt'     => self::resolveAltitude($gps),
+            'gps_alt'     => $this->resolveAltitude($gps),
         ];
     }
 
@@ -231,21 +232,21 @@ final class ExifConvenience
      *
      * @return bool True if the equivalent focal length is found.
      */
-    private static function containsEquivalent(array $parts, int $equivalent): bool
+    private function containsEquivalent(array $parts, int $equivalent): bool
     {
         $needle = sprintf('%d mm eq', $equivalent);
 
         return array_any($parts, fn ($part): bool => strcasecmp((string) $part, $needle) === 0);
     }
 
-    private static function formatExposureTime(float $seconds): string
+    private function formatExposureTime(float $seconds): string
     {
         if ($seconds <= 0.0) {
-            return self::formatNumber($seconds, 3) . ' s';
+            return $this->formatNumber($seconds, 3) . ' s';
         }
 
         if ($seconds >= 1.0) {
-            $formatted = self::formatNumber($seconds, $seconds < 10.0 ? 2 : 1);
+            $formatted = $this->formatNumber($seconds, $seconds < 10.0 ? 2 : 1);
 
             return $formatted . ' s';
         }
@@ -258,25 +259,25 @@ final class ExifConvenience
             }
         }
 
-        return self::formatNumber($seconds, 3) . ' s';
+        return $this->formatNumber($seconds, 3) . ' s';
     }
 
-    private static function formatFNumber(float $fNumber): string
+    private function formatFNumber(float $fNumber): string
     {
-        return 'f/' . self::formatNumber($fNumber, 1);
+        return 'f/' . $this->formatNumber($fNumber, 1);
     }
 
-    private static function formatIso(int $iso): string
+    private function formatIso(int $iso): string
     {
         return 'ISO ' . $iso;
     }
 
-    private static function formatFocalLength(float $focalLength): string
+    private function formatFocalLength(float $focalLength): string
     {
-        return self::formatNumber($focalLength, 1) . ' mm';
+        return $this->formatNumber($focalLength, 1) . ' mm';
     }
 
-    private static function formatCoordinate(float $value, int $precision): string
+    private function formatCoordinate(float $value, int $precision): string
     {
         if ($precision < 0) {
             $precision = 0;
@@ -287,7 +288,7 @@ final class ExifConvenience
         return sprintf($format, $value);
     }
 
-    private static function formatNumber(float $value, int $precision): string
+    private function formatNumber(float $value, int $precision): string
     {
         $precision = max(0, $precision);
         $format    = '%.' . $precision . 'f';
@@ -297,7 +298,7 @@ final class ExifConvenience
         return rtrim(rtrim($formatted, '0'), '.');
     }
 
-    private static function normalise(?string $value): ?string
+    private function normalise(?string $value): ?string
     {
         if ($value === null) {
             return null;
@@ -308,7 +309,7 @@ final class ExifConvenience
         return $normalised === '' ? null : $normalised;
     }
 
-    private static function startsWithCaseInsensitive(string $haystack, string $needle): bool
+    private function startsWithCaseInsensitive(string $haystack, string $needle): bool
     {
         $needleLength = strlen($needle);
         if ($needleLength === 0) {
@@ -318,7 +319,7 @@ final class ExifConvenience
         return strncmp(strtolower($haystack), strtolower($needle), $needleLength) === 0;
     }
 
-    private static function resolveLatitudeRef(Gps $gps, float $latitude): string
+    private function resolveLatitudeRef(Gps $gps, float $latitude): string
     {
         $ref = $gps->latitudeRef;
 
@@ -329,7 +330,7 @@ final class ExifConvenience
         return $latitude >= 0.0 ? 'N' : 'S';
     }
 
-    private static function resolveLongitudeRef(Gps $gps, float $longitude): string
+    private function resolveLongitudeRef(Gps $gps, float $longitude): string
     {
         $ref = $gps->longitudeRef;
 
@@ -340,7 +341,7 @@ final class ExifConvenience
         return $longitude >= 0.0 ? 'E' : 'W';
     }
 
-    private static function resolveAltitude(Gps $gps): ?float
+    private function resolveAltitude(Gps $gps): ?float
     {
         $altitude = $gps->altitude;
         if ($altitude === null) {
@@ -349,7 +350,7 @@ final class ExifConvenience
 
         $reference = $gps->altitudeRef;
 
-        if ($reference !== null && $reference->isBelow()) {
+        if ($reference instanceof GpsAltitudeRef && $reference->isBelow()) {
             return -$altitude;
         }
 

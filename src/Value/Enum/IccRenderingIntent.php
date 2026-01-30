@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-
 /**
  * Enumerates the ICC rendering intents referenced by EXIF 3.0 §4.6.3 (shooting
  * conditions) for embedded profiles.

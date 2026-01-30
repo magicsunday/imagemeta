@@ -11,10 +11,10 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
+use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;

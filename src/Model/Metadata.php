@@ -11,7 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
-use MagicSunday\ImageMeta\Factory\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
@@ -147,7 +148,7 @@ final readonly class Metadata
     /**
      * Returns curated structured metadata derived lazily from the available sources.
      */
-    public function structured(): StructuredMetadata
+    public function structured(): StructuredMetadataFactory
     {
         return $this->structuredCache->resolve($this);
     }

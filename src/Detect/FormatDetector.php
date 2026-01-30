@@ -20,7 +20,7 @@ use const SEEK_CUR;
 /**
  * Detects the container type of a binary stream based on magic numbers.
  */
-final class FormatDetector
+final readonly class FormatDetector implements FormatDetectorInterface
 {
     /**
      * Box types that can appear before the main ISO BMFF payload.
@@ -60,7 +60,7 @@ final class FormatDetector
      *
      * @throws ParseError when the signature cannot be read or does not match a known container
      */
-    public static function detect(Stream $stream): ContainerType
+    public function detect(Stream $stream): ContainerType
     {
         try {
             $stream->seek(0);
@@ -74,7 +74,7 @@ final class FormatDetector
         }
 
         try {
-            if (self::looksLikeIsoBmff($stream)) {
+            if ($this->looksLikeIsoBmff($stream)) {
                 return ContainerType::ISOBMFF;
             }
         } catch (BoundsError $exception) {
@@ -88,7 +88,7 @@ final class FormatDetector
     /**
      * Detects ISO BMFF signatures by scanning a handful of top-level boxes.
      */
-    private static function looksLikeIsoBmff(Stream $stream): bool
+    private function looksLikeIsoBmff(Stream $stream): bool
     {
         $stream->seek(0);
 

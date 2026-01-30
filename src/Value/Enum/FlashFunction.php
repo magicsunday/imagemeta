@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-
 /**
  * Describes whether the flash function is present on the camera as specified in
  * EXIF 3.0 §4.6.6.7.21 (Flash).

@@ -12,17 +12,18 @@ declare(strict_types=1);
 namespace MagicSunday\imagemeta\tests;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
-use MagicSunday\ImageMeta\Core\ExifCapabilities;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Factory\ExifAssembler;
-use MagicSunday\ImageMeta\Factory\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -38,7 +39,6 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
@@ -46,7 +46,6 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
@@ -63,6 +62,7 @@ use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File as FileValue;
@@ -122,7 +122,7 @@ use function unlink;
 #[UsesClass(ExifAssembler::class)]
 #[UsesClass(FormatDetector::class)]
 #[UsesClass(ValueFactory::class)]
-#[UsesClass(StructuredMetadata::class)]
+#[UsesClass(StructuredMetadataFactory::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleMakerNotesMerger::class)]
 #[UsesClass(QuickTimeLookup::class)]

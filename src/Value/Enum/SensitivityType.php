@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-
 /**
  * Sensitivity type enumeration for ISO sensitivity values.
  *

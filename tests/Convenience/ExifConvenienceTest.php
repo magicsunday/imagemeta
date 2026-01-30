@@ -79,7 +79,7 @@ final class ExifConvenienceTest extends TestCase
             null
         );
 
-        $summary = ExifConvenience::exposureSummary(
+        $summary = (new ExifConvenience())->exposureSummary(
             $exposure,
             $lens
         );
@@ -130,7 +130,7 @@ final class ExifConvenienceTest extends TestCase
 
         self::assertSame(
             '75 mm eq',
-            ExifConvenience::exposureSummary(
+            (new ExifConvenience())->exposureSummary(
                 $exposure,
                 null,
                 $derived
@@ -165,7 +165,7 @@ final class ExifConvenienceTest extends TestCase
             flashEnergy     : null,
         );
 
-        self::assertNull(ExifConvenience::exposureSummary($exposure));
+        self::assertNull((new ExifConvenience())->exposureSummary($exposure));
     }
 
     #[Test]
@@ -180,7 +180,7 @@ final class ExifConvenienceTest extends TestCase
             altitudeRef : GpsAltitudeRef::ABOVE_SEA_LEVEL,
         );
 
-        $formatted = ExifConvenience::gpsString(
+        $formatted = (new ExifConvenience())->gpsString(
             $gps,
             precision      : 3,
             includeAltitude: true
@@ -197,7 +197,7 @@ final class ExifConvenienceTest extends TestCase
     {
         $gps = new Gps();
 
-        self::assertNull(ExifConvenience::gpsString($gps));
+        self::assertNull((new ExifConvenience())->gpsString($gps));
     }
 
     #[Test]
@@ -221,7 +221,7 @@ final class ExifConvenienceTest extends TestCase
 
         self::assertSame(
             '6000×4000 px',
-            ExifConvenience::imageDimensions($image)
+            (new ExifConvenience())->imageDimensions($image)
         );
     }
 
@@ -244,7 +244,7 @@ final class ExifConvenienceTest extends TestCase
             null,
         );
 
-        self::assertNull(ExifConvenience::imageDimensions($image));
+        self::assertNull((new ExifConvenience())->imageDimensions($image));
     }
 
     #[Test]
@@ -262,7 +262,7 @@ final class ExifConvenienceTest extends TestCase
 
         self::assertSame(
             '2024-05-01T12:34:56+02:00',
-            ExifConvenience::captureDateTimeString($capture)
+            (new ExifConvenience())->captureDateTimeString($capture)
         );
     }
 
@@ -288,7 +288,7 @@ final class ExifConvenienceTest extends TestCase
 
         self::assertSame(
             'Canon EOS R6 · RF 24-70mm',
-            ExifConvenience::cameraDescription(
+            (new ExifConvenience())->cameraDescription(
                 $camera,
                 $lens
             )
@@ -387,7 +387,7 @@ final class ExifConvenienceTest extends TestCase
 
         self::assertSame(
             $expected,
-            ExifConvenience::toArray(
+            (new ExifConvenience())->toArray(
                 $camera,
                 $lens,
                 $image,

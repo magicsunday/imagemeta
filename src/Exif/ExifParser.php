@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Exif;
 
-use MagicSunday\ImageMeta\Factory\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MetadataReader;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 
@@ -39,9 +39,9 @@ final readonly class ExifParser
      *
      * @param string $path Absolute or relative path to the media file that should be parsed.
      *
-     * @return StructuredMetadata Immutable aggregate exposing the normalised metadata slices.
+     * @return StructuredMetadataFactory Immutable aggregate exposing the normalised metadata slices.
      */
-    public function read(string $path): StructuredMetadata
+    public function read(string $path): StructuredMetadataFactory
     {
         return $this->metadataReader->read($path)->structured();
     }

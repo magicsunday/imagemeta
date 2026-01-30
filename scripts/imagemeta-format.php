@@ -29,7 +29,7 @@ use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
-use MagicSunday\ImageMeta\Parse\Icc\IccDecoder;
+use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
@@ -1359,8 +1359,8 @@ final class MetadataFormatter
      */
     private function printIccSection(string $iccProfile): void
     {
-        $decoder = new IccDecoder();
-        $iccData = $decoder->decode($iccProfile);
+        $parser  = new IccParser();
+        $iccData = $parser->decode($iccProfile);
         $data    = [];
 
         if ($iccData !== null) {

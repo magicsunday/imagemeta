@@ -46,7 +46,7 @@ final class FormatDetectorTest extends TestCase
     {
         $stream = $this->createStream("\xFF\xD8\xFF\xE0");
 
-        $detected = FormatDetector::detect($stream);
+        $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::JPEG, $detected);
     }
@@ -59,7 +59,7 @@ final class FormatDetectorTest extends TestCase
     {
         $stream = $this->createStream("\x00\x00\x00\x18ftypisom");
 
-        $detected = FormatDetector::detect($stream);
+        $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
     }
@@ -72,7 +72,7 @@ final class FormatDetectorTest extends TestCase
     {
         $stream = $this->createStream("\x00\x00\x00\x08wide\x00\x00\x00\x08mdat");
 
-        $detected = FormatDetector::detect($stream);
+        $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
     }
@@ -85,7 +85,7 @@ final class FormatDetectorTest extends TestCase
     {
         $stream = $this->createStream("\x00\x00\x00\x08free\x00\x00\x00\x18ftypqt  ");
 
-        $detected = FormatDetector::detect($stream);
+        $detected = (new FormatDetector())->detect($stream);
 
         self::assertSame(ContainerType::ISOBMFF, $detected);
     }
@@ -100,7 +100,7 @@ final class FormatDetectorTest extends TestCase
 
         $this->expectException(ParseError::class);
 
-        FormatDetector::detect($stream);
+        (new FormatDetector())->detect($stream);
     }
 
     /**
@@ -117,7 +117,7 @@ final class FormatDetectorTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('Unable to read container signature');
 
-        FormatDetector::detect($stream);
+        (new FormatDetector())->detect($stream);
     }
 
     /**

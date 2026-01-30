@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Tiff;
 
-use MagicSunday\ImageMeta\Contracts\ExifParserInterface;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\BoundsError;
 use MagicSunday\ImageMeta\Core\Endian;
@@ -19,6 +18,7 @@ use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Exif\ExifParserInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;

@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Core;
 
-use MagicSunday\ImageMeta\Contracts\BinaryReadAccessInterface;
 use MagicSunday\ImageMeta\Core\Traits\NormalisesOffsets;
 use MagicSunday\ImageMeta\Core\Traits\ReadsBinaryPrimitives;
 use MagicSunday\ImageMeta\Core\Util\UInt64;

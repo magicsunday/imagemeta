@@ -27,12 +27,12 @@ use function trim;
 /**
  * Resolves the best available capture timestamp for an image asset.
  */
-final class CaptureDateResolver
+final readonly class CaptureDateResolver
 {
     /**
      * Determines the most precise capture timestamp contained in the metadata.
      */
-    public static function bestCaptureDateTime(Metadata $metadata): ?DateTimeImmutable
+    public function bestCaptureDateTime(Metadata $metadata): ?DateTimeImmutable
     {
         $structured = $metadata->structured();
 
@@ -40,9 +40,9 @@ final class CaptureDateResolver
         $temporal = $structured->temporal;
         $gps      = $structured->gps;
 
-        $candidate = self::captureDate($capture)
-            ?? self::temporalFallback($temporal)
-            ?? self::gpsFallback($gps);
+        $candidate = $this->captureDate($capture)
+            ?? $this->temporalFallback($temporal)
+            ?? $this->gpsFallback($gps);
 
         if ($candidate instanceof DateTimeImmutable) {
             return $candidate;
@@ -54,7 +54,7 @@ final class CaptureDateResolver
         }
 
         if ($xmpDocument instanceof XmpDocument) {
-            $createDate = self::readXmpCreateDate($xmpDocument);
+            $createDate = $this->readXmpCreateDate($xmpDocument);
 
             if ($createDate !== null) {
                 try {
@@ -68,12 +68,12 @@ final class CaptureDateResolver
         return null;
     }
 
-    private static function captureDate(Capture $capture): ?DateTimeImmutable
+    private function captureDate(Capture $capture): ?DateTimeImmutable
     {
         return $capture->dateTime;
     }
 
-    private static function temporalFallback(Temporal $temporal): ?DateTimeImmutable
+    private function temporalFallback(Temporal $temporal): ?DateTimeImmutable
     {
         $candidates = [
             $temporal->original,
@@ -87,7 +87,7 @@ final class CaptureDateResolver
         );
     }
 
-    private static function gpsFallback(Gps $gps): ?DateTimeImmutable
+    private function gpsFallback(Gps $gps): ?DateTimeImmutable
     {
         return $gps->timestamp;
     }
@@ -95,7 +95,7 @@ final class CaptureDateResolver
     /**
      * Extracts the ISO 8601 create date from the XMP document.
      */
-    private static function readXmpCreateDate(XmpDocument $document): ?string
+    private function readXmpCreateDate(XmpDocument $document): ?string
     {
         $value = $document->get('http://ns.adobe.com/xap/1.0/', 'CreateDate');
 
@@ -113,10 +113,7 @@ final class CaptureDateResolver
             return null;
         }
 
-        if (preg_match(
-            '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:?\d{2})$/',
-            $value
-        ) !== 1) {
+        if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:?\d{2})$/', $value) !== 1) {
             return null;
         }
 

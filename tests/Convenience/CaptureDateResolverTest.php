@@ -13,11 +13,12 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
-use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Factory\ExifAssembler;
-use MagicSunday\ImageMeta\Factory\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ExifRational;
@@ -26,9 +27,7 @@ use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Audio;
 use MagicSunday\ImageMeta\Value\AudioClips;
@@ -40,6 +39,7 @@ use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
@@ -120,7 +120,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Scene::class)]
 #[UsesClass(Sensor::class)]
 #[UsesClass(Standards::class)]
-#[UsesClass(StructuredMetadata::class)]
+#[UsesClass(StructuredMetadataFactory::class)]
 #[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(Temporal::class)]
 #[UsesClass(TiffData::class)]
@@ -148,7 +148,7 @@ final class CaptureDateResolverTest extends TestCase
             ]),
         );
 
-        $result = CaptureDateResolver::bestCaptureDateTime($metadata);
+        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
@@ -167,7 +167,7 @@ final class CaptureDateResolverTest extends TestCase
             ]),
         );
 
-        self::assertNull(CaptureDateResolver::bestCaptureDateTime($metadata));
+        self::assertNull((new CaptureDateResolver())->bestCaptureDateTime($metadata));
     }
 
     #[Test]
@@ -186,7 +186,7 @@ final class CaptureDateResolverTest extends TestCase
             ]),
         );
 
-        $result = CaptureDateResolver::bestCaptureDateTime($metadata);
+        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-03-30T12:34:56+00:00', $result->format(DATE_ATOM));
@@ -223,7 +223,7 @@ final class CaptureDateResolverTest extends TestCase
             xmpBlobs: [],
         );
 
-        $result = CaptureDateResolver::bestCaptureDateTime($metadata);
+        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-04-05T01:02:03+01:00', $result->format(DATE_ATOM));
@@ -272,7 +272,7 @@ final class CaptureDateResolverTest extends TestCase
             xmpBlobs: [],
         );
 
-        $result = CaptureDateResolver::bestCaptureDateTime($metadata);
+        $result = (new CaptureDateResolver())->bestCaptureDateTime($metadata);
 
         self::assertInstanceOf(DateTimeImmutable::class, $result);
         self::assertSame('2024-05-01T12:34:56+00:00', $result->format(DATE_ATOM));

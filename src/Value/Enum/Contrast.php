@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-
 /**
  * Enumerates the in-camera contrast processing levels described for the
  * Contrast tag in EXIF 3.0 §4.6.6.7.42 (shooting conditions).

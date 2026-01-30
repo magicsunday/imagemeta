@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use MagicSunday\ImageMeta\Detect\FormatDetectorInterface;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
@@ -48,6 +49,7 @@ final readonly class MetadataReader
         private AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
         private XmpParser $xmpParser = new XmpParser(),
         private IptcParser $iptcParser = new IptcParser(),
+        private FormatDetectorInterface $formatDetector = new FormatDetector(),
     ) {
     }
 
@@ -73,7 +75,7 @@ final readonly class MetadataReader
         [$sha1, $md5] = $withDigests ? $this->calculateDigests($path) : [null, null];
 
         $stream = Stream::fromPath($path);
-        $type   = FormatDetector::detect($stream);
+        $type   = $this->formatDetector->detect($stream);
 
         return match ($type) {
             ContainerType::JPEG    => $this->fromJpeg($stream, $mimeType, $fileSize, $extension, $sha1, $md5),

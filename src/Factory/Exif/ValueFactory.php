@@ -11,22 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Factory\Exif;
 
-use MagicSunday\ImageMeta\Contracts\ValueFactoryInterface;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\CameraFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\DeviceFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\ExposureFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\GpsFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\ImageFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\LensFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\MotionFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\MultiPictureFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\RegionsFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\SceneFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\SensorFactory;
-use MagicSunday\ImageMeta\Factory\Exif\SubFactory\TemporalFactory;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;

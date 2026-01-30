@@ -11,8 +11,6 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
-
 /**
  * Enumerates the orientation values defined for the Orientation tag in EXIF
  * 3.0 §4.6.5.1.6 (image data structure).

@@ -13,7 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Factory\Exif;
 
 use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Factory\ExifAssembler;
-use MagicSunday\ImageMeta\Factory\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
@@ -36,7 +36,7 @@ use function strlen;
 #[UsesClass(Image::class)]
 #[UsesClass(Iptc::class)]
 #[UsesClass(IptcDocument::class)]
-#[UsesClass(StructuredMetadata::class)]
+#[UsesClass(StructuredMetadataFactory::class)]
 #[UsesClass(DepthMap::class)]
 final class ValueFactoryTest extends TestCase
 {

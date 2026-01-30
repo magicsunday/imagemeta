@@ -11,24 +11,23 @@ declare(strict_types=1);
 
 namespace MagicSunday\imagemeta\tests\Model;
 
-use MagicSunday\ImageMeta\Core\ExifCapabilities;
-use MagicSunday\ImageMeta\Exif\Support\EnumFromIntStringNullable;
+use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
 use MagicSunday\ImageMeta\Factory\ExifAssembler;
-use MagicSunday\ImageMeta\Factory\StructuredMetadata;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\Model\Exif\ExifTag;
 use MagicSunday\ImageMeta\Model\Exif\Ifd;
 use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
 use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
-use MagicSunday\ImageMeta\Model\Exif\ValueConverters;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\QuickTimeMeta;
-use MagicSunday\ImageMeta\Model\StructuredMetadataCache;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -41,6 +40,7 @@ use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
+use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
@@ -89,7 +89,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]
-#[UsesClass(StructuredMetadata::class)]
+#[UsesClass(StructuredMetadataFactory::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
