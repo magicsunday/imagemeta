@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\imagemeta\tests;
+namespace MagicSunday\ImageMeta\Tests;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
@@ -18,12 +18,16 @@ use MagicSunday\ImageMeta\Core\StreamWindow;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
+use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
-use MagicSunday\ImageMeta\Factory\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
@@ -35,17 +39,13 @@ use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
 use MagicSunday\ImageMeta\MakerNotes\SonyDecoder;
 use MagicSunday\ImageMeta\MetadataReader;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
@@ -62,8 +62,6 @@ use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
-use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
-use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File as FileValue;
 use MagicSunday\ImageMeta\Value\FlashPix;
@@ -77,15 +75,17 @@ use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
-use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
 use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
@@ -109,7 +109,10 @@ use function tempnam;
 use function unlink;
 
 /**
- * Integration coverage for the convenience metadata reader.
+ * Exercises MetadataReader as the integration point across parsers and factories.
+ * It assembles EXIF, XMP, and maker notes from synthetic inputs and validates the resulting model graph.
+ * The coverage verifies builder and cache interactions to ensure structured metadata remains consistent.
+ * These scenarios confirm consumers receive stable, readonly value objects even when sections are absent.
  */
 #[CoversClass(MetadataReader::class)]
 #[UsesClass(ByteReader::class)]
@@ -119,10 +122,10 @@ use function unlink;
 #[UsesClass(StreamWindow::class)]
 #[UsesClass(UInt64::class)]
 #[UsesClass(Unpack::class)]
-#[UsesClass(ExifAssembler::class)]
+#[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(FormatDetector::class)]
 #[UsesClass(ValueFactory::class)]
-#[UsesClass(StructuredMetadataFactory::class)]
+#[UsesClass(StructuredMetadata::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(AppleMakerNotesMerger::class)]
 #[UsesClass(QuickTimeLookup::class)]
@@ -177,7 +180,7 @@ use function unlink;
 #[UsesClass(MultiPicture::class)]
 #[UsesClass(Thumbnail::class)]
 #[UsesClass(ProcessingSettings::class)]
-#[UsesClass(Regions::class)]
+#[UsesClass(RegionCollection::class)]
 #[UsesClass(RelatedAssets::class)]
 #[UsesClass(Rights::class)]
 #[UsesClass(Scene::class)]
@@ -197,7 +200,8 @@ final class MetadataReaderTest extends TestCase
     private const int MARKER_APP1 = 0xE1;
 
     /**
-     * Verifies that JPEG input populates EXIF/XMP blobs, maker notes, and structured values.
+     * Builds a JPEG containing EXIF and XMP APP1 segments plus a Nikon maker note.
+     * Verifies MetadataReader populates blobs, documents, maker notes, and structured values.
      *
      * @return void
      */
@@ -282,7 +286,8 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies that digest flags populate SHA1/MD5 on metadata and structured file.
+     * Reads a JPEG while requesting digest computation.
+     * Ensures both SHA-1 and MD5 checksums are calculated and propagated to structured file metadata.
      *
      * @return void
      */
@@ -316,7 +321,8 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies that SOF precision drives bits-per-sample fallback for structured images.
+     * Creates a JPEG with a baseline SOF but no EXIF BitsPerSample tag.
+     * Confirms the structured image falls back to SOF precision for bits per sample and dimensions.
      *
      * @return void
      */
@@ -347,7 +353,8 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies that ISO BMFF input populates EXIF/XMP, QuickTime, and item references.
+     * Builds an ISO BMFF payload with Exif/XMP boxes and QuickTime metadata.
+     * Verifies the reader extracts blobs, maker notes, QuickTime identifiers, and item references.
      *
      * @return void
      */
@@ -401,7 +408,8 @@ final class MetadataReaderTest extends TestCase
     }
 
     /**
-     * Verifies that duplicate XMP packets are deduplicated by content hash.
+     * Inserts duplicate XMP packets into a JPEG APP1 sequence.
+     * Ensures MetadataReader de-duplicates XMP blobs based on content hash.
      *
      * @return void
      */
@@ -429,6 +437,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Writes the provided binary payload to a temporary file and returns its path.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param string $payload Binary payload to persist on disk.
      *
@@ -516,6 +525,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Builds a baseline start of frame payload with three colour components.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int $precision Sample precision reported by the SOF marker.
      * @param int $height    Frame height in image lines.
@@ -542,6 +552,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Wraps a payload with a JPEG marker and its big-endian length field.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int    $marker  Marker identifier without the 0xFF prefix.
      * @param string $payload Binary segment payload.
@@ -555,6 +566,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Constructs a standard ISO BMFF box header around the provided payload.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param string $type    Four-character box type.
      * @param string $payload Box payload data.
@@ -570,6 +582,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Constructs a full box (including version and flags) around a payload.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param string $type    Four-character box type.
      * @param string $payload Box payload data.
@@ -590,6 +603,7 @@ final class MetadataReaderTest extends TestCase
 
     /**
      * Builds a QuickTime moov/udta/meta structure containing a content identifier.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param string $value Content identifier to store inside the structure.
      *

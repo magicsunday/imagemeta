@@ -32,6 +32,14 @@ use function pack;
 use function str_repeat;
 use function strlen;
 
+/**
+ * Exercises MPF parsing for multi-picture metadata inside JPEG APP2 segments.
+ * It verifies tag decoding, entry parsing, and attribute interpretation across types.
+ * The suite includes malformed tags and invalid counts to assert ParseError handling.
+ * This keeps MPF extraction stable for both minimal and multi-entry documents.
+ *
+ * @internal
+ */
 #[CoversClass(MpfParser::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(MemoryBuffer::class)]
@@ -73,7 +81,8 @@ final class MpfParserTest extends TestCase
     private const int TYPE_BYTE = 1;
 
     /**
-     * Verifies that MPF index and attribute IFDs map to a complete document.
+     * Parses a full MPF payload including image entries and attribute tags.
+     * This verifies version, entry list, and derived attributes are populated correctly.
      *
      * @return void
      */
@@ -138,7 +147,8 @@ final class MpfParserTest extends TestCase
     }
 
     /**
-     * Verifies that imageCount defaults to MP entry count when missing.
+     * Omits the NumberOfImages tag while keeping MP Entry data.
+     * This confirms the parser derives imageCount from the entry list length.
      *
      * @return void
      */
@@ -163,7 +173,8 @@ final class MpfParserTest extends TestCase
     }
 
     /**
-     * Verifies that invalid MP entry byte lengths raise ParseError.
+     * Uses an invalid MP Entry payload length.
+     * This asserts the parser rejects malformed entry data with a ParseError.
      *
      * @return void
      */
@@ -238,6 +249,8 @@ final class MpfParserTest extends TestCase
 
     /**
      * @param list<array{0:int,1:int,2:int,3:int|string}> $entries
+     *                                                             Builds an IFD body and associated data section for the provided entries.
+     *                                                             String values are stored in the data block with offsets relative to the IFD.
      *
      * @return array{body:string,data:string}
      */

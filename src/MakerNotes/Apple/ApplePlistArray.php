@@ -16,10 +16,10 @@ use function count;
 /**
  * Represents array property list values.
  */
-final class ApplePlistArray implements ApplePlistValue
+final class ApplePlistArray implements ApplePlistValueInterface
 {
     /**
-     * @param list<ApplePlistValue> $values
+     * @param list<ApplePlistValueInterface> $values
      */
     public function __construct(private array $values)
     {
@@ -28,7 +28,7 @@ final class ApplePlistArray implements ApplePlistValue
     /**
      * Returns the array values stored in this plist array.
      *
-     * @return list<ApplePlistValue> List of plist values.
+     * @return list<ApplePlistValueInterface> List of plist values.
      */
     public function values(): array
     {
@@ -56,9 +56,9 @@ final class ApplePlistArray implements ApplePlistValue
      *
      * @param int $index Zero-based index.
      *
-     * @return ApplePlistValue|null Value at index or null.
+     * @return ApplePlistValueInterface|null Value at index or null.
      */
-    public function get(int $index): ?ApplePlistValue
+    public function get(int $index): ?ApplePlistValueInterface
     {
         return $this->values[$index] ?? null;
     }

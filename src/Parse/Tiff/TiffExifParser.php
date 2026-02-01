@@ -18,17 +18,16 @@ use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
-use MagicSunday\ImageMeta\Exif\ExifParserInterface;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function array_any;
@@ -59,7 +58,7 @@ use function substr;
  * structure and byte order, §2.2 defines field types, and §8 provides the
  * baseline directory semantics shared by both formats.
  */
-final class TiffExifParser implements ExifParserInterface
+final class TiffExifParser
 {
     /**
      * Tag identifiers that store counted image data such as strips or tiles.

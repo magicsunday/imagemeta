@@ -19,12 +19,16 @@ use function rewind;
 use function strlen;
 
 /**
- * Helper for creating temporary in-memory streams populated with fixture payloads.
+ * Provides a reusable helper for creating temporary in-memory streams in tests.
+ * It writes a payload into php://temp and rewinds the handle for reading.
+ * The trait asserts on failure to create, populate, or rewind the stream.
+ * This keeps stream setup consistent and reduces duplication across tests.
  */
 trait CreatesTempStream
 {
     /**
      * Creates a temporary stream populated with the provided payload.
+     * The stream is rewound so consumers read from the beginning.
      *
      * @param string $payload Bytes that should be written to the stream.
      *

@@ -25,7 +25,10 @@ use function pack;
 use function strlen;
 
 /**
- * Unit tests verifying the behaviour of the bounds-checked stream wrapper.
+ * Exercises the Stream wrapper for bounds-checked reads and seeks.
+ * It covers sequential integer decoding, cursor tracking, and string reads.
+ * The tests verify UInt64 assembly and cursor offsets after each operation.
+ * This ensures Stream enforces limits while keeping read semantics predictable.
  */
 #[CoversClass(Stream::class)]
 #[UsesClass(ByteReader::class)]
@@ -36,7 +39,8 @@ final class StreamTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Verifies that $stream->tell() equals 0.
+     * Reads 16/32/64-bit integers sequentially from a packed payload.
+     * It verifies cursor offsets after each read and correct 64-bit assembly.
      *
      * @return void
      */
@@ -59,7 +63,8 @@ final class StreamTest extends TestCase
     }
 
     /**
-     * Verifies that $chunk equals 'Magic'.
+     * Reads string chunks and uses seek to read from a new position.
+     * This confirms read returns exact bytes and seek resets the cursor.
      *
      * @return void
      */
@@ -81,7 +86,8 @@ final class StreamTest extends TestCase
     }
 
     /**
-     * Verifies that BoundsError::class is thrown.
+     * Reads to the end and then requests one more byte.
+     * It asserts a BoundsError is thrown to prevent out-of-range reads.
      *
      * @return void
      */
@@ -99,7 +105,8 @@ final class StreamTest extends TestCase
     }
 
     /**
-     * Verifies that BoundsError::class is thrown.
+     * Seeks past the stream length to trigger a bounds violation.
+     * It asserts a BoundsError is raised for invalid offsets.
      *
      * @return void
      */

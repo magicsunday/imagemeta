@@ -17,11 +17,20 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+/**
+ * Exercises AppleDecoder float list normalization for maker note values.
+ * It verifies scalar values are wrapped into lists and numeric strings become floats.
+ * The suite covers mixed numeric arrays to ensure consistent float output.
+ * This keeps numeric maker note lists predictable for consumers.
+ *
+ * @internal
+ */
 #[CoversClass(AppleDecoder::class)]
 final class AppleDecoderFloatListTest extends TestCase
 {
     /**
-     * Verifies that $result equals [1.25].
+     * Calls floatList with a scalar value for the requested key.
+     * Ensures the scalar is wrapped into a single-element float array.
      *
      * @return void
      */
@@ -37,7 +46,8 @@ final class AppleDecoderFloatListTest extends TestCase
     }
 
     /**
-     * Verifies that $result equals [1.0, 2.5, 3.75].
+     * Provides a values list containing integers, numeric strings, and floats.
+     * Confirms floatList normalizes the payload into a list of floats.
      *
      * @return void
      */

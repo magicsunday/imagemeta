@@ -11,6 +11,9 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value;
 
+use MagicSunday\ImageMeta\Core\Util\MatrixParts;
+use MagicSunday\ImageMeta\Core\Util\MatrixValidator;
+
 /**
  * Spatial Frequency Response (SFR) value object.
  *

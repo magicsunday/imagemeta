@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * GPS speed reference unit enumeration.
  *
@@ -19,7 +21,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  * The allowed values are 'K' (kilometers per hour), 'M' (miles per hour), and
  * 'N' (knots).
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_SPEED_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_SPEED_REF
  */
 enum GpsSpeedRef: string
 {

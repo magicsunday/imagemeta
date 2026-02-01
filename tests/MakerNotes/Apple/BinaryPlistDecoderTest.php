@@ -30,6 +30,14 @@ use function str_repeat;
 use function strlen;
 use function substr;
 
+/**
+ * Exercises BinaryPlistDecoder error handling and core decoding paths.
+ * It verifies invalid headers, malformed trailers, and corrupted payloads throw ParseError.
+ * The suite covers scalar, array, and dictionary node decoding with varied payloads.
+ * This ensures binary plist decoding remains strict and reliable.
+ *
+ * @internal
+ */
 #[CoversClass(BinaryPlistDecoder::class)]
 #[UsesClass(ApplePlistArray::class)]
 #[UsesClass(ApplePlistDictionary::class)]
@@ -37,7 +45,8 @@ use function substr;
 final class BinaryPlistDecoderTest extends TestCase
 {
     /**
-     * Verifies that ParseError::class is thrown with message 'must not be empty'.
+     * Passes an empty payload to the binary plist decoder.
+     * Ensures a ParseError is raised for the missing header.
      *
      * @return void
      */
@@ -51,7 +60,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'Unsupported property list format'.
+     * Supplies a non-bplist string as input.
+     * Verifies the decoder rejects unsupported formats with ParseError.
      *
      * @return void
      */
@@ -65,7 +75,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'offset table offset is invalid'.
+     * Corrupts the trailer so the offset table is reported before the header.
+     * Ensures the decoder rejects the invalid offset table position.
      *
      * @return void
      */
@@ -86,7 +97,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'offset table exceeds payload bounds'.
+     * Manipulates the trailer so the offset table overlaps the plist trailer.
+     * Verifies the decoder detects the bounds violation and throws ParseError.
      *
      * @return void
      */
@@ -112,7 +124,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'outside of the object table range'.
+     * Corrupts the offset table entry to point beyond the object table range.
+     * Ensures the decoder reports the invalid object offset with ParseError.
      *
      * @return void
      */
@@ -135,7 +148,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'Top level object index is out of range'.
+     * Sets the top object index to a value that exceeds the object count.
+     * Confirms the decoder rejects the out-of-range top-level index.
      *
      * @return void
      */
@@ -161,7 +175,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a short ASCII string as a single object plist.
+     * Ensures the decoder returns an ApplePlistScalar with the string value.
      *
      * @return void
      */
@@ -180,7 +195,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a 1-byte integer object in a minimal plist.
+     * Verifies the decoder returns an ApplePlistScalar with the integer value.
      *
      * @return void
      */
@@ -199,7 +215,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a date value with zero seconds since the 2001-01-01 epoch.
+     * Confirms the decoder returns the correct ISO-8601 timestamp.
      *
      * @return void
      */
@@ -219,7 +236,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a date value with +60 seconds relative to the 2001-01-01 epoch.
+     * Ensures the decoded timestamp reflects the expected minute offset.
      *
      * @return void
      */
@@ -238,7 +256,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a date value with -60 seconds relative to the 2001-01-01 epoch.
+     * Verifies the decoder returns a timestamp before the epoch.
      *
      * @return void
      */
@@ -257,7 +276,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a date value with sub-second precision after the epoch.
+     * Confirms the decoder preserves microseconds in the output string.
      *
      * @return void
      */
@@ -276,7 +296,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a date value with sub-second precision before the epoch.
+     * Ensures the decoder returns a timestamp with preserved microseconds.
      *
      * @return void
      */
@@ -295,7 +316,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a UTF-16BE string payload in a binary plist.
+     * Confirms the decoder converts it to a Unicode PHP string.
      *
      * @return void
      */
@@ -315,7 +337,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistScalar::class.
+     * Encodes a UID value larger than the native PHP integer range.
+     * Ensures the decoder returns the UID as a string representation.
      *
      * @return void
      */
@@ -337,7 +360,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistArray::class.
+     * Builds an array object referencing an integer and an ASCII string.
+     * Verifies the decoder returns an ApplePlistArray with ordered elements.
      *
      * @return void
      */
@@ -372,7 +396,8 @@ final class BinaryPlistDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of ApplePlistDictionary::class.
+     * Builds a dictionary object with two string keys and integer values.
+     * Ensures the decoder returns an ApplePlistDictionary with the expected entries.
      *
      * @return void
      */
@@ -462,6 +487,7 @@ final class BinaryPlistDecoderTest extends TestCase
 
     /**
      * Build a plist with multiple objects; offsets are computed sequentially.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param array<int,string> $objects  Object bytes in object-index order.
      * @param int               $topIndex Index of the top-level object.
@@ -504,6 +530,7 @@ final class BinaryPlistDecoderTest extends TestCase
 
     /**
      * Build an Array object with inline count (<= 15) and 1-byte references.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param list<int> $refIndices Object indices referenced by the array.
      *
@@ -550,6 +577,7 @@ final class BinaryPlistDecoderTest extends TestCase
 
     /**
      * Pack an unsigned 64-bit integer (big-endian) using portable formats.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int $value
      *

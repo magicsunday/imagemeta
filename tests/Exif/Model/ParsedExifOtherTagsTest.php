@@ -1,0 +1,133 @@
+<?php
+
+/**
+ * This file is part of the package magicsunday/imagemeta.
+ *
+ * For the full copyright and license information, please read the
+ * LICENSE file that was distributed with this source code.
+ */
+
+declare(strict_types=1);
+
+namespace MagicSunday\ImageMeta\Tests\Exif\Model;
+
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Exercises miscellaneous EXIF string tags exposed by ParsedExif.
+ * It validates ImageUniqueID formatting and camera owner/serial/lens identifiers.
+ * The suite covers optional tags and ensures nulls are returned when absent.
+ * This keeps less-common EXIF fields consistent and easy to consume.
+ *
+ * @internal
+ */
+#[CoversClass(ParsedExif::class)]
+final class ParsedExifOtherTagsTest extends TestCase
+{
+    /**
+     * Supplies the ImageUniqueID tag as a 32-character hex string.
+     * Confirms imageUniqueId() returns the same identifier without modification.
+     *
+     * @return void
+     */
+    #[Test]
+    public function imageUniqueIdReturnsHexUuidString(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::IMAGE_UNIQUE_ID => new IfdEntry(
+                ExifTag::IMAGE_UNIQUE_ID,
+                2,
+                33,
+                '00112233445566778899aabbccddeeff',
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('00112233445566778899aabbccddeeff', $parsedExif->imageUniqueId());
+    }
+
+    /**
+     * Populates the camera owner, serial, and lens attribution tags.
+     * Verifies each getter returns the corresponding EXIF string.
+     *
+     * @return void
+     */
+    #[Test]
+    public function hardwareAttributionTagsReturnExifStrings(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_OWNER_NAME  => new IfdEntry(ExifTag::CAMERA_OWNER_NAME, 2, 1, 'Owner'),
+            ExifTag::BODY_SERIAL_NUMBER => new IfdEntry(ExifTag::BODY_SERIAL_NUMBER, 2, 1, '123456789'),
+            ExifTag::LENS_MAKE          => new IfdEntry(ExifTag::LENS_MAKE, 2, 1, 'LensMaker'),
+            ExifTag::LENS_MODEL         => new IfdEntry(ExifTag::LENS_MODEL, 2, 1, 'Lens Model 12-35mm'),
+            ExifTag::LENS_SERIAL_NUMBER => new IfdEntry(ExifTag::LENS_SERIAL_NUMBER, 2, 1, 'LN987654321'),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('Owner', $parsedExif->ownerName());
+        self::assertSame('123456789', $parsedExif->bodySerialNumber());
+        self::assertSame('LensMaker', $parsedExif->lensMake());
+        self::assertSame('Lens Model 12-35mm', $parsedExif->lensModel());
+        self::assertSame('LN987654321', $parsedExif->lensSerialNumber());
+    }
+
+    /**
+     * Uses a LensSpecification tag with four rational values.
+     * Ensures the parser converts them to floats in the expected order.
+     *
+     * @return void
+     */
+    #[Test]
+    public function lensSpecificationParsesFourRationals(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::LENS_SPECIFICATION => new IfdEntry(
+                ExifTag::LENS_SPECIFICATION,
+                5,
+                4,
+                [
+                    [24, 1],
+                    [70, 1],
+                    [28, 10],
+                    [28, 10],
+                ],
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame([24.0, 70.0, 2.8, 2.8], $parsedExif->lensSpecification());
+    }
+
+    /**
+     * Provides firmware and software pipeline tags with human-readable strings.
+     * Confirms ParsedExif surfaces each software field as an EXIF string.
+     *
+     * @return void
+     */
+    #[Test]
+    public function softwarePipelineTagsReturnExifStrings(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::CAMERA_FIRMWARE           => new IfdEntry(ExifTag::CAMERA_FIRMWARE, 2, 1, 'Firmware 1.2.3'),
+            ExifTag::RAW_DEVELOPING_SOFTWARE   => new IfdEntry(ExifTag::RAW_DEVELOPING_SOFTWARE, 2, 1, 'RAW Developer 5.0'),
+            ExifTag::IMAGE_EDITING_SOFTWARE    => new IfdEntry(ExifTag::IMAGE_EDITING_SOFTWARE, 2, 1, 'Editor 2.0'),
+            ExifTag::METADATA_EDITING_SOFTWARE => new IfdEntry(ExifTag::METADATA_EDITING_SOFTWARE, 2, 1, 'Metadata Tool 3.1'),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertSame('Firmware 1.2.3', $parsedExif->cameraFirmware());
+        self::assertSame('RAW Developer 5.0', $parsedExif->rawDevelopingSoftware());
+        self::assertSame('Editor 2.0', $parsedExif->imageEditingSoftware());
+        self::assertSame('Metadata Tool 3.1', $parsedExif->metadataEditingSoftware());
+    }
+}

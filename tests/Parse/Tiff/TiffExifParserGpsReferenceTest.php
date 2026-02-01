@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -24,8 +24,10 @@ use PHPUnit\Framework\TestCase;
 use function strlen;
 
 /**
- * GPS reference handling derived from EXIF 3.0 §4.6.6 (GPS tag examples)
- * and EXIF 2.32 §4.6.6 for backward-compatible hemisphere/altitude signs.
+ * Verifies GPS reference handling for latitude, longitude, and altitude signs.
+ * It parses sample GPS IFDs and checks that S/W and altitude reference flags affect sign.
+ * The tests ensure classic TIFF layouts yield consistent GPS fields and numeric values.
+ * This keeps GPS parsing aligned with EXIF reference tag semantics across versions.
  */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(ParsedExif::class)]
@@ -33,7 +35,8 @@ use function strlen;
 final class TiffExifParserGpsReferenceTest extends TestCase
 {
     /**
-     * Verifies that S/W references flip classic TIFF GPS signs (lat/lon/alt).
+     * Parses a classic TIFF GPS example with S/W references and altitude below sea level.
+     * Verifies the parser applies negative signs to latitude, longitude, and altitude.
      *
      * @return void
      */
@@ -57,7 +60,8 @@ final class TiffExifParserGpsReferenceTest extends TestCase
     }
 
     /**
-     * Verifies that S/W references flip BigTIFF GPS signs (lat/lon/alt).
+     * Parses a BigTIFF GPS example that uses S/W references and a negative altitude.
+     * Confirms BigTIFF parsing applies the same sign handling as classic TIFF.
      *
      * @return void
      */

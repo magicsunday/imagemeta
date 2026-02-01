@@ -26,14 +26,18 @@ use function substr;
 use function substr_replace;
 
 /**
- * ICC decoder tests.
+ * Exercises the ICC parser against minimal profiles and segmented payloads.
+ * It validates header decoding such as version, PCS, rendering intent, and profile ID.
+ * The tests confirm segment reassembly yields the same decoded header data as a full blob.
+ * Error cases cover truncated or inconsistent profiles to ensure safe failures.
  */
 #[UsesClass(IccRenderingIntent::class)]
 #[CoversClass(IccParser::class)]
 final class IccParserTest extends TestCase
 {
     /**
-     * Verifies that decoding a minimal ICC profile yields header metadata fields.
+     * Decodes a full ICC profile and extracts key header fields.
+     * This verifies version parsing, PCS detection, rendering intent, and profile ID formatting.
      *
      * @return void
      */
@@ -54,7 +58,8 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Verifies that ICC profile fragments are reassembled before decoding.
+     * Splits the ICC profile into segments and reassembles them.
+     * This confirms segment concatenation yields the same decoded header fields.
      *
      * @return void
      */
@@ -81,7 +86,8 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Verifies that truncated ICC data and single fragments return null.
+     * Supplies truncated payloads and incomplete segment lists.
+     * This verifies the decoder returns null when required data is missing.
      *
      * @return void
      */
@@ -95,7 +101,8 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Verifies that out-of-order ICC fragments are sorted by sequence index.
+     * Feeds out-of-order ICC segments to the decoder.
+     * This confirms the decoder sorts fragments before reconstruction.
      *
      * @return void
      */
@@ -119,7 +126,8 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Verifies that missing ICC fragments abort decoding.
+     * Drops the middle segment from a multi-part profile.
+     * This ensures the decoder rejects incomplete segment sequences.
      *
      * @return void
      */
@@ -140,7 +148,8 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Verifies that legacy ICC version bytes are parsed into a dotted version string.
+     * Modifies the version bytes to an older ICC encoding.
+     * This verifies legacy version parsing uses the correct byte layout.
      *
      * @return void
      */

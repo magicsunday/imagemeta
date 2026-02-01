@@ -84,7 +84,7 @@ final class KeyedArchiveUnarchiver
     /**
      * @phpstan-return ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
      */
-    private function resolveValue(ApplePlistValue $value): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
+    private function resolveValue(ApplePlistValueInterface $value): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
         if ($value instanceof ApplePlistDictionary) {
             if ($this->isUidReference($value)) {

@@ -1,12 +1,12 @@
 ---
-generated: "2026-01-30T13:08:44+00:00"
+generated: "2026-02-03T17:30:24+00:00"
 summary:
   total_spec_tags: 227
-  implemented: 227
-  partial: 0
-  missing: 0
+  implemented: 0
+  partial: 47
+  missing: 180
   extra: 0
-  coverage_percent: 100
+  coverage_percent: 0
 categories:
   tiff_tags:
     254:
@@ -16,13 +16,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - newSubfileType
-      - subfileType
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     255:
       tag_id: "0x00FF"
       name: SubfileType
@@ -30,13 +29,12 @@ categories:
       source: TIFF 5.0
       required: false
       deprecated: true
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - newSubfileType
-      - subfileType
+      getter_method_exists: false
+      getter_methods: []
       notes:
+      - No getter method in ParsedExif
       - Tag is deprecated in specification
     256:
       tag_id: "0x0100"
@@ -45,11 +43,10 @@ categories:
       source: TIFF 6.0
       required: true
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageWidth
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     257:
       tag_id: "0x0101"
@@ -58,12 +55,10 @@ categories:
       source: TIFF 6.0
       required: true
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageHeight
-      - imageLength
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     258:
       tag_id: "0x0102"
@@ -72,11 +67,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - bitsPerSample
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     259:
       tag_id: "0x0103"
@@ -85,12 +79,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - thumbnailCompression
-      - compression
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     262:
       tag_id: "0x0106"
@@ -99,11 +91,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - photometric
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     263:
       tag_id: "0x0107"
@@ -112,12 +103,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - threshholding
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     264:
       tag_id: "0x0108"
       name: CellWidth
@@ -125,12 +116,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - cellWidth
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     265:
       tag_id: "0x0109"
       name: CellLength
@@ -138,12 +129,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - cellLength
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     266:
       tag_id: "0x010A"
       name: FillOrder
@@ -151,12 +142,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - fillOrder
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     269:
       tag_id: "0x010D"
       name: DocumentName
@@ -164,12 +155,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - documentName
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     270:
       tag_id: "0x010E"
       name: ImageDescription
@@ -177,11 +168,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageDescription
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     271:
       tag_id: "0x010F"
@@ -190,13 +180,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - makerNotes
-      - cameraMake
-      - lensMake
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     272:
       tag_id: "0x0110"
@@ -205,12 +192,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - cameraModel
-      - lensModel
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     273:
       tag_id: "0x0111"
@@ -219,12 +204,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - stripOffsets
-      - thumbnailStripOffsets
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     274:
       tag_id: "0x0112"
@@ -233,12 +216,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - orientation
-      - orientationDescription
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     277:
       tag_id: "0x0115"
@@ -247,11 +228,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - samplesPerPixel
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     278:
       tag_id: "0x0116"
@@ -260,11 +240,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - rowsPerStrip
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     279:
       tag_id: "0x0117"
@@ -273,12 +252,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - stripByteCounts
-      - thumbnailStripByteCounts
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     280:
       tag_id: "0x0118"
@@ -287,13 +264,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - minSampleValue
-      - sMinSampleValue
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     281:
       tag_id: "0x0119"
       name: MaxSampleValue
@@ -301,13 +277,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - maxSampleValue
-      - sMaxSampleValue
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     282:
       tag_id: "0x011A"
       name: XResolution
@@ -315,11 +290,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneXResolution
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     283:
       tag_id: "0x011B"
@@ -328,11 +302,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneYResolution
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     284:
       tag_id: "0x011C"
@@ -341,11 +314,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - planarConfiguration
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     285:
       tag_id: "0x011D"
@@ -354,12 +326,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - pageName
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     286:
       tag_id: "0x011E"
       name: XPosition
@@ -367,12 +339,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - xPosition
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     287:
       tag_id: "0x011F"
       name: YPosition
@@ -380,12 +352,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - yPosition
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     288:
       tag_id: "0x0120"
       name: FreeOffsets
@@ -393,12 +365,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - freeOffsets
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     289:
       tag_id: "0x0121"
       name: FreeByteCounts
@@ -406,12 +378,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - freeByteCounts
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     290:
       tag_id: "0x0122"
       name: GrayResponseUnit
@@ -419,12 +391,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - grayResponseUnit
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     291:
       tag_id: "0x0123"
       name: GrayResponseCurve
@@ -432,12 +404,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - grayResponseCurve
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     292:
       tag_id: "0x0124"
       name: T4Options
@@ -445,12 +417,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - t4Options
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     293:
       tag_id: "0x0125"
       name: T6Options
@@ -458,12 +430,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - t6Options
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     296:
       tag_id: "0x0128"
       name: ResolutionUnit
@@ -471,12 +443,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneResolutionUnit
-      - resolutionUnit
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     297:
       tag_id: "0x0129"
@@ -485,12 +455,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - pageNumber
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     301:
       tag_id: "0x012D"
       name: TransferFunction
@@ -498,11 +468,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - transferFunction
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     305:
       tag_id: "0x0131"
@@ -511,14 +480,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - software
-      - rawDevelopingSoftware
-      - imageEditingSoftware
-      - metadataEditingSoftware
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     306:
       tag_id: "0x0132"
@@ -527,18 +492,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - dateTimeOriginalRaw
-      - dateTimeOriginal
-      - dateTimeOriginalBestEffort
-      - dateTimeDigitizedRaw
-      - dateTimeRaw
-      - captureDateTime
-      - dateTimeDigitized
-      - dateTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     315:
       tag_id: "0x013B"
@@ -547,11 +504,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - artist
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     316:
       tag_id: "0x013C"
@@ -560,12 +516,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - hostComputer
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     317:
       tag_id: "0x013D"
       name: Predictor
@@ -573,12 +529,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - predictor
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     318:
       tag_id: "0x013E"
       name: WhitePoint
@@ -586,11 +542,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - whitePoint
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     319:
       tag_id: "0x013F"
@@ -599,11 +554,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - primaryChromaticities
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     320:
       tag_id: "0x0140"
@@ -612,12 +566,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - colorMap
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     321:
       tag_id: "0x0141"
       name: HalftoneHints
@@ -625,12 +579,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - halftoneHints
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     322:
       tag_id: "0x0142"
       name: TileWidth
@@ -638,13 +592,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - tileWidth
-      - thumbnailTileWidth
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     323:
       tag_id: "0x0143"
       name: TileLength
@@ -652,13 +605,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - tileLength
-      - thumbnailTileLength
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     324:
       tag_id: "0x0144"
       name: TileOffsets
@@ -666,13 +618,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - tileOffsets
-      - thumbnailTileOffsets
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     325:
       tag_id: "0x0145"
       name: TileByteCounts
@@ -680,13 +631,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - tileByteCounts
-      - thumbnailTileByteCounts
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     332:
       tag_id: "0x014C"
       name: InkSet
@@ -694,12 +644,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - inkSet
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     333:
       tag_id: "0x014D"
       name: InkNames
@@ -707,12 +657,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - inkNames
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     334:
       tag_id: "0x014E"
       name: NumberOfInks
@@ -720,12 +670,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - numberOfInks
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     336:
       tag_id: "0x0150"
       name: DotRange
@@ -733,12 +683,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - dotRange
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     337:
       tag_id: "0x0151"
       name: TargetPrinter
@@ -746,12 +696,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - targetPrinter
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     338:
       tag_id: "0x0152"
       name: ExtraSamples
@@ -759,12 +709,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - extraSamples
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     339:
       tag_id: "0x0153"
       name: SampleFormat
@@ -772,12 +722,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - sampleFormat
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     340:
       tag_id: "0x0154"
       name: SMinSampleValue
@@ -785,12 +735,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - minSampleValue
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     341:
       tag_id: "0x0155"
       name: SMaxSampleValue
@@ -798,12 +748,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - maxSampleValue
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     342:
       tag_id: "0x0156"
       name: TransferRange
@@ -811,12 +761,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - transferRange
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     512:
       tag_id: "0x0200"
       name: JPEGProc
@@ -824,12 +774,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegProc
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     513:
       tag_id: "0x0201"
       name: JPEGInterchangeFormat
@@ -837,11 +787,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegInterchangeFormat
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     514:
       tag_id: "0x0202"
@@ -850,11 +799,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegInterchangeFormatLength
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     515:
       tag_id: "0x0203"
@@ -863,12 +811,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegRestartInterval
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     517:
       tag_id: "0x0205"
       name: JPEGLosslessPredictors
@@ -876,12 +824,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - predictor
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     518:
       tag_id: "0x0206"
       name: JPEGPointTransforms
@@ -889,12 +837,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegPointTransforms
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     519:
       tag_id: "0x0207"
       name: JPEGQTables
@@ -902,12 +850,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegQTables
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     520:
       tag_id: "0x0208"
       name: JPEGDCTables
@@ -915,12 +863,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegDCTables
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     521:
       tag_id: "0x0209"
       name: JPEGACTables
@@ -928,12 +876,12 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
+      status: partial
       constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegACTables
-      notes: []
+      getter_method_exists: false
+      getter_methods: []
+      notes:
+      - No getter method in ParsedExif
     529:
       tag_id: "0x0211"
       name: YCbCrCoefficients
@@ -941,11 +889,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - ycbcrCoefficients
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     530:
       tag_id: "0x0212"
@@ -954,11 +901,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - ycbcrSubSampling
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     531:
       tag_id: "0x0213"
@@ -967,11 +913,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - ycbcrPositioning
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     532:
       tag_id: "0x0214"
@@ -980,11 +925,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - referenceBlackWhite
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     33432:
       tag_id: "0x8298"
@@ -993,11 +937,10 @@ categories:
       source: TIFF 6.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - copyright
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
   exif_tags:
     256:
@@ -1007,11 +950,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageWidth
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     257:
       tag_id: "0x0101"
@@ -1020,12 +962,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageHeight
-      - imageLength
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     258:
       tag_id: "0x0102"
@@ -1034,11 +974,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - bitsPerSample
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     259:
       tag_id: "0x0103"
@@ -1047,12 +986,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - thumbnailCompression
-      - compression
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     262:
       tag_id: "0x0106"
@@ -1061,11 +998,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - photometric
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     270:
       tag_id: "0x010E"
@@ -1074,11 +1010,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageDescription
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     271:
       tag_id: "0x010F"
@@ -1087,13 +1022,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - makerNotes
-      - cameraMake
-      - lensMake
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     272:
       tag_id: "0x0110"
@@ -1102,12 +1034,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - cameraModel
-      - lensModel
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     273:
       tag_id: "0x0111"
@@ -1116,12 +1046,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - stripOffsets
-      - thumbnailStripOffsets
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     274:
       tag_id: "0x0112"
@@ -1130,12 +1058,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - orientation
-      - orientationDescription
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     277:
       tag_id: "0x0115"
@@ -1144,11 +1070,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - samplesPerPixel
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     278:
       tag_id: "0x0116"
@@ -1157,11 +1082,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - rowsPerStrip
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     279:
       tag_id: "0x0117"
@@ -1170,12 +1094,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - stripByteCounts
-      - thumbnailStripByteCounts
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     282:
       tag_id: "0x011A"
@@ -1184,11 +1106,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneXResolution
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     283:
       tag_id: "0x011B"
@@ -1197,11 +1118,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneYResolution
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     284:
       tag_id: "0x011C"
@@ -1210,11 +1130,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - planarConfiguration
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     296:
       tag_id: "0x0128"
@@ -1223,12 +1142,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneResolutionUnit
-      - resolutionUnit
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     301:
       tag_id: "0x012D"
@@ -1237,11 +1154,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - transferFunction
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     305:
       tag_id: "0x0131"
@@ -1250,14 +1166,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - software
-      - rawDevelopingSoftware
-      - imageEditingSoftware
-      - metadataEditingSoftware
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     306:
       tag_id: "0x0132"
@@ -1266,18 +1178,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - dateTimeOriginalRaw
-      - dateTimeOriginal
-      - dateTimeOriginalBestEffort
-      - dateTimeDigitizedRaw
-      - dateTimeRaw
-      - captureDateTime
-      - dateTimeDigitized
-      - dateTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     315:
       tag_id: "0x013B"
@@ -1286,11 +1190,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - artist
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     318:
       tag_id: "0x013E"
@@ -1299,11 +1202,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - whitePoint
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     319:
       tag_id: "0x013F"
@@ -1312,11 +1214,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - primaryChromaticities
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     513:
       tag_id: "0x0201"
@@ -1325,11 +1226,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegInterchangeFormat
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     514:
       tag_id: "0x0202"
@@ -1338,11 +1238,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - jpegInterchangeFormatLength
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     529:
       tag_id: "0x0211"
@@ -1351,11 +1250,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - ycbcrCoefficients
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     530:
       tag_id: "0x0212"
@@ -1364,11 +1262,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - ycbcrSubSampling
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     531:
       tag_id: "0x0213"
@@ -1377,11 +1274,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - ycbcrPositioning
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     532:
       tag_id: "0x0214"
@@ -1390,11 +1286,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - referenceBlackWhite
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     33432:
       tag_id: "0x8298"
@@ -1403,11 +1298,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - copyright
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34665:
       tag_id: "0x8769"
@@ -1416,12 +1310,13 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
+      status: partial
+      constant_defined: false
       getter_method_exists: true
       getter_methods: []
       notes:
       - Structural tag (IFD pointer) - not exposed as getter method
+      - Missing constant in ExifTag.php and TiffTag.php
     34853:
       tag_id: "0x8825"
       name: GPSInfoIFDPointer
@@ -1429,12 +1324,13 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
+      status: partial
+      constant_defined: false
       getter_method_exists: true
       getter_methods: []
       notes:
       - Structural tag (IFD pointer) - not exposed as getter method
+      - Missing constant in ExifTag.php and TiffTag.php
     33434:
       tag_id: "0x829A"
       name: ExposureTime
@@ -1442,13 +1338,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - exposureTime
-      - exposureTimeFormatted
-      - sourceExposureTimesOfCompositeImage
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     33437:
       tag_id: "0x829D"
@@ -1457,11 +1350,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - fNumber
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34850:
       tag_id: "0x8822"
@@ -1470,11 +1362,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - exposureProgram
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34852:
       tag_id: "0x8824"
@@ -1483,11 +1374,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - spectralSensitivity
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34855:
       tag_id: "0x8827"
@@ -1496,13 +1386,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - iso
-      - isoBestEffort
-      - photographicSensitivity
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34856:
       tag_id: "0x8828"
@@ -1511,12 +1398,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - oecf
-      - oecfPayload
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34864:
       tag_id: "0x8830"
@@ -1525,11 +1410,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - iso
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34865:
       tag_id: "0x8831"
@@ -1538,11 +1422,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - iso
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34866:
       tag_id: "0x8832"
@@ -1551,11 +1434,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - iso
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34867:
       tag_id: "0x8833"
@@ -1564,13 +1446,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - iso
-      - isoBestEffort
-      - iSOSpeed
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34868:
       tag_id: "0x8834"
@@ -1579,11 +1458,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - iso
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     34869:
       tag_id: "0x8835"
@@ -1592,11 +1470,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - iso
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     36864:
       tag_id: "0x9000"
@@ -1605,11 +1482,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - exifVersion
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     36867:
       tag_id: "0x9003"
@@ -1618,14 +1494,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - dateTimeOriginalRaw
-      - dateTimeOriginal
-      - dateTimeOriginalBestEffort
-      - dateTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     36868:
       tag_id: "0x9004"
@@ -1634,13 +1506,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - dateTimeDigitizedRaw
-      - dateTimeDigitized
-      - dateTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     36880:
       tag_id: "0x9010"
@@ -1649,13 +1518,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - offsetTimeOriginal
-      - offsetTimeDigitized
-      - offsetTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     36881:
       tag_id: "0x9011"
@@ -1664,12 +1530,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - offsetTimeOriginal
-      - offsetTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     36882:
       tag_id: "0x9012"
@@ -1678,12 +1542,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - offsetTimeDigitized
-      - offsetTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37121:
       tag_id: "0x9101"
@@ -1692,13 +1554,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - componentsConfiguration
-      - componentsConfigurationLabels
-      - componentsConfigurationDescription
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37122:
       tag_id: "0x9102"
@@ -1707,11 +1566,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - compressedBitsPerPixel
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37377:
       tag_id: "0x9201"
@@ -1720,11 +1578,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - shutterSpeedValue
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37378:
       tag_id: "0x9202"
@@ -1733,12 +1590,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - apertureValue
-      - apertureValueFormatted
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37379:
       tag_id: "0x9203"
@@ -1747,12 +1602,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - brightnessValue
-      - brightnessValueFormatted
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37380:
       tag_id: "0x9204"
@@ -1761,11 +1614,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - exposureBias
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37381:
       tag_id: "0x9205"
@@ -1774,11 +1626,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - apertureValue
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37382:
       tag_id: "0x9206"
@@ -1787,12 +1638,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - subjectDistanceRange
-      - subjectDistance
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37383:
       tag_id: "0x9207"
@@ -1801,11 +1650,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - meteringMode
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37384:
       tag_id: "0x9208"
@@ -1814,11 +1662,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - lightSource
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37385:
       tag_id: "0x9209"
@@ -1827,13 +1674,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - flashpixVersion
-      - flash
-      - flashEnergy
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37386:
       tag_id: "0x920A"
@@ -1842,13 +1686,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalLengthMm
-      - focalLength35Mm
-      - focalLengthIn35mmFilm
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37396:
       tag_id: "0x9214"
@@ -1857,11 +1698,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - subjectArea
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37500:
       tag_id: "0x927C"
@@ -1870,11 +1710,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - makerNotes
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37510:
       tag_id: "0x9286"
@@ -1883,13 +1722,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - userComment
-      - userCommentEncoding
-      - userCommentEncodingBestEffort
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37520:
       tag_id: "0x9290"
@@ -1898,13 +1734,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - subSecTimeOriginal
-      - subSecTimeDigitized
-      - subSecTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37521:
       tag_id: "0x9291"
@@ -1913,12 +1746,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - subSecTimeOriginal
-      - subSecTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37522:
       tag_id: "0x9292"
@@ -1927,12 +1758,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - subSecTimeDigitized
-      - subSecTime
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37888:
       tag_id: "0x9400"
@@ -1941,11 +1770,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - temperatureCelsius
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37889:
       tag_id: "0x9401"
@@ -1954,11 +1782,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - humidityPercent
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37890:
       tag_id: "0x9402"
@@ -1967,11 +1794,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - pressureHPa
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37891:
       tag_id: "0x9403"
@@ -1980,11 +1806,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - waterDepthMeters
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37892:
       tag_id: "0x9404"
@@ -1993,12 +1818,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - accelerationVector
-      - accelerationMs2
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     37893:
       tag_id: "0x9405"
@@ -2007,11 +1830,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - cameraElevationAngleDeg
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     40960:
       tag_id: "0xA000"
@@ -2020,12 +1842,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - flashpixVersion
-      - flash
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     40961:
       tag_id: "0xA001"
@@ -2034,11 +1854,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - colorSpace
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     40962:
       tag_id: "0xA002"
@@ -2047,12 +1866,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageWidth
-      - pixelXDimension
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     40963:
       tag_id: "0xA003"
@@ -2061,12 +1878,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageHeight
-      - pixelYDimension
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     40964:
       tag_id: "0xA004"
@@ -2075,11 +1890,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - relatedSoundFile
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     40965:
       tag_id: "0xA005"
@@ -2088,12 +1902,13 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
+      status: partial
+      constant_defined: false
       getter_method_exists: true
       getter_methods: []
       notes:
       - Structural tag (IFD pointer) - not exposed as getter method
+      - Missing constant in ExifTag.php and TiffTag.php
     41483:
       tag_id: "0xA20B"
       name: FlashEnergy
@@ -2101,12 +1916,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - flash
-      - flashEnergy
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41484:
       tag_id: "0xA20C"
@@ -2115,11 +1928,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - spatialFrequencyResponse
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41486:
       tag_id: "0xA20E"
@@ -2128,11 +1940,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneXResolution
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41487:
       tag_id: "0xA20F"
@@ -2141,11 +1952,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneYResolution
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41488:
       tag_id: "0xA210"
@@ -2154,12 +1964,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalPlaneResolutionUnit
-      - resolutionUnit
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41492:
       tag_id: "0xA214"
@@ -2168,11 +1976,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - subjectLocation
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41493:
       tag_id: "0xA215"
@@ -2181,12 +1988,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - recommendedExposureIndex
-      - exposureIndex
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41495:
       tag_id: "0xA217"
@@ -2195,11 +2000,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - sensingMethod
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41728:
       tag_id: "0xA300"
@@ -2208,11 +2012,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - fileSource
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41729:
       tag_id: "0xA301"
@@ -2221,11 +2024,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - sceneType
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41730:
       tag_id: "0xA302"
@@ -2234,12 +2036,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - cfaPattern
-      - cfaPatternColors
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41985:
       tag_id: "0xA401"
@@ -2248,11 +2048,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - customRendered
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41986:
       tag_id: "0xA402"
@@ -2261,11 +2060,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - exposureMode
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41987:
       tag_id: "0xA403"
@@ -2274,11 +2072,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - whiteBalance
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41988:
       tag_id: "0xA404"
@@ -2287,11 +2084,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - digitalZoomRatio
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41989:
       tag_id: "0xA405"
@@ -2300,12 +2096,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - focalLength35Mm
-      - focalLengthIn35mmFilm
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41990:
       tag_id: "0xA406"
@@ -2314,11 +2108,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - sceneCaptureType
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41991:
       tag_id: "0xA407"
@@ -2327,11 +2120,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - gainControl
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41992:
       tag_id: "0xA408"
@@ -2340,11 +2132,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - contrast
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41993:
       tag_id: "0xA409"
@@ -2353,11 +2144,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - saturation
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41994:
       tag_id: "0xA40A"
@@ -2366,11 +2156,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - sharpness
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41995:
       tag_id: "0xA40B"
@@ -2379,11 +2168,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - deviceSettingDescription
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     41996:
       tag_id: "0xA40C"
@@ -2392,12 +2180,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - subjectDistanceRange
-      - subjectDistance
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42016:
       tag_id: "0xA420"
@@ -2406,11 +2192,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageUniqueId
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42032:
       tag_id: "0xA430"
@@ -2419,11 +2204,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - ownerName
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42033:
       tag_id: "0xA431"
@@ -2432,11 +2216,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - bodySerialNumber
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42034:
       tag_id: "0xA432"
@@ -2445,11 +2228,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - lensSpecification
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42035:
       tag_id: "0xA433"
@@ -2458,11 +2240,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - lensMake
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42036:
       tag_id: "0xA434"
@@ -2471,11 +2252,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - lensModel
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42037:
       tag_id: "0xA435"
@@ -2484,11 +2264,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - lensSerialNumber
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42038:
       tag_id: "0xA436"
@@ -2497,11 +2276,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageTitle
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42039:
       tag_id: "0xA437"
@@ -2510,11 +2288,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - photographer
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42040:
       tag_id: "0xA438"
@@ -2523,11 +2300,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageEditor
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42041:
       tag_id: "0xA439"
@@ -2536,11 +2312,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - cameraFirmware
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42042:
       tag_id: "0xA43A"
@@ -2549,11 +2324,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - rawDevelopingSoftware
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42043:
       tag_id: "0xA43B"
@@ -2562,11 +2336,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - imageEditingSoftware
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42044:
       tag_id: "0xA43C"
@@ -2575,11 +2348,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - metadataEditingSoftware
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42080:
       tag_id: "0xA460"
@@ -2588,13 +2360,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - compositeImage
-      - sourceImageNumberOfCompositeImage
-      - sourceExposureTimesOfCompositeImage
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42081:
       tag_id: "0xA461"
@@ -2603,12 +2372,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - compositeImage
-      - sourceImageNumberOfCompositeImage
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42082:
       tag_id: "0xA462"
@@ -2617,13 +2384,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - exposureTime
-      - compositeImage
-      - sourceExposureTimesOfCompositeImage
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
     42240:
       tag_id: "0xA500"
@@ -2632,11 +2396,10 @@ categories:
       source: EXIF 3.0
       required: false
       deprecated: false
-      status: implemented
-      constant_defined: true
-      getter_method_exists: true
-      getter_methods:
-      - gamma
+      status: missing
+      constant_defined: false
+      getter_method_exists: false
+      getter_methods: []
       notes: []
   gps_tags:
   - tag_id: "0x0000"
@@ -2645,11 +2408,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0001"
     name: GPSLatitudeRef
@@ -2657,11 +2419,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0002"
     name: GPSLatitude
@@ -2669,11 +2430,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0003"
     name: GPSLongitudeRef
@@ -2681,11 +2441,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0004"
     name: GPSLongitude
@@ -2693,11 +2452,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0005"
     name: GPSAltitudeRef
@@ -2705,11 +2463,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0006"
     name: GPSAltitude
@@ -2717,11 +2474,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0007"
     name: GPSTimeStamp
@@ -2729,11 +2485,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0008"
     name: GPSSatellites
@@ -2741,11 +2496,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0009"
     name: GPSStatus
@@ -2753,11 +2507,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x000A"
     name: GPSMeasureMode
@@ -2765,11 +2518,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x000B"
     name: GPSDOP
@@ -2777,11 +2529,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x000C"
     name: GPSSpeedRef
@@ -2789,11 +2540,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x000D"
     name: GPSSpeed
@@ -2801,11 +2551,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x000E"
     name: GPSTrackRef
@@ -2813,11 +2562,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x000F"
     name: GPSTrack
@@ -2825,11 +2573,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0010"
     name: GPSImgDirectionRef
@@ -2837,11 +2584,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0011"
     name: GPSImgDirection
@@ -2849,11 +2595,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0012"
     name: GPSMapDatum
@@ -2861,11 +2606,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0013"
     name: GPSDestLatitudeRef
@@ -2873,11 +2617,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0014"
     name: GPSDestLatitude
@@ -2885,11 +2628,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0015"
     name: GPSDestLongitudeRef
@@ -2897,11 +2639,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0016"
     name: GPSDestLongitude
@@ -2909,11 +2650,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0017"
     name: GPSDestBearingRef
@@ -2921,11 +2661,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0018"
     name: GPSDestBearing
@@ -2933,11 +2672,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x0019"
     name: GPSDestDistanceRef
@@ -2945,11 +2683,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x001A"
     name: GPSDestDistance
@@ -2957,11 +2694,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x001B"
     name: GPSProcessingMethod
@@ -2969,11 +2705,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x001C"
     name: GPSAreaInformation
@@ -2981,11 +2716,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x001D"
     name: GPSDateStamp
@@ -2993,11 +2727,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x001E"
     name: GPSDifferential
@@ -3005,11 +2738,10 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
   - tag_id: "0x001F"
     name: GPSHPositioningError
@@ -3017,10 +2749,9 @@ categories:
     source: EXIF 3.0
     required: false
     deprecated: false
-    status: implemented
-    constant_defined: true
-    getter_method_exists: true
-    getter_methods:
-    - gps
+    status: missing
+    constant_defined: false
+    getter_method_exists: false
+    getter_methods: []
     notes: []
 ...

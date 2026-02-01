@@ -18,13 +18,13 @@ use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -39,13 +39,10 @@ use function strlen;
 use function substr;
 
 /**
- * Negative tests for TiffExifParser focusing on malformed and corrupted TIFF/EXIF data.
- *
- * These tests verify that the parser correctly rejects invalid inputs and throws
- * appropriate exceptions (ParseError or BoundsError) rather than crashing or
- * producing incorrect results.
- *
- * EXIF 3.0 §4.5 and TIFF 6.0 §2 define the structure that these tests deliberately violate.
+ * Exercises malformed TIFF/EXIF inputs to ensure strict rejection behavior.
+ * It targets invalid headers, broken offsets, and corrupt IFD structures.
+ * The suite expects ParseError or BoundsError instead of partial or misleading output.
+ * This enforces defensive parsing when encountering damaged TIFF payloads.
  */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(MemoryBuffer::class)]
@@ -65,7 +62,8 @@ use function substr;
 final class TiffExifParserNegativeTest extends TestCase
 {
     /**
-     * Verifies that invalid byte order markers raise ParseError.
+     * Uses a bogus byte-order marker instead of II/MM.
+     * Confirms the parser raises ParseError for an invalid byte order value.
      *
      * @return void
      */
@@ -83,7 +81,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that unknown TIFF magic values raise ParseError.
+     * Supplies a TIFF header with an unknown magic number.
+     * Ensures the parser rejects the header with a ParseError.
      *
      * @return void
      */
@@ -101,7 +100,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that out-of-range IFD offsets raise BoundsError.
+     * Points the first IFD offset beyond the available blob size.
+     * Verifies a BoundsError is thrown for the out-of-range offset.
      *
      * @return void
      */
@@ -119,7 +119,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that truncated IFD headers raise BoundsError.
+     * Sets the first IFD offset but provides no data at that location.
+     * Ensures the parser rejects the truncated IFD header with BoundsError.
      *
      * @return void
      */
@@ -137,7 +138,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that invalid BigTIFF offset sizes raise ParseError.
+     * Builds a BigTIFF header with an invalid offset size of 4 bytes.
+     * Confirms the parser throws ParseError for unsupported offset sizes.
      *
      * @return void
      */
@@ -160,7 +162,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that non-zero BigTIFF reserved fields raise ParseError.
+     * Sets the BigTIFF reserved field to a non-zero value.
+     * Ensures the parser flags the header as invalid with ParseError.
      *
      * @return void
      */
@@ -183,7 +186,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that RATIONAL values with zero denominators are tolerated.
+     * Uses a RATIONAL value whose denominator is zero.
+     * Confirms the parser tolerates the degenerate fraction without throwing.
      *
      * @return void
      */
@@ -200,7 +204,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that SRATIONAL extreme values are tolerated.
+     * Uses SRATIONAL values at the signed 32-bit extremes.
+     * Ensures the parser accepts extreme signed values without errors.
      *
      * @return void
      */
@@ -217,7 +222,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that excessive IFD entry counts raise BoundsError.
+     * Declares an IFD entry count that would overflow a classic TIFF.
+     * Verifies the parser rejects the header with a BoundsError.
      *
      * @return void
      */
@@ -238,7 +244,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that cyclic IFD chains are detected without infinite loops.
+     * Creates an IFD chain where the next pointer loops back to the same IFD.
+     * Confirms the parser detects the cycle and stops without looping indefinitely.
      *
      * @return void
      */
@@ -262,7 +269,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that unsupported TIFF field types raise ParseError.
+     * Builds a TIFF entry using an invalid field type code.
+     * Ensures the parser rejects unsupported TIFF types with ParseError.
      *
      * @return void
      */
@@ -280,7 +288,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that truncated IFD entries raise BoundsError.
+     * Truncates the IFD entry so mandatory fields are missing.
+     * Verifies a BoundsError is thrown for the incomplete entry data.
      *
      * @return void
      */
@@ -303,7 +312,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that malformed interoperability pointers raise ParseError.
+     * Creates an interoperability pointer entry with an invalid type/count layout.
+     * Ensures the parser throws a ParseError with the expected validation message.
      *
      * @return void
      */
@@ -321,7 +331,8 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
-     * Verifies that fixed-length tags with invalid counts raise ParseError.
+     * Feeds fixed-length tags with invalid counts via a data provider.
+     * Confirms the parser rejects each case with the expected ParseError message.
      *
      * @return void
      */
@@ -346,6 +357,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Builds a minimal valid TIFF blob with a RATIONAL value.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int $numerator   Numerator for the rational.
      * @param int $denominator Denominator for the rational.
@@ -380,6 +392,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Builds a TIFF blob with an Exif IFD that carries a malformed interoperability pointer.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int $type  Field type used for the interoperability pointer entry.
      * @param int $count Value count stored for the interoperability pointer entry.
@@ -414,6 +427,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Builds a minimal valid TIFF blob with an SRATIONAL value.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int $numerator   Signed numerator.
      * @param int $denominator Signed denominator.
@@ -447,6 +461,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Builds a TIFF blob with an IFD entry using an invalid type code.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int $invalidType Invalid TIFF type code.
      *

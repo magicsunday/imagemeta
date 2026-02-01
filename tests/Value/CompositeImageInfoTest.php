@@ -19,13 +19,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the CompositeImageInfo value object.
+ * Exercises CompositeImageInfo construction for composite type and counts.
+ * It verifies enum-backed composite types and count pairs are preserved.
+ * The suite checks optional SourceExposureTimes attachment for composites.
+ * This ensures composite metadata is represented consistently in structured output.
  */
 #[CoversClass(CompositeImageInfo::class)]
 final class CompositeImageInfoTest extends TestCase
 {
     /**
-     * Verifies that $info->type equals CompositeImage::GENERAL_COMPOSITE.
+     * Stores composite image type values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -42,7 +46,8 @@ final class CompositeImageInfoTest extends TestCase
     }
 
     /**
-     * Verifies that $info->counts equals [5, 3].
+     * Stores composite source count pairs.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -59,7 +64,8 @@ final class CompositeImageInfoTest extends TestCase
     }
 
     /**
-     * Verifies that $info->sourceExposureTimes equals $exposures.
+     * Stores composite exposure time details.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -89,7 +95,8 @@ final class CompositeImageInfoTest extends TestCase
     }
 
     /**
-     * Verifies that $info->type is null.
+     * Accepts null composite image fields.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

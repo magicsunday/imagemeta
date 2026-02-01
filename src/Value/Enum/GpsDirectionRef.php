@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * GPS direction reference enumeration.
  *
@@ -18,9 +20,9 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  * used for directional GPS tags (GPSImgDirectionRef, GPSTrackRef, GPSDestBearingRef).
  * The allowed values are 'T' (true direction) and 'M' (magnetic direction).
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_IMG_DIRECTION_REF
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_TRACK_REF
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_DEST_BEARING_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_IMG_DIRECTION_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_TRACK_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_DEST_BEARING_REF
  */
 enum GpsDirectionRef: string
 {

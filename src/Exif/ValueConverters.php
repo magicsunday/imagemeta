@@ -16,10 +16,10 @@ use DateTimeZone;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Converters\ConverterFactory;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Value\FlashInfo;
 
 /**
@@ -29,7 +29,7 @@ use MagicSunday\ImageMeta\Value\FlashInfo;
  * payloads normalised by these converters.
  *
  * This class delegates to the specific converter classes in
- * MagicSunday\ImageMeta\Model\Exif\Converters namespace.
+ * MagicSunday\ImageMeta\Exif\Converters namespace.
  *
  * @phpstan-type RationalComponent = array<int, int|float|string>
  * @phpstan-type RationalLike = array<int, RationalComponent|ExifRational|int|float|string>

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * Enumerates the colour component codes used by the CFA pattern tag in EXIF 3.0
  * §4.6.2 (image data structure).

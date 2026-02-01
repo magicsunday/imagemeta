@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Interop value object.
+ * Exercises the Interop value object for interoperability index metadata.
+ * It verifies the index string is stored and exposed as provided.
+ * The suite confirms null values are accepted for missing metadata.
+ * This keeps interop tag handling predictable in structured output.
  */
 #[CoversClass(Interop::class)]
 final class InteropTest extends TestCase
 {
     /**
-     * Verifies that $interop->index equals 'R98'.
+     * Stores the interoperability index value.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -38,7 +42,8 @@ final class InteropTest extends TestCase
     }
 
     /**
-     * Verifies that $interop->index is null.
+     * Accepts a null interoperability index.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

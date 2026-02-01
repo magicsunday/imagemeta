@@ -24,12 +24,21 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the Gps value object for coordinates, references, and timestamps.
+ * It verifies lat/lon values, hemisphere enums, and altitude/distance fields.
+ * The suite covers speed, direction, and time zone conversion logic.
+ * This ensures GPS metadata is normalized and represented consistently.
+ *
+ * @internal
+ */
 #[UsesClass(GpsCoordinate::class)]
 #[CoversClass(Gps::class)]
 final class GpsTest extends TestCase
 {
     /**
-     * Verifies that $gps->latitude equals 1.23.
+     * Exposes GPS fields and enum references from the constructor.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -70,7 +79,8 @@ final class GpsTest extends TestCase
     }
 
     /**
-     * Verifies that $gps->latitudeSigned equals -12.5.
+     * Calculates signed coordinates and derived coordinate wrappers.
+     * It exercises the scenario described by the test name.
      *
      * @return void
      */
@@ -101,7 +111,8 @@ final class GpsTest extends TestCase
     }
 
     /**
-     * Verifies that $utcTimestamp is not null.
+     * Normalizes timestamps to UTC.
+     * It exercises the scenario described by the test name.
      *
      * @return void
      */

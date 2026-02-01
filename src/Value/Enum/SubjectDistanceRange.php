@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * Enumerates the subject distance range classifications assigned to the
  * SubjectDistanceRange tag.

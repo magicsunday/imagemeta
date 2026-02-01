@@ -21,13 +21,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Scene value object.
+ * Exercises the Scene value object for scene classification and capture context.
+ * It verifies scene capture type, scene type, and light source enums are preserved.
+ * The suite covers optional HDR, night mode, and face count fields.
+ * This keeps scene-related metadata consistent for presentation and filtering.
  */
 #[CoversClass(Scene::class)]
 final class SceneTest extends TestCase
 {
     /**
-     * Verifies that $scene->type equals SceneCaptureType::STANDARD.
+     * Stores the scene capture type when provided.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -48,7 +52,8 @@ final class SceneTest extends TestCase
     }
 
     /**
-     * Verifies that $scene->type equals SceneCaptureType::NIGHT_SCENE.
+     * Stores full scene metadata fields and enums.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -75,7 +80,8 @@ final class SceneTest extends TestCase
     }
 
     /**
-     * Verifies that $scene->type is null.
+     * Accepts null scene metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

@@ -11,13 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * GPS receiver status enumeration.
  *
  * EXIF 3.0 §4.6.6 Table 27 (GPS Attribute Information) defines the GPSStatus tag
  * which indicates the status of the GPS receiver when the image was recorded.
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_STATUS
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_STATUS
  */
 enum GpsStatus: string
 {

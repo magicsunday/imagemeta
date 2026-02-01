@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Container value object.
+ * Exercises the Container value object for file-level format metadata.
+ * It verifies format, encoder, bitrate, and codec fields are stored together.
+ * The suite covers video and audio codec combinations typical for container formats.
+ * This ensures container metadata is preserved for downstream reporting.
  */
 #[CoversClass(Container::class)]
 final class ContainerTest extends TestCase
 {
     /**
-     * Verifies that $container->format equals 'JPEG'.
+     * Stores the container format when provided.
+     * It validates the transformation using representative inputs.
      *
      * @return void
      */
@@ -42,7 +46,8 @@ final class ContainerTest extends TestCase
     }
 
     /**
-     * Verifies that $container->format equals 'MP4'.
+     * Stores video container metadata fields together.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -65,7 +70,8 @@ final class ContainerTest extends TestCase
     }
 
     /**
-     * Verifies that $container->format is null.
+     * Accepts null container metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

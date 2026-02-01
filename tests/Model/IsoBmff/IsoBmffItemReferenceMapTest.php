@@ -17,12 +17,21 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises IsoBmffItemReference and IsoBmffItemReferenceMap lookup behavior.
+ * It verifies references are grouped by source item id and returned in order.
+ * The suite checks empty maps report no references and isEmpty() returns true.
+ * This ensures item-reference metadata remains predictable for ISO BMFF parsing.
+ *
+ * @internal
+ */
 #[CoversClass(IsoBmffItemReference::class)]
 #[CoversClass(IsoBmffItemReferenceMap::class)]
 final class IsoBmffItemReferenceMapTest extends TestCase
 {
     /**
-     * Verifies that $map->fromItemIds() equals [5].
+     * Exposes reference sources and lookups by item id.
+     * It validates the transformation using representative inputs.
      *
      * @return void
      */
@@ -39,7 +48,8 @@ final class IsoBmffItemReferenceMapTest extends TestCase
     }
 
     /**
-     * Verifies that $map->fromItemIds() equals [].
+     * Reports empty reference maps correctly.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

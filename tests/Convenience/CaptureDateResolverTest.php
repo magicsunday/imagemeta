@@ -13,20 +13,20 @@ namespace MagicSunday\ImageMeta\Tests\Convenience;
 
 use DateTimeImmutable;
 use MagicSunday\ImageMeta\Convenience\CaptureDateResolver;
+use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
-use MagicSunday\ImageMeta\Factory\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -39,8 +39,6 @@ use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
-use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
-use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
@@ -55,15 +53,17 @@ use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
-use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
 use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
@@ -74,7 +74,12 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for CaptureDateResolver.
+ * Exercises CaptureDateResolver across EXIF, XMP, and QuickTime timestamp sources.
+ * The suite builds structured metadata and verifies the resolved DateTimeImmutable output.
+ * It covers precedence rules and fallback behavior when primary tags are missing.
+ * These cases ensure capture time selection remains consistent across metadata variants.
+ *
+ * @internal
  */
 #[CoversClass(CaptureDateResolver::class)]
 #[UsesClass(AppleMakerNotes::class)]
@@ -88,7 +93,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Container::class)]
 #[UsesClass(Derived::class)]
 #[UsesClass(Device::class)]
-#[UsesClass(ExifAssembler::class)]
+#[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ExifFlash::class)]
 #[UsesClass(ExifRational::class)]
@@ -114,13 +119,13 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Thumbnail::class)]
 #[UsesClass(ProcessingSettings::class)]
 #[UsesClass(QuickTimeLookup::class)]
-#[UsesClass(Regions::class)]
+#[UsesClass(RegionCollection::class)]
 #[UsesClass(RelatedAssets::class)]
 #[UsesClass(Rights::class)]
 #[UsesClass(Scene::class)]
 #[UsesClass(Sensor::class)]
 #[UsesClass(Standards::class)]
-#[UsesClass(StructuredMetadataFactory::class)]
+#[UsesClass(StructuredMetadata::class)]
 #[UsesClass(StructuredMetadataCache::class)]
 #[UsesClass(Temporal::class)]
 #[UsesClass(TiffData::class)]
@@ -136,7 +141,8 @@ final class CaptureDateResolverTest extends TestCase
     private const string XMP_NAMESPACE = 'http://ns.adobe.com/xap/1.0/';
 
     /**
-     * Verifies that $result is instance of DateTimeImmutable::class.
+     * Uses XMP CreateDate when EXIF capture timestamps are absent.
+     * This verifies that XMP is considered a fallback source for capture time.
      *
      * @return void
      */
@@ -160,7 +166,8 @@ final class CaptureDateResolverTest extends TestCase
     }
 
     /**
-     * Verifies that (new CaptureDateResolver())->bestCaptureDateTime($metadata) is null.
+     * Supplies a non-ISO CreateDate string in XMP.
+     * This ensures invalid date strings are ignored rather than parsed loosely.
      *
      * @return void
      */
@@ -181,7 +188,8 @@ final class CaptureDateResolverTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of DateTimeImmutable::class.
+     * Provides an array-valued XMP CreateDate with multiple entries.
+     * This confirms the resolver picks the first ISO-formatted value.
      *
      * @return void
      */
@@ -208,7 +216,8 @@ final class CaptureDateResolverTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of DateTimeImmutable::class.
+     * Provides EXIF DateTimeDigitized with a matching offset tag.
+     * This confirms EXIF capture time takes precedence over XMP when present.
      *
      * @return void
      */
@@ -250,7 +259,8 @@ final class CaptureDateResolverTest extends TestCase
     }
 
     /**
-     * Verifies that $result is instance of DateTimeImmutable::class.
+     * Supplies GPS date and time tags without EXIF or XMP capture dates.
+     * This validates GPS timestamps are used as the last-resort source.
      *
      * @return void
      */

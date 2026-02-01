@@ -17,11 +17,20 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+/**
+ * Exercises AppleDecoder flag extraction from bitmasks and flag lists.
+ * It verifies that numeric and hex-encoded masks map to normalized boolean flags.
+ * The suite checks combined sources (SceneFlags, ImageProcessingFlags, PhotosAppFeatureFlags).
+ * This ensures maker note flags are interpreted consistently for downstream metadata.
+ *
+ * @internal
+ */
 #[CoversClass(AppleDecoder::class)]
 final class AppleDecoderFlagMaskTest extends TestCase
 {
     /**
-     * Verifies that the expected assertion passes.
+     * Invokes extractFlags with bitmask inputs and a values list that map to known flags.
+     * Confirms the resulting normalized flags are set to true for each mapped feature.
      *
      * @return void
      */
@@ -57,7 +66,8 @@ final class AppleDecoderFlagMaskTest extends TestCase
     }
 
     /**
-     * Verifies that the expected assertion passes.
+     * Supplies bitmask inputs that do not enable any known flags.
+     * Ensures the normalized flags default to false when no bits are matched.
      *
      * @return void
      */

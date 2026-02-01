@@ -20,7 +20,7 @@ use const SEEK_CUR;
 /**
  * Detects the container type of a binary stream based on magic numbers.
  */
-final readonly class FormatDetector implements FormatDetectorInterface
+final readonly class FormatDetector
 {
     /**
      * Box types that can appear before the main ISO BMFF payload.

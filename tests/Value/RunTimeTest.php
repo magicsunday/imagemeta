@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the RunTime value object (CoreMedia CMTime structure).
+ * Exercises the RunTime value object representing CoreMedia CMTime fields.
+ * It verifies epoch, timescale, value, and flags are preserved.
+ * The suite covers null handling for optional runtime metadata.
+ * This keeps timebase metadata consistent for video-related outputs.
  */
 #[CoversClass(RunTime::class)]
 final class RunTimeTest extends TestCase
 {
     /**
-     * Verifies that $runTime->epoch equals 0.
+     * Stores CoreMedia time values and flags.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -44,7 +48,8 @@ final class RunTimeTest extends TestCase
     }
 
     /**
-     * Verifies that $runTime->epoch is null.
+     * Accepts null runtime values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -65,7 +70,8 @@ final class RunTimeTest extends TestCase
     }
 
     /**
-     * Verifies that $runTime->timescale equals 600.
+     * Stores runtime values across different timescales.
+     * It exercises the scenario described by the test name.
      *
      * @return void
      */

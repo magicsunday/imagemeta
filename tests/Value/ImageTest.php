@@ -18,11 +18,20 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the Image value object for dimensions, orientation, and descriptive fields.
+ * It verifies color space, bits-per-sample, and component arrays are preserved.
+ * The suite covers document/title/description metadata and unique IDs.
+ * This ensures image-level metadata remains consistent for consumers.
+ *
+ * @internal
+ */
 #[CoversClass(Image::class)]
 final class ImageTest extends TestCase
 {
     /**
-     * Verifies that $image->width equals 6000.
+     * Exposes image dimensions and related metadata fields.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */

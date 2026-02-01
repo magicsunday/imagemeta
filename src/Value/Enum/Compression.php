@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * Enumerates the TIFF/EXIF compression schemes recorded for the Compression tag
  * in EXIF 3.0 §4.6.5.1.4 (image configuration) and the baseline assignments

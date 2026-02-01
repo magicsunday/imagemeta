@@ -21,13 +21,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the ProcessingSettings value object.
+ * Exercises the ProcessingSettings value object for image tuning parameters.
+ * It verifies contrast, saturation, and sharpness enums are preserved.
+ * The suite covers picture style, clarity, and device setting descriptions when present.
+ * This ensures processing metadata is stable for downstream rendering or display.
  */
 #[CoversClass(ProcessingSettings::class)]
 final class ProcessingSettingsTest extends TestCase
 {
     /**
-     * Verifies that $settings->sharpness equals Sharpness::NORMAL.
+     * Stores basic processing settings enums.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -50,7 +54,8 @@ final class ProcessingSettingsTest extends TestCase
     }
 
     /**
-     * Verifies that $settings->sharpness equals Sharpness::HARD.
+     * Stores full processing settings including device descriptions.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -83,7 +88,8 @@ final class ProcessingSettingsTest extends TestCase
     }
 
     /**
-     * Verifies that $settings->sharpness is null.
+     * Accepts null processing settings values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

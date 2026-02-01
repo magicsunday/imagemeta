@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\MakerNotes\Apple\Support;
 
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
 use function array_find;
 use function array_is_list;

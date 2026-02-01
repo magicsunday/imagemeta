@@ -28,7 +28,10 @@ use function sys_get_temp_dir;
 use function uniqid;
 
 /**
- * Tests covering the ParseError exception raised by stream guard failures.
+ * Exercises ParseError scenarios raised by stream guard failures and read errors.
+ * It triggers short reads and missing-file paths to force parsing failures.
+ * The assertions verify that error messages retain meaningful context.
+ * This ensures parse failures remain explicit and debuggable in client code.
  */
 #[CoversClass(ParseError::class)]
 #[UsesClass(ByteReader::class)]
@@ -39,7 +42,8 @@ final class ParseErrorTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Verifies that ParseError::class is thrown with message 'short read'.
+     * Declares a stream length larger than the payload to force a short read.
+     * It asserts that the short-read ParseError is raised with the expected message.
      *
      * @return void
      */
@@ -55,7 +59,8 @@ final class ParseErrorTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'Cannot open: ' . $path.
+     * Attempts to open a missing file path to trigger an open failure.
+     * It asserts the ParseError message includes the missing path.
      *
      * @return void
      */

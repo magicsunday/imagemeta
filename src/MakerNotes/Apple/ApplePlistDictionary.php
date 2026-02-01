@@ -16,10 +16,10 @@ use function array_key_exists;
 /**
  * Represents dictionary property list values.
  */
-final class ApplePlistDictionary implements ApplePlistValue
+final class ApplePlistDictionary implements ApplePlistValueInterface
 {
     /**
-     * @param array<string, ApplePlistValue> $values
+     * @param array<string, ApplePlistValueInterface> $values
      */
     public function __construct(private array $values)
     {
@@ -42,9 +42,9 @@ final class ApplePlistDictionary implements ApplePlistValue
      *
      * @param string $key Dictionary key.
      *
-     * @return ApplePlistValue|null Value at key or null when missing.
+     * @return ApplePlistValueInterface|null Value at key or null when missing.
      */
-    public function get(string $key): ?ApplePlistValue
+    public function get(string $key): ?ApplePlistValueInterface
     {
         return $this->values[$key] ?? null;
     }
@@ -52,7 +52,7 @@ final class ApplePlistDictionary implements ApplePlistValue
     /**
      * Returns all key-value entries in this plist dictionary.
      *
-     * @return array<string, ApplePlistValue> Dictionary entries.
+     * @return array<string, ApplePlistValueInterface> Dictionary entries.
      */
     public function entries(): array
     {
@@ -62,12 +62,12 @@ final class ApplePlistDictionary implements ApplePlistValue
     /**
      * Returns a cloned dictionary with an additional entry.
      *
-     * @param string          $key   Dictionary key.
-     * @param ApplePlistValue $value Value to add.
+     * @param string                   $key   Dictionary key.
+     * @param ApplePlistValueInterface $value Value to add.
      *
      * @return self Updated dictionary.
      */
-    public function with(string $key, ApplePlistValue $value): self
+    public function with(string $key, ApplePlistValueInterface $value): self
     {
         $clone               = clone $this;
         $clone->values[$key] = $value;

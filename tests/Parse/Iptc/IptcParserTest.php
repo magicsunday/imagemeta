@@ -25,6 +25,14 @@ use function str_repeat;
 use function strlen;
 use function substr;
 
+/**
+ * Exercises IPTC dataset parsing from Photoshop APP13 resource blocks.
+ * It verifies repeated datasets are preserved and extended-length values decode correctly.
+ * The tests include truncated blocks to assert BoundsError/ParseError behavior.
+ * This ensures IPTC extraction remains robust against malformed APP13 payloads.
+ *
+ * @internal
+ */
 #[CoversClass(IptcParser::class)]
 #[UsesClass(IptcDocument::class)]
 final class IptcParserTest extends TestCase
@@ -32,7 +40,8 @@ final class IptcParserTest extends TestCase
     private const string PHOTOSHOP_SIGNATURE = "Photoshop 3.0\0";
 
     /**
-     * Verifies that IPTC datasets are extracted from an APP13 Photoshop block.
+     * Parses IPTC datasets embedded in a Photoshop APP13 resource block.
+     * This confirms multiple values for the same dataset are preserved in order.
      *
      * @return void
      */
@@ -52,7 +61,8 @@ final class IptcParserTest extends TestCase
     }
 
     /**
-     * Verifies that extended-length IPTC datasets decode to full string values.
+     * Uses IPTC extended-length encoding for dataset values.
+     * This verifies that larger payloads are decoded correctly.
      *
      * @return void
      */
@@ -69,7 +79,8 @@ final class IptcParserTest extends TestCase
     }
 
     /**
-     * Verifies that truncated Photoshop resource blocks raise BoundsError.
+     * Truncates the Photoshop resource block to simulate corruption.
+     * This asserts a BoundsError is thrown when the block length is inconsistent.
      *
      * @return void
      */

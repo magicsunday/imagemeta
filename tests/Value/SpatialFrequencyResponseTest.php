@@ -17,20 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for SpatialFrequencyResponse value object.
- *
- * EXIF 3.0 §4.6.3 Table 16 defines SFR structure:
- * - columns: number of spatial frequency columns
- * - rows: number of SFR value rows
- * - columnLabels: frequency values
- * - rowLabels: direction/color labels
- * - values: matrix of RATIONAL response values
+ * Exercises SpatialFrequencyResponse creation from decoded matrix payloads.
+ * It validates column/row sizing and SFR value matrices derived from EXIF data.
+ * The suite ensures missing labels or malformed matrices are rejected.
+ * This keeps SFR metadata aligned with the EXIF structure and expectations.
  */
 #[CoversClass(SpatialFrequencyResponse::class)]
 final class SpatialFrequencyResponseTest extends TestCase
 {
     /**
-     * Verifies that $sfr is not null.
+     * Builds spatial frequency responses from decoded matrix data.
+     * It validates the transformation using representative inputs.
      *
      * @return void
      */
@@ -65,7 +62,8 @@ final class SpatialFrequencyResponseTest extends TestCase
     }
 
     /**
-     * Verifies that SpatialFrequencyResponse::fromMatrix(null) is null.
+     * Returns null for empty or missing SFR matrices.
+     * It verifies the error path and guardrail handling.
      *
      * @return void
      */
@@ -78,7 +76,8 @@ final class SpatialFrequencyResponseTest extends TestCase
     }
 
     /**
-     * Verifies that SpatialFrequencyResponse::fromMatrix($incomplete) is null.
+     * Returns null when required SFR fields are missing.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -94,7 +93,8 @@ final class SpatialFrequencyResponseTest extends TestCase
     }
 
     /**
-     * Verifies that SpatialFrequencyResponse::fromMatrix($matrix) is null.
+     * Rejects SFR matrices with invalid dimension declarations.
+     * It verifies the error path and guardrail handling.
      *
      * @return void
      */

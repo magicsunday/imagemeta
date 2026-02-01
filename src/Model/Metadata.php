@@ -11,19 +11,20 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model;
 
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
 use MagicSunday\ImageMeta\Model\Jpeg\JpegAudioStream;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 /**
  * Aggregates extracted metadata blobs alongside parsed representations.
@@ -148,7 +149,7 @@ final readonly class Metadata
     /**
      * Returns curated structured metadata derived lazily from the available sources.
      */
-    public function structured(): StructuredMetadataFactory
+    public function structured(): StructuredMetadata
     {
         return $this->structuredCache->resolve($this);
     }

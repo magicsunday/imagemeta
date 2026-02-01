@@ -25,7 +25,10 @@ use PHPUnit\Framework\TestCase;
 use function strlen;
 
 /**
- * Dedicated unit tests asserting that guard rails raise informative BoundsError messages.
+ * Exercises BoundsError scenarios triggered by stream and buffer guard rails.
+ * It forces read and seek operations beyond valid limits to ensure exceptions are raised.
+ * The assertions require precise, contextual error messages for debugging.
+ * This keeps bounds violations explicit and actionable instead of silent failures.
  */
 #[CoversClass(BoundsError::class)]
 #[UsesClass(ByteReader::class)]
@@ -37,7 +40,8 @@ final class BoundsErrorTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Verifies that BoundsError::class is thrown with message 'read beyond EOF: 4+1 > 4'.
+     * Attempts to read past EOF after consuming the entire stream.
+     * It verifies the BoundsError message includes the read range and stream size.
      *
      * @return void
      */
@@ -57,7 +61,8 @@ final class BoundsErrorTest extends TestCase
     }
 
     /**
-     * Verifies that BoundsError::class is thrown with message 'MemoryBuffer seek out of range: 6'.
+     * Attempts to seek beyond the buffer length.
+     * It verifies the BoundsError message reports the attempted offset.
      *
      * @return void
      */

@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the File value object.
+ * Exercises the File value object for MIME type, size, and checksum metadata.
+ * It verifies that extension and digest fields are preserved when supplied.
+ * The suite covers null values to ensure optional fields remain nullable.
+ * This keeps file identity and integrity data stable for consumers.
  */
 #[CoversClass(File::class)]
 final class FileTest extends TestCase
 {
     /**
-     * Verifies that $file->mimeType equals 'image/jpeg'.
+     * Stores basic file metadata fields.
+     * It validates the transformation using representative inputs.
      *
      * @return void
      */
@@ -44,7 +48,8 @@ final class FileTest extends TestCase
     }
 
     /**
-     * Verifies that $file->mimeType is null.
+     * Accepts null file metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -65,7 +70,8 @@ final class FileTest extends TestCase
     }
 
     /**
-     * Verifies that $file->mimeType equals 'image/heic'.
+     * Stores HEIC mime types and extensions.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */

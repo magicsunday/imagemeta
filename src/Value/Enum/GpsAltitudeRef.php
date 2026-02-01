@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * GPS altitude reference enumeration.
  *
@@ -18,7 +20,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  * - Values 0/1: Ellipsoidal surface reference (EXIF 3.0)
  * - Values 2/3: Sea level reference (backwards compatible with Version 2.32)
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_ALTITUDE_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_ALTITUDE_REF
  */
 enum GpsAltitudeRef: int
 {

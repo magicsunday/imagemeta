@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\imagemeta\tests\Parse\Xmp;
+namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
@@ -19,8 +19,10 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests that XMP parser correctly extracts all properties from complex multi-namespace documents.
- * Validates fix for issue where tiff namespace properties (Model, Orientation, etc.) were missing.
+ * Exercises the XMP parser with multiple rdf:Description blocks across namespaces.
+ * It verifies that EXIF and TIFF properties are extracted even when split across descriptions.
+ * The test asserts namespace prefixes are preserved and values are not dropped.
+ * This guards against regressions where one namespace would overshadow another.
  */
 #[CoversClass(XmpParser::class)]
 #[UsesClass(XmpDocument::class)]
@@ -31,7 +33,8 @@ final class XmpParserCompleteExtractionTest extends TestCase
     private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
 
     /**
-     * Verifies that EXIF/TIFF properties are extracted across multiple rdf:Description nodes.
+     * Parses an XMP document with separate rdf:Description blocks for EXIF and TIFF namespaces.
+     * Verifies the parser extracts all properties across descriptions and records namespace prefixes.
      *
      * @return void
      */
@@ -102,7 +105,8 @@ XML;
     }
 
     /**
-     * Verifies that x:xmptk metadata attributes are captured on the document.
+     * Uses an x:xmpmeta wrapper that declares an xmptk attribute.
+     * Ensures the parser exposes xmptk as a property in the metadata document.
      *
      * @return void
      */
@@ -127,7 +131,8 @@ XML;
     }
 
     /**
-     * Verifies that decimal values are preserved as strings during extraction.
+     * Provides decimal-valued TIFF properties inside an RDF description.
+     * Confirms the parser preserves decimal strings without normalization.
      *
      * @return void
      */

@@ -31,7 +31,10 @@ use const SEEK_CUR;
 use const SEEK_END;
 
 /**
- * Property-based regression tests that ensure the binary access implementations stay aligned.
+ * Exercises MemoryBuffer, Stream, and StreamWindow using randomized payloads and offsets.
+ * It runs identical read/seek sequences across implementations and compares the outputs.
+ * The tests validate cursor movement, bounds checks, and slice offsets remain consistent.
+ * This guards against subtle regressions in binary access primitives under varied inputs.
  */
 #[CoversClass(MemoryBuffer::class)]
 #[UsesClass(ByteReader::class)]
@@ -44,7 +47,8 @@ final class BinaryReadAccessPropertyTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Verifies that $this->consumeReader($stream) equals $this->consumeReader($buffer).
+     * Compares MemoryBuffer and Stream by executing the same read/seek sequence on random payloads.
+     * This guards against divergence in cursor movement, bounds handling, or integer decoding.
      *
      * @return void
      */
@@ -66,7 +70,8 @@ final class BinaryReadAccessPropertyTest extends TestCase
     }
 
     /**
-     * Verifies that $this->consumeReader($window) equals $this->consumeReader($buffer).
+     * Compares StreamWindow reads to a buffer slice for random offsets and window sizes.
+     * This validates that windowed access preserves offsets and bounds behavior.
      *
      * @return void
      */
@@ -100,7 +105,7 @@ final class BinaryReadAccessPropertyTest extends TestCase
     }
 
     /**
-     * Collects a selection of read operations to compare different implementations deterministically.
+     * Collects a deterministic mix of reads and seeks for cross-implementation comparison.
      *
      * @return array<int, int|string>
      */

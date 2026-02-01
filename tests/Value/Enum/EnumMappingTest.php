@@ -14,7 +14,6 @@ namespace MagicSunday\ImageMeta\Tests\Value\Enum;
 use MagicSunday\ImageMeta\Value\Enum\CompositeImage;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\CustomRendered;
-use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Enum\ExposureMode;
 use MagicSunday\ImageMeta\Value\Enum\FileSource;
 use MagicSunday\ImageMeta\Value\Enum\GainControl;
@@ -35,13 +34,17 @@ use MagicSunday\ImageMeta\Value\Enum\SensingMethod;
 use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Enum mapping tests.
+ * Exercises enum conversion helpers for EXIF-backed numeric values.
+ * It verifies that numeric strings and ints map to the correct enum cases.
+ * The suite covers multiple EXIF enums such as metering, light source, and GPS refs.
+ * This keeps enum normalization consistent across structured metadata.
  */
 #[CoversClass(Photometric::class)]
 #[CoversClass(ResolutionUnit::class)]
@@ -64,7 +67,8 @@ use PHPUnit\Framework\TestCase;
 final class EnumMappingTest extends TestCase
 {
     /**
-     * Verifies that Compression::fromExifValue(6) equals Compression::JPEG.
+     * Maps common numeric EXIF codes to their corresponding enum values.
+     * Ensures valid codes return enums while unsupported codes yield null when specified.
      *
      * @return void
      */
@@ -88,7 +92,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Compression::fromExifValue('6') equals Compression::JPEG.
+     * Supplies numeric values as strings for multiple enum types.
+     * Confirms string inputs are normalized and mapped to the expected enums.
      *
      * @return void
      */
@@ -102,7 +107,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Orientation::fromExifValue('6') equals Orientation::RIGHT_TOP.
+     * Uses string payloads for orientation, metering mode, and scene capture codes.
+     * Verifies these string codes resolve to the correct enum variants.
      *
      * @return void
      */
@@ -117,7 +123,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that CustomRendered::fromExifValue(0) equals CustomRendered::NORMAL_PROCESS.
+     * Checks shooting-condition enums with a mix of valid and invalid values.
+     * Ensures supported codes map to enums while invalid codes return null.
      *
      * @return void
      */
@@ -138,7 +145,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Compression::fromExifValue('') is null.
+     * Passes empty and non-numeric strings into enum mapping helpers.
+     * Confirms these inputs are rejected and return null.
      *
      * @return void
      */
@@ -150,7 +158,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that FileSource::fromExifValue(0x8000) is null.
+     * Uses a vendor-specific FileSource code outside the EXIF-defined range.
+     * Ensures the mapping ignores vendor-specific codes and returns null.
      *
      * @return void
      */
@@ -161,7 +170,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Orientation::fromExifValue(9) is null.
+     * Supplies an out-of-range orientation code.
+     * Verifies the mapping returns null for unsupported orientation values.
      *
      * @return void
      */
@@ -172,7 +182,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that SubjectDistanceRange::fromExifValue(4) is null.
+     * Uses reserved SubjectDistanceRange codes that should not be mapped.
+     * Confirms the mapping returns null for reserved values.
      *
      * @return void
      */
@@ -184,7 +195,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that CompositeImage::fromExifValue(4) is null.
+     * Uses reserved CompositeImage codes outside the defined range.
+     * Ensures the mapping rejects them by returning null.
      *
      * @return void
      */
@@ -196,7 +208,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Photometric::fromExifValue(0) is null.
+     * Supplies photometric codes that are reserved or invalid.
+     * Verifies the mapping returns null for these unsupported values.
      *
      * @return void
      */
@@ -209,7 +222,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that GpsSpeedRef::fromExifValue('K') equals GpsSpeedRef::KILOMETERS_PER_HOUR.
+     * Maps GPS reference and status codes expressed as strings to enum values.
+     * Ensures each EXIF Table 27 code resolves to the correct enum.
      *
      * @return void
      */
@@ -246,7 +260,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that GpsSpeedRef::fromExifValue('X') is null.
+     * Provides invalid GPS reference/status codes.
+     * Confirms the mapping returns null for unsupported GPS string values.
      *
      * @return void
      */
@@ -262,7 +277,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Orientation::UNKNOWN->rotationDescription() equals 'Unknown'.
+     * Checks rotationDescription strings for all orientation enum values.
+     * Ensures each description matches the expected rotation/mirroring semantics.
      *
      * @return void
      */
@@ -281,7 +297,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Orientation::UNKNOWN->rotationDegrees() equals 0.
+     * Verifies rotationDegrees for each orientation enum value.
+     * Confirms the degrees align with the expected rotation direction.
      *
      * @return void
      */
@@ -300,7 +317,8 @@ final class EnumMappingTest extends TestCase
     }
 
     /**
-     * Verifies that Orientation::UNKNOWN->isMirrored() is false.
+     * Evaluates isMirrored across all orientation enum values.
+     * Ensures the mirror flag matches the expected orientation semantics.
      *
      * @return void
      */

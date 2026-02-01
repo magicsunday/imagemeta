@@ -9,22 +9,27 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\imagemeta\tests\Model\Xmp;
+namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises XmpDocument merging and value aggregation behavior.
+ * It verifies duplicate properties are combined into arrays across documents.
+ * The suite checks namespace prefix maps are merged without losing existing prefixes.
+ * This keeps XMP document composition consistent when multiple packets are combined.
+ *
+ * @internal
+ */
 #[CoversClass(XmpDocument::class)]
 final class XmpDocumentTest extends TestCase
 {
     /**
-     * Verifies that $merged->data equals [
-     * '{ns1}PropA' => ['ValueA', 'ValueB'],
-     * '{ns2}List'  => ['One', 'Two'],
-     * '{ns3}PropC' => 'C',
-     * ].
+     * Merges duplicate keys into arrays and combines namespace prefixes.
+     * It exercises the scenario described by the test name.
      *
      * @return void
      */
@@ -75,7 +80,8 @@ final class XmpDocumentTest extends TestCase
     }
 
     /**
-     * Verifies that $merged->data equals [].
+     * Returns an empty document when merging no inputs.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

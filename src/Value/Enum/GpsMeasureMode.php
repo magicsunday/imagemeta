@@ -11,13 +11,15 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * GPS measurement mode enumeration.
  *
  * EXIF 3.0 §4.6.6 Table 27 (GPS Attribute Information) defines the GPSMeasureMode tag
  * which indicates the GPS measurement mode (2D or 3D).
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_MEASURE_MODE
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_MEASURE_MODE
  */
 enum GpsMeasureMode: string
 {

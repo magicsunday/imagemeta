@@ -48,7 +48,10 @@ use function tempnam;
 use function unlink;
 
 /**
- * Exercises the JPEG extractor using synthetic marker segments.
+ * Exercises the JPEG parser using synthetic marker segments and APP payloads.
+ * It validates extraction of EXIF, XMP, ICC profiles, FlashPix, IPTC, MPF, and audio streams.
+ * The suite includes malformed markers and length mismatches to confirm guardrail errors.
+ * This ensures JPEG parsing remains resilient while preserving segment ordering and data.
  */
 #[UsesClass(Stream::class)]
 #[UsesClass(ByteReader::class)]
@@ -90,7 +93,8 @@ final class JpegParserTest extends TestCase
     private const int MARKER_SOF2 = 0xC2;
 
     /**
-     * Verifies that EXIF blobs and XMP packets are extracted regardless of APP1 order.
+     * Extracts EXIF and XMP from APP1 segments in different orders.
+     * This verifies both payload types are found regardless of segment ordering.
      *
      * @param list<string> $segments
      * @param list<string> $expectedExif
@@ -112,6 +116,7 @@ final class JpegParserTest extends TestCase
 
     /**
      * Provides APP1 segment permutations mixing EXIF and XMP payloads.
+     * These fixtures exercise the ordering logic in the extractor.
      *
      * @return iterable<string, array{0: list<string>, 1: list<string>, 2: list<string>}>
      */
@@ -152,7 +157,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that multiple large EXIF APP1 segments are all collected.
+     * Supplies two large EXIF segments that exceed 64 KB when combined.
+     * This ensures multiple APP1 EXIF blobs are collected and returned intact.
      *
      * @return void
      */
@@ -172,7 +178,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that identical XMP packets are deduplicated to unique entries.
+     * Repeats identical XMP segments alongside unique ones.
+     * This verifies deduplication keeps only distinct XMP packets.
      *
      * @return void
      */
@@ -198,7 +205,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that unknown APP markers do not prevent EXIF and XMP extraction.
+     * Interleaves unknown APP markers with EXIF and XMP segments.
+     * This confirms unknown segments are skipped without affecting known payload extraction.
      *
      * @return void
      */
@@ -224,7 +232,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that multi-part ICC segments are merged into a single profile blob.
+     * Provides ICC profile split across multiple APP2 segments.
+     * This verifies segment buffering and reassembly of the full ICC profile.
      *
      * @return void
      */
@@ -245,7 +254,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that FlashPix segments are concatenated into a single stream.
+     * Supplies two FlashPix fragments for a single stream.
+     * This confirms sequence ordering and stream reassembly.
      *
      * @return void
      */
@@ -267,7 +277,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that FlashPix segments are grouped by stream identifier.
+     * Interleaves FlashPix fragments for multiple stream IDs.
+     * This verifies that each stream is reconstructed independently.
      *
      * @return void
      */
@@ -290,7 +301,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that EXIF audio APP2 segments decode into audio stream metadata.
+     * Adds both MU_LAW and PCM audio payloads in APP2 segments.
+     * This verifies audio stream parsing and metadata decoding for each format.
      *
      * @return void
      */
@@ -326,7 +338,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that unsupported PCM sample rates raise ParseError.
+     * Uses a PCM audio segment with an unsupported sample rate.
+     * This asserts a ParseError is thrown for unsupported audio configurations.
      *
      * @return void
      */
@@ -344,7 +357,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that mu-law audio rejects sample rates other than 8 kHz.
+     * Uses a MU_LAW audio segment with a non-8kHz sample rate.
+     * This verifies the MU_LAW constraints are enforced with a ParseError.
      *
      * @return void
      */
@@ -362,7 +376,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that split MPF segments are buffered and parsed into a document.
+     * Splits an MPF payload across two APP2 segments.
+     * This confirms the MPF parser receives a reassembled payload with expected entries.
      *
      * @return void
      */
@@ -404,7 +419,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that empty MPF segments trigger ParseError.
+     * Provides an MPF segment that contains only the signature.
+     * This verifies the parser rejects missing MPF payload data.
      *
      * @return void
      */
@@ -422,7 +438,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that inconsistent FlashPix sequence metadata discards the stream.
+     * Uses a mismatched FlashPix fragment count for a stream.
+     * This confirms invalid sequences are discarded rather than partially assembled.
      *
      * @return void
      */
@@ -440,7 +457,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that raw IPTC APP13 resource blocks are collected.
+     * Embeds two IPTC APP13 payloads with different values.
+     * This verifies IPTC payloads are collected as raw blobs.
      *
      * @return void
      */
@@ -460,7 +478,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that file-backed streams yield EXIF and XMP segments.
+     * Writes a JPEG to disk and parses it via Stream::fromPath.
+     * This ensures file-backed streams behave the same as in-memory buffers.
      *
      * @return void
      */
@@ -496,7 +515,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that SOF payloads provide precision, size, and sampling factors.
+     * Builds a SOF frame payload with explicit component sampling factors.
+     * Verifies the parser extracts precision, dimensions, and derived YCbCr subsampling.
      *
      * @param int $marker
      *
@@ -529,7 +549,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that illegal or reserved YCbCr subsampling values are rejected.
+     * Uses sampling factors that yield illegal and reserved subsampling ratios.
+     * Ensures the derived YCbCr subsampling is rejected and returns null.
      *
      * @return void
      */
@@ -597,6 +618,7 @@ final class JpegParserTest extends TestCase
 
     /**
      * Provides malformed JPEG structures expected to raise parse errors.
+     * Each fixture triggers a different guardrail in segment length handling.
      *
      * @return iterable<string, array{0: string, 1: string}>
      */
@@ -612,7 +634,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that invalid segment lengths and truncation raise ParseError.
+     * Parses malformed JPEG fixtures and asserts the ParseError message matches.
+     * This verifies guardrails for short lengths, truncation, and FlashPix header errors.
      *
      * @param string $jpeg           Binary JPEG fixture provided by the data set.
      * @param string $messagePattern Regular expression expected in the error message.
@@ -632,7 +655,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that parsing stops at SOS and ignores restart markers afterward.
+     * Inserts a Start of Scan marker followed by restart markers and extra APP data.
+     * This confirms parsing stops at SOS and ignores metadata after scan data begins.
      *
      * @return void
      */
@@ -661,7 +685,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that segments after EOI are ignored.
+     * Places valid APP segments before EOI and additional segments after EOI.
+     * This verifies segments after EOI are ignored while earlier metadata is preserved.
      *
      * @return void
      */
@@ -692,7 +717,8 @@ final class JpegParserTest extends TestCase
     }
 
     /**
-     * Verifies that malformed bytes after EOI are skipped without affecting results.
+     * Adds malformed trailing bytes after EOI with an oversized length field.
+     * This confirms the parser ignores post-EOI garbage without raising errors.
      *
      * @return void
      */
@@ -719,6 +745,7 @@ final class JpegParserTest extends TestCase
 
     /**
      * Builds a JPEG binary by wrapping payload segments with SOI/EOI markers.
+     * This helper keeps fixture construction concise across tests.
      *
      * @param string ...$segments
      *
@@ -731,6 +758,7 @@ final class JpegParserTest extends TestCase
 
     /**
      * Wraps a payload with a JPEG marker and two-byte length field.
+     * This helper standardizes APP segment construction for tests.
      *
      * @param int    $marker
      * @param string $payload
@@ -770,9 +798,11 @@ final class JpegParserTest extends TestCase
 
     /**
      * Builds a FlashPix APP2 payload with the provided header parameters.
+     * The payload includes stream ID, sequence numbers, and raw data bytes.
      */
     /**
      * Builds a synthetic MPF payload containing two entries and attribute metadata.
+     * This fixture is used to validate MPF segment buffering and parsing.
      */
     private function buildMpfPayload(): string
     {
@@ -838,6 +868,7 @@ final class JpegParserTest extends TestCase
 
     /**
      * Builds a FlashPix APP2 payload with the provided header parameters.
+     * The sequence and count fields mirror FlashPix segment numbering.
      */
     private function fpxrPayload(int $streamId, int $sequence, int $count, string $data): string
     {
@@ -846,6 +877,7 @@ final class JpegParserTest extends TestCase
 
     /**
      * Builds an EXIF audio APP2 payload with the provided metadata fields.
+     * It computes sample count for PCM formats and appends the raw audio data.
      */
     private function audioPayload(int $format, int $channels, int $sampleRate, int $bitDepth, string $data): string
     {
@@ -871,6 +903,7 @@ final class JpegParserTest extends TestCase
 
     /**
      * Creates a stream-backed extractor for an in-memory JPEG binary.
+     * This helper keeps parser instantiation consistent across tests.
      *
      * @param string $jpeg
      *

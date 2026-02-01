@@ -18,15 +18,17 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use DateTimeZone;
 use MagicSunday\ImageMeta\MetadataReader;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Exif\ValueConverters;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Mpf\MpfDocument;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
@@ -62,7 +64,7 @@ use MagicSunday\ImageMeta\Value\Enum\SubjectDistanceRange;
 use MagicSunday\ImageMeta\Value\Enum\WhiteBalance;
 use MagicSunday\ImageMeta\Value\Enum\YCbCrPositioning;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
-use MagicSunday\ImageMeta\Value\ExifFlash;
+use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use ReflectionClass;
 use ReflectionProperty;
 use Throwable;
@@ -131,6 +133,17 @@ foreach ($autoloadPaths as $autoloadPath) {
 final class MetadataFormatter
 {
     private const string VERSION = '1.0.0';
+
+    /**
+     * Maps QuickTime metadata keys to numeric QuickTime tag labels for exiftool-like output.
+     *
+     * @var array<string, string>
+     */
+    private const array QUICKTIME_KEY_LABELS = [
+        QuickTimeMeta::MAJOR_BRAND_KEY       => '0x0000 Major Brand',
+        QuickTimeMeta::MINOR_VERSION_KEY     => '0x0001 Minor Version',
+        QuickTimeMeta::COMPATIBLE_BRANDS_KEY => '0x0002 Compatible Brands',
+    ];
 
     /**
      * Maps tag IDs to their human-readable names for EXIF tags.
@@ -533,6 +546,10 @@ final class MetadataFormatter
      */
     private function formatEnumName(string $enumName): string
     {
+        if ($enumName === 'SRGB') {
+            return 'sRGB';
+        }
+
         // Split by underscore and convert each part to title case
         $parts = explode('_', $enumName);
         $parts = array_map(static fn (string $part): string => ucfirst(strtolower($part)), $parts);
@@ -569,6 +586,11 @@ final class MetadataFormatter
         // File section
         $this->printFileSection($metadata, $filePath);
 
+        $jfifData = $this->readJfifData($filePath);
+        if ($jfifData !== null) {
+            $this->printJfifSection($jfifData);
+        }
+
         // IFD0 section
         if ($metadata->exifDoc instanceof ParsedExif) {
             $this->printIfd0Section($metadata->exifDoc);
@@ -600,7 +622,7 @@ final class MetadataFormatter
         }
 
         // XMP sections
-        $this->printXmpSections($metadata->xmpDoc ?? $metadata->selectiveXmpDocument());
+        $this->printXmpSections($metadata->xmpDoc ?? $metadata->selectiveXmpDocument(), $metadata->exifDoc);
 
         // QuickTime section
         if ($metadata->quickTime instanceof QuickTimeMeta) {
@@ -656,6 +678,12 @@ final class MetadataFormatter
                 // Format with exactly 40 characters before the colon
                 // hex(6) + space(1) + tag name (padded to fill remaining 33 chars) = 40 total
                 $label = sprintf('%s %s', $hexKey, $tagName);
+                printf("%-39s: %s\n", $label, $formattedValue);
+            } elseif (!$showHex && is_string($key) && preg_match('/^0x[0-9a-fA-F]{4}\\s/', $key) === 1) {
+                $label = $key;
+                printf("%-39s: %s\n", $label, $formattedValue);
+            } elseif (!$showHex && is_string($key) && preg_match('/^[a-z0-9]{4}\\s/', $key) === 1) {
+                $label = $key;
                 printf("%-39s: %s\n", $label, $formattedValue);
             } else {
                 // Format with exactly 40 characters before the colon
@@ -767,6 +795,10 @@ final class MetadataFormatter
                 return $this->formatGpsValue($tagId, $decimal);
             }
 
+            if ($value->denominator === 1) {
+                return (string) $value->numerator;
+            }
+
             // If it's a simple fraction, show as fraction
             if ($value->denominator !== 1 && abs($decimal) < 10) {
                 return sprintf('%d/%d', $value->numerator, $value->denominator);
@@ -829,6 +861,16 @@ final class MetadataFormatter
         }
 
         if (is_float($value)) {
+            if ($tagId === ExifTag::FOCAL_LENGTH) {
+                $formatted = rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.');
+
+                return $formatted . ' mm';
+            }
+
+            if ($tagId === ExifTag::F_NUMBER || $tagId === ExifTag::APERTURE_VALUE || $tagId === ExifTag::MAX_APERTURE_VALUE) {
+                return rtrim(rtrim(number_format($value, 1, '.', ''), '0'), '.');
+            }
+
             // Clean up unnecessary decimals
             $formatted = number_format($value, 10, '.', '');
 
@@ -904,6 +946,130 @@ final class MetadataFormatter
     }
 
     /**
+     * Formats YCbCr subsampling factors into an ExifTool-like label.
+     */
+    private function formatYcbcrSubSampling(int $horizontal, int $vertical): string
+    {
+        $label = match (true) {
+            ($horizontal === 2) && ($vertical === 2) => 'YCbCr4:2:0',
+            ($horizontal === 2) && ($vertical === 1) => 'YCbCr4:2:2',
+            ($horizontal === 1) && ($vertical === 1) => 'YCbCr4:4:4',
+            default => sprintf('YCbCr %d:%d', $horizontal, $vertical),
+        };
+
+        return sprintf('%s (%d %d)', $label, $horizontal, $vertical);
+    }
+
+    /**
+     * Formats component configuration labels as a comma-separated string.
+     *
+     * @param list<string>|null $labels
+     */
+    private function formatComponentsConfiguration(?array $labels): ?string
+    {
+        if ($labels === null || $labels === []) {
+            return null;
+        }
+
+        if (count($labels) < 4) {
+            $labels = array_pad($labels, -4, '-');
+        }
+
+        return implode(', ', $labels);
+    }
+
+    /**
+     * Formats XYZ triplets for ICC output.
+     *
+     * @param array{x: float, y: float, z: float} $xyz
+     */
+    private function formatXyzTriplet(array $xyz): string
+    {
+        return sprintf(
+            '%.5f %.5f %.5f',
+            $xyz['x'],
+            $xyz['y'],
+            $xyz['z'],
+        );
+    }
+
+    /**
+     * Formats ICC header keys with offsets.
+     */
+    private function formatIccHeaderKey(int $offset, string $label): string
+    {
+        return sprintf('0x%04x %s', $offset, $label);
+    }
+
+    /**
+     * Decodes ICC profile flags into human-readable labels.
+     *
+     * ICC.1:2022 Table 21 — Profile flags.
+     */
+    private function decodeIccProfileFlags(string $hex): string
+    {
+        $hex = strtolower(trim($hex));
+        $lastNibble = $hex === '' ? 0 : hexdec($hex[strlen($hex) - 1]);
+
+        $embedded = ($lastNibble & 0x1) !== 0 ? 'Embedded' : 'Not Embedded';
+        $dependent = ($lastNibble & 0x2) !== 0 ? 'Dependent' : 'Independent';
+
+        return $embedded . ', ' . $dependent . ' (' . strtoupper($hex) . ')';
+    }
+
+    /**
+     * Decodes ICC device attributes into human-readable labels.
+     *
+     * ICC.1:2022 Table 22 — Device attributes.
+     */
+    private function decodeIccDeviceAttributes(string $hex): string
+    {
+        $hex = strtolower(trim($hex));
+        $lastNibble = $hex === '' ? 0 : hexdec($hex[strlen($hex) - 1]);
+
+        $reflective = ($lastNibble & 0x1) !== 0 ? 'Transparency' : 'Reflective';
+        $glossy = ($lastNibble & 0x2) !== 0 ? 'Matte' : 'Glossy';
+        $polarity = ($lastNibble & 0x4) !== 0 ? 'Negative' : 'Positive';
+        $color = ($lastNibble & 0x8) !== 0 ? 'Black & White' : 'Color';
+
+        return $reflective . ', ' . $glossy . ', ' . $polarity . ', ' . $color . ' (' . strtoupper($hex) . ')';
+    }
+
+    /**
+     * Normalises XMP values to match ExifTool-style output for key fields.
+     */
+    private function formatXmpValue(string $prefix, string $localName, mixed $value, ?ParsedExif $exifDoc): mixed
+    {
+        if ($prefix !== 'exif') {
+            return $value;
+        }
+
+        if ($localName === 'ExposureTime' && is_numeric($value)) {
+            $formatted = ValueConverters::formatExposureTime((float) $value);
+
+            return $formatted ?? $value;
+        }
+
+        if ($localName === 'ShutterSpeedValue' && is_numeric($value)) {
+            $floatVal = (float) $value;
+            $formatted = ValueConverters::formatShutterSpeedFromApex($floatVal);
+            if ($formatted !== null) {
+                return $formatted;
+            }
+
+            return rtrim(rtrim(number_format($floatVal, 6, '.', ''), '0'), '.');
+        }
+
+        if (($localName === 'ExposureBiasValue' || $localName === 'DigitalZoomRatio') && is_numeric($value)) {
+            $floatVal = (float) $value;
+
+            return rtrim(rtrim(number_format($floatVal, 10, '.', ''), '0'), '.');
+        }
+
+        return $value;
+    }
+
+    /**
      * Checks if a string contains binary data.
      */
     private function isBinary(string $data): bool
@@ -911,6 +1077,7 @@ final class MetadataFormatter
         // Check for null bytes or other control characters
         return preg_match('/[\x00-\x08\x0B-\x0C\x0E-\x1F]/', $data) === 1;
     }
+
 
     /**
      * Prints the System section with file system metadata.
@@ -967,7 +1134,7 @@ final class MetadataFormatter
         return match ($tagId) {
             // ComponentsConfiguration - Use ParsedExif accessor that returns formatted description
             // EXIF 3.0 §4.6.4 Table 17
-            ExifTag::COMPONENTS_CONFIGURATION => $exifDoc->componentsConfigurationDescription(),
+            ExifTag::COMPONENTS_CONFIGURATION => $this->formatComponentsConfiguration($exifDoc->componentsConfigurationLabels()),
 
             // SceneType - Use ParsedExif accessor that returns typed enum
             // EXIF 3.0 §4.6.3 Table 13
@@ -991,7 +1158,7 @@ final class MetadataFormatter
 
             // ApertureValue - Convert APEX value to f-number
             // EXIF 3.0 §4.6.6.7.14
-            ExifTag::APERTURE_VALUE => $exifDoc->apertureValueFormatted(),
+            ExifTag::APERTURE_VALUE => ValueConverters::apexToFNumber($exifDoc->apertureValue()),
 
             // BrightnessValue - Convert APEX value to decimal EV
             // EXIF 3.0 §4.6.6.7.15
@@ -1000,6 +1167,22 @@ final class MetadataFormatter
             // ExposureTime - Format as human-readable fraction
             // EXIF 3.0 §4.6.6.7.1
             ExifTag::EXPOSURE_TIME => $exifDoc->exposureTimeFormatted(),
+
+            // FNumber - Format as decimal f-number
+            // EXIF 3.0 §4.6.6.7.2
+            ExifTag::F_NUMBER => $exifDoc->fNumber(),
+
+            // MaxApertureValue - Convert APEX to f-number
+            // EXIF 3.0 §4.6.6.7.17
+            ExifTag::MAX_APERTURE_VALUE => ValueConverters::apexToFNumber($exifDoc->maxApertureApex()),
+
+            // FocalLength - Format in millimetres
+            // EXIF 3.0 §4.6.6.7.23
+            ExifTag::FOCAL_LENGTH => $exifDoc->focalLengthMm(),
+
+            // UserComment - Decode multicode prefix and payload
+            // EXIF 3.0 §4.6.6.4.2
+            ExifTag::USER_COMMENT => $exifDoc->userComment(),
 
             // No special accessor available
             default => null,
@@ -1011,20 +1194,23 @@ final class MetadataFormatter
      */
     private function formatFileSize(int|false $bytes): string
     {
-        if ($bytes === false) {
+        if ($bytes === false || $bytes < 0) {
             return 'unknown';
         }
 
-        $units = ['bytes', 'kB', 'MB', 'GB'];
-        $i     = 0;
-        $size  = (float) $bytes;
-
-        while ($size >= 1024 && $i < count($units) - 1) {
-            $size /= 1024;
-            ++$i;
+        if ($bytes < 1000) {
+            return $bytes . ' bytes';
         }
 
-        return round($size, 1) . ' ' . $units[$i];
+        if ($bytes < 10 * 1000 * 1000) {
+            return round($bytes / 1000) . ' kB';
+        }
+
+        if ($bytes < 1000 * 1000 * 1000) {
+            return round($bytes / (1000 * 1000), 1) . ' MB';
+        }
+
+        return round($bytes / (1000 * 1000 * 1000), 1) . ' GB';
     }
 
     /**
@@ -1123,10 +1309,9 @@ final class MetadataFormatter
 
         // Add YCbCr subsampling if available
         if ($metadata->jpegYCbCrSubSampling !== null) {
-            $data['YCbCr Sub Sampling'] = sprintf(
-                'YCbCr %d:%d',
+            $data['YCbCr Sub Sampling'] = $this->formatYcbcrSubSampling(
                 $metadata->jpegYCbCrSubSampling[0],
-                $metadata->jpegYCbCrSubSampling[1]
+                $metadata->jpegYCbCrSubSampling[1],
             );
         }
 
@@ -1153,6 +1338,107 @@ final class MetadataFormatter
         }
 
         $this->printSection('File', $data);
+    }
+
+    /**
+     * Prints the JFIF section when APP0 metadata is present.
+     *
+     * @param array{version:string,unit:string,xResolution:int,yResolution:int} $jfifData
+     */
+    private function printJfifSection(array $jfifData): void
+    {
+        $data = [
+            '0x0000 JFIF Version' => $jfifData['version'],
+            '0x0002 Resolution Unit' => $jfifData['unit'],
+            '0x0003 X Resolution' => $jfifData['xResolution'],
+            '0x0005 Y Resolution' => $jfifData['yResolution'],
+        ];
+
+        $this->printSection('JFIF', $data);
+    }
+
+    /**
+     * Attempts to read JFIF APP0 metadata from a JPEG file.
+     *
+     * @return array{version:string,unit:string,xResolution:int,yResolution:int}|null
+     */
+    private function readJfifData(string $filePath): ?array
+    {
+        $handle = @fopen($filePath, 'rb');
+        if ($handle === false) {
+            return null;
+        }
+
+        $start = fread($handle, 2);
+        if ($start !== "\xFF\xD8") {
+            fclose($handle);
+            return null;
+        }
+
+        while (!feof($handle)) {
+            $markerStart = fread($handle, 1);
+            if ($markerStart === '' || $markerStart === false) {
+                break;
+            }
+
+            if ($markerStart !== "\xFF") {
+                continue;
+            }
+
+            $marker = fread($handle, 1);
+            if ($marker === '' || $marker === false) {
+                break;
+            }
+
+            $markerByte = ord($marker);
+            if ($markerByte === 0xD9 || $markerByte === 0xDA) {
+                break;
+            }
+
+            $lengthBytes = fread($handle, 2);
+            if ($lengthBytes === '' || $lengthBytes === false || strlen($lengthBytes) !== 2) {
+                break;
+            }
+
+            $length = unpack('nlen', $lengthBytes)['len'] ?? 0;
+            if ($length < 2) {
+                break;
+            }
+
+            $payloadLength = $length - 2;
+            $payload       = $payloadLength > 0 ? fread($handle, $payloadLength) : '';
+
+            if ($markerByte === 0xE0 && is_string($payload) && str_starts_with($payload, "JFIF\0")) {
+                if (strlen($payload) < 14) {
+                    break;
+                }
+
+                $major = ord($payload[5]);
+                $minor = ord($payload[6]);
+                $unitCode = ord($payload[7]);
+                $xDensity = unpack('n', substr($payload, 8, 2))[1] ?? 0;
+                $yDensity = unpack('n', substr($payload, 10, 2))[1] ?? 0;
+
+                $unit = match ($unitCode) {
+                    1 => 'inches',
+                    2 => 'cm',
+                    default => 'None',
+                };
+
+                fclose($handle);
+
+                return [
+                    'version' => sprintf('%d.%02d', $major, $minor),
+                    'unit' => $unit,
+                    'xResolution' => $xDensity,
+                    'yResolution' => $yDensity,
+                ];
+            }
+        }
+
+        fclose($handle);
+
+        return null;
     }
 
     /**
@@ -1305,7 +1591,7 @@ final class MetadataFormatter
     /**
      * Prints XMP sections.
      */
-    private function printXmpSections(?XmpDocument $xmpDoc): void
+    private function printXmpSections(?XmpDocument $xmpDoc, ?ParsedExif $exifDoc = null): void
     {
         if ((!$xmpDoc instanceof XmpDocument) || !isset($xmpDoc->data)) {
             return;
@@ -1330,14 +1616,14 @@ final class MetadataFormatter
                     $grouped[$prefix] = [];
                 }
 
-                $grouped[$prefix][$localName] = $convertedValue;
+                $grouped[$prefix][$localName] = $this->formatXmpValue($prefix, $localName, $convertedValue, $exifDoc);
             } else {
                 // No namespace - use 'unknown' prefix
                 if (!isset($grouped['unknown'])) {
                     $grouped['unknown'] = [];
                 }
 
-                $grouped['unknown'][$clarkNotation] = $value;
+                $grouped['unknown'][$clarkNotation] = $this->formatXmpValue('unknown', $clarkNotation, $value, $exifDoc);
             }
         }
 
@@ -1361,36 +1647,103 @@ final class MetadataFormatter
     {
         $parser  = new IccParser();
         $iccData = $parser->decode($iccProfile);
-        $data    = [];
+        $header  = [];
+        $profile = [];
 
         if ($iccData !== null) {
-            if ($iccData['description'] !== null) {
-                $data['Profile Description'] = $iccData['description'];
+            if ($iccData['cmmType'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::CMM_TYPE, 'Profile CMM Type')] = $iccData['cmmType'];
             }
 
             if ($iccData['version'] !== null) {
-                $data['Profile Version'] = $iccData['version'];
+                $header[$this->formatIccHeaderKey(IccTag::PROFILE_VERSION, 'Profile Version')] = $iccData['version'];
+            }
+
+            if ($iccData['profileClass'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::PROFILE_CLASS, 'Profile Class')] = $iccData['profileClass'];
+            }
+
+            if ($iccData['colorSpace'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::COLOR_SPACE, 'Color Space Data')] = $iccData['colorSpace'];
             }
 
             if ($iccData['pcs'] !== null) {
-                $data['Profile Connection Space'] = $iccData['pcs'];
+                $header[$this->formatIccHeaderKey(IccTag::PCS, 'Profile Connection Space')] = $iccData['pcs'];
+            }
+
+            if ($iccData['profileDateTime'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::PROFILE_DATE_TIME, 'Profile Date Time')] = $iccData['profileDateTime'];
+            }
+
+            if ($iccData['profileSignature'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::PROFILE_SIGNATURE, 'Profile File Signature')] = $iccData['profileSignature'];
+            }
+
+            if ($iccData['profileFlags'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::PROFILE_FLAGS, 'Profile Flags')] = $this->decodeIccProfileFlags(
+                    $iccData['profileFlags']
+                );
+            }
+
+            if ($iccData['primaryPlatform'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::PRIMARY_PLATFORM, 'Primary Platform')] = $iccData['primaryPlatform'];
+            }
+
+            if ($iccData['deviceManufacturer'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::DEVICE_MANUFACTURER, 'Device Manufacturer')] = $iccData['deviceManufacturer'];
+            }
+
+            if ($iccData['deviceModel'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::DEVICE_MODEL, 'Device Model')] = $iccData['deviceModel'];
+            }
+
+            if ($iccData['deviceAttributes'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::DEVICE_ATTRIBUTES, 'Device Attributes')] = $this->decodeIccDeviceAttributes(
+                    $iccData['deviceAttributes']
+                );
             }
 
             if ($iccData['renderingIntent'] !== null) {
-                $data['Rendering Intent'] = $iccData['renderingIntent'];
+                $header[$this->formatIccHeaderKey(IccTag::RENDERING_INTENT, 'Rendering Intent')] = $iccData['renderingIntent'];
+            }
+
+            if ($iccData['illuminant'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::CONNECTION_SPACE_ILLUMINANT, 'Connection Space Illuminant')] = $this->formatXyzTriplet($iccData['illuminant']);
+            }
+
+            if ($iccData['profileCreator'] !== null) {
+                $header[$this->formatIccHeaderKey(IccTag::PROFILE_CREATOR, 'Profile Creator')] = $iccData['profileCreator'];
             }
 
             if ($iccData['profileId'] !== null) {
-                $data['Profile ID'] = $iccData['profileId'];
+                $header[$this->formatIccHeaderKey(IccTag::PROFILE_ID, 'Profile ID')] = $iccData['profileId'];
+            }
+
+            if ($iccData['description'] !== null) {
+                $profile['Profile Description'] = $iccData['description'];
+            }
+
+            if ($iccData['copyright'] !== null) {
+                $profile['Profile Copyright'] = $iccData['copyright'];
+            }
+
+            if ($iccData['whitePoint'] !== null) {
+                $profile['Media White Point'] = $this->formatXyzTriplet($iccData['whitePoint']);
             }
         }
 
         // Fallback if decoder couldn't parse the profile
-        if ($data === []) {
-            $data['Profile Description'] = '(Binary data)';
+        if ($header === [] && $profile === []) {
+            $header['Profile Description'] = '(Binary data)';
         }
 
-        $this->printSection('ICC-header', $data);
+        if ($header !== []) {
+            $this->printSection('ICC-header', $header);
+        }
+
+        if ($profile !== []) {
+            $this->printSection('ICC_Profile', $profile);
+        }
     }
 
     /**
@@ -1445,12 +1798,25 @@ final class MetadataFormatter
         $data = [];
 
         foreach ($quickTime->keys as $key => $value) {
-            // Convert key to display name
-            $displayKey        = $this->quickTimeKeyToDisplayName($key);
-            $data[$displayKey] = $value;
+            $label        = $this->formatQuickTimeLabel($key);
+            $data[$label] = $value;
         }
 
         $this->printSection('QuickTime', $data);
+    }
+
+    /**
+     * Formats a QuickTime metadata key into a tagged output label.
+     */
+    private function formatQuickTimeLabel(string $key): string
+    {
+        if (isset(self::QUICKTIME_KEY_LABELS[$key])) {
+            return self::QUICKTIME_KEY_LABELS[$key];
+        }
+
+        $displayName = $this->quickTimeKeyToDisplayName($key);
+
+        return $displayName;
     }
 
     /**

@@ -67,7 +67,7 @@ When working on specialist workflows you can inspect the extracted blobs and par
 ```php
 <?php
 use MagicSunday\ImageMeta\MetadataReader;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 
 $metadata = (new MetadataReader())->read('clip.mov', withDigests: true);
 
@@ -78,6 +78,21 @@ $metadata->quickTime?->stringValue(QuickTimeMeta::MAJOR_BRAND_KEY);
 $metadata->mpfDocument?->entries;              // MP Index entries
 $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 $metadata->structured()->derived->fieldOfViewDiagonalDeg;
+```
+
+### Reading EXIF only
+
+If you only need EXIF metadata without the structured aggregate, use the EXIF reader facade:
+
+```php
+<?php
+use MagicSunday\ImageMeta\Convenience\ExifReader;
+
+$exif = (new ExifReader())->read('photo.jpg');
+
+$exif->image->width;
+$exif->camera->make;
+$exif->exposure->iso;
 ```
 
 ## Structured Metadata API
@@ -94,7 +109,7 @@ The structured aggregate described above exposes typed value objects while keepi
 | `temporal.original`             | EXIF `DateTimeOriginal` + `OffsetTimeOriginal` | XMP `exif:DateTimeOriginal`              | `ValueConverters::parseOffset()`         |
 | `gps.speedMs`                   | EXIF `GPSSpeed` + `GPSSpeedRef`                | XMP `exif:GPSSpeed` / `exif:GPSSpeedRef` | `ValueConverters::gpsSpeedToMs()`        |
 | `gps.destinationDistanceMetres` | EXIF `GPSDestDistance` + `GPSDestDistanceRef`  | XMP `exif:GPSDestDistance`               | `ValueConverters::gpsDistanceToMetres()` |
-| `multiPicture.entries`          | MP Index IFD entries                           | –                                        | `Curate\Exif\ValueFactory`               |
+| `multiPicture.entries`          | MP Index IFD entries                           | –                                        | `Factory\Exif\MultiPictureFactory`       |
 
 ### Temporal fractional seconds harmonisation
 
@@ -102,7 +117,7 @@ ImageMeta mirrors fractional seconds from `SubSecTimeOriginal` or `SubSecTimeDig
 
 ### GPS metadata coverage
 
-ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decoded data is exposed through `ExifDocument::gps()` and dedicated convenience accessors on `ExifDocument`. The following fields are available to consumers:
+ImageMeta normalises every entry from the EXIF 2.32 table 66 GPS IFD. The decoded data is exposed through `ParsedExif::gps()` and dedicated convenience accessors on `ParsedExif`. The following fields are available to consumers:
 
 * Coordinate references and values: `lat_ref`, `lat`, `lon_ref`, `lon`, `alt_ref`, `alt`.
 * Navigation metrics: `speed_ref`, `speed_ms`, `track_ref`, `track`, `img_direction_ref`, `img_direction`, `dest_lat_ref`, `dest_lat`, `dest_lon_ref`, `dest_lon`, `dest_bearing_ref`, `dest_bearing`, `dest_distance_ref`, `dest_distance_m`.
@@ -115,7 +130,7 @@ All fields are trimmed and converted into PHP primitives (floats, ints, strings 
 EXIF 3.0 introduces environmental and sensor tags for underwater photography, motion tracking, and camera orientation. ImageMeta fully implements these tags through the `Capture` and `Motion` value objects:
 
 * **WaterDepth** (0x9403): Records the depth of the camera below the water surface in metres, accessible via `$s->capture->waterDepthM`.
-* **Acceleration** (0x9404): Captures the 3D acceleration vector in metres per second squared. The scalar magnitude is available through `$s->capture->accelerationMs2`, while individual axis components (X, Y, Z) are exposed via `$s->motion->accelX`, `$s->motion->accelY`, and `$s->motion->accelZ`.
+* **Acceleration** (0x9404): Captures the 3D acceleration vector in m/s². The scalar magnitude is available through `$s->capture->accelerationMs2`, while individual axis components (X, Y, Z) are exposed via `$s->motion->accelX`, `$s->motion->accelY`, and `$s->motion->accelZ`.
 * **CameraElevationAngle** (0x9405): Records the camera's elevation angle relative to the horizon in degrees, accessible via `$s->capture->cameraElevationAngleDeg`. Positive values indicate upward tilt, negative values indicate downward tilt.
 
 These tags enable precise documentation of capture conditions in specialised scenarios such as underwater photography, action cameras, and drone imaging. All values are converted from EXIF RATIONAL or SRATIONAL types into native PHP floats with appropriate unit conversions already applied.
@@ -134,8 +149,8 @@ These tags enable precise documentation of capture conditions in specialised sce
 | `Device`             | `rawDevelopingSoftware`, `imageEditingSoftware`, `metadataEditingSoftware`                                                  | `RAWDevelopingSoftware`, `ImageEditingSoftware`, `MetadataEditingSoftware`                   | –                                                                            |
 | `Capture`            | `dateTime`, `temperatureC`, `humidityPercent`, `pressureHPa`, `waterDepthM`, `accelerationMs2`, `cameraElevationAngleDeg`   | `Temperature`, `Humidity`, `Pressure`, `WaterDepth`, `Acceleration`, `CameraElevationAngle`  | `ValueConverters::rationalToFloat()`, `sqrt()` for acceleration magnitude    |
 | `Motion`             | `accelX`, `accelY`, `accelZ`                                                                                                | `Acceleration` (SRATIONAL triplet)                                                           | `ValueConverters::srationalTripletToFloatVector()`                           |
-| `Gps`                | `latitude`, `longitude`, `altitude`, `speed*`, `track*`, `timestamp`, navigation metadata                                   | GPS IFD (`GPS*`) with XMP `exif:GPS*` fallbacks                                              | `ValueConverters::gpsFromIfd()`, harmonisation in `Curate\Exif\ValueFactory` |
-| `MultiPicture`       | `version`, `imageCount`, `entries`, `totalFrames`, `individualImageNumber`, `imageUidList`, `panoramaAngle`, `panoramaAxis` | MP Index IFD, MP Attribute IFD                                                               | `Curate\Exif\ValueFactory::resolveMultiPicture()`                            |
+| `Gps`                | `latitude`, `longitude`, `altitude`, `speed*`, `track*`, `timestamp`, navigation metadata                                   | GPS IFD (`GPS*`) with XMP `exif:GPS*` fallbacks                                              | `ValueConverters::gpsFromIfd()`, harmonisation in `Factory\Exif\ValueFactory` |
+| `MultiPicture`       | `version`, `imageCount`, `entries`, `totalFrames`, `individualImageNumber`, `imageUidList`, `panoramaAngle`, `panoramaAxis` | MP Index IFD, MP Attribute IFD                                                               | `Factory\Exif\MultiPictureFactory`                                            |
 
 ```php
 $s = $meta->structured();

@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Motion value object.
+ * Exercises the Motion value object for acceleration readings on all axes.
+ * It verifies positive and negative acceleration values are preserved.
+ * The suite covers null values to ensure optional sensor data remains nullable.
+ * This keeps motion metadata consistent for analysis and display.
  */
 #[CoversClass(Motion::class)]
 final class MotionTest extends TestCase
 {
     /**
-     * Verifies that $motion->accelX equals 0.5.
+     * Stores acceleration values for all axes.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -42,7 +46,8 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Verifies that $motion->accelX is null.
+     * Accepts null acceleration values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -61,7 +66,8 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Verifies that $motion->accelX equals 0.0.
+     * Stores gravity-aligned acceleration vectors.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -81,7 +87,8 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Verifies that $motion->accelX equals -1.5.
+     * Stores negative acceleration values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -100,7 +107,8 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Verifies that $motion->accelX equals 150.0.
+     * Stores large acceleration magnitudes.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -120,7 +128,8 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Verifies that $motion->accelX equals 0.001.
+     * Stores small acceleration magnitudes.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -139,7 +148,8 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Verifies that $motion->accelX equals 5.0.
+     * Stores mixed-sign acceleration vectors.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -158,7 +168,8 @@ final class MotionTest extends TestCase
     }
 
     /**
-     * Verifies that $motion->accelX equals 1.0.
+     * Stores partial acceleration vectors with nullable axes.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

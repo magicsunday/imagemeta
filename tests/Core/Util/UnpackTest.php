@@ -22,14 +22,18 @@ use PHPUnit\Framework\TestCase;
 use function chr;
 
 /**
- * Tests for the Unpack utility class.
+ * Tests the Unpack helpers for decoding numeric values from byte strings.
+ * It covers integer and float extraction and validates 64-bit handling via UInt64.
+ * The suite asserts that invalid formats raise ParseError with context.
+ * This ensures binary decoding remains strict and reliable for parsers.
  */
 #[CoversClass(Unpack::class)]
 #[UsesClass(UInt64::class)]
 final class UnpackTest extends TestCase
 {
     /**
-     * Verifies that $result equals 0x1234.
+     * Unpacks a two-byte integer using a big-endian format.
+     * It confirms Unpack::int returns the expected scalar value.
      *
      * @return void
      */
@@ -44,7 +48,8 @@ final class UnpackTest extends TestCase
     }
 
     /**
-     * Verifies that $result matches 3.14 within delta 0.01.
+     * Unpacks a float value from the packed byte sequence.
+     * It validates floating-point extraction within a tolerance.
      *
      * @return void
      */
@@ -59,7 +64,8 @@ final class UnpackTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'Failed to unpack test'.
+     * Passes an invalid unpack format to force a failure.
+     * It asserts a ParseError is raised with the expected message.
      *
      * @return void
      */
@@ -73,7 +79,8 @@ final class UnpackTest extends TestCase
     }
 
     /**
-     * Verifies that $result->high() equals 0x12345678.
+     * Combines two 32-bit words into a UInt64 instance.
+     * It confirms the high and low parts are preserved correctly.
      *
      * @return void
      */
@@ -87,7 +94,8 @@ final class UnpackTest extends TestCase
     }
 
     /**
-     * Verifies that $result->high() equals 0x12345678.
+     * Unpacks a 64-bit unsigned integer in big-endian order.
+     * It verifies the high/low words match the original packed values.
      *
      * @return void
      */
@@ -103,7 +111,8 @@ final class UnpackTest extends TestCase
     }
 
     /**
-     * Verifies that $result->high() equals 0x12345678.
+     * Unpacks a 64-bit unsigned integer in little-endian order.
+     * It confirms the word order is reversed as expected.
      *
      * @return void
      */
@@ -119,7 +128,8 @@ final class UnpackTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'Failed to unpack test'.
+     * Supplies too few bytes to decode a 64-bit value.
+     * It asserts a ParseError is thrown for truncated input.
      *
      * @return void
      */

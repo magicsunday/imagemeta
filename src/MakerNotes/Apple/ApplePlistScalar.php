@@ -21,7 +21,7 @@ use function is_string;
 /**
  * Represents scalar property list values.
  */
-final readonly class ApplePlistScalar implements ApplePlistValue
+final readonly class ApplePlistScalar implements ApplePlistValueInterface
 {
     /**
      * @param bool|float|int|string|null $value Scalar value to wrap.

@@ -15,6 +15,7 @@ use Imagick;
 use ImagickPixel;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
 use Throwable;
 
@@ -69,6 +70,18 @@ final class IccParser
      *     pcs: string|null,
      *     renderingIntent: string|null,
      *     profileId: string|null,
+     *     cmmType: string|null,
+     *     profileClass: string|null,
+     *     colorSpace: string|null,
+     *     profileDateTime: string|null,
+     *     profileSignature: string|null,
+     *     profileFlags: string|null,
+     *     primaryPlatform: string|null,
+     *     deviceManufacturer: string|null,
+     *     deviceModel: string|null,
+     *     deviceAttributes: string|null,
+     *     profileCreator: string|null,
+     *     illuminant: array{x: float, y: float, z: float}|null,
      * }|null
      */
     public function decode(?string $profileData, array $segments = []): ?array
@@ -82,7 +95,7 @@ final class IccParser
             return null;
         }
 
-        $profileSize = $this->uInt32Be(substr($data, 0, 4));
+        $profileSize = $this->uInt32Be(substr($data, IccTag::PROFILE_SIZE, 4));
         $length      = strlen($data);
         if ($profileSize > $length) {
             return null; // truncated payload
@@ -94,22 +107,46 @@ final class IccParser
             return null; // invalid ICC profile
         }
 
-        $version         = $this->extractVersion($data);
-        $pcs             = $this->extractSignature(substr($data, 20, 4));
-        $renderingIntent = $this->extractRenderingIntent($data);
-        $profileId       = $this->extractProfileId($data);
-        $description     = $this->extractTag($data, $profileSize, 'desc');
-        $copyright       = $this->extractTag($data, $profileSize, 'cprt');
-        $whitePoint      = $this->extractWhitePoint($data, $profileSize);
+        $version            = $this->extractVersion($data);
+        $pcs                = $this->extractSignature(substr($data, IccTag::PCS, 4));
+        $renderingIntent    = $this->extractRenderingIntent($data);
+        $profileId          = $this->extractProfileId($data);
+        $description        = $this->extractTag($data, $profileSize, 'desc');
+        $copyright          = $this->extractTag($data, $profileSize, 'cprt');
+        $whitePoint         = $this->extractWhitePoint($data, $profileSize);
+        $cmmType            = $this->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
+        $profileClass       = $this->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
+        $colorSpace         = $this->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
+        $profileDateTime    = $this->extractProfileDateTime($data);
+        $profileSignature   = $this->extractSignature(substr($data, IccTag::PROFILE_SIGNATURE, 4));
+        $profileFlags       = $this->extractHexField($data, IccTag::PROFILE_FLAGS, 4, true);
+        $primaryPlatform    = $this->extractSignature(substr($data, IccTag::PRIMARY_PLATFORM, 4));
+        $deviceManufacturer = $this->extractSignature(substr($data, IccTag::DEVICE_MANUFACTURER, 4));
+        $deviceModel        = $this->extractSignature(substr($data, IccTag::DEVICE_MODEL, 4));
+        $deviceAttributes   = $this->extractHexField($data, IccTag::DEVICE_ATTRIBUTES, 8, true);
+        $profileCreator     = $this->extractSignature(substr($data, IccTag::PROFILE_CREATOR, 4));
+        $illuminant         = $this->extractIlluminant($data);
 
         return [
-            'description'     => $description,
-            'copyright'       => $copyright,
-            'whitePoint'      => $whitePoint,
-            'version'         => $version,
-            'pcs'             => $pcs,
-            'renderingIntent' => $renderingIntent,
-            'profileId'       => $profileId,
+            'description'        => $description,
+            'copyright'          => $copyright,
+            'whitePoint'         => $whitePoint,
+            'version'            => $version,
+            'pcs'                => $pcs,
+            'renderingIntent'    => $renderingIntent,
+            'profileId'          => $profileId,
+            'cmmType'            => $cmmType,
+            'profileClass'       => $profileClass,
+            'colorSpace'         => $colorSpace,
+            'profileDateTime'    => $profileDateTime,
+            'profileSignature'   => $profileSignature,
+            'profileFlags'       => $profileFlags,
+            'primaryPlatform'    => $primaryPlatform,
+            'deviceManufacturer' => $deviceManufacturer,
+            'deviceModel'        => $deviceModel,
+            'deviceAttributes'   => $deviceAttributes,
+            'profileCreator'     => $profileCreator,
+            'illuminant'         => $illuminant,
         ];
     }
 
@@ -224,7 +261,7 @@ final class IccParser
      */
     private function extractRenderingIntent(string $data): ?string
     {
-        $intent = $this->uInt32Be(substr($data, 64, 4));
+        $intent = $this->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
 
         return IccRenderingIntent::fromProfileHeaderValue($intent)?->label();
     }
@@ -238,12 +275,92 @@ final class IccParser
      */
     private function extractProfileId(string $data): ?string
     {
-        $profileId = substr($data, 84, 16);
+        $profileId = substr($data, IccTag::PROFILE_ID, 16);
         if ($profileId === str_repeat("\0", 16)) {
             return null;
         }
 
         return strtoupper(bin2hex($profileId));
+    }
+
+    /**
+     * Extracts the profile creation timestamp from the header.
+     *
+     * ICC.1:2022 §7.2.6 defines the dateTimeNumber structure.
+     *
+     * @param string $data Raw ICC profile payload.
+     *
+     * @return string|null Formatted timestamp or null when unavailable.
+     */
+    private function extractProfileDateTime(string $data): ?string
+    {
+        if (strlen($data) < (IccTag::PROFILE_DATE_TIME + 12)) {
+            return null;
+        }
+
+        $base   = IccTag::PROFILE_DATE_TIME;
+        $year   = $this->uInt16Be(substr($data, $base, 2));
+        $month  = $this->uInt16Be(substr($data, $base + 2, 2));
+        $day    = $this->uInt16Be(substr($data, $base + 4, 2));
+        $hour   = $this->uInt16Be(substr($data, $base + 6, 2));
+        $minute = $this->uInt16Be(substr($data, $base + 8, 2));
+        $second = $this->uInt16Be(substr($data, $base + 10, 2));
+
+        if ($year === 0) {
+            return null;
+        }
+
+        return sprintf('%04d:%02d:%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
+    }
+
+    /**
+     * Extracts the profile connection space illuminant as XYZ values.
+     *
+     * ICC.1:2022 §7.2.11 specifies the illuminant as s15Fixed16Numbers.
+     *
+     * @param string $data Raw ICC profile payload.
+     *
+     * @return array{x: float, y: float, z: float}|null
+     */
+    private function extractIlluminant(string $data): ?array
+    {
+        if (strlen($data) < (IccTag::CONNECTION_SPACE_ILLUMINANT + 12)) {
+            return null;
+        }
+
+        $base = IccTag::CONNECTION_SPACE_ILLUMINANT;
+        $x    = $this->s15Fixed16($data, $base);
+        $y    = $this->s15Fixed16($data, $base + 4);
+        $z    = $this->s15Fixed16($data, $base + 8);
+
+        return [
+            'x' => $x,
+            'y' => $y,
+            'z' => $z,
+        ];
+    }
+
+    /**
+     * Extracts a header field and formats it as an uppercase hex string.
+     *
+     * @param string $data   Raw ICC profile payload.
+     * @param int    $offset Byte offset within the header.
+     * @param int    $length Length in bytes.
+     *
+     * @return string|null Hex-encoded value or null when empty.
+     */
+    private function extractHexField(string $data, int $offset, int $length, bool $allowZero): ?string
+    {
+        if (strlen($data) < ($offset + $length)) {
+            return null;
+        }
+
+        $bytes = substr($data, $offset, $length);
+        if (!$allowZero && $bytes === str_repeat("\0", $length)) {
+            return null;
+        }
+
+        return strtoupper(bin2hex($bytes));
     }
 
     /**
@@ -518,6 +635,30 @@ final class IccParser
         $bytes = substr($bytes . "\0\0\0\0", 0, 4);
 
         $unpacked = @unpack('Nvalue', $bytes);
+        if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
+            return 0;
+        }
+
+        $value = $unpacked['value'];
+        if (!is_int($value)) {
+            throw new ParseError('Unexpected integer value while decoding ICC profile.');
+        }
+
+        return $value;
+    }
+
+    /**
+     * Converts up to two bytes into an unsigned big-endian integer.
+     *
+     * @param string $bytes Raw bytes to interpret as a big-endian integer.
+     *
+     * @return int Parsed unsigned integer value.
+     */
+    private function uInt16Be(string $bytes): int
+    {
+        $bytes = substr($bytes . "\0\0", 0, 2);
+
+        $unpacked = @unpack('nvalue', $bytes);
         if (!is_array($unpacked) || !array_key_exists('value', $unpacked)) {
             return 0;
         }

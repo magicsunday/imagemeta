@@ -12,19 +12,20 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Factory;
 
 use MagicSunday\ImageMeta\Model\Metadata;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 
 /**
  * Lazily assembles and caches structured metadata derived from the aggregate.
  */
 final class StructuredMetadataCache
 {
-    private ?StructuredMetadataFactory $structured = null;
+    private ?StructuredMetadata $structured = null;
 
     /**
-     * @param ExifAssembler $assembler Assembler used to build structured metadata.
+     * @param StructuredMetadataBuilder $builder Builder used to build structured metadata.
      */
     public function __construct(
-        private readonly ExifAssembler $assembler = new ExifAssembler(),
+        private readonly StructuredMetadataBuilder $builder = new StructuredMetadataBuilder(),
     ) {
     }
 
@@ -33,12 +34,12 @@ final class StructuredMetadataCache
      *
      * @param Metadata $metadata Source metadata aggregate.
      *
-     * @return StructuredMetadataFactory Structured metadata container.
+     * @return StructuredMetadata Structured metadata container.
      */
-    public function resolve(Metadata $metadata): StructuredMetadataFactory
+    public function resolve(Metadata $metadata): StructuredMetadata
     {
-        if (!$this->structured instanceof StructuredMetadataFactory) {
-            $this->structured = $this->assembler->assemble($metadata);
+        if (!$this->structured instanceof StructuredMetadata) {
+            $this->structured = $this->builder->assemble($metadata);
         }
 
         return $this->structured;

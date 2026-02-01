@@ -21,7 +21,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
@@ -42,7 +42,10 @@ use function strlen;
 use function substr;
 
 /**
- * Exercises the ISO BMFF extractor against synthetic container layouts.
+ * Exercises ISO BMFF parsing with synthetic container layouts and box hierarchies.
+ * It verifies EXIF and XMP extraction paths as well as QuickTime metadata key capture.
+ * The tests cover iloc item resolution, construction methods, and data reference handling.
+ * Error cases ensure malformed boxes and invalid sizes raise ParseError without crashes.
  */
 #[CoversClass(IsoBmffParser::class)]
 #[UsesClass(ByteReader::class)]
@@ -59,7 +62,8 @@ use function substr;
 final class IsoBmffParserTest extends TestCase
 {
     /**
-     * Verifies that EXIF bytes are extracted from a full meta Exif box.
+     * Extracts EXIF data from a dedicated Exif box inside a full meta box.
+     * This verifies the extractor returns the EXIF payload and leaves XMP/QuickTime empty.
      *
      * @return void
      */
@@ -80,7 +84,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that EXIF bytes are extracted from a QuickTime meta box.
+     * Parses EXIF from a non-full meta box in a QuickTime-branded file.
+     * This confirms EXIF extraction works for QuickTime-style meta boxes.
      *
      * @return void
      */
@@ -101,7 +106,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that short numeric QuickTime payloads are accepted as raw bytes.
+     * Provides a short numeric data payload for a QuickTime metadata key.
+     * This ensures the parser tolerates truncated numeric payloads without failing.
      *
      * @return void
      */
@@ -133,7 +139,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that short integer QuickTime payloads are accepted as raw bytes.
+     * Provides a short integer data payload for a QuickTime metadata key.
+     * This confirms short integer payloads are preserved instead of throwing.
      *
      * @return void
      */
@@ -165,7 +172,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that multiple iloc extents are concatenated into one EXIF payload.
+     * Resolves iloc items that are split across multiple extents.
+     * This verifies the extractor concatenates extents to reassemble the EXIF blob.
      *
      * @return void
      */
@@ -215,7 +223,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that iloc version 1 entries resolve EXIF item data.
+     * Builds a version 1 iloc box with 16-bit item IDs and resolves the EXIF item.
+     * This confirms iloc v1 parsing and item reconstruction produce the expected EXIF payload.
      *
      * @return void
      */
@@ -267,7 +276,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that XMP is collected from uuid, XMP box, and iloc item sources.
+     * Extracts XMP from three sources: uuid box, item-based XMP, and direct XMP box.
+     * This verifies all XMP sources are collected and returned in the expected order.
      *
      * @return void
      */
@@ -320,7 +330,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that content identifiers are read from keys or mdta metadata.
+     * Reads content identifiers from both QuickTime keys and mdta free-form boxes.
+     * This confirms either metadata path can populate QuickTimeMeta::contentIdentifier().
      *
      * @return void
      */
@@ -346,7 +357,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that UTF-16BE data boxes decode to UTF-8 identifiers.
+     * Encodes a UTF-16BE data box and decodes it back to UTF-8.
+     * This verifies Unicode content identifiers are normalized correctly.
      *
      * @return void
      */
@@ -366,7 +378,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that MacRoman data boxes decode to UTF-8 identifiers.
+     * Uses a MacRoman data payload to represent accented text.
+     * This confirms legacy encodings are converted to UTF-8 strings.
      *
      * @return void
      */
@@ -384,7 +397,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that legacy fourcc tags are exposed in QuickTime keys.
+     * Reads a legacy four-character code key from an ilst entry.
+     * This verifies that non-mdta keys are still captured in QuickTime metadata.
      *
      * @return void
      */
@@ -408,7 +422,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that int32 data box payloads decode to integers.
+     * Uses a data box with integer type and 32-bit payload.
+     * This confirms numeric QuickTime values are decoded to integers.
      *
      * @return void
      */
@@ -426,7 +441,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that numeric QuickTime strings are coerced to integers.
+     * Provides a numeric string value for a QuickTime key.
+     * This ensures numeric strings are coerced to integer values.
      *
      * @return void
      */
@@ -444,7 +460,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that numeric QuickTime strings are coerced to floats.
+     * Provides a decimal string value for a QuickTime key.
+     * This confirms numeric strings are coerced to floats when appropriate.
      *
      * @return void
      */
@@ -462,7 +479,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that QuickTime boolean strings are coerced to booleans.
+     * Provides a boolean-like string for a QuickTime key.
+     * This verifies string values are coerced to booleans when applicable.
      *
      * @return void
      */
@@ -480,7 +498,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that external data references produce unresolved item entries.
+     * Uses a non-zero data_reference_index to create an unresolved iloc item.
+     * This confirms external data references are recorded but not resolved.
      *
      * @return void
      */
@@ -532,7 +551,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that invalid iloc extents trigger ParseError.
+     * Builds an iloc extent with an invalid large offset to trigger validation.
+     * This asserts a ParseError is thrown when box sizes are inconsistent.
      *
      * @return void
      */
@@ -566,7 +586,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that iref relationships are mapped to item references.
+     * Parses an iref box with dimg relationships for a single item.
+     * This verifies the item reference map captures multiple outgoing references.
      *
      * @return void
      */
@@ -594,7 +615,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that iloc construction_method=1 uses idat payload data.
+     * Resolves iloc items stored in the idat box using construction method 1.
+     * This confirms idat-based extents are read and produce EXIF output.
      *
      * @return void
      */
@@ -630,7 +652,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that idat extents larger than the payload raise ParseError.
+     * Sets iloc extent length larger than the idat payload.
+     * This asserts a ParseError is thrown when idat extents exceed bounds.
      *
      * @return void
      */
@@ -666,7 +689,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that iloc extents can reference other item data via extent_index.
+     * Builds iloc entries with index_size to reference another item.
+     * This verifies extent offsets are resolved relative to referenced items.
      *
      * @return void
      */
@@ -723,7 +747,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that iloc extents exceeding referenced items raise ParseError.
+     * Uses an extent that exceeds the referenced item length.
+     * This asserts a ParseError is thrown for invalid item offset extents.
      *
      * @return void
      */
@@ -781,7 +806,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that external data references are tracked without resolution.
+     * Sets a non-zero data reference index to point at an external URL.
+     * This confirms external references are tracked while EXIF remains unresolved.
      *
      * @return void
      */
@@ -829,7 +855,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that oversized iref reference counts are rejected.
+     * Creates an iref entry with a reference count above the configured maximum.
+     * This ensures a ParseError is raised to prevent pathological allocations.
      *
      * @return void
      */
@@ -852,6 +879,7 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Builds a QuickTime structure containing a `keys` metadata entry.
+     * This helper is used to populate the content identifier from mdta keys.
      *
      * @param string $value Identifier value stored under the QuickTime key.
      */
@@ -862,6 +890,7 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Builds a QuickTime `keys` metadata structure with a custom `data` payload.
+     * This helper lets tests vary the data type and encoding independently.
      *
      * @param int    $type        Numeric QuickTime data type identifier.
      * @param string $encodedData Raw payload bytes stored inside the `data` box.
@@ -877,6 +906,7 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Builds a QuickTime `keys` metadata structure with a custom `data` payload.
+     * This helper is shared by tests that exercise different key/type combinations.
      *
      * @param string $key         QuickTime metadata key identifier.
      * @param int    $type        Numeric QuickTime data type identifier.
@@ -902,6 +932,7 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Builds a QuickTime structure containing an mdta free-form identifier.
+     * This helper is used to test the alternative content.identifier path.
      *
      * @param string $value Identifier value encoded within the mdta structure.
      */
@@ -921,7 +952,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that oversized iloc item counts are rejected.
+     * Creates an iloc box with more items than the configured maximum.
+     * This asserts the parser rejects excessive item counts early.
      *
      * @return void
      */
@@ -947,7 +979,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that oversized iinf entry counts are rejected.
+     * Creates an iinf box with an entry count above the configured maximum.
+     * This ensures the parser aborts before allocating oversized tables.
      *
      * @return void
      */
@@ -968,7 +1001,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that oversized keys entry counts are rejected.
+     * Creates a keys box with too many entries for the configured limit.
+     * This verifies that metadata key parsing enforces size caps.
      *
      * @return void
      */
@@ -990,7 +1024,8 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Verifies that oversized stsd entry counts are rejected.
+     * Creates an stsd box with an entry count above the configured maximum.
+     * This confirms the parser rejects malformed track tables.
      *
      * @return void
      */
@@ -1024,6 +1059,7 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Wraps raw bytes in a temporary stream-backed extractor.
+     * This helper keeps byte-length bookkeeping aligned with the payload.
      *
      * @param string $data Raw ISO BMFF file contents.
      */
@@ -1042,6 +1078,7 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Creates a standard ISO BMFF box header around a payload.
+     * This helper computes the size field and prefixes the box type.
      *
      * @param string $type    Four-character box type.
      * @param string $payload Raw box payload.
@@ -1057,6 +1094,7 @@ final class IsoBmffParserTest extends TestCase
 
     /**
      * Creates a full box including version and flags fields.
+     * This helper is used to build full boxes like meta, iinf, and iloc.
      *
      * @param string $type    Four-character box type.
      * @param string $payload Raw box payload excluding version/flags.

@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Rights value object.
+ * Exercises the Rights value object for copyright and licensing metadata.
+ * It verifies usage terms, license URL, and credit line fields are stored.
+ * The suite covers partial and full rights payloads.
+ * This keeps rights metadata consistent for attribution and compliance.
  */
 #[CoversClass(Rights::class)]
 final class RightsTest extends TestCase
 {
     /**
-     * Verifies that $rights->copyright equals '© 2024 John Doe'.
+     * Stores copyright values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -41,7 +45,8 @@ final class RightsTest extends TestCase
     }
 
     /**
-     * Verifies that $rights->copyright equals '© 2024 Jane Smith'.
+     * Stores full rights metadata fields.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -62,7 +67,8 @@ final class RightsTest extends TestCase
     }
 
     /**
-     * Verifies that $rights->copyright is null.
+     * Accepts null rights metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

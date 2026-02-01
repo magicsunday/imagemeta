@@ -29,12 +29,21 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the Exposure value object for numeric measurements and enum fields.
+ * It verifies shutter time, aperture, ISO, and exposure bias are stored correctly.
+ * The suite covers flash information and enums like metering mode and white balance.
+ * This ensures exposure metadata remains consistent across structured outputs.
+ *
+ * @internal
+ */
 #[UsesClass(FlashInfo::class)]
 #[CoversClass(Exposure::class)]
 final class ExposureTest extends TestCase
 {
     /**
-     * Verifies that $exposure->iso equals 200.
+     * Stores exposure measurements and enum metadata.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */

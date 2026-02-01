@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * GPS distance reference unit enumeration.
  *
@@ -18,7 +20,7 @@ namespace MagicSunday\ImageMeta\Value\Enum;
  * which indicates the unit used to express the distance to the destination point.
  * The allowed values are 'K' (kilometers), 'M' (miles), and 'N' (nautical miles).
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_DEST_DISTANCE_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_DEST_DISTANCE_REF
  */
 enum GpsDistanceRef: string
 {

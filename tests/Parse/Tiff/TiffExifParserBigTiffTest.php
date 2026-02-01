@@ -18,10 +18,10 @@ use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -32,13 +32,10 @@ use PHPUnit\Framework\TestCase;
 use function pack;
 
 /**
- * Negative tests for BigTIFF-specific parsing scenarios.
- *
- * BigTIFF extends classic TIFF to support files larger than 4 GiB using 64-bit
- * offsets and counts. These tests verify proper handling of edge cases and
- * invalid BigTIFF structures.
- *
- * EXIF 3.0 §4.5.1 describes BigTIFF support with magic number 0x002B.
+ * Exercises BigTIFF parsing edge cases that rely on 64-bit offsets and counts.
+ * It validates BigTIFF header variants, offset-size rules, and inline value limits.
+ * The tests feed malformed or out-of-range structures to assert ParseError/BoundsError.
+ * This ensures BigTIFF handling remains strict and safe for large-file metadata.
  */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(MemoryBuffer::class)]
@@ -56,7 +53,8 @@ use function pack;
 final class TiffExifParserBigTiffTest extends TestCase
 {
     /**
-     * Verifies that BigTIFF headers accept offset size 16.
+     * Builds a BigTIFF header that uses the 16-byte offset size variant.
+     * Confirms the parser accepts this supported offset size and yields an empty IFD.
      *
      * @return void
      */
@@ -72,7 +70,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that unsupported BigTIFF offset sizes are rejected.
+     * Uses an unsupported BigTIFF offset size (12 bytes).
+     * Ensures the parser rejects the header with a ParseError.
      *
      * @return void
      */
@@ -90,7 +89,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that a zero first-IFD offset yields an empty IFD.
+     * Sets the first IFD offset to zero in the BigTIFF header.
+     * Verifies the parser treats it as an empty directory rather than reading entries.
      *
      * @return void
      */
@@ -107,7 +107,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that 64-bit entry counts parse inline ASCII values in BigTIFF.
+     * Creates a BigTIFF file with a 64-bit entry count and two ASCII entries.
+     * Confirms the parser can iterate a 64-bit count and parse inline values.
      *
      * @return void
      */
@@ -146,7 +147,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that BigTIFF LONG8 values are read inline.
+     * Builds an IFD entry using the LONG8 type with an inline 64-bit value.
+     * Ensures the parser accepts LONG8 and produces an entry for ImageWidth.
      *
      * @return void
      */
@@ -178,7 +180,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that BigTIFF SLONG8 values preserve signed values.
+     * Builds an entry using the SLONG8 type with a negative value.
+     * Confirms signed 64-bit values are accepted and captured in the IFD.
      *
      * @return void
      */
@@ -208,7 +211,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that BigTIFF IFD8 pointer entries are parsed.
+     * Adds an IFD8 pointer entry that references a zero offset.
+     * Verifies the parser accepts the pointer type without attempting a sub-IFD.
      *
      * @return void
      */
@@ -238,7 +242,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that out-of-range BigTIFF offsets raise BoundsError.
+     * Uses a huge first-IFD offset that points beyond the blob size.
+     * Ensures bounds checking raises a BoundsError for the invalid offset.
      *
      * @return void
      */
@@ -260,7 +265,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that rejects big TIFF value offset beyond 4 gb.
+     * Provides an entry whose value offset is beyond 4 GiB.
+     * Confirms bounds checking rejects the out-of-range offset.
      *
      * @return void
      */
@@ -291,7 +297,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that rejects big TIFF truncated entry.
+     * Truncates the entry data so required fields are missing.
+     * Ensures the parser throws a BoundsError when the entry is incomplete.
      *
      * @return void
      */
@@ -316,7 +323,8 @@ final class TiffExifParserBigTiffTest extends TestCase
     }
 
     /**
-     * Verifies that rejects big TIFF with huge entry count.
+     * Declares an absurdly large 64-bit entry count in the IFD header.
+     * Verifies the parser rejects the file to prevent unrealistic allocations.
      *
      * @return void
      */
@@ -341,6 +349,7 @@ final class TiffExifParserBigTiffTest extends TestCase
 
     /**
      * Builds a minimal BigTIFF header.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param int $offsetSize Offset size (8 or 16).
      * @param int $reserved   Reserved field value (should be 0).

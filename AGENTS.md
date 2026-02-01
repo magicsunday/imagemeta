@@ -32,6 +32,8 @@
 * In parsers **at the relevant code location** reference the applicable EXIF chapter via PHPDoc/inline comment (format: `EXIF 3.0 §<chapter>`).
 * **If multiple versions apply:** always name the **latest** and also all differing chapters in older versions with relevant changes (e.g. “EXIF 3.0 §4.6.4; EXIF 2.32 §…”).
 * **If already covered:** only add if necessary (missing/imprecise/outdated).
+* **Unclear implementation details:** always consult the **HTML specifications under `docs/`** before making assumptions or changes.
+* **Tag definitions:** always describe and name tags using the **corresponding specification block** from the HTML specs in `docs/`.
 
 **Enums for common encodings (native PHP backed enums):**
 
@@ -218,6 +220,8 @@ List changed/new EXIF chapters (version/§) in section “References”.
 * **Fragile XMP parser** → `LIBXML_NONET`, no DTD/entities, tolerate broken XML.
 * **Magic numbers/strings** → use constants/enums.
 * **Missing spec refs** → add chapter refs on parser changes (latest + relevant older).
+* **Assumptions without spec checks** → consult HTML specs in `docs/` before implementing unclear behavior.
+* **Tag names not aligned to spec blocks** → align tag naming/description with the exact HTML spec block.
 * **Unnecessary control-flow leftovers** → remove redundant `return`/`continue` (see coding rules).
 
 ---
@@ -282,6 +286,8 @@ List changed/new EXIF chapters (version/§) in section “References”.
 * [ ] Variables/constants **descriptively** named
 * [ ] **Enums** for common encodings present/used
 * [ ] **EXIF chapters** referenced/updated at relevant code locations
+* [ ] **Specs consulted** (HTML under `docs/`) for unclear behavior before implementation
+* [ ] **Tag definitions** aligned with the corresponding HTML spec block
 * [ ] **Explicit parentheses in conditions:**
 
     * **Example (with parens):** `if (($this->ifd1 instanceof Ifd) && ($ifd === $this->ifd1)) { … }`

@@ -17,7 +17,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMaps;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistArray;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistDictionary;
 use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistScalar;
-use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistValue;
+use MagicSunday\ImageMeta\MakerNotes\Apple\ApplePlistValueInterface;
 use MagicSunday\ImageMeta\MakerNotes\Apple\BinaryPlistDecoder;
 use MagicSunday\ImageMeta\MakerNotes\Apple\KeyedArchiveUnarchiver;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
@@ -671,7 +671,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @phpstan-return NativePlistValue
      */
-    private function plistValueToPhp(ApplePlistValue $value): array|string|int|float|bool|null
+    private function plistValueToPhp(ApplePlistValueInterface $value): array|string|int|float|bool|null
     {
         if ($value instanceof ApplePlistScalar) {
             return $value->value();
@@ -705,7 +705,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
      *
      * @phpstan-param NativePlistValue $value
      */
-    private function nativeToPlistValue(array|bool|float|int|string|null $value): ApplePlistValue
+    private function nativeToPlistValue(array|bool|float|int|string|null $value): ApplePlistValueInterface
     {
         if (!is_array($value)) {
             return new ApplePlistScalar($value);

@@ -18,13 +18,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Capture value object.
+ * Exercises the Capture value object for timestamp and environmental fields.
+ * It verifies DateTime storage alongside temperature, humidity, and pressure data.
+ * The suite checks optional fields like water depth and acceleration vectors.
+ * This ensures capture context metadata remains intact for consumers.
  */
 #[CoversClass(Capture::class)]
 final class CaptureTest extends TestCase
 {
     /**
-     * Verifies that $capture->dateTime equals $dateTime.
+     * Stores the capture timestamp when provided.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -47,7 +51,8 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Verifies that $capture->temperatureC equals 22.5.
+     * Stores environmental capture data values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -73,7 +78,8 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Verifies that $capture->dateTime is null.
+     * Allows capture fields to be omitted.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -100,7 +106,8 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Verifies that $capture->waterDepthM equals 100.5.
+     * Stores large water depth values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -121,7 +128,8 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Verifies that $capture->waterDepthM equals 0.0.
+     * Stores zero water depth values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -142,7 +150,8 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Verifies that $capture1->accelerationMs2 equals 9.81.
+     * Stores a range of acceleration magnitudes.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -190,7 +199,8 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Verifies that $capture1->cameraElevationAngleDeg equals 45.0.
+     * Stores camera elevation angles across expected ranges.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -251,7 +261,8 @@ final class CaptureTest extends TestCase
     }
 
     /**
-     * Verifies that $capture->dateTime is instance of DateTimeImmutable::class.
+     * Stores EXIF 3.0 environmental tags together in the value object.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */

@@ -18,13 +18,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for UInt64 unsigned 64-bit integer handling.
+ * Exercises UInt64 construction and conversions from int and word parts.
+ * It verifies high/low accessors and boundary handling for 64-bit values.
+ * The suite covers parsing errors on invalid or negative inputs.
+ * This keeps UInt64 behavior predictable for large offsets and sizes.
  */
 #[CoversClass(UInt64::class)]
 final class UInt64Test extends TestCase
 {
     /**
-     * Verifies that $value->high() equals 0x12345678.
+     * Constructs a UInt64 from explicit high/low parts.
+     * It verifies the accessors return the exact values provided.
      *
      * @return void
      */
@@ -38,7 +42,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $value->high() equals 0x00000001.
+     * Builds a UInt64 from two unsigned 32-bit words.
+     * It ensures the high and low words are preserved as-is.
      *
      * @return void
      */
@@ -52,7 +57,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $value->high() equals 1.
+     * Converts a non-negative integer larger than 32 bits into high/low parts.
+     * It confirms the high word captures the overflow beyond the low word.
      *
      * @return void
      */
@@ -66,7 +72,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'Cannot create UInt64 from a negative integer.'.
+     * Rejects negative input when constructing from an integer.
+     * It asserts a ParseError is thrown for invalid signed values.
      *
      * @return void
      */
@@ -80,7 +87,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $value->toInt('test') equals 12345.
+     * Converts a small UInt64 back to a native integer.
+     * It verifies the conversion succeeds within the supported range.
      *
      * @return void
      */
@@ -93,7 +101,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $zero->isZero() is true.
+     * Detects zero-valued UInt64 instances.
+     * It confirms non-zero values are not treated as zero.
      *
      * @return void
      */
@@ -108,7 +117,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'test exceeds supported integer range.'.
+     * Rejects conversion when the value exceeds the supported integer range.
+     * It asserts a ParseError is thrown to prevent truncation.
      *
      * @return void
      */
@@ -124,7 +134,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that (string) $value->low() equals '12345'.
+     * Converts the value to a string representation for small values.
+     * It confirms the decimal formatting matches the low word.
      *
      * @return void
      */
@@ -137,7 +148,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $result->high() equals 0.
+     * Adds a small integer without overflowing the low word.
+     * It verifies that the high word remains unchanged.
      *
      * @return void
      */
@@ -152,7 +164,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $result->high() equals 1.
+     * Adds a small integer that overflows the low word.
+     * It verifies the carry increments the high word and wraps the low word.
      *
      * @return void
      */
@@ -167,7 +180,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $smaller->compare($larger) < 0 is true.
+     * Compares values with identical high words and differing low words.
+     * It verifies comparison results for less-than, greater-than, and equality.
      *
      * @return void
      */
@@ -187,7 +201,8 @@ final class UInt64Test extends TestCase
     }
 
     /**
-     * Verifies that $smaller->compare($larger) < 0 is true.
+     * Compares values with different high words.
+     * It confirms the high word dominates ordering before the low word.
      *
      * @return void
      */

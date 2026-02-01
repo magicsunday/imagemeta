@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\imagemeta\tests\Parse\Xmp;
+namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
@@ -20,8 +20,11 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Validates the lightweight streaming XMP parser implementation.
- * */
+ * Exercises the lightweight XMP parser across attribute and element extraction paths.
+ * It covers RDF descriptions, nested containers (Alt/Bag/Seq), and namespace handling.
+ * The suite verifies merged output when multiple descriptions contribute properties.
+ * This ensures predictable XMP extraction for both simple and structured packets.
+ */
 #[CoversClass(XmpParser::class)]
 #[UsesClass(XmpDocument::class)]
 final class XmpParserTest extends TestCase
@@ -35,7 +38,8 @@ final class XmpParserTest extends TestCase
     private const string TIFF_NS = 'http://ns.adobe.com/tiff/1.0/';
 
     /**
-     * Verifies that rdf:Description attributes are captured as properties.
+     * Uses rdf:Description attributes for TIFF and XMP properties.
+     * Confirms the parser captures attribute-based values across namespaces.
      *
      * @return void
      */
@@ -66,7 +70,8 @@ XML;
     }
 
     /**
-     * Verifies that xmlns declarations are ignored as properties.
+     * Declares a custom namespace and provides a custom attribute property.
+     * Ensures namespace declarations themselves are ignored as properties.
      *
      * @return void
      */
@@ -92,7 +97,8 @@ XML;
     }
 
     /**
-     * Verifies that rdf:about is ignored while dc:title is captured.
+     * Includes rdf:about alongside a dc:title attribute in the same description.
+     * Verifies rdf:about is ignored while dc:title is captured.
      *
      * @return void
      */
@@ -117,7 +123,8 @@ XML;
     }
 
     /**
-     * Verifies that custom namespace attributes are captured.
+     * Provides multiple attributes in a custom drone-dji namespace.
+     * Confirms the parser captures each custom attribute with its namespace URI.
      *
      * @return void
      */
@@ -148,7 +155,8 @@ XML;
     }
 
     /**
-     * Verifies that attribute and element values are both extracted.
+     * Mixes attribute-based values with element content inside the same RDF description.
+     * Ensures the parser extracts both the attribute and element values.
      *
      * @return void
      */
@@ -178,7 +186,8 @@ XML;
     }
 
     /**
-     * Verifies that rdf:value elements are used for resource and bag entries.
+     * Uses rdf:value elements and an rdf:Bag list within resource nodes.
+     * Verifies the parser resolves rdf:value and collects list items into arrays.
      *
      * @return void
      */
@@ -218,7 +227,8 @@ XML;
     }
 
     /**
-     * Verifies that a full EXIF/TIFF sample extracts all expected tags and prefixes.
+     * Parses a full EXIF/TIFF XMP sample with many tags across two descriptions.
+     * Confirms all expected properties and namespace prefixes are captured.
      *
      * @return void
      */
@@ -313,7 +323,8 @@ XML;
     }
 
     /**
-     * Verifies that scalar values and rdf:Bag lists are extracted.
+     * Includes scalar values alongside a dc:subject rdf:Bag list.
+     * Ensures scalar properties are strings and bag entries are returned as arrays.
      *
      * @return void
      */
@@ -360,7 +371,8 @@ XML;
     }
 
     /**
-     * Verifies that invalid XML yields an empty XMP document.
+     * Feeds malformed XML fragments via the data provider.
+     * Verifies the parser returns an empty document instead of throwing.
      *
      * @return void
      */
@@ -376,6 +388,7 @@ XML;
 
     /**
      * Provides malformed or unsupported XML fragments for negative parsing scenarios.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @return iterable<string, array{0: string}>
      */
@@ -385,7 +398,8 @@ XML;
     }
 
     /**
-     * Verifies that default-namespace elements are captured.
+     * Uses a default namespace with an unprefixed element.
+     * Confirms the parser stores the value under the namespace URI.
      *
      * @return void
      */
@@ -400,7 +414,8 @@ XML;
     }
 
     /**
-     * Verifies that mixed text and CDATA content are concatenated.
+     * Mixes text nodes with a CDATA section inside a single element.
+     * Ensures the parser concatenates mixed content into one string.
      *
      * @return void
      */
@@ -420,7 +435,8 @@ XML;
     }
 
     /**
-     * Verifies that multiple custom namespaces and prefixes are extracted.
+     * Parses metadata with many custom namespaces and attribute values.
+     * Verifies values are captured and namespace prefixes are recorded for each URI.
      *
      * @return void
      */
@@ -508,7 +524,8 @@ XML;
     }
 
     /**
-     * Verifies that Google depth map attributes are extracted.
+     * Uses the Google depthmap namespace with depth-related attributes.
+     * Ensures the parser extracts data, mime, and near/far distances.
      *
      * @return void
      */

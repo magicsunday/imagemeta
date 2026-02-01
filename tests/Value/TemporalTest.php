@@ -19,13 +19,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Temporal value object representing date/time metadata.
+ * Exercises the Temporal value object for create/modify/original timestamps.
+ * It verifies timezone, offset time, and sub-second fields are preserved.
+ * The suite covers null handling for optional temporal metadata.
+ * This keeps date/time metadata consistent across structured output.
  */
 #[CoversClass(Temporal::class)]
 final class TemporalTest extends TestCase
 {
     /**
-     * Verifies that $temporal->original equals $dateTime.
+     * Stores the original capture timestamp.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -52,7 +56,8 @@ final class TemporalTest extends TestCase
     }
 
     /**
-     * Verifies that $temporal->create equals $create.
+     * Stores all temporal metadata fields and offsets.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -88,7 +93,8 @@ final class TemporalTest extends TestCase
     }
 
     /**
-     * Verifies that $temporal->create is null.
+     * Accepts null temporal metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

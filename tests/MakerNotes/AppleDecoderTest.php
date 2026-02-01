@@ -35,7 +35,10 @@ use function str_replace;
 use function strlen;
 
 /**
- * Validates the Apple maker notes decoder implementation.
+ * Exercises the Apple maker notes decoder across keyed-archive payloads.
+ * It verifies camera type mapping, content identifiers, and runtime extraction.
+ * The suite covers scalar, array, and dictionary plist values used in maker notes.
+ * This ensures Apple maker notes are decoded into structured records reliably.
  */
 #[CoversClass(AppleDecoder::class)]
 #[UsesClass(AppleMakerNotes::class)]
@@ -50,7 +53,8 @@ use function strlen;
 final class AppleDecoderTest extends TestCase
 {
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Decodes a keyed-archive payload that includes camera type information.
+     * Ensures AppleDecoder maps the camera type code and extracts the content identifier.
      *
      * @return void
      */
@@ -81,7 +85,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Decodes a keyed archive containing HDR, semantic style, acceleration, and flags.
+     * Verifies AppleMakerNotes fields are populated from the archived structure.
      *
      * @return void
      */
@@ -139,7 +144,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $metadata->vendor equals 'Apple'.
+     * Parses a synthetic maker note property list blob.
+     * Ensures the metadata record and AppleMakerNotes fields are populated, including flags.
      *
      * @return void
      */
@@ -175,7 +181,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Decodes a dictionary-style maker note payload with trailing null padding.
+     * Confirms padding is ignored and key fields are parsed successfully.
      *
      * @return void
      */
@@ -195,7 +202,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Decodes flag bitmasks where all bits are zero.
+     * Ensures all known flags are present and default to false.
      *
      * @return void
      */
@@ -228,7 +236,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Decodes a maker note payload that uses the LivePhotoMovieIndex key.
+     * Verifies the decoder exposes the live photo index as an integer.
      *
      * @return void
      */
@@ -246,7 +255,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Parses a compact semantic style array from a binary plist payload.
+     * Ensures semantic style preset, warmth, and tone are extracted correctly.
      *
      * @return void
      */
@@ -267,7 +277,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Builds AppleMakerNotes from a dictionary that includes extended maker note fields.
+     * Confirms HDR, burst, focus range, OIS, and AF fields are mapped and normalized.
      *
      * @return void
      */
@@ -306,7 +317,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Normalizes MakerNoteVersion values supplied as integers, lists, or values wrappers.
+     * Ensures buildAppleMakerNotes emits a dot-separated version string for each input form.
      *
      * @param array<int, int>|array{values: list<int>}|int $makerNoteVersion
      *
@@ -340,7 +352,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Combines FocusDistanceRangeNear and FocusDistanceRangeFar into a single range.
+     * Verifies the range is preserved while related fields remain mapped.
      *
      * @return void
      */
@@ -366,7 +379,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Provides only FocusDistanceRangeNear in the maker note dictionary.
+     * Ensures the builder returns a single-element focus distance range.
      *
      * @return void
      */
@@ -387,7 +401,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Provides only FocusDistanceRangeFar as a numeric string.
+     * Confirms the builder parses it into a single-element focus distance range.
      *
      * @return void
      */
@@ -408,7 +423,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Supplies HDRImageType and ImageCaptureType codes outside the known mappings.
+     * Ensures unknown values are preserved as strings without conversion.
      *
      * @return void
      */
@@ -431,7 +447,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Maps HDR image type codes provided via the data provider.
+     * Verifies each code resolves to the expected label.
      *
      * @return void
      */
@@ -465,7 +482,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Maps image capture type codes using the data provider.
+     * Ensures each code is translated into the correct capture type label.
      *
      * @return void
      */
@@ -504,7 +522,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Decodes a textual maker note payload containing additional tagged fields.
+     * Confirms version, HDR type, burst info, focus range, and AF metrics are parsed.
      *
      * @return void
      */
@@ -535,7 +554,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $mapped is instance of AppleMakerNotes::class.
+     * Supplies known and unknown camera type codes in the maker note dictionary.
+     * Ensures known codes map to labels while unknown codes remain numeric.
      *
      * @return void
      */
@@ -562,7 +582,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Provides a SemanticStyle dictionary using a values wrapper structure.
+     * Verifies the builder falls back to dictionary parsing for semantic style fields.
      *
      * @return void
      */
@@ -590,7 +611,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Supplies a RunTime dictionary alongside LivePhotoVideoIndex.
+     * Ensures run-time data is converted to a RunTime object and livePhotoTime is computed.
      *
      * @return void
      */
@@ -625,7 +647,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Provides extended AE/AF and quality fields in multiple numeric representations.
+     * Confirms the builder normalizes these values and trims string fields.
      *
      * @return void
      */
@@ -664,7 +687,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Uses the data provider to supply AE/AF stability flags in different formats.
+     * Ensures the corresponding boolean flags are set as expected.
      *
      * @return void
      */
@@ -710,7 +734,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $metadata->apple is null.
+     * Provides a non-plist string payload that should not be decoded.
+     * Ensures the decoder returns metadata without Apple maker notes.
      *
      * @return void
      */
@@ -724,7 +749,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $scalarNotes is instance of AppleMakerNotes::class.
+     * Compares scalar flag inputs against equivalent bitmask-derived flags.
+     * Verifies both approaches yield matching normalized flag values.
      *
      * @return void
      */
@@ -793,7 +819,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Combines explicit boolean flags with bitmask-derived flags.
+     * Ensures explicit values override mask-derived defaults.
      *
      * @return void
      */
@@ -829,7 +856,8 @@ final class AppleDecoderTest extends TestCase
     }
 
     /**
-     * Verifies that $notes is instance of AppleMakerNotes::class.
+     * Supplies bit position lists for the flag masks.
+     * Confirms the decoder accepts list-based masks and maps them to booleans.
      *
      * @return void
      */

@@ -9,7 +9,7 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\imagemeta\tests\Detect;
+namespace MagicSunday\ImageMeta\Tests\Detect;
 
 use MagicSunday\ImageMeta\Core\ByteReader;
 use MagicSunday\ImageMeta\Core\ParseError;
@@ -30,7 +30,10 @@ use function rewind;
 use function strlen;
 
 /**
- * Validates format detection based on common signature bytes.
+ * Verifies container detection based on signature bytes and header guards.
+ * It covers JPEG SOI/APP0 detection and ISO BMFF brand parsing from ftyp boxes.
+ * The tests include invalid or undersized payloads to assert safe failure behavior.
+ * This keeps format detection predictable before deeper parsing begins.
  */
 #[CoversClass(FormatDetector::class)]
 #[UsesClass(ByteReader::class)]
@@ -39,7 +42,8 @@ use function strlen;
 final class FormatDetectorTest extends TestCase
 {
     /**
-     * Verifies that $detected equals ContainerType::JPEG.
+     * Uses the JPEG SOI marker and APP0 prefix to identify JPEG containers.
+     * This ensures the detector recognizes the canonical JPEG signature bytes.
      *
      * @return void
      */
@@ -54,7 +58,8 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Verifies that $detected equals ContainerType::ISOBMFF.
+     * Reads the ftyp box header and identifies ISO BMFF containers.
+     * This confirms brand-based detection for ISO BMFF signatures.
      *
      * @return void
      */
@@ -69,7 +74,8 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Verifies that $detected equals ContainerType::ISOBMFF.
+     * Skips a QuickTime wide box and continues detection.
+     * This verifies that early padding boxes do not hide ISO BMFF detection.
      *
      * @return void
      */
@@ -84,7 +90,8 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Verifies that $detected equals ContainerType::ISOBMFF.
+     * Skips a free box and then detects the subsequent ftyp brand.
+     * This ensures the detector handles leading padding boxes correctly.
      *
      * @return void
      */
@@ -99,7 +106,8 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown.
+     * Supplies a stream with an unsupported signature.
+     * This confirms a ParseError is thrown for unknown container bytes.
      *
      * @return void
      */
@@ -114,7 +122,8 @@ final class FormatDetectorTest extends TestCase
     }
 
     /**
-     * Verifies that ParseError::class is thrown with message 'Unable to read container signature'.
+     * Provides streams shorter than the required signature length.
+     * This asserts a ParseError with a specific message when reads are insufficient.
      *
      * @param string $bytes byte sequence to test
      *
@@ -134,6 +143,7 @@ final class FormatDetectorTest extends TestCase
 
     /**
      * Provides byte sequences that are insufficient to cover the signature reads.
+     * These fixtures exercise the short-read branch in the detector.
      *
      * @return iterable<string, array{0: string}>
      */
@@ -145,6 +155,7 @@ final class FormatDetectorTest extends TestCase
 
     /**
      * Creates a Stream instance backed by an in-memory temporary resource containing the provided bytes.
+     * This helper ensures the stream length matches the payload size.
      */
     private function createStream(string $bytes): Stream
     {

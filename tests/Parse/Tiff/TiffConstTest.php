@@ -21,13 +21,17 @@ use ReflectionClass;
 use function sprintf;
 
 /**
- * Ensures TIFF shared constants keep their specification-backed numeric values.
+ * Verifies TIFF constants remain aligned with the specification-defined numeric values.
+ * It checks magic numbers for classic TIFF and BigTIFF alongside type identifiers.
+ * The data provider enumerates all public constants to prevent silent drift.
+ * This guards parsers that rely on these values for type and header validation.
  */
 #[CoversClass(TiffConst::class)]
 final class TiffConstTest extends TestCase
 {
     /**
      * Provides each public constant defined by {@see TiffConst} alongside its expected numeric value.
+     * The dataset tracks TIFF magic numbers and type identifiers used across parsers.
      *
      * @return iterable<string, array{string, int}>
      */
@@ -54,7 +58,8 @@ final class TiffConstTest extends TestCase
     }
 
     /**
-     * Verifies that each TIFF constant matches its specification-defined value.
+     * Compares each constant against its expected numeric value.
+     * This guards against accidental changes to TIFF type identifiers.
      *
      * @return void
      */

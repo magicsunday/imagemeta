@@ -26,14 +26,18 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests the maker notes registry behaviour.
- * */
+ * Exercises the maker notes Registry for decoder lookup by make strings.
+ * It verifies prefix and case-insensitive matching for registered decoders.
+ * The suite checks fallback behavior when no decoder matches.
+ * This ensures vendor-specific maker note decoders are resolved reliably.
+ */
 #[CoversClass(Registry::class)]
 #[UsesClass(RegistryFactory::class)]
 final class RegistryTest extends TestCase
 {
     /**
      * Provides make strings that should resolve to the registered decoder.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @return iterable<string, array{0: string}>
      */
@@ -45,7 +49,8 @@ final class RegistryTest extends TestCase
     }
 
     /**
-     * Verifies that $registry->find($make) equals $decoder.
+     * Registers an Apple decoder and tests several make string variants.
+     * Confirms the registry resolves the same decoder for matching prefixes and casing.
      *
      * @param string $make The make string used during lookup.
      *
@@ -58,6 +63,7 @@ final class RegistryTest extends TestCase
         $decoder = new class implements MakerNotesDecoderInterface {
             /**
              * Decodes the maker notes payload for the registered Apple decoder in this test.
+             * This checks the behavior for the specific inputs used in the test.
              *
              * @param string      $raw   The raw maker notes data to decode.
              * @param string      $make  The make string associated with the image metadata.
@@ -78,7 +84,8 @@ final class RegistryTest extends TestCase
     }
 
     /**
-     * Verifies that $registry->find('Nikon Corporation') is null.
+     * Registers a Canon decoder but searches with a Nikon make string.
+     * Ensures the registry returns null when no registered prefix matches.
      *
      * @return void
      */
@@ -89,6 +96,7 @@ final class RegistryTest extends TestCase
         $registry->register('Canon', new class implements MakerNotesDecoderInterface {
             /**
              * Decodes the maker notes payload for the registered Canon decoder in this test.
+             * This checks the behavior for the specific inputs used in the test.
              *
              * @param string      $raw   The raw maker notes data to decode.
              * @param string      $make  The make string associated with the image metadata.
@@ -106,7 +114,8 @@ final class RegistryTest extends TestCase
     }
 
     /**
-     * Verifies that $registry->find('Canon Inc.') is instance of CanonDecoder::class.
+     * Builds the default registry via RegistryFactory::createDefault().
+     * Verifies that built-in decoders are registered for common camera makers.
      *
      * @return void
      */

@@ -12,13 +12,13 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes;
 
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Factory\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MetadataReader;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
@@ -28,10 +28,13 @@ use PHPUnit\Framework\TestCase;
 use function str_repeat;
 
 /**
- * Verifies that maker note metadata propagates through the model layer.
+ * Exercises maker note propagation through ParsedExif, Metadata, and StructuredMetadata layers.
+ * It verifies the same MakerNotesRecord instance is preserved across access paths.
+ * The suite checks propagation via MetadataReader and structured caches.
+ * This ensures maker notes are not lost during aggregation or transformation.
  */
 #[CoversClass(MetadataReader::class)]
-#[UsesClass(ExifAssembler::class)]
+#[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(MakerNotesRecord::class)]
 #[UsesClass(Ifd::class)]
@@ -42,7 +45,8 @@ use function str_repeat;
 final class MakerNotesPropagationTest extends TestCase
 {
     /**
-     * Verifies that $document->makerNotes() equals $makerNotes.
+     * Builds a ParsedExif document that includes a MakerNotesRecord.
+     * Confirms makerNotes() returns the same maker notes instance.
      *
      * @return void
      */
@@ -56,7 +60,8 @@ final class MakerNotesPropagationTest extends TestCase
     }
 
     /**
-     * Verifies that $metadata->makerNotes equals $makerNotes.
+     * Creates a Metadata aggregate with a MakerNotesRecord attached.
+     * Ensures the aggregate retains and exposes the same maker notes instance.
      *
      * @return void
      */

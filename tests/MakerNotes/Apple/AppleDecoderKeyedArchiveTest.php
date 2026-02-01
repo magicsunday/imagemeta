@@ -43,6 +43,11 @@ use function str_repeat;
 use function strlen;
 
 /**
+ * Exercises AppleDecoder handling of NSKeyedArchive payloads within maker notes.
+ * It verifies decoding of nested plist structures and conversion to AppleMakerNotes.
+ * The suite checks RunTime extraction and nested dictionary value normalization.
+ * This ensures keyed-archive maker notes are decoded reliably.
+ *
  * @phpstan-type NativePlistValue array<string|int, mixed>|bool|float|int|string|null
  * @phpstan-type NativePlistDictionary array<string, mixed>
  */
@@ -59,7 +64,8 @@ use function strlen;
 final class AppleDecoderKeyedArchiveTest extends TestCase
 {
     /**
-     * Verifies that $apple is instance of AppleMakerNotes::class.
+     * Decodes a synthetic NSKeyedArchive payload that models Apple maker note metadata.
+     * Verifies the decoder populates AppleMakerNotes fields and the nested RunTime value object.
      *
      * @return void
      */
@@ -91,7 +97,8 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     }
 
     /**
-     * Verifies that the expected assertion passes.
+     * Prepends padding bytes to a binary plist before decoding.
+     * Ensures the internal decoder skips padding and still reads the archive dictionary.
      *
      * @return void
      */
@@ -112,7 +119,8 @@ final class AppleDecoderKeyedArchiveTest extends TestCase
     }
 
     /**
-     * Verifies that the expected assertion passes.
+     * Wraps a keyed archive dictionary inside a MakerNote container.
+     * Confirms the resolver unwraps the archive and returns its decoded content.
      *
      * @return void
      */

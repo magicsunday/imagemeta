@@ -40,7 +40,12 @@ namespace MagicSunday\ImageMeta\Tests\Core {
     use function substr;
 
     /**
-     * Unit tests for the bounds-checked in-memory buffer abstraction.
+     * Exercises the MemoryBuffer implementation for bounds-checked reads and seeks.
+     * It uses the test hook to force short reads and verify ParseError handling.
+     * The suite validates ByteReader integration and integer decoding on buffer data.
+     * It confirms that offsets and lengths are enforced for both int and UInt64 inputs.
+     *
+     * @internal
      */
     #[CoversClass(MemoryBuffer::class)]
     #[UsesClass(ByteReader::class)]
@@ -62,6 +67,7 @@ namespace MagicSunday\ImageMeta\Tests\Core {
 
         /**
          * Delegates to the global \substr implementation while allowing tests to force short reads.
+         * This lets tests trigger the short-read ParseError path deterministically.
          *
          * @param string   $string Source string to slice.
          * @param int      $offset Starting offset to read from.
@@ -87,7 +93,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Verifies that $buffer->tell() equals 3.
+         * Seeks to an in-bounds offset and reads a byte range.
+         * This confirms the cursor moves correctly across seek/read operations.
          *
          * @return void
          */
@@ -103,7 +110,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Verifies that BoundsError::class is thrown.
+         * Seeks past the buffer length to trigger a bounds violation.
+         * This verifies that MemoryBuffer enforces strict seek limits.
          *
          * @return void
          */
@@ -117,7 +125,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Verifies that $buffer->read(5) equals 'Magic'.
+         * Reads sequential chunks and validates cursor advancement.
+         * This confirms reads return exact bytes and update the position.
          *
          * @return void
          */
@@ -133,7 +142,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Verifies that BoundsError::class is thrown.
+         * Reads to the end and then attempts to read past it.
+         * This ensures the bounds guard triggers on over-read.
          *
          * @return void
          */
@@ -149,7 +159,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Verifies that ParseError::class is thrown.
+         * Forces a short read via the substr hook to trigger ParseError.
+         * This validates the error path when the read returns fewer bytes than requested.
          *
          * @return void
          */
@@ -165,7 +176,8 @@ namespace MagicSunday\ImageMeta\Tests\Core {
         }
 
         /**
-         * Verifies that $buffer->readU8() equals 0x7F.
+         * Reads mixed-endian integer values from a single payload.
+         * This confirms endianness handling for 8/16/32/64-bit reads and cursor position at EOF.
          *
          * @return void
          */

@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Integrity value object.
+ * Exercises the Integrity value object for original file provenance and edits.
+ * It verifies original file name and digest fields are preserved.
+ * The suite covers edit flags and last-software history values.
+ * This ensures integrity metadata remains accurate for audit and display.
  */
 #[CoversClass(Integrity::class)]
 final class IntegrityTest extends TestCase
 {
     /**
-     * Verifies that $integrity->originalFileName equals 'IMG_1234.JPG'.
+     * Stores original file name metadata.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -41,7 +45,8 @@ final class IntegrityTest extends TestCase
     }
 
     /**
-     * Verifies that $integrity->originalFileName equals 'IMG_1234.JPG'.
+     * Stores editing history and integrity fields together.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -62,7 +67,8 @@ final class IntegrityTest extends TestCase
     }
 
     /**
-     * Verifies that $integrity->originalFileName is null.
+     * Accepts null integrity fields.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

@@ -17,11 +17,20 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+/**
+ * Exercises AppleDecoder numeric normalization helpers for maker note fields.
+ * It verifies rational pairs and whitespace-separated numeric values are parsed correctly.
+ * The suite checks integer and float coercion paths for mixed input types.
+ * This ensures numeric maker note values are stable and predictable.
+ *
+ * @internal
+ */
 #[CoversClass(AppleDecoder::class)]
 final class AppleDecoderNumericValueTest extends TestCase
 {
     /**
-     * Verifies that $result is not null.
+     * Provides a whitespace-separated numerator/denominator value for AFPerformance.
+     * Confirms rationalFloatValue converts the pair into a floating-point ratio.
      *
      * @return void
      */
@@ -42,7 +51,8 @@ final class AppleDecoderNumericValueTest extends TestCase
     }
 
     /**
-     * Verifies that $result is not null.
+     * Calls numericScalarValue with a whitespace-separated numeric pair.
+     * Ensures the helper parses the pair into a float ratio.
      *
      * @return void
      */

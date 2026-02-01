@@ -18,13 +18,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Capabilities mapping tests.
+ * Exercises ExifCapabilities mapping from raw EXIF version strings.
+ * It verifies handling of numeric, decimal, and malformed versions.
+ * The suite checks that unknown or empty inputs map to the fallback profile.
+ * This keeps capability resolution consistent for downstream parsing logic.
  */
 #[CoversClass(ExifCapabilities::class)]
 final class ExifCapabilitiesTest extends TestCase
 {
     /**
-     * Verifies that ExifCapabilities::fromVersion($input) equals $expected.
+     * Maps raw EXIF version strings to capability profiles.
+     * The data provider covers nulls, decimal formats, and raw four-digit codes.
      *
      * @return void
      */

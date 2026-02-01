@@ -26,8 +26,11 @@ use function rewind;
 use function strlen;
 
 /**
- * Exercises the ISO BMFF box descriptor value object.
- * */
+ * Tests the BoxDescriptor value object used to represent ISO BMFF boxes.
+ * It verifies that constructor arguments are stored verbatim, including offsets and window slices.
+ * The suite ensures distinct descriptors do not share mutable state.
+ * This keeps box metadata consistent for higher-level parsers that consume descriptors.
+ */
 #[CoversClass(BoxDescriptor::class)]
 #[UsesClass(ByteReader::class)]
 #[UsesClass(Stream::class)]
@@ -35,7 +38,8 @@ use function strlen;
 final class BoxDescriptorTest extends TestCase
 {
     /**
-     * Verifies that the box descriptor exposes constructor inputs as properties.
+     * Builds a descriptor with a window and explicit offsets/sizes.
+     * This verifies the constructor stores all fields verbatim.
      *
      * @return void
      */
@@ -64,7 +68,8 @@ final class BoxDescriptorTest extends TestCase
     }
 
     /**
-     * Verifies that distinct descriptors keep independent state.
+     * Creates two descriptors with different windows and metadata.
+     * This confirms instances do not share mutable state accidentally.
      *
      * @return void
      */

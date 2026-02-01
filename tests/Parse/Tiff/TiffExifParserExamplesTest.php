@@ -12,8 +12,8 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\Endian;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
@@ -24,12 +24,10 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Positive parsing examples derived from the EXIF 3.0 sample TIFF layouts.
- *
- * EXIF 3.0 §4.5.2 illustrates representative IFD0/ExifIFD/GPSIFD chains for
- * classic TIFF (0x002A) and BigTIFF (0x002B) in both little- and big-endian
- * order. The legacy layout is retained from EXIF 2.32 §4.5.2 with identical
- * tag groupings for these fields.
+ * Parses the EXIF 3.0 sample TIFF layouts across endian variants.
+ * It validates that common EXIF, GPS, and TIFF tags are decoded as documented examples.
+ * The suite covers both classic TIFF and BigTIFF layouts with representative IFD chains.
+ * This ensures the parser matches the published reference structures from the spec.
  */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(ParsedExif::class)]
@@ -37,7 +35,8 @@ use PHPUnit\Framework\TestCase;
 final class TiffExifParserExamplesTest extends TestCase
 {
     /**
-     * Verifies that classic little-endian EXIF examples parse common EXIF/GPS values.
+     * Parses the EXIF 3.0 classic TIFF example encoded in little-endian order.
+     * Confirms common EXIF values and GPS fields are extracted correctly.
      *
      * @return void
      */
@@ -52,7 +51,8 @@ final class TiffExifParserExamplesTest extends TestCase
     }
 
     /**
-     * Verifies that classic big-endian EXIF examples parse common EXIF/GPS values.
+     * Parses the EXIF 3.0 classic TIFF example encoded in big-endian order.
+     * Verifies the parser handles big-endian offsets and returns expected EXIF/GPS data.
      *
      * @return void
      */
@@ -67,7 +67,8 @@ final class TiffExifParserExamplesTest extends TestCase
     }
 
     /**
-     * Verifies that BigTIFF little-endian examples parse common EXIF/GPS values.
+     * Parses a BigTIFF example encoded in little-endian order with 64-bit offsets.
+     * Ensures common EXIF and GPS values match the expected sample values.
      *
      * @return void
      */
@@ -82,7 +83,8 @@ final class TiffExifParserExamplesTest extends TestCase
     }
 
     /**
-     * Verifies that BigTIFF big-endian examples parse common EXIF/GPS values.
+     * Parses a BigTIFF example encoded in big-endian order.
+     * Confirms the parser supports BigTIFF byte order and extracts expected fields.
      *
      * @return void
      */
@@ -97,7 +99,8 @@ final class TiffExifParserExamplesTest extends TestCase
     }
 
     /**
-     * Verifies that interop and thumbnail IFDs expose offsets, lengths, and compression.
+     * Builds a classic TIFF sample that includes Interop IFD and thumbnail data.
+     * Verifies interop index, thumbnail JPEG info, and tile metadata are parsed.
      *
      * @return void
      */
@@ -260,6 +263,7 @@ final class TiffExifParserExamplesTest extends TestCase
 
     /**
      * Builds a classic TIFF blob with Exif/Interop IFD chaining and a thumbnail IFD1.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * EXIF 3.0 §4.5.2 describes the classic TIFF directory layout, §4.6.3.3.1
      * specifies the Interoperability IFD pointer field, and §4.6.5.2.4 plus

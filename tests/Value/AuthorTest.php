@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Author value object.
+ * Exercises the Author value object that aggregates creator and rights-holder details.
+ * It verifies artist and owner name fields are stored verbatim.
+ * The suite checks creator contact fields (email, phone, address) are preserved together.
+ * This ensures author metadata remains consistent across structured outputs.
  */
 #[CoversClass(Author::class)]
 final class AuthorTest extends TestCase
 {
     /**
-     * Verifies that $author->artist equals 'John Doe'.
+     * Stores the provided artist name.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -50,7 +54,8 @@ final class AuthorTest extends TestCase
     }
 
     /**
-     * Verifies that $author->artist equals 'Jane Smith'.
+     * Stores all author metadata fields when provided.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -89,7 +94,8 @@ final class AuthorTest extends TestCase
     }
 
     /**
-     * Verifies that $author->artist is null.
+     * Accepts null author fields without errors.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

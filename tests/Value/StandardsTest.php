@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Standards value object.
+ * Exercises the Standards value object for EXIF and related version strings.
+ * It verifies EXIF version, profile, and FlashPix version fields are preserved.
+ * The suite covers null handling for optional standard identifiers.
+ * This ensures standards metadata remains stable for reporting and compatibility checks.
  */
 #[CoversClass(Standards::class)]
 final class StandardsTest extends TestCase
 {
     /**
-     * Verifies that $standards->exifVersion equals '3.00'.
+     * Stores EXIF version identifiers.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -40,7 +44,8 @@ final class StandardsTest extends TestCase
     }
 
     /**
-     * Verifies that $standards->exifVersion equals '2.32'.
+     * Stores EXIF profile and FlashPix version identifiers.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -59,7 +64,8 @@ final class StandardsTest extends TestCase
     }
 
     /**
-     * Verifies that $standards->exifVersion is null.
+     * Accepts null standards metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

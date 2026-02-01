@@ -19,13 +19,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Focus value object.
+ * Exercises the Focus value object for subject distance and AF metadata.
+ * It verifies subject distance values are stored alongside AF mode strings.
+ * The suite covers SubjectArea composition with type and coordinate fields.
+ * This ensures focus-related metadata remains consistent in structured output.
  */
 #[CoversClass(Focus::class)]
 final class FocusTest extends TestCase
 {
     /**
-     * Verifies that $focus->subjectDistanceM equals 2.5.
+     * Stores subject distance values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -42,7 +46,8 @@ final class FocusTest extends TestCase
     }
 
     /**
-     * Verifies that $focus->subjectArea is not null.
+     * Stores subject area rectangles when provided.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -71,7 +76,8 @@ final class FocusTest extends TestCase
     }
 
     /**
-     * Verifies that $focus->afMode equals 'Continuous'.
+     * Stores autofocus mode values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -88,7 +94,8 @@ final class FocusTest extends TestCase
     }
 
     /**
-     * Verifies that $focus->subjectDistanceM is null.
+     * Accepts null focus fields.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

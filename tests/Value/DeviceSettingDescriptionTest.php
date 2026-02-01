@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the DeviceSettingDescription value object.
+ * Exercises the DeviceSettingDescription value object for EXIF device settings.
+ * It verifies column/row dimensions and settings arrays are preserved.
+ * The suite covers both empty settings and populated rows.
+ * This keeps device setting metadata stable for structured output.
  */
 #[CoversClass(DeviceSettingDescription::class)]
 final class DeviceSettingDescriptionTest extends TestCase
 {
     /**
-     * Verifies that $desc->columns equals 5.
+     * Stores basic device setting dimensions and settings lists.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -42,7 +46,8 @@ final class DeviceSettingDescriptionTest extends TestCase
     }
 
     /**
-     * Verifies that $desc->columns equals 3.
+     * Stores full device setting descriptions with rows and settings.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -61,7 +66,8 @@ final class DeviceSettingDescriptionTest extends TestCase
     }
 
     /**
-     * Verifies that $desc->columns equals 1.
+     * Handles empty settings lists while preserving dimensions.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

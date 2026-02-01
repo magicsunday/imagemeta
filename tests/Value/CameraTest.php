@@ -18,11 +18,20 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the Camera value object with make/model and capture-source metadata.
+ * It verifies owner name and firmware fields are stored and exposed correctly.
+ * The suite checks enum-backed fields like FileSource and SensingMethod.
+ * This ensures camera identity and source data remain consistent for consumers.
+ *
+ * @internal
+ */
 #[CoversClass(Camera::class)]
 final class CameraTest extends TestCase
 {
     /**
-     * Verifies that $camera->make equals 'Canon'.
+     * Exposes camera metadata provided via the constructor.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */

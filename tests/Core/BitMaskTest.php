@@ -17,6 +17,14 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Validates the BitMask constants against their expected hexadecimal values.
+ * It composes masks from primitive bits and checks that named aliases match the combinations.
+ * The suite covers derived masks created via shifting, incrementing, and halving operations.
+ * It also verifies boundary constants like INT31_MAX remain consistent with sign-bit math.
+ *
+ * @internal
+ */
 #[CoversClass(BitMask::class)]
 final class BitMaskTest extends TestCase
 {
@@ -49,7 +57,8 @@ final class BitMaskTest extends TestCase
     }
 
     /**
-     * Verifies that BitMask::{$constant} equals $this->fromHex($hex).
+     * Confirms bitmask constants match their expected hex values.
+     * This ensures the constants remain correct when refactoring bit operations.
      *
      * @return void
      */
@@ -91,7 +100,8 @@ final class BitMaskTest extends TestCase
     }
 
     /**
-     * Verifies that $this->bitMaskValue($expected) equals $mask.
+     * Combines bit constants to match expected composite masks.
+     * This verifies that composed masks equal their named constants.
      *
      * @param array<int, string> $bits
      *
@@ -119,7 +129,8 @@ final class BitMaskTest extends TestCase
     }
 
     /**
-     * Verifies that $this->bitMaskValue($expected) equals $shifted.
+     * Matches shifted masks to their corresponding constants.
+     * This confirms that bit shifting preserves the expected bit positions.
      *
      * @return void
      */
@@ -148,7 +159,8 @@ final class BitMaskTest extends TestCase
     }
 
     /**
-     * Verifies that $this->bitMaskValue($expected) equals $incremented.
+     * Confirms incremented masks equal the expected base constants.
+     * This guards against off-by-one mistakes in base and max constants.
      *
      * @return void
      */
@@ -177,7 +189,8 @@ final class BitMaskTest extends TestCase
     }
 
     /**
-     * Verifies that $this->bitMaskValue($expected) equals $halved.
+     * Confirms halved masks equal the expected sign-bit constants.
+     * This verifies sign-bit constants align with their base values.
      *
      * @return void
      */
@@ -191,7 +204,8 @@ final class BitMaskTest extends TestCase
     }
 
     /**
-     * Verifies that $this->bitMaskValue('INT31_MAX') equals $decremented.
+     * Defines INT31_MAX as one less than the 32-bit sign bit.
+     * This asserts the signed 31-bit maximum boundary is derived correctly.
      *
      * @return void
      */

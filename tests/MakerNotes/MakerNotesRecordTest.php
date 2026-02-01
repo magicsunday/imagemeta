@@ -19,13 +19,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Validates the maker notes record value object.
- * */
+ * Exercises the MakerNotesRecord value object for vendor, length, and digest fields.
+ * It verifies valid records store identifiers and optional vendor-specific data.
+ * The suite checks invalid argument combinations raise the expected exceptions.
+ * This ensures maker note records remain well-formed for downstream use.
+ */
 #[CoversClass(MakerNotesRecord::class)]
 final class MakerNotesRecordTest extends TestCase
 {
     /**
-     * Verifies that $metadata->vendor equals 'Contoso'.
+     * Constructs a MakerNotesRecord with valid vendor, length, and SHA-1 values.
+     * Verifies the fields are stored and optional vendor-specific records remain null.
      *
      * @return void
      */
@@ -43,6 +47,7 @@ final class MakerNotesRecordTest extends TestCase
 
     /**
      * Provides invalid constructor argument combinations.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @return array<string, array{0:string,1:int,2:string}>
      */
@@ -56,7 +61,8 @@ final class MakerNotesRecordTest extends TestCase
     }
 
     /**
-     * Verifies that InvalidArgumentException::class is thrown.
+     * Raises the expected exception for the error path.
+     * This verifies guardrails and error reporting behavior.
      *
      * @param string $vendor Vendor name provided to the constructor.
      * @param int    $length Payload length provided to the constructor.

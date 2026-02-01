@@ -15,6 +15,9 @@ use function pack;
 
 /**
  * Provides synthetic ICC profile fixtures for unit tests.
+ * It defines minimal profiles with required headers and a description tag.
+ * The fixtures are packed from hex strings to ensure deterministic byte layouts.
+ * This keeps ICC parser tests stable without large binary files.
  */
 final class IccFixtures
 {

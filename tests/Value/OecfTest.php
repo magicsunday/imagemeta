@@ -17,20 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for OECF (Opto-Electronic Conversion Function) value object.
- *
- * EXIF 3.0 §4.6.6.7.6 (Figure 16, Table 11) and EXIF 2.32 §4.6.3 define the OECF structure:
- * - columns: number of input (pixel value) columns
- * - rows: number of output (luminance) rows
- * - columnLabels: names for each column
- * - rowLabels: names for each row
- * - values: matrix of SRATIONAL values
+ * Exercises the Oecf value object creation from decoded matrix payloads.
+ * It validates column/row dimensions, labels, and SRATIONAL value matrices.
+ * The suite ensures invalid or incomplete matrices return null rather than partial data.
+ * This keeps OECF metadata aligned with EXIF-defined structure and expectations.
  */
 #[CoversClass(Oecf::class)]
 final class OecfTest extends TestCase
 {
     /**
-     * Verifies that $oecf is not null.
+     * Builds OECF values from decoded matrix data.
+     * It validates the transformation using representative inputs.
      *
      * @return void
      */
@@ -69,7 +66,8 @@ final class OecfTest extends TestCase
     }
 
     /**
-     * Verifies that $oecf is not null.
+     * Accepts null entries within OECF matrices.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -95,7 +93,8 @@ final class OecfTest extends TestCase
     }
 
     /**
-     * Verifies that Oecf::fromMatrix(null) is null.
+     * Returns null for empty or missing OECF matrix inputs.
+     * It verifies the error path and guardrail handling.
      *
      * @return void
      */
@@ -108,7 +107,8 @@ final class OecfTest extends TestCase
     }
 
     /**
-     * Verifies that Oecf::fromMatrix($incomplete) is null.
+     * Returns null when required OECF fields are missing.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -124,7 +124,8 @@ final class OecfTest extends TestCase
     }
 
     /**
-     * Verifies that Oecf::fromMatrix($matrix) is null.
+     * Rejects OECF matrices with invalid dimension declarations.
+     * It verifies the error path and guardrail handling.
      *
      * @return void
      */
@@ -148,7 +149,8 @@ final class OecfTest extends TestCase
     }
 
     /**
-     * Verifies that Oecf::fromMatrix($matrix) is null.
+     * Rejects OECF matrices when row counts do not match.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -171,7 +173,8 @@ final class OecfTest extends TestCase
     }
 
     /**
-     * Verifies that Oecf::fromMatrix($matrix) is null.
+     * Rejects OECF matrices when column counts do not match.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

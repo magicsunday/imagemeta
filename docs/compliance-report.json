@@ -1,12 +1,12 @@
 {
-    "generated": "2026-01-30T13:08:44+00:00",
+    "generated": "2026-02-03T17:30:24+00:00",
     "summary": {
         "total_spec_tags": 227,
-        "implemented": 227,
-        "partial": 0,
-        "missing": 0,
+        "implemented": 0,
+        "partial": 47,
+        "missing": 180,
         "extra": 0,
-        "coverage_percent": 100
+        "coverage_percent": 0
     },
     "categories": {
         "tiff_tags": {
@@ -17,14 +17,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "newSubfileType",
-                    "subfileType"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "255": {
                 "tag_id": "0x00FF",
@@ -33,14 +32,12 @@
                 "source": "TIFF 5.0",
                 "required": false,
                 "deprecated": true,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "newSubfileType",
-                    "subfileType"
-                ],
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": [
+                    "No getter method in ParsedExif",
                     "Tag is deprecated in specification"
                 ]
             },
@@ -51,12 +48,10 @@
                 "source": "TIFF 6.0",
                 "required": true,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageWidth"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "257": {
@@ -66,13 +61,10 @@
                 "source": "TIFF 6.0",
                 "required": true,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageHeight",
-                    "imageLength"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "258": {
@@ -82,12 +74,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "bitsPerSample"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "259": {
@@ -97,13 +87,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "thumbnailCompression",
-                    "compression"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "262": {
@@ -113,12 +100,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "photometric"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "263": {
@@ -128,13 +113,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "threshholding"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "264": {
                 "tag_id": "0x0108",
@@ -143,13 +128,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "cellWidth"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "265": {
                 "tag_id": "0x0109",
@@ -158,13 +143,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "cellLength"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "266": {
                 "tag_id": "0x010A",
@@ -173,13 +158,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "fillOrder"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "269": {
                 "tag_id": "0x010D",
@@ -188,13 +173,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "documentName"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "270": {
                 "tag_id": "0x010E",
@@ -203,12 +188,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageDescription"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "271": {
@@ -218,14 +201,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "makerNotes",
-                    "cameraMake",
-                    "lensMake"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "272": {
@@ -235,13 +214,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "cameraModel",
-                    "lensModel"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "273": {
@@ -251,13 +227,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "stripOffsets",
-                    "thumbnailStripOffsets"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "274": {
@@ -267,13 +240,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "orientation",
-                    "orientationDescription"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "277": {
@@ -283,12 +253,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "samplesPerPixel"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "278": {
@@ -298,12 +266,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "rowsPerStrip"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "279": {
@@ -313,13 +279,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "stripByteCounts",
-                    "thumbnailStripByteCounts"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "280": {
@@ -329,14 +292,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "minSampleValue",
-                    "sMinSampleValue"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "281": {
                 "tag_id": "0x0119",
@@ -345,14 +307,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "maxSampleValue",
-                    "sMaxSampleValue"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "282": {
                 "tag_id": "0x011A",
@@ -361,12 +322,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneXResolution"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "283": {
@@ -376,12 +335,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneYResolution"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "284": {
@@ -391,12 +348,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "planarConfiguration"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "285": {
@@ -406,13 +361,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "pageName"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "286": {
                 "tag_id": "0x011E",
@@ -421,13 +376,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "xPosition"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "287": {
                 "tag_id": "0x011F",
@@ -436,13 +391,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "yPosition"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "288": {
                 "tag_id": "0x0120",
@@ -451,13 +406,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "freeOffsets"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "289": {
                 "tag_id": "0x0121",
@@ -466,13 +421,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "freeByteCounts"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "290": {
                 "tag_id": "0x0122",
@@ -481,13 +436,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "grayResponseUnit"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "291": {
                 "tag_id": "0x0123",
@@ -496,13 +451,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "grayResponseCurve"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "292": {
                 "tag_id": "0x0124",
@@ -511,13 +466,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "t4Options"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "293": {
                 "tag_id": "0x0125",
@@ -526,13 +481,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "t6Options"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "296": {
                 "tag_id": "0x0128",
@@ -541,13 +496,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneResolutionUnit",
-                    "resolutionUnit"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "297": {
@@ -557,13 +509,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "pageNumber"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "301": {
                 "tag_id": "0x012D",
@@ -572,12 +524,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "transferFunction"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "305": {
@@ -587,15 +537,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "software",
-                    "rawDevelopingSoftware",
-                    "imageEditingSoftware",
-                    "metadataEditingSoftware"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "306": {
@@ -605,19 +550,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "dateTimeOriginalRaw",
-                    "dateTimeOriginal",
-                    "dateTimeOriginalBestEffort",
-                    "dateTimeDigitizedRaw",
-                    "dateTimeRaw",
-                    "captureDateTime",
-                    "dateTimeDigitized",
-                    "dateTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "315": {
@@ -627,12 +563,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "artist"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "316": {
@@ -642,13 +576,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "hostComputer"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "317": {
                 "tag_id": "0x013D",
@@ -657,13 +591,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "predictor"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "318": {
                 "tag_id": "0x013E",
@@ -672,12 +606,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "whitePoint"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "319": {
@@ -687,12 +619,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "primaryChromaticities"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "320": {
@@ -702,13 +632,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "colorMap"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "321": {
                 "tag_id": "0x0141",
@@ -717,13 +647,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "halftoneHints"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "322": {
                 "tag_id": "0x0142",
@@ -732,14 +662,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "tileWidth",
-                    "thumbnailTileWidth"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "323": {
                 "tag_id": "0x0143",
@@ -748,14 +677,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "tileLength",
-                    "thumbnailTileLength"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "324": {
                 "tag_id": "0x0144",
@@ -764,14 +692,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "tileOffsets",
-                    "thumbnailTileOffsets"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "325": {
                 "tag_id": "0x0145",
@@ -780,14 +707,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "tileByteCounts",
-                    "thumbnailTileByteCounts"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "332": {
                 "tag_id": "0x014C",
@@ -796,13 +722,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "inkSet"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "333": {
                 "tag_id": "0x014D",
@@ -811,13 +737,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "inkNames"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "334": {
                 "tag_id": "0x014E",
@@ -826,13 +752,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "numberOfInks"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "336": {
                 "tag_id": "0x0150",
@@ -841,13 +767,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "dotRange"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "337": {
                 "tag_id": "0x0151",
@@ -856,13 +782,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "targetPrinter"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "338": {
                 "tag_id": "0x0152",
@@ -871,13 +797,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "extraSamples"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "339": {
                 "tag_id": "0x0153",
@@ -886,13 +812,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "sampleFormat"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "340": {
                 "tag_id": "0x0154",
@@ -901,13 +827,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "minSampleValue"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "341": {
                 "tag_id": "0x0155",
@@ -916,13 +842,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "maxSampleValue"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "342": {
                 "tag_id": "0x0156",
@@ -931,13 +857,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "transferRange"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "512": {
                 "tag_id": "0x0200",
@@ -946,13 +872,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegProc"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "513": {
                 "tag_id": "0x0201",
@@ -961,12 +887,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegInterchangeFormat"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "514": {
@@ -976,12 +900,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegInterchangeFormatLength"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "515": {
@@ -991,13 +913,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegRestartInterval"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "517": {
                 "tag_id": "0x0205",
@@ -1006,13 +928,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "predictor"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "518": {
                 "tag_id": "0x0206",
@@ -1021,13 +943,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegPointTransforms"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "519": {
                 "tag_id": "0x0207",
@@ -1036,13 +958,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegQTables"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "520": {
                 "tag_id": "0x0208",
@@ -1051,13 +973,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegDCTables"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "521": {
                 "tag_id": "0x0209",
@@ -1066,13 +988,13 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
+                "status": "partial",
                 "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegACTables"
-                ],
-                "notes": []
+                "getter_method_exists": false,
+                "getter_methods": [],
+                "notes": [
+                    "No getter method in ParsedExif"
+                ]
             },
             "529": {
                 "tag_id": "0x0211",
@@ -1081,12 +1003,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "ycbcrCoefficients"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "530": {
@@ -1096,12 +1016,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "ycbcrSubSampling"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "531": {
@@ -1111,12 +1029,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "ycbcrPositioning"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "532": {
@@ -1126,12 +1042,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "referenceBlackWhite"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "33432": {
@@ -1141,12 +1055,10 @@
                 "source": "TIFF 6.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "copyright"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             }
         },
@@ -1158,12 +1070,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageWidth"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "257": {
@@ -1173,13 +1083,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageHeight",
-                    "imageLength"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "258": {
@@ -1189,12 +1096,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "bitsPerSample"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "259": {
@@ -1204,13 +1109,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "thumbnailCompression",
-                    "compression"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "262": {
@@ -1220,12 +1122,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "photometric"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "270": {
@@ -1235,12 +1135,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageDescription"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "271": {
@@ -1250,14 +1148,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "makerNotes",
-                    "cameraMake",
-                    "lensMake"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "272": {
@@ -1267,13 +1161,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "cameraModel",
-                    "lensModel"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "273": {
@@ -1283,13 +1174,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "stripOffsets",
-                    "thumbnailStripOffsets"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "274": {
@@ -1299,13 +1187,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "orientation",
-                    "orientationDescription"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "277": {
@@ -1315,12 +1200,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "samplesPerPixel"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "278": {
@@ -1330,12 +1213,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "rowsPerStrip"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "279": {
@@ -1345,13 +1226,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "stripByteCounts",
-                    "thumbnailStripByteCounts"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "282": {
@@ -1361,12 +1239,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneXResolution"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "283": {
@@ -1376,12 +1252,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneYResolution"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "284": {
@@ -1391,12 +1265,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "planarConfiguration"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "296": {
@@ -1406,13 +1278,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneResolutionUnit",
-                    "resolutionUnit"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "301": {
@@ -1422,12 +1291,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "transferFunction"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "305": {
@@ -1437,15 +1304,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "software",
-                    "rawDevelopingSoftware",
-                    "imageEditingSoftware",
-                    "metadataEditingSoftware"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "306": {
@@ -1455,19 +1317,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "dateTimeOriginalRaw",
-                    "dateTimeOriginal",
-                    "dateTimeOriginalBestEffort",
-                    "dateTimeDigitizedRaw",
-                    "dateTimeRaw",
-                    "captureDateTime",
-                    "dateTimeDigitized",
-                    "dateTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "315": {
@@ -1477,12 +1330,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "artist"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "318": {
@@ -1492,12 +1343,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "whitePoint"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "319": {
@@ -1507,12 +1356,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "primaryChromaticities"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "513": {
@@ -1522,12 +1369,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegInterchangeFormat"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "514": {
@@ -1537,12 +1382,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "jpegInterchangeFormatLength"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "529": {
@@ -1552,12 +1395,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "ycbcrCoefficients"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "530": {
@@ -1567,12 +1408,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "ycbcrSubSampling"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "531": {
@@ -1582,12 +1421,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "ycbcrPositioning"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "532": {
@@ -1597,12 +1434,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "referenceBlackWhite"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "33432": {
@@ -1612,12 +1447,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "copyright"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34665": {
@@ -1627,12 +1460,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [],
                 "notes": [
-                    "Structural tag (IFD pointer) - not exposed as getter method"
+                    "Structural tag (IFD pointer) - not exposed as getter method",
+                    "Missing constant in ExifTag.php and TiffTag.php"
                 ]
             },
             "34853": {
@@ -1642,12 +1476,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [],
                 "notes": [
-                    "Structural tag (IFD pointer) - not exposed as getter method"
+                    "Structural tag (IFD pointer) - not exposed as getter method",
+                    "Missing constant in ExifTag.php and TiffTag.php"
                 ]
             },
             "33434": {
@@ -1657,14 +1492,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "exposureTime",
-                    "exposureTimeFormatted",
-                    "sourceExposureTimesOfCompositeImage"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "33437": {
@@ -1674,12 +1505,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "fNumber"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34850": {
@@ -1689,12 +1518,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "exposureProgram"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34852": {
@@ -1704,12 +1531,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "spectralSensitivity"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34855": {
@@ -1719,14 +1544,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "iso",
-                    "isoBestEffort",
-                    "photographicSensitivity"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34856": {
@@ -1736,13 +1557,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "oecf",
-                    "oecfPayload"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34864": {
@@ -1752,12 +1570,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "iso"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34865": {
@@ -1767,12 +1583,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "iso"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34866": {
@@ -1782,12 +1596,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "iso"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34867": {
@@ -1797,14 +1609,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "iso",
-                    "isoBestEffort",
-                    "iSOSpeed"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34868": {
@@ -1814,12 +1622,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "iso"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "34869": {
@@ -1829,12 +1635,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "iso"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "36864": {
@@ -1844,12 +1648,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "exifVersion"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "36867": {
@@ -1859,15 +1661,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "dateTimeOriginalRaw",
-                    "dateTimeOriginal",
-                    "dateTimeOriginalBestEffort",
-                    "dateTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "36868": {
@@ -1877,14 +1674,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "dateTimeDigitizedRaw",
-                    "dateTimeDigitized",
-                    "dateTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "36880": {
@@ -1894,14 +1687,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "offsetTimeOriginal",
-                    "offsetTimeDigitized",
-                    "offsetTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "36881": {
@@ -1911,13 +1700,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "offsetTimeOriginal",
-                    "offsetTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "36882": {
@@ -1927,13 +1713,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "offsetTimeDigitized",
-                    "offsetTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37121": {
@@ -1943,14 +1726,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "componentsConfiguration",
-                    "componentsConfigurationLabels",
-                    "componentsConfigurationDescription"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37122": {
@@ -1960,12 +1739,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "compressedBitsPerPixel"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37377": {
@@ -1975,12 +1752,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "shutterSpeedValue"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37378": {
@@ -1990,13 +1765,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "apertureValue",
-                    "apertureValueFormatted"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37379": {
@@ -2006,13 +1778,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "brightnessValue",
-                    "brightnessValueFormatted"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37380": {
@@ -2022,12 +1791,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "exposureBias"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37381": {
@@ -2037,12 +1804,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "apertureValue"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37382": {
@@ -2052,13 +1817,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "subjectDistanceRange",
-                    "subjectDistance"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37383": {
@@ -2068,12 +1830,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "meteringMode"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37384": {
@@ -2083,12 +1843,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "lightSource"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37385": {
@@ -2098,14 +1856,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "flashpixVersion",
-                    "flash",
-                    "flashEnergy"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37386": {
@@ -2115,14 +1869,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalLengthMm",
-                    "focalLength35Mm",
-                    "focalLengthIn35mmFilm"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37396": {
@@ -2132,12 +1882,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "subjectArea"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37500": {
@@ -2147,12 +1895,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "makerNotes"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37510": {
@@ -2162,14 +1908,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "userComment",
-                    "userCommentEncoding",
-                    "userCommentEncodingBestEffort"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37520": {
@@ -2179,14 +1921,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "subSecTimeOriginal",
-                    "subSecTimeDigitized",
-                    "subSecTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37521": {
@@ -2196,13 +1934,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "subSecTimeOriginal",
-                    "subSecTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37522": {
@@ -2212,13 +1947,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "subSecTimeDigitized",
-                    "subSecTime"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37888": {
@@ -2228,12 +1960,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "temperatureCelsius"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37889": {
@@ -2243,12 +1973,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "humidityPercent"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37890": {
@@ -2258,12 +1986,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "pressureHPa"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37891": {
@@ -2273,12 +1999,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "waterDepthMeters"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37892": {
@@ -2288,13 +2012,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "accelerationVector",
-                    "accelerationMs2"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "37893": {
@@ -2304,12 +2025,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "cameraElevationAngleDeg"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "40960": {
@@ -2319,13 +2038,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "flashpixVersion",
-                    "flash"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "40961": {
@@ -2335,12 +2051,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "colorSpace"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "40962": {
@@ -2350,13 +2064,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageWidth",
-                    "pixelXDimension"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "40963": {
@@ -2366,13 +2077,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageHeight",
-                    "pixelYDimension"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "40964": {
@@ -2382,12 +2090,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "relatedSoundFile"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "40965": {
@@ -2397,12 +2103,13 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
+                "status": "partial",
+                "constant_defined": false,
                 "getter_method_exists": true,
                 "getter_methods": [],
                 "notes": [
-                    "Structural tag (IFD pointer) - not exposed as getter method"
+                    "Structural tag (IFD pointer) - not exposed as getter method",
+                    "Missing constant in ExifTag.php and TiffTag.php"
                 ]
             },
             "41483": {
@@ -2412,13 +2119,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "flash",
-                    "flashEnergy"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41484": {
@@ -2428,12 +2132,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "spatialFrequencyResponse"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41486": {
@@ -2443,12 +2145,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneXResolution"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41487": {
@@ -2458,12 +2158,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneYResolution"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41488": {
@@ -2473,13 +2171,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalPlaneResolutionUnit",
-                    "resolutionUnit"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41492": {
@@ -2489,12 +2184,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "subjectLocation"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41493": {
@@ -2504,13 +2197,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "recommendedExposureIndex",
-                    "exposureIndex"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41495": {
@@ -2520,12 +2210,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "sensingMethod"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41728": {
@@ -2535,12 +2223,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "fileSource"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41729": {
@@ -2550,12 +2236,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "sceneType"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41730": {
@@ -2565,13 +2249,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "cfaPattern",
-                    "cfaPatternColors"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41985": {
@@ -2581,12 +2262,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "customRendered"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41986": {
@@ -2596,12 +2275,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "exposureMode"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41987": {
@@ -2611,12 +2288,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "whiteBalance"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41988": {
@@ -2626,12 +2301,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "digitalZoomRatio"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41989": {
@@ -2641,13 +2314,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "focalLength35Mm",
-                    "focalLengthIn35mmFilm"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41990": {
@@ -2657,12 +2327,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "sceneCaptureType"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41991": {
@@ -2672,12 +2340,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gainControl"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41992": {
@@ -2687,12 +2353,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "contrast"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41993": {
@@ -2702,12 +2366,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "saturation"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41994": {
@@ -2717,12 +2379,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "sharpness"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41995": {
@@ -2732,12 +2392,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "deviceSettingDescription"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "41996": {
@@ -2747,13 +2405,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "subjectDistanceRange",
-                    "subjectDistance"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42016": {
@@ -2763,12 +2418,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageUniqueId"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42032": {
@@ -2778,12 +2431,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "ownerName"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42033": {
@@ -2793,12 +2444,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "bodySerialNumber"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42034": {
@@ -2808,12 +2457,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "lensSpecification"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42035": {
@@ -2823,12 +2470,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "lensMake"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42036": {
@@ -2838,12 +2483,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "lensModel"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42037": {
@@ -2853,12 +2496,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "lensSerialNumber"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42038": {
@@ -2868,12 +2509,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageTitle"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42039": {
@@ -2883,12 +2522,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "photographer"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42040": {
@@ -2898,12 +2535,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageEditor"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42041": {
@@ -2913,12 +2548,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "cameraFirmware"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42042": {
@@ -2928,12 +2561,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "rawDevelopingSoftware"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42043": {
@@ -2943,12 +2574,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "imageEditingSoftware"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42044": {
@@ -2958,12 +2587,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "metadataEditingSoftware"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42080": {
@@ -2973,14 +2600,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "compositeImage",
-                    "sourceImageNumberOfCompositeImage",
-                    "sourceExposureTimesOfCompositeImage"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42081": {
@@ -2990,13 +2613,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "compositeImage",
-                    "sourceImageNumberOfCompositeImage"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42082": {
@@ -3006,14 +2626,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "exposureTime",
-                    "compositeImage",
-                    "sourceExposureTimesOfCompositeImage"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             "42240": {
@@ -3023,12 +2639,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gamma"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             }
         },
@@ -3040,12 +2654,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3055,12 +2667,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3070,12 +2680,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3085,12 +2693,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3100,12 +2706,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3115,12 +2719,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3130,12 +2732,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3145,12 +2745,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3160,12 +2758,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3175,12 +2771,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3190,12 +2784,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3205,12 +2797,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3220,12 +2810,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3235,12 +2823,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3250,12 +2836,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3265,12 +2849,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3280,12 +2862,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3295,12 +2875,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3310,12 +2888,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3325,12 +2901,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3340,12 +2914,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3355,12 +2927,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3370,12 +2940,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3385,12 +2953,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3400,12 +2966,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3415,12 +2979,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3430,12 +2992,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3445,12 +3005,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3460,12 +3018,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3475,12 +3031,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3490,12 +3044,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             },
             {
@@ -3505,12 +3057,10 @@
                 "source": "EXIF 3.0",
                 "required": false,
                 "deprecated": false,
-                "status": "implemented",
-                "constant_defined": true,
-                "getter_method_exists": true,
-                "getter_methods": [
-                    "gps"
-                ],
+                "status": "missing",
+                "constant_defined": false,
+                "getter_method_exists": false,
+                "getter_methods": [],
                 "notes": []
             }
         ]

@@ -11,16 +11,18 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * GPS latitude/longitude hemisphere reference enumeration.
  *
  * EXIF 3.0 §4.6.6 Table 27 (GPS Attribute Information) defines the reference
  * values for GPS latitude and longitude hemisphere indicators.
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_LATITUDE_REF
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_LONGITUDE_REF
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_DEST_LATITUDE_REF
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::GPS_DEST_LONGITUDE_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_LATITUDE_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_LONGITUDE_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_DEST_LATITUDE_REF
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::GPS_DEST_LONGITUDE_REF
  */
 enum GpsLatLonRef: string
 {

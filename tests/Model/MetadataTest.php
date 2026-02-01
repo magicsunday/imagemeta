@@ -9,25 +9,25 @@
 
 declare(strict_types=1);
 
-namespace MagicSunday\imagemeta\tests\Model;
+namespace MagicSunday\ImageMeta\Tests\Model;
 
+use MagicSunday\ImageMeta\Exif\Converters\ExifFlash;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Factory\ValueFactory;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
-use MagicSunday\ImageMeta\Factory\Exif\ValueFactory;
-use MagicSunday\ImageMeta\Factory\ExifAssembler;
+use MagicSunday\ImageMeta\Factory\StructuredMetadataBuilder;
 use MagicSunday\ImageMeta\Factory\StructuredMetadataCache;
-use MagicSunday\ImageMeta\Factory\StructuredMetadataFactory;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotes;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\Metadata;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use MagicSunday\ImageMeta\Value\Audio;
@@ -40,8 +40,6 @@ use MagicSunday\ImageMeta\Value\CompositeImageInfo;
 use MagicSunday\ImageMeta\Value\Container;
 use MagicSunday\ImageMeta\Value\Derived;
 use MagicSunday\ImageMeta\Value\Device;
-use MagicSunday\ImageMeta\Value\Enum\EnumFromIntStringNullable;
-use MagicSunday\ImageMeta\Value\ExifFlash;
 use MagicSunday\ImageMeta\Value\Exposure;
 use MagicSunday\ImageMeta\Value\File;
 use MagicSunday\ImageMeta\Value\FlashPix;
@@ -55,15 +53,17 @@ use MagicSunday\ImageMeta\Value\Lens;
 use MagicSunday\ImageMeta\Value\Motion;
 use MagicSunday\ImageMeta\Value\MultiPicture;
 use MagicSunday\ImageMeta\Value\ProcessingSettings;
-use MagicSunday\ImageMeta\Value\Regions;
+use MagicSunday\ImageMeta\Value\RegionCollection;
 use MagicSunday\ImageMeta\Value\RelatedAssets;
 use MagicSunday\ImageMeta\Value\Rights;
 use MagicSunday\ImageMeta\Value\Scene;
 use MagicSunday\ImageMeta\Value\Sensor;
 use MagicSunday\ImageMeta\Value\Standards;
+use MagicSunday\ImageMeta\Value\StructuredMetadata;
 use MagicSunday\ImageMeta\Value\Temporal;
 use MagicSunday\ImageMeta\Value\Thumbnail;
 use MagicSunday\ImageMeta\Value\TiffData;
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
 use MagicSunday\ImageMeta\Value\Video;
 use MagicSunday\ImageMeta\Value\WhiteBalanceDetails;
 use MagicSunday\ImageMeta\Value\Xmp;
@@ -74,8 +74,11 @@ use PHPUnit\Framework\Attributes\UsesTrait;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Test case for the aggregated metadata container model.
- * */
+ * Exercises the Metadata aggregate as the central container for parsed blobs and documents.
+ * It builds instances with EXIF, XMP, QuickTime, and maker note inputs to verify storage.
+ * The suite validates structured metadata assembly via the builder/cache paths.
+ * This ensures callers get consistent readonly values derived from the aggregate.
+ */
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(ExifTag::class)]
 #[UsesClass(Ifd::class)]
@@ -89,7 +92,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(ExifCapabilities::class)]
 #[UsesClass(ValueConverters::class)]
 #[UsesClass(ValueFactory::class)]
-#[UsesClass(StructuredMetadataFactory::class)]
+#[UsesClass(StructuredMetadata::class)]
 #[UsesTrait(EnumFromIntStringNullable::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
@@ -118,7 +121,7 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(MultiPicture::class)]
 #[UsesClass(Thumbnail::class)]
 #[UsesClass(ProcessingSettings::class)]
-#[UsesClass(Regions::class)]
+#[UsesClass(RegionCollection::class)]
 #[UsesClass(RelatedAssets::class)]
 #[UsesClass(Rights::class)]
 #[UsesClass(Scene::class)]
@@ -129,13 +132,14 @@ use PHPUnit\Framework\TestCase;
 #[UsesClass(Video::class)]
 #[UsesClass(WhiteBalanceDetails::class)]
 #[UsesClass(Xmp::class)]
-#[UsesClass(ExifAssembler::class)]
+#[UsesClass(StructuredMetadataBuilder::class)]
 #[UsesClass(StructuredMetadataCache::class)]
 #[CoversClass(Metadata::class)]
 final class MetadataTest extends TestCase
 {
     /**
-     * Verifies that $metadata->exifBlobs equals $exifBlobs.
+     * Stores provided metadata components and exposes them via accessors.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -220,7 +224,8 @@ final class MetadataTest extends TestCase
     }
 
     /**
-     * Verifies that $metadata->exifBlobs equals [].
+     * Defaults optional metadata fields to null or empty collections.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -248,7 +253,8 @@ final class MetadataTest extends TestCase
     }
 
     /**
-     * Verifies that $metadata->exifBlobs[0] equals 'primary-exif-blob'.
+     * Exposes aggregated metadata values across stored components.
+     * It confirms optional fields are accepted without errors.
      *
      * @return void
      */
@@ -293,7 +299,8 @@ final class MetadataTest extends TestCase
     }
 
     /**
-     * Verifies that $document is instance of XmpDocument::class.
+     * Builds a selective XMP document from available blobs when missing.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -329,7 +336,8 @@ XML;
     }
 
     /**
-     * Verifies that $document is instance of XmpDocument::class.
+     * Merges multiple XMP blobs into a single selective document.
+     * It exercises the scenario described by the test name.
      *
      * @return void
      */
@@ -366,7 +374,8 @@ XML;
     }
 
     /**
-     * Verifies that $metadata->selectiveXmpDocument() equals $xmpDoc.
+     * Reuses an existing XMP document when present.
+     * It exercises the scenario described by the test name.
      *
      * @return void
      */
@@ -381,7 +390,8 @@ XML;
     }
 
     /**
-     * Verifies that $document is instance of IptcDocument::class.
+     * Builds a selective IPTC document from Photoshop resource blocks.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -414,7 +424,8 @@ XML;
     }
 
     /**
-     * Verifies that $second equals $first.
+     * Caches the structured metadata aggregate.
+     * It ensures cached results are reused on subsequent access.
      *
      * @return void
      */

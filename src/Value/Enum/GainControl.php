@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * Enumerates the gain control adjustments described for the GainControl tag in
  * EXIF 3.0 §4.6.6.7.41 (shooting conditions).

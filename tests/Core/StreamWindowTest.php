@@ -26,7 +26,10 @@ use function pack;
 use function strlen;
 
 /**
- * Unit tests covering the stream window cursor, bounds checks, and integer helpers.
+ * Tests StreamWindow behavior for window-relative reads, seeks, and bounds.
+ * It verifies that size and cursor positions are relative to the window, not the parent stream.
+ * The suite exercises integer decoding within the windowed slice.
+ * This confirms that window offsets and limits are enforced consistently.
  */
 #[CoversClass(StreamWindow::class)]
 #[UsesClass(ByteReader::class)]
@@ -38,7 +41,8 @@ final class StreamWindowTest extends TestCase
     use CreatesTempStream;
 
     /**
-     * Verifies that $window->size() equals 5.
+     * Creates a window with a fixed offset and length.
+     * It confirms size reporting and that the cursor starts at zero within the window.
      *
      * @return void
      */
@@ -52,7 +56,8 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Verifies that $window->tell() equals 3.
+     * Seeks to valid positions within the window.
+     * It confirms tell reports window-relative offsets.
      *
      * @return void
      */
@@ -69,7 +74,8 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Verifies that BoundsError::class is thrown.
+     * Attempts to seek beyond the window length.
+     * It asserts a BoundsError is raised for out-of-range seeks.
      *
      * @return void
      */
@@ -83,7 +89,8 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Verifies that $window->read(6) equals 'Sunday'.
+     * Reads the entire window and advances the cursor to the end.
+     * It confirms reads are window-relative, not stream-relative.
      *
      * @return void
      */
@@ -97,7 +104,8 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Verifies that BoundsError::class is thrown.
+     * Requests more bytes than remain in the window.
+     * It asserts a BoundsError is raised for window over-reads.
      *
      * @return void
      */
@@ -111,7 +119,8 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Verifies that $window->readU8() equals 0xAA.
+     * Reads multiple unsigned integer types from a single window payload.
+     * It confirms helper methods honor endianness and advance to the window end.
      *
      * @return void
      */
@@ -133,7 +142,8 @@ final class StreamWindowTest extends TestCase
     }
 
     /**
-     * Verifies that BoundsError::class is thrown.
+     * Consumes part of the payload and then attempts a 64-bit read.
+     * It confirms helper methods enforce bounds when insufficient bytes remain.
      *
      * @return void
      */
@@ -151,6 +161,7 @@ final class StreamWindowTest extends TestCase
 
     /**
      * Creates a Stream instance populated with the provided payload.
+     * This helper ensures stream windows are built on known content.
      *
      * @param string $payload Bytes to insert into the temporary stream.
      *

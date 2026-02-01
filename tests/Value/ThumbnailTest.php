@@ -17,11 +17,20 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the Thumbnail value object for embedded thumbnail metadata fields.
+ * It verifies offsets, lengths, and compression enums are preserved.
+ * The suite covers tile and strip offsets/byte counts for different thumbnail layouts.
+ * This ensures thumbnail metadata remains consistent for extraction and display.
+ *
+ * @internal
+ */
 #[CoversClass(Thumbnail::class)]
 final class ThumbnailTest extends TestCase
 {
     /**
-     * Verifies that $thumbnail->hasThumbnail is true.
+     * Sets the expected boolean state for $thumbnail->hasThumbnail.
+     * This checks the flag or predicate logic.
      *
      * @return void
      */

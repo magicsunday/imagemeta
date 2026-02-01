@@ -11,17 +11,19 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Value\Enum;
 
+use MagicSunday\ImageMeta\Value\Traits\EnumFromIntStringNullable;
+
 /**
  * Sensitivity type enumeration for ISO sensitivity values.
  *
  * EXIF 3.0 §4.6.6.7.7 Table 14 defines the SensitivityType tag which indicates
  * which ISO 12232 parameter is encoded by the PhotographicSensitivity tag.
  *
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::SENSITIVITY_TYPE
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::PHOTOGRAPHIC_SENSITIVITY
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::STANDARD_OUTPUT_SENSITIVITY
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::RECOMMENDED_EXPOSURE_INDEX
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag::ISO_SPEED
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::SENSITIVITY_TYPE
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::PHOTOGRAPHIC_SENSITIVITY
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::STANDARD_OUTPUT_SENSITIVITY
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::RECOMMENDED_EXPOSURE_INDEX
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag::ISO_SPEED
  */
 enum SensitivityType: int
 {

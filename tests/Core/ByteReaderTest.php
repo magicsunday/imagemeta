@@ -22,7 +22,10 @@ use PHPUnit\Framework\TestCase;
 use function chr;
 
 /**
- * Tests for the ByteReader component.
+ * Covers the ByteReader helpers for integer decoding across endian modes.
+ * It verifies that read methods advance the cursor and that seeking resets the position.
+ * The tests validate 64-bit reads split into correct high/low words.
+ * This ensures deterministic reading behavior from a fixed byte stream.
  */
 #[CoversClass(ByteReader::class)]
 #[UsesClass(UInt64::class)]
@@ -58,7 +61,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $reader->readU8() equals 255.
+     * Reads an unsigned 8-bit integer from a one-byte stream.
+     * This confirms the reader does not apply endianness to single-byte values.
      *
      * @return void
      */
@@ -71,7 +75,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $reader->readU16BE() equals 0x1234.
+     * Reads an unsigned 16-bit integer in big-endian order.
+     * This validates that byte order is interpreted correctly for multi-byte reads.
      *
      * @return void
      */
@@ -84,7 +89,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $reader->readU16LE() equals 0x1234.
+     * Reads an unsigned 16-bit integer in little-endian order.
+     * This verifies that the reader swaps byte order appropriately.
      *
      * @return void
      */
@@ -97,7 +103,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $reader->readU32BE() equals 0x12345678.
+     * Reads an unsigned 32-bit integer in big-endian order.
+     * This ensures four-byte values are assembled in the correct order.
      *
      * @return void
      */
@@ -110,7 +117,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $reader->readU32LE() equals 0x12345678.
+     * Reads an unsigned 32-bit integer in little-endian order.
+     * This confirms the reader handles low-to-high byte ordering correctly.
      *
      * @return void
      */
@@ -123,7 +131,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $result->high() equals 0x00000001.
+     * Reads an unsigned 64-bit integer in big-endian order.
+     * This validates high/low word assembly for 64-bit values.
      *
      * @return void
      */
@@ -141,7 +150,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $result->high() equals 0x00000001.
+     * Reads an unsigned 64-bit integer in little-endian order.
+     * This ensures the reader flips word order correctly for 64-bit values.
      *
      * @return void
      */
@@ -159,7 +169,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $reader->tell() equals 0.
+     * Reports the current position after sequential reads.
+     * This confirms that read methods advance the cursor by their byte length.
      *
      * @return void
      */
@@ -176,7 +187,8 @@ final class ByteReaderTest extends TestCase
     }
 
     /**
-     * Verifies that $reader->readU8() equals 0xBB.
+     * Seeks to absolute offsets and reads the expected byte.
+     * This verifies that seeking resets the cursor before subsequent reads.
      *
      * @return void
      */

@@ -17,13 +17,13 @@ use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
-use MagicSunday\ImageMeta\Model\Exif\ExifNumericList;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
-use MagicSunday\ImageMeta\Model\Exif\ExifTag;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -37,6 +37,14 @@ use function str_pad;
 use function strlen;
 use function substr;
 
+/**
+ * Exercises TIFF EXIF parsing for fixed-length and inline value cases.
+ * It verifies correct handling of inline vs. offset storage for various tag types.
+ * The tests include rational, numeric list, and ASCII values across endian modes.
+ * This keeps fixed-size parsing paths stable for common EXIF payloads.
+ *
+ * @internal
+ */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(MemoryBuffer::class)]
 #[UsesClass(BitMask::class)]
@@ -54,7 +62,8 @@ use function substr;
 final class TiffExifParserFixedLengthTest extends TestCase
 {
     /**
-     * Verifies that fixed-length tags accept only the specification-defined counts.
+     * Uses fixed-length EXIF/GPS tags with valid component counts from the data provider.
+     * Verifies the parser accepts these entries without raising a ParseError.
      *
      * @return void
      */

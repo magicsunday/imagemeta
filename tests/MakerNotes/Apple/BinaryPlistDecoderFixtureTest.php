@@ -22,6 +22,14 @@ use PHPUnit\Framework\TestCase;
 
 use function file_get_contents;
 
+/**
+ * Exercises BinaryPlistDecoder against a real fixture binary plist payload.
+ * It verifies dictionary, array, and scalar nodes are decoded into ApplePlist objects.
+ * The suite checks expected keys and values match the fixture contents.
+ * This ensures plist decoding remains stable for maker note ingestion.
+ *
+ * @internal
+ */
 #[CoversClass(BinaryPlistDecoder::class)]
 #[UsesClass(ApplePlistArray::class)]
 #[UsesClass(ApplePlistDictionary::class)]
@@ -38,7 +46,8 @@ final class BinaryPlistDecoderFixtureTest extends TestCase
     }
 
     /**
-     * Verifies that $root is instance of ApplePlistDictionary::class.
+     * Decodes a fixture binary plist and validates the expected keys, types, and values.
+     * Ensures the decoder produces correct ApplePlist objects for scalars, arrays, and dictionaries.
      *
      * @return void
      */

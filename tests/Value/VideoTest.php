@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Video value object.
+ * Exercises the Video value object for timing, dimensions, and codec metadata.
+ * It verifies duration, frame rate, width, and height fields are preserved.
+ * The suite covers codec and HDR flags when provided.
+ * This keeps video metadata consistent for playback and display.
  */
 #[CoversClass(Video::class)]
 final class VideoTest extends TestCase
 {
     /**
-     * Verifies that $video->durationSec equals 120.5.
+     * Constructs a Video object with basic timing and dimension fields.
+     * Verifies the value object preserves the supplied core properties.
      *
      * @return void
      */
@@ -46,7 +50,8 @@ final class VideoTest extends TestCase
     }
 
     /**
-     * Verifies that $video->codec equals 'H.265'.
+     * Constructs a Video object with HDR-related metadata and codec details.
+     * Ensures HDR flags and color metadata are stored as provided.
      *
      * @return void
      */
@@ -71,7 +76,8 @@ final class VideoTest extends TestCase
     }
 
     /**
-     * Verifies that $video->durationSec is null.
+     * Creates a Video object with optional fields set to null.
+     * Confirms nulls are preserved while the HDR flag remains false.
      *
      * @return void
      */

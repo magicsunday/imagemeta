@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Derived value object containing calculated metrics.
+ * Exercises the Derived value object holding calculated exposure and optics metrics.
+ * It verifies EV100, hyperfocal distance, and circle of confusion values are stored.
+ * The suite covers field-of-view angles and 35mm equivalents when present.
+ * This ensures derived calculations remain intact for presentation and analysis.
  */
 #[CoversClass(Derived::class)]
 final class DerivedTest extends TestCase
 {
     /**
-     * Verifies that $derived->ev100 equals 10.5.
+     * Stores exposure value metrics.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -45,7 +49,8 @@ final class DerivedTest extends TestCase
     }
 
     /**
-     * Verifies that $derived->ev100 equals 12.0.
+     * Stores all derived metrics when provided.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -74,7 +79,8 @@ final class DerivedTest extends TestCase
     }
 
     /**
-     * Verifies that $derived->ev100 is null.
+     * Accepts null derived metrics.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -101,7 +107,8 @@ final class DerivedTest extends TestCase
     }
 
     /**
-     * Verifies that $derived->equivalent35mm equals 50.
+     * Stores full-frame equivalents and crop factors.
+     * It exercises the scenario described by the test name.
      *
      * @return void
      */

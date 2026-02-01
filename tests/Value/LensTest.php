@@ -16,11 +16,20 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises the Lens value object for make/model, serial, and focal length data.
+ * It verifies lens specification arrays and numeric fields are preserved.
+ * The suite checks 35mm equivalent values and maximum aperture storage.
+ * This ensures lens metadata remains consistent for display and calculations.
+ *
+ * @internal
+ */
 #[CoversClass(Lens::class)]
 final class LensTest extends TestCase
 {
     /**
-     * Verifies that $lens->lensMake equals 'Canon'.
+     * Exposes lens metadata and specification values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */

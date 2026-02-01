@@ -20,7 +20,7 @@ namespace MagicSunday\ImageMeta\Model\Tiff;
  * Source: TIFF 6.0 Specification Final—June 3, 1992, Appendix A: TIFF Tags Sorted by Number
  *
  * @see docs/TIFF6.pdf
- * @see \MagicSunday\ImageMeta\Model\Exif\ExifTag for shared TIFF/EXIF tags
+ * @see \MagicSunday\ImageMeta\Exif\Model\ExifTag for shared TIFF/EXIF tags
  */
 final readonly class TiffTag
 {

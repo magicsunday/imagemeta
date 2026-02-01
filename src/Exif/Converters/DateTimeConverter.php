@@ -13,8 +13,8 @@ namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use DateTimeZone;
 use Exception;
-use MagicSunday\ImageMeta\Model\Exif\ExifRational;
-use MagicSunday\ImageMeta\Model\Exif\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
+use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 
 use function ctype_digit;
 use function explode;

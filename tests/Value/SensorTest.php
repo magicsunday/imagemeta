@@ -20,13 +20,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Sensor value object.
+ * Exercises the Sensor value object for hardware and CFA metadata.
+ * It verifies pixel pitch, sensor type, and IBIS fields are preserved.
+ * The suite covers CFA pattern data and focal plane resolution values.
+ * This ensures sensor metadata is consistent for image analysis.
  */
 #[CoversClass(Sensor::class)]
 final class SensorTest extends TestCase
 {
     /**
-     * Verifies that $sensor->pixelPitchUm equals 3.76.
+     * Stores basic sensor metadata values.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -45,7 +49,8 @@ final class SensorTest extends TestCase
     }
 
     /**
-     * Verifies that $cfaPattern is instance of CfaPattern::class.
+     * Stores CFA pattern data on the sensor value object.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -77,7 +82,8 @@ final class SensorTest extends TestCase
     }
 
     /**
-     * Verifies that $sensor->focalPlaneXResolution equals 3000.0.
+     * Stores focal plane resolutions and units.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -103,7 +109,8 @@ final class SensorTest extends TestCase
     }
 
     /**
-     * Verifies that $sensor->pixelPitchUm is null.
+     * Accepts null sensor metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

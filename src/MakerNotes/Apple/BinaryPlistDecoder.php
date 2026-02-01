@@ -760,9 +760,9 @@ final class BinaryPlistDecoder
             throw new ParseError('Dictionary references exceed payload bounds.');
         }
 
-        /** @var list<ApplePlistValue> $keys */
+        /** @var list<ApplePlistValueInterface> $keys */
         $keys = [];
-        /** @var list<ApplePlistValue> $values */
+        /** @var list<ApplePlistValueInterface> $values */
         $values = [];
 
         for ($idx = 0; $idx < $count; ++$idx) {
@@ -786,7 +786,7 @@ final class BinaryPlistDecoder
             throw new ParseError('Dictionary keys must be strings.');
         }
 
-        /** @var array<string, ApplePlistValue> $entries */
+        /** @var array<string, ApplePlistValueInterface> $entries */
         $entries = [];
         for ($idx = 0; $idx < $count; ++$idx) {
             /** @var ApplePlistScalar $key */

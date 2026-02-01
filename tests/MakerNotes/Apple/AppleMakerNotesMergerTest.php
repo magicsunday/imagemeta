@@ -16,7 +16,7 @@ use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
@@ -24,6 +24,14 @@ use PHPUnit\Framework\TestCase;
 
 use function str_repeat;
 
+/**
+ * Exercises AppleMakerNotesMerger conflict resolution between maker notes and QuickTime data.
+ * It verifies maker note values take precedence when both sources provide the same fields.
+ * The suite checks that missing maker note values can be filled from QuickTime metadata.
+ * This ensures merged Apple metadata remains consistent and deterministic.
+ *
+ * @internal
+ */
 #[CoversClass(AppleMakerNotesMerger::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(QuickTimeLookup::class)]
@@ -33,7 +41,8 @@ use function str_repeat;
 final class AppleMakerNotesMergerTest extends TestCase
 {
     /**
-     * Verifies that $mapped is not null.
+     * Provides maker notes with populated fields alongside conflicting QuickTime values.
+     * Ensures merge keeps maker note values for populated properties and preserves record metadata.
      *
      * @return void
      */
@@ -121,7 +130,8 @@ final class AppleMakerNotesMergerTest extends TestCase
     }
 
     /**
-     * Verifies that $mapped is not null.
+     * Supplies a maker notes record with null fields and a QuickTime payload with values.
+     * Verifies merge fills missing fields from QuickTime and performs value conversions.
      *
      * @return void
      */
@@ -216,7 +226,8 @@ final class AppleMakerNotesMergerTest extends TestCase
     }
 
     /**
-     * Verifies that $mapped is not null.
+     * Merges when no existing maker notes record is provided.
+     * Confirms a new record is created with defaults and populated from QuickTime metadata.
      *
      * @return void
      */
@@ -245,7 +256,8 @@ final class AppleMakerNotesMergerTest extends TestCase
     }
 
     /**
-     * Verifies that $mapped is not null.
+     * Combines flags from maker notes with flags derived from QuickTime metadata.
+     * Ensures existing flags are preserved while additional QuickTime flags are added.
      *
      * @return void
      */

@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Device value object.
+ * Exercises the Device value object for software and processing metadata.
+ * It verifies software, raw-developing, and editing tool fields are preserved.
+ * The suite checks multiple software sources can be stored together.
+ * This ensures device/software provenance remains consistent in outputs.
  */
 #[CoversClass(Device::class)]
 final class DeviceTest extends TestCase
 {
     /**
-     * Verifies that $device->software equals 'Adobe Photoshop 2024'.
+     * Stores device software fields when provided.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -41,7 +45,8 @@ final class DeviceTest extends TestCase
     }
 
     /**
-     * Verifies that $device->software equals 'Capture One 23'.
+     * Stores raw and editing software metadata together.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -62,7 +67,8 @@ final class DeviceTest extends TestCase
     }
 
     /**
-     * Verifies that $device->software is null.
+     * Accepts null software metadata values.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

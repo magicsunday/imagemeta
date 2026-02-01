@@ -16,7 +16,6 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Stream;
 use MagicSunday\ImageMeta\Detect\ContainerType;
 use MagicSunday\ImageMeta\Detect\FormatDetector;
-use MagicSunday\ImageMeta\Detect\FormatDetectorInterface;
 use MagicSunday\ImageMeta\MakerNotes\Apple\AppleMakerNotesMerger;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\MakerNotes\RegistryFactory;
@@ -45,18 +44,18 @@ use const PATHINFO_EXTENSION;
 final readonly class MetadataReader
 {
     /**
-     * @param TiffExifParser          $tiffReader     TIFF/EXIF parser instance.
-     * @param AppleMakerNotesMerger   $appleMerger    Apple maker notes merger.
-     * @param XmpParser               $xmpParser      XMP parser instance.
-     * @param IptcParser              $iptcParser     IPTC parser instance.
-     * @param FormatDetectorInterface $formatDetector Container format detector.
+     * @param TiffExifParser        $tiffReader     TIFF/EXIF parser instance.
+     * @param AppleMakerNotesMerger $appleMerger    Apple maker notes merger.
+     * @param XmpParser             $xmpParser      XMP parser instance.
+     * @param IptcParser            $iptcParser     IPTC parser instance.
+     * @param FormatDetector        $formatDetector Container format detector.
      */
     public function __construct(
         private TiffExifParser $tiffReader = new TiffExifParser(),
         private AppleMakerNotesMerger $appleMerger = new AppleMakerNotesMerger(),
         private XmpParser $xmpParser = new XmpParser(),
         private IptcParser $iptcParser = new IptcParser(),
-        private FormatDetectorInterface $formatDetector = new FormatDetector(),
+        private FormatDetector $formatDetector = new FormatDetector(),
     ) {
     }
 

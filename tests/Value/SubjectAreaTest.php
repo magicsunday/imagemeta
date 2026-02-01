@@ -18,18 +18,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for SubjectArea value object.
- *
- * EXIF 3.0 §4.6.6.7.22 defines SubjectArea tag 0x9214 formats:
- * - 2 values: center point (x, y)
- * - 3 values: circle (center x, y, diameter)
- * - 4 values: rectangle (center x, y, width, height)
+ * Exercises SubjectArea parsing from the EXIF SubjectArea component formats.
+ * It verifies point, circle, and rectangle inputs map to the correct type and fields.
+ * The suite checks invalid component counts return null instead of partial data.
+ * This keeps subject area metadata consistent with the EXIF-defined structures.
  */
 #[CoversClass(SubjectArea::class)]
 final class SubjectAreaTest extends TestCase
 {
     /**
-     * Verifies that $area is not null.
+     * Builds subject area points from two-component input.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -49,7 +48,8 @@ final class SubjectAreaTest extends TestCase
     }
 
     /**
-     * Verifies that $area is not null.
+     * Builds subject area circles from three-component input.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -69,7 +69,8 @@ final class SubjectAreaTest extends TestCase
     }
 
     /**
-     * Verifies that $area is not null.
+     * Builds subject area rectangles from four-component input.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -89,7 +90,8 @@ final class SubjectAreaTest extends TestCase
     }
 
     /**
-     * Verifies that SubjectArea::fromComponents([]) is null.
+     * Returns null for invalid subject area component counts.
+     * It verifies the error path and guardrail handling.
      *
      * @return void
      */
@@ -102,7 +104,8 @@ final class SubjectAreaTest extends TestCase
     }
 
     /**
-     * Verifies that SubjectArea::fromComponents(null) is null.
+     * Returns null when subject area input is missing.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -113,7 +116,8 @@ final class SubjectAreaTest extends TestCase
     }
 
     /**
-     * Verifies that SubjectArea::fromComponents([-1, 10]) is null.
+     * Rejects negative or non-numeric subject area components.
+     * It verifies the error path and guardrail handling.
      *
      * @return void
      */

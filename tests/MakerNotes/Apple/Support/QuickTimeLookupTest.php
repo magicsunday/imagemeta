@@ -12,18 +12,27 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\QuickTimeLookup;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Exercises QuickTimeLookup helper methods for typed and fallback access.
+ * It verifies string, int, and float lookups trim and coerce values as needed.
+ * The suite checks fallback ordering when multiple keys are provided.
+ * This keeps QuickTime metadata access predictable for maker note merging.
+ *
+ * @internal
+ */
 #[CoversClass(QuickTimeLookup::class)]
 #[UsesClass(QuickTimeMeta::class)]
 final class QuickTimeLookupTest extends TestCase
 {
     /**
-     * Verifies that $lookup->string('Primary', 'Secondary') equals 'value'.
+     * Provides a primary empty string and a secondary string with surrounding whitespace.
+     * Ensures string() trims values and returns the first non-empty candidate.
      *
      * @return void
      */
@@ -41,7 +50,8 @@ final class QuickTimeLookupTest extends TestCase
     }
 
     /**
-     * Verifies that $lookup->string('Primary', 'Secondary') is null.
+     * Uses only empty or whitespace-only string candidates.
+     * Confirms string() returns null when no usable value is found.
      *
      * @return void
      */
@@ -59,7 +69,8 @@ final class QuickTimeLookupTest extends TestCase
     }
 
     /**
-     * Verifies that $lookup->float('First', 'Second') equals 42.5.
+     * Supplies a non-numeric first value and a numeric string fallback.
+     * Ensures float() skips invalid candidates and parses a numeric string.
      *
      * @return void
      */
@@ -77,7 +88,8 @@ final class QuickTimeLookupTest extends TestCase
     }
 
     /**
-     * Verifies that $lookup->int('Missing') is null.
+     * Uses a QuickTimeLookup with no metadata attached.
+     * Verifies int() returns null when the key cannot be resolved.
      *
      * @return void
      */
@@ -90,7 +102,8 @@ final class QuickTimeLookupTest extends TestCase
     }
 
     /**
-     * Verifies that $lookup->bool('Primary') is false.
+     * Uses a string "false" primary and a boolean true secondary value.
+     * Ensures bool() resolves the first candidate and can fall back to a secondary key.
      *
      * @return void
      */

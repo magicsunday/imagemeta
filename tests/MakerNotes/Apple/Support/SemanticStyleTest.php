@@ -12,20 +12,26 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\MakerNotes\Apple\Support;
 
 use MagicSunday\ImageMeta\MakerNotes\Apple\Support\SemanticStyle;
-use MagicSunday\ImageMeta\Model\QuickTimeMeta;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
 /**
+ * Exercises SemanticStyle parsing from QuickTime and legacy dictionary payloads.
+ * It verifies preset, warmth, and tone values are normalized across formats.
+ * The suite checks mixed numeric/string inputs are coerced consistently.
+ * This keeps portrait semantic style metadata stable for maker note consumers.
+ *
  * @phpstan-import-type SemanticStyleDictionary from SemanticStyle
  */
 #[CoversClass(SemanticStyle::class)]
 final class SemanticStyleTest extends TestCase
 {
     /**
-     * Verifies that SemanticStyle::fromQuickTime($meta) equals ['Vivid', 0.15, 0.25].
+     * Uses the modern QuickTime SemanticStyle structure with _0/_2/_3 keys.
+     * Ensures fromQuickTime returns the normalized preset, warmth, and tone values.
      *
      * @return void
      */
@@ -42,7 +48,8 @@ final class SemanticStyleTest extends TestCase
     }
 
     /**
-     * Verifies that SemanticStyle::fromDictionary($dictionary) equals ['Warm', 0.5, 0.75].
+     * Supplies a legacy dictionary payload containing a SemanticStyle values array.
+     * Verifies fromDictionary extracts the expected preset, warmth, and tone entries.
      *
      * @return void
      */
@@ -63,7 +70,8 @@ final class SemanticStyleTest extends TestCase
     }
 
     /**
-     * Verifies that SemanticStyle::fromValue($payload) equals ['Cinematic', 0.45, 0.67].
+     * Uses a deeply nested payload with mixed string and numeric values.
+     * Ensures fromValue normalizes nesting, trims strings, and returns the ordered tuple.
      *
      * @return void
      */
@@ -76,7 +84,8 @@ final class SemanticStyleTest extends TestCase
     }
 
     /**
-     * Verifies that SemanticStyle::fromValue(['values' => []]) is null.
+     * Supplies a payload with an empty values list.
+     * Confirms fromValue returns null when no semantic components are present.
      *
      * @return void
      */
@@ -88,6 +97,7 @@ final class SemanticStyleTest extends TestCase
 
     /**
      * Builds a deeply nested semantic style payload used for normalisation tests.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @return array{
      *     values: array{
@@ -146,6 +156,7 @@ final class SemanticStyleTest extends TestCase
 
     /**
      * Creates a QuickTime metadata container populated with the supplied semantic style payload.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param SemanticStyleDictionary $semanticStyle
      *

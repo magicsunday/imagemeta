@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the Keywords value object.
+ * Exercises the Keywords value object for flat and hierarchical keyword sets.
+ * It verifies flat keyword arrays and optional hierarchical lists are preserved.
+ * The suite covers both single-mode and combined keyword storage.
+ * This ensures keyword metadata stays structured for search and display.
  */
 #[CoversClass(Keywords::class)]
 final class KeywordsTest extends TestCase
 {
     /**
-     * Verifies that $keywords->flat equals ['landscape', 'mountain', 'nature'].
+     * Stores flat keyword lists.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -40,7 +44,8 @@ final class KeywordsTest extends TestCase
     }
 
     /**
-     * Verifies that $keywords->flat equals ['landscape', 'mountain'].
+     * Stores flat and hierarchical keyword lists together.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -57,7 +62,8 @@ final class KeywordsTest extends TestCase
     }
 
     /**
-     * Verifies that $keywords->flat equals [].
+     * Accepts empty keyword lists.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */

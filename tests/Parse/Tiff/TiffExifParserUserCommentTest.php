@@ -16,9 +16,9 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
-use MagicSunday\ImageMeta\Model\Exif\Ifd;
-use MagicSunday\ImageMeta\Model\Exif\IfdEntry;
-use MagicSunday\ImageMeta\Model\Exif\ParsedExif;
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -30,10 +30,10 @@ use function pack;
 use function strlen;
 
 /**
- * Edge case tests for UserComment encoding and special EXIF fields.
- *
- * EXIF 3.0 §4.6.6.4.2 (Table 11) and EXIF 2.32 §4.6.6.4.2 define the UserComment tag
- * structure with character code prefixes ("ASCII\0\0\0", "JIS\0\0\0\0\0", etc.).
+ * Exercises UserComment decoding with character set prefixes and special EXIF fields.
+ * It validates that ASCII, JIS, and undefined prefixes are handled without corrupting IFDs.
+ * The tests ensure UserComment data is extracted while maintaining other EXIF values.
+ * This keeps comment parsing aligned with EXIF prefix rules and legacy payloads.
  */
 #[CoversClass(TiffExifParser::class)]
 #[UsesClass(MemoryBuffer::class)]
@@ -48,7 +48,8 @@ use function strlen;
 final class TiffExifParserUserCommentTest extends TestCase
 {
     /**
-     * Verifies that UserComment with ASCII prefix is accepted.
+     * Builds a UserComment value with an ASCII encoding prefix and text.
+     * Confirms the parser accepts the ASCII prefix and keeps the EXIF IFD intact.
      *
      * @return void
      */
@@ -65,7 +66,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that UserComment with JIS prefix is accepted.
+     * Uses the JIS encoding prefix followed by text content.
+     * Ensures the parser accepts the JIS prefix without failing the EXIF parse.
      *
      * @return void
      */
@@ -82,7 +84,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that UserComment with UNICODE prefix is accepted.
+     * Uses the UNICODE encoding prefix with a short payload.
+     * Confirms the parser tolerates the Unicode prefix and parses the EXIF IFD.
      *
      * @return void
      */
@@ -99,7 +102,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that UserComment without a defined prefix is accepted.
+     * Uses an all-zero prefix to represent undefined UserComment encoding.
+     * Ensures the parser accepts the undefined encoding without errors.
      *
      * @return void
      */
@@ -116,7 +120,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that truncated UserComment prefixes do not break parsing.
+     * Provides only a partial encoding prefix ("ASC") to simulate truncation.
+     * Verifies the parser handles the truncated prefix gracefully.
      *
      * @return void
      */
@@ -134,7 +139,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that unknown UserComment prefixes do not break parsing.
+     * Supplies an unsupported encoding prefix followed by data.
+     * Ensures the parser does not fail when the encoding identifier is unknown.
      *
      * @return void
      */
@@ -151,7 +157,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that empty UserComment payloads are accepted.
+     * Uses an empty UserComment value with no prefix or payload.
+     * Confirms the parser handles the empty tag without errors.
      *
      * @return void
      */
@@ -167,7 +174,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that encoding-only UserComment payloads are accepted.
+     * Provides only the ASCII prefix with no comment text.
+     * Ensures the parser accepts a prefix-only UserComment value.
      *
      * @return void
      */
@@ -184,7 +192,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that non-printable UserComment payloads are accepted.
+     * Provides an ASCII prefix followed by non-printable bytes.
+     * Confirms the parser tolerates binary payloads without failing.
      *
      * @return void
      */
@@ -201,7 +210,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that large UserComment payloads are accepted.
+     * Uses an ASCII prefix with a large comment payload.
+     * Verifies the parser handles long UserComment data within limits.
      *
      * @return void
      */
@@ -219,7 +229,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that MakerNote payloads are accepted in ExifIFD.
+     * Supplies MakerNote data with a vendor-style prefix.
+     * Ensures the parser accepts the MakerNote tag and leaves the EXIF IFD available.
      *
      * @return void
      */
@@ -236,7 +247,8 @@ final class TiffExifParserUserCommentTest extends TestCase
     }
 
     /**
-     * Verifies that empty MakerNote payloads are accepted.
+     * Uses an empty MakerNote payload.
+     * Confirms the parser tolerates empty MakerNote data without errors.
      *
      * @return void
      */
@@ -253,6 +265,7 @@ final class TiffExifParserUserCommentTest extends TestCase
 
     /**
      * Builds a TIFF blob with IFD0 and ExifIFD containing a UserComment entry.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param string $commentData The UserComment data including encoding prefix.
      *
@@ -296,6 +309,7 @@ final class TiffExifParserUserCommentTest extends TestCase
 
     /**
      * Builds a TIFF blob with IFD0 and ExifIFD containing a MakerNote entry.
+     * This checks the behavior for the specific inputs used in the test.
      *
      * @param string $makerNoteData The MakerNote data.
      *

@@ -20,13 +20,22 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
 
+/**
+ * Exercises AppleDecoder handling of SemanticStyle maker note payloads.
+ * It verifies preset, warmth, and tone fields are extracted from the dictionary.
+ * The suite ensures SemanticStyle normalization feeds into AppleMakerNotes correctly.
+ * This keeps portrait-style metadata stable for later consumers.
+ *
+ * @internal
+ */
 #[CoversClass(AppleDecoder::class)]
 #[UsesClass(AppleMakerNotes::class)]
 #[UsesClass(SemanticStyle::class)]
 final class AppleDecoderSemanticStyleTest extends TestCase
 {
     /**
-     * Verifies that $makerNotes is instance of AppleMakerNotes::class.
+     * Invokes buildAppleMakerNotes with a SemanticStyle dictionary payload.
+     * Ensures semantic style preset, warmth, and tone fields are extracted.
      *
      * @return void
      */

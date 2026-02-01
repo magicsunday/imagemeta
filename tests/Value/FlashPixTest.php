@@ -17,13 +17,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the FlashPix value object.
+ * Exercises the FlashPix value object for embedded stream payloads.
+ * It verifies that stream maps keyed by identifier are preserved intact.
+ * The suite covers empty maps to ensure optional data remains nullable.
+ * This keeps FlashPix extension data stable for structured output.
  */
 #[CoversClass(FlashPix::class)]
 final class FlashPixTest extends TestCase
 {
     /**
-     * Verifies that $flashPix->streams equals [1 => 'stream_data_1', 2 => 'stream_data_2'].
+     * Stores FlashPix streams when provided.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */
@@ -41,7 +45,8 @@ final class FlashPixTest extends TestCase
     }
 
     /**
-     * Verifies that $flashPix->streams equals [].
+     * Allows empty FlashPix stream maps.
+     * It ensures missing or invalid inputs yield no value.
      *
      * @return void
      */
@@ -54,7 +59,8 @@ final class FlashPixTest extends TestCase
     }
 
     /**
-     * Verifies that $flashPix->streams contains key 10.
+     * Preserves stream keys alongside payloads.
+     * It confirms the object preserves the supplied metadata.
      *
      * @return void
      */

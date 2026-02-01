@@ -20,13 +20,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the TiffData value object.
+ * Exercises the TiffData value object for TIFF image structure fields.
+ * It verifies strip/tile dimensions, compression, and photometric enums are preserved.
+ * The suite covers resolution units and X/Y resolution values.
+ * This ensures TIFF-related metadata remains consistent for downstream usage.
  */
 #[CoversClass(TiffData::class)]
 final class TiffDataTest extends TestCase
 {
     /**
-     * Verifies that $tiff->samplesPerPixel equals 3.
+     * Constructs a TiffData instance using strip-based image fields and resolution values.
+     * Verifies the value object preserves the supplied image structure properties.
      *
      * @return void
      */
@@ -72,7 +76,8 @@ final class TiffDataTest extends TestCase
     }
 
     /**
-     * Verifies that $tiff->tileWidth equals 256.
+     * Constructs a TiffData instance using tile-based fields and JPEG compression.
+     * Ensures tile dimensions, offsets, and subsampling are stored as provided.
      *
      * @return void
      */
@@ -115,7 +120,8 @@ final class TiffDataTest extends TestCase
     }
 
     /**
-     * Verifies that $tiff->samplesPerPixel is null.
+     * Builds a TiffData instance with all nullable fields set to null.
+     * Confirms the value object preserves nulls without coercion.
      *
      * @return void
      */

@@ -18,13 +18,17 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for the WhiteBalanceDetails value object.
+ * Exercises the WhiteBalanceDetails value object for mode and temperature metadata.
+ * It verifies enum-backed modes and optional kelvin values are preserved.
+ * The suite covers red/blue gain fields for manual white balance settings.
+ * This ensures white balance metadata remains consistent for rendering and display.
  */
 #[CoversClass(WhiteBalanceDetails::class)]
 final class WhiteBalanceDetailsTest extends TestCase
 {
     /**
-     * Verifies that $wb->mode equals WhiteBalance::AUTO.
+     * Constructs WhiteBalanceDetails with only the mode provided.
+     * Ensures the mode is stored and the optional numeric fields remain null.
      *
      * @return void
      */
@@ -42,7 +46,8 @@ final class WhiteBalanceDetailsTest extends TestCase
     }
 
     /**
-     * Verifies that $wb->mode equals WhiteBalance::MANUAL.
+     * Constructs WhiteBalanceDetails with a manual mode, kelvin, and gain values.
+     * Verifies the value object preserves the supplied temperature and gain fields.
      *
      * @return void
      */
@@ -63,7 +68,8 @@ final class WhiteBalanceDetailsTest extends TestCase
     }
 
     /**
-     * Verifies that $wb->mode is null.
+     * Creates WhiteBalanceDetails with all fields set to null.
+     * Confirms the object preserves nulls for optional white balance details.
      *
      * @return void
      */
