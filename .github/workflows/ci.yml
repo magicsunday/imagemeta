@@ -92,19 +92,3 @@ jobs:
                 if: ${{ always() && steps.install.conclusion == 'success' }}
                 run: |
                     composer ci:test:php:unit
-
-            -   id: compliance
-                name: EXIF/TIFF Compliance Analysis
-                if: ${{ always() && steps.install.conclusion == 'success' }}
-                run: |
-                    php scripts/analyze-exif-compliance.php 50
-
-            -   name: Upload Compliance Report
-                uses: actions/upload-artifact@v4
-                if: always()
-                with:
-                    name: compliance-report-php-${{ matrix.php }}
-                    path: |
-                        docs/compliance-report.json
-                        docs/compliance-report.yaml
-                    retention-days: 30
