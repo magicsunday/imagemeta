@@ -1641,7 +1641,7 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         $version = $win->readU8();
-        $flags   = $this->readUInt24($win);
+        $this->readUInt24($win);
 
         // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
         $offsetLengthSizes = $win->readU8();
@@ -1665,13 +1665,9 @@ final readonly class IsoBmffParser
         $locations = [];
 
         for ($i = 0; $i < $itemCount; ++$i) {
-            if ($version < 2) {
-                $itemId = $win->readU16BE();
-            } elseif (($flags & BitMask::BIT_0) !== 0) {
-                $itemId = $win->readU32BE();
-            } else {
-                $itemId = $win->readU16BE();
-            }
+            // ISO/IEC 14496-12 §8.11.3.2: item_ID is 16-bit for version < 2 and 32-bit for version 2.
+            // Note: flags bit 0 indicates hidden_item and does not affect item_ID width.
+            $itemId = $version < 2 ? $win->readU16BE() : $win->readU32BE();
 
             $constructionMethod = 0;
             if ($version === 1 || $version === 2) {

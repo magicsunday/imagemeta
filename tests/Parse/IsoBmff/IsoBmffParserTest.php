@@ -276,6 +276,55 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a version 2 iloc box and resolves the EXIF item using 32-bit item IDs.
+     * This ensures iloc v2 does not depend on flags to determine item_ID width.
+     *
+     * @return void
+     */
+    #[Test]
+    public function resolveIlocVersion2Uses32BitItemId(): void
+    {
+        $exifBlob = "Exif\0\0version-two-data";
+
+        // Build infe for Exif item (version 2 infe with item_ID as 16-bit)
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
+        $iinf        = $this->box('iinf', $iinfPayload);
+
+        // Build version 2 iloc box (item_count/item_ID are 32-bit)
+        $ilocBuilder = function (int $offset, int $length): string {
+            $payload = "\x44";       // offset_size=4, length_size=4
+            $payload .= "\x00";       // base_offset_size=0 (high nibble), index_size=0 (low nibble)
+            $payload .= pack('N', 1); // item_count = 1
+
+            $payload .= pack('N', 1); // item_id = 1 (32-bit)
+            $payload .= pack('n', 0); // construction_method (v2)
+            $payload .= pack('n', 0); // data_reference_index = 0
+            $payload .= pack('n', 1); // extent_count = 1
+            $payload .= pack('N', $offset); // extent_offset
+            $payload .= pack('N', $length); // extent_length
+
+            return $this->fullBox('iloc', $payload, 2, 0);
+        };
+
+        $metaPayload = $iinf . $ilocBuilder(0, strlen($exifBlob));
+        $meta        = $this->fullBox('meta', $metaPayload);
+        $ftyp        = $this->box('ftyp', 'heic');
+        $mdat        = $this->box('mdat', $exifBlob);
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
+        $iloc       = $ilocBuilder($offsetBase, strlen($exifBlob));
+        $meta       = $this->fullBox('meta', $iinf . $iloc);
+        $data       = $ftyp . $meta . $mdat;
+
+        $extractor = $this->createExtractor($data);
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(['version-two-data'], $exifs);
+    }
+
+    /**
      * Extracts XMP from three sources: uuid box, item-based XMP, and direct XMP box.
      * This verifies all XMP sources are collected and returned in the expected order.
      *
