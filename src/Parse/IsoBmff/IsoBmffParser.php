@@ -2225,6 +2225,8 @@ final readonly class IsoBmffParser
     /**
      * Validates ISO BMFF length-size nibbles and returns the byte width.
      *
+     * ISO/IEC 14496-12 §8.11.3.3 limits size nibbles to 0, 4, or 8 bytes.
+     *
      * @param int $nibble Raw nibble extracted from the length-size field.
      *
      * @return int
@@ -2233,7 +2235,7 @@ final readonly class IsoBmffParser
     {
         return match ($nibble) {
             0 => 0,
-            1, 2, 4, 8 => $nibble,
+            4, 8 => $nibble,
             default => throw new ParseError('invalid length field size'),
         };
     }

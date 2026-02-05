@@ -325,6 +325,60 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects iloc boxes that use a non-conformant offset_size nibble.
+     * This ensures size nibbles are limited to 0, 4, or 8 bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocOffsetSizeNibbleOfOne(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('invalid length field size');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x14";       // offset_size=1 (invalid), length_size=4
+        $ilocPayload .= "\x00";       // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('n', 0); // item_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects iloc boxes that use a non-conformant index_size nibble.
+     * This ensures size nibbles are limited to 0, 4, or 8 bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocIndexSizeNibbleOfTwo(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('invalid length field size');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x44";       // offset_size=4, length_size=4
+        $ilocPayload .= "\x02";       // base_offset_size=0 (high), index_size=2 (invalid)
+        $ilocPayload .= pack('n', 0); // item_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Extracts XMP from three sources: uuid box, item-based XMP, and direct XMP box.
      * This verifies all XMP sources are collected and returned in the expected order.
      *
@@ -758,14 +812,14 @@ final class IsoBmffParserTest extends TestCase
         // iloc v1: base_offset_size and index_size share ONE byte
         $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
             $payload = "\x44"; // offset_size=4, length_size=4
-            $payload .= "\x02"; // base_offset_size=0 (high nibble), index_size=2 (low nibble)
+            $payload .= "\x04"; // base_offset_size=0 (high nibble), index_size=4 (low nibble)
             $payload .= pack('n', 2); // item_count = 2
 
             $payload .= pack('n', 1);
             $payload .= pack('n', 0x2000);
             $payload .= pack('n', 0);
             $payload .= pack('n', 1);
-            $payload .= pack('n', 1);
+            $payload .= pack('N', 1);
             $payload .= pack('N', 0);
             $payload .= pack('N', $item1Length);
 
@@ -773,7 +827,7 @@ final class IsoBmffParserTest extends TestCase
             $payload .= pack('n', 0x0000);
             $payload .= pack('n', 0);
             $payload .= pack('n', 1);
-            $payload .= pack('n', 0);
+            $payload .= pack('N', 0);
             $payload .= pack('N', $item2Offset);
             $payload .= pack('N', $item2Length);
 
@@ -819,14 +873,14 @@ final class IsoBmffParserTest extends TestCase
         // iloc v1: base_offset_size and index_size share ONE byte
         $ilocBuilder = function (int $item2Offset, int $item2Length, int $item1Length): string {
             $payload = "\x44"; // offset_size=4, length_size=4
-            $payload .= "\x02"; // base_offset_size=0 (high nibble), index_size=2 (low nibble)
+            $payload .= "\x04"; // base_offset_size=0 (high nibble), index_size=4 (low nibble)
             $payload .= pack('n', 2); // item_count = 2
 
             $payload .= pack('n', 1);
             $payload .= pack('n', 0x2000);
             $payload .= pack('n', 0);
             $payload .= pack('n', 1);
-            $payload .= pack('n', 0);
+            $payload .= pack('N', 0);
             $payload .= pack('N', 0);
             $payload .= pack('N', $item1Length + 1);
 
@@ -834,7 +888,7 @@ final class IsoBmffParserTest extends TestCase
             $payload .= pack('n', 0x0000);
             $payload .= pack('n', 0);
             $payload .= pack('n', 1);
-            $payload .= pack('n', 0);
+            $payload .= pack('N', 0);
             $payload .= pack('N', $item2Offset);
             $payload .= pack('N', $item2Length);
 
