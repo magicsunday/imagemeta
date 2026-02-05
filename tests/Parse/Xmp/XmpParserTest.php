@@ -123,6 +123,57 @@ XML;
     }
 
     /**
+     * Preserves explicit empty scalar text values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesEmptyScalarText(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title />
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame('', $document->get(self::DC_NS, 'title'));
+    }
+
+    /**
+     * Preserves explicit empty list items in RDF containers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesEmptyListItems(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:subject>
+      <rdf:Seq>
+        <rdf:li></rdf:li>
+        <rdf:li>Two</rdf:li>
+      </rdf:Seq>
+    </dc:subject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame(['', 'Two'], $document->get(self::DC_NS, 'subject'));
+    }
+
+    /**
      * Provides multiple attributes in a custom drone-dji namespace.
      * Confirms the parser captures each custom attribute with its namespace URI.
      *

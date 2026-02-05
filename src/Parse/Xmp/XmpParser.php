@@ -15,9 +15,7 @@ use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use XMLReader;
 
-use function array_filter;
 use function array_key_exists;
-use function array_values;
 use function in_array;
 use function sprintf;
 use function trim;
@@ -117,37 +115,33 @@ final class XmpParser
                     [$namespace, $localName] = $info;
                     if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
                         $text = trim($textBuffers[$depth] ?? '');
-                        if ($text !== '') {
-                            for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
-                                if (isset($listBuffers[$parentDepth])) {
-                                    $listBuffers[$parentDepth][] = $text;
-                                    break;
-                                }
+                        for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
+                            if (isset($listBuffers[$parentDepth])) {
+                                $listBuffers[$parentDepth][] = $text;
+                                break;
                             }
                         }
                     } elseif ($namespace === self::RDF_NAMESPACE && $localName === 'value') {
                         // XMP Specification Part 1 §7.9.3: Qualified properties encode their primary value via rdf:value.
                         $text = trim($textBuffers[$depth] ?? '');
-                        if ($text !== '') {
-                            for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
-                                $parentInfo = $elementPath[$parentDepth] ?? null;
-                                if ($parentInfo === null) {
-                                    continue;
-                                }
+                        for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
+                            $parentInfo = $elementPath[$parentDepth] ?? null;
+                            if ($parentInfo === null) {
+                                continue;
+                            }
 
-                                [$parentNamespace, $parentLocalName] = $parentInfo;
+                            [$parentNamespace, $parentLocalName] = $parentInfo;
 
-                                if ($parentNamespace === self::RDF_NAMESPACE && $parentLocalName === 'li') {
-                                    $existing                  = $textBuffers[$parentDepth] ?? '';
-                                    $textBuffers[$parentDepth] = $existing . $text;
-                                    break;
-                                }
+                            if ($parentNamespace === self::RDF_NAMESPACE && $parentLocalName === 'li') {
+                                $existing                  = $textBuffers[$parentDepth] ?? '';
+                                $textBuffers[$parentDepth] = $existing . $text;
+                                break;
+                            }
 
-                                if ($parentNamespace !== self::RDF_NAMESPACE) {
-                                    $existing                  = $textBuffers[$parentDepth] ?? '';
-                                    $textBuffers[$parentDepth] = $existing . $text;
-                                    break;
-                                }
+                            if ($parentNamespace !== self::RDF_NAMESPACE) {
+                                $existing                  = $textBuffers[$parentDepth] ?? '';
+                                $textBuffers[$parentDepth] = $existing . $text;
+                                break;
                             }
                         }
                     } elseif ($namespace !== self::RDF_NAMESPACE) {
@@ -248,10 +242,8 @@ final class XmpParser
             // Capture the attribute value as a property
             $value = $reader->value;
 
-            if ($value !== '') {
-                $key = $this->buildClarkName($attrNamespace, $attrLocalName);
-                $this->storeValue($data, $key, $value);
-            }
+            $key = $this->buildClarkName($attrNamespace, $attrLocalName);
+            $this->storeValue($data, $key, $value);
         } while ($reader->moveToNextAttribute());
 
         // Return to the element node after attribute traversal
@@ -279,10 +271,6 @@ final class XmpParser
 
         $value = $this->finalizeValue($items, $text);
 
-        if ($value === null) {
-            return;
-        }
-
         $this->storeValue(
             $data,
             $this->buildClarkName($namespace, $localName),
@@ -296,22 +284,15 @@ final class XmpParser
      * @param list<string> $items
      * @param string       $text
      *
-     * @return list<string>|string|null
+     * @return list<string>|string
      */
-    private function finalizeValue(array $items, string $text): array|string|null
+    private function finalizeValue(array $items, string $text): array|string
     {
-        $filtered = array_values(array_filter(
-            $items,
-            static fn (string $value): bool => $value !== '',
-        ));
-
-        if ($filtered !== []) {
-            return $filtered;
+        if ($items !== []) {
+            return $items;
         }
 
-        $text = trim($text);
-
-        return $text === '' ? null : $text;
+        return trim($text);
     }
 
     /**
