@@ -37,6 +37,7 @@ use function strlen;
 use function strtoupper;
 use function substr;
 use function unpack;
+use function usort;
 
 /**
  * Decodes ICC profiles to expose header information and human readable tags.
@@ -101,10 +102,20 @@ final class IccParser
             return null; // truncated payload
         }
 
+        // ICC.1:2022 §7.1: Profile size and tag table entries must be 4-byte aligned.
+        if (($profileSize % 4) !== 0) {
+            return null;
+        }
+
         // ICC.1:2022 §7.2.9: Validate 'acsp' signature at bytes 36-39
         $signature = substr($data, 36, 4);
         if ($signature !== self::PROFILE_SIGNATURE) {
             return null; // invalid ICC profile
+        }
+
+        // ICC.1:2022 §7.1: Tag data must follow the tag table with NULL padding.
+        if (!$this->validateTagTable($data, $profileSize)) {
+            return null;
         }
 
         $version            = $this->extractVersion($data);
@@ -453,6 +464,10 @@ final class IccParser
 
         $tagCount = $this->uInt32Be(substr($data, $tagCountOffset, 4));
         $cursor   = $tagCountOffset + 4;
+        $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
+        if ($tableEnd > $length) {
+            return null;
+        }
 
         for ($i = 0; $i < $tagCount; ++$i) {
             if ($cursor + self::TAG_RECORD_LENGTH > $length) {
@@ -468,7 +483,15 @@ final class IccParser
                 continue;
             }
 
-            if ($offset < self::HEADER_LENGTH) {
+            if (($offset % 4) !== 0) {
+                continue;
+            }
+
+            if (($size % 4) !== 0) {
+                continue;
+            }
+
+            if ($offset < $tableEnd) {
                 continue;
             }
 
@@ -476,7 +499,7 @@ final class IccParser
                 continue;
             }
 
-            if ($offset + $size > $length) {
+            if (($offset + $size) > $length) {
                 continue;
             }
 
@@ -484,6 +507,106 @@ final class IccParser
         }
 
         return null;
+    }
+
+    /**
+     * Validates the tag table layout and padding rules.
+     *
+     * ICC.1:2022 §7.1: Tag data begins immediately after the tag table and
+     * padding between tag data blocks (and after the last block) is NULL.
+     */
+    private function validateTagTable(string $data, int $profileSize): bool
+    {
+        if ($profileSize < self::HEADER_LENGTH + 4) {
+            return false;
+        }
+
+        $length         = min(strlen($data), $profileSize);
+        $tagCountOffset = self::HEADER_LENGTH;
+        if (($tagCountOffset + 4) > $length) {
+            return false;
+        }
+
+        $tagCount = $this->uInt32Be(substr($data, $tagCountOffset, 4));
+        $tableEnd = $tagCountOffset + 4 + ($tagCount * self::TAG_RECORD_LENGTH);
+        if ($tableEnd > $length) {
+            return false;
+        }
+
+        $entries = [];
+        $cursor  = $tagCountOffset + 4;
+
+        for ($i = 0; $i < $tagCount; ++$i) {
+            if (($cursor + self::TAG_RECORD_LENGTH) > $length) {
+                return false;
+            }
+
+            $offset = $this->uInt32Be(substr($data, $cursor + 4, 4));
+            $size   = $this->uInt32Be(substr($data, $cursor + 8, 4));
+            $cursor += self::TAG_RECORD_LENGTH;
+
+            if ($size === 0) {
+                continue;
+            }
+
+            if ((($offset % 4) !== 0) || (($size % 4) !== 0)) {
+                return false;
+            }
+
+            if ($offset < $tableEnd) {
+                return false;
+            }
+
+            if (($offset + $size) > $length) {
+                return false;
+            }
+
+            $entries[] = [
+                'offset' => $offset,
+                'size'   => $size,
+            ];
+        }
+
+        if ($entries === []) {
+            return $this->paddingIsNull($data, $tableEnd, $length - $tableEnd);
+        }
+
+        usort(
+            $entries,
+            static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
+        );
+
+        if ($entries[0]['offset'] !== $tableEnd) {
+            return false;
+        }
+
+        $cursor = $tableEnd;
+
+        foreach ($entries as $entry) {
+            if ($entry['offset'] < $cursor) {
+                return false;
+            }
+
+            if (!$this->paddingIsNull($data, $cursor, $entry['offset'] - $cursor)) {
+                return false;
+            }
+
+            $cursor = $entry['offset'] + $entry['size'];
+        }
+
+        return $this->paddingIsNull($data, $cursor, $length - $cursor);
+    }
+
+    /**
+     * Confirms that the specified range is fully NULL padded.
+     */
+    private function paddingIsNull(string $data, int $offset, int $length): bool
+    {
+        if ($length <= 0) {
+            return true;
+        }
+
+        return substr($data, $offset, $length) === str_repeat("\0", $length);
     }
 
     /**

@@ -21,6 +21,8 @@ use PHPUnit\Framework\TestCase;
 
 use function chr;
 use function intdiv;
+use function pack;
+use function str_repeat;
 use function strlen;
 use function substr;
 use function substr_replace;
@@ -145,6 +147,71 @@ final class IccParserTest extends TestCase
         $decoder = new IccParser();
 
         self::assertNull($decoder->decode(null, $segments));
+    }
+
+    /**
+     * Rejects profiles whose declared size is not 4-byte aligned.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsMisalignedProfileSize(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        $profile = substr_replace($profile, pack('N', 243), 0, 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * Rejects tag tables with misaligned tag offsets.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsMisalignedTagOffset(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        $profile = substr_replace($profile, pack('N', 145), 136, 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * Rejects tag tables with misaligned tag sizes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsMisalignedTagSize(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        $profile = substr_replace($profile, pack('N', 99), 140, 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * Rejects non-NULL padding after the last tag data block.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsNonNullPaddingAfterLastTag(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        $profile .= "\x01" . str_repeat("\0", 3);
+        $profile = substr_replace($profile, pack('N', strlen($profile)), 0, 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
     }
 
     /**
