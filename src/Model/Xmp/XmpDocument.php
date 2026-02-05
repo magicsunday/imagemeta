@@ -127,9 +127,9 @@ final readonly class XmpDocument
         $value = $this->get($namespaceUri, $localName);
 
         if (is_string($value)) {
-            $parts = array_map(trim(...), explode(',', $value));
+            $trimmed = trim($value);
 
-            return array_values(array_filter($parts, static fn (string $item): bool => $item !== ''));
+            return $trimmed === '' ? [] : [$trimmed];
         }
 
         if (!is_array($value)) {

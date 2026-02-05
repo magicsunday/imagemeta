@@ -96,6 +96,65 @@ final class XmpDocumentTest extends TestCase
     }
 
     /**
+     * Returns a single list item for scalar text values.
+     * Ensures commas inside text are not treated as separators.
+     *
+     * @return void
+     */
+    #[Test]
+    public function stringListPreservesScalarTextWithCommas(): void
+    {
+        $namespace = 'http://example.com/xmp/';
+        $document  = new XmpDocument(
+            [
+                sprintf('{%s}Title', $namespace) => 'ACME, Inc.',
+            ],
+            [],
+        );
+
+        self::assertSame(['ACME, Inc.'], $document->stringList($namespace, 'Title'));
+    }
+
+    /**
+     * Returns list items when the property is already represented as an array.
+     * It keeps the existing trimming behavior for container values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function stringListReturnsArrayValues(): void
+    {
+        $namespace = 'http://example.com/xmp/';
+        $document  = new XmpDocument(
+            [
+                sprintf('{%s}Keywords', $namespace) => ['  one ', 'two', ''],
+            ],
+            [],
+        );
+
+        self::assertSame(['one', 'two'], $document->stringList($namespace, 'Keywords'));
+    }
+
+    /**
+     * Returns an empty list for empty scalar values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function stringListSkipsEmptyScalar(): void
+    {
+        $namespace = 'http://example.com/xmp/';
+        $document  = new XmpDocument(
+            [
+                sprintf('{%s}Title', $namespace) => '   ',
+            ],
+            [],
+        );
+
+        self::assertSame([], $document->stringList($namespace, 'Title'));
+    }
+
+    /**
      * Parses canonical XMP boolean strings.
      * Ensures strict True/False values are interpreted correctly.
      *
