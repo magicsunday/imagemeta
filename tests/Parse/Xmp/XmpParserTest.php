@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -27,6 +28,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(XmpParser::class)]
 #[UsesClass(XmpDocument::class)]
+#[UsesClass(XmpLanguageAlternative::class)]
 final class XmpParserTest extends TestCase
 {
     private const string XMP_NS = 'http://ns.adobe.com/xap/1.0/';
@@ -120,6 +122,39 @@ XML;
 
         // Should NOT capture rdf:about
         self::assertNull($document->find('about'));
+    }
+
+    /**
+     * Preserves rdf:Alt language qualifiers and default ordering.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesLanguageAlternatives(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title>
+      <rdf:Alt>
+        <rdf:li xml:lang="en-US">Hello</rdf:li>
+        <rdf:li xml:lang="x-default">Default</rdf:li>
+      </rdf:Alt>
+    </dc:title>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+        $alt      = $document->languageAlternative(self::DC_NS, 'title');
+
+        self::assertInstanceOf(XmpLanguageAlternative::class, $alt);
+        self::assertSame(['x-default', 'en-US'], $alt->languages());
+        self::assertSame(['Default', 'Hello'], $alt->values());
+        self::assertSame('Default', $alt->defaultValue());
+        self::assertSame('Hello', $alt->valueFor('en-US'));
     }
 
     /**

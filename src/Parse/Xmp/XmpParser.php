@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
+use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
 use XMLReader;
 
@@ -45,7 +46,7 @@ final class XmpParser
             return new XmpDocument([], []);
         }
 
-        /** @var array<string, array<int, string>|string> $data */
+        /** @var array<string, array<int, string>|string|XmpLanguageAlternative> $data */
         $data = [];
         /** @var array<string, string> $namespacePrefixes Maps namespace URI to prefix */
         $namespacePrefixes = [];
@@ -55,6 +56,12 @@ final class XmpParser
         $textBuffers = [];
         /** @var array<int, list<string>> $listBuffers */
         $listBuffers = [];
+        /** @var array<int, list<array{lang: string, value: string}>> $altBuffers */
+        $altBuffers = [];
+        /** @var array<int, string> $listKinds */
+        $listKinds = [];
+        /** @var array<int, string> $languageBuffers */
+        $languageBuffers = [];
 
         while ($reader->read()) {
             switch ($reader->nodeType) {
@@ -68,6 +75,21 @@ final class XmpParser
 
                     if ($namespace !== self::RDF_NAMESPACE) {
                         $listBuffers[$depth] = [];
+                        $altBuffers[$depth]  = [];
+                        $listKinds[$depth]   = '';
+                    }
+
+                    if ($namespace === self::RDF_NAMESPACE && in_array($localName, ['Alt', 'Bag', 'Seq'], true)) {
+                        for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
+                            if (isset($listBuffers[$parentDepth])) {
+                                $listKinds[$parentDepth] = $localName;
+                                break;
+                            }
+                        }
+                    }
+
+                    if ($namespace === self::RDF_NAMESPACE && $localName === 'li') {
+                        $languageBuffers[$depth] = $this->readXmlLang($reader);
                     }
 
                     // XMP Specification Part 1 §7.2: Extract namespace prefix declarations
@@ -82,6 +104,8 @@ final class XmpParser
                             $this->storeFinalizedValue(
                                 $data,
                                 $listBuffers,
+                                $altBuffers,
+                                $listKinds,
                                 $textBuffers,
                                 $depth,
                                 $namespace,
@@ -117,7 +141,15 @@ final class XmpParser
                         $text = trim($textBuffers[$depth] ?? '');
                         for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
                             if (isset($listBuffers[$parentDepth])) {
-                                $listBuffers[$parentDepth][] = $text;
+                                if (($listKinds[$parentDepth] ?? '') === 'Alt') {
+                                    $altBuffers[$parentDepth][] = [
+                                        'lang'  => $languageBuffers[$depth] ?? '',
+                                        'value' => $text,
+                                    ];
+                                } else {
+                                    $listBuffers[$parentDepth][] = $text;
+                                }
+
                                 break;
                             }
                         }
@@ -148,6 +180,8 @@ final class XmpParser
                         $this->storeFinalizedValue(
                             $data,
                             $listBuffers,
+                            $altBuffers,
+                            $listKinds,
                             $textBuffers,
                             $depth,
                             $namespace,
@@ -155,7 +189,14 @@ final class XmpParser
                         );
                     }
 
-                    unset($elementPath[$depth], $textBuffers[$depth], $listBuffers[$depth]);
+                    unset(
+                        $elementPath[$depth],
+                        $textBuffers[$depth],
+                        $listBuffers[$depth],
+                        $altBuffers[$depth],
+                        $listKinds[$depth],
+                        $languageBuffers[$depth],
+                    );
                     break;
             }
         }
@@ -211,8 +252,8 @@ final class XmpParser
      * (rdf:about, rdf:ID, rdf:nodeID, rdf:parseType) while capturing actual
      * property values.
      *
-     * @param XMLReader                                $reader Active XMLReader positioned on an element.
-     * @param array<string, array<int, string>|string> &$data  Target map for discovered properties.
+     * @param XMLReader                                                       $reader Active XMLReader positioned on an element.
+     * @param array<string, array<int, string>|string|XmpLanguageAlternative> &$data  Target map for discovered properties.
      */
     private function extractAttributes(XMLReader $reader, array &$data): void
     {
@@ -228,6 +269,11 @@ final class XmpParser
 
             // XMP Specification Part 1 §7.2: Skip namespace declarations (xmlns:*)
             if ($attrNamespace === 'http://www.w3.org/2000/xmlns/') {
+                continue;
+            }
+
+            // XMP Specification Part 1 Appendix A.2.3.4: Skip xml:lang qualifiers on rdf:li.
+            if ($attrNamespace === 'http://www.w3.org/XML/1998/namespace' && $attrLocalName === 'lang') {
                 continue;
             }
 
@@ -253,13 +299,17 @@ final class XmpParser
     /**
      * Stores a value derived from buffered list/text information.
      *
-     * @param array<string, array<int, string>|string> $data
-     * @param array<int, list<string>>                 $listBuffers
-     * @param array<int, string>                       $textBuffers
+     * @param array<string, array<int, string>|string|XmpLanguageAlternative> $data
+     * @param array<int, list<string>>                                        $listBuffers
+     * @param array<int, list<array{lang: string, value: string}>>            $altBuffers
+     * @param array<int, string>                                              $listKinds
+     * @param array<int, string>                                              $textBuffers
      */
     private function storeFinalizedValue(
         array &$data,
         array $listBuffers,
+        array $altBuffers,
+        array $listKinds,
         array $textBuffers,
         int $depth,
         string $namespace,
@@ -267,9 +317,11 @@ final class XmpParser
     ): void {
         /** @var list<string> $items */
         $items = $listBuffers[$depth] ?? [];
-        $text  = $textBuffers[$depth] ?? '';
+        /** @var list<array{lang: string, value: string}> $altItems */
+        $altItems = $altBuffers[$depth] ?? [];
+        $text     = $textBuffers[$depth] ?? '';
 
-        $value = $this->finalizeValue($items, $text);
+        $value = $this->finalizeValue($items, $altItems, $listKinds[$depth] ?? '', $text);
 
         $this->storeValue(
             $data,
@@ -281,13 +333,19 @@ final class XmpParser
     /**
      * Finalises the collected container/list data for the current element.
      *
-     * @param list<string> $items
-     * @param string       $text
+     * @param list<string>                             $items
+     * @param list<array{lang: string, value: string}> $altItems
+     * @param string                                   $listKind
+     * @param string                                   $text
      *
-     * @return list<string>|string
+     * @return list<string>|string|XmpLanguageAlternative
      */
-    private function finalizeValue(array $items, string $text): array|string
+    private function finalizeValue(array $items, array $altItems, string $listKind, string $text): array|string|XmpLanguageAlternative
     {
+        if ($listKind === 'Alt') {
+            return new XmpLanguageAlternative($altItems);
+        }
+
         if ($items !== []) {
             return $items;
         }
@@ -296,12 +354,37 @@ final class XmpParser
     }
 
     /**
+     * Reads the xml:lang attribute value from the current element.
+     */
+    private function readXmlLang(XMLReader $reader): string
+    {
+        if (!$reader->hasAttributes) {
+            return '';
+        }
+
+        $language = '';
+
+        $reader->moveToFirstAttribute();
+
+        do {
+            if ($reader->namespaceURI === 'http://www.w3.org/XML/1998/namespace' && $reader->localName === 'lang') {
+                $language = $reader->value;
+                break;
+            }
+        } while ($reader->moveToNextAttribute());
+
+        $reader->moveToElement();
+
+        return $language;
+    }
+
+    /**
      * Stores a value in the result map while merging multiple occurrences.
      *
-     * @param array<string, string|array<int, string>> $data
-     * @param list<string>|string                      $value
+     * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data
+     * @param list<string>|string|XmpLanguageAlternative                      $value
      */
-    private function storeValue(array &$data, string $key, array|string $value): void
+    private function storeValue(array &$data, string $key, array|string|XmpLanguageAlternative $value): void
     {
         XmpValueAccumulator::merge($data, $key, $value);
     }

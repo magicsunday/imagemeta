@@ -33,12 +33,12 @@ use function trim;
 final readonly class XmpDocument
 {
     /**
-     * @param array<string, string|array<int, string>> $data              Map of Clark notation => value
-     * @param array<string, string>                    $namespacePrefixes Map of namespace URI => prefix
+     * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data              Map of Clark notation => value
+     * @param array<string, string>                                           $namespacePrefixes Map of namespace URI => prefix
      */
     public function __construct(
         /**
-         * @var array<string, string|array<int, string>>
+         * @var array<string, string|array<int, string>|XmpLanguageAlternative>
          */
         public array $data,
         /**
@@ -59,7 +59,7 @@ final readonly class XmpDocument
             return new self([], []);
         }
 
-        /** @var array<string, string|array<int, string>> $data */
+        /** @var array<string, string|array<int, string>|XmpLanguageAlternative> $data */
         $data = [];
         /** @var array<string, string> $namespacePrefixes */
         $namespacePrefixes = [];
@@ -82,10 +82,13 @@ final readonly class XmpDocument
     /**
      * Accumulates a value into the aggregate data map using the same semantics as the parser.
      *
-     * @param array<string, string|array<int, string>> $data
-     * @param array<int, string>|string                $value
+     * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data
+     *
+     * @param-out array<string, string|array<int, string>|XmpLanguageAlternative> $data
+     *
+     * @param array<int, string>|string|XmpLanguageAlternative $value
      */
-    private static function accumulateValue(array &$data, string $key, array|string $value): void
+    private static function accumulateValue(array &$data, string $key, array|string|XmpLanguageAlternative $value): void
     {
         XmpValueAccumulator::merge($data, $key, $value);
     }
@@ -99,6 +102,18 @@ final readonly class XmpDocument
 
         if (is_string($value)) {
             $trimmed = trim($value);
+
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        if ($value instanceof XmpLanguageAlternative) {
+            $text = $value->defaultValue();
+
+            if ($text === null) {
+                return null;
+            }
+
+            $trimmed = trim($text);
 
             return $trimmed === '' ? null : $trimmed;
         }
@@ -130,6 +145,12 @@ final readonly class XmpDocument
             $trimmed = trim($value);
 
             return $trimmed === '' ? [] : [$trimmed];
+        }
+
+        if ($value instanceof XmpLanguageAlternative) {
+            $items = array_map(trim(...), $value->values());
+
+            return array_values(array_filter($items, static fn (string $item): bool => $item !== ''));
         }
 
         if (!is_array($value)) {
@@ -206,12 +227,16 @@ final readonly class XmpDocument
      *
      * @return array<int, string>|string|null
      */
-    public function get(string $namespaceUri, string $localName): array|string|null
+    public function get(string $namespaceUri, string $localName): array|string|XmpLanguageAlternative|null
     {
         $key   = $this->buildClarkName($namespaceUri, $localName);
         $value = $this->data[$key] ?? null;
 
         if (is_string($value)) {
+            return $value;
+        }
+
+        if ($value instanceof XmpLanguageAlternative) {
             return $value;
         }
 
@@ -230,12 +255,22 @@ final readonly class XmpDocument
      *
      * @return array<int, string>|string|null
      */
-    public function find(string $localName): array|string|null
+    public function find(string $localName): array|string|XmpLanguageAlternative|null
     {
         return array_find(
             $this->data,
-            fn (array|string $value, string $key): bool => $this->matchesLocalName($key, $localName)
+            fn (array|string|XmpLanguageAlternative $value, string $key): bool => $this->matchesLocalName($key, $localName)
         );
+    }
+
+    /**
+     * Returns the language alternative container for the specified property.
+     */
+    public function languageAlternative(string $namespaceUri, string $localName): ?XmpLanguageAlternative
+    {
+        $value = $this->get($namespaceUri, $localName);
+
+        return $value instanceof XmpLanguageAlternative ? $value : null;
     }
 
     /**
