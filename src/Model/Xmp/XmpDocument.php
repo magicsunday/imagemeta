@@ -259,12 +259,13 @@ final readonly class XmpDocument
             $numerator                 = trim($numerator);
             $denominator               = trim($denominator);
 
-            if ($denominator === '0' || $denominator === '-0') {
-                return null;
-            }
-
             if (is_numeric($numerator) && is_numeric($denominator)) {
-                return (float) $numerator / (float) $denominator;
+                $denominatorValue = (float) $denominator;
+                if ($denominatorValue === 0.0) {
+                    return null;
+                }
+
+                return (float) $numerator / $denominatorValue;
             }
         }
 

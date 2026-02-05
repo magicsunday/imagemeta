@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Tests\Model\Xmp;
 
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -92,5 +93,62 @@ final class XmpDocumentTest extends TestCase
 
         self::assertSame([], $merged->data);
         self::assertSame([], $merged->namespacePrefixes);
+    }
+
+    /**
+     * Parses a basic rational value into a float.
+     * It keeps the numeric parsing rules stable for valid inputs.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseNumericValueParsesValidRational(): void
+    {
+        self::assertSame(0.5, XmpDocument::parseNumericValue('1/2'));
+    }
+
+    /**
+     * Rejects rational values that use zero-equivalent denominators.
+     * It prevents division by zero across multiple textual forms.
+     *
+     * @param string $denominator Denominator string to test.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('zeroEquivalentDenominatorProvider')]
+    public function parseNumericValueRejectsZeroEquivalentDenominators(string $denominator): void
+    {
+        $value = sprintf('1/%s', $denominator);
+
+        self::assertNull(XmpDocument::parseNumericValue($value));
+    }
+
+    /**
+     * Rejects malformed rational strings without numeric content.
+     * It ensures invalid numerator/denominator pairs return null.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseNumericValueRejectsMalformedRational(): void
+    {
+        self::assertNull(XmpDocument::parseNumericValue('foo/bar'));
+    }
+
+    /**
+     * Provides zero-equivalent denominators for rational parsing tests.
+     *
+     * @return array<string, array{string}>
+     */
+    public static function zeroEquivalentDenominatorProvider(): array
+    {
+        return [
+            'zero'             => ['0'],
+            'plus-zero'        => ['+0'],
+            'zero-padded'      => ['00'],
+            'decimal'          => ['0.0'],
+            'negative-decimal' => ['-0.0'],
+        ];
     }
 }
