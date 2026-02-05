@@ -24,7 +24,6 @@ use function preg_match;
 use function sprintf;
 use function str_contains;
 use function strpos;
-use function strtolower;
 use function substr;
 use function trim;
 
@@ -151,7 +150,8 @@ final readonly class XmpDocument
     }
 
     /**
-     * Interprets the property as boolean when possible.
+     * Interprets the property as an XMP boolean literal when possible.
+     * XMP defines canonical boolean strings as "True" and "False".
      */
     public function bool(string $namespaceUri, string $localName): ?bool
     {
@@ -161,11 +161,9 @@ final readonly class XmpDocument
             return null;
         }
 
-        $normalized = strtolower($value);
-
-        return match ($normalized) {
-            'true', '1' => true,
-            'false', '0' => false,
+        return match ($value) {
+            'True'  => true,
+            'False' => false,
             default => null,
         };
     }

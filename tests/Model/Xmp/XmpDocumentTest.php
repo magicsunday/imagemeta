@@ -96,6 +96,59 @@ final class XmpDocumentTest extends TestCase
     }
 
     /**
+     * Parses canonical XMP boolean strings.
+     * Ensures strict True/False values are interpreted correctly.
+     *
+     * @return void
+     */
+    #[Test]
+    public function boolParsesCanonicalValues(): void
+    {
+        $namespace = 'http://example.com/xmp/';
+
+        $trueDocument = new XmpDocument(
+            [
+                sprintf('{%s}Flag', $namespace) => 'True',
+            ],
+            [],
+        );
+
+        $falseDocument = new XmpDocument(
+            [
+                sprintf('{%s}Flag', $namespace) => 'False',
+            ],
+            [],
+        );
+
+        self::assertTrue($trueDocument->bool($namespace, 'Flag'));
+        self::assertFalse($falseDocument->bool($namespace, 'Flag'));
+    }
+
+    /**
+     * Rejects non-canonical boolean representations.
+     * It keeps the accessor aligned with the XMP lexical space.
+     *
+     * @param string $value Boolean candidate to validate.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('nonCanonicalBooleanProvider')]
+    public function boolRejectsNonCanonicalValues(string $value): void
+    {
+        $namespace = 'http://example.com/xmp/';
+
+        $document = new XmpDocument(
+            [
+                sprintf('{%s}Flag', $namespace) => $value,
+            ],
+            [],
+        );
+
+        self::assertNull($document->bool($namespace, 'Flag'));
+    }
+
+    /**
      * Parses a basic rational value into a float.
      * It keeps the numeric parsing rules stable for valid inputs.
      *
@@ -149,6 +202,23 @@ final class XmpDocumentTest extends TestCase
             'zero-padded'      => ['00'],
             'decimal'          => ['0.0'],
             'negative-decimal' => ['-0.0'],
+        ];
+    }
+
+    /**
+     * Provides non-canonical boolean representations.
+     *
+     * @return array<string, array{string}>
+     */
+    public static function nonCanonicalBooleanProvider(): array
+    {
+        return [
+            'lower-true'  => ['true'],
+            'lower-false' => ['false'],
+            'upper-true'  => ['TRUE'],
+            'upper-false' => ['FALSE'],
+            'one'         => ['1'],
+            'zero'        => ['0'],
         ];
     }
 }
