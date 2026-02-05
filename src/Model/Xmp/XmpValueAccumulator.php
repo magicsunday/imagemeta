@@ -12,9 +12,6 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
 use function array_key_exists;
-use function array_unique;
-use function array_values;
-use function in_array;
 use function is_array;
 
 /**
@@ -23,10 +20,10 @@ use function is_array;
 final class XmpValueAccumulator
 {
     /**
-     * Merges an XMP value into the provided data map, avoiding duplicates.
+     * Merges an XMP value into the provided data map while preserving multiplicity.
      *
      * When the same property appears multiple times in different XMP segments,
-     * this method ensures that duplicate values are not accumulated.
+     * this method keeps all entries in their observed order.
      *
      * @param array<string, string|array<int, string>> $data
      * @param array<int, string>|string                $value
@@ -44,13 +41,11 @@ final class XmpValueAccumulator
         // Handle case where existing value is an array
         if (is_array($existing)) {
             if (is_array($value)) {
-                // Merge arrays and deduplicate
-                $merged     = [...$existing, ...$value];
-                $data[$key] = array_values(array_unique($merged));
-            } elseif (!in_array($value, $existing, true)) {
-                // Add single value only if not already present
-                $existing[] = $value;
-                $data[$key] = $existing;
+                // Merge arrays and preserve order/duplicates.
+                $data[$key] = [...$existing, ...$value];
+            } else {
+                // Append the single value as-is, even if it duplicates.
+                $data[$key] = [...$existing, $value];
             }
 
             return;
@@ -58,19 +53,13 @@ final class XmpValueAccumulator
 
         // Handle case where existing value is a string
         if (is_array($value)) {
-            // Include existing string only if not already in the array
-            $merged = in_array($existing, $value, true) ? $value : [$existing, ...$value];
-
-            $data[$key] = array_values(array_unique($merged));
+            // Preserve the existing string and append the array values.
+            $data[$key] = [$existing, ...$value];
 
             return;
         }
 
-        // Both are strings - only convert to array if they're different
-        if ($existing !== $value) {
-            $data[$key] = [$existing, $value];
-        }
-
-        // If they're the same, keep the existing single value
+        // Both are strings: preserve multiplicity by storing both values.
+        $data[$key] = [$existing, $value];
     }
 }
