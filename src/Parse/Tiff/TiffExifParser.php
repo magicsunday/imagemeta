@@ -444,7 +444,15 @@ final class TiffExifParser
     {
         $tag  = $this->readU16();
         $type = $this->readU16();
-        $cnt  = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
+
+        if (
+            !$this->bigTiff
+            && in_array($type, [TiffConst::TYPE_LONG8, TiffConst::TYPE_SLONG8, TiffConst::TYPE_IFD8], true)
+        ) {
+            throw new ParseError('BigTIFF-only field type ' . $type . ' in classic TIFF');
+        }
+
+        $cnt = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
 
         $this->validateFixedLengthTagLayout($tag, $type, $cnt);
 

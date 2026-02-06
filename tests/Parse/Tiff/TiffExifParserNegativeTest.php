@@ -490,6 +490,60 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Builds a classic TIFF with a LONG8 field type in IFD0.
+     * Confirms the parser rejects BigTIFF-only types in classic TIFF.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLong8InClassicTiff(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('BigTIFF-only field type');
+
+        $blob = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_LONG8, 1);
+
+        $reader = new TiffExifParser();
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
+     * Builds a classic TIFF with an SLONG8 field type in IFD0.
+     * Confirms the parser rejects BigTIFF-only types in classic TIFF.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSlong8InClassicTiff(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('BigTIFF-only field type');
+
+        $blob = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_SLONG8, 1);
+
+        $reader = new TiffExifParser();
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
+     * Builds a classic TIFF with an IFD8 field type in IFD0.
+     * Confirms the parser rejects BigTIFF-only types in classic TIFF.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsIfd8InClassicTiff(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('BigTIFF-only field type');
+
+        $blob = $this->buildTiffWithIfd0Pointer(0x0100, TiffConst::TYPE_IFD8, 1);
+
+        $reader = new TiffExifParser();
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
      * Builds a minimal valid TIFF blob with a RATIONAL value.
      * This checks the behavior for the specific inputs used in the test.
      *
