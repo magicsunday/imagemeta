@@ -1661,8 +1661,16 @@ final readonly class IsoBmffParser
         $win = $infe->window;
         $win->seek(0);
 
+        if ($infe->contentSize < 8) {
+            throw new ParseError('infe box truncated');
+        }
+
         $version = $win->readU8();
         $this->readUInt24($win);
+
+        if ($version > 3) {
+            throw new ParseError('unsupported infe box version');
+        }
 
         if ($version === 0 || $version === 1) {
             $itemId = $win->readU16BE();
@@ -1682,9 +1690,16 @@ final readonly class IsoBmffParser
             ];
         }
 
-        // ISO 14496-12: Version 2 uses 16-bit item_ID, version 3+ uses 32-bit.
+        // ISO 14496-12: Version 2 uses 16-bit item_ID, version 3 uses 32-bit.
         // Note: flags bit 0 indicates hidden_item, not item_ID size.
-        $id = $version >= 3 ? $win->readU32BE() : $win->readU16BE();
+        // v2: 4 header + 2 item_ID + 2 protection_index + 4 item_type = 12
+        // v3: 4 header + 4 item_ID + 2 protection_index + 4 item_type = 14
+        $minSize = $version === 3 ? 14 : 12;
+        if ($infe->contentSize < $minSize) {
+            throw new ParseError('infe box truncated');
+        }
+
+        $id = $version === 3 ? $win->readU32BE() : $win->readU16BE();
         $win->readU16BE(); // protection index
         $itemType    = $win->read(4);
         $remaining   = $infe->contentSize - $win->tell();

@@ -1511,6 +1511,72 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds an infe box with version 4, which is not defined by ISO/IEC 14496-12.
+     * Confirms the parser rejects unsupported infe versions.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectInfeUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported infe box version');
+
+        $infePayload = "\x04\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $meta        = $this->fullBox('meta', $iinf);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an infe box with only 4 bytes (needs 8 minimum for v0/v1).
+     * Confirms the parser rejects truncated infe payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectInfeTruncated(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('infe box truncated');
+
+        $infe = $this->box('infe', "\0\0\0\0"); // only 4 bytes, needs 8
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $meta = $this->fullBox('meta', $iinf);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an infe v2 box with only 10 bytes (needs 12: 4 header + 2 ID + 2 prot + 4 type).
+     * Confirms the parser rejects truncated v2 infe payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectInfeTruncatedVersion2(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('infe box truncated');
+
+        // v2 needs 12 bytes: 4 header + 2 item_ID + 2 protection_index + 4 item_type
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0); // 8 bytes, needs 12
+        $infe        = $this->box('infe', $infePayload);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $meta        = $this->fullBox('meta', $iinf);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Builds an iinf box with version 2, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported iinf versions.
      *
