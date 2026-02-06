@@ -893,33 +893,35 @@ final readonly class ParsedExif
 
     /**
      * Returns the encoding declared in the EXIF user comment prefix.
+     *
+     * EXIF 3.0 §4.6.4 requires UNDEFINED text fields to include an 8-byte
+     * character code area. Payloads shorter than 8 bytes are non-conformant.
      */
     public function userCommentEncoding(): ?string
     {
         $raw = $this->rawUserComment();
-        if ($raw === null) {
+        if ($raw === null || strlen($raw) < 8) {
             return null;
-        }
-
-        if (strlen($raw) < 8) {
-            return $this->inferUserCommentEncoding($raw);
         }
 
         $prefix            = substr($raw, 0, 8);
         $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
-        $hasKnownPrefix    = $canonicalEncoding !== '';
-        $content           = $hasKnownPrefix ? substr($raw, 8) : $raw;
-        $hasContent        = trim($content, "\0 ") !== '';
 
-        if (!$hasKnownPrefix) {
-            return $this->inferUserCommentEncoding($content);
+        if ($canonicalEncoding === '') {
+            return null;
         }
+
+        $content    = substr($raw, 8);
+        $hasContent = trim($content, "\0 ") !== '';
 
         return $hasContent ? $canonicalEncoding : null;
     }
 
     /**
-     * Provides the declared user comment encoding falling back to ASCII when undecorated content exists.
+     * Provides the declared user comment encoding falling back to content inference
+     * when the 8-byte prefix is present but denotes UNDEFINED encoding.
+     *
+     * EXIF 3.0 §4.6.4 requires the 8-byte character code area to be present.
      */
     public function userCommentEncodingBestEffort(): ?string
     {
@@ -929,14 +931,18 @@ final readonly class ParsedExif
         }
 
         $raw = $this->rawUserComment();
-        if ($raw === null) {
+        if ($raw === null || strlen($raw) < 8) {
             return null;
         }
 
         $prefix            = substr($raw, 0, 8);
         $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
-        $hasKnownPrefix    = $canonicalEncoding !== '';
-        $content           = $hasKnownPrefix ? substr($raw, 8) : $raw;
+
+        if ($canonicalEncoding === '') {
+            return null;
+        }
+
+        $content = substr($raw, 8);
 
         return $this->inferUserCommentEncoding($content);
     }
@@ -3869,44 +3875,35 @@ final readonly class ParsedExif
 
     /**
      * Decodes EXIF user comment strings with encoding prefixes.
+     *
+     * EXIF 3.0 §4.6.4 requires UNDEFINED text fields to include an 8-byte
+     * character code area. Payloads shorter than 8 bytes are non-conformant
+     * and are rejected. An unrecognised prefix is also rejected.
      */
     private function decodeUserComment(string $raw): ?string
     {
-        if (strlen($raw) <= 8) {
-            $content = trim($raw, "\0");
-
-            if ($content === '') {
-                return null;
-            }
-
-            $encoding = $this->inferUserCommentEncoding($raw);
-            if ($encoding === 'UNICODE') {
-                return $this->decodeUnicodeComment($raw);
-            }
-
-            return $content;
+        if (strlen($raw) < 8) {
+            return null;
         }
 
         $prefix            = substr($raw, 0, 8);
         $canonicalEncoding = $this->canonicalUserCommentMarker($prefix);
-        $hasKnownPrefix    = $canonicalEncoding !== '';
-        $content           = $hasKnownPrefix ? substr($raw, 8) : $raw;
-        $sanitized         = trim($content, "\0 ");
 
-        if ($hasKnownPrefix) {
-            $resolvedEncoding = $sanitized === '' ? null : $canonicalEncoding;
-        } else {
-            $resolvedEncoding = $this->inferUserCommentEncoding($content);
-        }
-
-        if ($resolvedEncoding === null) {
+        if ($canonicalEncoding === '') {
             return null;
         }
 
-        return match ($resolvedEncoding) {
+        $content   = substr($raw, 8);
+        $sanitized = trim($content, "\0 ");
+
+        if ($sanitized === '') {
+            return null;
+        }
+
+        return match ($canonicalEncoding) {
             'UNICODE' => $this->decodeUnicodeComment($content),
             'JIS'     => $this->decodeJisComment($sanitized),
-            default   => $sanitized === '' ? null : $sanitized,
+            default   => $sanitized,
         };
     }
 

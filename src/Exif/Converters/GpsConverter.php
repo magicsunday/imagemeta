@@ -23,6 +23,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 
 use function abs;
+use function array_find;
 use function count;
 use function floor;
 use function iconv;
@@ -38,7 +39,6 @@ use function preg_replace;
 use function round;
 use function sprintf;
 use function str_replace;
-use function str_starts_with;
 use function strlen;
 use function strtoupper;
 use function substr;
@@ -918,15 +918,20 @@ final readonly class GpsConverter
      *
      * @param int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value Raw value.
      */
+    /**
+     * EXIF 3.0 §4.6.4 requires UNDEFINED text fields to include an 8-byte
+     * character code area. Payloads shorter than 8 bytes or with an
+     * unrecognised prefix are rejected.
+     */
     private function decodeUndefinedString(
         string|int|float|ExifRational|ExifRationalList|ExifNumericList|UInt64|null $value,
     ): ?string {
-        if (!is_string($value)) {
+        if (!is_string($value) || strlen($value) < 8) {
             return null;
         }
 
-        $payload  = $value;
-        $encoding = null;
+        $prefixBytes = substr($value, 0, 8);
+        $payload     = substr($value, 8);
 
         $prefixes = [
             "ASCII\0\0\0"   => CharacterEncoding::ASCII,
@@ -934,18 +939,20 @@ final readonly class GpsConverter
             "JIS\0\0\0\0\0" => CharacterEncoding::JIS,
         ];
 
-        foreach ($prefixes as $prefix => $encodingEnum) {
-            if (str_starts_with($payload, $prefix)) {
-                $payload  = substr($payload, strlen($prefix));
-                $encoding = $encodingEnum;
-                break;
-            }
+        $encoding = array_find($prefixes, fn (CharacterEncoding $encodingEnum, string $prefix): bool => $prefixBytes === $prefix);
+
+        // EXIF 3.0 §4.6.4: all-NULL prefix denotes UNDEFINED encoding
+        if ($encoding === null && trim($prefixBytes, "\0") === '') {
+            return $this->stringConverter->sanitize($payload);
+        }
+
+        if ($encoding === null) {
+            return null;
         }
 
         return match ($encoding) {
             CharacterEncoding::UTF16LE => $this->decodeUndefinedUnicode($payload),
             CharacterEncoding::JIS     => $this->decodeUndefinedJis($payload),
-            null                       => $this->stringConverter->sanitize($payload),
             default                    => $this->stringConverter->sanitize($payload),
         };
     }
