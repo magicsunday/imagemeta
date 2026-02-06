@@ -250,7 +250,7 @@ final class IsoBmffParserTest extends TestCase
 
             // Item entry for version 1:
             $payload .= pack('n', 1);    // item_id = 1
-            $payload .= pack('n', 0);    // construction_method (high 4 bits) + reserved (v1/v2)
+            $payload .= pack('n', 0);    // reserved (12 bits) + construction_method (4 bits)
             $payload .= pack('n', 0);    // data_reference_index = 0
             $payload .= pack('n', 1);    // extent_count = 1
             // No extent_index since index_size=0
@@ -371,6 +371,122 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload = "\x44";       // offset_size=4, length_size=4
         $ilocPayload .= "\x02";       // base_offset_size=0 (high), index_size=2 (invalid)
         $ilocPayload .= pack('n', 0); // item_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an iloc box with version 3, which is undefined in ISO/IEC 14496-12 §8.11.3.
+     * Confirms the parser rejects unsupported iloc versions.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported iloc box version');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x44";       // offset_size=4, length_size=4
+        $ilocPayload .= "\x00";       // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('n', 0); // item_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload, 3, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an iloc v0 box where the low nibble of the base_offset/index byte is non-zero.
+     * This confirms the reserved nibble is validated per ISO/IEC 14496-12 §8.11.3.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocVersion0NonZeroReservedNibble(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc version 0 reserved nibble must be zero');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x44";       // offset_size=4, length_size=4
+        $ilocPayload .= "\x04";       // base_offset_size=0 (high), reserved=4 (low, should be 0)
+        $ilocPayload .= pack('n', 0); // item_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload, 0, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an iloc v1 box with non-zero reserved bits in the construction_method field.
+     * This validates that the upper 12 bits of the 16-bit field are zero per ISO/IEC 14496-12 §8.11.3.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocNonZeroConstructionMethodReservedBits(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc construction_method reserved bits must be zero');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x44";         // offset_size=4, length_size=4
+        $ilocPayload .= "\x00";         // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('n', 1);   // item_count = 1
+        $ilocPayload .= pack('n', 1);   // item_id = 1
+        $ilocPayload .= pack('n', 0x0010); // reserved bits set (bit 4)
+        $ilocPayload .= pack('n', 0);   // data_reference_index = 0
+        $ilocPayload .= pack('n', 0);   // extent_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an iloc v1 box with construction_method = 4, which is outside the defined range 0–2.
+     * This verifies that invalid construction method values are rejected per ISO/IEC 14496-12 §8.11.3.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocInvalidConstructionMethodValue(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iloc construction_method value out of range');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        $ilocPayload = "\x44";         // offset_size=4, length_size=4
+        $ilocPayload .= "\x00";         // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('n', 1);   // item_count = 1
+        $ilocPayload .= pack('n', 1);   // item_id = 1
+        $ilocPayload .= pack('n', 0x0004); // construction_method=4 (invalid)
+        $ilocPayload .= pack('n', 0);   // data_reference_index = 0
+        $ilocPayload .= pack('n', 0);   // extent_count = 0
         $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
@@ -874,7 +990,7 @@ final class IsoBmffParserTest extends TestCase
         $payload .= "\x00";       // base_offset_size=0 (high nibble), index_size=0 (low nibble)
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
-        $payload .= pack('n', 0x1000); // construction_method=1 (high 4 bits)
+        $payload .= pack('n', 0x0001); // construction_method=1
         $payload .= pack('n', 0); // data_reference_index = 0
         $payload .= pack('n', 1); // extent_count = 1
         $payload .= pack('N', 0); // extent_offset = 0
@@ -914,7 +1030,7 @@ final class IsoBmffParserTest extends TestCase
         $payload .= "\x00";       // base_offset_size=0, index_size=0
         $payload .= pack('n', 1); // item_count = 1
         $payload .= pack('n', 1); // item_id = 1
-        $payload .= pack('n', 0x1000); // construction_method=1
+        $payload .= pack('n', 0x0001); // construction_method=1
         $payload .= pack('n', 0); // data_reference_index = 0
         $payload .= pack('n', 1); // extent_count = 1
         $payload .= pack('N', 0); // extent_offset = 0
@@ -954,7 +1070,7 @@ final class IsoBmffParserTest extends TestCase
             $payload .= pack('n', 2); // item_count = 2
 
             $payload .= pack('n', 1);
-            $payload .= pack('n', 0x2000);
+            $payload .= pack('n', 0x0002);
             $payload .= pack('n', 0);
             $payload .= pack('n', 1);
             $payload .= pack('N', 1);
@@ -1015,7 +1131,7 @@ final class IsoBmffParserTest extends TestCase
             $payload .= pack('n', 2); // item_count = 2
 
             $payload .= pack('n', 1);
-            $payload .= pack('n', 0x2000);
+            $payload .= pack('n', 0x0002);
             $payload .= pack('n', 0);
             $payload .= pack('n', 1);
             $payload .= pack('N', 0);

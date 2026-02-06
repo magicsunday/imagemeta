@@ -1706,16 +1706,27 @@ final readonly class IsoBmffParser
         $version = $win->readU8();
         $this->readUInt24($win);
 
+        // ISO/IEC 14496-12 §8.11.3: only versions 0, 1 and 2 are defined
+        if ($version > 2) {
+            throw new ParseError('unsupported iloc box version');
+        }
+
         // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
         $offsetLengthSizes = $win->readU8();
         $offsetSize        = $this->validateSizeNibble(($offsetLengthSizes >> 4) & BitMask::LOW_NIBBLE); // High nibble
         $lengthSize        = $this->validateSizeNibble($offsetLengthSizes & BitMask::LOW_NIBBLE);         // Low nibble
 
-        // ISO/IEC 14496-12 §8.11.3: base_offset_size in high nibble, index_size_size in low nibble (v1/v2)
+        // ISO/IEC 14496-12 §8.11.3: base_offset_size in high nibble, index_size in low nibble (v1/v2)
         $baseField      = $win->readU8();
         $baseOffsetSize = $this->validateSizeNibble(($baseField >> 4) & BitMask::LOW_NIBBLE);
         $indexSize      = 0;
-        if ($version === 1 || $version === 2) {
+
+        if ($version === 0) {
+            // ISO/IEC 14496-12 §8.11.3: for version 0 the low nibble is reserved and must be 0
+            if (($baseField & BitMask::LOW_NIBBLE) !== 0) {
+                throw new ParseError('iloc version 0 reserved nibble must be zero');
+            }
+        } else {
             $indexSize = $this->validateSizeNibble($baseField & BitMask::LOW_NIBBLE);
         }
 
@@ -1734,9 +1745,18 @@ final readonly class IsoBmffParser
 
             $constructionMethod = 0;
             if ($version === 1 || $version === 2) {
-                // ISO/IEC 14496-12 §8.11.3: construction_method is in the high 4 bits of a 16-bit field
-                $tmp                = $win->readU16BE();
-                $constructionMethod = ($tmp >> 12) & BitMask::LOW_NIBBLE;
+                // ISO/IEC 14496-12 §8.11.3: 12-bit reserved (must be 0) followed by 4-bit construction_method
+                $tmp = $win->readU16BE();
+
+                if (($tmp >> 4) !== 0) {
+                    throw new ParseError('iloc construction_method reserved bits must be zero');
+                }
+
+                $constructionMethod = $tmp & BitMask::LOW_NIBBLE;
+
+                if (ConstructionMethod::tryFrom($constructionMethod) === null) {
+                    throw new ParseError('iloc construction_method value out of range');
+                }
             }
 
             $dataReferenceIndex = $win->readU16BE();
