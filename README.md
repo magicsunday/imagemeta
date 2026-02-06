@@ -32,6 +32,7 @@ composer require magicsunday/imagemeta
 
 * Streaming-first container detection with support for JPEG as well as ISO BMFF derivatives such as HEIC, AVIF, MP4 and MOV, handled through `MetadataReader` and the `FormatDetector` component.
 * Unified EXIF 3.0, XMP and QuickTime metadata mapped into immutable value objects that expose typed properties instead of raw tag identifiers.
+* Baseline DNG support for core IFD0 tags: `DNGVersion`, `DNGBackwardVersion`, and `UniqueCameraModel` via `ParsedExif` accessors.
 * Maker note decoding with automatic Apple metadata merging plus MPF (Multi-Picture Format) documents, ICC profiles, FlashPix extension streams and EXIF audio tracks surfaced on the aggregate model.
 * Optional SHA-1 and MD5 digest calculation alongside MIME type, extension and frame dimension helpers for downstream correlation.
 * Lazy assembly of curated metadata via `Metadata::structured()` backed by dedicated accessor aggregates for file, device, lens, exposure, GPS, derived optical values and more.

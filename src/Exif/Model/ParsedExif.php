@@ -20,6 +20,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
+use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
@@ -403,6 +404,36 @@ final readonly class ParsedExif
         }
 
         return ValueConverters::toExifVersion($value);
+    }
+
+    /**
+     * Returns the DNG version encoded in IFD0 when present.
+     *
+     * DNG 1.7.1.0 (DNG Tags, DNGVersion): BYTE[4], required in IFD0.
+     */
+    public function dngVersion(): ?string
+    {
+        return $this->dngVersionTag($this->ifd0, DngTag::DNG_VERSION);
+    }
+
+    /**
+     * Returns the backward-compatibility DNG version encoded in IFD0 when present.
+     *
+     * DNG 1.7.1.0 (DNG Tags, DNGBackwardVersion): BYTE[4], required in IFD0.
+     */
+    public function dngBackwardVersion(): ?string
+    {
+        return $this->dngVersionTag($this->ifd0, DngTag::DNG_BACKWARD_VERSION);
+    }
+
+    /**
+     * Returns the non-localized unique DNG camera model from IFD0 when present.
+     *
+     * DNG 1.7.1.0 (DNG Tags, UniqueCameraModel): ASCII, NUL-terminated.
+     */
+    public function uniqueCameraModel(): ?string
+    {
+        return $this->str($this->ifd0, DngTag::UNIQUE_CAMERA_MODEL);
     }
 
     /**
@@ -3681,6 +3712,29 @@ final readonly class ParsedExif
         }
 
         return null;
+    }
+
+    /**
+     * Formats DNG BYTE[4] version tags into dotted notation.
+     *
+     * @param Ifd|null $ifd IFD that may contain the DNG version tag.
+     * @param int      $tag DNG tag identifier for the requested version field.
+     */
+    private function dngVersionTag(?Ifd $ifd, int $tag): ?string
+    {
+        $components = $this->numericList($ifd, $tag);
+
+        if (!is_array($components) || count($components) !== 4) {
+            return null;
+        }
+
+        return $components[0]
+            . '.'
+            . $components[1]
+            . '.'
+            . $components[2]
+            . '.'
+            . $components[3];
     }
 
     /**
