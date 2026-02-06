@@ -54,6 +54,52 @@ final class ParsedExifOtherTagsTest extends TestCase
     }
 
     /**
+     * Provides an ImageUniqueID value that is too short (only 16 hex characters).
+     * Verifies that non-conformant lengths are rejected per EXIF 3.0 §4.6.6.9.1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function imageUniqueIdRejectsShortHexString(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::IMAGE_UNIQUE_ID => new IfdEntry(
+                ExifTag::IMAGE_UNIQUE_ID,
+                2,
+                17,
+                '0011223344556677',
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertNull($parsedExif->imageUniqueId());
+    }
+
+    /**
+     * Provides an ImageUniqueID value with non-hex characters.
+     * Verifies that invalid hex content is rejected per EXIF 3.0 §4.6.6.9.1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function imageUniqueIdRejectsNonHexCharacters(): void
+    {
+        $exifIfd = new Ifd([
+            ExifTag::IMAGE_UNIQUE_ID => new IfdEntry(
+                ExifTag::IMAGE_UNIQUE_ID,
+                2,
+                33,
+                '00112233445566778899aabbccddeezz',
+            ),
+        ]);
+
+        $parsedExif = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertNull($parsedExif->imageUniqueId());
+    }
+
+    /**
      * Populates the camera owner, serial, and lens attribution tags.
      * Verifies each getter returns the corresponding EXIF string.
      *

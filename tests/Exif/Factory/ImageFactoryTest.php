@@ -55,7 +55,7 @@ final class ImageFactoryTest extends TestCase
             bitsPerSample: 8,
             colorSpace: ColorSpace::SRGB,
             interopIndex: null,
-            imageUniqueId: 'ABC123',
+            imageUniqueId: '00112233445566778899aabbccddeeff',
             documentName: 'document.tif',
             imageDescription: 'Test image',
             imageTitle: 'Title',
@@ -79,7 +79,7 @@ final class ImageFactoryTest extends TestCase
         self::assertSame(Orientation::TOP_LEFT, $image->orientation);
         self::assertSame(8, $image->bitsPerSample);
         self::assertSame(ColorSpace::SRGB, $image->colorSpace);
-        self::assertSame('ABC123', $image->imageUniqueId);
+        self::assertSame('00112233445566778899aabbccddeeff', $image->imageUniqueId);
         self::assertSame('document.tif', $image->documentName);
         self::assertSame('Test image', $image->description);
         self::assertSame('Title', $image->title);

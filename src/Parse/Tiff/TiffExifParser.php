@@ -129,6 +129,13 @@ final class TiffExifParser
             'typeName' => 'BYTE',
             'spec'     => 'EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8',
         ],
+        ExifTag::IMAGE_UNIQUE_ID => [
+            'name'     => 'ImageUniqueID',
+            'count'    => 33,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.6.9.1',
+        ],
     ];
 
     private const int ASCII_PRINTABLE_MIN = 0x20;

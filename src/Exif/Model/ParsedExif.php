@@ -377,7 +377,15 @@ final readonly class ParsedExif
      */
     public function imageUniqueId(): ?string
     {
-        return $this->str($this->exifIfd, ExifTag::IMAGE_UNIQUE_ID);
+        $value = $this->str($this->exifIfd, ExifTag::IMAGE_UNIQUE_ID);
+
+        // EXIF 3.0 §4.6.6.9.1: ImageUniqueID is a 128-bit UUID encoded as
+        // 32 hexadecimal ASCII characters. Reject non-conformant values.
+        if (($value === null) || (preg_match('/\A[0-9a-fA-F]{32}\z/', $value) !== 1)) {
+            return null;
+        }
+
+        return $value;
     }
 
     /**
