@@ -447,7 +447,7 @@ final readonly class IsoBmffParser
      */
     private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
     {
-        foreach ($this->walkChildren($udta) as $child) {
+        foreach ($this->walkChildren($udta, allowTrailingTerminator: true) as $child) {
             if ($child->type === self::BOX_META) {
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
             }
@@ -2335,12 +2335,16 @@ final readonly class IsoBmffParser
     /**
      * Iterates through child boxes within a container, yielding descriptors.
      *
-     * @param BoxDescriptor $parent Parent box descriptor whose content is iterated.
-     * @param int           $offset Optional relative byte offset where iteration begins.
+     * @param BoxDescriptor $parent                  Parent box descriptor whose content is iterated.
+     * @param int           $offset                  Optional relative byte offset where iteration begins.
+     * @param bool          $allowTrailingTerminator When true, tolerates a trailing 4-byte zero terminator
+     *                                               at the end of the child list. QuickTime File Format 2012
+     *                                               §2 "User Data Atoms" specifies that a udta list may
+     *                                               optionally end with a 32-bit integer set to 0.
      *
      * @return iterable<BoxDescriptor>
      */
-    private function walkChildren(BoxDescriptor $parent, int $offset = 0): iterable
+    private function walkChildren(BoxDescriptor $parent, int $offset = 0, bool $allowTrailingTerminator = false): iterable
     {
         if ($offset < 0 || $offset > $parent->contentSize) {
             throw new ParseError('child offset outside container');
@@ -2357,6 +2361,15 @@ final readonly class IsoBmffParser
         }
 
         if ($cursor !== $end) {
+            // QuickTime File Format 2012 §2 "User Data Atoms": a udta child
+            // list may optionally end with a 32-bit zero terminator.
+            if ($allowTrailingTerminator && (($end - $cursor) === 4)) {
+                $this->stream->seek($cursor);
+                if ($this->stream->readU32BE() === 0) {
+                    return;
+                }
+            }
+
             throw new ParseError('child boxes do not align with parent');
         }
     }

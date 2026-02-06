@@ -525,6 +525,40 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Creates a udta box whose child list ends with the optional 4-byte zero terminator.
+     * Per QuickTime File Format 2012 §2 "User Data Atoms", readers must tolerate this
+     * trailing terminator without raising an alignment error.
+     *
+     * @return void
+     */
+    #[Test]
+    public function toleratesUdtaTrailingZeroTerminator(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'udta-terminator-value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $metaPayload = "\0\0\0\0" . $keys . $ilst;
+        $meta        = $this->box('meta', $metaPayload);
+
+        // Append 4-byte zero terminator inside udta
+        $udtaPayload = $meta . "\0\0\0\0";
+        $udta        = $this->box('udta', $udtaPayload);
+        $moov        = $this->box('moov', $udta);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('udta-terminator-value', $qtMeta->keys[$key]);
+    }
+
+    /**
      * Builds a keys atom with entries from different namespaces (mdta and a custom one).
      * Verifies the parser preserves the namespace: mdta keys are stored directly while
      * non-mdta keys are prefixed with the 4-byte namespace per QuickTime File Format 2012.
