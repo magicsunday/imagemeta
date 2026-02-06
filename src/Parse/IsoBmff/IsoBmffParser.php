@@ -1606,8 +1606,21 @@ final readonly class IsoBmffParser
         $win = $iinf->window;
         $win->seek(0);
 
+        // FullBox header (4 bytes) + entry_count (2 for v0, 4 for v1)
+        if ($iinf->contentSize < 6) {
+            throw new ParseError('iinf box truncated');
+        }
+
         $version = $win->readU8();
         $this->readUInt24($win); // flags
+
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError('unsupported iinf box version');
+        }
+
+        if ($version === 1 && $iinf->contentSize < 8) {
+            throw new ParseError('iinf box truncated');
+        }
 
         $entryCount = $version === 0 ? $win->readU16BE() : $win->readU32BE();
 

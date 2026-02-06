@@ -1511,6 +1511,66 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds an iinf box with version 2, which is not defined by ISO/IEC 14496-12.
+     * Confirms the parser rejects unsupported iinf versions.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIinfUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported iinf box version');
+
+        $iinf = $this->box('iinf', "\x02\0\0\0" . pack('N', 0)); // version=2
+        $meta = $this->fullBox('meta', $iinf);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an iinf box with only 3 bytes of content (needs 6 minimum).
+     * Confirms the parser rejects truncated iinf payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIinfTruncated(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iinf box truncated');
+
+        $iinf = $this->box('iinf', "\0\0\0"); // only 3 bytes
+        $meta = $this->fullBox('meta', $iinf);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds an iinf v1 box with only 6 bytes (needs 8: 4 header + 4 entry_count).
+     * Confirms the parser rejects truncated v1 iinf payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIinfTruncatedVersion1(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iinf box truncated');
+
+        $iinf = $this->box('iinf', "\x01\0\0\0" . pack('n', 0)); // version=1 but only 6 bytes
+        $meta = $this->fullBox('meta', $iinf);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Builds a pitm box with version 2, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported pitm versions.
      *
