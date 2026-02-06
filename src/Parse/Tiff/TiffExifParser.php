@@ -157,6 +157,27 @@ final class TiffExifParser
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.6.6.5',
         ],
+        ExifTag::DATETIME => [
+            'name'     => 'DateTime',
+            'count'    => 20,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.5.4.5',
+        ],
+        ExifTag::DATETIME_ORIGINAL => [
+            'name'     => 'DateTimeOriginal',
+            'count'    => 20,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.6.6.1',
+        ],
+        ExifTag::DATETIME_DIGITIZED => [
+            'name'     => 'DateTimeDigitized',
+            'count'    => 20,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.6.6.2',
+        ],
     ];
 
     private const int ASCII_PRINTABLE_MIN = 0x20;

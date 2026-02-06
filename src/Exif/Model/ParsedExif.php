@@ -4322,7 +4322,8 @@ final readonly class ParsedExif
 
         $rawDateTime = substr($rawDateTime, 0, 19);
 
-        if (preg_match('/\d/', $rawDateTime) !== 1) {
+        // EXIF 3.0 §4.6.5.4.5 / §4.6.6.6.1 / §4.6.6.6.2: strict "YYYY:MM:DD HH:MM:SS"
+        if (preg_match('/\A\d{4}:\d{2}:\d{2} \d{2}:\d{2}:\d{2}\z/', $rawDateTime) !== 1) {
             return null;
         }
 
