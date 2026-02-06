@@ -578,12 +578,14 @@ final readonly class GpsConverter
 
         $components = [];
 
+        // EXIF 3.0 §4.6.8: GPSLatitude/GPSLongitude require exactly 3 RATIONAL
+        // components (degrees, minutes, seconds). Non-conformant counts are rejected.
         if ($val instanceof ExifRationalList) {
-            foreach ($val->values as $index => $component) {
-                if ($index >= 3) {
-                    break;
-                }
+            if (count($val->values) !== 3) {
+                return null;
+            }
 
+            foreach ($val->values as $component) {
                 $numeric = $this->rationalConverter->toFloat($component);
                 if ($numeric === null) {
                     return null;
@@ -592,11 +594,11 @@ final readonly class GpsConverter
                 $components[] = abs($numeric);
             }
         } else {
-            foreach ($val->values as $index => $component) {
-                if ($index >= 3) {
-                    break;
-                }
+            if (count($val->values) !== 3) {
+                return null;
+            }
 
+            foreach ($val->values as $component) {
                 $numeric = $this->numericConverter->normaliseComponent($component);
                 if ($numeric === null) {
                     return null;
@@ -606,13 +608,9 @@ final readonly class GpsConverter
             }
         }
 
-        if ($components === []) {
-            return null;
-        }
-
         $deg = $components[0];
-        $min = $components[1] ?? 0.0;
-        $sec = $components[2] ?? 0.0;
+        $min = $components[1];
+        $sec = $components[2];
 
         $sign = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
 

@@ -417,6 +417,73 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Provides a GPSLatitude with only 2 components instead of the required 3.
+     * Verifies that non-conformant DMS counts are rejected per EXIF 3.0 §4.6.8.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLatitudeWithTwoComponents(): void
+    {
+        $entries = [
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 2, [
+                [52, 1],
+                [31, 1],
+            ]),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertNull($result['lat']);
+    }
+
+    /**
+     * Provides a GPSLongitude with 4 components instead of the required 3.
+     * Verifies that excess DMS components are rejected per EXIF 3.0 §4.6.8.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLongitudeWithFourComponents(): void
+    {
+        $entries = [
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'E'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 4, [
+                [13, 1],
+                [24, 1],
+                [17820, 1000],
+                [0, 1],
+            ]),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertNull($result['lon']);
+    }
+
+    /**
+     * Provides a GPSLatitude with only 1 component instead of the required 3.
+     * Verifies that a single-component DMS value is rejected per EXIF 3.0 §4.6.8.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLatitudeWithOneComponent(): void
+    {
+        $entries = [
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'S'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 1, [
+                [33, 1],
+            ]),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertNull($result['lat']);
+    }
+
+    /**
      * Builds an IFD containing a GPS reference tag and matching coordinate data.
      *
      * @param int    $refTag   The GPS reference tag constant (e.g. ExifTag::GPS_LATITUDE_REF).
