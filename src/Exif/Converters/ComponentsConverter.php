@@ -45,6 +45,10 @@ final readonly class ComponentsConverter
     /**
      * Normalises the components configuration tag into a list of component identifiers.
      *
+     * EXIF 3.0 §4.6.5.1.3 defines allowed component codes: 0 (does not exist),
+     * 1 (Y), 2 (Cb), 3 (Cr), 4 (R), 5 (G), 6 (B). Values outside this set are
+     * rejected as non-conformant.
+     *
      * @param array<int, int|float|string|UInt64>|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value Raw EXIF value.
      *
      * @return list<int>|null
@@ -52,7 +56,18 @@ final readonly class ComponentsConverter
     public function configuration(
         array|ExifNumericList|ExifRationalList|ExifRational|UInt64|string|int|float|null $value,
     ): ?array {
-        return $this->numericConverter->toIntList($value);
+        $components = $this->numericConverter->toIntList($value);
+        if ($components === null) {
+            return null;
+        }
+
+        foreach ($components as $code) {
+            if ($code < 0 || $code > 6) {
+                return null;
+            }
+        }
+
+        return $components;
     }
 
     /**
