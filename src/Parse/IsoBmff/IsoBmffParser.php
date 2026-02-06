@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReference;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
@@ -62,6 +63,9 @@ use function trim;
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
  * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
+ * @phpstan-type QuickTimeRawDataAtom = array{type: int, locale: int, value: string|int|float}
+ * @phpstan-type QuickTimeCoercedDataAtom = array{type: int, locale: int, value: string|int|float|bool}
+ * @phpstan-type QuickTimeDataAtomList = array<string, list<QuickTimeCoercedDataAtom>>
  */
 final readonly class IsoBmffParser
 {
@@ -328,6 +332,7 @@ final readonly class IsoBmffParser
         $exifBlobs       = [];
         $xmpBlobs        = [];
         $qtKeys          = [];
+        $qtDataAtoms     = [];
         $queuedUuidXmp   = [];
         $xmpHashes       = [];
         $itemReferences  = [];
@@ -338,9 +343,9 @@ final readonly class IsoBmffParser
             if ($box->type === self::BOX_FTYP) {
                 $qtKeys = $this->mergeAssociative($qtKeys, $this->parseFtyp($box));
             } elseif ($box->type === self::BOX_META) {
-                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
+                $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($box->type === self::BOX_MOOV) {
-                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
+                $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
                 $queuedUuidXmp[] = $this->readAll($box->window);
             }
@@ -350,7 +355,15 @@ final readonly class IsoBmffParser
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
-        $qt               = $qtKeys === [] ? null : new QuickTimeMeta($qtKeys);
+        /** @var array<string, list<QuickTimeDataAtom>> $dataAtomVOs */
+        $dataAtomVOs = [];
+        foreach ($qtDataAtoms as $key => $rawAtoms) {
+            foreach ($rawAtoms as $raw) {
+                $dataAtomVOs[$key][] = new QuickTimeDataAtom($raw['type'], $raw['locale'], $raw['value']);
+            }
+        }
+
+        $qt               = ($qtKeys === [] && $dataAtomVOs === []) ? null : new QuickTimeMeta($qtKeys, $dataAtomVOs);
         $itemReferenceMap = $itemReferences === [] ? null : new IsoBmffItemReferenceMap($itemReferences);
         $dataReferenceMap = $dataReferences === [] ? null : new IsoBmffDataReferenceMap($dataReferences);
 
@@ -389,14 +402,15 @@ final readonly class IsoBmffParser
      * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
      * @param array<string, bool>                    $xmpHashes
      * @param QuickTimeKeyMap                        $qtKeys
+     * @param QuickTimeDataAtomList                  $qtDataAtoms
      */
-    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
+    private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_UDTA) {
-                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_TRAK) {
                 $qtKeys = $this->mergeAssociative($qtKeys, $this->parseTrak($child));
             }
@@ -445,12 +459,13 @@ final readonly class IsoBmffParser
      * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
      * @param array<string, bool>                    $xmpHashes
      * @param QuickTimeKeyMap                        $qtKeys
+     * @param QuickTimeDataAtomList                  $qtDataAtoms
      */
-    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
+    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
         foreach ($this->walkChildren($udta, allowTrailingTerminator: true) as $child) {
             if ($child->type === self::BOX_META) {
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             }
         }
     }
@@ -802,8 +817,9 @@ final readonly class IsoBmffParser
      * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
      * @param array<string, bool>                    $xmpHashes
      * @param QuickTimeKeyMap                        $qtKeys
+     * @param QuickTimeDataAtomList                  $qtDataAtoms
      */
-    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes): void
+    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
         if ($meta->contentSize < 4) {
             throw new ParseError('meta box truncated');
@@ -843,7 +859,7 @@ final readonly class IsoBmffParser
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
-        $qtKeys = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes']);
+        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms);
     }
 
     /**
@@ -1120,13 +1136,14 @@ final readonly class IsoBmffParser
     /**
      * Merges QuickTime key mappings from multiple sources.
      *
-     * @param QuickTimeKeyMap                     $existing  Existing key mappings.
-     * @param list<array<int, QuickTimeKeyEntry>> $keysMaps  Key map data from 'keys' boxes.
-     * @param list<BoxDescriptor>                 $ilstBoxes Item list box descriptors.
+     * @param QuickTimeKeyMap                     $existing      Existing key mappings.
+     * @param list<array<int, QuickTimeKeyEntry>> $keysMaps      Key map data from 'keys' boxes.
+     * @param list<BoxDescriptor>                 $ilstBoxes     Item list box descriptors.
+     * @param QuickTimeDataAtomList               $existingAtoms Existing data atom list.
      *
-     * @return QuickTimeKeyMap Merged key mappings.
+     * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
      */
-    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes): array
+    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = []): array
     {
         /** @var array<int, QuickTimeKeyEntry> $keyIndex */
         $keyIndex = [];
@@ -1140,7 +1157,28 @@ final readonly class IsoBmffParser
 
         // Merge all ilst entries into the cumulative QuickTime metadata set.
         foreach ($ilstBoxes as $ilst) {
-            $existing = $this->mergeAssociative($existing, $this->parseIlst($ilst, $keyIndex));
+            [$ilstKeys, $ilstAtoms] = $this->parseIlst($ilst, $keyIndex);
+            $existing               = $this->mergeAssociative($existing, $ilstKeys);
+            $existingAtoms          = $this->mergeAtomLists($existingAtoms, $ilstAtoms);
+        }
+
+        return [$existing, $existingAtoms];
+    }
+
+    /**
+     * Appends data atom entries from the incoming list into the existing list.
+     *
+     * @param QuickTimeDataAtomList $existing Accumulated atom lists.
+     * @param QuickTimeDataAtomList $incoming New atom lists to merge.
+     *
+     * @return QuickTimeDataAtomList
+     */
+    private function mergeAtomLists(array $existing, array $incoming): array
+    {
+        foreach ($incoming as $key => $atoms) {
+            foreach ($atoms as $atom) {
+                $existing[$key][] = $atom;
+            }
         }
 
         return $existing;
@@ -1906,14 +1944,18 @@ final readonly class IsoBmffParser
      * as a reverse-DNS identifier. For other namespaces, the key is prefixed with the
      * namespace to prevent collisions.
      *
+     * Returns the scalar key map (first value per key for backward compatibility) and a
+     * structured atom list preserving all data atoms with their type and locale indicators.
+     *
      * @param BoxDescriptor                 $ilst     Box descriptor for the `ilst` container.
      * @param array<int, QuickTimeKeyEntry> $keyIndex Structured key entries from parseKeys().
      *
-     * @return QuickTimeKeyMap
+     * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
      */
     private function parseIlst(BoxDescriptor $ilst, array $keyIndex): array
     {
-        $result = [];
+        $result    = [];
+        $atomsList = [];
         foreach ($this->walkChildren($ilst) as $entry) {
             $keyName = null;
             $index   = $this->fourccToIndex($entry->type);
@@ -1931,13 +1973,23 @@ final readonly class IsoBmffParser
 
             foreach ($this->walkChildren($entry) as $sub) {
                 if ($sub->type === self::BOX_DATA) {
-                    $value            = $this->parseDataBox($sub);
-                    $result[$keyName] = $this->coerceQuickTimeValue($keyName, $value);
+                    $structured = $this->parseDataBoxStructured($sub);
+                    $coerced    = $this->coerceQuickTimeValue($keyName, $structured['value']);
+
+                    if (!array_key_exists($keyName, $result)) {
+                        $result[$keyName] = $coerced;
+                    }
+
+                    $atomsList[$keyName][] = [
+                        'type'   => $structured['type'],
+                        'locale' => $structured['locale'],
+                        'value'  => $coerced,
+                    ];
                 }
             }
         }
 
-        return $result;
+        return [$result, $atomsList];
     }
 
     /**
@@ -1987,22 +2039,31 @@ final readonly class IsoBmffParser
     /**
      * Extracts the payload from a `data` box, normalising known text encodings.
      *
-     * QuickTime metadata stores textual values using numeric type codes inside the
-     * `data` box header. The parser treats UTF-8 (1), UTF-16 big-endian (2), and
-     * MacRoman (7) values as text payloads with optional NUL-termination and
-     * trims the trailing terminators so that callers receive clean strings.
-     * Binary payload types are returned untouched.
-     *
-     * The 32-bit type indicator is split into an indicator byte (bits 24–31) and
-     * a 24-bit well-known type code (bits 0–23). Per QuickTime File Format 2012,
-     * "Type Indicator" (p. 139), the indicator byte must be 0; all other values
-     * are reserved and rejected with a ParseError.
+     * Delegates to {@see parseDataBoxStructured()} and returns only the decoded value.
      *
      * @param BoxDescriptor $data Box descriptor for the `data` box.
      *
      * @return string|int|float
      */
     private function parseDataBox(BoxDescriptor $data): string|int|float
+    {
+        return $this->parseDataBoxStructured($data)['value'];
+    }
+
+    /**
+     * Parses a `data` box into a structured array preserving the type indicator and locale.
+     *
+     * QuickTime File Format 2012, "Value Atom" (p. 139): the data atom header
+     * contains a 32-bit type indicator and a 32-bit locale indicator. The type
+     * indicator byte (bits 24–31) must be 0; the lower 24 bits identify the
+     * well-known type. The locale indicator encodes country (upper 16 bits) and
+     * language (lower 16 bits).
+     *
+     * @param BoxDescriptor $data Box descriptor for the `data` box.
+     *
+     * @return QuickTimeRawDataAtom
+     */
+    private function parseDataBoxStructured(BoxDescriptor $data): array
     {
         $win = $data->window;
         $win->seek(0);
@@ -2019,10 +2080,28 @@ final readonly class IsoBmffParser
             throw new ParseError('data box type indicator byte must be 0');
         }
 
-        $win->readU32BE(); // locale
+        $locale      = $win->readU32BE();
         $payloadSize = $data->contentSize - 8;
         $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
 
+        return [
+            'type'   => $type,
+            'locale' => $locale,
+            'value'  => $this->decodeDataPayload($type, $payload, $payloadSize),
+        ];
+    }
+
+    /**
+     * Decodes a data box payload according to its well-known type code.
+     *
+     * @param int    $type        Well-known type code (24-bit).
+     * @param string $payload     Raw payload bytes.
+     * @param int    $payloadSize Length of the payload in bytes.
+     *
+     * @return string|int|float
+     */
+    private function decodeDataPayload(int $type, string $payload, int $payloadSize): string|int|float
+    {
         $trimmed = trim($payload, "\0");
 
         if ($type === self::DATA_TYPE_UTF8) {

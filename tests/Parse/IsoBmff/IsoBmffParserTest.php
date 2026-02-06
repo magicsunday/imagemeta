@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffDataReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffItemReferenceMap;
 use MagicSunday\ImageMeta\Model\IsoBmff\IsoBmffUnresolvedItem;
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Parse\IsoBmff\BoxDescriptor;
 use MagicSunday\ImageMeta\Parse\IsoBmff\IsoBmffParser;
@@ -57,6 +58,7 @@ use function substr;
 #[UsesClass(BoxDescriptor::class)]
 #[UsesClass(IsoBmffDataReferenceMap::class)]
 #[UsesClass(IsoBmffUnresolvedItem::class)]
+#[UsesClass(QuickTimeDataAtom::class)]
 #[UsesClass(QuickTimeMeta::class)]
 #[UsesClass(ConstructionMethod::class)]
 final class IsoBmffParserTest extends TestCase
@@ -1114,6 +1116,58 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+    }
+
+    /**
+     * Builds an ilst entry with two data boxes (different locales) under one key.
+     * This confirms $keys has the first value and allValues() returns both atoms
+     * with correct type and locale indicators.
+     *
+     * @return void
+     */
+    #[Test]
+    public function preservesMultipleDataAtomsPerQuickTimeKey(): void
+    {
+        $keyName = 'com.apple.quicktime.content.identifier';
+
+        $keysPayload = pack('N', 1);
+        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= 'mdta';
+        $keysPayload .= $keyName;
+        $keys = $this->fullBox('keys', $keysPayload);
+
+        // Two data boxes with different locales
+        $locale1  = 0x00000000; // default locale
+        $locale2  = 0x00010002; // country=1, language=2
+        $dataBox1 = $this->box('data', pack('N', 1) . pack('N', $locale1) . 'first-value');
+        $dataBox2 = $this->box('data', pack('N', 1) . pack('N', $locale2) . 'second-value');
+        $entry    = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
+        $ilst     = $this->box('ilst', $entry);
+
+        $meta = $this->fullBox('meta', $keys . $ilst);
+        $ftyp = $this->box('ftyp', 'qt  ');
+
+        $extractor       = $this->createExtractor($ftyp . $meta);
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+
+        // Backward compat: $keys has the first value
+        self::assertSame('first-value', $quickTime->keys[$keyName]);
+
+        // allValues() returns both atoms
+        $atoms = $quickTime->allValues($keyName);
+        self::assertCount(2, $atoms);
+
+        self::assertSame(1, $atoms[0]->typeIndicator);
+        self::assertSame(0, $atoms[0]->locale);
+        self::assertSame('first-value', $atoms[0]->value);
+
+        self::assertSame(1, $atoms[1]->typeIndicator);
+        self::assertSame(0x00010002, $atoms[1]->locale);
+        self::assertSame('second-value', $atoms[1]->value);
+        self::assertSame(1, $atoms[1]->countryIndicator());
+        self::assertSame(2, $atoms[1]->languageIndicator());
     }
 
     /**

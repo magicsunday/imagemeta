@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Model\QuickTime;
 
+use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
+use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -23,6 +25,7 @@ use PHPUnit\Framework\TestCase;
  * This ensures QuickTime key/value metadata remains consistent for consumers.
  */
 #[CoversClass(QuickTimeMeta::class)]
+#[UsesClass(QuickTimeDataAtom::class)]
 final class QuickTimeMetaTest extends TestCase
 {
     /**
@@ -100,5 +103,62 @@ final class QuickTimeMetaTest extends TestCase
         self::assertNull($meta->intValue('UnknownKey'));
         self::assertNull($meta->floatValue('UnknownKey'));
         self::assertNull($meta->boolValue('UnknownKey'));
+    }
+
+    /**
+     * Returns all data atoms for a key via allValues().
+     * It confirms multi-value data atoms are accessible in order.
+     *
+     * @return void
+     */
+    #[Test]
+    public function allValuesReturnsDataAtomsForKey(): void
+    {
+        $key   = QuickTimeMeta::CONTENT_IDENTIFIER_KEY;
+        $atom1 = new QuickTimeDataAtom(1, 0, 'first');
+        $atom2 = new QuickTimeDataAtom(1, 0x00010002, 'second');
+
+        $meta = new QuickTimeMeta(
+            [$key => 'first'],
+            [$key => [$atom1, $atom2]],
+        );
+
+        $values = $meta->allValues($key);
+
+        self::assertCount(2, $values);
+        self::assertSame($atom1, $values[0]);
+        self::assertSame($atom2, $values[1]);
+    }
+
+    /**
+     * Returns an empty list when no data atoms are present.
+     * It ensures the default empty array is used when dataAtoms is omitted.
+     *
+     * @return void
+     */
+    #[Test]
+    public function allValuesReturnsEmptyForDefaultDataAtoms(): void
+    {
+        $meta = new QuickTimeMeta([]);
+
+        self::assertSame([], $meta->allValues('UnknownKey'));
+    }
+
+    /**
+     * Returns an empty list when requesting a key not in dataAtoms.
+     * It verifies missing keys in the atom map yield no results.
+     *
+     * @return void
+     */
+    #[Test]
+    public function allValuesReturnsEmptyForMissingKey(): void
+    {
+        $atom = new QuickTimeDataAtom(1, 0, 'value');
+        $meta = new QuickTimeMeta(
+            [QuickTimeMeta::CONTENT_IDENTIFIER_KEY => 'value'],
+            [QuickTimeMeta::CONTENT_IDENTIFIER_KEY => [$atom]],
+        );
+
+        self::assertSame([], $meta->allValues('NonExistentKey'));
     }
 }

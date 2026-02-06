@@ -142,10 +142,13 @@ final readonly class QuickTimeMeta
     /**
      * Creates a new instance of QuickTime metadata information.
      *
-     * @param array<string, string|int|float|bool> $keys Map of QuickTime metadata keys and their values.
+     * @param array<string, string|int|float|bool>   $keys      Map of QuickTime metadata keys and their values (first value per key).
+     * @param array<string, list<QuickTimeDataAtom>> $dataAtoms All data value atoms per key, preserving type, locale, and order.
      */
-    public function __construct(public array $keys)
-    {
+    public function __construct(
+        public array $keys,
+        public array $dataAtoms = [],
+    ) {
     }
 
     /**
@@ -220,6 +223,23 @@ final readonly class QuickTimeMeta
         }
 
         return null;
+    }
+
+    /**
+     * Returns all data value atoms for the given metadata key, resolving aliases.
+     *
+     * @return list<QuickTimeDataAtom>
+     */
+    public function allValues(string $key): array
+    {
+        $candidates = self::KEY_ALIASES[$key] ?? [$key];
+
+        $resolvedKey = array_find(
+            $candidates,
+            fn (string $candidate): bool => array_key_exists($candidate, $this->dataAtoms)
+        );
+
+        return $resolvedKey !== null ? $this->dataAtoms[$resolvedKey] : [];
     }
 
     /**
