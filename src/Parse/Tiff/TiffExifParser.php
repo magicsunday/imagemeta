@@ -136,6 +136,27 @@ final class TiffExifParser
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.6.9.1',
         ],
+        ExifTag::OFFSET_TIME => [
+            'name'     => 'OffsetTime',
+            'count'    => 7,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.6.6.3',
+        ],
+        ExifTag::OFFSET_TIME_ORIGINAL => [
+            'name'     => 'OffsetTimeOriginal',
+            'count'    => 7,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.6.6.4',
+        ],
+        ExifTag::OFFSET_TIME_DIGITIZED => [
+            'name'     => 'OffsetTimeDigitized',
+            'count'    => 7,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.6.6.5',
+        ],
     ];
 
     private const int ASCII_PRINTABLE_MIN = 0x20;

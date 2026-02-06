@@ -4228,8 +4228,14 @@ final readonly class ParsedExif
         }
 
         if (is_string($value)) {
-            $trimmed = trim($value);
+            $trimmed = rtrim(trim($value), "\0");
             if ($trimmed === '') {
+                return null;
+            }
+
+            // EXIF 3.0 §4.6.6.6.3–§4.6.6.6.5: OffsetTime tags are ASCII strings
+            // formatted as "±HH:MM". Reject non-conformant string encodings.
+            if (preg_match('/\A[+-]\d{2}:\d{2}\z/', $trimmed) !== 1) {
                 return null;
             }
 
