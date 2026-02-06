@@ -383,7 +383,83 @@ final class TiffExifParserNegativeTest extends TestCase
         $reader = new TiffExifParser();
 
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('Interoperability IFD pointer must contain exactly one offset per EXIF 3.0 §4.6.3.3.1.');
+        $this->expectExceptionMessage('IFD pointer tag 0xA005 must contain exactly one offset per EXIF 3.0 §4.6.3.3.1.');
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
+     * Creates an ExifIFDPointer entry with count=2 instead of the required 1.
+     * Ensures the parser rejects bad ExifIFD pointer count per EXIF 3.0 §4.6.3.1.1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExifIfdPointerWithBadCount(): void
+    {
+        $blob = $this->buildTiffWithIfd0Pointer(ExifTag::EXIF_IFD_POINTER, TiffConst::TYPE_LONG, 2);
+
+        $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('IFD pointer tag 0x8769 must contain exactly one offset per EXIF 3.0 §4.6.3.1.1.');
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
+     * Creates an ExifIFDPointer entry with type SHORT instead of LONG.
+     * Ensures the parser rejects bad ExifIFD pointer type per EXIF 3.0 §4.6.3.1.1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExifIfdPointerWithBadType(): void
+    {
+        $blob = $this->buildTiffWithIfd0Pointer(ExifTag::EXIF_IFD_POINTER, TiffConst::TYPE_SHORT, 1);
+
+        $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('IFD pointer tag 0x8769 must use a LONG/IFD field type per EXIF 3.0 §4.6.3.1.1.');
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
+     * Creates a GPSInfoIFDPointer entry with count=3 instead of the required 1.
+     * Ensures the parser rejects bad GPS pointer count per EXIF 3.0 §4.6.3.2.1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsIfdPointerWithBadCount(): void
+    {
+        $blob = $this->buildTiffWithIfd0Pointer(ExifTag::GPS_IFD_POINTER, TiffConst::TYPE_LONG, 3);
+
+        $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('IFD pointer tag 0x8825 must contain exactly one offset per EXIF 3.0 §4.6.3.2.1.');
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
+     * Creates a GPSInfoIFDPointer entry with type ASCII instead of LONG.
+     * Ensures the parser rejects bad GPS pointer type per EXIF 3.0 §4.6.3.2.1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsIfdPointerWithBadType(): void
+    {
+        $blob = $this->buildTiffWithIfd0Pointer(ExifTag::GPS_IFD_POINTER, TiffConst::TYPE_ASCII, 1);
+
+        $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('IFD pointer tag 0x8825 must use a LONG/IFD field type per EXIF 3.0 §4.6.3.2.1.');
 
         $reader->parseFromBlob($blob);
     }
@@ -475,6 +551,33 @@ final class TiffExifParserNegativeTest extends TestCase
         // Exif IFD with malformed interoperability pointer entry
         $blob .= pack('v', 1)
             . pack('v', ExifTag::INTEROPERABILITY_IFD_POINTER)
+            . pack('v', $type)
+            . pack('V', $count)
+            . pack('V', 0)
+            . pack('V', 0);
+
+        return $blob;
+    }
+
+    /**
+     * Builds a TIFF blob with IFD0 carrying a malformed pointer entry directly.
+     * This checks the behavior for invalid ExifIFDPointer or GPSInfoIFDPointer layouts.
+     *
+     * @param int $tag   Tag identifier for the pointer entry.
+     * @param int $type  Field type used for the pointer entry.
+     * @param int $count Value count stored for the pointer entry.
+     */
+    private function buildTiffWithIfd0Pointer(int $tag, int $type, int $count): string
+    {
+        $ifd0Offset = 8;
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset);
+
+        // IFD0 with the malformed pointer entry
+        $blob .= pack('v', 1)
+            . pack('v', $tag)
             . pack('v', $type)
             . pack('V', $count)
             . pack('V', 0)

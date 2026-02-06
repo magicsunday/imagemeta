@@ -1453,9 +1453,7 @@ final class TiffExifParser
      */
     private function pointerOffset(IfdEntry $entry): ?int
     {
-        if ($entry->tag === ExifTag::INTEROPERABILITY_IFD_POINTER) {
-            $this->assertInteropPointerLayout($entry);
-        }
+        $this->assertIfdPointerLayout($entry);
 
         $value = $entry->value;
 
@@ -1498,15 +1496,29 @@ final class TiffExifParser
     }
 
     /**
-     * Validates the interoperability IFD pointer layout mandated by EXIF.
+     * Validates the layout of IFD pointer tags mandated by the EXIF spec.
      *
-     * EXIF 3.0 §4.6.3.3.1 describes the interoperability IFD pointer as a single LONG
-     * value referencing another TIFF-structured IFD that does not itself embed image data.
+     * EXIF 3.0 §4.6.3.1.1 (ExifIFDPointer), §4.6.3.2.1 (GPSInfoIFDPointer) and
+     * §4.6.3.3.1 (InteroperabilityIFDPointer) all require a single LONG (or
+     * LONG8/IFD8 in BigTIFF) offset value.
      */
-    private function assertInteropPointerLayout(IfdEntry $entry): void
+    private function assertIfdPointerLayout(IfdEntry $entry): void
     {
+        $specRefs = [
+            ExifTag::EXIF_IFD_POINTER             => 'EXIF 3.0 §4.6.3.1.1',
+            ExifTag::GPS_IFD_POINTER              => 'EXIF 3.0 §4.6.3.2.1',
+            ExifTag::INTEROPERABILITY_IFD_POINTER => 'EXIF 3.0 §4.6.3.3.1',
+        ];
+
+        $specRef = $specRefs[$entry->tag] ?? null;
+        if ($specRef === null) {
+            return;
+        }
+
         if ($entry->count !== 1) {
-            throw new ParseError('Interoperability IFD pointer must contain exactly one offset per EXIF 3.0 §4.6.3.3.1.');
+            throw new ParseError(
+                sprintf('IFD pointer tag 0x%04X must contain exactly one offset per %s.', $entry->tag, $specRef),
+            );
         }
 
         $allowedTypes = $this->bigTiff
@@ -1522,7 +1534,9 @@ final class TiffExifParser
             ];
 
         if (!in_array($entry->type, $allowedTypes, true)) {
-            throw new ParseError('Interoperability IFD pointer must use a LONG/IFD field type per EXIF 3.0 §4.6.3.3.1.');
+            throw new ParseError(
+                sprintf('IFD pointer tag 0x%04X must use a LONG/IFD field type per %s.', $entry->tag, $specRef),
+            );
         }
     }
 

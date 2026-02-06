@@ -197,7 +197,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $blob .= pack('P', 1);  // 1 entry
 
         // Entry with SLONG8 (signed 64-bit value: -42)
-        $blob .= pack('v', 0x8769)                // Tag: ExifIFDPointer (just as example)
+        $blob .= pack('v', 0x0100)                // Tag: ImageWidth (non-pointer tag)
             . pack('v', TiffConst::TYPE_SLONG8)   // Type: SLONG8
             . pack('P', 1)                        // Count
             . pack('q', -42);                     // Inline signed value
