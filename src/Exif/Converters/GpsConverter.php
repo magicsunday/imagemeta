@@ -27,6 +27,7 @@ use function count;
 use function floor;
 use function iconv;
 use function implode;
+use function in_array;
 use function is_callable;
 use function is_float;
 use function is_int;
@@ -96,6 +97,56 @@ final readonly class GpsConverter
      * EXIF 3.0 §4.6.7.1.1 (GPSVersionID) default value when the field is blank.
      */
     private const string DEFAULT_GPS_VERSION = '2.4.0.0';
+
+    /**
+     * EXIF 3.0 §4.6.7.1.2 GPSLatitudeRef: 'N' (north) or 'S' (south).
+     *
+     * @var list<string>
+     */
+    private const array GPS_LATITUDE_REF_VALUES = ['N', 'S'];
+
+    /**
+     * EXIF 3.0 §4.6.7.1.4 GPSLongitudeRef: 'E' (east) or 'W' (west).
+     *
+     * @var list<string>
+     */
+    private const array GPS_LONGITUDE_REF_VALUES = ['E', 'W'];
+
+    /**
+     * EXIF 3.0 §4.6.7.1.10 GPSStatus: 'A' (measurement in progress) or 'V' (measurement interrupted).
+     *
+     * @var list<string>
+     */
+    private const array GPS_STATUS_VALUES = ['A', 'V'];
+
+    /**
+     * EXIF 3.0 §4.6.7.1.11 GPSMeasureMode: '2' (2D) or '3' (3D).
+     *
+     * @var list<string>
+     */
+    private const array GPS_MEASURE_MODE_VALUES = ['2', '3'];
+
+    /**
+     * EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K' (km/h), 'M' (mph) or 'N' (knots).
+     *
+     * @var list<string>
+     */
+    private const array GPS_SPEED_REF_VALUES = ['K', 'M', 'N'];
+
+    /**
+     * EXIF 3.0 §4.6.7.1.15 GPSTrackRef, §4.6.7.1.17 GPSImgDirectionRef, §4.6.7.1.24 GPSDestBearingRef:
+     * 'T' (true direction) or 'M' (magnetic direction).
+     *
+     * @var list<string>
+     */
+    private const array GPS_BEARING_REF_VALUES = ['T', 'M'];
+
+    /**
+     * EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K' (km), 'M' (miles) or 'N' (nautical miles).
+     *
+     * @var list<string>
+     */
+    private const array GPS_DISTANCE_REF_VALUES = ['K', 'M', 'N'];
 
     /**
      * Creates the converter with its numeric, string, and rational dependencies.
@@ -185,8 +236,16 @@ final readonly class GpsConverter
         $lonRef = $lonRefEntry?->value;
         $lonVal = $lonValEntry?->value;
 
-        $result['lat_ref'] = is_string($latRef) ? strtoupper(trim($latRef)) : null;
-        $result['lon_ref'] = is_string($lonRef) ? strtoupper(trim($lonRef)) : null;
+        // EXIF 3.0 §4.6.7.1.2 GPSLatitudeRef: 'N' or 'S'
+        $result['lat_ref'] = $this->validateGpsRef(
+            is_string($latRef) ? strtoupper(trim($latRef)) : null,
+            self::GPS_LATITUDE_REF_VALUES,
+        );
+        // EXIF 3.0 §4.6.7.1.4 GPSLongitudeRef: 'E' or 'W'
+        $result['lon_ref'] = $this->validateGpsRef(
+            is_string($lonRef) ? strtoupper(trim($lonRef)) : null,
+            self::GPS_LONGITUDE_REF_VALUES,
+        );
 
         $latPairs = $this->resolveCoordinatePairs($latVal);
         $lonPairs = $this->resolveCoordinatePairs($lonVal);
@@ -240,53 +299,90 @@ final readonly class GpsConverter
         $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
         $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
 
-        $versionParts           = $this->formatVersion($versionEntry?->value);
-        $result['version']      = $versionParts['normalized'];
-        $result['version_raw']  = $versionParts['raw'];
-        $result['satellites']   = $this->stringConverter->sanitize($satellitesEntry?->value);
-        $result['status']       = $this->stringConverter->sanitize($statusEntry?->value);
-        $result['measure_mode'] = $this->stringConverter->sanitize($measureEntry?->value);
-        $result['dop']          = $this->rationalConverter->toFloat($dopEntry?->value);
+        $versionParts          = $this->formatVersion($versionEntry?->value);
+        $result['version']     = $versionParts['normalized'];
+        $result['version_raw'] = $versionParts['raw'];
+        $result['satellites']  = $this->stringConverter->sanitize($satellitesEntry?->value);
 
-        $speedRefValue                = $speedRefEntry?->value;
-        $speedOriginalRef             = $this->stringConverter->sanitize($speedRefValue);
-        $speedRef                     = is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null;
+        // EXIF 3.0 §4.6.7.1.10 GPSStatus: 'A' (measurement in progress) or 'V' (measurement interrupted)
+        $statusSanitized  = $this->stringConverter->sanitize($statusEntry?->value);
+        $result['status'] = $this->validateGpsRef(
+            is_string($statusSanitized) ? strtoupper(trim($statusSanitized)) : null,
+            self::GPS_STATUS_VALUES,
+        );
+
+        // EXIF 3.0 §4.6.7.1.11 GPSMeasureMode: '2' (2D) or '3' (3D)
+        $measureSanitized       = $this->stringConverter->sanitize($measureEntry?->value);
+        $result['measure_mode'] = $this->validateGpsRef(
+            is_string($measureSanitized) ? strtoupper(trim($measureSanitized)) : null,
+            self::GPS_MEASURE_MODE_VALUES,
+        );
+        $result['dop'] = $this->rationalConverter->toFloat($dopEntry?->value);
+
+        // EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K', 'M' or 'N'
+        $speedRefValue    = $speedRefEntry?->value;
+        $speedOriginalRef = $this->stringConverter->sanitize($speedRefValue);
+        $speedRef         = $this->validateGpsRef(
+            is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
+            self::GPS_SPEED_REF_VALUES,
+        );
         $result['speed_ref']          = $speedRef;
         $result['speed_ms']           = $this->speedToMs($speedRef, $speedEntry?->value);
         $result['speed_original_ref'] = $speedOriginalRef;
         $result['speed_original']     = $this->rationalConverter->toFloat($speedEntry?->value);
 
+        // EXIF 3.0 §4.6.7.1.15 GPSTrackRef: 'T' (true direction) or 'M' (magnetic direction)
         $trackRefValue       = $trackRefEntry?->value;
-        $result['track_ref'] = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
+        $trackRefNormalized  = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
+        $result['track_ref'] = $this->validateGpsRef($trackRefNormalized, self::GPS_BEARING_REF_VALUES);
+        $trackRefInvalid     = ($trackRefNormalized !== null) && ($result['track_ref'] === null);
         $trackValue          = $this->rationalConverter->toFloat($trackEntry?->value);
-        $result['track']     = $this->normalizeBearing($trackValue);
+        $result['track']     = $trackRefInvalid ? null : $this->normalizeBearing($trackValue);
 
+        // EXIF 3.0 §4.6.7.1.17 GPSImgDirectionRef: 'T' (true direction) or 'M' (magnetic direction)
         $imgDirRefValue              = $imgDirRefEntry?->value;
-        $result['img_direction_ref'] = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
+        $imgDirRefNormalized         = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
+        $result['img_direction_ref'] = $this->validateGpsRef($imgDirRefNormalized, self::GPS_BEARING_REF_VALUES);
+        $imgDirRefInvalid            = ($imgDirRefNormalized !== null) && ($result['img_direction_ref'] === null);
         $imgDirectionValue           = $this->rationalConverter->toFloat($imgDirEntry?->value);
-        $result['img_direction']     = $this->normalizeBearing($imgDirectionValue);
+        $result['img_direction']     = $imgDirRefInvalid ? null : $this->normalizeBearing($imgDirectionValue);
 
         $result['map_datum'] = $this->stringConverter->sanitize($mapDatumEntry?->value);
 
+        // EXIF 3.0 §4.6.7.1.20 GPSDestLatitudeRef: 'N' or 'S'
         $destLatRefValue        = $destLatRefEntry?->value;
         $destLatVal             = $destLatEntry?->value;
         $destLatPairs           = $destLatVal instanceof ExifRationalList ? $destLatVal : null;
-        $result['dest_lat_ref'] = is_string($destLatRefValue) ? strtoupper(trim($destLatRefValue)) : null;
-        $result['dest_lat']     = $this->dmsToFloat($result['dest_lat_ref'], $destLatPairs);
+        $result['dest_lat_ref'] = $this->validateGpsRef(
+            is_string($destLatRefValue) ? strtoupper(trim($destLatRefValue)) : null,
+            self::GPS_LATITUDE_REF_VALUES,
+        );
+        $result['dest_lat'] = $this->dmsToFloat($result['dest_lat_ref'], $destLatPairs);
 
+        // EXIF 3.0 §4.6.7.1.22 GPSDestLongitudeRef: 'E' or 'W'
         $destLonRefValue        = $destLonRefEntry?->value;
         $destLonVal             = $destLonEntry?->value;
         $destLonPairs           = $destLonVal instanceof ExifRationalList ? $destLonVal : null;
-        $result['dest_lon_ref'] = is_string($destLonRefValue) ? strtoupper(trim($destLonRefValue)) : null;
-        $result['dest_lon']     = $this->dmsToFloat($result['dest_lon_ref'], $destLonPairs);
+        $result['dest_lon_ref'] = $this->validateGpsRef(
+            is_string($destLonRefValue) ? strtoupper(trim($destLonRefValue)) : null,
+            self::GPS_LONGITUDE_REF_VALUES,
+        );
+        $result['dest_lon'] = $this->dmsToFloat($result['dest_lon_ref'], $destLonPairs);
 
+        // EXIF 3.0 §4.6.7.1.24 GPSDestBearingRef: 'T' (true direction) or 'M' (magnetic direction)
         $destBearingRefValue        = $destBearRefEntry?->value;
-        $result['dest_bearing_ref'] = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
+        $destBearingRefNormalized   = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
+        $result['dest_bearing_ref'] = $this->validateGpsRef($destBearingRefNormalized, self::GPS_BEARING_REF_VALUES);
+        $destBearingRefInvalid      = ($destBearingRefNormalized !== null) && ($result['dest_bearing_ref'] === null);
         $destBearingValue           = $this->rationalConverter->toFloat($destBearEntry?->value);
-        $result['dest_bearing']     = $this->normalizeBearing($destBearingValue);
+        $result['dest_bearing']     = $destBearingRefInvalid ? null : $this->normalizeBearing($destBearingValue);
 
-        $destDistanceRefValue                 = $destDistRefEntry?->value;
-        $result['dest_distance_ref']          = is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null;
+        // EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K', 'M' or 'N'
+        $destDistanceRefValue        = $destDistRefEntry?->value;
+        $result['dest_distance_ref'] = $this->validateGpsRef(
+            is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
+            self::GPS_DISTANCE_REF_VALUES,
+        );
         $result['dest_distance_original_ref'] = $this->stringConverter->sanitize($destDistanceRefValue);
         $result['dest_distance_original']     = $this->rationalConverter->toFloat($destDistEntry?->value);
         $result['dest_distance_m']            = $this->distanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
@@ -384,6 +480,26 @@ final readonly class GpsConverter
         }
 
         return $bearing;
+    }
+
+    /**
+     * Validates a GPS reference value against a list of allowed spec values.
+     *
+     * EXIF 3.0 §4.6.7 defines enumerated values for each GPS reference/status tag;
+     * any value not in the allowed set is treated as reserved and rejected.
+     *
+     * @param string|null  $value   Normalised (uppercase, trimmed) reference value.
+     * @param list<string> $allowed Permitted values from the EXIF 3.0 specification.
+     *
+     * @return string|null The value if valid, null otherwise.
+     */
+    private function validateGpsRef(?string $value, array $allowed): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        return in_array($value, $allowed, true) ? $value : null;
     }
 
     /**
