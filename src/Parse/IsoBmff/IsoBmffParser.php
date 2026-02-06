@@ -1979,6 +1979,11 @@ final readonly class IsoBmffParser
      * trims the trailing terminators so that callers receive clean strings.
      * Binary payload types are returned untouched.
      *
+     * The 32-bit type indicator is split into an indicator byte (bits 24–31) and
+     * a 24-bit well-known type code (bits 0–23). Per QuickTime File Format 2012,
+     * "Type Indicator" (p. 139), the indicator byte must be 0; all other values
+     * are reserved and rejected with a ParseError.
+     *
      * @param BoxDescriptor $data Box descriptor for the `data` box.
      *
      * @return string|int|float
@@ -1992,6 +1997,14 @@ final readonly class IsoBmffParser
         }
 
         $type = $win->readU32BE();
+
+        // QuickTime File Format 2012, "Type Indicator" (p. 139): the indicator
+        // byte (bits 24–31) must be 0, meaning the type is drawn from the
+        // well-known set. All other values are reserved.
+        if (($type >> 24) !== 0) {
+            throw new ParseError('data box type indicator byte must be 0');
+        }
+
         $win->readU32BE(); // locale
         $payloadSize = $data->contentSize - 8;
         $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';

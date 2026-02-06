@@ -644,6 +644,30 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Provides a data box whose type indicator byte (bits 24–31) is non-zero.
+     * Per QuickTime File Format 2012, "Type Indicator" (p. 139), the indicator
+     * byte must be 0; a non-zero value must trigger a ParseError.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsNonZeroDataBoxTypeIndicatorByte(): void
+    {
+        // Indicator byte = 0x01, well-known type bits = 0x000001 (UTF-8)
+        $invalidType = 0x01000001;
+        $file        = $this->createQuickTimeKeysFileWithCustomKey(
+            'com.apple.quicktime.content.identifier',
+            $invalidType,
+            'test-value',
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data box type indicator byte must be 0');
+
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
      * Uses a non-zero data_reference_index to create an unresolved iloc item.
      * This confirms external data references are recorded but not resolved.
      *
