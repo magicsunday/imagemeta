@@ -559,6 +559,41 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Creates a meta box with an hdlr handler type other than 'mdta'.
+     * Per QuickTime File Format 2012, "Metadata Atom", keys/ilst structures
+     * must only be interpreted when the handler is 'mdta'. A non-mdta handler
+     * causes the parser to discard collected keys/ilst entries.
+     *
+     * @return void
+     */
+    #[Test]
+    public function ignoresKeysIlstWhenHdlrIsNotMdta(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'should-be-ignored');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        // hdlr with handler type 'pict' (not 'mdta')
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
+
+        $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
+        $meta        = $this->box('meta', $metaPayload);
+        $moov        = $this->box('moov', $this->box('udta', $meta));
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        // With keys/ilst discarded due to non-mdta handler and a minimal ftyp,
+        // no QuickTime metadata is produced.
+        self::assertNull($qtMeta);
+    }
+
+    /**
      * Builds a keys atom with entries from different namespaces (mdta and a custom one).
      * Verifies the parser preserves the namespace: mdta keys are stored directly while
      * non-mdta keys are prefixed with the 4-byte namespace per QuickTime File Format 2012.

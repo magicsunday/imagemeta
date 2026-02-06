@@ -281,13 +281,14 @@ final readonly class IsoBmffParser
     private const int MAX_KEYS_ENTRIES = 1000;
 
     /**
-     * QuickTime key namespace for reverse-DNS metadata keys.
+     * QuickTime 'mdta' FourCC identifying the metadata type scheme.
      *
-     * QuickTime File Format 2012, "Metadata item keys atom": The key_namespace identifies
-     * the naming scheme. When the namespace is 'mdta', the key_value is a UTF-8 reverse-DNS
-     * string (e.g. 'com.apple.quicktime.content.identifier').
+     * Used as (1) the handler reference type in the metadata hdlr box
+     * (QuickTime File Format 2012, "Metadata Atom") and (2) the key namespace
+     * in the keys atom ("Metadata item keys atom"), where the key_value is a
+     * UTF-8 reverse-DNS string (e.g. 'com.apple.quicktime.content.identifier').
      */
-    private const string KEYS_NAMESPACE_MDTA = 'mdta';
+    private const string QUICKTIME_MDTA = 'mdta';
 
     /**
      * Maximum number of sample entries in an stsd box to prevent DoS attacks.
@@ -875,14 +876,18 @@ final readonly class IsoBmffParser
         $uuidXmp        = [];
         $directExif     = [];
         $idatPayload    = null;
-        /** @var list<array<int, array{namespace: string, name: string}>> $keysMaps */
+        /** @var list<array<int, QuickTimeKeyEntry>> $keysMaps */
         $keysMaps = [];
         /** @var list<BoxDescriptor> $ilstBoxes */
-        $ilstBoxes = [];
+        $ilstBoxes   = [];
+        $handlerType = null;
 
         $childOffset = $this->detectMetaChildOffset($meta);
         foreach ($this->walkChildren($meta, $childOffset) as $child) {
             switch ($child->type) {
+                case self::BOX_HDLR:
+                    [$handlerType] = $this->parseHdlr($child);
+                    break;
                 case self::BOX_EXIF:
                     // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalise deviations.
                     $blob         = $this->readAll($child->window);
@@ -932,6 +937,15 @@ final readonly class IsoBmffParser
                     $ilstBoxes[] = $child;
                     break;
             }
+        }
+
+        // QuickTime File Format 2012, "Metadata Atom": a reader should confirm the
+        // handler reference type is 'mdta' before interpreting keys/ilst structures.
+        // When hdlr is present but declares a different handler (e.g. 'pict' in
+        // ISOBMFF), discard collected keys/ilst to prevent misinterpretation.
+        if (($handlerType !== null) && ($handlerType !== self::QUICKTIME_MDTA)) {
+            $keysMaps  = [];
+            $ilstBoxes = [];
         }
 
         return [
@@ -1937,7 +1951,7 @@ final readonly class IsoBmffParser
      */
     private function resolveKeyName(array $entry): string
     {
-        if ($entry['namespace'] === self::KEYS_NAMESPACE_MDTA) {
+        if ($entry['namespace'] === self::QUICKTIME_MDTA) {
             return $entry['name'];
         }
 
