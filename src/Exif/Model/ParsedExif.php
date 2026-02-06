@@ -2750,7 +2750,7 @@ final readonly class ParsedExif
 
         if ($values !== null) {
             if (count($values) === 2) {
-                return [$values[0], $values[1]];
+                return $this->validateYcbcrPair($values[0], $values[1]);
             }
 
             return null;
@@ -2758,7 +2758,29 @@ final readonly class ParsedExif
 
         $raw = $this->rawString($this->ifd0, ExifTag::YCBCR_SUB_SAMPLING);
 
-        return $raw !== null ? ValueConverters::ycbcrSubSamplingToPair($raw) : null;
+        if ($raw === null) {
+            return null;
+        }
+
+        $pair = ValueConverters::ycbcrSubSamplingToPair($raw);
+
+        return $pair !== null ? $this->validateYcbcrPair($pair[0], $pair[1]) : null;
+    }
+
+    /**
+     * Validates a YCbCrSubSampling pair against the EXIF 3.0 §4.6.5.1.12 allowed values.
+     *
+     * Only [2,1] (YCbCr4:2:2) and [2,2] (YCbCr4:2:0) are defined by the spec.
+     *
+     * @return array{0:int,1:int}|null
+     */
+    private function validateYcbcrPair(int $horiz, int $vert): ?array
+    {
+        if ($horiz === 2 && ($vert === 1 || $vert === 2)) {
+            return [$horiz, $vert];
+        }
+
+        return null;
     }
 
     /**
