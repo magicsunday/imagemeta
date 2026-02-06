@@ -1803,10 +1803,28 @@ final readonly class IsoBmffParser
         $win = $pitm->window;
         $win->seek(0);
 
+        // FullBox header (4 bytes) + item_ID (2 for v0, 4 for v1)
+        if ($pitm->contentSize < 6) {
+            throw new ParseError('pitm box truncated');
+        }
+
         $version = $win->readU8();
         $this->readUInt24($win);
 
-        return $version === 0 ? $win->readU16BE() : $win->readU32BE();
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError('unsupported pitm box version');
+        }
+
+        if ($version === 0) {
+            return $win->readU16BE();
+        }
+
+        // v1 requires 4-byte item_ID → 8 bytes total
+        if ($pitm->contentSize < 8) {
+            throw new ParseError('pitm box truncated');
+        }
+
+        return $win->readU32BE();
     }
 
     /**

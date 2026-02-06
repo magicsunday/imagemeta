@@ -1511,6 +1511,69 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a pitm box with version 2, which is not defined by ISO/IEC 14496-12.
+     * Confirms the parser rejects unsupported pitm versions.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectPitmUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported pitm box version');
+
+        $pitmPayload = "\x02\0\0\0" . pack('N', 1); // version=2, flags=0, item_ID=1
+        $pitm        = $this->box('pitm', $pitmPayload);
+        $meta        = $this->fullBox('meta', $pitm);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds a pitm v0 box with only 3 bytes of payload (needs 6: 4 header + 2 item_ID).
+     * Confirms the parser rejects truncated pitm payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectPitmTruncatedVersion0(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('pitm box truncated');
+
+        $pitmPayload = "\0\0\0"; // only 3 bytes, needs at least 6
+        $pitm        = $this->box('pitm', $pitmPayload);
+        $meta        = $this->fullBox('meta', $pitm);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds a pitm v1 box with only 6 bytes of payload (needs 8: 4 header + 4 item_ID).
+     * Confirms the parser rejects truncated v1 pitm payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectPitmTruncatedVersion1(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('pitm box truncated');
+
+        $pitmPayload = "\x01\0\0\0" . pack('n', 1); // version=1, flags=0, only 2-byte item_ID (6 bytes total, needs 8)
+        $pitm        = $this->box('pitm', $pitmPayload);
+        $meta        = $this->fullBox('meta', $pitm);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Wraps raw bytes in a temporary stream-backed extractor.
      * This helper keeps byte-length bookkeeping aligned with the payload.
      *
