@@ -94,13 +94,13 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 ExifTag::EXIF_VERSION,
                 TiffConst::TYPE_ASCII,
                 4,
-                '0300',
+                "030\0",
             ],
             'FlashpixVersion count 4' => [
                 ExifTag::FLASHPIX_VERSION,
                 TiffConst::TYPE_ASCII,
                 4,
-                '0100',
+                "010\0",
             ],
             'ComponentsConfiguration count 4' => [
                 ExifTag::COMPONENTS_CONFIGURATION,

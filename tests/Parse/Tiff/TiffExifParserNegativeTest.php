@@ -312,6 +312,33 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Uses an ASCII entry whose declared payload omits the required trailing NUL.
+     * Ensures the parser rejects non-conformant ASCII values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAsciiValueWithoutNullTerminator(): void
+    {
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 1)
+            . pack('v', ExifTag::MAKE)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 4)
+            . pack('V', 0x44434241)
+            . pack('V', 0);
+
+        $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ASCII values must be NUL-terminated and include the terminator in count per EXIF 3.0 §4.6.2; TIFF 6.0 §2.');
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
      * Builds an IFD with descending tag identifiers.
      * Verifies the parser rejects unsorted directory entries per TIFF 6.0.
      *

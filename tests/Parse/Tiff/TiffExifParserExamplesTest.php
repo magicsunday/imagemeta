@@ -222,7 +222,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 2)
-            . pack('A4', 'N')
+            . pack('a4', 'N')
             // GPSLatitude = [35, 59, 30.3]
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -232,7 +232,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 2)
-            . pack('A4', 'E')
+            . pack('a4', 'E')
             // GPSLongitude = [139, 44, 30]
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -320,7 +320,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::INTEROPERABILITY_INDEX)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 4)
-            . pack('A4', 'R98')
+            . pack('a4', 'R98')
             . pack($packLong, 0);
 
         $ifd1 = pack($packShort, $ifd1EntryCount)
@@ -448,7 +448,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . $this->packUint64(2, $endian)
-            . pack('A8', 'N')
+            . pack('a8', 'N')
             // GPSLatitude = [35, 59, 30.3]
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -458,7 +458,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . $this->packUint64(2, $endian)
-            . pack('A8', 'E')
+            . pack('a8', 'E')
             // GPSLongitude = [139, 44, 30]
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)

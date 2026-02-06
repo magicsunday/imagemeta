@@ -121,7 +121,7 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 2)
-            . pack('A4', 'S')
+            . pack('a4', 'S')
             // GPSLatitude = [12, 34, 56.78]
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -131,7 +131,7 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 2)
-            . pack('A4', 'W')
+            . pack('a4', 'W')
             // GPSLongitude = [98, 45, 43.21]
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -198,7 +198,7 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong8, 2)
-            . pack('A8', 'S')
+            . pack('a8', 'S')
             // GPSLatitude = [12, 34, 56.78]
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -208,7 +208,7 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong8, 2)
-            . pack('A8', 'W')
+            . pack('a8', 'W')
             // GPSLongitude = [98, 45, 43.21]
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)

@@ -767,6 +767,14 @@ final class TiffExifParser
 
         // ASCII
         if ($type === TiffConst::TYPE_ASCII) {
+            // EXIF 3.0 §4.6.2 and TIFF 6.0 §2 require ASCII values to be
+            // NUL-terminated, with the declared count including that terminator.
+            if (($count > 0) && ($bytes[$count - 1] !== "\0")) {
+                throw new ParseError(
+                    'ASCII values must be NUL-terminated and include the terminator in count per EXIF 3.0 §4.6.2; TIFF 6.0 §2.',
+                );
+            }
+
             return rtrim($bytes, "\0");
         }
 
