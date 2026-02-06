@@ -330,15 +330,6 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packLong, 1)
             . pack($packShort, Compression::JPEG->value)
             . pack($packShort, 0)
-            // EXIF 3.0 §4.6.5.2.4 (JPEGInterchangeFormat) and §4.6.5.1.6 (Table 3).
-            . pack($packShort, ExifTag::JPEG_INTERCHANGE_FORMAT)
-            . pack($packShort, TiffConst::TYPE_LONG)
-            . pack($packLong, 1)
-            . pack($packLong, $jpegOffset)
-            . pack($packShort, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH)
-            . pack($packShort, TiffConst::TYPE_LONG)
-            . pack($packLong, 1)
-            . pack($packLong, $jpegLength)
             . pack($packShort, TiffTag::TILE_WIDTH)
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 1)
@@ -355,6 +346,16 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 2)
             . pack($packLong, $tileCountsStart)
+            // TIFF 6.0 §2 requires ascending tag order within each IFD.
+            // EXIF 3.0 §4.6.5.2.4 (JPEGInterchangeFormat) and §4.6.5.1.6 (Table 3).
+            . pack($packShort, ExifTag::JPEG_INTERCHANGE_FORMAT)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, $jpegOffset)
+            . pack($packShort, ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH)
+            . pack($packShort, TiffConst::TYPE_LONG)
+            . pack($packLong, 1)
+            . pack($packLong, $jpegLength)
             . pack($packLong, 0);
 
         $ifd1Data = pack($packLong, $tileOffsets[0])

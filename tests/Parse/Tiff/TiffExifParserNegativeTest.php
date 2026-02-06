@@ -312,6 +312,37 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Builds an IFD with descending tag identifiers.
+     * Verifies the parser rejects unsorted directory entries per TIFF 6.0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsIfdEntriesThatAreNotSortedByTag(): void
+    {
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 2)
+            . pack('v', 0x011A)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', 72)
+            . pack('v', 0x010F)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 4)
+            . pack('V', 0x00434241)
+            . pack('V', 0);
+
+        $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('IFD entries must be sorted in ascending order by tag per TIFF 6.0 §2.');
+
+        $reader->parseFromBlob($blob);
+    }
+
+    /**
      * Creates an interoperability pointer entry with an invalid type/count layout.
      * Ensures the parser throws a ParseError with the expected validation message.
      *

@@ -350,9 +350,19 @@ final class TiffExifParser
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
         // (BigTIFF) directory entries and the unsigned entry count preceding them.
-        $entries = [];
+        $entries   = [];
+        $lastTagId = null;
         for ($i = 0; $i < $entryCount; ++$i) {
-            $entries += $this->readDirEntry();
+            $entry = $this->readDirEntry();
+
+            // TIFF 6.0 §2 requires IFD entries to be sorted by tag identifier in
+            // ascending order so readers can apply deterministic directory traversal.
+            if (($lastTagId !== null) && ($entry->tag < $lastTagId)) {
+                throw new ParseError('IFD entries must be sorted in ascending order by tag per TIFF 6.0 §2.');
+            }
+
+            $lastTagId            = $entry->tag;
+            $entries[$entry->tag] = $entry;
         }
 
         if ($this->bigTiff) {
@@ -379,9 +389,9 @@ final class TiffExifParser
      * EXIF 3.0 §4.5.2 defines the tag, type, count, and value/offset fields mirrored
      * by this reader, aligning with the TIFF 6.0 §8 directory entry layout.
      *
-     * @return array<int, IfdEntry> tagId => entry
+     * @return IfdEntry
      */
-    private function readDirEntry(): array
+    private function readDirEntry(): IfdEntry
     {
         $tag  = $this->readU16();
         $type = $this->readU16();
@@ -419,7 +429,7 @@ final class TiffExifParser
             $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
         }
 
-        return [$tag => new IfdEntry($tag, $type, $cnt, $value)];
+        return new IfdEntry($tag, $type, $cnt, $value);
     }
 
     /**
