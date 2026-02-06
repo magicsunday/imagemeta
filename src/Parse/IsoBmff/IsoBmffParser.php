@@ -1897,8 +1897,20 @@ final readonly class IsoBmffParser
     {
         $win = $keys->window;
         $win->seek(0);
-        // version/flags
-        $win->read(4);
+
+        if ($keys->contentSize < 8) {
+            throw new ParseError('keys box truncated');
+        }
+
+        // QuickTime File Format 2012, "Metadata item keys atom": the keys atom
+        // is a FullAtom; version must be 0 and flags must be 0 for the defined
+        // structure.
+        $version = $win->readU8();
+        $flags   = $this->readUInt24($win);
+
+        if (($version !== 0) || ($flags !== 0)) {
+            throw new ParseError('keys box version/flags must be 0');
+        }
 
         $entryCount = $win->readU32BE();
 

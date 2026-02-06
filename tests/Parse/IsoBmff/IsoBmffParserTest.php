@@ -1317,6 +1317,50 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Creates a keys box with non-zero version to trigger validation.
+     * QuickTime File Format 2012, "Metadata item keys atom": version/flags must be 0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsKeysBoxWithNonZeroVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('keys box version/flags must be 0');
+
+        $payload = pack('N', 1); // entryCount = 1
+        $keys    = $this->fullBox('keys', $payload, 1, 0); // version=1
+        $meta    = $this->fullBox('meta', $keys);
+        $moov    = $this->box('moov', $meta);
+        $ftyp    = $this->box('ftyp', 'qt  ');
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
+     * Creates a keys box with non-zero flags to trigger validation.
+     * QuickTime File Format 2012, "Metadata item keys atom": version/flags must be 0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsKeysBoxWithNonZeroFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('keys box version/flags must be 0');
+
+        $payload = pack('N', 1); // entryCount = 1
+        $keys    = $this->fullBox('keys', $payload, 0, 1); // flags=1
+        $meta    = $this->fullBox('meta', $keys);
+        $moov    = $this->box('moov', $meta);
+        $ftyp    = $this->box('ftyp', 'qt  ');
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
      * Creates an stsd box with an entry count above the configured maximum.
      * This confirms the parser rejects malformed track tables.
      *
