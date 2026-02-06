@@ -1266,7 +1266,13 @@ final readonly class IsoBmffParser
             throw new ParseError('dref box truncated');
         }
 
-        $win->read(4); // version/flags
+        $version = $win->readU8();
+        $this->readUInt24($win); // flags
+
+        if ($version !== 0) {
+            throw new ParseError('unsupported dref box version');
+        }
+
         $entryCount = $win->readU32BE();
 
         if ($entryCount > self::MAX_DREF_ENTRIES) {

@@ -1700,6 +1700,27 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a dref box with version 1, which violates the ISO/IEC 14496-12 spec.
+     * Confirms the parser rejects non-zero dref versions.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported dref box version');
+
+        $dref = $this->fullBox('dref', pack('N', 0), 1); // version=1, entry_count=0
+        $dinf = $this->box('dinf', $dref);
+        $meta = $this->fullBox('meta', $dinf);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Wraps raw bytes in a temporary stream-backed extractor.
      * This helper keeps byte-length bookkeeping aligned with the payload.
      *
