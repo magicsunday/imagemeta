@@ -525,6 +525,49 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a keys atom with entries from different namespaces (mdta and a custom one).
+     * Verifies the parser preserves the namespace: mdta keys are stored directly while
+     * non-mdta keys are prefixed with the 4-byte namespace per QuickTime File Format 2012.
+     *
+     * @return void
+     */
+    #[Test]
+    public function preservesKeyNamespaceForNonMdtaKeys(): void
+    {
+        $mdtaKey   = 'com.apple.quicktime.content.identifier';
+        $customKey = 'custom.vendor.key';
+
+        // Build two key entries: one mdta, one with custom 'cust' namespace
+        $mdtaEntry = pack('N', 8 + strlen($mdtaKey)) . 'mdta' . $mdtaKey;
+        $custEntry = pack('N', 8 + strlen($customKey)) . 'cust' . $customKey;
+        $keys      = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $mdtaEntry . $custEntry);
+
+        // Build ilst with two data entries mapped by index
+        $dataBox1   = $this->box('data', pack('N', 1) . pack('N', 0) . 'mdta-value');
+        $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'cust-value');
+        $ilstEntry1 = $this->box(pack('N', 1), $dataBox1);
+        $ilstEntry2 = $this->box(pack('N', 2), $dataBox2);
+        $ilst       = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $moov = $this->box('moov', $this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+
+        // mdta namespace key is stored directly by name
+        self::assertSame('mdta-value', $qtMeta->keys[$mdtaKey]);
+
+        // Non-mdta namespace key is prefixed with namespace
+        $prefixedKey = 'cust:' . $customKey;
+        self::assertArrayHasKey($prefixedKey, $qtMeta->keys);
+        self::assertSame('cust-value', $qtMeta->keys[$prefixedKey]);
+    }
+
+    /**
      * Uses a data box with integer type and 32-bit payload.
      * This confirms numeric QuickTime values are decoded to integers.
      *

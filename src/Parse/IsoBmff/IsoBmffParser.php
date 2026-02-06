@@ -61,6 +61,7 @@ use function trim;
  *
  * @phpstan-type QuickTimeValue = string|int|float|bool
  * @phpstan-type QuickTimeKeyMap = array<string, QuickTimeValue>
+ * @phpstan-type QuickTimeKeyEntry = array{namespace: string, name: string}
  */
 final readonly class IsoBmffParser
 {
@@ -278,6 +279,15 @@ final readonly class IsoBmffParser
      * Maximum number of keys in a keys box to prevent DoS attacks.
      */
     private const int MAX_KEYS_ENTRIES = 1000;
+
+    /**
+     * QuickTime key namespace for reverse-DNS metadata keys.
+     *
+     * QuickTime File Format 2012, "Metadata item keys atom": The key_namespace identifies
+     * the naming scheme. When the namespace is 'mdta', the key_value is a UTF-8 reverse-DNS
+     * string (e.g. 'com.apple.quicktime.content.identifier').
+     */
+    private const string KEYS_NAMESPACE_MDTA = 'mdta';
 
     /**
      * Maximum number of sample entries in an stsd box to prevent DoS attacks.
@@ -846,7 +856,7 @@ final readonly class IsoBmffParser
      *     uuidXmp: list<string>,
      *     directExif: list<string>,
      *     idatPayload: ?string,
-     *     keysMaps: list<array<int, string>>,
+     *     keysMaps: list<array<int, QuickTimeKeyEntry>>,
      *     ilstBoxes: list<BoxDescriptor>
      * }
      */
@@ -865,7 +875,7 @@ final readonly class IsoBmffParser
         $uuidXmp        = [];
         $directExif     = [];
         $idatPayload    = null;
-        /** @var list<array<int, string>> $keysMaps */
+        /** @var list<array<int, array{namespace: string, name: string}>> $keysMaps */
         $keysMaps = [];
         /** @var list<BoxDescriptor> $ilstBoxes */
         $ilstBoxes = [];
@@ -1096,20 +1106,21 @@ final readonly class IsoBmffParser
     /**
      * Merges QuickTime key mappings from multiple sources.
      *
-     * @param QuickTimeKeyMap          $existing  Existing key mappings.
-     * @param list<array<int, string>> $keysMaps  Key map data from 'keys' boxes.
-     * @param list<BoxDescriptor>      $ilstBoxes Item list box descriptors.
+     * @param QuickTimeKeyMap                     $existing  Existing key mappings.
+     * @param list<array<int, QuickTimeKeyEntry>> $keysMaps  Key map data from 'keys' boxes.
+     * @param list<BoxDescriptor>                 $ilstBoxes Item list box descriptors.
      *
      * @return QuickTimeKeyMap Merged key mappings.
      */
     private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes): array
     {
+        /** @var array<int, QuickTimeKeyEntry> $keyIndex */
         $keyIndex = [];
 
         // Flatten key maps so later entries override duplicate indexes.
         foreach ($keysMaps as $map) {
-            foreach ($map as $idx => $name) {
-                $keyIndex[$idx] = $name;
+            foreach ($map as $idx => $entry) {
+                $keyIndex[$idx] = $entry;
             }
         }
 
@@ -1820,11 +1831,15 @@ final readonly class IsoBmffParser
     }
 
     /**
-     * Parses the QuickTime keys box into an index of identifier strings.
+     * Parses the QuickTime keys box into an index of structured key entries.
+     *
+     * QuickTime File Format 2012, "Metadata item keys atom": each entry contains
+     * a 4-byte key_namespace and a variable-length key_value whose structure depends
+     * on the namespace.
      *
      * @param BoxDescriptor $keys Box descriptor for the QuickTime `keys` box.
      *
-     * @return array<int, string>
+     * @return array<int, QuickTimeKeyEntry>
      */
     private function parseKeys(BoxDescriptor $keys): array
     {
@@ -1855,7 +1870,10 @@ final readonly class IsoBmffParser
             }
 
             $name    = $win->read($size - 8);
-            $map[$i] = $name;
+            $map[$i] = [
+                'namespace' => $namespace,
+                'name'      => $name,
+            ];
             $pos += $size;
         }
 
@@ -1869,8 +1887,13 @@ final readonly class IsoBmffParser
     /**
      * Parses the iTunes-style list (`ilst`) box using the discovered key index.
      *
-     * @param BoxDescriptor      $ilst     Box descriptor for the `ilst` container.
-     * @param array<int, string> $keyIndex
+     * QuickTime File Format 2012, "Metadata item keys atom": the key_namespace determines
+     * how the key_value is interpreted. For 'mdta' namespace, the key_value is used directly
+     * as a reverse-DNS identifier. For other namespaces, the key is prefixed with the
+     * namespace to prevent collisions.
+     *
+     * @param BoxDescriptor                 $ilst     Box descriptor for the `ilst` container.
+     * @param array<int, QuickTimeKeyEntry> $keyIndex Structured key entries from parseKeys().
      *
      * @return QuickTimeKeyMap
      */
@@ -1880,8 +1903,8 @@ final readonly class IsoBmffParser
         foreach ($this->walkChildren($ilst) as $entry) {
             $keyName = null;
             $index   = $this->fourccToIndex($entry->type);
-            if ($index !== null && isset($keyIndex[$index])) {
-                $keyName = $keyIndex[$index];
+            if (($index !== null) && isset($keyIndex[$index])) {
+                $keyName = $this->resolveKeyName($keyIndex[$index]);
             } elseif ($entry->type === self::BOX_FREEFORM) {
                 $keyName = $this->parseFreeformKey($entry);
             } elseif ($this->isPrintableFourcc($entry->type)) {
@@ -1901,6 +1924,24 @@ final readonly class IsoBmffParser
         }
 
         return $result;
+    }
+
+    /**
+     * Resolves a structured key entry into a string key name for the QuickTimeKeyMap.
+     *
+     * QuickTime File Format 2012, "Metadata item keys atom": for the 'mdta' namespace
+     * the key_value is a reverse-DNS string used directly. For other namespaces the key
+     * is prefixed with the 4-byte namespace to prevent collisions between naming schemes.
+     *
+     * @param QuickTimeKeyEntry $entry Structured key entry with namespace and name.
+     */
+    private function resolveKeyName(array $entry): string
+    {
+        if ($entry['namespace'] === self::KEYS_NAMESPACE_MDTA) {
+            return $entry['name'];
+        }
+
+        return $entry['namespace'] . ':' . $entry['name'];
     }
 
     /**
