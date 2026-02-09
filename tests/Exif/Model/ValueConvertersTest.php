@@ -742,7 +742,7 @@ final class ValueConvertersTest extends TestCase
             ExifTag::GPS_DEST_DISTANCE       => new IfdEntry(ExifTag::GPS_DEST_DISTANCE, 5, 1, new ExifRational(42, 1)),
             ExifTag::GPS_PROCESSING_METHOD   => new IfdEntry(ExifTag::GPS_PROCESSING_METHOD, 7, 11, "ASCII\0\0\0NETWORK"),
             ExifTag::GPS_AREA_INFORMATION    => new IfdEntry(ExifTag::GPS_AREA_INFORMATION, 7, 13, "ASCII\0\0\0AreaName"),
-            ExifTag::GPS_DIFFERENTIAL        => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 2),
+            ExifTag::GPS_DIFFERENTIAL        => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 1),
             ExifTag::GPS_H_POSITIONING_ERROR => new IfdEntry(ExifTag::GPS_H_POSITIONING_ERROR, 5, 1, new ExifRational(15, 10)),
         ]);
 
@@ -787,7 +787,7 @@ final class ValueConvertersTest extends TestCase
         self::assertSame('2024-05-06T12:34:56+00:00', $timestamp->format(DATE_ATOM));
         self::assertSame('12:34:56.789000', $timestamp->format('H:i:s.u'));
 
-        self::assertSame(2, $result['differential']);
+        self::assertSame(1, $result['differential']);
         self::assertEqualsWithDelta(1.5, $result['h_positioning_error'], 0.000001);
     }
 

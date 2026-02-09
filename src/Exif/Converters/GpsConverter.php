@@ -405,10 +405,8 @@ final readonly class GpsConverter
             $diffValue = $diffValue->values[0] ?? null;
         }
 
-        if (is_int($diffValue)) {
+        if (is_int($diffValue) && ($diffValue === 0 || $diffValue === 1)) {
             $result['differential'] = $diffValue;
-        } elseif (is_float($diffValue)) {
-            $result['differential'] = (int) round($diffValue);
         }
 
         $hPositionEntry                = $gps->get(ExifTag::GPS_H_POSITIONING_ERROR);

@@ -484,6 +484,60 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Provides a valid GPSDifferential value (0).
+     * Verifies no-correction is accepted per EXIF 3.0 §4.6.7.1.31.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsValidGpsDifferentialZero(): void
+    {
+        $entries = [
+            ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 0),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertSame(0, $result['differential']);
+    }
+
+    /**
+     * Provides a valid GPSDifferential value (1).
+     * Verifies differential-corrected is accepted per EXIF 3.0 §4.6.7.1.31.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsValidGpsDifferentialOne(): void
+    {
+        $entries = [
+            ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 1),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertSame(1, $result['differential']);
+    }
+
+    /**
+     * Supplies an invalid GPSDifferential value (2).
+     * Verifies out-of-range values are nulled per EXIF 3.0 §4.6.7.1.31.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsInvalidGpsDifferential(): void
+    {
+        $entries = [
+            ExifTag::GPS_DIFFERENTIAL => new IfdEntry(ExifTag::GPS_DIFFERENTIAL, 3, 1, 2),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertNull($result['differential']);
+    }
+
+    /**
      * Builds an IFD containing a GPS reference tag and matching coordinate data.
      *
      * @param int    $refTag   The GPS reference tag constant (e.g. ExifTag::GPS_LATITUDE_REF).

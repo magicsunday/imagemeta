@@ -114,6 +114,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 4,
                 "\x02\x03\x00\x00",
             ],
+            'GPSDifferential count 1' => [
+                ExifTag::GPS_DIFFERENTIAL,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x01\x00",
+            ],
         ];
     }
 

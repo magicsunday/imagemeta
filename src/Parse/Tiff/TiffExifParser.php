@@ -179,6 +179,13 @@ final class TiffExifParser
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.6.6.2',
         ],
+        ExifTag::GPS_DIFFERENTIAL => [
+            'name'     => 'GPSDifferential',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.31',
+        ],
         DngTag::DNG_VERSION => [
             'name'     => 'DNGVersion',
             'count'    => 4,
