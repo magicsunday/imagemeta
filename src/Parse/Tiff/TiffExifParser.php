@@ -179,6 +179,13 @@ final class TiffExifParser
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.6.6.2',
         ],
+        ExifTag::FILE_SOURCE => [
+            'name'     => 'FileSource',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_UNDEFINED,
+            'typeName' => 'UNDEFINED',
+            'spec'     => 'EXIF 3.0 §4.6.6.7.32',
+        ],
         ExifTag::GPS_ALTITUDE_REF => [
             'name'     => 'GPSAltitudeRef',
             'count'    => 1,
