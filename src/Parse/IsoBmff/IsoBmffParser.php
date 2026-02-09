@@ -1801,15 +1801,17 @@ final readonly class IsoBmffParser
             $payload   = $remaining > 0 ? $win->read($remaining) : '';
             $parts     = $payload === '' ? [] : explode("\0", $payload);
 
-            $name        = $parts[0] ?? null;
-            $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
+            // ISO/IEC 14496-12 §8.11.6: v0/v1 payload is item_name\0content_type\0[content_encoding\0]
+            $name            = $parts[0] ?? null;
+            $contentType     = (isset($parts[1]) && ($parts[1] !== '')) ? $parts[1] : null;
+            $contentEncoding = (isset($parts[2]) && ($parts[2] !== '')) ? $parts[2] : null;
 
             return [
                 'id'              => $itemId,
                 'itemType'        => null,
-                'name'            => $name !== '' ? $name : null,
+                'name'            => ($name !== '') ? $name : null,
                 'contentType'     => $contentType,
-                'contentEncoding' => null,
+                'contentEncoding' => $contentEncoding,
                 'extensionType'   => null,
             ];
         }
