@@ -120,6 +120,30 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 4,
                 "\x00\x00\x00\x1C\x00\x00\x00\x01\x00\x00\x00\x46\x00\x00\x00\x01\x00\x00\x00\x18\x00\x00\x00\x0A\x00\x00\x00\x38\x00\x00\x00\x0A",
             ],
+            'WhitePoint count 2' => [
+                ExifTag::WHITE_POINT,
+                TiffConst::TYPE_RATIONAL,
+                2,
+                str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+            ],
+            'PrimaryChromaticities count 6' => [
+                ExifTag::PRIMARY_CHROMATICITIES,
+                TiffConst::TYPE_RATIONAL,
+                6,
+                str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 6),
+            ],
+            'YCbCrCoefficients count 3' => [
+                ExifTag::YCBCR_COEFFICIENTS,
+                TiffConst::TYPE_RATIONAL,
+                3,
+                str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 3),
+            ],
+            'ReferenceBlackWhite count 6' => [
+                ExifTag::REFERENCE_BLACK_WHITE,
+                TiffConst::TYPE_RATIONAL,
+                6,
+                str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 6),
+            ],
             'GPSTimeStamp count 3' => [
                 ExifTag::GPS_TIME_STAMP,
                 TiffConst::TYPE_RATIONAL,
