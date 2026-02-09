@@ -114,6 +114,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 4,
                 "\x02\x03\x00\x00",
             ],
+            'LensSpecification count 4' => [
+                ExifTag::LENS_SPECIFICATION,
+                TiffConst::TYPE_RATIONAL,
+                4,
+                "\x00\x00\x00\x1C\x00\x00\x00\x01\x00\x00\x00\x46\x00\x00\x00\x01\x00\x00\x00\x18\x00\x00\x00\x0A\x00\x00\x00\x38\x00\x00\x00\x0A",
+            ],
             'FileSource count 1' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
@@ -180,6 +186,11 @@ final class TiffExifParserFixedLengthTest extends TestCase
             TiffConst::TYPE_ASCII,
             TiffConst::TYPE_BYTE,
             TiffConst::TYPE_UNDEFINED => 1,
+            TiffConst::TYPE_SHORT     => 2,
+            TiffConst::TYPE_LONG,
+            TiffConst::TYPE_SLONG => 4,
+            TiffConst::TYPE_RATIONAL,
+            TiffConst::TYPE_SRATIONAL => 8,
             default                   => 1,
         };
     }

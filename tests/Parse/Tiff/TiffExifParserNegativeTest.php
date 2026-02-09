@@ -736,6 +736,13 @@ final class TiffExifParserNegativeTest extends TestCase
                 "\x02\x03\x00",
                 'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8.',
             ],
+            'LensSpecification expects 4 RATIONAL' => [
+                ExifTag::LENS_SPECIFICATION,
+                TiffConst::TYPE_RATIONAL,
+                3,
+                "\x00\x00\x00\x1C\x00\x00\x00\x01\x00\x00\x00\x46\x00\x00\x00\x01\x00\x00\x00\x18\x00\x00\x00\x0A",
+                'LensSpecification must contain exactly 4 bytes per EXIF 3.0 §4.6.6.9.4.',
+            ],
             'FileSource expects 1 UNDEFINED' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,

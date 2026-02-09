@@ -179,6 +179,13 @@ final class TiffExifParser
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.6.6.2',
         ],
+        ExifTag::LENS_SPECIFICATION => [
+            'name'     => 'LensSpecification',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'EXIF 3.0 §4.6.6.9.4',
+        ],
         ExifTag::FILE_SOURCE => [
             'name'     => 'FileSource',
             'count'    => 1,
