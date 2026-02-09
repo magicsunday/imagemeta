@@ -1649,6 +1649,10 @@ final readonly class IsoBmffParser
             }
         }
 
+        if ($index !== $entryCount) {
+            throw new ParseError('iinf entry count mismatch');
+        }
+
         return $items;
     }
 

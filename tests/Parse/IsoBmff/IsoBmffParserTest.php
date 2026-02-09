@@ -1577,6 +1577,28 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds an iinf box claiming 2 entries but containing only 1 infe child.
+     * Confirms the parser rejects entry_count mismatches.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIinfEntryCountMismatch(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('iinf entry count mismatch');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 2) . $infe); // claims 2, has 1
+        $meta        = $this->fullBox('meta', $iinf);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Builds an iinf box with version 2, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported iinf versions.
      *
