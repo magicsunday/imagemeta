@@ -562,6 +562,13 @@ final class TiffExifParser
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
         $value      = $this->convertUInt64Values($tag, $value);
 
+        // DNG 1.7.1.0: LocalizedCameraModel may be stored as BYTE instead of
+        // ASCII. When type is BYTE, treat the raw bytes as a NUL-terminated
+        // UTF-8 string rather than a numeric list.
+        if ($tag === DngTag::LOCALIZED_CAMERA_MODEL && $type === TiffConst::TYPE_BYTE) {
+            $value = rtrim($rawBytes, "\0");
+        }
+
         if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
             $decodedPattern = $this->decodeCfaPatternPayload($rawBytes);
 

@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Exif\Model\Ifd;
+use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -27,6 +29,8 @@ use function strlen;
  * Verifies parsing and exposure of baseline DNG tags from TIFF/EXIF payloads.
  */
 #[CoversClass(TiffExifParser::class)]
+#[UsesClass(Ifd::class)]
+#[UsesClass(IfdEntry::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
 #[UsesClass(DngTag::class)]
@@ -68,6 +72,40 @@ final class TiffExifParserDngTagTest extends TestCase
         self::assertNull($parsed->dngVersion());
         self::assertNull($parsed->dngBackwardVersion());
         self::assertNull($parsed->uniqueCameraModel());
+    }
+
+    /**
+     * DNG 1.7.1.0: LocalizedCameraModel may use BYTE type instead of ASCII.
+     * When stored as BYTE, the parser decodes the raw bytes as a NUL-terminated
+     * UTF-8 string rather than a numeric list.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodesLocalizedCameraModelByteAsUtf8String(): void
+    {
+        $model     = "Kamera Modell\0";
+        $ifdOffset = 8;
+        $ifdSize   = 2 + 12 + 4;
+        $valOffset = $ifdOffset + $ifdSize;
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', 1)
+            . pack('v', DngTag::LOCALIZED_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', strlen($model))
+            . pack('V', $valOffset)
+            . pack('V', 0)
+            . $model;
+
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($blob);
+
+        $entry = $parsed->ifd0->get(DngTag::LOCALIZED_CAMERA_MODEL);
+        self::assertNotNull($entry);
+        self::assertSame('Kamera Modell', $entry->value);
     }
 
     /**
