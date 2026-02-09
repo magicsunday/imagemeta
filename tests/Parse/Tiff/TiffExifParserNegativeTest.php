@@ -743,6 +743,13 @@ final class TiffExifParserNegativeTest extends TestCase
                 "\x03\x00",
                 'FileSource must contain exactly 1 bytes per EXIF 3.0 §4.6.6.7.32.',
             ],
+            'SceneType expects 1 UNDEFINED' => [
+                ExifTag::SCENE_TYPE,
+                TiffConst::TYPE_UNDEFINED,
+                2,
+                "\x01\x00",
+                'SceneType must contain exactly 1 bytes per EXIF 3.0 §4.6.6.7.33.',
+            ],
             'GPSAltitudeRef expects 1 BYTE' => [
                 ExifTag::GPS_ALTITUDE_REF,
                 TiffConst::TYPE_BYTE,

@@ -186,6 +186,13 @@ final class TiffExifParser
             'typeName' => 'UNDEFINED',
             'spec'     => 'EXIF 3.0 §4.6.6.7.32',
         ],
+        ExifTag::SCENE_TYPE => [
+            'name'     => 'SceneType',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_UNDEFINED,
+            'typeName' => 'UNDEFINED',
+            'spec'     => 'EXIF 3.0 §4.6.6.7.33',
+        ],
         ExifTag::GPS_ALTITUDE_REF => [
             'name'     => 'GPSAltitudeRef',
             'count'    => 1,
