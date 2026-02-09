@@ -658,8 +658,12 @@ final readonly class IsoBmffParser
             throw new ParseError('hdlr pre_defined must be 0');
         }
 
-        $handler = $win->read(4);
-        $win->read(12); // reserved
+        $handler  = $win->read(4);
+        $reserved = $win->read(12);
+
+        if ($reserved !== "\0\0\0\0\0\0\0\0\0\0\0\0") {
+            throw new ParseError('hdlr reserved fields must be 0');
+        }
 
         $nameBytes = '';
         if ($win->tell() < $hdlr->contentSize) {
