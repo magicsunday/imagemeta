@@ -1377,7 +1377,12 @@ final readonly class IsoBmffParser
             throw new ParseError('dref entry truncated');
         }
 
-        $win->readU8(); // version
+        $version = $win->readU8();
+
+        if ($version !== 0) {
+            throw new ParseError('unsupported dref entry version');
+        }
+
         $flags = $this->readUInt24($win);
 
         $payloadSize = $entry->contentSize - 4;

@@ -1923,6 +1923,27 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects a dref url entry with non-zero version.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefEntryUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported dref entry version');
+
+        $drefEntry = $this->fullBox('url ', '', 1); // version=1
+        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf      = $this->box('dinf', $dref);
+        $meta      = $this->fullBox('meta', $dinf);
+        $ftyp      = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects an ftyp box whose compatible_brands length is not a multiple of 4.
      *
      * @return void
