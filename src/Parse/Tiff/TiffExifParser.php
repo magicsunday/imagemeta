@@ -200,6 +200,20 @@ final class TiffExifParser
             'typeName' => 'UNDEFINED',
             'spec'     => 'EXIF 3.0 §4.6.6.7.33',
         ],
+        ExifTag::GPS_TIME_STAMP => [
+            'name'     => 'GPSTimeStamp',
+            'count'    => 3,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.7',
+        ],
+        ExifTag::GPS_DATE_STAMP => [
+            'name'     => 'GPSDateStamp',
+            'count'    => 11,
+            'type'     => TiffConst::TYPE_ASCII,
+            'typeName' => 'ASCII',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.30',
+        ],
         ExifTag::GPS_ALTITUDE_REF => [
             'name'     => 'GPSAltitudeRef',
             'count'    => 1,

@@ -120,6 +120,18 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 4,
                 "\x00\x00\x00\x1C\x00\x00\x00\x01\x00\x00\x00\x46\x00\x00\x00\x01\x00\x00\x00\x18\x00\x00\x00\x0A\x00\x00\x00\x38\x00\x00\x00\x0A",
             ],
+            'GPSTimeStamp count 3' => [
+                ExifTag::GPS_TIME_STAMP,
+                TiffConst::TYPE_RATIONAL,
+                3,
+                "\x00\x00\x00\x0C\x00\x00\x00\x01\x00\x00\x00\x22\x00\x00\x00\x01\x00\x00\x00\x38\x00\x00\x00\x01",
+            ],
+            'GPSDateStamp count 11' => [
+                ExifTag::GPS_DATE_STAMP,
+                TiffConst::TYPE_ASCII,
+                11,
+                "2024:05:06\0",
+            ],
             'FileSource count 1' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,

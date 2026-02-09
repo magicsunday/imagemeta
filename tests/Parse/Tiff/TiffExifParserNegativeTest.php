@@ -743,6 +743,20 @@ final class TiffExifParserNegativeTest extends TestCase
                 "\x00\x00\x00\x1C\x00\x00\x00\x01\x00\x00\x00\x46\x00\x00\x00\x01\x00\x00\x00\x18\x00\x00\x00\x0A",
                 'LensSpecification must contain exactly 4 bytes per EXIF 3.0 §4.6.6.9.4.',
             ],
+            'GPSTimeStamp expects 3 RATIONAL' => [
+                ExifTag::GPS_TIME_STAMP,
+                TiffConst::TYPE_RATIONAL,
+                2,
+                "\x00\x00\x00\x0C\x00\x00\x00\x01\x00\x00\x00\x22\x00\x00\x00\x01",
+                'GPSTimeStamp must contain exactly 3 bytes per EXIF 3.0 §4.6.7.1.7.',
+            ],
+            'GPSDateStamp expects 11 ASCII' => [
+                ExifTag::GPS_DATE_STAMP,
+                TiffConst::TYPE_ASCII,
+                10,
+                '2024:05:06',
+                'GPSDateStamp must contain exactly 11 bytes per EXIF 3.0 §4.6.7.1.30.',
+            ],
             'FileSource expects 1 UNDEFINED' => [
                 ExifTag::FILE_SOURCE,
                 TiffConst::TYPE_UNDEFINED,
