@@ -2372,22 +2372,14 @@ final readonly class IsoBmffParser
             return $trimmed;
         }
 
+        // QuickTime File Format 2012 Table 3-5: type 21/22 encode integers
+        // in 1, 2, 3, or 4 bytes (big-endian).
         if ($type === self::DATA_TYPE_SIGNED_INT) {
-            if ($payloadSize < 4) {
-                return $payload;
-            }
-
-            $unsigned = Unpack::int('N', substr($payload, 0, 4), 'QuickTime signed int payload');
-
-            return $unsigned >= 0x80000000 ? $unsigned - 0x100000000 : $unsigned;
+            return $this->decodeQuickTimeSignedInt($payload, $payloadSize);
         }
 
         if ($type === self::DATA_TYPE_UNSIGNED_INT) {
-            if ($payloadSize < 4) {
-                return $payload;
-            }
-
-            return Unpack::int('N', substr($payload, 0, 4), 'QuickTime unsigned int payload');
+            return $this->decodeQuickTimeUnsignedInt($payload, $payloadSize);
         }
 
         if ($type === self::DATA_TYPE_FLOAT32) {
@@ -2407,6 +2399,44 @@ final readonly class IsoBmffParser
         }
 
         return $payload;
+    }
+
+    /**
+     * Decodes a variable-width big-endian signed integer from a QuickTime data box.
+     *
+     * QuickTime File Format 2012, Table 3-5: type 21 supports 1, 2, 3, or 4 byte payloads.
+     *
+     * @param string $payload     Raw payload bytes.
+     * @param int    $payloadSize Length of the payload in bytes.
+     *
+     * @return int Decoded signed integer value.
+     */
+    private function decodeQuickTimeSignedInt(string $payload, int $payloadSize): int
+    {
+        $unsigned = $this->decodeQuickTimeUnsignedInt($payload, $payloadSize);
+        $signBit  = 1 << (($payloadSize * 8) - 1);
+
+        return ($unsigned >= $signBit) ? ($unsigned - ($signBit << 1)) : $unsigned;
+    }
+
+    /**
+     * Decodes a variable-width big-endian unsigned integer from a QuickTime data box.
+     *
+     * QuickTime File Format 2012, Table 3-5: type 22 supports 1, 2, 3, or 4 byte payloads.
+     *
+     * @param string $payload     Raw payload bytes.
+     * @param int    $payloadSize Length of the payload in bytes.
+     *
+     * @return int Decoded unsigned integer value.
+     */
+    private function decodeQuickTimeUnsignedInt(string $payload, int $payloadSize): int
+    {
+        $value = 0;
+        for ($i = 0; $i < $payloadSize; ++$i) {
+            $value = ($value << 8) | ord($payload[$i]);
+        }
+
+        return $value;
     }
 
     /**

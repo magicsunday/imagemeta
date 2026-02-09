@@ -108,13 +108,13 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Provides a short numeric data payload for a QuickTime metadata key.
-     * This ensures the parser tolerates truncated numeric payloads without failing.
+     * Decodes a 1-byte unsigned integer data box payload.
+     * QuickTime File Format 2012, Table 3-5: type 22 supports 1-4 byte payloads.
      *
      * @return void
      */
     #[Test]
-    public function tolerateShortNumericQuickTimePayloads(): void
+    public function decodeOneBytUnsignedIntPayload(): void
     {
         $keyName = 'com.apple.quicktime.live-photo.auto';
 
@@ -137,17 +137,17 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertNotNull($quickTime);
         self::assertArrayHasKey($keyName, $quickTime->keys);
-        self::assertSame("\x01", $quickTime->keys[$keyName]);
+        self::assertSame(1, $quickTime->keys[$keyName]);
     }
 
     /**
-     * Provides a short integer data payload for a QuickTime metadata key.
-     * This confirms short integer payloads are preserved instead of throwing.
+     * Decodes a 1-byte signed integer data box payload.
+     * QuickTime File Format 2012, Table 3-5: type 21 supports 1-4 byte payloads.
      *
      * @return void
      */
     #[Test]
-    public function tolerateShortIntegerQuickTimePayloads(): void
+    public function decodeOneByteSignedIntPayload(): void
     {
         $keyName = 'com.apple.quicktime.live-photo.auto';
 
@@ -170,7 +170,7 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertNotNull($quickTime);
         self::assertArrayHasKey($keyName, $quickTime->keys);
-        self::assertSame("\x01", $quickTime->keys[$keyName]);
+        self::assertSame(1, $quickTime->keys[$keyName]);
     }
 
     /**
