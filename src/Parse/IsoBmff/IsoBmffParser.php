@@ -48,6 +48,7 @@ use function sprintf;
 use function str_starts_with;
 use function strcasecmp;
 use function strlen;
+use function strpos;
 use function strtolower;
 use function strtoupper;
 use function substr;
@@ -1605,7 +1606,7 @@ final readonly class IsoBmffParser
      *
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
-     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string}>
+     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string}>
      */
     private function parseIinf(BoxDescriptor $iinf): array
     {
@@ -1664,7 +1665,7 @@ final readonly class IsoBmffParser
      *
      * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
-     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string}
+     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string}
      */
     private function parseInfe(BoxDescriptor $infe): array
     {
@@ -1693,10 +1694,12 @@ final readonly class IsoBmffParser
             $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
 
             return [
-                'id'          => $itemId,
-                'itemType'    => null,
-                'name'        => $name !== '' ? $name : null,
-                'contentType' => $contentType,
+                'id'              => $itemId,
+                'itemType'        => null,
+                'name'            => $name !== '' ? $name : null,
+                'contentType'     => $contentType,
+                'contentEncoding' => null,
+                'extensionType'   => null,
             ];
         }
 
@@ -1711,18 +1714,30 @@ final readonly class IsoBmffParser
 
         $id = $version === 3 ? $win->readU32BE() : $win->readU16BE();
         $win->readU16BE(); // protection index
-        $itemType    = $win->read(4);
-        $remaining   = $infe->contentSize - $win->tell();
-        $payload     = $remaining > 0 ? $win->read($remaining) : '';
-        $parts       = $payload === '' ? [] : explode("\0", $payload);
-        $name        = $parts[0] ?? null;
-        $contentType = isset($parts[1]) && $parts[1] !== '' ? $parts[1] : null;
+        $itemType  = $win->read(4);
+        $remaining = $infe->contentSize - $win->tell();
+        $payload   = $remaining > 0 ? $win->read($remaining) : '';
+
+        // ISO 14496-12: remaining payload is item_name\0content_type\0[content_encoding\0]
+        $cursor          = 0;
+        $name            = $this->readNulString($payload, $cursor);
+        $contentType     = $this->readNulString($payload, $cursor);
+        $contentEncoding = $this->readNulString($payload, $cursor);
+
+        // ISO 14496-12: if item_type == 'mime' and 4+ bytes remain after the
+        // NUL-terminated strings, a 4-byte extension_type follows
+        $extensionType = null;
+        if ($itemType === 'mime' && (strlen($payload) - $cursor) >= 4) {
+            $extensionType = substr($payload, $cursor, 4);
+        }
 
         return [
-            'id'          => $id,
-            'itemType'    => $itemType !== '' ? $itemType : null,
-            'name'        => $name !== '' ? $name : null,
-            'contentType' => $contentType,
+            'id'              => $id,
+            'itemType'        => $itemType !== '' ? $itemType : null,
+            'name'            => $name,
+            'contentType'     => $contentType,
+            'contentEncoding' => $contentEncoding,
+            'extensionType'   => $extensionType,
         ];
     }
 
@@ -2610,5 +2625,31 @@ final readonly class IsoBmffParser
             $window,
             $userType,
         );
+    }
+
+    /**
+     * Reads a NUL-terminated string from a payload at the given cursor position.
+     *
+     * @param string $payload Binary payload to read from.
+     * @param int    &$cursor Current read position; advanced past the NUL terminator.
+     */
+    private function readNulString(string $payload, int &$cursor): ?string
+    {
+        if ($cursor >= strlen($payload)) {
+            return null;
+        }
+
+        $nul = strpos($payload, "\0", $cursor);
+        if ($nul === false) {
+            $value  = substr($payload, $cursor);
+            $cursor = strlen($payload);
+
+            return $value !== '' ? $value : null;
+        }
+
+        $value  = substr($payload, $cursor, $nul - $cursor);
+        $cursor = $nul + 1;
+
+        return $value !== '' ? $value : null;
     }
 }

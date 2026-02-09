@@ -1577,6 +1577,90 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds an infe v2 box with content_encoding and verifies item identification
+     * still works. This confirms parseInfe correctly parses the optional third
+     * NUL-terminated string without breaking content_type matching.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesInfeWithContentEncoding(): void
+    {
+        $xmpData = '<x:xmpmeta xmlns:x="adobe:ns:meta/">encoded</x:xmpmeta>';
+
+        // infe v2: item_ID=1, protection_index=0, item_type='xmp\0',
+        // name='XMP\0', content_type='application/rdf+xml\0', content_encoding='gzip\0'
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . "xmp\0"
+            . "XMP\0application/rdf+xml\0gzip\0";
+        $infe = $this->box('infe', $infePayload);
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $pitm = $this->box('pitm', "\0\0\0\0" . pack('n', 1));
+
+        // iloc v0: one item at a known offset
+        $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
+            . pack('n', 1) . pack('n', 0) . pack('n', 1)
+            . pack('N', 0) . pack('N', strlen($xmpData));
+        $iloc = $this->box('iloc', $ilocPayload);
+
+        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+        $mdat = $this->box('mdat', $xmpData);
+
+        // Recalculate iloc offset now that we know full meta size
+        $dataOffset  = strlen($ftyp) + strlen($meta) + 8; // +8 for mdat box header
+        $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
+            . pack('n', 1) . pack('n', 0) . pack('n', 1)
+            . pack('N', $dataOffset) . pack('N', strlen($xmpData));
+        $iloc = $this->box('iloc', $ilocPayload);
+        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+
+        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([$xmpData], $xmps);
+    }
+
+    /**
+     * Builds an infe v2 box with item_type='mime' and extension_type.
+     * Confirms the parser handles the optional extension_type field without error.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesInfeWithExtensionType(): void
+    {
+        $xmpData = '<x:xmpmeta xmlns:x="adobe:ns:meta/">ext</x:xmpmeta>';
+
+        // infe v2: item_type='mime', with content_encoding + extension_type
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'mime'
+            . "XMP\0application/rdf+xml\0\0" . 'fdel';
+        $infe = $this->box('infe', $infePayload);
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+        $pitm = $this->box('pitm', "\0\0\0\0" . pack('n', 1));
+
+        $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
+            . pack('n', 1) . pack('n', 0) . pack('n', 1)
+            . pack('N', 0) . pack('N', strlen($xmpData));
+        $iloc = $this->box('iloc', $ilocPayload);
+
+        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+        $mdat = $this->box('mdat', $xmpData);
+
+        $dataOffset  = strlen($ftyp) + strlen($meta) + 8;
+        $ilocPayload = "\0\0\0\0\x44\0" . pack('n', 1)
+            . pack('n', 1) . pack('n', 0) . pack('n', 1)
+            . pack('N', $dataOffset) . pack('N', strlen($xmpData));
+        $iloc = $this->box('iloc', $ilocPayload);
+        $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
+
+        $extractor = $this->createExtractor($ftyp . $meta . $mdat);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([$xmpData], $xmps);
+    }
+
+    /**
      * Builds an iinf box claiming 2 entries but containing only 1 infe child.
      * Confirms the parser rejects entry_count mismatches.
      *
