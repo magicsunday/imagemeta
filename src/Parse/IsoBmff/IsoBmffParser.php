@@ -1043,6 +1043,11 @@ final readonly class IsoBmffParser
             }
         }
 
+        // ISO/IEC 14496-12 §8.11.4: the primary item must reference an existing item.
+        if ($primaryItemId !== null && !isset($locations[$primaryItemId]) && !isset($itemInfos[$primaryItemId])) {
+            throw new ParseError(sprintf('pitm references non-existent item %d', $primaryItemId));
+        }
+
         return [
             'itemInfos'      => $itemInfos,
             'locations'      => $locations,

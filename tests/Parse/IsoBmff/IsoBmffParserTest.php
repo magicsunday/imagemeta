@@ -2167,6 +2167,27 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects pitm referencing a non-existent item.
+     * ISO/IEC 14496-12 §8.11.4: the primary item must reference an existing item.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectPitmReferencingNonExistentItem(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('pitm references non-existent item 99');
+
+        $pitm = $this->fullBox('pitm', pack('n', 99)); // item_ID = 99 (no such item)
+        $iinf = $this->fullBox('iinf', pack('n', 0));  // No items defined
+        $meta = $this->fullBox('meta', $iinf . $pitm);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects a dref url entry with non-zero version.
      *
      * @return void
