@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Metadata;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
@@ -363,9 +364,9 @@ final class ImageFactoryTest extends TestCase
         if ($interopIndex !== null) {
             $interopEntries[ExifTag::INTEROPERABILITY_INDEX] = new IfdEntry(
                 ExifTag::INTEROPERABILITY_INDEX,
-                2,
-                strlen($interopIndex),
-                $interopIndex,
+                TiffConst::TYPE_ASCII,
+                4,
+                $interopIndex . "\0",
             );
         }
 

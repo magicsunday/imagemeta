@@ -22,6 +22,7 @@ use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Value\CfaPattern;
 use MagicSunday\ImageMeta\Value\DeviceSettingDescription;
 use MagicSunday\ImageMeta\Value\Enum\CfaPatternColor;
@@ -2903,9 +2904,20 @@ final readonly class ParsedExif
 
     /**
      * Returns the interoperability index string when recorded.
+     *
+     * EXIF 3.0 §4.6.8.1.1: ASCII[4] including terminating NUL.
      */
     public function interopIndex(): ?string
     {
+        $entry = $this->interopIfd?->get(ExifTag::INTEROPERABILITY_INDEX);
+        if (!$entry instanceof IfdEntry) {
+            return null;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_ASCII || $entry->count !== 4) {
+            return null;
+        }
+
         return $this->str($this->interopIfd, ExifTag::INTEROPERABILITY_INDEX);
     }
 
