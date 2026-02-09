@@ -1923,6 +1923,24 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an ftyp box whose compatible_brands length is not a multiple of 4.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectFtypMisalignedCompatibleBrands(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ftyp compatible_brands length is not a multiple of 4');
+
+        // major_brand (4) + minor_version (4) + 5 bytes (not multiple of 4)
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0) . 'heicX');
+
+        $extractor = $this->createExtractor($ftyp);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects a tkhd box with unsupported version (2).
      *
      * @return void

@@ -438,6 +438,10 @@ final readonly class IsoBmffParser
         $majorBrand = $this->normaliseFourcc($win->read(4));
         $minor      = $win->readU32BE();
 
+        if (($ftyp->contentSize - 8) % 4 !== 0) {
+            throw new ParseError('ftyp compatible_brands length is not a multiple of 4');
+        }
+
         $brands = [];
         while ($win->tell() + 4 <= $ftyp->contentSize) {
             $brands[] = $this->normaliseFourcc($win->read(4));
