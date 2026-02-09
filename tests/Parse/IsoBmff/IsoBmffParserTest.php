@@ -1867,6 +1867,28 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects a tkhd box with unsupported version (2).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectTkhdUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported tkhd box version');
+
+        // version=2, flags=0, then 80 bytes of padding for minimum content
+        $tkhdPayload = "\x02\x00\x00\x00" . str_repeat("\0", 80);
+        $tkhd        = $this->box('tkhd', $tkhdPayload);
+        $trak        = $this->box('trak', $tkhd);
+        $moov        = $this->box('moov', $trak);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects an hdlr box with non-zero version.
      *
      * @return void

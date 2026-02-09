@@ -565,6 +565,10 @@ final readonly class IsoBmffParser
         $version = $win->readU8();
         $this->readUInt24($win); // flags
 
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError('unsupported tkhd box version');
+        }
+
         // ISO/IEC 14496-12 §8.3.2: version 0 uses 32-bit timestamps, version 1 uses 64-bit
         if ($version === 1) {
             if ($tkhd->contentSize < 96) {
