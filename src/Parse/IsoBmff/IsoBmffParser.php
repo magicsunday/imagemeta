@@ -727,7 +727,18 @@ final readonly class IsoBmffParser
             throw new ParseError('stsd box truncated');
         }
 
-        $win->read(4); // version/flags
+        $versionFlags = $win->read(4);
+        $version      = ord($versionFlags[0]);
+        $flags        = (ord($versionFlags[1]) << 16) | (ord($versionFlags[2]) << 8) | ord($versionFlags[3]);
+
+        if ($version !== 0) {
+            throw new ParseError('unsupported stsd box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported stsd box flags');
+        }
+
         $entryCount = $win->readU32BE();
 
         if ($entryCount > self::MAX_STSD_ENTRIES) {

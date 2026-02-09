@@ -1511,6 +1511,62 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an stsd box with non-zero version.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectStsdUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported stsd box version');
+
+        $payload = pack('N', 0);
+        $stsd    = $this->fullBox('stsd', $payload, 1); // version=1
+        $stbl    = $this->box('stbl', $stsd);
+        $minf    = $this->box('minf', $stbl);
+
+        $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+
+        $mdia = $this->box('mdia', $hdlr . $minf);
+        $trak = $this->box('trak', $mdia);
+        $moov = $this->box('moov', $trak);
+        $ftyp = $this->box('ftyp', 'qt  ');
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects an stsd box with non-zero flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectStsdUnsupportedFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported stsd box flags');
+
+        $payload = pack('N', 0);
+        $stsd    = $this->fullBox('stsd', $payload, 0, 1); // flags=1
+        $stbl    = $this->box('stbl', $stsd);
+        $minf    = $this->box('minf', $stbl);
+
+        $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+
+        $mdia = $this->box('mdia', $hdlr . $minf);
+        $trak = $this->box('trak', $mdia);
+        $moov = $this->box('moov', $trak);
+        $ftyp = $this->box('ftyp', 'qt  ');
+
+        $extractor = $this->createExtractor($ftyp . $moov);
+        $extractor->extract();
+    }
+
+    /**
      * Builds an infe box with version 4, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported infe versions.
      *
