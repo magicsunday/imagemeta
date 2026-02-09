@@ -540,17 +540,27 @@ final class IccParser
             return false;
         }
 
-        $entries = [];
-        $cursor  = $tagCountOffset + 4;
+        $entries   = [];
+        $seenSigs  = [];
+        $offsetMap = [];
+        $cursor    = $tagCountOffset + 4;
 
         for ($i = 0; $i < $tagCount; ++$i) {
             if (($cursor + self::TAG_RECORD_LENGTH) > $length) {
                 return false;
             }
 
-            $offset = $this->uInt32Be(substr($data, $cursor + 4, 4));
-            $size   = $this->uInt32Be(substr($data, $cursor + 8, 4));
+            $signature = substr($data, $cursor, 4);
+            $offset    = $this->uInt32Be(substr($data, $cursor + 4, 4));
+            $size      = $this->uInt32Be(substr($data, $cursor + 8, 4));
             $cursor += self::TAG_RECORD_LENGTH;
+
+            // ICC.1:2022 §7.3: Tag signatures must be unique.
+            if (isset($seenSigs[$signature])) {
+                return false;
+            }
+
+            $seenSigs[$signature] = true;
 
             if ($size === 0) {
                 continue;
@@ -568,28 +578,46 @@ final class IccParser
                 return false;
             }
 
+            // ICC.1:2022 §7.3: Shared offsets must have identical sizes.
+            if (isset($offsetMap[$offset])) {
+                if ($offsetMap[$offset] !== $size) {
+                    return false;
+                }
+            } else {
+                $offsetMap[$offset] = $size;
+            }
+
             $entries[] = [
                 'offset' => $offset,
                 'size'   => $size,
             ];
         }
 
-        if ($entries === []) {
+        // Deduplicate entries with shared offsets (already validated for size equality).
+        $uniqueEntries = [];
+        foreach ($offsetMap as $offset => $size) {
+            $uniqueEntries[] = [
+                'offset' => $offset,
+                'size'   => $size,
+            ];
+        }
+
+        if ($uniqueEntries === []) {
             return $this->paddingIsNull($data, $tableEnd, $length - $tableEnd);
         }
 
         usort(
-            $entries,
+            $uniqueEntries,
             static fn (array $left, array $right): int => $left['offset'] <=> $right['offset'],
         );
 
-        if ($entries[0]['offset'] !== $tableEnd) {
+        if ($uniqueEntries[0]['offset'] !== $tableEnd) {
             return false;
         }
 
         $cursor = $tableEnd;
 
-        foreach ($entries as $entry) {
+        foreach ($uniqueEntries as $entry) {
             if ($entry['offset'] < $cursor) {
                 return false;
             }

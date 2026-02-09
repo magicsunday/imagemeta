@@ -266,6 +266,67 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Builds a profile with two tags sharing the same signature.
+     * Confirms the parser rejects duplicate tag signatures per ICC.1:2022 §7.3.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsDuplicateTagSignatures(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // Current profile: 1 tag (desc). Add a second 'desc' entry:
+        // Increase tag count to 2, insert another 12-byte record, adjust offsets/size.
+        // Header + tag_count(4) + 2*record(24) = 156. desc data = 100 bytes.
+        // Total = 256 bytes.
+        $header = substr($profile, 0, 128);
+        // Set tag count = 2
+        $tagTable = pack('N', 2);
+        // desc #1 at offset 156 (header+4+24), size 100
+        $tagTable .= 'desc' . pack('N', 156) . pack('N', 100);
+        // desc #2 at offset 156 (same, duplicate signature)
+        $tagTable .= 'desc' . pack('N', 156) . pack('N', 100);
+        // desc data (100 bytes)
+        $descData = substr($profile, 144, 100);
+        // Assemble and update profile size
+        $newProfile = $header . $tagTable . $descData;
+        $newProfile = substr_replace($newProfile, pack('N', strlen($newProfile)), 0, 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($newProfile));
+    }
+
+    /**
+     * Builds a profile with two tags sharing the same offset but different sizes.
+     * Confirms the parser rejects mismatched shared-offset sizes per ICC.1:2022 §7.3.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsSharedOffsetSizeMismatch(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+
+        // 2 tags with different signatures but same offset, different sizes.
+        $header   = substr($profile, 0, 128);
+        $tagTable = pack('N', 2);
+        // 'desc' at offset 156, size 100
+        $tagTable .= 'desc' . pack('N', 156) . pack('N', 100);
+        // 'cprt' at offset 156, size 96 (different!)
+        $tagTable .= 'cprt' . pack('N', 156) . pack('N', 96);
+        // desc data (100 bytes)
+        $descData   = substr($profile, 144, 100);
+        $newProfile = $header . $tagTable . $descData;
+        $newProfile = substr_replace($newProfile, pack('N', strlen($newProfile)), 0, 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($newProfile));
+    }
+
+    /**
      * Modifies the version bytes to an older ICC encoding.
      * This verifies legacy version parsing uses the correct byte layout.
      *
