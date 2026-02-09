@@ -270,6 +270,62 @@ final class TiffExifParser
             'typeName' => 'BYTE',
             'spec'     => 'DNG 1.7.1.0',
         ],
+        DngTag::CFA_LAYOUT => [
+            'name'     => 'CFALayout',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::BASELINE_EXPOSURE => [
+            'name'     => 'BaselineExposure',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SRATIONAL,
+            'typeName' => 'SRATIONAL',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::BAYER_GREEN_SPLIT => [
+            'name'     => 'BayerGreenSplit',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_LONG,
+            'typeName' => 'LONG',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::MAKER_NOTE_SAFETY => [
+            'name'     => 'MakerNoteSafety',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::CALIBRATION_ILLUMINANT_1 => [
+            'name'     => 'CalibrationIlluminant1',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::CALIBRATION_ILLUMINANT_2 => [
+            'name'     => 'CalibrationIlluminant2',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::RAW_DATA_UNIQUE_ID => [
+            'name'     => 'RawDataUniqueID',
+            'count'    => 16,
+            'type'     => TiffConst::TYPE_BYTE,
+            'typeName' => 'BYTE',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::DEFAULT_USER_CROP => [
+            'name'     => 'DefaultUserCrop',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
     ];
 
     private const int ASCII_PRINTABLE_MIN = 0x20;

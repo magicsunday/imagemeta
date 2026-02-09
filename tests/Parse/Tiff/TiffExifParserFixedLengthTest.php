@@ -24,6 +24,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -59,6 +60,7 @@ use function substr;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
+#[UsesClass(DngTag::class)]
 final class TiffExifParserFixedLengthTest extends TestCase
 {
     /**
@@ -179,6 +181,54 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 TiffConst::TYPE_SHORT,
                 1,
                 "\x01\x00",
+            ],
+            'CFALayout count 1' => [
+                DngTag::CFA_LAYOUT,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x01\x00",
+            ],
+            'BaselineExposure count 1' => [
+                DngTag::BASELINE_EXPOSURE,
+                TiffConst::TYPE_SRATIONAL,
+                1,
+                "\x00\x00\x00\x01\x00\x00\x00\x01",
+            ],
+            'BayerGreenSplit count 1' => [
+                DngTag::BAYER_GREEN_SPLIT,
+                TiffConst::TYPE_LONG,
+                1,
+                "\x00\x00\x00\x00",
+            ],
+            'MakerNoteSafety count 1' => [
+                DngTag::MAKER_NOTE_SAFETY,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x01\x00",
+            ],
+            'CalibrationIlluminant1 count 1' => [
+                DngTag::CALIBRATION_ILLUMINANT_1,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x15\x00",
+            ],
+            'CalibrationIlluminant2 count 1' => [
+                DngTag::CALIBRATION_ILLUMINANT_2,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x17\x00",
+            ],
+            'RawDataUniqueID count 16' => [
+                DngTag::RAW_DATA_UNIQUE_ID,
+                TiffConst::TYPE_BYTE,
+                16,
+                str_repeat("\xAB", 16),
+            ],
+            'DefaultUserCrop count 4' => [
+                DngTag::DEFAULT_USER_CROP,
+                TiffConst::TYPE_RATIONAL,
+                4,
+                str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 4),
             ],
         ];
     }

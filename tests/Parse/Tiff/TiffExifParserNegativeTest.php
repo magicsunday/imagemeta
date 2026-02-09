@@ -827,6 +827,27 @@ final class TiffExifParserNegativeTest extends TestCase
                 "\x01\x07\x01",
                 'DNGBackwardVersion must contain exactly 4 bytes per DNG 1.7.1.0.',
             ],
+            'CFALayout expects 1 SHORT' => [
+                DngTag::CFA_LAYOUT,
+                TiffConst::TYPE_SHORT,
+                2,
+                "\x01\x00\x02\x00",
+                'CFALayout must contain exactly 1 bytes per DNG 1.7.1.0.',
+            ],
+            'BaselineExposure expects 1 SRATIONAL' => [
+                DngTag::BASELINE_EXPOSURE,
+                TiffConst::TYPE_SRATIONAL,
+                2,
+                str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+                'BaselineExposure must contain exactly 1 bytes per DNG 1.7.1.0.',
+            ],
+            'RawDataUniqueID expects 16 BYTE' => [
+                DngTag::RAW_DATA_UNIQUE_ID,
+                TiffConst::TYPE_BYTE,
+                8,
+                str_repeat("\xAB", 8),
+                'RawDataUniqueID must contain exactly 16 bytes per DNG 1.7.1.0.',
+            ],
         ];
     }
 
