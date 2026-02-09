@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -734,6 +735,20 @@ final class TiffExifParserNegativeTest extends TestCase
                 3,
                 "\x02\x03\x00",
                 'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8.',
+            ],
+            'DNGVersion expects 4 BYTE' => [
+                DngTag::DNG_VERSION,
+                TiffConst::TYPE_BYTE,
+                3,
+                "\x01\x07\x01",
+                'DNGVersion must contain exactly 4 bytes per DNG 1.7.1.0.',
+            ],
+            'DNGBackwardVersion expects 4 BYTE' => [
+                DngTag::DNG_BACKWARD_VERSION,
+                TiffConst::TYPE_BYTE,
+                3,
+                "\x01\x07\x01",
+                'DNGBackwardVersion must contain exactly 4 bytes per DNG 1.7.1.0.',
             ],
         ];
     }

@@ -28,6 +28,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesDecoderInterface;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
+use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 
 use function array_any;
@@ -177,6 +178,20 @@ final class TiffExifParser
             'type'     => TiffConst::TYPE_ASCII,
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.6.6.2',
+        ],
+        DngTag::DNG_VERSION => [
+            'name'     => 'DNGVersion',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_BYTE,
+            'typeName' => 'BYTE',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::DNG_BACKWARD_VERSION => [
+            'name'     => 'DNGBackwardVersion',
+            'count'    => 4,
+            'type'     => TiffConst::TYPE_BYTE,
+            'typeName' => 'BYTE',
+            'spec'     => 'DNG 1.7.1.0',
         ],
     ];
 
