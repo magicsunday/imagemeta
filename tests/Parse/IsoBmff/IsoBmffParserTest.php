@@ -2190,6 +2190,45 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects duplicate meta boxes inside a moov container.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDuplicateMetaInMoov(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate meta box in moov');
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr);
+        $moov = $this->box('moov', $meta . $meta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * Rejects duplicate meta boxes inside a udta container.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDuplicateMetaInUdta(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate meta box in udta');
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr);
+        $udta = $this->box('udta', $meta . $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
      * Wraps raw bytes in a temporary stream-backed extractor.
      * This helper keeps byte-length bookkeeping aligned with the payload.
      *

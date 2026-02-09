@@ -408,8 +408,17 @@ final readonly class IsoBmffParser
      */
     private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
+        $metaSeen = false;
+
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
+                // QuickTime File Format 2012, "Metadata Structure": only one
+                // metadata atom is allowed per container location.
+                if ($metaSeen) {
+                    throw new ParseError('duplicate meta box in moov');
+                }
+
+                $metaSeen = true;
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_UDTA) {
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
@@ -469,8 +478,17 @@ final readonly class IsoBmffParser
      */
     private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
+        $metaSeen = false;
+
         foreach ($this->walkChildren($udta, allowTrailingTerminator: true) as $child) {
             if ($child->type === self::BOX_META) {
+                // QuickTime File Format 2012, "Metadata Structure": only one
+                // metadata atom is allowed per container location.
+                if ($metaSeen) {
+                    throw new ParseError('duplicate meta box in udta');
+                }
+
+                $metaSeen = true;
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             }
         }

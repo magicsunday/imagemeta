@@ -84,7 +84,7 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function decodesLocalizedCameraModelByteAsUtf8String(): void
     {
-        $model     = "Kamera Modell\0";
+        $model     = "Camera Model\0";
         $ifdOffset = 8;
         $ifdSize   = 2 + 12 + 4;
         $valOffset = $ifdOffset + $ifdSize;
@@ -105,7 +105,7 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $entry = $parsed->ifd0->get(DngTag::LOCALIZED_CAMERA_MODEL);
         self::assertNotNull($entry);
-        self::assertSame('Kamera Modell', $entry->value);
+        self::assertSame('Camera Model', $entry->value);
     }
 
     /**
