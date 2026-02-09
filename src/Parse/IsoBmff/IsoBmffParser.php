@@ -1688,10 +1688,14 @@ final readonly class IsoBmffParser
         }
 
         $version = $win->readU8();
-        $this->readUInt24($win); // flags
+        $flags   = $this->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
             throw new ParseError('unsupported iinf box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported iinf box flags');
         }
 
         if ($version === 1 && $iinf->contentSize < 8) {
@@ -1746,10 +1750,14 @@ final readonly class IsoBmffParser
         }
 
         $version = $win->readU8();
-        $this->readUInt24($win);
+        $flags   = $this->readUInt24($win);
 
         if ($version > 3) {
             throw new ParseError('unsupported infe box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported infe box flags');
         }
 
         if ($version === 0 || $version === 1) {
@@ -1931,10 +1939,14 @@ final readonly class IsoBmffParser
         }
 
         $version = $win->readU8();
-        $this->readUInt24($win);
+        $flags   = $this->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
             throw new ParseError('unsupported pitm box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported pitm box flags');
         }
 
         if ($version === 0) {

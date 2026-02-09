@@ -1923,6 +1923,66 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an iinf box with non-zero flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIinfUnsupportedFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported iinf box flags');
+
+        $iinf = $this->fullBox('iinf', pack('n', 0), 0, 1); // flags=1
+        $meta = $this->fullBox('meta', $iinf);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects an infe box with non-zero flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectInfeUnsupportedFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported infe box flags');
+
+        $infePayload = pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $infe        = $this->fullBox('infe', $infePayload, 2, 1); // flags=1
+        $iinf        = $this->fullBox('iinf', pack('n', 1) . $infe);
+        $meta        = $this->fullBox('meta', $iinf);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects a pitm box with non-zero flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectPitmUnsupportedFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported pitm box flags');
+
+        $pitm = $this->fullBox('pitm', pack('n', 1), 0, 1); // flags=1
+        $iinf = $this->fullBox('iinf', pack('n', 0));
+        $meta = $this->fullBox('meta', $iinf . $pitm);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Rejects a dref url entry with non-zero version.
      *
      * @return void
