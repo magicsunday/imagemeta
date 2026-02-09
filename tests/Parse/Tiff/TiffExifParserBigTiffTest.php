@@ -90,20 +90,20 @@ final class TiffExifParserBigTiffTest extends TestCase
 
     /**
      * Sets the first IFD offset to zero in the BigTIFF header.
-     * Verifies the parser treats it as an empty directory rather than reading entries.
+     * EXIF 3.0 §4.5.1 requires a valid 0th IFD offset; zero is rejected.
      *
      * @return void
      */
     #[Test]
-    public function handlesZeroFirstIfdOffsetInBigTiff(): void
+    public function rejectsZeroFirstIfdOffsetInBigTiff(): void
     {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('missing 0th IFD offset');
+
         $blob = $this->buildBigTiffHeader(8, 0, 0);
 
         $reader = new TiffExifParser();
-        $result = $reader->parseFromBlob($blob);
-
-        // Zero offset should result in empty IFD
-        self::assertCount(0, $result->ifd0->entries);
+        $reader->parseFromBlob($blob);
     }
 
     /**

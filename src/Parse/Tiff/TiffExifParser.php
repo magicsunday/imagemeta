@@ -396,14 +396,27 @@ final class TiffExifParser
             $this->bigTiff = true;
             $this->parseBigTiffHeader();
             $firstIfd = $this->readBigTiffOffsetValue();
-            $ifd0     = $this->readIfd($firstIfd);
+
+            // EXIF 3.0 §4.5.1: the 0th IFD offset must point past the header.
+            if (($firstIfd instanceof UInt64) && $firstIfd->isZero()) {
+                throw new ParseError('missing 0th IFD offset');
+            }
+
+            $ifd0 = $this->readIfd($firstIfd);
         } elseif ($magic === TiffConst::MAGIC_CLASSIC) {
             $this->bigTiff = false;
             // Classic TIFF header layout per EXIF 3.0 §4.5.1 and TIFF 6.0 §8
             // stores the first IFD offset as a 32-bit pointer immediately
             // after the byte-order and magic fields.
             $firstIfd = $this->readU32();
-            $ifd0     = $this->readIfd($firstIfd);
+
+            // EXIF 3.0 §4.5.1: the 0th IFD offset must be non-zero and point
+            // past the classic TIFF header.
+            if ($firstIfd < TiffConst::HEADER_SIZE_CLASSIC) {
+                throw new ParseError('missing 0th IFD offset');
+            }
+
+            $ifd0 = $this->readIfd($firstIfd);
         } else {
             throw new ParseError(
                 sprintf(

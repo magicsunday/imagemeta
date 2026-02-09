@@ -40,6 +40,18 @@ final class TiffConst
     public const int MAGIC_BIG_TIFF = self::MAGIC_BIG;
 
     /**
+     * Size in bytes of the classic TIFF file header (byte order + magic + IFD offset).
+     * TIFF 6.0 §2.1; EXIF 3.0 §4.5.1.
+     */
+    public const int HEADER_SIZE_CLASSIC = 8;
+
+    /**
+     * Size in bytes of the BigTIFF file header (byte order + magic + offset size + reserved + IFD offset).
+     * BigTIFF specification; EXIF 3.0 §4.5.1.
+     */
+    public const int HEADER_SIZE_BIG = 16;
+
+    /**
      * 8-bit unsigned integer.
      * TIFF 6.0 §2.2; EXIF 3.0 §4.5.2 Table 3.
      */
