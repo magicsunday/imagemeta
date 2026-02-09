@@ -772,12 +772,18 @@ final class IccParser
             return null;
         }
 
+        // ICC.1:2022 §10.13: UTF-16BE must consist of complete code units.
+        if ((strlen($data) % 2) !== 0) {
+            throw new ParseError('Odd-length UTF-16BE payload in ICC mluc record');
+        }
+
         if (function_exists('mb_convert_encoding')) {
             return mb_convert_encoding($data, 'UTF-8', 'UTF-16BE');
         }
 
         if (function_exists('iconv')) {
-            $converted = iconv('UTF-16BE', 'UTF-8//IGNORE', $data);
+            // Strict conversion without //IGNORE to reject malformed sequences.
+            $converted = iconv('UTF-16BE', 'UTF-8', $data);
 
             return $converted === false ? null : $converted;
         }

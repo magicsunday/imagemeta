@@ -453,6 +453,97 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects odd-length UTF-16BE payload in ICC mluc record.
+     * ICC.1:2022 §10.13: UTF-16BE must consist of complete code units.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOddLengthUtf16InMluc(): void
+    {
+        $profile = $this->buildMlucProfile("\x00\x48\x00\x65\x00"); // 5 bytes = odd
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Odd-length UTF-16BE payload');
+
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Parses a valid UTF-16BE mluc description.
+     * ICC.1:2022 §10.13: mluc record with even-length UTF-16BE string.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesValidMlucDescription(): void
+    {
+        // "Hi" in UTF-16BE
+        $utf16 = "\x00\x48\x00\x69";
+
+        $profile = $this->buildMlucProfile($utf16);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('Hi', $result['description']);
+    }
+
+    /**
+     * Builds a minimal ICC profile with an mluc description tag containing the given UTF-16BE string.
+     */
+    private function buildMlucProfile(string $utf16String): string
+    {
+        // ICC header (128 bytes)
+        $header = pack('N', 0)           // Profile size (placeholder, patched below)
+            . str_repeat("\0", 4)        // Preferred CMM type
+            . pack('N', 0x04200000)      // Version 4.2.0
+            . str_repeat("\0", 4)        // Device class
+            . 'RGB '                     // Color space
+            . 'XYZ '                     // PCS
+            . str_repeat("\0", 12)       // Date/time (year=0 → null)
+            . 'acsp'                     // Profile signature
+            . str_repeat("\0", 28)       // Primary platform + flags + device mfg + etc.
+            . pack('N', 1)              // Rendering intent
+            . str_repeat("\0", 12)       // PCS illuminant
+            . str_repeat("\0", 16)       // Profile ID
+            . str_repeat("\0", 28);      // Reserved
+
+        // Pad header to exactly 128 bytes
+        $header = str_pad($header, 128, "\0");
+
+        // mluc tag data: signature + reserved + recordCount + recordSize + record + string
+        $stringOffset = 16 + 12; // after mluc header (16) + 1 record (12)
+        $mlucTag      = 'mluc'
+            . pack('N', 0)               // Reserved
+            . pack('N', 1)               // Record count
+            . pack('N', 12)              // Record size
+            . 'enUS'                     // Language + country
+            . pack('N', strlen($utf16String)) // String length
+            . pack('N', $stringOffset)   // String offset (relative to tag start)
+            . $utf16String;
+
+        // ICC.1:2022 §7.3: tag size must be 4-byte aligned
+        $paddedSize = (int) (ceil(strlen($mlucTag) / 4) * 4);
+        $mlucTag    = str_pad($mlucTag, $paddedSize, "\0");
+
+        // Tag table: 1 entry (desc)
+        $tagOffset = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
+        $tagTable  = pack('N', 1)        // Tag count
+            . 'desc'                     // Tag signature
+            . pack('N', $tagOffset)      // Offset to tag data
+            . pack('N', $paddedSize);    // Tag size (4-byte aligned)
+
+        $profile = $header . $tagTable . $mlucTag;
+
+        // Patch profile size
+        return pack('N', strlen($profile)) . substr($profile, 4);
+    }
+
+    /**
      * @param int    $sequence Sequence index of the ICC fragment.
      * @param int    $count    Total number of ICC fragments.
      * @param string $payload  Raw ICC fragment payload.
