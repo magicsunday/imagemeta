@@ -1867,6 +1867,75 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an hdlr box with non-zero version.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectHdlrUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported hdlr box version');
+
+        $hdlrPayload = "\x01\x00\x00\x00"         // version=1, flags=0
+            . "\x00\x00\x00\x00"                   // pre_defined=0
+            . 'vide'                               // handler_type
+            . str_repeat("\0", 12);                // reserved
+        $hdlr = $this->box('hdlr', $hdlrPayload);
+        $meta = $this->fullBox('meta', $hdlr);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects an hdlr box with non-zero flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectHdlrUnsupportedFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported hdlr box flags');
+
+        $hdlrPayload = "\x00\x00\x00\x01"         // version=0, flags=1
+            . "\x00\x00\x00\x00"                   // pre_defined=0
+            . 'vide'                               // handler_type
+            . str_repeat("\0", 12);                // reserved
+        $hdlr = $this->box('hdlr', $hdlrPayload);
+        $meta = $this->fullBox('meta', $hdlr);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Rejects an hdlr box with non-zero pre_defined field.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectHdlrNonZeroPreDefined(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('hdlr pre_defined must be 0');
+
+        $hdlrPayload = "\x00\x00\x00\x00"         // version=0, flags=0
+            . "\x00\x00\x00\x01"                   // pre_defined=1
+            . 'vide'                               // handler_type
+            . str_repeat("\0", 12);                // reserved
+        $hdlr = $this->box('hdlr', $hdlrPayload);
+        $meta = $this->fullBox('meta', $hdlr);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Wraps raw bytes in a temporary stream-backed extractor.
      * This helper keeps byte-length bookkeeping aligned with the payload.
      *

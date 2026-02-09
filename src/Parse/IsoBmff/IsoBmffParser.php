@@ -632,8 +632,23 @@ final readonly class IsoBmffParser
             throw new ParseError('hdlr box truncated');
         }
 
-        $win->read(4); // version/flags
-        $win->read(4); // pre-defined
+        $versionFlags = $win->read(4);
+        $version      = ord($versionFlags[0]);
+        $flags        = (ord($versionFlags[1]) << 16) | (ord($versionFlags[2]) << 8) | ord($versionFlags[3]);
+
+        if ($version !== 0) {
+            throw new ParseError('unsupported hdlr box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported hdlr box flags');
+        }
+
+        $preDefined = $win->readU32BE();
+
+        if ($preDefined !== 0) {
+            throw new ParseError('hdlr pre_defined must be 0');
+        }
 
         $handler = $win->read(4);
         $win->read(12); // reserved
