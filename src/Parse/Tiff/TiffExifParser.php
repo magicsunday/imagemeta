@@ -179,6 +179,13 @@ final class TiffExifParser
             'typeName' => 'ASCII',
             'spec'     => 'EXIF 3.0 §4.6.6.6.2',
         ],
+        ExifTag::GPS_ALTITUDE_REF => [
+            'name'     => 'GPSAltitudeRef',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_BYTE,
+            'typeName' => 'BYTE',
+            'spec'     => 'EXIF 3.0 §4.6.7.1.6',
+        ],
         ExifTag::GPS_DIFFERENTIAL => [
             'name'     => 'GPSDifferential',
             'count'    => 1,

@@ -736,6 +736,13 @@ final class TiffExifParserNegativeTest extends TestCase
                 "\x02\x03\x00",
                 'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8.',
             ],
+            'GPSAltitudeRef expects 1 BYTE' => [
+                ExifTag::GPS_ALTITUDE_REF,
+                TiffConst::TYPE_BYTE,
+                2,
+                "\x00\x01",
+                'GPSAltitudeRef must contain exactly 1 bytes per EXIF 3.0 §4.6.7.1.6.',
+            ],
             'GPSDifferential expects 1 SHORT' => [
                 ExifTag::GPS_DIFFERENTIAL,
                 TiffConst::TYPE_SHORT,
