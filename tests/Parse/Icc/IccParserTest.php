@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Icc;
 
+use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Parse\Icc\IccParser;
 use MagicSunday\ImageMeta\Tests\Fixtures\Icc\IccFixtures;
 use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
@@ -33,6 +35,7 @@ use function substr_replace;
  * The tests confirm segment reassembly yields the same decoded header data as a full blob.
  * Error cases cover truncated or inconsistent profiles to ensure safe failures.
  */
+#[UsesClass(ParseError::class)]
 #[UsesClass(IccRenderingIntent::class)]
 #[CoversClass(IccParser::class)]
 final class IccParserTest extends TestCase
@@ -344,6 +347,109 @@ final class IccParserTest extends TestCase
 
         self::assertNotNull($result);
         self::assertSame('2.1.3', $result['version']);
+    }
+
+    /**
+     * Parses a profile with a valid ICC dateTimeNumber.
+     * ICC.1:2022 §7.2.6 requires valid calendar/time ranges.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesValidDateTimeNumber(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 2024, 6, 15, 12, 30, 45);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('2024:06:15 12:30:45', $result['profileDateTime']);
+    }
+
+    /**
+     * Rejects invalid month in ICC dateTimeNumber.
+     * ICC.1:2022 §7.2.6 requires month in range 1..12.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsInvalidMonthInDateTimeNumber(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 2024, 13, 15, 12, 0, 0);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Invalid ICC dateTimeNumber');
+
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Rejects invalid hour in ICC dateTimeNumber.
+     * ICC.1:2022 §7.2.6 requires hour in range 0..23.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsInvalidHourInDateTimeNumber(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 2024, 6, 15, 24, 0, 0);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Invalid ICC dateTimeNumber');
+
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Rejects Feb 29 on a non-leap year in ICC dateTimeNumber.
+     * ICC.1:2022 §7.2.6 requires a valid calendar date.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsInvalidLeapDayInDateTimeNumber(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 2023, 2, 29, 10, 0, 0);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Invalid ICC dateTimeNumber');
+
+        $decoder->decode($profile);
+    }
+
+    /**
+     * Accepts Feb 29 on a leap year in ICC dateTimeNumber.
+     * ICC.1:2022 §7.2.6: 2024 is a leap year, so Feb 29 is valid.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsLeapDayOnLeapYear(): void
+    {
+        $profile  = IccFixtures::minimalProfile();
+        $dateTime = pack('nnnnnn', 2024, 2, 29, 10, 0, 0);
+        $profile  = substr_replace($profile, $dateTime, IccTag::PROFILE_DATE_TIME, 12);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('2024:02:29 10:00:00', $result['profileDateTime']);
     }
 
     /**

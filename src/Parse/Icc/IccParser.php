@@ -21,6 +21,7 @@ use Throwable;
 
 use function array_key_exists;
 use function bin2hex;
+use function checkdate;
 use function class_exists;
 use function function_exists;
 use function iconv;
@@ -326,6 +327,24 @@ final class IccParser
 
         if ($year === 0) {
             return null;
+        }
+
+        // ICC.1:2022 §7.2.6: validate calendar/time field ranges.
+        if (
+            !checkdate($month, $day, $year)
+            || ($hour > 23)
+            || ($minute > 59)
+            || ($second > 59)
+        ) {
+            throw new ParseError(sprintf(
+                'Invalid ICC dateTimeNumber: %04d-%02d-%02d %02d:%02d:%02d',
+                $year,
+                $month,
+                $day,
+                $hour,
+                $minute,
+                $second,
+            ));
         }
 
         return sprintf('%04d:%02d:%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
