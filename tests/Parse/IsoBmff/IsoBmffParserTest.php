@@ -1827,6 +1827,46 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a meta box with FullBox version=1 instead of 0.
+     * Confirms the parser rejects unsupported meta versions.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMetaUnsupportedVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported meta box version');
+
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
+        $meta = $this->fullBox('meta', $iinf, 1); // version=1, flags=0
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
+     * Builds a meta box with FullBox flags=1 instead of 0.
+     * Confirms the parser rejects unsupported meta flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMetaUnsupportedFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported meta box flags');
+
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
+        $meta = $this->fullBox('meta', $iinf, 0, 1); // version=0, flags=1
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Wraps raw bytes in a temporary stream-backed extractor.
      * This helper keeps byte-length bookkeeping aligned with the payload.
      *

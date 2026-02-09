@@ -40,6 +40,7 @@ use function is_float;
 use function is_int;
 use function is_numeric;
 use function is_string;
+use function ord;
 use function preg_match;
 use function round;
 use function rtrim;
@@ -1012,11 +1013,40 @@ final readonly class IsoBmffParser
             $type = substr($peek, 8, 4);
 
             if ($this->isPrintableFourcc($type) && $this->isPlausibleBoxSize($size, $meta->contentSize - 4)) {
+                $this->validateMetaFullBoxHeader($peek);
+
                 return 4;
             }
         }
 
+        $this->validateMetaFullBoxHeader($peek);
+
         return 4;
+    }
+
+    /**
+     * Validates the FullBox version/flags header of a meta box.
+     *
+     * ISO/IEC 14496-12 §8.11.1: meta is FullBox('meta', version = 0, 0).
+     *
+     * @param string $peek First bytes of the meta box content.
+     */
+    private function validateMetaFullBoxHeader(string $peek): void
+    {
+        if (strlen($peek) < 4) {
+            return;
+        }
+
+        $version = ord($peek[0]);
+        $flags   = (ord($peek[1]) << 16) | (ord($peek[2]) << 8) | ord($peek[3]);
+
+        if ($version !== 0) {
+            throw new ParseError('unsupported meta box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported meta box flags');
+        }
     }
 
     /**
