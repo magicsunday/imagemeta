@@ -215,6 +215,57 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Rejects profiles where the declared size is below the 128-byte header minimum.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsProfileSizeBelowMinimum(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Set profileSize to 64 (below 128 minimum)
+        $profile = substr_replace($profile, pack('N', 64), 0, 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * Rejects profiles where the declared size does not match the actual payload length.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsProfileSizeMismatch(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Append 4 extra bytes without updating profileSize
+        $profile .= str_repeat("\0", 4);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * Rejects truncated profiles where the declared size exceeds available data.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsTruncatedProfile(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Truncate to 200 bytes while profileSize claims 244
+        $profile = substr($profile, 0, 200);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
      * Modifies the version bytes to an older ICC encoding.
      * This verifies legacy version parsing uses the correct byte layout.
      *

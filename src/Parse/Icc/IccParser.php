@@ -98,12 +98,19 @@ final class IccParser
 
         $profileSize = $this->uInt32Be(substr($data, IccTag::PROFILE_SIZE, 4));
         $length      = strlen($data);
-        if ($profileSize > $length) {
-            return null; // truncated payload
+
+        // ICC.1:2022 §7.2.2: Profile size must be at least the 128-byte header.
+        if ($profileSize < self::HEADER_LENGTH) {
+            return null;
         }
 
         // ICC.1:2022 §7.1: Profile size and tag table entries must be 4-byte aligned.
         if (($profileSize % 4) !== 0) {
+            return null;
+        }
+
+        // ICC.1:2022 §7.2.2: Profile size must match the actual payload length.
+        if ($profileSize !== $length) {
             return null;
         }
 
