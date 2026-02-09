@@ -105,15 +105,15 @@ final class TiffExifParser
         ExifTag::EXIF_VERSION => [
             'name'     => 'ExifVersion',
             'count'    => 4,
-            'type'     => TiffConst::TYPE_ASCII,
-            'typeName' => 'ASCII',
+            'type'     => TiffConst::TYPE_UNDEFINED,
+            'typeName' => 'UNDEFINED',
             'spec'     => 'EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1',
         ],
         ExifTag::FLASHPIX_VERSION => [
             'name'     => 'FlashpixVersion',
             'count'    => 4,
-            'type'     => TiffConst::TYPE_ASCII,
-            'typeName' => 'ASCII',
+            'type'     => TiffConst::TYPE_UNDEFINED,
+            'typeName' => 'UNDEFINED',
             'spec'     => 'EXIF 3.0 §4.6.6.1.2; EXIF 2.32 §4.6.6.1.2',
         ],
         ExifTag::COMPONENTS_CONFIGURATION => [
@@ -669,7 +669,12 @@ final class TiffExifParser
         $rule = self::FIXED_LENGTH_TAGS[$tag];
 
         if ($type !== $rule['type']) {
-            if (($type === TiffConst::TYPE_UNDEFINED) && ($rule['type'] === TiffConst::TYPE_ASCII)) {
+            // EXIF 3.0 §4.6.6.1.1/§4.6.6.1.2 specify UNDEFINED for version tags,
+            // but many cameras use ASCII. Accept both directions for compatibility.
+            if (
+                ($type === TiffConst::TYPE_UNDEFINED && $rule['type'] === TiffConst::TYPE_ASCII)
+                || ($type === TiffConst::TYPE_ASCII && $rule['type'] === TiffConst::TYPE_UNDEFINED)
+            ) {
                 return;
             }
 

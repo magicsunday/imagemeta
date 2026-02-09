@@ -92,13 +92,25 @@ final class TiffExifParserFixedLengthTest extends TestCase
     public static function validFixedLengthTagProvider(): array
     {
         return [
-            'ExifVersion count 4' => [
+            'ExifVersion UNDEFINED count 4' => [
+                ExifTag::EXIF_VERSION,
+                TiffConst::TYPE_UNDEFINED,
+                4,
+                '0300',
+            ],
+            'ExifVersion ASCII count 4' => [
                 ExifTag::EXIF_VERSION,
                 TiffConst::TYPE_ASCII,
                 4,
                 "030\0",
             ],
-            'FlashpixVersion count 4' => [
+            'FlashpixVersion UNDEFINED count 4' => [
+                ExifTag::FLASHPIX_VERSION,
+                TiffConst::TYPE_UNDEFINED,
+                4,
+                '0100',
+            ],
+            'FlashpixVersion ASCII count 4' => [
                 ExifTag::FLASHPIX_VERSION,
                 TiffConst::TYPE_ASCII,
                 4,

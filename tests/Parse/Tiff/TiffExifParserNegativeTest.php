@@ -708,16 +708,23 @@ final class TiffExifParserNegativeTest extends TestCase
     public static function invalidFixedLengthTagProvider(): array
     {
         return [
-            'ExifVersion expects 4 ASCII bytes' => [
+            'ExifVersion expects 4 UNDEFINED bytes' => [
                 ExifTag::EXIF_VERSION,
-                TiffConst::TYPE_ASCII,
+                TiffConst::TYPE_UNDEFINED,
                 3,
                 '010',
                 'ExifVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1.',
             ],
-            'FlashpixVersion expects 4 ASCII bytes' => [
+            'ExifVersion rejects SHORT type' => [
+                ExifTag::EXIF_VERSION,
+                TiffConst::TYPE_SHORT,
+                4,
+                "\x03\x00\x00\x00\x00\x00\x00\x00",
+                'ExifVersion must use TIFF type UNDEFINED per EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1.',
+            ],
+            'FlashpixVersion expects 4 UNDEFINED bytes' => [
                 ExifTag::FLASHPIX_VERSION,
-                TiffConst::TYPE_ASCII,
+                TiffConst::TYPE_UNDEFINED,
                 3,
                 '010',
                 'FlashpixVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.2; EXIF 2.32 §4.6.6.1.2.',

@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -437,7 +438,7 @@ final class TiffExifParserFuzzTest extends TestCase
 
         $undefinedData = "\x00\xFF\x01\xFE\x02\xFD\x03\xFC";
 
-        $blob .= pack('v', 0x9000)                    // ExifVersion
+        $blob .= pack('v', ExifTag::MAKER_NOTE)       // MakerNote (no fixed-length rule)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', strlen($undefinedData))
             . pack('V', 26);
