@@ -1868,11 +1868,15 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         $version = $win->readU8();
-        $this->readUInt24($win);
+        $flags   = $this->readUInt24($win);
 
         // ISO/IEC 14496-12 §8.11.3: only versions 0, 1 and 2 are defined
         if ($version > 2) {
             throw new ParseError('unsupported iloc box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported iloc box flags');
         }
 
         // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
@@ -1933,6 +1937,12 @@ final readonly class IsoBmffParser
                 $extentIndex = null;
                 if ($indexSize > 0) {
                     $extentIndex = $this->readUInt($win, $indexSize);
+
+                    // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based and 0 is
+                    // reserved. This only applies to construction_method=2 (item_offset).
+                    if ($constructionMethod === ConstructionMethod::ItemOffset->value && $extentIndex === 0) {
+                        throw new ParseError('iloc extent_index 0 is reserved');
+                    }
                 }
 
                 $extentOffset = $offsetSize > 0 ? $this->readUInt($win, $offsetSize) : 0;
@@ -2015,10 +2025,14 @@ final readonly class IsoBmffParser
         }
 
         $version = $win->readU8();
-        $this->readUInt24($win); // flags
+        $flags   = $this->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
             throw new ParseError('unsupported iref box version');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported iref box flags');
         }
 
         $references = [];

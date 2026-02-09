@@ -408,6 +408,25 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects an iloc box with non-zero flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocNonZeroFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported iloc box flags');
+
+        $ilocPayload = "\x44\x00" . pack('n', 0);
+        $iloc        = $this->fullBox('iloc', $ilocPayload, flags: 1);
+        $meta        = $this->fullBox('meta', $iloc);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $meta)->extract();
+    }
+
+    /**
      * Builds an iloc v0 box where the low nibble of the base_offset/index byte is non-zero.
      * This confirms the reserved nibble is validated per ISO/IEC 14496-12 §8.11.3.
      *
@@ -1182,21 +1201,21 @@ final class IsoBmffParserTest extends TestCase
             $payload .= "\x04"; // base_offset_size=0 (high nibble), index_size=4 (low nibble)
             $payload .= pack('n', 2); // item_count = 2
 
-            $payload .= pack('n', 1);
-            $payload .= pack('n', 0x0002);
-            $payload .= pack('n', 0);
-            $payload .= pack('n', 1);
-            $payload .= pack('N', 0);
-            $payload .= pack('N', 0);
-            $payload .= pack('N', $item1Length + 1);
+            $payload .= pack('n', 1);          // item_id = 1
+            $payload .= pack('n', 0x0002);     // construction_method=2 (item_offset)
+            $payload .= pack('n', 0);          // data_reference_index = 0
+            $payload .= pack('n', 1);          // extent_count = 1
+            $payload .= pack('N', 1);          // extent_index = 1 (1-based)
+            $payload .= pack('N', 0);          // extent_offset = 0
+            $payload .= pack('N', $item1Length + 1); // extent_length (too large!)
 
-            $payload .= pack('n', 2);
-            $payload .= pack('n', 0x0000);
-            $payload .= pack('n', 0);
-            $payload .= pack('n', 1);
-            $payload .= pack('N', 0);
-            $payload .= pack('N', $item2Offset);
-            $payload .= pack('N', $item2Length);
+            $payload .= pack('n', 2);          // item_id = 2
+            $payload .= pack('n', 0x0000);     // construction_method=0
+            $payload .= pack('n', 0);          // data_reference_index = 0
+            $payload .= pack('n', 1);          // extent_count = 1
+            $payload .= pack('N', 0);          // extent_index (irrelevant for method 0)
+            $payload .= pack('N', $item2Offset); // extent_offset
+            $payload .= pack('N', $item2Length); // extent_length
 
             return $this->fullBox('iloc', $payload, 1, 0);
         };
@@ -1284,6 +1303,26 @@ final class IsoBmffParserTest extends TestCase
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+    }
+
+    /**
+     * Rejects an iref box with non-zero flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIrefNonZeroFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('unsupported iref box flags');
+
+        $entryPayload = pack('n', 1) . pack('n', 1) . pack('n', 2);
+        $entry        = $this->box('dimg', $entryPayload);
+        $iref         = $this->fullBox('iref', $entry, flags: 1);
+        $meta         = $this->fullBox('meta', $iref);
+        $ftyp         = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $meta)->extract();
     }
 
     /**
