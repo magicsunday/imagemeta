@@ -712,6 +712,58 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * QuickTime File Format 2012, "Metadata Structure": an mdta meta box
+     * must contain a keys subatom. When keys is missing, the parser rejects
+     * the meta box.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMdtaMetaMissingKeys(): void
+    {
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
+        $moov = $this->box('moov', $this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('mdta meta box missing required keys subatom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * QuickTime File Format 2012, "Metadata Structure": an mdta meta box
+     * must contain an ilst subatom. When ilst is missing, the parser rejects
+     * the meta box.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMdtaMetaMissingIlst(): void
+    {
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys);
+        $moov = $this->box('moov', $this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('mdta meta box missing required ilst subatom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
      * Builds a keys atom with entries from different namespaces (mdta and a custom one).
      * Verifies the parser preserves the namespace: mdta keys are stored directly while
      * non-mdta keys are prefixed with the 4-byte namespace per QuickTime File Format 2012.

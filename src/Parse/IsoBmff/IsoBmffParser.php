@@ -1000,6 +1000,18 @@ final readonly class IsoBmffParser
             $ilstBoxes = [];
         }
 
+        // QuickTime File Format 2012, "Metadata Structure": a metadata atom with
+        // handler type 'mdta' must contain keys and ilst subatoms.
+        if ($handlerType === self::QUICKTIME_MDTA) {
+            if ($keysMaps === []) {
+                throw new ParseError('mdta meta box missing required keys subatom');
+            }
+
+            if ($ilstBoxes === []) {
+                throw new ParseError('mdta meta box missing required ilst subatom');
+            }
+        }
+
         return [
             'itemInfos'      => $itemInfos,
             'locations'      => $locations,
