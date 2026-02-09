@@ -182,6 +182,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 1,
                 "\x01",
             ],
+            'SubjectLocation count 2' => [
+                ExifTag::SUBJECT_LOCATION,
+                TiffConst::TYPE_SHORT,
+                2,
+                "\x00\x64\x00\xC8",
+            ],
             'GPSAltitudeRef count 1' => [
                 ExifTag::GPS_ALTITUDE_REF,
                 TiffConst::TYPE_BYTE,

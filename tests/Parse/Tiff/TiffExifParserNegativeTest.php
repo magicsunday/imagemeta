@@ -743,6 +743,20 @@ final class TiffExifParserNegativeTest extends TestCase
                 "\x02\x03\x00",
                 'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8.',
             ],
+            'SubjectLocation expects 2 SHORT' => [
+                ExifTag::SUBJECT_LOCATION,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x00\x64",
+                'SubjectLocation must contain exactly 2 bytes per EXIF 3.0 §4.6.6.7.29.',
+            ],
+            'SubjectLocation rejects LONG type' => [
+                ExifTag::SUBJECT_LOCATION,
+                TiffConst::TYPE_LONG,
+                2,
+                "\x00\x00\x00\x64\x00\x00\x00\xC8",
+                'SubjectLocation must use TIFF type SHORT per EXIF 3.0 §4.6.6.7.29.',
+            ],
             'LensSpecification expects 4 RATIONAL' => [
                 ExifTag::LENS_SPECIFICATION,
                 TiffConst::TYPE_RATIONAL,

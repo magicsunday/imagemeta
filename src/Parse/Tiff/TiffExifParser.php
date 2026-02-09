@@ -228,6 +228,13 @@ final class TiffExifParser
             'typeName' => 'RATIONAL',
             'spec'     => 'EXIF 3.0 §4.6.5.3.5',
         ],
+        ExifTag::SUBJECT_LOCATION => [
+            'name'     => 'SubjectLocation',
+            'count'    => 2,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'EXIF 3.0 §4.6.6.7.29',
+        ],
         ExifTag::GPS_TIME_STAMP => [
             'name'     => 'GPSTimeStamp',
             'count'    => 3,
