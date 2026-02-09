@@ -516,6 +516,42 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Rejects iloc boxes with duplicate item_ID entries.
+     * ISO/IEC 14496-12 §8.11.3: item_ID values must be unique within one iloc box.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectIlocDuplicateItemId(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate iloc item_ID 1');
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        // Version 0 iloc with 2 items sharing item_id=1
+        $ilocPayload = "\x44";         // offset_size=4, length_size=4
+        $ilocPayload .= "\x00";         // base_offset_size=0, index_size=0
+        $ilocPayload .= pack('n', 2);   // item_count = 2
+        // First item
+        $ilocPayload .= pack('n', 1);   // item_id = 1
+        $ilocPayload .= pack('n', 0);   // data_reference_index = 0
+        $ilocPayload .= pack('n', 0);   // extent_count = 0
+        // Second item (duplicate)
+        $ilocPayload .= pack('n', 1);   // item_id = 1 (duplicate)
+        $ilocPayload .= pack('n', 0);   // data_reference_index = 0
+        $ilocPayload .= pack('n', 0);   // extent_count = 0
+        $iloc = $this->fullBox('iloc', $ilocPayload);
+
+        $meta = $this->fullBox('meta', $iinf . $iloc);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Extracts XMP from three sources: uuid box, item-based XMP, and direct XMP box.
      * This verifies all XMP sources are collected and returned in the expected order.
      *

@@ -1961,6 +1961,11 @@ final readonly class IsoBmffParser
                 $extents[]    = ['offset' => $extentOffset, 'length' => $extentLength, 'index' => $extentIndex];
             }
 
+            // ISO/IEC 14496-12 §8.11.3: item_ID values must be unique within one iloc box.
+            if (isset($locations[$itemId])) {
+                throw new ParseError(sprintf('duplicate iloc item_ID %d', $itemId));
+            }
+
             $locations[$itemId] = [
                 'dataReferenceIndex' => $dataReferenceIndex,
                 'constructionMethod' => $constructionMethod,
