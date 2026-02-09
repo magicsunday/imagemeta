@@ -845,6 +845,63 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Decodes an unsigned 32-bit integer data box payload.
+     * QuickTime File Format 2012, Table 3-5, type code 22.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeUnsignedIntDataBoxPayload(): void
+    {
+        $key          = 'com.apple.quicktime.videoOrientation';
+        $payload      = pack('N', 0xFFFFFFFF);
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x16, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(0xFFFFFFFF, $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Decodes a float32 data box payload.
+     * QuickTime File Format 2012, Table 3-5, type code 23.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeFloat32DataBoxPayload(): void
+    {
+        $key          = 'com.apple.quicktime.videoOrientation';
+        $payload      = pack('G', 3.14);
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x17, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertEqualsWithDelta(3.14, $qtMeta->keys[$key], 0.001);
+    }
+
+    /**
+     * Decodes a float64 data box payload.
+     * QuickTime File Format 2012, Table 3-5, type code 24.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeFloat64DataBoxPayload(): void
+    {
+        $key          = 'com.apple.quicktime.videoOrientation';
+        $payload      = pack('E', 2.718281828);
+        $file         = $this->createQuickTimeKeysFileWithCustomKey($key, 0x18, $payload);
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertEqualsWithDelta(2.718281828, $qtMeta->keys[$key], 0.000001);
+    }
+
+    /**
      * Provides a numeric string value for a QuickTime key.
      * This ensures numeric strings are coerced to integer values.
      *

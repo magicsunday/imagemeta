@@ -232,19 +232,28 @@ final readonly class IsoBmffParser
     private const int DATA_TYPE_MAC_ROMAN = 7;
 
     /**
-     * QuickTime `data` box type code for signed 32-bit integer payloads.
+     * QuickTime `data` box type code for signed big-endian integer payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 21.
      */
-    private const int DATA_TYPE_INT32 = 0x15;
+    private const int DATA_TYPE_SIGNED_INT = 0x15;
 
     /**
-     * QuickTime `data` box type code for 32-bit floating point payloads.
+     * QuickTime `data` box type code for unsigned big-endian integer payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 22.
      */
-    private const int DATA_TYPE_FLOAT32 = 0x16;
+    private const int DATA_TYPE_UNSIGNED_INT = 0x16;
 
     /**
-     * QuickTime `data` box type code for 64-bit floating point payloads.
+     * QuickTime `data` box type code for 32-bit big-endian floating point payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 23.
      */
-    private const int DATA_TYPE_FLOAT64 = 0x17;
+    private const int DATA_TYPE_FLOAT32 = 0x17;
+
+    /**
+     * QuickTime `data` box type code for 64-bit big-endian floating point payloads.
+     * QuickTime File Format 2012, Table 3-5, type code 24.
+     */
+    private const int DATA_TYPE_FLOAT64 = 0x18;
 
     /**
      * FourCC for QuickTime mean payload in free-form metadata.
@@ -2363,14 +2372,22 @@ final readonly class IsoBmffParser
             return $trimmed;
         }
 
-        if ($type === self::DATA_TYPE_INT32) {
+        if ($type === self::DATA_TYPE_SIGNED_INT) {
             if ($payloadSize < 4) {
                 return $payload;
             }
 
-            $unsigned = Unpack::int('N', substr($payload, 0, 4), 'QuickTime int32 payload');
+            $unsigned = Unpack::int('N', substr($payload, 0, 4), 'QuickTime signed int payload');
 
             return $unsigned >= 0x80000000 ? $unsigned - 0x100000000 : $unsigned;
+        }
+
+        if ($type === self::DATA_TYPE_UNSIGNED_INT) {
+            if ($payloadSize < 4) {
+                return $payload;
+            }
+
+            return Unpack::int('N', substr($payload, 0, 4), 'QuickTime unsigned int payload');
         }
 
         if ($type === self::DATA_TYPE_FLOAT32) {
