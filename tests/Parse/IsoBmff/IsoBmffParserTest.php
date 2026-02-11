@@ -1436,9 +1436,9 @@ final class IsoBmffParserTest extends TestCase
         $keysPayload .= $keyName;
         $keys = $this->fullBox('keys', $keysPayload);
 
-        // Two data boxes with different locales
+        // Two data boxes with different locales (direct ISO codes, value > 255)
         $locale1  = 0x00000000; // default locale
-        $locale2  = 0x00010002; // country=1, language=2
+        $locale2  = 0x555315C7; // country='US' (ISO 3166), language='eng' (packed ISO 639-2/T)
         $dataBox1 = $this->box('data', pack('N', 1) . pack('N', $locale1) . 'first-value');
         $dataBox2 = $this->box('data', pack('N', 1) . pack('N', $locale2) . 'second-value');
         $entry    = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
@@ -1464,10 +1464,10 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame('first-value', $atoms[0]->value);
 
         self::assertSame(1, $atoms[1]->typeIndicator);
-        self::assertSame(0x00010002, $atoms[1]->locale);
+        self::assertSame(0x555315C7, $atoms[1]->locale);
         self::assertSame('second-value', $atoms[1]->value);
-        self::assertSame(1, $atoms[1]->countryIndicator());
-        self::assertSame(2, $atoms[1]->languageIndicator());
+        self::assertSame(0x5553, $atoms[1]->countryIndicator());
+        self::assertSame(0x15C7, $atoms[1]->languageIndicator());
     }
 
     /**
@@ -2738,6 +2738,122 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
         self::assertSame('no-itif-value', $qtMeta->keys[$key]);
+    }
+
+    /**
+     * Valid ctry and lang list atoms with locale index references parse without error.
+     */
+    #[Test]
+    public function parsesValidCtryAndLangWithLocaleIndicators(): void
+    {
+        $file = $this->createQuickTimeMetaWithLocale(
+            $this->buildLocaleListPayload([[0x5553, 0x4742]]),
+            $this->buildLocaleListPayload([[0x15C7, 0x1676]]),
+            (1 << 16) | 1,
+        );
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('locale-test', $qtMeta->keys['com.apple.quicktime.content.identifier']);
+    }
+
+    /**
+     * Locale country index without ctry list atom triggers ParseError.
+     */
+    #[Test]
+    public function rejectLocaleCountryIndexWithoutCtryAtom(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data atom locale country index 1 requires a ctry list atom');
+
+        $file = $this->createQuickTimeMetaWithLocale(null, null, 1 << 16);
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Locale country index exceeding ctry list entry count triggers ParseError.
+     */
+    #[Test]
+    public function rejectLocaleCountryIndexOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data atom locale country index 2 exceeds ctry list entry count 1');
+
+        $file = $this->createQuickTimeMetaWithLocale(
+            $this->buildLocaleListPayload([[0x5553]]),
+            null,
+            2 << 16,
+        );
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Malformed ctry atom with payload/entry_count mismatch triggers ParseError.
+     */
+    #[Test]
+    public function rejectMalformedCtryPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ctry atom');
+
+        // entry_count=2 but only provide data for 1 entry
+        $malformedPayload = pack('N', 2) . pack('n', 1) . pack('n', 0x5553);
+        $file             = $this->createQuickTimeMetaWithLocale($malformedPayload, null, 0);
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Builds a QuickTime file with optional ctry/lang atoms and a custom locale indicator.
+     *
+     * @param string|null $ctryPayload Raw ctry atom payload (after version/flags), or null to omit.
+     * @param string|null $langPayload Raw lang atom payload (after version/flags), or null to omit.
+     * @param int         $locale      32-bit locale indicator for the data atom.
+     */
+    private function createQuickTimeMetaWithLocale(?string $ctryPayload, ?string $langPayload, int $locale): string
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', $locale) . 'locale-test');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+
+        $extras = '';
+        if ($ctryPayload !== null) {
+            $extras .= $this->fullBox('ctry', $ctryPayload);
+        }
+
+        if ($langPayload !== null) {
+            $extras .= $this->fullBox('lang', $langPayload);
+        }
+
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst . $extras);
+        $moov = $this->box('moov', $meta);
+
+        return $this->box('ftyp', 'isom') . $moov;
+    }
+
+    /**
+     * Builds a locale list atom payload (without version/flags header) from arrays of code lists.
+     *
+     * @param list<list<int>> $lists Each inner array is a list of 16-bit ISO codes.
+     */
+    private function buildLocaleListPayload(array $lists): string
+    {
+        $payload = pack('N', count($lists));
+        foreach ($lists as $codes) {
+            $payload .= pack('n', count($codes));
+            foreach ($codes as $code) {
+                $payload .= pack('n', $code);
+            }
+        }
+
+        return $payload;
     }
 
     /**

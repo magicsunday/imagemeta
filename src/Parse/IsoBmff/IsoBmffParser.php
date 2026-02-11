@@ -272,6 +272,16 @@ final readonly class IsoBmffParser
     private const string BOX_ITIF = 'itif';
 
     /**
+     * FourCC for QuickTime country list atom.
+     */
+    private const string BOX_CTRY = 'ctry';
+
+    /**
+     * FourCC for QuickTime language list atom.
+     */
+    private const string BOX_LANG = 'lang';
+
+    /**
      * FourCC for QuickTime mean payload in free-form metadata.
      */
     private const string FREEFORM_MEAN = 'mean';
@@ -310,6 +320,11 @@ final readonly class IsoBmffParser
      * Maximum number of keys in a keys box to prevent DoS attacks.
      */
     private const int MAX_KEYS_ENTRIES = 1000;
+
+    /**
+     * Maximum number of entries in a ctry/lang locale list atom.
+     */
+    private const int MAX_LOCALE_LIST_ENTRIES = 255;
 
     /**
      * QuickTime 'mdta' FourCC identifying the metadata type scheme.
@@ -984,7 +999,7 @@ final readonly class IsoBmffParser
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
-        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms, $payloads['hasMhdr']);
+        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms, $payloads['hasMhdr'], $payloads['countryLists'], $payloads['languageLists']);
     }
 
     /**
@@ -1000,7 +1015,9 @@ final readonly class IsoBmffParser
      *     idatPayload: ?string,
      *     keysMaps: list<array<int, QuickTimeKeyEntry>>,
      *     ilstBoxes: list<BoxDescriptor>,
-     *     hasMhdr: bool
+     *     hasMhdr: bool,
+     *     countryLists: list<list<int>>,
+     *     languageLists: list<list<int>>
      * }
      */
     private function collectDirectPayloads(BoxDescriptor $meta): array
@@ -1024,6 +1041,10 @@ final readonly class IsoBmffParser
         $ilstBoxes   = [];
         $handlerType = null;
         $hasMhdr     = false;
+        /** @var list<list<int>> $countryLists */
+        $countryLists = [];
+        /** @var list<list<int>> $languageLists */
+        $languageLists = [];
 
         $childOffset = $this->detectMetaChildOffset($meta);
         foreach ($this->walkChildren($meta, $childOffset) as $child) {
@@ -1083,6 +1104,12 @@ final readonly class IsoBmffParser
                 case self::BOX_ILST:
                     $ilstBoxes[] = $child;
                     break;
+                case self::BOX_CTRY:
+                    $countryLists = $this->parseLocaleListAtom($child, 'ctry');
+                    break;
+                case self::BOX_LANG:
+                    $languageLists = $this->parseLocaleListAtom($child, 'lang');
+                    break;
             }
         }
 
@@ -1091,8 +1118,10 @@ final readonly class IsoBmffParser
         // When hdlr is present but declares a different handler (e.g. 'pict' in
         // ISOBMFF), discard collected keys/ilst to prevent misinterpretation.
         if (($handlerType !== null) && ($handlerType !== self::QUICKTIME_MDTA)) {
-            $keysMaps  = [];
-            $ilstBoxes = [];
+            $keysMaps      = [];
+            $ilstBoxes     = [];
+            $countryLists  = [];
+            $languageLists = [];
         }
 
         // QuickTime File Format 2012, "Metadata Structure": a metadata atom with
@@ -1125,6 +1154,8 @@ final readonly class IsoBmffParser
             'keysMaps'       => $keysMaps,
             'ilstBoxes'      => $ilstBoxes,
             'hasMhdr'        => $hasMhdr,
+            'countryLists'   => $countryLists,
+            'languageLists'  => $languageLists,
         ];
     }
 
@@ -1319,10 +1350,12 @@ final readonly class IsoBmffParser
      * @param list<BoxDescriptor>                 $ilstBoxes     Item list box descriptors.
      * @param QuickTimeDataAtomList               $existingAtoms Existing data atom list.
      * @param bool                                $hasMhdr       Whether a metadata header atom was found.
+     * @param list<list<int>>                     $countryLists  Parsed country list arrays from ctry atom.
+     * @param list<list<int>>                     $languageLists Parsed language list arrays from lang atom.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
      */
-    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false): array
+    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false, array $countryLists = [], array $languageLists = []): array
     {
         /** @var array<int, QuickTimeKeyEntry> $keyIndex */
         $keyIndex   = [];
@@ -1337,7 +1370,7 @@ final readonly class IsoBmffParser
 
         // Merge all ilst entries into the cumulative QuickTime metadata set.
         foreach ($ilstBoxes as $ilst) {
-            [$ilstKeys, $ilstAtoms, $ilstHasItemIds] = $this->parseIlst($ilst, $keyIndex);
+            [$ilstKeys, $ilstAtoms, $ilstHasItemIds] = $this->parseIlst($ilst, $keyIndex, $countryLists, $languageLists);
             $existing                                = $this->mergeAssociative($existing, $ilstKeys);
             $existingAtoms                           = $this->mergeAtomLists($existingAtoms, $ilstAtoms);
 
@@ -2277,12 +2310,14 @@ final readonly class IsoBmffParser
      * Returns the scalar key map (first value per key for backward compatibility) and a
      * structured atom list preserving all data atoms with their type and locale indicators.
      *
-     * @param BoxDescriptor                 $ilst     Box descriptor for the `ilst` container.
-     * @param array<int, QuickTimeKeyEntry> $keyIndex Structured key entries from parseKeys().
+     * @param BoxDescriptor                 $ilst          Box descriptor for the `ilst` container.
+     * @param array<int, QuickTimeKeyEntry> $keyIndex      Structured key entries from parseKeys().
+     * @param list<list<int>>               $countryLists  Parsed country list arrays from ctry atom.
+     * @param list<list<int>>               $languageLists Parsed language list arrays from lang atom.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList, 2: bool}
      */
-    private function parseIlst(BoxDescriptor $ilst, array $keyIndex): array
+    private function parseIlst(BoxDescriptor $ilst, array $keyIndex, array $countryLists = [], array $languageLists = []): array
     {
         $result      = [];
         $atomsList   = [];
@@ -2309,6 +2344,7 @@ final readonly class IsoBmffParser
             foreach ($this->walkChildren($entry) as $sub) {
                 if ($sub->type === self::BOX_DATA) {
                     $structured = $this->parseDataBoxStructured($sub);
+                    $this->validateLocaleIndicator($structured['locale'], $countryLists, $languageLists);
 
                     $effectiveKey = $keyName ?? $itemName;
                     if ($effectiveKey === null) {
@@ -2469,6 +2505,114 @@ final readonly class IsoBmffParser
 
         // nextItemID — read for validation but not currently exposed
         $win->readU32BE();
+    }
+
+    /**
+     * Parses a locale list atom (ctry or lang) inside a QuickTime metadata container.
+     *
+     * QuickTime File Format 2012, "Country List Atom" (p. 133) / "Language List Atom"
+     * (p. 134): both are FullAtoms (version=0, flags=0) containing a 32-bit entry_count
+     * followed by entry_count arrays. Each array starts with a 16-bit item count followed
+     * by that many 16-bit ISO codes (ISO 3166 for countries, packed ISO 639-2/T for languages).
+     *
+     * @param BoxDescriptor $box   Box descriptor for the ctry or lang atom.
+     * @param string        $label Human-readable label for error messages ('ctry' or 'lang').
+     *
+     * @return list<list<int>> List of locale code arrays.
+     */
+    private function parseLocaleListAtom(BoxDescriptor $box, string $label): array
+    {
+        if ($box->contentSize < 8) {
+            throw new ParseError(sprintf('%s atom truncated', $label));
+        }
+
+        $win = $box->window;
+        $win->seek(0);
+
+        $version = $win->readU8();
+        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
+
+        if ($version !== 0) {
+            throw new ParseError(sprintf('%s atom version must be 0', $label));
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError(sprintf('%s atom flags must be 0', $label));
+        }
+
+        $entryCount = $win->readU32BE();
+
+        if ($entryCount > self::MAX_LOCALE_LIST_ENTRIES) {
+            throw new ParseError(sprintf('%s atom entry count %d exceeds maximum %d', $label, $entryCount, self::MAX_LOCALE_LIST_ENTRIES));
+        }
+
+        $entries  = [];
+        $consumed = 8; // version(1) + flags(3) + entry_count(4)
+
+        for ($i = 0; $i < $entryCount; ++$i) {
+            if ($consumed + 2 > $box->contentSize) {
+                throw new ParseError(sprintf('%s atom entry %d truncated (missing item count)', $label, $i + 1));
+            }
+
+            $itemCount = $win->readU16BE();
+            $consumed += 2;
+
+            $needed = $itemCount * 2;
+            if ($consumed + $needed > $box->contentSize) {
+                throw new ParseError(sprintf('%s atom entry %d truncated (expected %d codes, only %d bytes remain)', $label, $i + 1, $itemCount, $box->contentSize - $consumed));
+            }
+
+            $codes = [];
+            for ($j = 0; $j < $itemCount; ++$j) {
+                $codes[] = $win->readU16BE();
+            }
+
+            $entries[] = $codes;
+            $consumed += $needed;
+        }
+
+        if ($consumed !== $box->contentSize) {
+            throw new ParseError(sprintf('%s atom has %d trailing bytes after entries', $label, $box->contentSize - $consumed));
+        }
+
+        return $entries;
+    }
+
+    /**
+     * Validates a locale indicator from a data atom against the available locale lists.
+     *
+     * QuickTime File Format 2012, "Locale Indicator" (p. 139): country and language
+     * indicator values 1–255 are 1-based indices into the ctry/lang list atoms.
+     * Values > 255 are direct ISO codes. Value 0 means default/any.
+     *
+     * @param int             $locale        32-bit locale indicator (country << 16 | language).
+     * @param list<list<int>> $countryLists  Country list arrays from ctry atom.
+     * @param list<list<int>> $languageLists Language list arrays from lang atom.
+     */
+    private function validateLocaleIndicator(int $locale, array $countryLists, array $languageLists): void
+    {
+        $country  = ($locale >> 16) & 0xFFFF;
+        $language = $locale & 0xFFFF;
+
+        if ($country >= 1 && $country <= 255) {
+            if ($countryLists === []) {
+                throw new ParseError(sprintf('data atom locale country index %d requires a ctry list atom', $country));
+            }
+
+            if ($country > count($countryLists)) {
+                throw new ParseError(sprintf('data atom locale country index %d exceeds ctry list entry count %d', $country, count($countryLists)));
+            }
+        }
+
+        if ($language >= 1 && $language <= 255) {
+            if ($languageLists === []) {
+                throw new ParseError(sprintf('data atom locale language index %d requires a lang list atom', $language));
+            }
+
+            if ($language > count($languageLists)) {
+                throw new ParseError(sprintf('data atom locale language index %d exceeds lang list entry count %d', $language, count($languageLists)));
+            }
+        }
     }
 
     /**
