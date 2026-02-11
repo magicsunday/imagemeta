@@ -2460,6 +2460,96 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame('track-level-value', $qtMeta->keys[$key]);
     }
 
+    #[Test]
+    public function ilstNameAtomUsedAsFallbackKey(): void
+    {
+        // Build ilst with an entry that has no key mapping — only a name atom + data atom
+        // name atom: full box (version=0, flags=0) + UTF-8 string
+        $namePayload = "\0\0\0\0custom.metadata.key";
+        $nameAtom    = $this->box('name', $namePayload);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'name-fallback-value');
+
+        // Use a non-printable fourcc (0x00000001) so the key index lookup fails
+        $ilstEntry = $this->box(pack('N', 1), $nameAtom . $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        // No keys box — only ilst with name atom fallback
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('name-fallback-value', $qtMeta->keys['custom.metadata.key']);
+    }
+
+    #[Test]
+    public function rejectDuplicateIlstNameAtomValues(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate ilst name atom value "duplicate.key"');
+
+        $namePayload = "\0\0\0\0duplicate.key";
+        $nameAtom    = $this->box('name', $namePayload);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'value1');
+        $ilstEntry1  = $this->box(pack('N', 1), $nameAtom . $dataBox);
+
+        $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value2');
+        $ilstEntry2 = $this->box(pack('N', 2), $nameAtom . $dataBox2);
+
+        $ilst = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
+    public function rejectIlstNameAtomWithNonZeroVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ilst name atom version must be 0');
+
+        $namePayload = "\x01\0\0\0some.key";
+        $nameAtom    = $this->box('name', $namePayload);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry   = $this->box(pack('N', 1), $nameAtom . $dataBox);
+
+        $ilst = $this->box('ilst', $ilstEntry);
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
+    public function rejectIlstNameAtomWithInvalidUtf8(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ilst name atom contains invalid UTF-8');
+
+        // 0xFF 0xFE is invalid UTF-8
+        $namePayload = "\0\0\0\0\xFF\xFE";
+        $nameAtom    = $this->box('name', $namePayload);
+        $dataBox     = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry   = $this->box(pack('N', 1), $nameAtom . $dataBox);
+
+        $ilst = $this->box('ilst', $ilstEntry);
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
     /**
      * Wraps raw bytes in a temporary stream-backed extractor.
      * This helper keeps byte-length bookkeeping aligned with the payload.

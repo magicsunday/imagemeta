@@ -40,6 +40,7 @@ use function is_float;
 use function is_int;
 use function is_numeric;
 use function is_string;
+use function mb_check_encoding;
 use function ord;
 use function preg_match;
 use function round;
@@ -2256,9 +2257,13 @@ final readonly class IsoBmffParser
     {
         $result    = [];
         $atomsList = [];
+        $seenNames = [];
+
         foreach ($this->walkChildren($ilst) as $entry) {
-            $keyName = null;
-            $index   = $this->fourccToIndex($entry->type);
+            $keyName  = null;
+            $itemName = null;
+            $index    = $this->fourccToIndex($entry->type);
+
             if (($index !== null) && isset($keyIndex[$index])) {
                 $keyName = $this->resolveKeyName($keyIndex[$index]);
             } elseif ($entry->type === self::BOX_FREEFORM) {
@@ -2267,29 +2272,97 @@ final readonly class IsoBmffParser
                 $keyName = $entry->type;
             }
 
-            if ($keyName === null) {
-                continue;
-            }
+            // Freeform entries ('----') handle 'name' children in parseFreeformKey()
+            // as data boxes; only non-freeform entries use the spec Name atom.
+            $isFreeform = ($entry->type === self::BOX_FREEFORM);
 
             foreach ($this->walkChildren($entry) as $sub) {
                 if ($sub->type === self::BOX_DATA) {
                     $structured = $this->parseDataBoxStructured($sub);
-                    $coerced    = $this->coerceQuickTimeValue($keyName, $structured['value']);
 
-                    if (!array_key_exists($keyName, $result)) {
-                        $result[$keyName] = $coerced;
+                    $effectiveKey = $keyName ?? $itemName;
+                    if ($effectiveKey === null) {
+                        continue;
                     }
 
-                    $atomsList[$keyName][] = [
+                    $coerced = $this->coerceQuickTimeValue($effectiveKey, $structured['value']);
+
+                    if (!array_key_exists($effectiveKey, $result)) {
+                        $result[$effectiveKey] = $coerced;
+                    }
+
+                    $atomsList[$effectiveKey][] = [
                         'type'   => $structured['type'],
                         'locale' => $structured['locale'],
                         'value'  => $coerced,
                     ];
+                } elseif ($sub->type === self::BOX_NAME && !$isFreeform) {
+                    $itemName = $this->parseIlstNameAtom($sub, $seenNames);
+
+                    // Use name as fallback key when no key index or fourcc is available
+                    if ($keyName === null) {
+                        $keyName = $itemName;
+                    }
                 }
             }
         }
 
         return [$result, $atomsList];
+    }
+
+    /**
+     * Parses a metadata item Name atom inside an ilst entry.
+     *
+     * QuickTime File Format 2012, "Metadata Item Atom / Name": the name atom
+     * is a full atom with version 0 and flags 0. The payload is a UTF-8 string.
+     * No two metadata items may share the same name.
+     *
+     * @param BoxDescriptor       $name      Box descriptor for the name atom.
+     * @param array<string, true> $seenNames Previously encountered names for uniqueness check.
+     *
+     * @return string The validated name string.
+     */
+    private function parseIlstNameAtom(BoxDescriptor $name, array &$seenNames): string
+    {
+        if ($name->contentSize < 4) {
+            throw new ParseError('ilst name atom truncated');
+        }
+
+        $win = $name->window;
+        $win->seek(0);
+
+        $version = $win->readU8();
+        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
+
+        if ($version !== 0) {
+            throw new ParseError('ilst name atom version must be 0');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('ilst name atom flags must be 0');
+        }
+
+        $payloadSize = $name->contentSize - 4;
+        if ($payloadSize < 1) {
+            throw new ParseError('ilst name atom has empty payload');
+        }
+
+        $value = $win->read($payloadSize);
+
+        if (!mb_check_encoding($value, 'UTF-8')) {
+            throw new ParseError('ilst name atom contains invalid UTF-8');
+        }
+
+        if (array_key_exists($value, $seenNames)) {
+            throw new ParseError(sprintf(
+                'duplicate ilst name atom value "%s"',
+                $value,
+            ));
+        }
+
+        $seenNames[$value] = true;
+
+        return $value;
     }
 
     /**
