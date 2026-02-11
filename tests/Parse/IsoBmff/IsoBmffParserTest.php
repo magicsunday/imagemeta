@@ -2089,6 +2089,27 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Builds a dref box with non-zero flags, which violates the ISO/IEC 14496-12 spec.
+     * Confirms the parser rejects non-zero dref flags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectDrefNonZeroFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('dref FullBox flags must be 0 per ISO/IEC 14496-12');
+
+        $dref = $this->fullBox('dref', pack('N', 0), 0, 1); // version=0, flags=1, entry_count=0
+        $dinf = $this->box('dinf', $dref);
+        $meta = $this->fullBox('meta', $dinf);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor = $this->createExtractor($ftyp . $meta);
+        $extractor->extract();
+    }
+
+    /**
      * Builds a meta box with FullBox version=1 instead of 0.
      * Confirms the parser rejects unsupported meta versions.
      *

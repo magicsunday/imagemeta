@@ -1515,10 +1515,14 @@ final readonly class IsoBmffParser
         }
 
         $version = $win->readU8();
-        $this->readUInt24($win); // flags
+        $flags   = $this->readUInt24($win);
 
         if ($version !== 0) {
             throw new ParseError('unsupported dref box version', 1173);
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('dref FullBox flags must be 0 per ISO/IEC 14496-12', 1360);
         }
 
         $entryCount = $win->readU32BE();
