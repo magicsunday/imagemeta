@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Xmp;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpValueAccumulator;
@@ -142,8 +143,14 @@ final class XmpParser
                         for ($parentDepth = $depth - 1; $parentDepth >= 0; --$parentDepth) {
                             if (isset($listBuffers[$parentDepth])) {
                                 if (($listKinds[$parentDepth] ?? '') === 'Alt') {
+                                    $lang = $languageBuffers[$depth] ?? '';
+
+                                    if ($lang === '') {
+                                        throw new ParseError('rdf:li in rdf:Alt must have an xml:lang qualifier per XMP spec LanguageAlternative.');
+                                    }
+
                                     $altBuffers[$parentDepth][] = [
-                                        'lang'  => $languageBuffers[$depth] ?? '',
+                                        'lang'  => $lang,
                                         'value' => $text,
                                     ];
                                 } else {

@@ -672,4 +672,34 @@ XML;
 
         $parser->parse($xml);
     }
+
+    /**
+     * Rejects rdf:li in rdf:Alt without xml:lang qualifier.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMissingXmlLangInAlt(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title>
+      <rdf:Alt>
+        <rdf:li xml:lang="x-default">Default</rdf:li>
+        <rdf:li>No language</rdf:li>
+      </rdf:Alt>
+    </dc:title>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser = new XmpParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('rdf:li in rdf:Alt must have an xml:lang qualifier');
+
+        $parser->parse($xml);
+    }
 }
