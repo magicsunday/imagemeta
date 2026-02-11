@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -109,6 +110,67 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Valid DNGPrivateData with NUL-terminated ASCII prefix parses successfully.
+     */
+    #[Test]
+    public function parsesValidDngPrivateData(): void
+    {
+        $privateData = "Adobe\0\x01\x02\x03\x04";
+        $blob        = $this->buildTiffWithDngPrivateData($privateData);
+
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($blob);
+
+        $entry = $parsed->ifd0->get(DngTag::DNG_PRIVATE_DATA);
+        self::assertNotNull($entry);
+    }
+
+    /**
+     * DNGPrivateData without NUL terminator is rejected.
+     */
+    #[Test]
+    public function rejectDngPrivateDataWithoutNulTerminator(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGPrivateData block must start with a NUL-terminated ASCII string per DNG 1.7.1.0.');
+
+        $privateData = 'AdobeNoNul';
+        $blob        = $this->buildTiffWithDngPrivateData($privateData);
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * DNGPrivateData with non-ASCII byte in prefix is rejected.
+     */
+    #[Test]
+    public function rejectDngPrivateDataWithNonAsciiPrefix(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGPrivateData manufacturer name contains non-ASCII byte 0x80 at offset 5 per DNG 1.7.1.0.');
+
+        $privateData = "Adobe\x80\0\x01\x02";
+        $blob        = $this->buildTiffWithDngPrivateData($privateData);
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * DNGPrivateData with empty manufacturer name is rejected.
+     */
+    #[Test]
+    public function rejectDngPrivateDataWithEmptyManufacturerName(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('DNGPrivateData manufacturer name must not be empty per DNG 1.7.1.0.');
+
+        $privateData = "\0\x01\x02\x03\x04";
+        $blob        = $this->buildTiffWithDngPrivateData($privateData);
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * Builds a classic TIFF payload with required baseline DNG tags in IFD0.
      *
      * DNG 1.7.1.0 (DNG Tags, pp. 24-25) defines DNGVersion and
@@ -140,5 +202,26 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $modelOffset)
             . pack('V', 0)
             . $uniqueCameraModel;
+    }
+
+    /**
+     * Builds a classic TIFF payload with a single DNGPrivateData tag in IFD0.
+     */
+    private function buildTiffWithDngPrivateData(string $privateData): string
+    {
+        $ifdOffset = 8;
+        $ifdSize   = 2 + 12 + 4;
+        $valOffset = $ifdOffset + $ifdSize;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', 1)
+            . pack('v', DngTag::DNG_PRIVATE_DATA)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', strlen($privateData))
+            . pack('V', $valOffset)
+            . pack('V', 0)
+            . $privateData;
     }
 }

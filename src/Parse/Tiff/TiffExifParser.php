@@ -48,6 +48,7 @@ use function rtrim;
 use function sha1;
 use function sprintf;
 use function strlen;
+use function strpos;
 use function strspn;
 use function substr;
 
@@ -1372,6 +1373,10 @@ final class TiffExifParser
             $this->makerNoteRaw = $rawBytes;
         }
 
+        if ($tag === DngTag::DNG_PRIVATE_DATA) {
+            $this->validateDngPrivateData($rawBytes);
+        }
+
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
             $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
         }
@@ -1414,6 +1419,46 @@ final class TiffExifParser
                 $rule['name'],
                 $rule['count'],
                 $rule['spec'],
+            ));
+        }
+    }
+
+    /**
+     * Validates the DNGPrivateData block structure.
+     *
+     * DNG 1.7.1.0 (p. 41): the block must start with a NUL-terminated ASCII
+     * string identifying the manufacturer. All bytes before the terminator
+     * must be printable ASCII (0x20–0x7E). The block must be at least two
+     * bytes (one character plus NUL terminator).
+     *
+     * @param string $rawBytes Raw tag payload.
+     */
+    private function validateDngPrivateData(string $rawBytes): void
+    {
+        $length = strlen($rawBytes);
+
+        if ($length < 2) {
+            throw new ParseError('DNGPrivateData block must be at least 2 bytes per DNG 1.7.1.0.');
+        }
+
+        $nulPos = strpos($rawBytes, "\0");
+
+        if ($nulPos === false) {
+            throw new ParseError('DNGPrivateData block must start with a NUL-terminated ASCII string per DNG 1.7.1.0.');
+        }
+
+        if ($nulPos === 0) {
+            throw new ParseError('DNGPrivateData manufacturer name must not be empty per DNG 1.7.1.0.');
+        }
+
+        $prefix    = substr($rawBytes, 0, $nulPos);
+        $asciiSpan = strspn($prefix, ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~');
+
+        if ($asciiSpan !== $nulPos) {
+            throw new ParseError(sprintf(
+                'DNGPrivateData manufacturer name contains non-ASCII byte 0x%02X at offset %d per DNG 1.7.1.0.',
+                ord($prefix[$asciiSpan]),
+                $asciiSpan,
             ));
         }
     }
