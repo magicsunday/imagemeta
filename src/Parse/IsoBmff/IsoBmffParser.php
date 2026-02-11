@@ -47,7 +47,6 @@ use function round;
 use function rtrim;
 use function sha1;
 use function sprintf;
-use function str_starts_with;
 use function strcasecmp;
 use function strlen;
 use function strpos;
@@ -312,6 +311,11 @@ final readonly class IsoBmffParser
     private const int MAX_ILOC_ITEMS = 10000;
 
     /**
+     * Maximum number of extents per item in an iloc box to prevent DoS attacks.
+     */
+    private const int MAX_ILOC_EXTENTS = 10000;
+
+    /**
      * Maximum number of entries in an iinf box to prevent DoS attacks.
      */
     private const int MAX_IINF_ENTRIES = 10000;
@@ -320,6 +324,11 @@ final readonly class IsoBmffParser
      * Maximum number of item references allowed per iref entry.
      */
     private const int MAX_IREF_REFERENCES = 10000;
+
+    /**
+     * Maximum number of reference entry boxes allowed in an iref box.
+     */
+    private const int MAX_IREF_ENTRIES = 10000;
 
     /**
      * Maximum number of data references allowed per dref entry.
@@ -495,6 +504,8 @@ final readonly class IsoBmffParser
                 if ($mvhdCount > 1) {
                     throw new ParseError('moov must contain exactly one mvhd box', 1374);
                 }
+
+                $this->parseMvhd($child);
             }
         }
 
@@ -786,10 +797,123 @@ final readonly class IsoBmffParser
         // width/height represent aspect ratio, not pixel dimensions
         $isAspectRatio = ($flags & 0x000008) !== 0;
 
-        $width  = ($widthFixed > 0 && !$isAspectRatio) ? intdiv($widthFixed, 1 << 16) : null;
-        $height = ($heightFixed > 0 && !$isAspectRatio) ? intdiv($heightFixed, 1 << 16) : null;
+        // GH-890: decode 16.16 fixed-point with rounding instead of truncation
+        $width  = ($widthFixed > 0 && !$isAspectRatio) ? (int) round($widthFixed / 65536) : null;
+        $height = ($heightFixed > 0 && !$isAspectRatio) ? (int) round($heightFixed / 65536) : null;
 
         return [$width, $height];
+    }
+
+    /**
+     * Validates the media header box (`mdhd`).
+     *
+     * ISO/IEC 14496-12 §8.4.2: the mdhd box is a FullBox with version 0 (32-bit
+     * timestamps) or 1 (64-bit timestamps). The timescale field must be non-zero.
+     *
+     * @param BoxDescriptor $mdhd Media header box descriptor.
+     */
+    private function parseMdhd(BoxDescriptor $mdhd): void
+    {
+        $win = $mdhd->window;
+        $win->seek(0);
+
+        if ($mdhd->contentSize < 4) {
+            throw new ParseError('mdhd box truncated', 1400);
+        }
+
+        $version = $win->readU8();
+        $flags   = $this->readUInt24($win);
+
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError('unsupported mdhd box version', 1401);
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported mdhd box flags', 1402);
+        }
+
+        // version 0: 4+4+4+4+2+2 = 20 bytes after header; version 1: 8+8+4+8+2+2 = 32 bytes
+        $minPayload = $version === 1 ? 36 : 24;
+        if ($mdhd->contentSize < $minPayload) {
+            throw new ParseError('mdhd box truncated', 1400);
+        }
+
+        if ($version === 1) {
+            $win->read(8 + 8); // creation_time(64), modification_time(64)
+        } else {
+            $win->read(4 + 4); // creation_time(32), modification_time(32)
+        }
+
+        $timescale = $win->readU32BE();
+
+        if ($timescale === 0) {
+            throw new ParseError('mdhd timescale must not be zero', 1403);
+        }
+    }
+
+    /**
+     * Validates the movie header box (`mvhd`).
+     *
+     * ISO/IEC 14496-12 §8.2.2: the mvhd box is a FullBox with version 0 (32-bit
+     * timestamps) or 1 (64-bit timestamps). The timescale and next_track_ID fields
+     * must be non-zero.
+     *
+     * @param BoxDescriptor $mvhd Movie header box descriptor.
+     */
+    private function parseMvhd(BoxDescriptor $mvhd): void
+    {
+        $win = $mvhd->window;
+        $win->seek(0);
+
+        if ($mvhd->contentSize < 4) {
+            throw new ParseError('mvhd box truncated', 1405);
+        }
+
+        $version = $win->readU8();
+        $flags   = $this->readUInt24($win);
+
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError('unsupported mvhd box version', 1406);
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('unsupported mvhd box flags', 1407);
+        }
+
+        // version 0: 4+4+4+4 + 76 = 96 after FullBox header (including rate, volume, matrix, etc.)
+        // version 1: 8+8+4+8 + 76 = 108 after FullBox header
+        $minPayload = $version === 1 ? 112 : 100;
+        if ($mvhd->contentSize < $minPayload) {
+            throw new ParseError('mvhd box truncated', 1405);
+        }
+
+        if ($version === 1) {
+            $win->read(8 + 8); // creation_time(64), modification_time(64)
+        } else {
+            $win->read(4 + 4); // creation_time(32), modification_time(32)
+        }
+
+        $timescale = $win->readU32BE();
+
+        if ($timescale === 0) {
+            throw new ParseError('mvhd timescale must not be zero', 1408);
+        }
+
+        // Skip duration
+        if ($version === 1) {
+            $win->read(8); // duration(64)
+        } else {
+            $win->read(4); // duration(32)
+        }
+
+        // Skip rate(4), volume(2), reserved(10), matrix(36), pre_defined(24) = 76 bytes
+        $win->read(76);
+
+        $nextTrackId = $win->readU32BE();
+
+        if ($nextTrackId === 0) {
+            throw new ParseError('mvhd next_track_ID must not be zero', 1409);
+        }
     }
 
     /**
@@ -834,6 +958,8 @@ final readonly class IsoBmffParser
                 if ($mdhdCount > 1) {
                     throw new ParseError('mdia must contain exactly one mdhd box', 1380);
                 }
+
+                $this->parseMdhd($child);
             }
         }
 
@@ -1066,10 +1192,21 @@ final readonly class IsoBmffParser
             $entryStart = $win->tell();
             $entryEnd   = $pos + $entrySize;
 
-            $win->read(6); // reserved
-            $win->readU16BE(); // data reference index
+            // GH-860: ISO 14496-12 §8.5.2.2: the 6-byte reserved field must be all zeros
+            $reserved6 = $win->read(6);
+            if ($reserved6 !== "\0\0\0\0\0\0") {
+                throw new ParseError('stsd sample entry reserved field must be zero', 1398);
+            }
 
-            if ($handlerType === 'vide') {
+            // GH-865: ISO 14496-12 §8.5.2.2: data_reference_index is 1-based
+            $dataRefIndex = $win->readU16BE();
+            if ($dataRefIndex === 0) {
+                throw new ParseError('stsd sample entry data_reference_index must be >= 1', 1399);
+            }
+
+            // GH-835: use first entry only; skip parsing subsequent entries to
+            // avoid implicit 'last entry wins' when entry_count > 1
+            if ($result === [] && $handlerType === 'vide') {
                 if ($win->tell() + 70 > $entryEnd) {
                     throw new ParseError('video sample entry truncated', 1159);
                 }
@@ -1096,7 +1233,7 @@ final readonly class IsoBmffParser
                     'height'         => $height,
                     'compressorName' => $compressor,
                 ];
-            } elseif ($handlerType === 'soun') {
+            } elseif ($result === [] && $handlerType === 'soun') {
                 if ($win->tell() + 20 > $entryEnd) {
                     throw new ParseError('audio sample entry truncated', 1160);
                 }
@@ -1248,6 +1385,11 @@ final readonly class IsoBmffParser
                     [$handlerType] = $this->parseHdlr($child);
                     break;
                 case self::BOX_EXIF:
+                    // GH-859: enforce payload cap before reading direct Exif box
+                    if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
+                        throw new ParseError('direct Exif box payload exceeds maximum allowed size', 1396);
+                    }
+
                     // The EXIF 3.0 §4.8 Exif box must expose the TIFF header directly; normalise deviations.
                     $blob         = $this->readAll($child->window);
                     $directExif[] = $this->normalizeExifBlob($blob);
@@ -1289,10 +1431,20 @@ final readonly class IsoBmffParser
                     $dataReferences = $this->mergeDataReferences($dataReferences, $this->parseDinf($child));
                     break;
                 case self::BOX_XMP:
+                    // GH-859: enforce payload cap before reading direct XMP box
+                    if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
+                        throw new ParseError('direct XMP box payload exceeds maximum allowed size', 1397);
+                    }
+
                     $directXmp[] = $this->readAll($child->window);
                     break;
                 case self::BOX_UUID:
                     if ($child->userType === self::XMP_UUID) {
+                        // GH-859: enforce payload cap before reading uuid XMP box
+                        if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
+                            throw new ParseError('uuid XMP box payload exceeds maximum allowed size', 1397);
+                        }
+
                         $uuidXmp[] = $this->readAll($child->window);
                     }
 
@@ -1818,27 +1970,31 @@ final readonly class IsoBmffParser
      */
     private function normalizeExifBlob(string $blob): string
     {
+        // GH-842: strict 4-byte TIFF-header offset validation
         if (strlen($blob) < 4) {
-            return $blob;
+            throw new ParseError('Exif item payload too short for TIFF-header offset prefix', 1394);
         }
 
         // ISO 14496-12: Exif items start with a 4-byte big-endian offset to the TIFF header
         $unpacked = @unpack('Noffset', substr($blob, 0, 4));
-        if (is_array($unpacked) && isset($unpacked['offset']) && is_int($unpacked['offset'])) {
-            $offset = $unpacked['offset'];
-
-            // Validate offset and skip to TIFF header
-            if (($offset >= 0) && ((4 + $offset) <= strlen($blob))) {
-                return substr($blob, 4 + $offset);
-            }
+        if (!is_array($unpacked) || !isset($unpacked['offset']) || !is_int($unpacked['offset'])) {
+            throw new ParseError('Exif item TIFF-header offset unreadable', 1395);
         }
 
-        // Fallback: check for Exif\0\0 signature directly (legacy/non-conformant writers)
-        if (str_starts_with($blob, "Exif\0\0")) {
-            return substr($blob, 6);
+        $offset = $unpacked['offset'];
+
+        // Validate the offset does not exceed the payload bounds
+        if ($offset < 0 || (4 + $offset + 2) > strlen($blob)) {
+            throw new ParseError('Exif item TIFF-header offset out of range', 1395);
         }
 
-        return $blob;
+        // Validate the data at the pointed offset starts with a valid TIFF header (II or MM)
+        $tiffSig = substr($blob, 4 + $offset, 2);
+        if ($tiffSig !== 'II' && $tiffSig !== 'MM') {
+            throw new ParseError('Exif item TIFF-header offset does not point to valid TIFF signature', 1395);
+        }
+
+        return substr($blob, 4 + $offset);
     }
 
     /**
@@ -2076,7 +2232,7 @@ final readonly class IsoBmffParser
      *
      * @param BoxDescriptor $iinf Box descriptor containing the item information payload.
      *
-     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string}>
+     * @return list<array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string}>
      */
     private function parseIinf(BoxDescriptor $iinf): array
     {
@@ -2142,7 +2298,7 @@ final readonly class IsoBmffParser
      *
      * @param BoxDescriptor $infe Box descriptor for the entry being parsed.
      *
-     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string}
+     * @return array{id: int, itemType: ?string, name: ?string, contentType: ?string, contentEncoding: ?string, extensionType: ?string, itemUriType?: string}
      */
     private function parseInfe(BoxDescriptor $infe): array
     {
@@ -2206,6 +2362,32 @@ final readonly class IsoBmffParser
         $name            = $this->readNulString($payload, $cursor);
         $contentType     = $this->readNulString($payload, $cursor);
         $contentEncoding = $this->readNulString($payload, $cursor);
+
+        // GH-832: ISO 14496-12 §8.11.6: if item_type == 'uri ', the post-name
+        // payload is a single NUL-terminated item_uri_type (no content_type/content_encoding)
+        if ($itemType === 'uri ') {
+            $itemUriType = $this->readNulString($payload, $cursor);
+
+            if ($itemUriType === null || $itemUriType === '') {
+                throw new ParseError('infe uri item_uri_type must be non-empty', 1392);
+            }
+
+            return [
+                'id'              => $id,
+                'itemType'        => $itemType,
+                'name'            => $name,
+                'contentType'     => null,
+                'contentEncoding' => null,
+                'extensionType'   => null,
+                'itemUriType'     => $itemUriType,
+            ];
+        }
+
+        // GH-820: ISO 14496-12 §8.11.6: when item_type == 'mime', content_type
+        // is mandatory and must be non-empty
+        if ($itemType === 'mime' && ($contentType === null || $contentType === '')) {
+            throw new ParseError('infe mime item requires non-empty content_type', 1391);
+        }
 
         // ISO 14496-12: if item_type == 'mime' and 4+ bytes remain after the
         // NUL-terminated strings, a 4-byte extension_type follows
@@ -2302,6 +2484,12 @@ final readonly class IsoBmffParser
             $dataReferenceIndex = $win->readU16BE();
             $baseOffset         = $baseOffsetSize > 0 ? $this->readUInt($win, $baseOffsetSize) : 0;
             $extentCount        = $win->readU16BE();
+
+            // GH-893: enforce maximum extent_count per item
+            if ($extentCount > self::MAX_ILOC_EXTENTS) {
+                throw new ParseError('iloc extent count exceeds maximum allowed', 1411);
+            }
+
             /** @var list<array{offset:int,length:int,index:?int}> $extents */
             $extents = [];
 
@@ -2417,8 +2605,16 @@ final readonly class IsoBmffParser
         }
 
         $references = [];
+        $entryCount = 0;
 
         foreach ($this->walkChildren($iref, 4) as $child) {
+            ++$entryCount;
+
+            // GH-894: enforce maximum number of reference entry boxes
+            if ($entryCount > self::MAX_IREF_ENTRIES) {
+                throw new ParseError('iref entry count exceeds maximum allowed', 1412);
+            }
+
             $entry      = $this->parseSingleItemReference($child, $version);
             $references = $this->mergeItemReferences($references, [
                 $entry['fromItemId'] => $entry['references'],

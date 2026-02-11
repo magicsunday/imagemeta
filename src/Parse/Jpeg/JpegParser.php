@@ -528,9 +528,11 @@ final class JpegParser
     private function handleApp1(string $payload): void
     {
         if (str_starts_with($payload, self::EXIF_SIGNATURE)) {
-            // EXIF 3.0 §4.5.2 require APP1 EXIF data to start with
-            // "Exif\0\0" before the TIFF stream, so we drop the identifying preamble here.
-            $this->exifBlobs[] = substr($payload, strlen(self::EXIF_SIGNATURE));
+            // EXIF 3.0 §4.7.2 requires APP1 Exif data to start with "Exif\0\0"
+            // followed by a valid TIFF header (byte order + magic number).
+            $tiffData = substr($payload, strlen(self::EXIF_SIGNATURE));
+            $this->validateApp1TiffHeader($tiffData);
+            $this->exifBlobs[] = $tiffData;
         } elseif (str_starts_with($payload, self::XMP_SIGNATURE)) {
             $packet = substr($payload, strlen(self::XMP_SIGNATURE));
             $hash   = sha1($packet);
@@ -580,21 +582,55 @@ final class JpegParser
 
         $this->iccSegments[] = $payload;
 
-        $shouldStoreSequence = true;
+        // GH-896: sequence count must not be zero
+        if ($sequenceCount === 0) {
+            throw new ParseError(
+                sprintf('ICC segment at offset %d has zero sequence count', $offset),
+                1301,
+            );
+        }
 
-        if ($sequenceNumber === 0 || $sequenceCount === 0 || $sequenceNumber > $sequenceCount) {
-            $this->iccExpectedCount = 0;
-            $shouldStoreSequence    = false;
-        } elseif ($this->iccExpectedCount === null) {
+        // GH-896: sequence number must be in range 1..sequenceCount
+        if ($sequenceNumber === 0 || $sequenceNumber > $sequenceCount) {
+            throw new ParseError(
+                sprintf(
+                    'ICC segment at offset %d has out-of-range sequence number %d (expected 1..%d)',
+                    $offset,
+                    $sequenceNumber,
+                    $sequenceCount,
+                ),
+                1302,
+            );
+        }
+
+        // GH-896: all chunks must agree on the total count
+        if ($this->iccExpectedCount === null) {
             $this->iccExpectedCount = $sequenceCount;
         } elseif ($this->iccExpectedCount !== $sequenceCount) {
-            $this->iccExpectedCount = 0;
-            $shouldStoreSequence    = false;
+            throw new ParseError(
+                sprintf(
+                    'ICC segment at offset %d has inconsistent sequence count (%d vs %d)',
+                    $offset,
+                    $sequenceCount,
+                    $this->iccExpectedCount,
+                ),
+                1303,
+            );
         }
 
-        if ($shouldStoreSequence && !array_key_exists($sequenceNumber, $this->iccSequence)) {
-            $this->iccSequence[$sequenceNumber] = $iccData;
+        // GH-852: reject duplicate sequence numbers
+        if (array_key_exists($sequenceNumber, $this->iccSequence)) {
+            throw new ParseError(
+                sprintf(
+                    'ICC segment at offset %d has duplicate sequence number %d',
+                    $offset,
+                    $sequenceNumber,
+                ),
+                1304,
+            );
         }
+
+        $this->iccSequence[$sequenceNumber] = $iccData;
     }
 
     /**
@@ -921,5 +957,38 @@ final class JpegParser
         }
 
         return null;
+    }
+
+    /**
+     * Validates the TIFF header region after the Exif signature.
+     *
+     * EXIF 3.0 §4.7.2 requires APP1 Exif payload to carry a structurally valid TIFF header:
+     * byte-order marker (II or MM) followed by TIFF magic (0x002A) or BigTIFF magic (0x002B).
+     *
+     * @param string $tiffData Raw bytes after the "Exif\0\0" signature.
+     */
+    private function validateApp1TiffHeader(string $tiffData): void
+    {
+        // Minimum TIFF header is 4 bytes: 2 byte-order + 2 magic
+        if (strlen($tiffData) < 4) {
+            throw new ParseError('APP1 Exif payload too short for TIFF header', 1400);
+        }
+
+        $byteOrder = substr($tiffData, 0, 2);
+        if ($byteOrder !== 'II' && $byteOrder !== 'MM') {
+            throw new ParseError('APP1 Exif TIFF header has invalid byte order', 1401);
+        }
+
+        $format   = $byteOrder === 'II' ? 'v' : 'n';
+        $unpacked = @unpack($format, substr($tiffData, 2, 2));
+
+        if (($unpacked === false) || !isset($unpacked[1])) {
+            throw new ParseError('APP1 Exif TIFF header has invalid magic number', 1402);
+        }
+
+        /** @var array{1:int} $unpacked */
+        if ($unpacked[1] !== 0x002A && $unpacked[1] !== 0x002B) {
+            throw new ParseError('APP1 Exif TIFF header has invalid magic number', 1402);
+        }
     }
 }

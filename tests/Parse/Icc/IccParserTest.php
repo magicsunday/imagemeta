@@ -59,7 +59,7 @@ final class IccParserTest extends TestCase
         self::assertSame('4.2.1', $result['version']);
         self::assertSame('XYZ ', $result['pcs']);
         self::assertSame('Media-Relative Colorimetric', $result['renderingIntent']);
-        self::assertSame('00112233445566778899AABBCCDDEEFF', $result['profileId']);
+        self::assertNull($result['profileId']);
     }
 
     /**
@@ -87,7 +87,7 @@ final class IccParserTest extends TestCase
         self::assertSame('4.2.1', $result['version']);
         self::assertSame('XYZ ', $result['pcs']);
         self::assertSame('Media-Relative Colorimetric', $result['renderingIntent']);
-        self::assertSame('00112233445566778899AABBCCDDEEFF', $result['profileId']);
+        self::assertNull($result['profileId']);
     }
 
     /**
@@ -507,9 +507,12 @@ final class IccParserTest extends TestCase
             . 'XYZ '                     // PCS
             . str_repeat("\0", 12)       // Date/time (year=0 → null)
             . 'acsp'                     // Profile signature
-            . str_repeat("\0", 28)       // Primary platform + flags + device mfg + etc.
-            . pack('N', 1)              // Rendering intent
-            . str_repeat("\0", 12)       // PCS illuminant
+            . str_repeat("\0", 24)       // Primary platform + flags + device mfg + model + attributes
+            . pack('N', 0)              // Rendering intent (perceptual)
+            . pack('N', 0x0000F6D6)     // PCS illuminant X (D50)
+            . pack('N', 0x00010000)     // PCS illuminant Y (D50)
+            . pack('N', 0x0000D32D)     // PCS illuminant Z (D50)
+            . str_repeat("\0", 4)       // Profile creator
             . str_repeat("\0", 16)       // Profile ID
             . str_repeat("\0", 28);      // Reserved
 
@@ -686,9 +689,12 @@ final class IccParserTest extends TestCase
             . 'XYZ '                     // PCS
             . str_repeat("\0", 12)       // Date/time (year=0 → null)
             . 'acsp'                     // Profile signature
-            . str_repeat("\0", 28)       // Primary platform + flags + device mfg + etc.
-            . pack('N', 1)              // Rendering intent
-            . str_repeat("\0", 12)       // PCS illuminant
+            . str_repeat("\0", 24)       // Primary platform + flags + device mfg + model + attributes
+            . pack('N', 0)              // Rendering intent (perceptual)
+            . pack('N', 0x0000F6D6)     // PCS illuminant X (D50)
+            . pack('N', 0x00010000)     // PCS illuminant Y (D50)
+            . pack('N', 0x0000D32D)     // PCS illuminant Z (D50)
+            . str_repeat("\0", 4)       // Profile creator
             . str_repeat("\0", 16)       // Profile ID
             . str_repeat("\0", 28);      // Reserved
 
@@ -813,9 +819,12 @@ final class IccParserTest extends TestCase
             . 'XYZ '                     // PCS
             . str_repeat("\0", 12)       // Date/time (year=0 → null)
             . 'acsp'                     // Profile signature
-            . str_repeat("\0", 28)       // Primary platform + flags + device mfg + etc.
-            . pack('N', 1)              // Rendering intent
-            . str_repeat("\0", 12)       // PCS illuminant
+            . str_repeat("\0", 24)       // Primary platform + flags + device mfg + model + attributes
+            . pack('N', 0)              // Rendering intent (perceptual)
+            . pack('N', 0x0000F6D6)     // PCS illuminant X (D50)
+            . pack('N', 0x00010000)     // PCS illuminant Y (D50)
+            . pack('N', 0x0000D32D)     // PCS illuminant Z (D50)
+            . str_repeat("\0", 4)       // Profile creator
             . str_repeat("\0", 16)       // Profile ID
             . str_repeat("\0", 28);      // Reserved
 

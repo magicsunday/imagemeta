@@ -72,7 +72,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function extractExifFromExifBox(): void
     {
-        $exifPayload = "Exif\0\0primary-exif";
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aprimary-exif";
         $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
         $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $data        = $ftyp . $meta;
@@ -80,7 +80,7 @@ final class IsoBmffParserTest extends TestCase
         $extractor           = $this->createExtractor($data);
         [$exifs, $xmps, $qt] = $extractor->extract();
 
-        self::assertSame(['primary-exif'], $exifs);
+        self::assertSame(["MM\x00\x2Aprimary-exif"], $exifs);
         self::assertSame([], $xmps);
         self::assertNotNull($qt);
     }
@@ -94,7 +94,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function extractExifFromNonFullMetaBox(): void
     {
-        $exifPayload = "Exif\0\0quicktime-exif";
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aquicktime-exif";
         $meta        = $this->box('meta', $this->box('Exif', $exifPayload));
         $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
         $data        = $ftyp . $meta;
@@ -102,7 +102,7 @@ final class IsoBmffParserTest extends TestCase
         $extractor           = $this->createExtractor($data);
         [$exifs, $xmps, $qt] = $extractor->extract();
 
-        self::assertSame(['quicktime-exif'], $exifs);
+        self::assertSame(["MM\x00\x2Aquicktime-exif"], $exifs);
         self::assertSame([], $xmps);
         self::assertNotNull($qt);
     }
@@ -182,7 +182,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocMultiExtent(): void
     {
-        $exifBlob = "Exif\0\0segment-onesegment-two";
+        $exifBlob = pack('N', 0) . "MM\x00\x2Asegment-onesegment-two";
         $part1    = substr($exifBlob, 0, 10);
         $part2    = substr($exifBlob, 10);
 
@@ -221,7 +221,7 @@ final class IsoBmffParserTest extends TestCase
         $extractor = $this->createExtractor($data);
         [$exifs]   = $extractor->extract();
 
-        self::assertSame(['segment-onesegment-two'], $exifs);
+        self::assertSame(["MM\x00\x2Asegment-onesegment-two"], $exifs);
     }
 
     /**
@@ -233,7 +233,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocVersion1(): void
     {
-        $exifBlob = "Exif\0\0version-one-data";
+        $exifBlob = pack('N', 0) . "MM\x00\x2Aversion-one-data";
 
         // Build infe for Exif item (version 2 infe with item_ID as 16-bit)
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
@@ -274,7 +274,7 @@ final class IsoBmffParserTest extends TestCase
         $extractor = $this->createExtractor($data);
         [$exifs]   = $extractor->extract();
 
-        self::assertSame(['version-one-data'], $exifs);
+        self::assertSame(["MM\x00\x2Aversion-one-data"], $exifs);
     }
 
     /**
@@ -286,7 +286,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocVersion2Uses32BitItemId(): void
     {
-        $exifBlob = "Exif\0\0version-two-data";
+        $exifBlob = pack('N', 0) . "MM\x00\x2Aversion-two-data";
 
         // Build infe for Exif item (version 2 infe with item_ID as 16-bit)
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
@@ -323,7 +323,7 @@ final class IsoBmffParserTest extends TestCase
         $extractor = $this->createExtractor($data);
         [$exifs]   = $extractor->extract();
 
-        self::assertSame(['version-two-data'], $exifs);
+        self::assertSame(["MM\x00\x2Aversion-two-data"], $exifs);
     }
 
     /**
@@ -1145,7 +1145,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocIdatConstructionMethod(): void
     {
-        $exifPayload = "Exif\0\0idat-exif";
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aidat-exif";
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -1171,7 +1171,7 @@ final class IsoBmffParserTest extends TestCase
         $extractor                         = $this->createExtractor($ftyp . $meta);
         [$exifs, , , , , $unresolvedItems] = $extractor->extract();
 
-        self::assertSame(['idat-exif'], $exifs);
+        self::assertSame(["MM\x00\x2Aidat-exif"], $exifs);
         self::assertSame([], $unresolvedItems);
     }
 
@@ -1187,7 +1187,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iloc extent length exceeds idat payload');
 
-        $exifPayload = "Exif\0\0idat";
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aidat";
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -1241,7 +1241,7 @@ final class IsoBmffParserTest extends TestCase
     #[Test]
     public function resolveIlocItemOffsetWithExtentIndex(): void
     {
-        $exifPayload = "Exif\0\0item-ref";
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aitem-ref";
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -1287,7 +1287,7 @@ final class IsoBmffParserTest extends TestCase
         $extractor = $this->createExtractor($ftyp . $meta . $mdat);
         [$exifs]   = $extractor->extract();
 
-        self::assertSame(['item-ref'], $exifs);
+        self::assertSame(["MM\x00\x2Aitem-ref"], $exifs);
     }
 
     /**
@@ -1302,7 +1302,7 @@ final class IsoBmffParserTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('iloc extent outside referenced item');
 
-        $exifPayload = "Exif\0\0ref";
+        $exifPayload = pack('N', 0) . "MM\x00\x2Aref";
 
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
@@ -3168,7 +3168,7 @@ final class IsoBmffParserTest extends TestCase
     {
         // mvhd v0: creation(4) + modification(4) + timescale(4, >0) + duration(4)
         //        + rate(4) + volume(2) + reserved(10) + matrix(36) + pre_defined(24) + next_track_ID(4) = 96
-        return $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 84) . pack('N', 1));
+        return $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 80) . pack('N', 1));
     }
 
     /**

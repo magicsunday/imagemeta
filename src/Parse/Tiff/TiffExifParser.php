@@ -2791,6 +2791,15 @@ final class TiffExifParser
             return null;
         }
 
+        // TIFF 6.0 §8: the TIFF header occupies bytes 0..7, so any non-zero
+        // IFD pointer offset must be >= 8 to reference a valid IFD structure.
+        if ($offset < 8) {
+            throw new ParseError(
+                sprintf('IFD pointer tag 0x%04X offset %d points into TIFF header', $tag, $offset),
+                1407,
+            );
+        }
+
         return $this->ensureOffset($offset, sprintf('IFD pointer tag 0x%04X', $tag));
     }
 

@@ -11,25 +11,24 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Icc;
 
-use Imagick;
-use ImagickPixel;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Icc\IccTag;
 use MagicSunday\ImageMeta\Value\Enum\IccRenderingIntent;
-use Throwable;
 
 use function array_key_exists;
 use function bin2hex;
 use function checkdate;
-use function class_exists;
 use function function_exists;
 use function iconv;
+use function in_array;
 use function is_array;
 use function is_int;
 use function mb_convert_encoding;
+use function md5;
 use function min;
 use function ord;
+use function round;
 use function rtrim;
 use function sprintf;
 use function str_repeat;
@@ -37,6 +36,7 @@ use function str_starts_with;
 use function strlen;
 use function strtoupper;
 use function substr;
+use function substr_replace;
 use function unpack;
 use function usort;
 
@@ -55,6 +55,43 @@ final class IccParser
      * ICC.1:2022 §7.2.9: Profile file signature field must contain 'acsp' (61637370h).
      */
     private const string PROFILE_SIGNATURE = 'acsp';
+
+    /**
+     * ICC.1:2022 Table 18: Allowed profile/device class signatures.
+     *
+     * @var list<string>
+     */
+    private const array ALLOWED_PROFILE_CLASSES = [
+        'scnr', // Input device profile
+        'mntr', // Display device profile
+        'prtr', // Output device profile
+        'link', // DeviceLink profile
+        'spac', // ColorSpace profile
+        'abst', // Abstract profile
+        'nmcl', // NamedColor profile
+    ];
+
+    /**
+     * ICC.1:2022 Table 19: Allowed data colour space signatures.
+     *
+     * @var list<string>
+     */
+    private const array ALLOWED_COLOR_SPACES = [
+        'XYZ ', 'Lab ', 'Luv ', 'YCbr', 'Yxy ', 'RGB ', 'GRAY',
+        'HSV ', 'HLS ', 'CMYK', 'CMY ', '2CLR', '3CLR', '4CLR',
+        '5CLR', '6CLR', '7CLR', '8CLR', '9CLR', 'ACLR', 'BCLR',
+        'CCLR', 'DCLR', 'ECLR', 'FCLR',
+    ];
+
+    /**
+     * ICC.1:2022 §7.2.7: Allowed PCS signatures.
+     *
+     * @var list<string>
+     */
+    private const array ALLOWED_PCS = [
+        'XYZ ',
+        'Lab ',
+    ];
 
     /**
      * Decodes the ICC profile payload by extracting header fields and well known tags.
@@ -138,15 +175,38 @@ final class IccParser
             return null;
         }
 
-        $pcs                = $this->extractSignature(substr($data, IccTag::PCS, 4));
+        $profileClass = $this->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
+        $colorSpace   = $this->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
+        $pcs          = $this->extractSignature(substr($data, IccTag::PCS, 4));
+
+        // GH-883: validate constrained header signatures
+        if ($profileClass !== null && !in_array($profileClass, self::ALLOWED_PROFILE_CLASSES, true)) {
+            throw new ParseError(
+                sprintf('ICC profile class signature "%s" is not in the allowed set', $profileClass),
+                1134,
+            );
+        }
+
+        if ($colorSpace !== null && !in_array($colorSpace, self::ALLOWED_COLOR_SPACES, true)) {
+            throw new ParseError(
+                sprintf('ICC data colour space signature "%s" is not in the allowed set', $colorSpace),
+                1135,
+            );
+        }
+
+        if ($pcs !== null && !in_array($pcs, self::ALLOWED_PCS, true)) {
+            throw new ParseError(
+                sprintf('ICC PCS signature "%s" is not XYZ or Lab', $pcs),
+                1136,
+            );
+        }
+
         $renderingIntent    = $this->extractRenderingIntent($data);
         $profileId          = $this->extractProfileId($data);
         $description        = $this->extractTag($data, $profileSize, 'desc');
         $copyright          = $this->extractTag($data, $profileSize, 'cprt');
         $whitePoint         = $this->extractWhitePoint($data, $profileSize);
         $cmmType            = $this->extractSignature(substr($data, IccTag::CMM_TYPE, 4));
-        $profileClass       = $this->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
-        $colorSpace         = $this->extractSignature(substr($data, IccTag::COLOR_SPACE, 4));
         $profileDateTime    = $this->extractProfileDateTime($data);
         $profileSignature   = $this->extractSignature(substr($data, IccTag::PROFILE_SIGNATURE, 4));
         $profileFlags       = $this->extractHexField($data, IccTag::PROFILE_FLAGS, 4, true);
@@ -208,13 +268,40 @@ final class IccParser
             $sequenceCount  = ord($payload[strlen(self::ICC_SIGNATURE) + 1]);
 
             if ($sequenceCount === 0) {
-                return null;
+                throw new ParseError('ICC chunk assembly: sequence count is zero', 1126);
             }
 
             if ($expectedCount === null) {
                 $expectedCount = $sequenceCount;
             } elseif ($expectedCount !== $sequenceCount) {
-                return null; // conflicting counts
+                throw new ParseError(
+                    sprintf(
+                        'ICC chunk assembly: inconsistent sequence count (%d vs %d)',
+                        $expectedCount,
+                        $sequenceCount,
+                    ),
+                    1127,
+                );
+            }
+
+            // GH-887: reject out-of-range sequence numbers
+            if ($sequenceNumber === 0 || $sequenceNumber > $sequenceCount) {
+                throw new ParseError(
+                    sprintf(
+                        'ICC chunk assembly: sequence number %d is out of range 1..%d',
+                        $sequenceNumber,
+                        $sequenceCount,
+                    ),
+                    1128,
+                );
+            }
+
+            // GH-887: reject duplicate sequence numbers
+            if (array_key_exists($sequenceNumber, $sequence)) {
+                throw new ParseError(
+                    sprintf('ICC chunk assembly: duplicate sequence number %d', $sequenceNumber),
+                    1129,
+                );
             }
 
             $sequence[$sequenceNumber] = substr($payload, $minLength);
@@ -271,11 +358,14 @@ final class IccParser
     }
 
     /**
-     * Normalises a 4-byte signature by uppercasing and validating its contents.
+     * Returns a 4-byte signature preserving canonical case.
+     *
+     * ICC.1:2022 signatures are binary identifiers with defined case. Zero-filled
+     * signatures are normalised to null for fields that allow "not used".
      *
      * @param string $signature Raw 4-byte signature string.
      *
-     * @return string|null Uppercased signature or null when invalid.
+     * @return string|null Canonical signature or null when empty/zero.
      */
     private function extractSignature(string $signature): ?string
     {
@@ -283,25 +373,55 @@ final class IccParser
             return null;
         }
 
-        return strtoupper($signature);
+        if ($signature === "\0\0\0\0") {
+            return null;
+        }
+
+        return $signature;
     }
 
     /**
      * Maps the rendering intent field from the profile header to a descriptive label.
      *
+     * ICC.1:2022 §7.2.15: The field is a uInt32Number where the most significant 16 bits
+     * must be zero and the least significant 16 bits encode an intent value 0..3.
+     *
      * @param string $data Raw ICC profile payload.
      *
-     * @return string|null Rendering intent description or null when unknown.
+     * @return string Rendering intent description.
      */
-    private function extractRenderingIntent(string $data): ?string
+    private function extractRenderingIntent(string $data): string
     {
-        $intent = $this->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
+        $raw = $this->uInt32Be(substr($data, IccTag::RENDERING_INTENT, 4));
 
-        return IccRenderingIntent::fromProfileHeaderValue($intent)?->label();
+        // GH-903: upper 16 bits must be zero
+        $upper = ($raw >> 16) & 0xFFFF;
+        if ($upper !== 0) {
+            throw new ParseError(
+                sprintf('ICC rendering intent upper 16 bits are non-zero: 0x%04X', $upper),
+                1130,
+            );
+        }
+
+        $lower  = $raw & 0xFFFF;
+        $intent = IccRenderingIntent::fromProfileHeaderValue($lower);
+
+        if (!$intent instanceof IccRenderingIntent) {
+            throw new ParseError(
+                sprintf('ICC rendering intent value %d is outside the defined domain 0..3', $lower),
+                1131,
+            );
+        }
+
+        return $intent->label();
     }
 
     /**
-     * Extracts the profile ID digest when present.
+     * Extracts and validates the profile ID digest when present.
+     *
+     * ICC.1:2022 §7.2.18: When non-zero the field shall contain the MD5 fingerprint
+     * computed over profile_size bytes with bytes 44..47 (flags), 64..67 (rendering intent)
+     * and 84..99 (profile ID) temporarily zeroed.
      *
      * @param string $data Raw ICC profile payload.
      *
@@ -312,6 +432,28 @@ final class IccParser
         $profileId = substr($data, IccTag::PROFILE_ID, 16);
         if ($profileId === str_repeat("\0", 16)) {
             return null;
+        }
+
+        // GH-906: compute expected MD5 per §7.2.18
+        $zeroed = $data;
+        // Zero profile flags (bytes 44..47)
+        $zeroed = substr_replace($zeroed, "\0\0\0\0", 44, 4);
+        // Zero rendering intent (bytes 64..67)
+        $zeroed = substr_replace($zeroed, "\0\0\0\0", 64, 4);
+        // Zero profile ID (bytes 84..99)
+        $zeroed = substr_replace($zeroed, str_repeat("\0", 16), 84, 16);
+
+        $computed = md5($zeroed, true);
+
+        if ($computed !== $profileId) {
+            throw new ParseError(
+                sprintf(
+                    'ICC Profile ID mismatch: stored %s, computed %s',
+                    strtoupper(bin2hex($profileId)),
+                    strtoupper(bin2hex($computed)),
+                ),
+                1132,
+            );
         }
 
         return strtoupper(bin2hex($profileId));
@@ -366,9 +508,10 @@ final class IccParser
     }
 
     /**
-     * Extracts the profile connection space illuminant as XYZ values.
+     * Extracts and validates the profile connection space illuminant as XYZ values.
      *
-     * ICC.1:2022 §7.2.11 specifies the illuminant as s15Fixed16Numbers.
+     * ICC.1:2022 §7.2.16: The PCS illuminant shall be D50 with values (rounded to
+     * four decimals): X = 0.9642, Y = 1.0000, Z = 0.8249.
      *
      * @param string $data Raw ICC profile payload.
      *
@@ -384,6 +527,23 @@ final class IccParser
         $x    = $this->s15Fixed16($data, $base);
         $y    = $this->s15Fixed16($data, $base + 4);
         $z    = $this->s15Fixed16($data, $base + 8);
+
+        // GH-904: validate D50 requirement at 4-decimal rounding
+        if (
+            round($x, 4) !== 0.9642
+            || round($y, 4) !== 1.0
+            || round($z, 4) !== 0.8249
+        ) {
+            throw new ParseError(
+                sprintf(
+                    'ICC PCS illuminant is not D50: X=%.4f, Y=%.4f, Z=%.4f',
+                    $x,
+                    $y,
+                    $z,
+                ),
+                1133,
+            );
+        }
 
         return [
             'x' => $x,
@@ -473,8 +633,22 @@ final class IccParser
             return null;
         }
 
+        // GH-905: ICC.1:2022 §10.31 reserved bytes 4..7 must be zero
+        $reserved = substr($tagData, 4, 4);
+        if ($reserved !== "\0\0\0\0") {
+            throw new ParseError('ICC wtpt XYZType reserved bytes 4..7 are non-zero', 1141);
+        }
+
+        // GH-905: wtpt must contain exactly one XYZNumber (20 bytes total)
+        if (strlen($tagData) !== 20) {
+            throw new ParseError(
+                sprintf('ICC wtpt XYZType payload must be exactly 20 bytes, got %d', strlen($tagData)),
+                1142,
+            );
+        }
+
         // ICC.1:2022 §10.31: XYZType contains XYZNumber at offset 8
-        // XYZNumber is 3 × s15Fixed16Number (each 4 bytes)
+        // XYZNumber is 3 x s15Fixed16Number (each 4 bytes)
         return [
             'x' => $this->s15Fixed16($tagData, 8),
             'y' => $this->s15Fixed16($tagData, 12),
@@ -694,6 +868,12 @@ final class IccParser
             return null;
         }
 
+        // GH-901: ICC.1:2022 §10.24 reserved bytes 4..7 must be zero
+        $reserved = substr($data, 4, 4);
+        if ($reserved !== "\0\0\0\0") {
+            return null;
+        }
+
         $text = substr($data, 8);
 
         // ICC.1:2022 §10.24: textType must end with a NUL byte
@@ -728,6 +908,12 @@ final class IccParser
     private function parseDescTag(string $data): ?string
     {
         if (strlen($data) < 12) {
+            return null;
+        }
+
+        // GH-902: reserved bytes 4..7 must be zero
+        $reserved = substr($data, 4, 4);
+        if ($reserved !== "\0\0\0\0") {
             return null;
         }
 
@@ -768,22 +954,40 @@ final class IccParser
      */
     private function parseMlucTag(string $data): ?string
     {
-        if (strlen($data) < 16) {
+        $length = strlen($data);
+        if ($length < 16) {
             return null;
+        }
+
+        // GH-851: ICC.1:2022 Table 54 reserved bytes 4..7 must be zero
+        $reserved = substr($data, 4, 4);
+        if ($reserved !== "\0\0\0\0") {
+            throw new ParseError('ICC mluc reserved bytes 4..7 are non-zero', 1137);
         }
 
         $recordCount = $this->uInt32Be(substr($data, 8, 4));
         $recordSize  = $this->uInt32Be(substr($data, 12, 4));
-        if ($recordCount === 0 || $recordSize < 12) {
+
+        if ($recordCount === 0) {
             return null;
+        }
+
+        // GH-851: recordSize must be exactly 12
+        if ($recordSize !== 12) {
+            throw new ParseError(
+                sprintf('ICC mluc recordSize must be 12, got %d', $recordSize),
+                1138,
+            );
+        }
+
+        // GH-851: record table must fit within payload
+        $tableEnd = 16 + ($recordCount * $recordSize);
+        if ($tableEnd > $length) {
+            throw new ParseError('ICC mluc record table exceeds payload bounds', 1139);
         }
 
         $cursor = 16;
         for ($i = 0; $i < $recordCount; ++$i) {
-            if ($cursor + $recordSize > strlen($data)) {
-                break;
-            }
-
             $stringLength = $this->uInt32Be(substr($data, $cursor + 4, 4));
             $stringOffset = $this->uInt32Be(substr($data, $cursor + 8, 4));
             $cursor += $recordSize;
@@ -792,8 +996,18 @@ final class IccParser
                 continue;
             }
 
-            if ($stringOffset + $stringLength > strlen($data)) {
-                continue;
+            // GH-851: each record's string must be fully bounded within payload
+            if ($stringOffset + $stringLength > $length) {
+                throw new ParseError(
+                    sprintf(
+                        'ICC mluc record %d string range [%d..%d) exceeds payload length %d',
+                        $i,
+                        $stringOffset,
+                        $stringOffset + $stringLength,
+                        $length,
+                    ),
+                    1140,
+                );
             }
 
             $raw = substr($data, $stringOffset, $stringLength);
@@ -835,21 +1049,7 @@ final class IccParser
             return $converted === false ? null : $converted;
         }
 
-        if (class_exists('Imagick') && class_exists('ImagickPixel')) {
-            try {
-                $imagick = new Imagick();
-                $imagick->newImage(1, 1, new ImagickPixel('white'));
-                $imagick->setImageFormat('png');
-                $imagick->setImageProperty('icc:text', $data);
-                $text = $imagick->getImageProperty('icc:text');
-                if ($text !== '') {
-                    return $text;
-                }
-            } catch (Throwable) {
-                // ignore - fall through to null
-            }
-        }
-
+        // GH-897: no Imagick fallback; return null when no pure-PHP conversion is available
         return null;
     }
 

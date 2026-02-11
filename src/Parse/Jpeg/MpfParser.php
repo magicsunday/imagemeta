@@ -131,13 +131,24 @@ final class MpfParser
 
         $attributes = null;
         if ($nextIfdOffset !== 0) {
+            // Non-zero next-IFD offsets must not point into the TIFF header (bytes 0..7).
+            if ($nextIfdOffset < 8) {
+                throw new ParseError('MP Index IFD next offset points into TIFF header', 1405);
+            }
+
             // When present, the MP Attribute IFD follows the MP Index IFD and shares the same offset semantics (EXIF 3.0 §4.6.4).
             if ($nextIfdOffset >= $buffer->size()) {
                 throw new ParseError('MP Attribute IFD offset outside payload bounds', 1294);
             }
 
-            [$attributeEntries] = $this->readIfd($buffer, $endian, $nextIfdOffset);
-            $attributes         = $this->buildAttributes($attributeEntries);
+            [$attributeEntries, $attributeNextOffset] = $this->readIfd($buffer, $endian, $nextIfdOffset);
+
+            // EXIF 3.0 MPF defines at most two IFDs (Index + Attribute); no further chaining is allowed.
+            if ($attributeNextOffset !== 0) {
+                throw new ParseError('MP Attribute IFD must not chain to a further IFD', 1406);
+            }
+
+            $attributes = $this->buildAttributes($attributeEntries);
         }
 
         return new MpfDocument(
@@ -164,11 +175,26 @@ final class MpfParser
             throw new ParseError('MPF IFD entry count outside supported range', 1295);
         }
 
-        $entries = [];
+        $entries     = [];
+        $previousTag = -1;
         for ($i = 0; $i < $entryCount; ++$i) {
             $tag            = $this->readU16($buffer, $endian);
             $type           = $this->readU16($buffer, $endian);
             $componentCount = $this->readU32($buffer, $endian);
+
+            // TIFF 6.0 requires IFD entries sorted by tag ID in ascending order.
+            if ($tag <= $previousTag) {
+                if ($tag === $previousTag) {
+                    throw new ParseError(sprintf('MPF IFD contains duplicate tag 0x%04X', $tag), 1403);
+                }
+
+                throw new ParseError(
+                    sprintf('MPF IFD tags not in ascending order (0x%04X after 0x%04X)', $tag, $previousTag),
+                    1404,
+                );
+            }
+
+            $previousTag = $tag;
 
             if ($componentCount < 0 || $componentCount > 1_048_576) {
                 throw new ParseError('MPF entry reports unreasonable component count', 1296);
@@ -207,8 +233,13 @@ final class MpfParser
 
         if ($byteCount <= 4) {
             // Inline MPF values use the same in-place storage rule as TIFF IFD
-            // entries (EXIF 3.0 §4.6.2).
+            // entries (EXIF 3.0 §4.6.2). For big-endian, lower-order bytes are
+            // at the end of the 4-byte field per TIFF 6.0 Value/Offset semantics.
             $bytes = $this->packInt($valueOrOffset, $endian);
+
+            if ($endian === Endian::Big && $byteCount < 4) {
+                return substr($bytes, 4 - $byteCount);
+            }
 
             return substr($bytes, 0, $byteCount);
         }

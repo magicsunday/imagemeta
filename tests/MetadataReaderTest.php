@@ -374,7 +374,7 @@ final class MetadataReaderTest extends TestCase
         // SingleItemTypeReferenceBox is a plain Box, not a FullBox
         $irefEntry  = $this->box('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
         $iref       = $this->fullBox('iref', $irefEntry);
-        $meta       = $this->fullBox('meta', $this->box('Exif', self::EXIF_SIGNATURE . $tiff) . $this->box('XMP ', $xmp) . $iref);
+        $meta       = $this->fullBox('meta', $this->box('Exif', pack('N', 0) . $tiff) . $this->box('XMP ', $xmp) . $iref);
         $moov       = $this->quickTimeMoov($identifier);
         $isoPayload = $ftyp . $meta . $moov;
 
@@ -637,7 +637,7 @@ final class MetadataReaderTest extends TestCase
         $meta        = $this->box('meta', $metaPayload);
         $udta        = $this->box('udta', $meta);
 
-        $mvhd = $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 84) . pack('N', 1));
+        $mvhd = $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 80) . pack('N', 1));
         $trak = $this->minimalTrak();
 
         return $this->box('moov', $mvhd . $trak . $udta);

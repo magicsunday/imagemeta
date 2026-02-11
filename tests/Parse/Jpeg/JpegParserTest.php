@@ -70,6 +70,8 @@ final class JpegParserTest extends TestCase
 {
     private const string EXIF_SIGNATURE = "Exif\0\0";
 
+    private const string TIFF_HEADER = "MM\x00\x2A";
+
     private const string XMP_SIGNATURE = "http://ns.adobe.com/xap/1.0/\0";
 
     private const string ICC_SIGNATURE = "ICC_PROFILE\0";
@@ -122,7 +124,7 @@ final class JpegParserTest extends TestCase
      */
     public static function provideApp1Variants(): iterable
     {
-        $exifPayload = 'primary-exif';
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
 
         yield 'only-exif' => [
@@ -165,8 +167,8 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function largeExifOver64KbIsHandled(): void
     {
-        $firstBlob  = str_repeat('A', 40_000);
-        $secondBlob = str_repeat('B', 30_000);
+        $firstBlob  = self::TIFF_HEADER . str_repeat('A', 40_000);
+        $secondBlob = self::TIFF_HEADER . str_repeat('B', 30_000);
         $xmpXml     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Large</x:xmpmeta>';
 
         $jpeg = $this->jpeg(self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $firstBlob), self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $secondBlob), self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml));
@@ -188,7 +190,7 @@ final class JpegParserTest extends TestCase
     {
         $xmpOne   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">One</x:xmpmeta>';
         $xmpTwo   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Two</x:xmpmeta>';
-        $exifBlob = 'primary-exif';
+        $exifBlob = self::TIFF_HEADER . 'primary-exif';
 
         $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
@@ -213,7 +215,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function skipsUnknownAppMarkersWhileExtractingKnownMetadata(): void
     {
-        $exifPayload = 'primary-exif';
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Meta</x:xmpmeta>';
 
         $jpeg = $this->jpeg(
@@ -486,7 +488,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function extractsAppSegmentsFromFilesystemStream(): void
     {
-        $exifPayload = 'filesystem-exif';
+        $exifPayload = self::TIFF_HEADER . 'filesystem-exif';
         $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Filesystem</x:xmpmeta>';
 
         $jpeg = $this->jpeg(
@@ -663,9 +665,9 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function stopsAtSosIgnoresRestartMarkers(): void
     {
-        $primaryExif = 'primary-before-sos';
+        $primaryExif = self::TIFF_HEADER . 'primary-before-sos';
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">BeforeSOS</x:xmpmeta>';
-        $ignoredExif = 'ignored-after-sos';
+        $ignoredExif = self::TIFF_HEADER . 'ignored-after-sos';
 
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $primaryExif)
@@ -693,10 +695,10 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function ignoresSegmentsAfterEoi(): void
     {
-        $exifPayload  = 'pre-eoi-exif';
+        $exifPayload  = self::TIFF_HEADER . 'pre-eoi-exif';
         $xmpPayload   = '<x:xmpmeta xmlns:x="adobe:ns:meta/">PreEOI</x:xmpmeta>';
         $iccProfile   = 'icc-profile';
-        $postExifData = 'ignored-post-eoi';
+        $postExifData = self::TIFF_HEADER . 'ignored-post-eoi';
 
         $jpeg = "\xFF\xD8"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
@@ -725,7 +727,7 @@ final class JpegParserTest extends TestCase
     #[Test]
     public function skipsMalformedTrailingDataAfterEoi(): void
     {
-        $exifPayload = 'pre-eoi-exif';
+        $exifPayload = self::TIFF_HEADER . 'pre-eoi-exif';
         $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Trailing</x:xmpmeta>';
 
         $jpeg = "\xFF\xD8"
