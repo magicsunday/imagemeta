@@ -644,6 +644,86 @@ XML;
     }
 
     /**
+     * Trims XML structural whitespace from simple text values while preserving inner content.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseTrimXmlWhitespaceFromTextValues(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title>  padded value  </dc:title>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame('padded value', $document->get(self::DC_NS, 'title'));
+    }
+
+    /**
+     * Filters rdf:resource and rdf:datatype as structural attributes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseFiltersRdfResourceAndDatatypeAttributes(): void
+    {
+        $xml = <<<'XML_WRAP'
+            <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+                     xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <rdf:Description>
+                <dc:format rdf:resource="http://example.com/resource" rdf:datatype="http://www.w3.org/2001/XMLSchema#string">image/jpeg</dc:format>
+              </rdf:Description>
+            </rdf:RDF>
+            XML_WRAP;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        // Should capture the element text value
+        self::assertSame('image/jpeg', $document->get(self::DC_NS, 'format'));
+
+        // Should NOT capture rdf:resource or rdf:datatype as properties
+        self::assertNull($document->find('resource'));
+        self::assertNull($document->find('datatype'));
+    }
+
+    /**
+     * Preserves empty rdf:li items within RDF Bag containers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesEmptyRdfLiItems(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:subject>
+      <rdf:Bag>
+        <rdf:li>first</rdf:li>
+        <rdf:li></rdf:li>
+        <rdf:li>third</rdf:li>
+      </rdf:Bag>
+    </dc:subject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame(['first', '', 'third'], $document->get(self::DC_NS, 'subject'));
+    }
+
+    /**
      * Rejects rdf:Alt with duplicate xml:lang values per XMP spec.
      *
      * @return void

@@ -120,7 +120,6 @@ final class XmpParser
                     break;
 
                 case XMLReader::TEXT:
-                case XMLReader::WHITESPACE:
                 case XMLReader::SIGNIFICANT_WHITESPACE:
                 case XMLReader::CDATA:
                     $depth = $reader->depth - 1;
@@ -172,14 +171,12 @@ final class XmpParser
                             [$parentNamespace, $parentLocalName] = $parentInfo;
 
                             if ($parentNamespace === self::RDF_NAMESPACE && $parentLocalName === 'li') {
-                                $existing                  = $textBuffers[$parentDepth] ?? '';
-                                $textBuffers[$parentDepth] = $existing . $text;
+                                $textBuffers[$parentDepth] = $text;
                                 break;
                             }
 
                             if ($parentNamespace !== self::RDF_NAMESPACE) {
-                                $existing                  = $textBuffers[$parentDepth] ?? '';
-                                $textBuffers[$parentDepth] = $existing . $text;
+                                $textBuffers[$parentDepth] = $text;
                                 break;
                             }
                         }
@@ -287,7 +284,7 @@ final class XmpParser
             // XMP Specification Part 1 §7.9.2.2: Skip RDF structural attributes
             if (
                 $attrNamespace === self::RDF_NAMESPACE
-                    && in_array($attrLocalName, ['about', 'ID', 'nodeID', 'parseType'], true)
+                    && in_array($attrLocalName, ['about', 'datatype', 'ID', 'nodeID', 'parseType', 'resource'], true)
             ) {
                 continue;
             }
