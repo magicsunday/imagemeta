@@ -282,6 +282,16 @@ final readonly class IsoBmffParser
     private const string BOX_LANG = 'lang';
 
     /**
+     * FourCC for the movie header box.
+     */
+    private const string BOX_MVHD = 'mvhd';
+
+    /**
+     * FourCC for the media header box.
+     */
+    private const string BOX_MDHD = 'mdhd';
+
+    /**
      * FourCC for QuickTime mean payload in free-form metadata.
      */
     private const string FREEFORM_MEAN = 'mean';
@@ -381,14 +391,26 @@ final readonly class IsoBmffParser
         $dataReferences  = [];
         $unresolvedItems = [];
 
+        $moovCount = 0;
+
         foreach ($this->walkTopLevelBoxes() as $box) {
             if ($box->type === self::BOX_FTYP) {
                 $qtKeys = $this->mergeAssociative($qtKeys, $this->parseFtyp($box));
             } elseif ($box->type === self::BOX_META) {
                 $this->parseMetaBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($box->type === self::BOX_MOOV) {
+                ++$moovCount;
+
+                if ($moovCount > 1) {
+                    throw new ParseError('file must contain exactly one moov box', 1373);
+                }
+
                 $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
+                if ($box->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
+                    throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
+                }
+
                 $queuedUuidXmp[] = $this->readAll($box->window);
             }
         }
@@ -423,7 +445,7 @@ final readonly class IsoBmffParser
         $offset   = 0;
 
         while ($offset + 8 <= $fileSize) {
-            $box = $this->readBoxAt($offset, $fileSize);
+            $box = $this->readBoxAt($offset, $fileSize, allowImplicitSize: true);
             yield $box;
             $offset += $box->size;
         }
@@ -448,7 +470,9 @@ final readonly class IsoBmffParser
      */
     private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
-        $metaSeen = false;
+        $metaSeen  = false;
+        $mvhdCount = 0;
+        $trakCount = 0;
 
         foreach ($this->walkChildren($moov) as $child) {
             if ($child->type === self::BOX_META) {
@@ -463,8 +487,23 @@ final readonly class IsoBmffParser
             } elseif ($child->type === self::BOX_UDTA) {
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_TRAK) {
+                ++$trakCount;
                 $this->parseTrak($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+            } elseif ($child->type === self::BOX_MVHD) {
+                ++$mvhdCount;
+
+                if ($mvhdCount > 1) {
+                    throw new ParseError('moov must contain exactly one mvhd box', 1374);
+                }
             }
+        }
+
+        if ($mvhdCount === 0) {
+            throw new ParseError('moov must contain exactly one mvhd box', 1374);
+        }
+
+        if ($trakCount === 0) {
+            throw new ParseError('moov must contain at least one trak box', 1375);
         }
     }
 
@@ -481,7 +520,7 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($ftyp->contentSize < 8) {
-            return [];
+            throw new ParseError('ftyp box payload too small for mandatory fields', 1361);
         }
 
         $majorBrand = $this->normaliseFourcc($win->read(4));
@@ -592,15 +631,37 @@ final readonly class IsoBmffParser
         $handler     = null;
         $handlerName = null;
         $sampleInfo  = [];
+        $tkhdCount   = 0;
+        $mdiaCount   = 0;
 
         foreach ($this->walkChildren($trak) as $child) {
             if ($child->type === self::BOX_TKHD) {
+                ++$tkhdCount;
+
+                if ($tkhdCount > 1) {
+                    throw new ParseError('trak must contain exactly one tkhd box', 1376);
+                }
+
                 [$tkhdWidth, $tkhdHeight] = $this->parseTkhd($child);
             } elseif ($child->type === self::BOX_MDIA) {
+                ++$mdiaCount;
+
+                if ($mdiaCount > 1) {
+                    throw new ParseError('trak must contain exactly one mdia box', 1377);
+                }
+
                 [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child);
             } elseif ($child->type === self::BOX_UDTA) {
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             }
+        }
+
+        if ($tkhdCount === 0) {
+            throw new ParseError('trak must contain exactly one tkhd box', 1376);
+        }
+
+        if ($mdiaCount === 0) {
+            throw new ParseError('trak must contain exactly one mdia box', 1377);
         }
 
         if ($handler === null) {
@@ -667,7 +728,7 @@ final readonly class IsoBmffParser
         }
 
         $version = $win->readU8();
-        $this->readUInt24($win); // flags
+        $flags   = $this->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
             throw new ParseError('unsupported tkhd box version', 1145);
@@ -679,23 +740,54 @@ final readonly class IsoBmffParser
                 throw new ParseError('tkhd version 1 box truncated', 1146);
             }
 
-            $win->read(8 + 8 + 4 + 4 + 8); // creation(64), modification(64), track_id(32), reserved(32), duration(64)
+            $win->read(8 + 8); // creation(64), modification(64)
+            $trackId    = $win->readU32BE();
+            $reserved32 = $win->read(4);
+            $win->read(8); // duration(64)
         } else {
-            $win->read(4 + 4 + 4 + 4 + 4); // creation(32), modification(32), track_id(32), reserved(32), duration(32)
+            $win->read(4 + 4); // creation(32), modification(32)
+            $trackId    = $win->readU32BE();
+            $reserved32 = $win->read(4);
+            $win->read(4); // duration(32)
         }
 
-        $win->read(8); // reserved
+        // ISO/IEC 14496-12 §8.3.2: track_ID must be non-zero
+        if ($trackId === 0) {
+            throw new ParseError('tkhd track_ID must not be zero', 1369);
+        }
+
+        // ISO/IEC 14496-12 §8.3.2: reserved field after track_ID must be zero
+        if ($reserved32 !== "\0\0\0\0") {
+            throw new ParseError('tkhd reserved field after track_ID must be zero', 1370);
+        }
+
+        $reserved64 = $win->read(8); // reserved
+
+        if ($reserved64 !== "\0\0\0\0\0\0\0\0") {
+            throw new ParseError('tkhd reserved 8-byte field must be zero', 1371);
+        }
+
         $win->read(2); // layer
         $win->read(2); // alternate group
         $win->read(2); // volume
-        $win->read(2); // reserved
+
+        $reserved16 = $win->read(2); // reserved
+
+        if ($reserved16 !== "\0\0") {
+            throw new ParseError('tkhd reserved 2-byte field must be zero', 1372);
+        }
+
         $win->read(36); // matrix
 
         $widthFixed  = $win->readU32BE();
         $heightFixed = $win->readU32BE();
 
-        $width  = $widthFixed > 0 ? intdiv($widthFixed, 1 << 16) : null;
-        $height = $heightFixed > 0 ? intdiv($heightFixed, 1 << 16) : null;
+        // ISO/IEC 14496-12 §8.3.2: when track_size_is_aspect_ratio flag is set,
+        // width/height represent aspect ratio, not pixel dimensions
+        $isAspectRatio = ($flags & 0x000008) !== 0;
+
+        $width  = ($widthFixed > 0 && !$isAspectRatio) ? intdiv($widthFixed, 1 << 16) : null;
+        $height = ($heightFixed > 0 && !$isAspectRatio) ? intdiv($heightFixed, 1 << 16) : null;
 
         return [$width, $height];
     }
@@ -712,13 +804,54 @@ final readonly class IsoBmffParser
         $handler     = null;
         $handlerName = null;
         $sampleInfo  = [];
+        $hdlrCount   = 0;
+        $minfCount   = 0;
+        $mdhdCount   = 0;
+
+        // GH-881: collect children first so hdlr/minf order does not matter
+        $children = [];
 
         foreach ($this->walkChildren($mdia) as $child) {
             if ($child->type === self::BOX_HDLR) {
+                ++$hdlrCount;
+
+                if ($hdlrCount > 1) {
+                    throw new ParseError('mdia must contain exactly one hdlr box', 1378);
+                }
+
                 [$handler, $handlerName] = $this->parseHdlr($child);
             } elseif ($child->type === self::BOX_MINF) {
-                $sampleInfo = $this->parseMinf($child, $handler);
+                ++$minfCount;
+
+                if ($minfCount > 1) {
+                    throw new ParseError('mdia must contain exactly one minf box', 1379);
+                }
+
+                $children[] = $child;
+            } elseif ($child->type === self::BOX_MDHD) {
+                ++$mdhdCount;
+
+                if ($mdhdCount > 1) {
+                    throw new ParseError('mdia must contain exactly one mdhd box', 1380);
+                }
             }
+        }
+
+        if ($hdlrCount === 0) {
+            throw new ParseError('mdia must contain exactly one hdlr box', 1378);
+        }
+
+        if ($minfCount === 0) {
+            throw new ParseError('mdia must contain exactly one minf box', 1379);
+        }
+
+        if ($mdhdCount === 0) {
+            throw new ParseError('mdia must contain exactly one mdhd box', 1380);
+        }
+
+        // Parse minf after hdlr so handler type is always available (GH-881)
+        foreach ($children as $child) {
+            $sampleInfo = $this->parseMinf($child, $handler);
         }
 
         return [$handler, $handlerName, $sampleInfo];
@@ -777,13 +910,18 @@ final readonly class IsoBmffParser
                 // QuickTime File Format 2012, "Handler Reference Atom" (p. 85):
                 // component name is a counted string (first byte = length).
                 $name = $countedLen > 0 ? substr($nameBytes, 1, $countedLen) : null;
-            } elseif (str_contains($nameBytes, "\0")) {
+            } elseif ($nameBytes[$remaining - 1] === "\0") {
                 // ISO/IEC 14496-12 §8.4.3: NUL-terminated UTF-8 handler name.
-                $trimmed = trim($nameBytes, "\0");
-                $name    = $trimmed !== '' ? $trimmed : null;
+                $trimmed = rtrim($nameBytes, "\0");
+
+                if ($trimmed !== '' && !mb_check_encoding($trimmed, 'UTF-8')) {
+                    throw new ParseError('hdlr handler name contains invalid UTF-8', 1384);
+                }
+
+                $name = $trimmed !== '' ? $trimmed : null;
             } else {
                 throw new ParseError(sprintf(
-                    'hdlr component name counted length %d exceeds remaining %d bytes',
+                    'hdlr handler name missing NUL terminator (counted length %d exceeds remaining %d bytes)',
                     $countedLen,
                     $remaining - 1,
                 ), 1152);
@@ -807,13 +945,39 @@ final readonly class IsoBmffParser
             return [];
         }
 
+        $stblCount = 0;
+        $dinfCount = 0;
+        $result    = [];
+
         foreach ($this->walkChildren($minf) as $child) {
             if ($child->type === self::BOX_STBL) {
-                return $this->parseStbl($child, $handlerType);
+                ++$stblCount;
+
+                if ($stblCount > 1) {
+                    throw new ParseError('minf must contain exactly one stbl box', 1381);
+                }
+
+                $result = $this->parseStbl($child, $handlerType);
+            } elseif ($child->type === self::BOX_DINF) {
+                ++$dinfCount;
+
+                if ($dinfCount > 1) {
+                    throw new ParseError('minf must contain exactly one dinf box', 1382);
+                }
+
+                $this->parseDinf($child);
             }
         }
 
-        return [];
+        if ($stblCount === 0) {
+            throw new ParseError('minf must contain exactly one stbl box', 1381);
+        }
+
+        if ($dinfCount === 0) {
+            throw new ParseError('minf must contain exactly one dinf box', 1382);
+        }
+
+        return $result;
     }
 
     /**
@@ -826,13 +990,26 @@ final readonly class IsoBmffParser
      */
     private function parseStbl(BoxDescriptor $stbl, string $handlerType): array
     {
+        $stsdCount = 0;
+        $result    = [];
+
         foreach ($this->walkChildren($stbl) as $child) {
             if ($child->type === self::BOX_STSD) {
-                return $this->parseStsd($child, $handlerType);
+                ++$stsdCount;
+
+                if ($stsdCount > 1) {
+                    throw new ParseError('stbl must contain exactly one stsd box', 1383);
+                }
+
+                $result = $this->parseStsd($child, $handlerType);
             }
         }
 
-        return [];
+        if ($stsdCount === 0) {
+            throw new ParseError('stbl must contain exactly one stsd box', 1383);
+        }
+
+        return $result;
     }
 
     /**
@@ -1016,7 +1193,7 @@ final readonly class IsoBmffParser
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
-        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms, $payloads['hasMhdr'], $payloads['countryLists'], $payloads['languageLists']);
+        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms, $payloads['hasMhdr'], $payloads['countryLists'], $payloads['languageLists'], $payloads['isMdta']);
     }
 
     /**
@@ -1034,7 +1211,8 @@ final readonly class IsoBmffParser
      *     ilstBoxes: list<BoxDescriptor>,
      *     hasMhdr: bool,
      *     countryLists: list<list<int>>,
-     *     languageLists: list<list<int>>
+     *     languageLists: list<list<int>>,
+     *     isMdta: bool
      * }
      */
     private function collectDirectPayloads(BoxDescriptor $meta): array
@@ -1181,6 +1359,7 @@ final readonly class IsoBmffParser
             'hasMhdr'        => $hasMhdr,
             'countryLists'   => $countryLists,
             'languageLists'  => $languageLists,
+            'isMdta'         => $handlerType === self::QUICKTIME_MDTA,
         ];
     }
 
@@ -1380,7 +1559,7 @@ final readonly class IsoBmffParser
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
      */
-    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false, array $countryLists = [], array $languageLists = []): array
+    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false, array $countryLists = [], array $languageLists = [], bool $isMdta = false): array
     {
         /** @var array<int, QuickTimeKeyEntry> $keyIndex */
         $keyIndex   = [];
@@ -1395,7 +1574,7 @@ final readonly class IsoBmffParser
 
         // Merge all ilst entries into the cumulative QuickTime metadata set.
         foreach ($ilstBoxes as $ilst) {
-            [$ilstKeys, $ilstAtoms, $ilstHasItemIds] = $this->parseIlst($ilst, $keyIndex, $countryLists, $languageLists);
+            [$ilstKeys, $ilstAtoms, $ilstHasItemIds] = $this->parseIlst($ilst, $keyIndex, $countryLists, $languageLists, $isMdta);
             $existing                                = $this->mergeAssociative($existing, $ilstKeys);
             $existingAtoms                           = $this->mergeAtomLists($existingAtoms, $ilstAtoms);
 
@@ -1486,11 +1665,22 @@ final readonly class IsoBmffParser
     private function parseDinf(BoxDescriptor $dinf): array
     {
         $references = [];
+        $drefCount  = 0;
 
         foreach ($this->walkChildren($dinf) as $child) {
             if ($child->type === self::BOX_DREF) {
+                ++$drefCount;
+
+                if ($drefCount > 1) {
+                    throw new ParseError('dinf must contain exactly one dref box', 1366);
+                }
+
                 $references = $this->mergeDataReferences($references, $this->parseDref($child));
             }
+        }
+
+        if ($drefCount === 0) {
+            throw new ParseError('dinf must contain exactly one dref box', 1366);
         }
 
         return $references;
@@ -1527,6 +1717,10 @@ final readonly class IsoBmffParser
 
         $entryCount = $win->readU32BE();
 
+        if ($entryCount === 0) {
+            throw new ParseError('dref must contain at least one data reference entry', 1365);
+        }
+
         if ($entryCount > self::MAX_DREF_ENTRIES) {
             throw new ParseError('dref entry count exceeds maximum allowed', 1174);
         }
@@ -1536,10 +1730,12 @@ final readonly class IsoBmffParser
 
         foreach ($this->walkChildren($dref, 8) as $child) {
             ++$index;
-            $references[$index] = $this->parseDataReferenceEntry($child, $index);
-            if ($index >= $entryCount) {
-                break;
+
+            if ($index > $entryCount) {
+                throw new ParseError('dref contains entries beyond declared entry_count', 1363);
             }
+
+            $references[$index] = $this->parseDataReferenceEntry($child, $index);
         }
 
         if ($index !== $entryCount) {
@@ -1557,6 +1753,10 @@ final readonly class IsoBmffParser
      */
     private function parseDataReferenceEntry(BoxDescriptor $entry, int $index): IsoBmffDataReference
     {
+        if ($entry->type !== self::BOX_URL && $entry->type !== self::BOX_URN) {
+            throw new ParseError(sprintf('unsupported dref entry type "%s"', $entry->type), 1367);
+        }
+
         $win = $entry->window;
         $win->seek(0);
 
@@ -1572,16 +1772,30 @@ final readonly class IsoBmffParser
 
         $flags = $this->readUInt24($win);
 
-        $payloadSize = $entry->contentSize - 4;
-        $payload     = $payloadSize > 0 ? $win->read($payloadSize) : '';
-        $uri         = null;
-
-        if ($entry->type === self::BOX_URL || $entry->type === self::BOX_URN) {
-            $trimmed = rtrim($payload, "\0");
-            $uri     = $trimmed !== '' ? $trimmed : null;
-        }
-
+        $payloadSize   = $entry->contentSize - 4;
         $selfContained = ($flags & BitMask::BIT_0) !== 0;
+        $payload       = $payloadSize > 0 ? $win->read($payloadSize) : '';
+        $uri           = null;
+
+        if ($selfContained) {
+            // ISO/IEC 14496-12 §8.7.2: self-contained entries must have no payload
+            if ($payloadSize > 0) {
+                throw new ParseError('self-contained dref entry must have empty payload', 1388);
+            }
+        } elseif ($payload !== '') {
+            // Validate NUL-terminated UTF-8 string for URL/URN payloads
+            if ($payload[strlen($payload) - 1] !== "\0") {
+                throw new ParseError('dref entry URL/URN payload missing NUL terminator', 1389);
+            }
+
+            $trimmed = rtrim($payload, "\0");
+
+            if ($trimmed !== '' && !mb_check_encoding($trimmed, 'UTF-8')) {
+                throw new ParseError('dref entry URL/URN payload contains invalid UTF-8', 1390);
+            }
+
+            $uri = $trimmed !== '' ? $trimmed : null;
+        }
 
         return new IsoBmffDataReference(
             $index,
@@ -1898,16 +2112,19 @@ final readonly class IsoBmffParser
         $start = $win->tell();
         $items = [];
         $index = 0;
+
         foreach ($this->walkChildren($iinf, $start) as $child) {
             if ($child->type !== self::BOX_INFE) {
                 continue;
             }
 
-            $items[] = $this->parseInfe($child);
             ++$index;
-            if ($index >= $entryCount) {
-                break;
+
+            if ($index > $entryCount) {
+                throw new ParseError('iinf contains infe entries beyond declared entry_count', 1364);
             }
+
+            $items[] = $this->parseInfe($child);
         }
 
         if ($index !== $entryCount) {
@@ -2118,6 +2335,10 @@ final readonly class IsoBmffParser
             ];
         }
 
+        if ($win->tell() !== $iloc->contentSize) {
+            throw new ParseError('iloc payload has trailing bytes after declared items', 1387);
+        }
+
         return $locations;
     }
 
@@ -2313,7 +2534,13 @@ final readonly class IsoBmffParser
                 throw new ParseError('invalid keys entry size', 1225);
             }
 
-            $name    = $win->read($size - 8);
+            $name = $win->read($size - 8);
+
+            // GH-815: validate UTF-8 encoding for mdta namespace keys
+            if ($namespace === self::QUICKTIME_MDTA && !mb_check_encoding($name, 'UTF-8')) {
+                throw new ParseError('keys mdta key_value contains invalid UTF-8', 1385);
+            }
+
             $map[$i] = [
                 'namespace' => $namespace,
                 'name'      => $name,
@@ -2343,10 +2570,11 @@ final readonly class IsoBmffParser
      * @param array<int, QuickTimeKeyEntry> $keyIndex      Structured key entries from parseKeys().
      * @param list<list<int>>               $countryLists  Parsed country list arrays from ctry atom.
      * @param list<list<int>>               $languageLists Parsed language list arrays from lang atom.
+     * @param bool                          $isMdta        Whether the handler type is mdta.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList, 2: bool}
      */
-    private function parseIlst(BoxDescriptor $ilst, array $keyIndex, array $countryLists = [], array $languageLists = []): array
+    private function parseIlst(BoxDescriptor $ilst, array $keyIndex, array $countryLists = [], array $languageLists = [], bool $isMdta = false): array
     {
         $result      = [];
         $atomsList   = [];
@@ -2362,6 +2590,19 @@ final readonly class IsoBmffParser
                 $keyName = $this->resolveKeyName($keyIndex[$index]);
             } elseif ($entry->type === self::BOX_FREEFORM) {
                 $keyName = $this->parseFreeformKey($entry);
+            } elseif ($isMdta) {
+                // GH-814: in mdta mode, ilst entries must reference keys by index
+                if ($index !== null) {
+                    throw new ParseError(sprintf(
+                        'mdta ilst entry key index %d out of range',
+                        $index,
+                    ), 1386);
+                }
+
+                throw new ParseError(sprintf(
+                    'mdta ilst entry type "%s" is not a valid key index',
+                    $entry->type,
+                ), 1386);
             } elseif ($this->isPrintableFourcc($entry->type)) {
                 $keyName = $entry->type;
             }
@@ -3175,7 +3416,7 @@ final readonly class IsoBmffParser
      *
      * @return BoxDescriptor
      */
-    private function readBoxAt(int $offset, int $limit): BoxDescriptor
+    private function readBoxAt(int $offset, int $limit, bool $allowImplicitSize = false): BoxDescriptor
     {
         if ($offset < 0 || $offset > $limit) {
             throw new ParseError('box offset outside container', 1260);
@@ -3188,6 +3429,10 @@ final readonly class IsoBmffParser
         $size       = $size32;
 
         if ($size32 === 0) {
+            if (!$allowImplicitSize) {
+                throw new ParseError('nested box size==0 is only valid at top level', 1362);
+            }
+
             $size = $limit - $offset;
         } elseif ($size32 === 1) {
             $size = $this->stream->readU64BE()->toInt('extended box size');

@@ -370,7 +370,7 @@ final class MetadataReaderTest extends TestCase
             . '</x:xmpmeta>';
         $identifier = 'qt-meta-identifier';
 
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
         // SingleItemTypeReferenceBox is a plain Box, not a FullBox
         $irefEntry  = $this->box('cdsc', pack('n', 2) . pack('n', 1) . pack('n', 3));
         $iref       = $this->fullBox('iref', $irefEntry);
@@ -637,6 +637,25 @@ final class MetadataReaderTest extends TestCase
         $meta        = $this->box('meta', $metaPayload);
         $udta        = $this->box('udta', $meta);
 
-        return $this->box('moov', $udta);
+        $mvhd = $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 84) . pack('N', 1));
+        $trak = $this->minimalTrak();
+
+        return $this->box('moov', $mvhd . $trak . $udta);
+    }
+
+    private function minimalTrak(): string
+    {
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $stsd = $this->fullBox('stsd', pack('N', 0));
+        $stbl = $this->box('stbl', $stsd);
+        $minf = $this->box('minf', $dinf . $stbl);
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+
+        return $this->box('trak', $tkhd . $mdia);
     }
 }

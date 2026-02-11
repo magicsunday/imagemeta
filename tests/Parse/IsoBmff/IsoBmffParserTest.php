@@ -74,7 +74,7 @@ final class IsoBmffParserTest extends TestCase
     {
         $exifPayload = "Exif\0\0primary-exif";
         $meta        = $this->fullBox('meta', $this->box('Exif', $exifPayload));
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $data        = $ftyp . $meta;
 
         $extractor           = $this->createExtractor($data);
@@ -82,7 +82,7 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertSame(['primary-exif'], $exifs);
         self::assertSame([], $xmps);
-        self::assertNull($qt);
+        self::assertNotNull($qt);
     }
 
     /**
@@ -96,7 +96,7 @@ final class IsoBmffParserTest extends TestCase
     {
         $exifPayload = "Exif\0\0quicktime-exif";
         $meta        = $this->box('meta', $this->box('Exif', $exifPayload));
-        $ftyp        = $this->box('ftyp', 'qt  ');
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
         $data        = $ftyp . $meta;
 
         $extractor           = $this->createExtractor($data);
@@ -104,7 +104,7 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertSame(['quicktime-exif'], $exifs);
         self::assertSame([], $xmps);
-        self::assertNull($qt);
+        self::assertNotNull($qt);
     }
 
     /**
@@ -130,7 +130,7 @@ final class IsoBmffParserTest extends TestCase
         $ilst        = $this->box('ilst', $entry);
 
         $meta = $this->fullBox('meta', $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor       = $this->createExtractor($ftyp . $meta);
         [, , $quickTime] = $extractor->extract();
@@ -163,7 +163,7 @@ final class IsoBmffParserTest extends TestCase
         $ilst        = $this->box('ilst', $entry);
 
         $meta = $this->fullBox('meta', $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor       = $this->createExtractor($ftyp . $meta);
         [, , $quickTime] = $extractor->extract();
@@ -209,7 +209,7 @@ final class IsoBmffParserTest extends TestCase
         // Build once to compute offsets
         $metaPayload = $iinf . $ilocBuilder(0, 0, strlen($part1), strlen($part2));
         $meta        = $this->fullBox('meta', $metaPayload);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdatPayload = $part1 . $part2;
         $mdat        = $this->box('mdat', $mdatPayload);
 
@@ -263,7 +263,7 @@ final class IsoBmffParserTest extends TestCase
         // Calculate layout
         $metaPayload = $iinf . $ilocBuilder(0, strlen($exifBlob));
         $meta        = $this->fullBox('meta', $metaPayload);
-        $ftyp        = $this->box('ftyp', 'heic');
+        $ftyp        = $this->box('ftyp', 'heic' . pack('N', 0));
         $mdat        = $this->box('mdat', $exifBlob);
 
         $offsetBase = strlen($ftyp) + strlen($meta) + 8; // mdat payload starts after header
@@ -312,7 +312,7 @@ final class IsoBmffParserTest extends TestCase
 
         $metaPayload = $iinf . $ilocBuilder(0, strlen($exifBlob));
         $meta        = $this->fullBox('meta', $metaPayload);
-        $ftyp        = $this->box('ftyp', 'heic');
+        $ftyp        = $this->box('ftyp', 'heic' . pack('N', 0));
         $mdat        = $this->box('mdat', $exifBlob);
 
         $offsetBase = strlen($ftyp) + strlen($meta) + 8;
@@ -347,7 +347,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->fullBox('iloc', $ilocPayload);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -374,7 +374,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -401,7 +401,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->fullBox('iloc', $ilocPayload, 3, 0);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -421,7 +421,7 @@ final class IsoBmffParserTest extends TestCase
         $ilocPayload = "\x44\x00" . pack('n', 0);
         $iloc        = $this->fullBox('iloc', $ilocPayload, flags: 1);
         $meta        = $this->fullBox('meta', $iloc);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $meta)->extract();
     }
@@ -447,7 +447,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->fullBox('iloc', $ilocPayload, 0, 0);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -478,7 +478,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -509,7 +509,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -545,7 +545,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->fullBox('iloc', $ilocPayload);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -591,7 +591,7 @@ final class IsoBmffParserTest extends TestCase
         $xmpData     = $itemXmp;
         $metaPayload = $pitm . $iinf . $ilocBuilder(0, strlen($xmpData)) . $this->box('XMP ', $directXmp);
         $meta        = $this->fullBox('meta', $metaPayload);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat        = $this->box('mdat', $xmpData);
 
         $offsetBase = strlen($ftyp) + strlen($uuidBox) + strlen($meta) + 8;
@@ -687,8 +687,8 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box($legacyKey, $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
         $meta      = $this->box('meta', "\0\0\0\0" . $ilst);
-        $moov      = $this->box('moov', $meta);
-        $ftyp      = $this->box('ftyp', 'qt  ');
+        $moov      = $this->moov($meta);
+        $ftyp      = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor           = $this->createExtractor($ftyp . $moov);
         [, , $quickTimeMeta] = $extractor->extract();
@@ -721,8 +721,8 @@ final class IsoBmffParserTest extends TestCase
         // Append 4-byte zero terminator inside udta
         $udtaPayload = $meta . "\0\0\0\0";
         $udta        = $this->box('udta', $udtaPayload);
-        $moov        = $this->box('moov', $udta);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $moov        = $this->moov($udta);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -755,15 +755,16 @@ final class IsoBmffParserTest extends TestCase
 
         $metaPayload = "\0\0\0\0" . $hdlr . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
-        $moov        = $this->box('moov', $this->box('udta', $meta));
-        $ftyp        = $this->box('ftyp', 'isom');
+        $moov        = $this->moov($this->box('udta', $meta));
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
 
-        // With keys/ilst discarded due to non-mdta handler and a minimal ftyp,
-        // no QuickTime metadata is produced.
-        self::assertNull($qtMeta);
+        // With keys/ilst discarded due to non-mdta handler, only ftyp-derived
+        // metadata is produced (majorBrand, minorVersion, compatibleBrands).
+        self::assertNotNull($qtMeta);
+        self::assertNull($qtMeta->stringValue('com.apple.quicktime.testKey'));
     }
 
     /**
@@ -783,8 +784,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst      = $this->box('ilst', $ilstEntry);
 
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $ilst);
-        $moov = $this->box('moov', $this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('mdta meta box missing required keys subatom');
@@ -809,8 +810,8 @@ final class IsoBmffParserTest extends TestCase
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys);
-        $moov = $this->box('moov', $this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->expectException(ParseError::class);
         $this->expectExceptionMessage('mdta meta box missing required ilst subatom');
@@ -844,8 +845,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst       = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
 
         $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
-        $moov = $this->box('moov', $this->box('udta', $meta));
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($this->box('udta', $meta));
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -1032,7 +1033,7 @@ final class IsoBmffParserTest extends TestCase
         $iinfPayload = "\0\0\0\0" . pack('n', 1) . $infe;
         $iinf        = $this->box('iinf', $iinfPayload);
 
-        $drefEntry = $this->fullBox('url ', 'file://example');
+        $drefEntry = $this->fullBox('url ', "file://example\0");
         $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
         $dinf      = $this->box('dinf', $dref);
 
@@ -1047,7 +1048,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->box('iloc', $payload);
 
         $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
         $data = $ftyp . $meta;
 
         $extractor                                        = $this->createExtractor($data);
@@ -1094,7 +1095,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->box('iloc', $ilocPayload);
 
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $data = $this->box('ftyp', 'isom') . $meta;
+        $data = $this->box('ftyp', 'isom' . pack('N', 0)) . $meta;
 
         $extractor = $this->createExtractor($data);
 
@@ -1120,7 +1121,7 @@ final class IsoBmffParserTest extends TestCase
         $entry        = $this->box('dimg', $entryPayload);
         $iref         = $this->fullBox('iref', $entry);
         $meta         = $this->fullBox('meta', $iref);
-        $ftyp         = $this->box('ftyp', 'isom');
+        $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor              = $this->createExtractor($ftyp . $meta);
         [, , , $itemReferences] = $extractor->extract();
@@ -1163,9 +1164,9 @@ final class IsoBmffParserTest extends TestCase
 
         $idat    = $this->box('idat', $exifPayload);
         $prefix  = $iinf . $iloc;
-        $padding = $this->alignmentPadding(12 + 12 + strlen($prefix), 8);
+        $padding = $this->alignmentPadding(16 + 12 + strlen($prefix), 8);
         $meta    = $this->fullBox('meta', $prefix . $padding . $idat);
-        $ftyp    = $this->box('ftyp', 'isom');
+        $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor                         = $this->createExtractor($ftyp . $meta);
         [$exifs, , , , , $unresolvedItems] = $extractor->extract();
@@ -1205,9 +1206,9 @@ final class IsoBmffParserTest extends TestCase
 
         $idat    = $this->box('idat', $exifPayload);
         $prefix  = $iinf . $iloc;
-        $padding = $this->alignmentPadding(12 + 12 + strlen($prefix), 8);
+        $padding = $this->alignmentPadding(16 + 12 + strlen($prefix), 8);
         $meta    = $this->fullBox('meta', $prefix . $padding . $idat);
-        $ftyp    = $this->box('ftyp', 'isom');
+        $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1226,7 +1227,7 @@ final class IsoBmffParserTest extends TestCase
         $freeBox = $this->box('free', 'X');
         $idat    = $this->box('idat', 'payload');
         $meta    = $this->fullBox('meta', $freeBox . $idat);
-        $ftyp    = $this->box('ftyp', 'isom');
+        $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $meta)->extract();
     }
@@ -1276,7 +1277,7 @@ final class IsoBmffParserTest extends TestCase
 
         $placeholderIloc = $ilocBuilder(0, strlen($exifPayload), strlen($exifPayload));
         $meta            = $this->fullBox('meta', $iinf . $iref . $placeholderIloc);
-        $ftyp            = $this->box('ftyp', 'isom');
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat            = $this->box('mdat', $exifPayload);
 
         $offsetBase = strlen($ftyp) + strlen($meta) + 8;
@@ -1337,7 +1338,7 @@ final class IsoBmffParserTest extends TestCase
 
         $placeholderIloc = $ilocBuilder(0, strlen($exifPayload), strlen($exifPayload));
         $meta            = $this->fullBox('meta', $iinf . $iref . $placeholderIloc);
-        $ftyp            = $this->box('ftyp', 'isom');
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat            = $this->box('mdat', $exifPayload);
 
         $offsetBase = strlen($ftyp) + strlen($meta) + 8;
@@ -1372,12 +1373,12 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('N', 4); // extent_length = 4
         $iloc = $this->fullBox('iloc', $payload, 1, 0);
 
-        $drefEntry = $this->fullBox('url ', 'https://example.test/exif');
+        $drefEntry = $this->fullBox('url ', "https://example.test/exif\0");
         $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
         $dinf      = $this->box('dinf', $dref);
 
         $meta = $this->fullBox('meta', $iinf . $iloc . $dinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor                                        = $this->createExtractor($ftyp . $meta);
         [$exifs, , , , $dataReferences, $unresolvedItems] = $extractor->extract();
@@ -1414,7 +1415,7 @@ final class IsoBmffParserTest extends TestCase
         $entry        = $this->box('dimg', $entryPayload);
         $iref         = $this->fullBox('iref', $entry);
         $meta         = $this->fullBox('meta', $iref);
-        $ftyp         = $this->box('ftyp', 'isom');
+        $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1435,7 +1436,7 @@ final class IsoBmffParserTest extends TestCase
         $entry        = $this->box('dimg', $entryPayload);
         $iref         = $this->fullBox('iref', $entry, flags: 1);
         $meta         = $this->fullBox('meta', $iref);
-        $ftyp         = $this->box('ftyp', 'isom');
+        $ftyp         = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $meta)->extract();
     }
@@ -1467,7 +1468,7 @@ final class IsoBmffParserTest extends TestCase
         $ilst     = $this->box('ilst', $entry);
 
         $meta = $this->fullBox('meta', $keys . $ilst);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor       = $this->createExtractor($ftyp . $meta);
         [, , $quickTime] = $extractor->extract();
@@ -1540,9 +1541,9 @@ final class IsoBmffParserTest extends TestCase
 
         $metaPayload = "\0\0\0\0" . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
-        $moov        = $this->box('moov', $this->box('udta', $meta));
+        $moov        = $this->moov($this->box('udta', $meta));
 
-        return $this->box('ftyp', 'isom') . $moov;
+        return $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
     }
 
     /**
@@ -1561,9 +1562,9 @@ final class IsoBmffParserTest extends TestCase
 
         $metaPayload = "\0\0\0\0" . $ilst;
         $meta        = $this->box('meta', $metaPayload);
-        $moov        = $this->box('moov', $meta);
+        $moov        = $this->moov($meta);
 
-        return $this->box('ftyp', 'isom') . $moov;
+        return $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
     }
 
     /**
@@ -1587,7 +1588,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->box('iloc', $payload);
         $iinf = $this->fullBox('iinf', pack('n', 0)); // empty iinf
         $meta = $this->fullBox('meta', $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1609,7 +1610,7 @@ final class IsoBmffParserTest extends TestCase
         $payload = pack('N', 10001); // version 1 uses 32-bit entry count
         $iinf    = $this->fullBox('iinf', $payload, 1, 0);
         $meta    = $this->fullBox('meta', $iinf);
-        $ftyp    = $this->box('ftyp', 'isom');
+        $ftyp    = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1631,8 +1632,8 @@ final class IsoBmffParserTest extends TestCase
         $payload = pack('N', 1001); // entryCount = 1001 (exceeds limit)
         $keys    = $this->fullBox('keys', $payload);
         $meta    = $this->fullBox('meta', $keys);
-        $moov    = $this->box('moov', $meta);
-        $ftyp    = $this->box('ftyp', 'qt  ');
+        $moov    = $this->moov($meta);
+        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -1653,8 +1654,8 @@ final class IsoBmffParserTest extends TestCase
         $payload = pack('N', 1); // entryCount = 1
         $keys    = $this->fullBox('keys', $payload, 1, 0); // version=1
         $meta    = $this->fullBox('meta', $keys);
-        $moov    = $this->box('moov', $meta);
-        $ftyp    = $this->box('ftyp', 'qt  ');
+        $moov    = $this->moov($meta);
+        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -1675,8 +1676,8 @@ final class IsoBmffParserTest extends TestCase
         $payload = pack('N', 1); // entryCount = 1
         $keys    = $this->fullBox('keys', $payload, 0, 1); // flags=1
         $meta    = $this->fullBox('meta', $keys);
-        $moov    = $this->box('moov', $meta);
-        $ftyp    = $this->box('ftyp', 'qt  ');
+        $moov    = $this->moov($meta);
+        $ftyp    = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -1707,10 +1708,11 @@ final class IsoBmffParserTest extends TestCase
         $hdlrPayload .= str_repeat("\0", 12); // reserved
         $hdlr = $this->box('hdlr', $hdlrPayload);
 
-        $mdia = $this->box('mdia', $hdlr . $minf);
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
         $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $trak);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -1735,10 +1737,11 @@ final class IsoBmffParserTest extends TestCase
         $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
         $hdlr        = $this->box('hdlr', $hdlrPayload);
 
-        $mdia = $this->box('mdia', $hdlr . $minf);
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
         $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $trak);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -1763,10 +1766,11 @@ final class IsoBmffParserTest extends TestCase
         $hdlrPayload = pack('N', 0) . "\0\0\0\0" . 'vide' . str_repeat("\0", 12);
         $hdlr        = $this->box('hdlr', $hdlrPayload);
 
-        $mdia = $this->box('mdia', $hdlr . $minf);
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
         $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $trak);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -1788,7 +1792,7 @@ final class IsoBmffParserTest extends TestCase
         $infe        = $this->box('infe', $infePayload);
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
         $meta        = $this->fullBox('meta', $iinf);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1809,7 +1813,7 @@ final class IsoBmffParserTest extends TestCase
         $infe = $this->box('infe', "\0\0\0\0"); // only 4 bytes, needs 8
         $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
         $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1832,7 +1836,7 @@ final class IsoBmffParserTest extends TestCase
         $infe        = $this->box('infe', $infePayload);
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
         $meta        = $this->fullBox('meta', $iinf);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1865,7 +1869,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->box('iloc', $ilocPayload);
 
         $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat = $this->box('mdat', $xmpData);
 
         // Recalculate iloc offset now that we know full meta size
@@ -1906,7 +1910,7 @@ final class IsoBmffParserTest extends TestCase
         $iloc = $this->box('iloc', $ilocPayload);
 
         $meta = $this->fullBox('meta', $pitm . $iinf . $iloc);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
         $mdat = $this->box('mdat', $xmpData);
 
         $dataOffset  = strlen($ftyp) + strlen($meta) + 8;
@@ -1938,7 +1942,7 @@ final class IsoBmffParserTest extends TestCase
         $infe        = $this->box('infe', $infePayload);
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 2) . $infe); // claims 2, has 1
         $meta        = $this->fullBox('meta', $iinf);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1958,7 +1962,7 @@ final class IsoBmffParserTest extends TestCase
 
         $iinf = $this->box('iinf', "\x02\0\0\0" . pack('N', 0)); // version=2
         $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1978,7 +1982,7 @@ final class IsoBmffParserTest extends TestCase
 
         $iinf = $this->box('iinf', "\0\0\0"); // only 3 bytes
         $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -1998,7 +2002,7 @@ final class IsoBmffParserTest extends TestCase
 
         $iinf = $this->box('iinf', "\x01\0\0\0" . pack('n', 0)); // version=1 but only 6 bytes
         $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2019,7 +2023,7 @@ final class IsoBmffParserTest extends TestCase
         $pitmPayload = "\x02\0\0\0" . pack('N', 1); // version=2, flags=0, item_ID=1
         $pitm        = $this->box('pitm', $pitmPayload);
         $meta        = $this->fullBox('meta', $pitm);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2040,7 +2044,7 @@ final class IsoBmffParserTest extends TestCase
         $pitmPayload = "\0\0\0"; // only 3 bytes, needs at least 6
         $pitm        = $this->box('pitm', $pitmPayload);
         $meta        = $this->fullBox('meta', $pitm);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2061,7 +2065,7 @@ final class IsoBmffParserTest extends TestCase
         $pitmPayload = "\x01\0\0\0" . pack('n', 1); // version=1, flags=0, only 2-byte item_ID (6 bytes total, needs 8)
         $pitm        = $this->box('pitm', $pitmPayload);
         $meta        = $this->fullBox('meta', $pitm);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2082,7 +2086,7 @@ final class IsoBmffParserTest extends TestCase
         $dref = $this->fullBox('dref', pack('N', 0), 1); // version=1, entry_count=0
         $dinf = $this->box('dinf', $dref);
         $meta = $this->fullBox('meta', $dinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2103,7 +2107,7 @@ final class IsoBmffParserTest extends TestCase
         $dref = $this->fullBox('dref', pack('N', 0), 0, 1); // version=0, flags=1, entry_count=0
         $dinf = $this->box('dinf', $dref);
         $meta = $this->fullBox('meta', $dinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2123,7 +2127,7 @@ final class IsoBmffParserTest extends TestCase
 
         $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
         $meta = $this->fullBox('meta', $iinf, 1); // version=1, flags=0
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2143,7 +2147,7 @@ final class IsoBmffParserTest extends TestCase
 
         $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', 0));
         $meta = $this->fullBox('meta', $iinf, 0, 1); // version=0, flags=1
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2162,7 +2166,7 @@ final class IsoBmffParserTest extends TestCase
 
         $iinf = $this->fullBox('iinf', pack('n', 0), 0, 1); // flags=1
         $meta = $this->fullBox('meta', $iinf);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2183,7 +2187,7 @@ final class IsoBmffParserTest extends TestCase
         $infe        = $this->fullBox('infe', $infePayload, 2, 1); // flags=1
         $iinf        = $this->fullBox('iinf', pack('n', 1) . $infe);
         $meta        = $this->fullBox('meta', $iinf);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2203,7 +2207,7 @@ final class IsoBmffParserTest extends TestCase
         $pitm = $this->fullBox('pitm', pack('n', 1), 0, 1); // flags=1
         $iinf = $this->fullBox('iinf', pack('n', 0));
         $meta = $this->fullBox('meta', $iinf . $pitm);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2224,7 +2228,7 @@ final class IsoBmffParserTest extends TestCase
         $pitm = $this->fullBox('pitm', pack('n', 99)); // item_ID = 99 (no such item)
         $iinf = $this->fullBox('iinf', pack('n', 0));  // No items defined
         $meta = $this->fullBox('meta', $iinf . $pitm);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2245,7 +2249,7 @@ final class IsoBmffParserTest extends TestCase
         $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
         $dinf      = $this->box('dinf', $dref);
         $meta      = $this->fullBox('meta', $dinf);
-        $ftyp      = $this->box('ftyp', 'isom');
+        $ftyp      = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2284,8 +2288,8 @@ final class IsoBmffParserTest extends TestCase
         $tkhdPayload = "\x02\x00\x00\x00" . str_repeat("\0", 80);
         $tkhd        = $this->box('tkhd', $tkhdPayload);
         $trak        = $this->box('trak', $tkhd);
-        $moov        = $this->box('moov', $trak);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $moov);
         $extractor->extract();
@@ -2308,7 +2312,7 @@ final class IsoBmffParserTest extends TestCase
             . str_repeat("\0", 12);                // reserved
         $hdlr = $this->box('hdlr', $hdlrPayload);
         $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2331,7 +2335,7 @@ final class IsoBmffParserTest extends TestCase
             . str_repeat("\0", 12);                // reserved
         $hdlr = $this->box('hdlr', $hdlrPayload);
         $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2354,7 +2358,7 @@ final class IsoBmffParserTest extends TestCase
             . str_repeat("\0", 12);                // reserved
         $hdlr = $this->box('hdlr', $hdlrPayload);
         $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2379,7 +2383,7 @@ final class IsoBmffParserTest extends TestCase
             . "\x00\x00\x00\x00";                  // reserved[2] = 0
         $hdlr = $this->box('hdlr', $hdlrPayload);
         $meta = $this->fullBox('meta', $hdlr);
-        $ftyp = $this->box('ftyp', 'isom');
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
@@ -2398,8 +2402,8 @@ final class IsoBmffParserTest extends TestCase
 
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr);
-        $moov = $this->box('moov', $meta . $meta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->box('moov', $this->minimalMvhd() . $this->minimalTrak() . $meta . $meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2418,8 +2422,8 @@ final class IsoBmffParserTest extends TestCase
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0pict" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr);
         $udta = $this->box('udta', $meta . $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2439,9 +2443,9 @@ final class IsoBmffParserTest extends TestCase
         $metaPayload = "\0\0\0\0" . $keys . $ilst;
         $meta        = $this->box('meta', $metaPayload);
         $udta        = $this->box('udta', $meta);
-        $trak        = $this->box('trak', $udta);
-        $moov        = $this->box('moov', $trak);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $trak        = $this->box('trak', $this->minimalTrakContent() . $udta);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2456,9 +2460,9 @@ final class IsoBmffParserTest extends TestCase
         $namePayload = "Test Track Name\0";
         $nameAtom    = $this->box('name', $namePayload);
         $udta        = $this->box('udta', $nameAtom);
-        $trak        = $this->box('trak', $udta);
-        $moov        = $this->box('moov', $trak);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $trak        = $this->box('trak', $this->minimalTrakContent() . $udta);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2489,10 +2493,10 @@ final class IsoBmffParserTest extends TestCase
 
         $trackMeta = $this->box('meta', "\0\0\0\0" . $keys . $ilst2);
         $trackUdta = $this->box('udta', $trackMeta);
-        $trak      = $this->box('trak', $trackUdta);
+        $trak      = $this->box('trak', $this->minimalTrakContent() . $trackUdta);
 
-        $moov = $this->box('moov', $movieUdta . $trak);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->box('moov', $this->minimalMvhd() . $movieUdta . $trak);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2519,8 +2523,8 @@ final class IsoBmffParserTest extends TestCase
         // No keys box — only ilst with name atom fallback
         $meta = $this->box('meta', "\0\0\0\0" . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2546,8 +2550,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
         $meta = $this->box('meta', "\0\0\0\0" . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2566,8 +2570,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst = $this->box('ilst', $ilstEntry);
         $meta = $this->box('meta', "\0\0\0\0" . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2591,8 +2595,8 @@ final class IsoBmffParserTest extends TestCase
 
         $meta = $this->box('meta', "\0\0\0\0" . $mhdr . $keys . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2622,8 +2626,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
         $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2641,8 +2645,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst = $this->box('ilst', $ilstEntry);
         $meta = $this->box('meta', "\0\0\0\0" . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2660,8 +2664,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst = $this->box('ilst', $ilstEntry);
         $meta = $this->box('meta', "\0\0\0\0" . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2681,8 +2685,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst = $this->box('ilst', $ilstEntry);
         $meta = $this->box('meta', "\0\0\0\0" . $ilst);
         $udta = $this->box('udta', $meta);
-        $moov = $this->box('moov', $udta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($udta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2705,8 +2709,8 @@ final class IsoBmffParserTest extends TestCase
 
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
-        $moov = $this->box('moov', $meta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2732,8 +2736,8 @@ final class IsoBmffParserTest extends TestCase
 
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->box('moov', $meta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2754,8 +2758,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
 
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
-        $moov = $this->box('moov', $meta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2773,8 +2777,8 @@ final class IsoBmffParserTest extends TestCase
 
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->box('moov', $meta);
-        $ftyp = $this->box('ftyp', 'isom');
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2857,10 +2861,13 @@ final class IsoBmffParserTest extends TestCase
         $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12)
             . chr(strlen($name)) . $name;
         $hdlr = $this->box('hdlr', $hdlrPayload);
-        $mdia = $this->box('mdia', $hdlr);
-        $trak = $this->box('trak', $mdia);
-        $moov = $this->box('moov', $trak);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $minf = $this->minimalMinf();
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2886,8 +2893,8 @@ final class IsoBmffParserTest extends TestCase
         $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
 
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->box('moov', $meta);
-        $ftyp = $this->box('ftyp', 'qt  ');
+        $moov = $this->moov($meta);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -2903,14 +2910,14 @@ final class IsoBmffParserTest extends TestCase
     public function rejectHdlrCountedStringExceedsRemaining(): void
     {
         $this->expectException(ParseError::class);
-        $this->expectExceptionMessage('hdlr component name counted length 20 exceeds remaining 2 bytes');
+        $this->expectExceptionMessage('hdlr handler name missing NUL terminator (counted length 20 exceeds remaining 2 bytes)');
 
         // Length byte says 20 but only 2 bytes follow, and no NUL → not ISO fallback
         $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12) . chr(20) . 'AB';
         $hdlr        = $this->box('hdlr', $hdlrPayload);
         $meta        = $this->box('meta', "\0\0\0\0" . $hdlr);
-        $moov        = $this->box('moov', $meta);
-        $ftyp        = $this->box('ftyp', 'isom');
+        $moov        = $this->moov($meta);
+        $ftyp        = $this->box('ftyp', 'isom' . pack('N', 0));
 
         $this->createExtractor($ftyp . $moov)->extract();
     }
@@ -2924,10 +2931,13 @@ final class IsoBmffParserTest extends TestCase
         $name        = "VideoHandler\0";
         $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12) . $name;
         $hdlr        = $this->box('hdlr', $hdlrPayload);
-        $mdia        = $this->box('mdia', $hdlr);
-        $trak        = $this->box('trak', $mdia);
-        $moov        = $this->box('moov', $trak);
-        $ftyp        = $this->box('ftyp', 'qt  ');
+        $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $minf        = $this->minimalMinf();
+        $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd        = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak        = $this->box('trak', $tkhd . $mdia);
+        $moov        = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ' . pack('N', 0));
 
         $extractor    = $this->createExtractor($ftyp . $moov);
         [, , $qtMeta] = $extractor->extract();
@@ -3016,9 +3026,9 @@ final class IsoBmffParserTest extends TestCase
 
         $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
-        $moov = $this->box('moov', $meta);
+        $moov = $this->moov($meta);
 
-        return $this->box('ftyp', 'isom') . $moov;
+        return $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
     }
 
     /**
@@ -3075,9 +3085,9 @@ final class IsoBmffParserTest extends TestCase
         }
 
         $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst . $extras);
-        $moov = $this->box('moov', $meta);
+        $moov = $this->moov($meta);
 
-        return $this->box('ftyp', 'isom') . $moov;
+        return $this->box('ftyp', 'isom' . pack('N', 0)) . $moov;
     }
 
     /**
@@ -3149,5 +3159,72 @@ final class IsoBmffParserTest extends TestCase
         $header = chr($version) . chr(($flags >> 16) & 0xFF) . chr(($flags >> 8) & 0xFF) . chr($flags & 0xFF);
 
         return $this->box($type, $header . $payload);
+    }
+
+    /**
+     * Returns a minimal valid mvhd box (version 0, 108 bytes content).
+     */
+    private function minimalMvhd(): string
+    {
+        // mvhd v0: creation(4) + modification(4) + timescale(4, >0) + duration(4)
+        //        + rate(4) + volume(2) + reserved(10) + matrix(36) + pre_defined(24) + next_track_ID(4) = 96
+        return $this->fullBox('mvhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 84) . pack('N', 1));
+    }
+
+    /**
+     * Returns a minimal valid trak box with tkhd + mdia(hdlr + mdhd + minf(dinf(dref(url)) + stbl(stsd))).
+     */
+    private function minimalTrak(): string
+    {
+        // tkhd v0: 4 (version+flags) + 4 creation + 4 modification + 4 track_id + 4 reserved + 4 duration
+        //        + 8 reserved + 2 layer + 2 alternate_group + 2 volume + 2 reserved + 36 matrix + 4 width + 4 height = 84
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $stsd = $this->fullBox('stsd', pack('N', 0));
+        $stbl = $this->box('stbl', $stsd);
+        $minf = $this->box('minf', $dinf . $stbl);
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+
+        return $this->box('trak', $tkhd . $mdia);
+    }
+
+    /**
+     * Returns the inner content of a minimal valid trak (tkhd + mdia) without the trak box wrapper.
+     * Useful when building a custom trak that needs additional children (e.g. udta).
+     */
+    private function minimalTrakContent(): string
+    {
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $this->minimalMinf());
+
+        return $tkhd . $mdia;
+    }
+
+    /**
+     * Returns a minimal valid minf box with dinf(dref(url)) + stbl(stsd).
+     */
+    private function minimalMinf(): string
+    {
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $stsd = $this->fullBox('stsd', pack('N', 0));
+        $stbl = $this->box('stbl', $stsd);
+
+        return $this->box('minf', $dinf . $stbl);
+    }
+
+    /**
+     * Wraps content in a valid moov box with required mvhd and a minimal trak.
+     */
+    private function moov(string $content): string
+    {
+        return $this->box('moov', $this->minimalMvhd() . $this->minimalTrak() . $content);
     }
 }
