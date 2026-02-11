@@ -12,9 +12,11 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
+use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
@@ -35,6 +37,8 @@ use function strlen;
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
 #[UsesClass(DngTag::class)]
+#[UsesClass(ExifTag::class)]
+#[UsesClass(MakerNotesRecord::class)]
 final class TiffExifParserDngTagTest extends TestCase
 {
     /**
@@ -171,6 +175,44 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * MakerNoteSafety=1 is exposed as safe=true on the MakerNotesRecord.
+     */
+    #[Test]
+    public function exposesMakerNoteSafetyTrue(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($this->buildTiffWithMakerNoteSafety(1));
+
+        self::assertNotNull($parsed->makerNotes());
+        self::assertTrue($parsed->makerNotes()->safe);
+    }
+
+    /**
+     * MakerNoteSafety=0 is exposed as safe=false on the MakerNotesRecord.
+     */
+    #[Test]
+    public function exposesMakerNoteSafetyFalse(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($this->buildTiffWithMakerNoteSafety(0));
+
+        self::assertNotNull($parsed->makerNotes());
+        self::assertFalse($parsed->makerNotes()->safe);
+    }
+
+    /**
+     * MakerNoteSafety value outside {0, 1} triggers a ParseError.
+     */
+    #[Test]
+    public function rejectInvalidMakerNoteSafetyDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('MakerNoteSafety value 2 is outside the valid domain {0, 1} per DNG 1.7.1.0.');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithMakerNoteSafety(2));
+    }
+
+    /**
      * Builds a classic TIFF payload with required baseline DNG tags in IFD0.
      *
      * DNG 1.7.1.0 (DNG Tags, pp. 24-25) defines DNGVersion and
@@ -223,5 +265,47 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', $valOffset)
             . pack('V', 0)
             . $privateData;
+    }
+
+    /**
+     * Builds a TIFF with IFD0 containing EXIF_IFD_POINTER + MakerNoteSafety,
+     * and an EXIF IFD containing a minimal MakerNote.
+     */
+    private function buildTiffWithMakerNoteSafety(int $safetyValue): string
+    {
+        // Layout: header(8) + IFD0(2 + 2*12 + 4 = 30) + EXIF IFD(2 + 12 + 4 = 18)
+        $ifd0Offset     = 8;
+        $ifd0EntryCount = 2;
+        $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
+        $exifIfdOffset  = $ifd0Offset + $ifd0Size;
+
+        // IFD0: ExifIfdPointer (0x8769) < MakerNoteSafety (0xC635) — ascending tag order
+        $ifd0 = pack('v', $ifd0EntryCount)
+            // ExifIfdPointer: LONG, count=1, value=offset to EXIF IFD
+            . pack('v', ExifTag::EXIF_IFD_POINTER)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $exifIfdOffset)
+            // MakerNoteSafety: SHORT, count=1, value inline
+            . pack('v', DngTag::MAKER_NOTE_SAFETY)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $safetyValue) . pack('v', 0)
+            // next IFD offset
+            . pack('V', 0);
+
+        // EXIF IFD: MakerNote with 4 bytes inline (UNDEFINED type)
+        $exifIfd = pack('v', 1)
+            . pack('v', ExifTag::MAKER_NOTE)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', 4)
+            . pack('a4', 'TEST')
+            . pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset)
+            . $ifd0
+            . $exifIfd;
     }
 }

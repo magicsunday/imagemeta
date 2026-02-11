@@ -1377,6 +1377,13 @@ final class TiffExifParser
             $this->validateDngPrivateData($rawBytes);
         }
 
+        if ($tag === DngTag::MAKER_NOTE_SAFETY && is_int($value) && $value !== 0 && $value !== 1) {
+            throw new ParseError(sprintf(
+                'MakerNoteSafety value %d is outside the valid domain {0, 1} per DNG 1.7.1.0.',
+                $value,
+            ));
+        }
+
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
             $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
         }
@@ -2074,25 +2081,25 @@ final class TiffExifParser
         }
 
         if (!($registry instanceof Registry) || !($exifIfd instanceof Ifd)) {
-            return $this->makerNotesDigest();
+            return $this->applyMakerNoteSafety($this->makerNotesDigest(), $ifd0);
         }
 
         $make = $this->stringFromIfd($ifd0, ExifTag::MAKE);
 
         if ($make === null || $make === '') {
-            return $this->makerNotesDigest();
+            return $this->applyMakerNoteSafety($this->makerNotesDigest(), $ifd0);
         }
 
         $decoder = $registry->find($make);
 
         if (!$decoder instanceof MakerNotesDecoderInterface) {
-            return $this->makerNotesDigest();
+            return $this->applyMakerNoteSafety($this->makerNotesDigest(), $ifd0);
         }
 
         $model    = $this->stringFromIfd($ifd0, ExifTag::MODEL);
         $metadata = $decoder->decode($this->makerNoteRaw, $make, $model);
 
-        return $this->applyMakerNoteSafety($metadata);
+        return $this->applyMakerNoteSafety($metadata, $ifd0);
     }
 
     /**
@@ -2112,14 +2119,18 @@ final class TiffExifParser
     /**
      * Applies the maker note safety flag to the provided metadata instance.
      */
-    private function applyMakerNoteSafety(MakerNotesRecord $metadata): MakerNotesRecord
+    private function applyMakerNoteSafety(MakerNotesRecord $metadata, Ifd $ifd0): MakerNotesRecord
     {
+        $entry = $ifd0->get(DngTag::MAKER_NOTE_SAFETY);
+        $safe  = $entry instanceof IfdEntry ? ($entry->value === 1) : null;
+
         return new MakerNotesRecord(
             $metadata->vendor,
             $metadata->length,
             $metadata->sha1,
             $metadata->apple,
             $metadata->samsung,
+            $safe,
         );
     }
 
