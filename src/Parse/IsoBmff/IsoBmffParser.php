@@ -262,6 +262,11 @@ final readonly class IsoBmffParser
     private const int DATA_TYPE_FLOAT64 = 0x18;
 
     /**
+     * FourCC for QuickTime metadata header atom.
+     */
+    private const string BOX_MHDR = 'mhdr';
+
+    /**
      * FourCC for QuickTime item information atom inside metadata items.
      */
     private const string BOX_ITIF = 'itif';
@@ -979,7 +984,7 @@ final readonly class IsoBmffParser
             $this->appendUniqueXmp($xmpBlobs, $xmpHashes, $blob);
         }
 
-        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms);
+        [$qtKeys, $qtDataAtoms] = $this->mergeQuickTimeKeys($qtKeys, $payloads['keysMaps'], $payloads['ilstBoxes'], $qtDataAtoms, $payloads['hasMhdr']);
     }
 
     /**
@@ -994,7 +999,8 @@ final readonly class IsoBmffParser
      *     directExif: list<string>,
      *     idatPayload: ?string,
      *     keysMaps: list<array<int, QuickTimeKeyEntry>>,
-     *     ilstBoxes: list<BoxDescriptor>
+     *     ilstBoxes: list<BoxDescriptor>,
+     *     hasMhdr: bool
      * }
      */
     private function collectDirectPayloads(BoxDescriptor $meta): array
@@ -1017,6 +1023,7 @@ final readonly class IsoBmffParser
         /** @var list<BoxDescriptor> $ilstBoxes */
         $ilstBoxes   = [];
         $handlerType = null;
+        $hasMhdr     = false;
 
         $childOffset = $this->detectMetaChildOffset($meta);
         foreach ($this->walkChildren($meta, $childOffset) as $child) {
@@ -1066,6 +1073,10 @@ final readonly class IsoBmffParser
                     }
 
                     break;
+                case self::BOX_MHDR:
+                    $this->parseMhdr($child);
+                    $hasMhdr = true;
+                    break;
                 case self::BOX_KEYS:
                     $keysMaps[] = $this->parseKeys($child);
                     break;
@@ -1113,6 +1124,7 @@ final readonly class IsoBmffParser
             'idatPayload'    => $idatPayload,
             'keysMaps'       => $keysMaps,
             'ilstBoxes'      => $ilstBoxes,
+            'hasMhdr'        => $hasMhdr,
         ];
     }
 
@@ -1306,13 +1318,15 @@ final readonly class IsoBmffParser
      * @param list<array<int, QuickTimeKeyEntry>> $keysMaps      Key map data from 'keys' boxes.
      * @param list<BoxDescriptor>                 $ilstBoxes     Item list box descriptors.
      * @param QuickTimeDataAtomList               $existingAtoms Existing data atom list.
+     * @param bool                                $hasMhdr       Whether a metadata header atom was found.
      *
      * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
      */
-    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = []): array
+    private function mergeQuickTimeKeys(array $existing, array $keysMaps, array $ilstBoxes, array $existingAtoms = [], bool $hasMhdr = false): array
     {
         /** @var array<int, QuickTimeKeyEntry> $keyIndex */
-        $keyIndex = [];
+        $keyIndex   = [];
+        $hasItemIds = false;
 
         // Flatten key maps so later entries override duplicate indexes.
         foreach ($keysMaps as $map) {
@@ -1323,9 +1337,19 @@ final readonly class IsoBmffParser
 
         // Merge all ilst entries into the cumulative QuickTime metadata set.
         foreach ($ilstBoxes as $ilst) {
-            [$ilstKeys, $ilstAtoms] = $this->parseIlst($ilst, $keyIndex);
-            $existing               = $this->mergeAssociative($existing, $ilstKeys);
-            $existingAtoms          = $this->mergeAtomLists($existingAtoms, $ilstAtoms);
+            [$ilstKeys, $ilstAtoms, $ilstHasItemIds] = $this->parseIlst($ilst, $keyIndex);
+            $existing                                = $this->mergeAssociative($existing, $ilstKeys);
+            $existingAtoms                           = $this->mergeAtomLists($existingAtoms, $ilstAtoms);
+
+            if ($ilstHasItemIds) {
+                $hasItemIds = true;
+            }
+        }
+
+        // QuickTime File Format 2012, "Metadata Header Atom": metadata header
+        // atom must exist if metadata items contain item information atoms.
+        if ($hasItemIds && !$hasMhdr) {
+            throw new ParseError('metadata header atom (mhdr) required when ilst items have itif atoms');
         }
 
         return [$existing, $existingAtoms];
@@ -2256,7 +2280,7 @@ final readonly class IsoBmffParser
      * @param BoxDescriptor                 $ilst     Box descriptor for the `ilst` container.
      * @param array<int, QuickTimeKeyEntry> $keyIndex Structured key entries from parseKeys().
      *
-     * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList}
+     * @return array{0: QuickTimeKeyMap, 1: QuickTimeDataAtomList, 2: bool}
      */
     private function parseIlst(BoxDescriptor $ilst, array $keyIndex): array
     {
@@ -2315,7 +2339,7 @@ final readonly class IsoBmffParser
             }
         }
 
-        return [$result, $atomsList];
+        return [$result, $atomsList, $seenItemIds !== []];
     }
 
     /**
@@ -2413,6 +2437,38 @@ final readonly class IsoBmffParser
         }
 
         $seenItemIds[$itemId] = true;
+    }
+
+    /**
+     * Parses and validates a metadata header atom (`mhdr`).
+     *
+     * QuickTime File Format 2012, "Metadata Header Atom": the mhdr atom is
+     * a full atom with version 0 and flags 0, containing a uint32 nextItemID.
+     *
+     * @param BoxDescriptor $mhdr Box descriptor for the mhdr atom.
+     */
+    private function parseMhdr(BoxDescriptor $mhdr): void
+    {
+        if ($mhdr->contentSize < 8) {
+            throw new ParseError('mhdr atom truncated');
+        }
+
+        $win = $mhdr->window;
+        $win->seek(0);
+
+        $version = $win->readU8();
+        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
+
+        if ($version !== 0) {
+            throw new ParseError('mhdr atom version must be 0');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('mhdr atom flags must be 0');
+        }
+
+        // nextItemID — read for validation but not currently exposed
+        $win->readU32BE();
     }
 
     /**

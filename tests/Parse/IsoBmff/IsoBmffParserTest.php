@@ -2536,6 +2536,9 @@ final class IsoBmffParserTest extends TestCase
         $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
         $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
 
+        // mhdr: version=0, flags=0, nextItemID=43
+        $mhdr = $this->box('mhdr', "\0\0\0\0" . pack('N', 43));
+
         // itif: version=0, flags=0, Item_ID=42
         $itif    = $this->box('itif', "\0\0\0\0" . pack('N', 42));
         $dataBox = $this->box('data', pack('N', 1) . pack('N', 0) . 'itif-test-value');
@@ -2543,7 +2546,7 @@ final class IsoBmffParserTest extends TestCase
         $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
         $ilst      = $this->box('ilst', $ilstEntry);
 
-        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $meta = $this->box('meta', "\0\0\0\0" . $mhdr . $keys . $ilst);
         $udta = $this->box('udta', $meta);
         $moov = $this->box('moov', $udta);
         $ftyp = $this->box('ftyp', 'isom');
@@ -2639,6 +2642,102 @@ final class IsoBmffParserTest extends TestCase
         $ftyp = $this->box('ftyp', 'isom');
 
         $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
+    public function acceptsItifWithValidMhdr(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        // mhdr: version=0, flags=0, nextItemID=43
+        $mhdr = $this->box('mhdr', "\0\0\0\0" . pack('N', 43));
+
+        // itif: version=0, flags=0, Item_ID=42
+        $itif      = $this->box('itif', "\0\0\0\0" . pack('N', 42));
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'mhdr-test-value');
+        $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
+        $moov = $this->box('moov', $meta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('mhdr-test-value', $qtMeta->keys[$key]);
+    }
+
+    #[Test]
+    public function rejectItifWithoutMhdr(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('metadata header atom (mhdr) required when ilst items have itif atoms');
+
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $itif      = $this->box('itif', "\0\0\0\0" . pack('N', 1));
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->box('moov', $meta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
+    public function rejectMhdrWithNonZeroVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('mhdr atom version must be 0');
+
+        $mhdr = $this->box('mhdr', "\x01\0\0\0" . pack('N', 1));
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
+
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $mhdr . $keys . $ilst);
+        $moov = $this->box('moov', $meta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
+    public function acceptsIlstWithoutItifAndNoMhdr(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'no-itif-value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->box('moov', $meta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('no-itif-value', $qtMeta->keys[$key]);
     }
 
     /**
