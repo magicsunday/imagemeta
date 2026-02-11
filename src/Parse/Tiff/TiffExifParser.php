@@ -1350,15 +1350,10 @@ final class TiffExifParser
 
         $this->validateFixedLengthTagLayout($tag, $type, $cnt);
 
-        if ($this->bigTiff) {
-            // BigTIFF stores the inline value/offset field as an 8- or 16-byte
-            // quantity (EXIF 3.0 §4.5.2 BigTIFF note) with inline payloads padded
-            // to the negotiated offset width.
-            [$valOrOff, $inlineBytes] = $this->readValueOrOffset($type, $cnt);
-        } else {
-            $valOrOff    = $this->readU32();
-            $inlineBytes = null;
-        }
+        // Read the Value/Offset field.  For inline values (data fits within the
+        // field) the raw bytes are returned directly to avoid endianness-dependent
+        // reinterpretation (TIFF 6.0 §2, EXIF 3.0 §4.5.2).
+        [$valOrOff, $inlineBytes] = $this->readValueOrOffset($type, $cnt);
 
         [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff, $inlineBytes);
         $value      = $this->decodeBytes($type, $cnt, $rawBytes);
@@ -1944,24 +1939,27 @@ final class TiffExifParser
      */
     private function readValueOrOffset(int $type, int $count): array
     {
-        if (!$this->bigTiff) {
-            return [$this->readU32(), null];
-        }
+        $componentSize   = $this->bytesPerComponent($type);
+        $inlineThreshold = $this->bigTiff ? $this->bigTiffOffsetSize : 4;
+        $valueBytes      = $componentSize * $count;
 
-        $componentSize    = $this->bytesPerComponent($type);
-        $inlineThreshold  = $this->bigTiffOffsetSize;
-        $inlineValueBytes = $componentSize * $count;
-
-        if ($inlineValueBytes <= $inlineThreshold) {
+        // TIFF 6.0 §2: if the value fits in the Value/Offset field it is
+        // stored left-justified in the lower-numbered bytes.  We read the
+        // raw field bytes to avoid endianness-dependent reinterpretation.
+        if ($valueBytes <= $inlineThreshold) {
             $rawField    = $this->buffer->read($inlineThreshold);
-            $inlineBytes = $inlineValueBytes === $inlineThreshold
+            $inlineBytes = $valueBytes === $inlineThreshold
                 ? $rawField
-                : substr($rawField, 0, $inlineValueBytes);
+                : substr($rawField, 0, $valueBytes);
 
             return [$inlineBytes, $inlineBytes];
         }
 
-        return [$this->readBigTiffOffsetValue(), null];
+        if ($this->bigTiff) {
+            return [$this->readBigTiffOffsetValue(), null];
+        }
+
+        return [$this->readU32(), null];
     }
 
     /**

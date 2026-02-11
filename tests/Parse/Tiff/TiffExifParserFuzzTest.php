@@ -425,6 +425,34 @@ final class TiffExifParserFuzzTest extends TestCase
     }
 
     /**
+     * Big-endian inline SHORT value is extracted from the left-justified
+     * lower-numbered bytes per TIFF 6.0 §2.
+     */
+    #[Test]
+    public function parsesBigEndianInlineShortValue(): void
+    {
+        // Big-endian TIFF with one SHORT entry (Orientation=6)
+        $blob = 'MM'
+            . pack('n', TiffConst::MAGIC_CLASSIC)
+            . pack('N', 8)
+            . pack('n', 1)
+            // tag=Orientation(0x0112), type=SHORT(3), count=1
+            . pack('n', ExifTag::ORIENTATION)
+            . pack('n', TiffConst::TYPE_SHORT)
+            . pack('N', 1)
+            // value: left-justified 2 bytes (0x0006) + 2 padding bytes
+            . "\x00\x06\x00\x00"
+            . pack('N', 0);
+
+        $reader = new TiffExifParser();
+        $result = $reader->parseFromBlob($blob);
+
+        $entry = $result->ifd0->get(ExifTag::ORIENTATION);
+        self::assertNotNull($entry);
+        self::assertSame(6, $entry->value);
+    }
+
+    /**
      * Uses an UNDEFINED tag payload filled with arbitrary bytes.
      * Confirms the parser accepts opaque data without attempting interpretation.
      *
