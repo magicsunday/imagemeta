@@ -1161,9 +1161,11 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('N', strlen($exifPayload)); // extent_length
         $iloc = $this->fullBox('iloc', $payload, 1, 0);
 
-        $idat = $this->box('idat', $exifPayload);
-        $meta = $this->fullBox('meta', $iinf . $iloc . $idat);
-        $ftyp = $this->box('ftyp', 'isom');
+        $idat    = $this->box('idat', $exifPayload);
+        $prefix  = $iinf . $iloc;
+        $padding = $this->alignmentPadding(12 + 12 + strlen($prefix), 8);
+        $meta    = $this->fullBox('meta', $prefix . $padding . $idat);
+        $ftyp    = $this->box('ftyp', 'isom');
 
         $extractor                         = $this->createExtractor($ftyp . $meta);
         [$exifs, , , , , $unresolvedItems] = $extractor->extract();
@@ -1201,12 +1203,32 @@ final class IsoBmffParserTest extends TestCase
         $payload .= pack('N', strlen($exifPayload) + 1); // extent_length (too large!)
         $iloc = $this->fullBox('iloc', $payload, 1, 0);
 
-        $idat = $this->box('idat', $exifPayload);
-        $meta = $this->fullBox('meta', $iinf . $iloc . $idat);
-        $ftyp = $this->box('ftyp', 'isom');
+        $idat    = $this->box('idat', $exifPayload);
+        $prefix  = $iinf . $iloc;
+        $padding = $this->alignmentPadding(12 + 12 + strlen($prefix), 8);
+        $meta    = $this->fullBox('meta', $prefix . $padding . $idat);
+        $ftyp    = $this->box('ftyp', 'isom');
 
         $extractor = $this->createExtractor($ftyp . $meta);
         $extractor->extract();
+    }
+
+    /**
+     * Rejects idat box that is not 8-byte aligned per ISO/IEC 14496-12 §8.11.11.2.
+     */
+    #[Test]
+    public function rejectMisalignedIdatBox(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('idat box at offset');
+
+        // ftyp(12) + meta header(12) = 24; add a 9-byte free box to misalign idat
+        $freeBox = $this->box('free', 'X');
+        $idat    = $this->box('idat', 'payload');
+        $meta    = $this->fullBox('meta', $freeBox . $idat);
+        $ftyp    = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $meta)->extract();
     }
 
     /**
@@ -2976,6 +2998,31 @@ final class IsoBmffParserTest extends TestCase
         $moov = $this->box('moov', $meta);
 
         return $this->box('ftyp', 'isom') . $moov;
+    }
+
+    /**
+     * Returns a `free` box that pads the current offset to the requested alignment.
+     *
+     * @param int $currentOffset Current absolute byte offset in the stream.
+     * @param int $alignment     Required alignment boundary (must be a power of two).
+     */
+    private function alignmentPadding(int $currentOffset, int $alignment): string
+    {
+        $remainder = $currentOffset % $alignment;
+
+        if ($remainder === 0) {
+            return '';
+        }
+
+        $needed = $alignment - $remainder;
+
+        // A box has an 8-byte header minimum; if the gap is < 8 we pad to
+        // the next aligned boundary instead.
+        if ($needed < 8) {
+            $needed += $alignment;
+        }
+
+        return $this->box('free', str_repeat("\0", $needed - 8));
     }
 
     /**

@@ -1084,6 +1084,14 @@ final readonly class IsoBmffParser
                     $locations = $this->parseIloc($child);
                     break;
                 case self::BOX_IDAT:
+                    // ISO/IEC 14496-12 §8.11.11.2: aligned(8) class ItemDataBox
+                    if ($child->offset % 8 !== 0) {
+                        throw new ParseError(sprintf(
+                            'idat box at offset %d is not 8-byte aligned per ISO/IEC 14496-12 §8.11.11.2.',
+                            $child->offset,
+                        ));
+                    }
+
                     if ($idatPayload === null) {
                         if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                             throw new ParseError('idat payload exceeds configured limit');
