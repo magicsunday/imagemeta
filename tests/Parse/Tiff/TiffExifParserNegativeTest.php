@@ -348,15 +348,17 @@ final class TiffExifParserNegativeTest extends TestCase
     #[Test]
     public function rejectsIfdEntriesThatAreNotSortedByTag(): void
     {
+        // Use Software (0x0131) before Artist (0x013B) — wrong order: 0x0131 < 0x013B is correct,
+        // so reverse them: Artist (0x013B) first, then Software (0x0131) — descending = invalid.
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
             . pack('v', 2)
-            . pack('v', 0x011A)
-            . pack('v', TiffConst::TYPE_LONG)
-            . pack('V', 1)
-            . pack('V', 72)
-            . pack('v', 0x010F)
+            . pack('v', ExifTag::ARTIST)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 4)
+            . pack('V', 0x00434241)
+            . pack('v', ExifTag::SOFTWARE)
             . pack('v', TiffConst::TYPE_ASCII)
             . pack('V', 4)
             . pack('V', 0x00434241)
@@ -713,35 +715,35 @@ final class TiffExifParserNegativeTest extends TestCase
                 TiffConst::TYPE_UNDEFINED,
                 3,
                 '010',
-                'ExifVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1.',
+                'ExifVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.1.',
             ],
             'ExifVersion rejects SHORT type' => [
                 ExifTag::EXIF_VERSION,
                 TiffConst::TYPE_SHORT,
                 4,
                 "\x03\x00\x00\x00\x00\x00\x00\x00",
-                'ExifVersion must use TIFF type UNDEFINED per EXIF 3.0 §4.6.6.1.1; EXIF 2.32 §4.6.6.1.1.',
+                'ExifVersion must use TIFF type UNDEFINED per EXIF 3.0 §4.6.6.1.1.',
             ],
             'FlashpixVersion expects 4 UNDEFINED bytes' => [
                 ExifTag::FLASHPIX_VERSION,
                 TiffConst::TYPE_UNDEFINED,
                 3,
                 '010',
-                'FlashpixVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.2; EXIF 2.32 §4.6.6.1.2.',
+                'FlashpixVersion must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.2.',
             ],
             'ComponentsConfiguration expects 4 bytes' => [
                 ExifTag::COMPONENTS_CONFIGURATION,
                 TiffConst::TYPE_UNDEFINED,
                 3,
                 "\x01\x02\x03",
-                'ComponentsConfiguration must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.3; EXIF 2.32 §4.6.6.1.3.',
+                'ComponentsConfiguration must contain exactly 4 bytes per EXIF 3.0 §4.6.6.1.3.',
             ],
             'GPSVersionID expects 4 bytes' => [
                 ExifTag::GPS_VERSION_ID,
                 TiffConst::TYPE_BYTE,
                 3,
                 "\x02\x03\x00",
-                'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.8; EXIF 2.32 §4.6.8.',
+                'GPSVersionID must contain exactly 4 bytes per EXIF 3.0 §4.6.7.1.1.',
             ],
             'SubjectLocation expects 2 SHORT' => [
                 ExifTag::SUBJECT_LOCATION,
@@ -797,7 +799,7 @@ final class TiffExifParserNegativeTest extends TestCase
                 TiffConst::TYPE_RATIONAL,
                 2,
                 "\x00\x00\x00\x0C\x00\x00\x00\x01\x00\x00\x00\x22\x00\x00\x00\x01",
-                'GPSTimeStamp must contain exactly 3 bytes per EXIF 3.0 §4.6.7.1.7.',
+                'GPSTimeStamp must contain exactly 3 bytes per EXIF 3.0 §4.6.7.1.8.',
             ],
             'GPSDateStamp expects 11 ASCII' => [
                 ExifTag::GPS_DATE_STAMP,
