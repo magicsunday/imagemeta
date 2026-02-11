@@ -2894,6 +2894,91 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Valid UTF-8 data payload parses unchanged.
+     */
+    #[Test]
+    public function parsesValidUtf8DataPayload(): void
+    {
+        $value = 'Ünïcödé Tëxt';
+        $file  = $this->createQuickTimeMetaWithDataPayload(1, $value);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame($value, $qtMeta->stringValue('com.apple.quicktime.content.identifier'));
+    }
+
+    /**
+     * Invalid UTF-8 byte sequence in data payload triggers ParseError.
+     */
+    #[Test]
+    public function rejectInvalidUtf8DataPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data box UTF-8 payload contains invalid byte sequence.');
+
+        // 0xFE is never valid in UTF-8
+        $file = $this->createQuickTimeMetaWithDataPayload(1, "hello\xFEworld");
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Valid UTF-16BE data payload decodes to UTF-8.
+     */
+    #[Test]
+    public function parsesValidUtf16beDataPayload(): void
+    {
+        $utf16 = iconv('UTF-8', 'UTF-16BE', 'Hello');
+        self::assertIsString($utf16);
+
+        $file = $this->createQuickTimeMetaWithDataPayload(2, $utf16);
+
+        $extractor    = $this->createExtractor($file);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Hello', $qtMeta->stringValue('com.apple.quicktime.content.identifier'));
+    }
+
+    /**
+     * UTF-16BE data payload with odd byte count triggers ParseError.
+     */
+    #[Test]
+    public function rejectMalformedUtf16beDataPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('data box UTF-16BE payload has odd byte count.');
+
+        // 3 bytes is not valid UTF-16
+        $file = $this->createQuickTimeMetaWithDataPayload(2, "\x00H\x00");
+        $this->createExtractor($file)->extract();
+    }
+
+    /**
+     * Creates a QuickTime file with a data atom using a specific type and payload.
+     *
+     * @param int    $dataType Well-known type code (1=UTF-8, 2=UTF-16BE, etc.).
+     * @param string $payload  Raw payload bytes for the data atom.
+     */
+    private function createQuickTimeMetaWithDataPayload(int $dataType, string $payload): string
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', $dataType) . pack('N', 0) . $payload);
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $hdlr = $this->box('hdlr', "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12));
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->box('moov', $meta);
+
+        return $this->box('ftyp', 'isom') . $moov;
+    }
+
+    /**
      * Builds a QuickTime file with optional ctry/lang atoms and a custom locale indicator.
      *
      * @param string|null $ctryPayload Raw ctry atom payload (after version/flags), or null to omit.

@@ -2742,22 +2742,32 @@ final readonly class IsoBmffParser
      */
     private function decodeDataPayload(int $type, string $payload, int $payloadSize): string|int|float
     {
-        $trimmed = trim($payload, "\0");
-
         if ($type === self::DATA_TYPE_UTF8) {
-            return $trimmed;
+            if (!mb_check_encoding($payload, 'UTF-8')) {
+                throw new ParseError('data box UTF-8 payload contains invalid byte sequence.');
+            }
+
+            // QuickTime File Format 2012, Table 3-5: UTF-8 "without NULL
+            // terminator".  Tolerate a single trailing NUL that real-world
+            // encoders append, but nothing more.
+            return rtrim($payload, "\0");
         }
 
         if ($type === self::DATA_TYPE_UTF16) {
-            $normalised = rtrim($payload, "\0");
-            $converted  = iconv('UTF-16BE', 'UTF-8//IGNORE', $normalised);
-
-            if ($converted !== false) {
-                return trim($converted, "\0");
+            if ($payloadSize % 2 !== 0) {
+                throw new ParseError('data box UTF-16BE payload has odd byte count.');
             }
 
-            return $trimmed;
+            $converted = iconv('UTF-16BE', 'UTF-8', $payload);
+
+            if ($converted === false) {
+                throw new ParseError('data box UTF-16BE payload contains malformed sequence.');
+            }
+
+            return rtrim($converted, "\0");
         }
+
+        $trimmed = trim($payload, "\0");
 
         if ($type === self::DATA_TYPE_MAC_ROMAN) {
             $converted = iconv('macintosh', 'UTF-8//IGNORE', $trimmed);
