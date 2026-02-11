@@ -681,13 +681,16 @@ final class JpegParser
             throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels), 1272);
         }
 
-        $allowedSampleRates = [8_000, 11_025, 22_050, 44_100];
+        // GH-913: format-aware sampling rate validation per EXIF 3.0 §5.4.1
+        $allowedSampleRates = match ($format) {
+            self::AUDIO_FORMAT_PCM       => [8_000, 11_025, 22_050, 32_000, 44_100, 48_000, 96_000, 192_000],
+            self::AUDIO_FORMAT_MU_LAW    => [8_000],
+            self::AUDIO_FORMAT_IMA_ADPCM => [8_000, 11_025, 22_050, 44_100],
+            default                      => [],
+        };
+
         if (!in_array($sampleRate, $allowedSampleRates, true)) {
             throw new ParseError(sprintf('Audio segment at offset %d uses unsupported sample rate %d', $offset, $sampleRate), 1273);
-        }
-
-        if ($format === self::AUDIO_FORMAT_MU_LAW && $sampleRate !== 8_000) {
-            throw new ParseError(sprintf('Audio segment at offset %d uses unsupported μ-law sample rate %d', $offset, $sampleRate), 1274);
         }
 
         $formatName = match ($format) {
@@ -701,7 +704,8 @@ final class JpegParser
             throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $format), 1275);
         }
 
-        if ($format === self::AUDIO_FORMAT_PCM && !in_array($bitDepth, [8, 16], true)) {
+        // GH-914: allow PCM 24-bit sample size per EXIF 3.0 §5.4.2
+        if ($format === self::AUDIO_FORMAT_PCM && !in_array($bitDepth, [8, 16, 24], true)) {
             throw new ParseError(sprintf('Audio segment at offset %d has invalid PCM bit depth %d', $offset, $bitDepth), 1276);
         }
 
@@ -799,7 +803,20 @@ final class JpegParser
                 $this->flashPixSequences[$streamId] = [];
             }
 
-            if ($shouldStoreStream && !array_key_exists($sequenceNumber, $this->flashPixSequences[$streamId])) {
+            // GH-885: reject duplicate FlashPix APP2 segment sequence numbers
+            if ($shouldStoreStream && array_key_exists($sequenceNumber, $this->flashPixSequences[$streamId])) {
+                throw new ParseError(
+                    sprintf(
+                        'FlashPix stream %d at offset %d has duplicate sequence number %d',
+                        $streamId,
+                        $offset,
+                        $sequenceNumber,
+                    ),
+                    1305,
+                );
+            }
+
+            if ($shouldStoreStream) {
                 $this->flashPixSequences[$streamId][$sequenceNumber] = $data;
             }
         }

@@ -3185,8 +3185,9 @@ final class IsoBmffParserTest extends TestCase
         $dref = $this->fullBox('dref', pack('N', 1) . $url);
         $dinf = $this->box('dinf', $dref);
         $stsd = $this->fullBox('stsd', pack('N', 0));
-        $stbl = $this->box('stbl', $stsd);
-        $minf = $this->box('minf', $dinf . $stbl);
+        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
+        $minf = $this->box('minf', $vmhd . $dinf . $stbl);
         $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
 
         return $this->box('trak', $tkhd . $mdia);
@@ -3207,17 +3208,29 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Returns a minimal valid minf box with dinf(dref(url)) + stbl(stsd).
+     * Returns a minimal valid minf box with vmhd + dinf(dref(url)) + stbl(stsd+stts+stsc+stsz+stco).
      */
     private function minimalMinf(): string
     {
+        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
         $url  = $this->fullBox('url ', '', 0, 1);
         $dref = $this->fullBox('dref', pack('N', 1) . $url);
         $dinf = $this->box('dinf', $dref);
         $stsd = $this->fullBox('stsd', pack('N', 0));
-        $stbl = $this->box('stbl', $stsd);
+        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
 
-        return $this->box('minf', $dinf . $stbl);
+        return $this->box('minf', $vmhd . $dinf . $stbl);
+    }
+
+    /**
+     * Returns the mandatory stbl child atoms (stts, stsc, stsz, stco) with zero entries.
+     */
+    private function minimalStblAtoms(): string
+    {
+        return $this->fullBox('stts', pack('N', 0))
+            . $this->fullBox('stsc', pack('N', 0))
+            . $this->fullBox('stsz', pack('NN', 0, 0))
+            . $this->fullBox('stco', pack('N', 0));
     }
 
     /**

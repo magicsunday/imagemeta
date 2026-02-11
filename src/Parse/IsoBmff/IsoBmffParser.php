@@ -30,6 +30,7 @@ use function array_unique;
 use function array_unshift;
 use function array_values;
 use function bin2hex;
+use function count;
 use function explode;
 use function iconv;
 use function implode;
@@ -205,6 +206,51 @@ final readonly class IsoBmffParser
      * FourCC for sample description box.
      */
     private const string BOX_STSD = 'stsd';
+
+    /**
+     * FourCC for video media header box.
+     */
+    private const string BOX_VMHD = 'vmhd';
+
+    /**
+     * FourCC for sound media header box.
+     */
+    private const string BOX_SMHD = 'smhd';
+
+    /**
+     * FourCC for null media header box.
+     */
+    private const string BOX_NMHD = 'nmhd';
+
+    /**
+     * FourCC for time-to-sample box.
+     */
+    private const string BOX_STTS = 'stts';
+
+    /**
+     * FourCC for sample-to-chunk box.
+     */
+    private const string BOX_STSC = 'stsc';
+
+    /**
+     * FourCC for sample size box.
+     */
+    private const string BOX_STSZ = 'stsz';
+
+    /**
+     * FourCC for compact sample size box.
+     */
+    private const string BOX_STZ2 = 'stz2';
+
+    /**
+     * FourCC for chunk offset box.
+     */
+    private const string BOX_STCO = 'stco';
+
+    /**
+     * FourCC for large chunk offset box.
+     */
+    private const string BOX_CO64 = 'co64';
 
     /**
      * FourCC for item information entry box.
@@ -1071,9 +1117,17 @@ final readonly class IsoBmffParser
             return [];
         }
 
-        $stblCount = 0;
-        $dinfCount = 0;
-        $result    = [];
+        $stblCount    = 0;
+        $dinfCount    = 0;
+        $mediaHdrType = null;
+        $result       = [];
+
+        // GH-877: determine expected media header box from handler type
+        $expectedMediaHdr = match ($handlerType) {
+            'vide'  => self::BOX_VMHD,
+            'soun'  => self::BOX_SMHD,
+            default => self::BOX_NMHD,
+        };
 
         foreach ($this->walkChildren($minf) as $child) {
             if ($child->type === self::BOX_STBL) {
@@ -1092,6 +1146,13 @@ final readonly class IsoBmffParser
                 }
 
                 $this->parseDinf($child);
+            } elseif (in_array($child->type, [self::BOX_VMHD, self::BOX_SMHD, self::BOX_NMHD], true)) {
+                // GH-877: enforce exactly one handler-matching media header
+                if ($mediaHdrType !== null) {
+                    throw new ParseError('minf must contain exactly one media header box', 1421);
+                }
+
+                $mediaHdrType = $child->type;
             }
         }
 
@@ -1101,6 +1162,15 @@ final readonly class IsoBmffParser
 
         if ($dinfCount === 0) {
             throw new ParseError('minf must contain exactly one dinf box', 1382);
+        }
+
+        // GH-877: validate media header presence and handler match
+        if ($mediaHdrType === null) {
+            throw new ParseError(sprintf('minf missing required media header box %s for handler %s', $expectedMediaHdr, $handlerType), 1422);
+        }
+
+        if ($mediaHdrType !== $expectedMediaHdr) {
+            throw new ParseError(sprintf('minf media header %s does not match handler %s (expected %s)', $mediaHdrType, $handlerType, $expectedMediaHdr), 1423);
         }
 
         return $result;
@@ -1117,6 +1187,10 @@ final readonly class IsoBmffParser
     private function parseStbl(BoxDescriptor $stbl, string $handlerType): array
     {
         $stsdCount = 0;
+        $sttsCount = 0;
+        $stscCount = 0;
+        $stszCount = 0;
+        $stcoCount = 0;
         $result    = [];
 
         foreach ($this->walkChildren($stbl) as $child) {
@@ -1128,11 +1202,52 @@ final readonly class IsoBmffParser
                 }
 
                 $result = $this->parseStsd($child, $handlerType);
+            } elseif ($child->type === self::BOX_STTS) {
+                ++$sttsCount;
+
+                if ($sttsCount > 1) {
+                    throw new ParseError('stbl must contain exactly one stts box', 1424);
+                }
+            } elseif ($child->type === self::BOX_STSC) {
+                ++$stscCount;
+
+                if ($stscCount > 1) {
+                    throw new ParseError('stbl must contain exactly one stsc box', 1425);
+                }
+            } elseif ($child->type === self::BOX_STSZ || $child->type === self::BOX_STZ2) {
+                ++$stszCount;
+
+                if ($stszCount > 1) {
+                    throw new ParseError('stbl must contain exactly one stsz or stz2 box', 1426);
+                }
+            } elseif ($child->type === self::BOX_STCO || $child->type === self::BOX_CO64) {
+                ++$stcoCount;
+
+                if ($stcoCount > 1) {
+                    throw new ParseError('stbl must contain exactly one stco or co64 box', 1427);
+                }
             }
         }
 
         if ($stsdCount === 0) {
             throw new ParseError('stbl must contain exactly one stsd box', 1383);
+        }
+
+        // GH-878: enforce mandatory core sample-table boxes
+        if ($sttsCount === 0) {
+            throw new ParseError('stbl must contain exactly one stts box', 1424);
+        }
+
+        if ($stscCount === 0) {
+            throw new ParseError('stbl must contain exactly one stsc box', 1425);
+        }
+
+        if ($stszCount === 0) {
+            throw new ParseError('stbl must contain exactly one stsz or stz2 box', 1426);
+        }
+
+        if ($stcoCount === 0) {
+            throw new ParseError('stbl must contain exactly one stco or co64 box', 1427);
         }
 
         return $result;
@@ -1219,10 +1334,15 @@ final readonly class IsoBmffParser
                 $win->read(4); // reserved
                 $win->readU16BE(); // frame count
 
+                // GH-836: decode compressorName as strict 32-byte Pascal string
                 $nameLength = $win->readU8();
                 $nameData   = $win->read(31);
-                $compressor = substr($nameData, 0, min($nameLength, 31));
-                $compressor = trim($compressor);
+
+                if ($nameLength > 31) {
+                    throw new ParseError('compressorName Pascal string length exceeds 31', 1428);
+                }
+
+                $compressor = $nameLength > 0 ? substr($nameData, 0, $nameLength) : '';
 
                 $win->readU16BE(); // depth
                 $win->readU16BE(); // pre-defined
@@ -1401,6 +1521,10 @@ final readonly class IsoBmffParser
 
                     break;
                 case self::BOX_ILOC:
+                    if ($locations !== []) {
+                        throw new ParseError('meta context must contain at most one iloc box', 1413);
+                    }
+
                     $locations = $this->parseIloc($child);
                     break;
                 case self::BOX_IDAT:
@@ -1412,13 +1536,15 @@ final readonly class IsoBmffParser
                         ), 1163);
                     }
 
-                    if ($idatPayload === null) {
-                        if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
-                            throw new ParseError('idat payload exceeds configured limit', 1164);
-                        }
-
-                        $idatPayload = $this->readAll($child->window);
+                    if ($idatPayload !== null) {
+                        throw new ParseError('meta context must contain at most one idat box', 1414);
                     }
+
+                    if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
+                        throw new ParseError('idat payload exceeds configured limit', 1164);
+                    }
+
+                    $idatPayload = $this->readAll($child->window);
 
                     break;
                 case self::BOX_PITM:
@@ -2033,13 +2159,35 @@ final readonly class IsoBmffParser
         }
 
         if ($location['constructionMethod'] === ConstructionMethod::FileOffset->value) {
-            $blob     = '';
-            $total    = 0;
-            $fileSize = $this->stream->size();
+            $blob        = '';
+            $total       = 0;
+            $fileSize    = $this->stream->size();
+            $extentCount = count($location['extents']);
             foreach ($location['extents'] as $extent) {
                 $length = $extent['length'];
+
+                // GH-1000: implied extent_length semantics for single-extent items
                 if ($length === 0) {
-                    continue;
+                    if ($extentCount !== 1) {
+                        continue;
+                    }
+
+                    $baseOffset   = $location['baseOffset'];
+                    $extentOffset = $extent['offset'];
+                    if ($baseOffset < 0 || $extentOffset < 0) {
+                        throw new ParseError('iloc negative offset', 1180);
+                    }
+
+                    if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+                        throw new ParseError('iloc offset overflow', 1181);
+                    }
+
+                    $effectiveOffset = $baseOffset + $extentOffset;
+                    if ($effectiveOffset > $fileSize) {
+                        throw new ParseError('iloc extent outside file', 1182);
+                    }
+
+                    $length = $fileSize - $effectiveOffset;
                 }
 
                 if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
@@ -2081,13 +2229,35 @@ final readonly class IsoBmffParser
             }
 
             // ISO/IEC 14496-12 §8.11.3.2 defines construction_method=1 offsets as idat-relative.
-            $blob     = '';
-            $total    = 0;
-            $idatSize = strlen($idatPayload);
+            $blob        = '';
+            $total       = 0;
+            $idatSize    = strlen($idatPayload);
+            $extentCount = count($location['extents']);
             foreach ($location['extents'] as $extent) {
                 $length = $extent['length'];
+
+                // GH-1000: implied extent_length semantics for single-extent items
                 if ($length === 0) {
-                    continue;
+                    if ($extentCount !== 1) {
+                        continue;
+                    }
+
+                    $baseOffset   = $location['baseOffset'];
+                    $extentOffset = $extent['offset'];
+                    if ($baseOffset < 0 || $extentOffset < 0) {
+                        throw new ParseError('iloc negative offset', 1185);
+                    }
+
+                    if ($baseOffset > PHP_INT_MAX - $extentOffset) {
+                        throw new ParseError('iloc offset overflow', 1186);
+                    }
+
+                    $effectiveOffset = $baseOffset + $extentOffset;
+                    if ($effectiveOffset > $idatSize) {
+                        throw new ParseError('iloc extent outside idat payload', 1187);
+                    }
+
+                    $length = $idatSize - $effectiveOffset;
                 }
 
                 if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
@@ -2130,13 +2300,11 @@ final readonly class IsoBmffParser
             }
 
             // ISO/IEC 14496-12 §8.11.3.2 ties construction_method=2 extents to item references.
-            $blob  = '';
-            $total = 0;
+            $blob        = '';
+            $total       = 0;
+            $extentCount = count($location['extents']);
             foreach ($location['extents'] as $extent) {
                 $length = $extent['length'];
-                if ($length === 0) {
-                    continue;
-                }
 
                 if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
                     throw new ParseError('iloc item payload exceeds configured limit', 1188);
@@ -2182,6 +2350,24 @@ final readonly class IsoBmffParser
                 }
 
                 $offset = $baseOffset + $extentOffset;
+
+                // GH-1000: implied extent_length semantics for single-extent items
+                if ($length === 0) {
+                    if ($extentCount !== 1) {
+                        continue;
+                    }
+
+                    if ($offset > $referenceSize) {
+                        throw new ParseError('iloc extent outside referenced item', 1191);
+                    }
+
+                    $length = $referenceSize - $offset;
+
+                    if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
+                        throw new ParseError('iloc item payload exceeds configured limit', 1188);
+                    }
+                }
+
                 if (($length > $referenceSize) || ($offset > ($referenceSize - $length))) {
                     throw new ParseError('iloc extent outside referenced item', 1191);
                 }
@@ -2285,6 +2471,16 @@ final readonly class IsoBmffParser
 
         if ($index !== $entryCount) {
             throw new ParseError('iinf entry count mismatch', 1197);
+        }
+
+        // GH-967: reject duplicate item_ID values across infe entries
+        $seenIds = [];
+        foreach ($items as $item) {
+            if (isset($seenIds[$item['id']])) {
+                throw new ParseError(sprintf('duplicate infe item_ID %d', $item['id']), 1415);
+            }
+
+            $seenIds[$item['id']] = true;
         }
 
         return $items;
@@ -2728,6 +2924,16 @@ final readonly class IsoBmffParser
             $namespace = $win->read(4);
             if (($size < 8) || (($pos + $size) > $keys->contentSize)) {
                 throw new ParseError('invalid keys entry size', 1225);
+            }
+
+            // GH-991: validate key_namespace as proper 4CC code (printable ASCII)
+            if (preg_match('/^[\x20-\x7E]{4}$/', $namespace) !== 1) {
+                throw new ParseError('keys entry key_namespace is not a valid 4CC code', 1416);
+            }
+
+            // GH-977: reject empty key_value entries (size <= 8 means no actual key data)
+            if ($size <= 8) {
+                throw new ParseError('keys entry has empty key_value', 1417);
             }
 
             $name = $win->read($size - 8);
@@ -3239,16 +3445,18 @@ final readonly class IsoBmffParser
         }
 
         if ($type === self::DATA_TYPE_FLOAT32) {
+            // GH-987: reject truncated float32 payloads
             if ($payloadSize < 4) {
-                return $payload;
+                throw new ParseError('data box float32 payload truncated', 1418);
             }
 
             return Unpack::float('G', substr($payload, 0, 4), 'QuickTime float32 payload');
         }
 
         if ($type === self::DATA_TYPE_FLOAT64) {
+            // GH-987: reject truncated float64 payloads
             if ($payloadSize < 8) {
-                return $payload;
+                throw new ParseError('data box float64 payload truncated', 1419);
             }
 
             return Unpack::float('E', substr($payload, 0, 8), 'QuickTime float64 payload');
@@ -3637,6 +3845,11 @@ final readonly class IsoBmffParser
 
         $userType = null;
         if ($type === self::BOX_UUID) {
+            // GH-1011: uuid box must be at least 24 bytes (8-byte header + 16-byte userType)
+            if ($size < 24) {
+                throw new ParseError('uuid box size must be at least 24 bytes', 1420);
+            }
+
             $userType = $this->stream->read(16);
             $headerSize += 16;
         }

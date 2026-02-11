@@ -404,7 +404,7 @@ final class JpegParserTest extends TestCase
         self::assertCount(2, $document->entries);
 
         $first = $document->entries[0];
-        self::assertSame(0x20000001, $first->attributes);
+        self::assertSame(0x80000001, $first->attributes);
         self::assertSame(12345, $first->imageSize);
         self::assertSame(1000, $first->dataOffset);
 
@@ -809,7 +809,7 @@ final class JpegParserTest extends TestCase
     private function buildMpfPayload(): string
     {
         $entries = [
-            $this->mpfEntry(0x20000001, 12345, 1000, 0, 0),
+            $this->mpfEntry(0x80000001, 12345, 1000, 0, 0),
             $this->mpfEntry(0x00000002, 54321, 2000, 1, 0),
         ];
 
@@ -823,7 +823,7 @@ final class JpegParserTest extends TestCase
         $attributeOffset = $mpEntryOffset + strlen($entryData);
 
         $indexIfd = pack('v', $entryCount)
-            . $this->mpfIfdEntry(0xB000, 7, 4, '0100')
+            . $this->mpfIfdEntry(0xB000, 2, 4, '0100')
             . $this->mpfIfdEntry(0xB001, 4, 1, pack('V', $imageCount))
             . $this->mpfIfdEntry(0xB002, 7, strlen($entryData), offset: $mpEntryOffset)
             . pack('V', $attributeOffset);

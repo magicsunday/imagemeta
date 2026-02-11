@@ -68,15 +68,11 @@ final class MpfParserTest extends TestCase
 
     private const int TYPE_ASCII = 2;
 
-    private const int TYPE_SHORT = 3;
-
     private const int TYPE_LONG = 4;
 
     private const int TYPE_RATIONAL = 5;
 
     private const int TYPE_UNDEFINED = 7;
-
-    private const int TYPE_SRATIONAL = 10;
 
     private const int TYPE_BYTE = 1;
 
@@ -90,27 +86,27 @@ final class MpfParserTest extends TestCase
     public function parsesCompleteMpfPayloadWithAttributes(): void
     {
         $entriesData = $this->buildMpEntries([
-            [0x11223344, 1_000, 2_048, 1, 0],
-            [0x55667788, 2_000, 4_096, 0, 2],
+            [0x83000044, 1_000, 2_048, 1, 0],
+            [0x44000088, 2_000, 4_096, 0, 2],
         ]);
 
         $indexEntries = [
-            [self::TAG_MPF_VERSION, self::TYPE_ASCII, strlen("0100\0"), "0100\0"],
+            [self::TAG_MPF_VERSION, self::TYPE_ASCII, 4, '0100'],
             [self::TAG_NUMBER_OF_IMAGES, self::TYPE_LONG, 1, 2],
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
         ];
 
-        $panoramaAngleData = pack('V', 1) . pack('V', 2) . pack('V', 3) . pack('V', 1);
-        $panoramaAxisData  = $this->packSigned32(-90) . pack('V', 1);
-        $uidList           = str_repeat("\xAB", 16);
+        $panoramaAngleData = pack('V', 1) . pack('V', 2);
+        $panoramaAxisData  = pack('V', 90) . pack('V', 1) . pack('V', 45) . pack('V', 1) . pack('V', 0) . pack('V', 1);
+        $uidList           = str_repeat("\xAB", 33);
         $extraTagData      = pack('C*', 1, 2, 3, 4, 5, 6);
 
         $attributeEntries = [
             [self::TAG_IMAGE_UID_LIST, self::TYPE_UNDEFINED, strlen($uidList), $uidList],
             [self::TAG_TOTAL_FRAMES, self::TYPE_LONG, 1, 3],
-            [self::TAG_INDIVIDUAL_IMAGE_NUMBER, self::TYPE_SHORT, 1, 2],
-            [self::TAG_PANORAMA_ANGLE, self::TYPE_RATIONAL, 2, $panoramaAngleData],
-            [self::TAG_PANORAMA_AXIS, self::TYPE_SRATIONAL, 1, $panoramaAxisData],
+            [self::TAG_INDIVIDUAL_IMAGE_NUMBER, self::TYPE_LONG, 1, 2],
+            [self::TAG_PANORAMA_ANGLE, self::TYPE_RATIONAL, 1, $panoramaAngleData],
+            [self::TAG_PANORAMA_AXIS, self::TYPE_RATIONAL, 3, $panoramaAxisData],
             [0xB123, self::TYPE_BYTE, strlen($extraTagData), $extraTagData],
         ];
 
@@ -123,8 +119,8 @@ final class MpfParserTest extends TestCase
             version: '0100',
             imageCount: 2,
             entries: [
-                new MpfEntry(0x11223344, 1_000, 2_048, 1, 0),
-                new MpfEntry(0x55667788, 2_000, 4_096, 0, 2),
+                new MpfEntry(0x83000044, 1_000, 2_048, 1, 0),
+                new MpfEntry(0x44000088, 2_000, 4_096, 0, 2),
             ],
             attributes: new MpfAttributes(
                 imageUidList: $uidList,
@@ -132,10 +128,11 @@ final class MpfParserTest extends TestCase
                 individualImageNumber: 2,
                 panoramaAngle: [
                     ['numerator' => 1, 'denominator' => 2],
-                    ['numerator' => 3, 'denominator' => 1],
                 ],
                 panoramaAxis: [
-                    ['numerator' => -90, 'denominator' => 1],
+                    ['numerator' => 90, 'denominator' => 1],
+                    ['numerator' => 45, 'denominator' => 1],
+                    ['numerator' => 0, 'denominator' => 1],
                 ],
                 additionalTags: [
                     0xB123 => [1, 2, 3, 4, 5, 6],
@@ -157,11 +154,11 @@ final class MpfParserTest extends TestCase
     {
         $entriesData = $this->buildMpEntries([
             [0x01020304, 512, 1_024, 0, 0],
-            [0x0A0B0C0D, 256, 2_048, 0, 1],
+            [0x02030405, 256, 2_048, 0, 1],
         ]);
 
         $indexEntries = [
-            [self::TAG_MPF_VERSION, self::TYPE_ASCII, strlen("0100\0"), "0100\0"],
+            [self::TAG_MPF_VERSION, self::TYPE_ASCII, 4, '0100'],
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, strlen($entriesData), $entriesData],
         ];
 
@@ -182,7 +179,7 @@ final class MpfParserTest extends TestCase
     public function rejectsMpEntryDataWithInvalidLength(): void
     {
         $indexEntries = [
-            [self::TAG_MPF_VERSION, self::TYPE_ASCII, strlen("0100\0"), "0100\0"],
+            [self::TAG_MPF_VERSION, self::TYPE_ASCII, 4, '0100'],
             [self::TAG_MP_ENTRY, self::TYPE_UNDEFINED, 3, 'bad'],
         ];
 
@@ -208,11 +205,6 @@ final class MpfParserTest extends TestCase
         }
 
         return $binary;
-    }
-
-    private function packSigned32(int $value): string
-    {
-        return pack('V', $value & 0xFFFFFFFF);
     }
 
     /**
@@ -262,13 +254,22 @@ final class MpfParserTest extends TestCase
         $dataOffset = $ifdOffset + 2 + ($count * 12) + 4;
 
         foreach ($entries as [$tag, $type, $components, $value]) {
-            if (is_string($value)) {
+            if (is_string($value) && strlen($value) > 4) {
                 $offset = $dataOffset + strlen($data);
                 $body .= pack('v', $tag)
                     . pack('v', $type)
                     . pack('V', $components)
                     . pack('V', $offset);
                 $data .= $value;
+
+                continue;
+            }
+
+            if (is_string($value)) {
+                $body .= pack('v', $tag)
+                    . pack('v', $type)
+                    . pack('V', $components)
+                    . str_pad($value, 4, "\0");
 
                 continue;
             }

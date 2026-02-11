@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Parse\Jpeg;
 
+use Closure;
 use MagicSunday\ImageMeta\Core\BitMask;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
@@ -28,6 +29,7 @@ use function is_array;
 use function is_int;
 use function is_string;
 use function pack;
+use function sprintf;
 use function strlen;
 use function substr;
 
@@ -110,7 +112,23 @@ final class MpfParser
             throw new ParseError('MP Index IFD offset outside payload bounds', 1291);
         }
 
-        [$indexEntries, $nextIfdOffset] = $this->readIfd($buffer, $endian, $firstIfdOffset);
+        // GH-840: MP Index IFD tag type/count constraints per EXIF 3.0 §4.6.2
+        $indexConstraints = [
+            self::TAG_MPF_VERSION => [
+                'type'    => self::TYPE_ASCII,
+                'countFn' => static fn (int $c): bool => $c === 4,
+            ],
+            self::TAG_NUMBER_OF_IMAGES => [
+                'type'    => self::TYPE_LONG,
+                'countFn' => static fn (int $c): bool => $c === 1,
+            ],
+            self::TAG_MP_ENTRY => [
+                'type'    => self::TYPE_UNDEFINED,
+                'countFn' => static fn (int $c): bool => $c >= 16 && ($c % 16) === 0,
+            ],
+        ];
+
+        [$indexEntries, $nextIfdOffset] = $this->readIfd($buffer, $endian, $firstIfdOffset, $indexConstraints);
 
         $version    = $this->stringValue($indexEntries[self::TAG_MPF_VERSION] ?? null);
         $imageCount = $this->intValue($indexEntries[self::TAG_NUMBER_OF_IMAGES] ?? null);
@@ -141,7 +159,31 @@ final class MpfParser
                 throw new ParseError('MP Attribute IFD offset outside payload bounds', 1294);
             }
 
-            [$attributeEntries, $attributeNextOffset] = $this->readIfd($buffer, $endian, $nextIfdOffset);
+            // GH-899: MP Attribute IFD tag type/count constraints per EXIF 3.0 §4.6.4
+            $attributeConstraints = [
+                self::TAG_IMAGE_UID_LIST => [
+                    'type'    => self::TYPE_UNDEFINED,
+                    'countFn' => static fn (int $c): bool => $c >= 33 && ($c % 33) === 0,
+                ],
+                self::TAG_TOTAL_FRAMES => [
+                    'type'    => self::TYPE_LONG,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_INDIVIDUAL_IMAGE_NUMBER => [
+                    'type'    => self::TYPE_LONG,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_PANORAMA_ANGLE => [
+                    'type'    => self::TYPE_RATIONAL,
+                    'countFn' => static fn (int $c): bool => $c === 1,
+                ],
+                self::TAG_PANORAMA_AXIS => [
+                    'type'    => self::TYPE_RATIONAL,
+                    'countFn' => static fn (int $c): bool => $c === 3,
+                ],
+            ];
+
+            [$attributeEntries, $attributeNextOffset] = $this->readIfd($buffer, $endian, $nextIfdOffset, $attributeConstraints);
 
             // EXIF 3.0 MPF defines at most two IFDs (Index + Attribute); no further chaining is allowed.
             if ($attributeNextOffset !== 0) {
@@ -164,9 +206,11 @@ final class MpfParser
      *
      * Both the MP Index IFD and MP Attribute IFD re-use the classic TIFF IFD layout (EXIF 3.0 §4.6.2/§4.6.4).
      *
+     * @param array<int, array{type: int, countFn: Closure(int):bool}> $constraints Per-tag type/count constraints.
+     *
      * @return array{0: MpfDirectory, 1: int}
      */
-    private function readIfd(MemoryBuffer $buffer, Endian $endian, int $offset): array
+    private function readIfd(MemoryBuffer $buffer, Endian $endian, int $offset, array $constraints = []): array
     {
         $buffer->seek($offset);
 
@@ -198,6 +242,33 @@ final class MpfParser
 
             if ($componentCount < 0 || $componentCount > 1_048_576) {
                 throw new ParseError('MPF entry reports unreasonable component count', 1296);
+            }
+
+            // GH-840/GH-899: enforce per-tag type/count constraints
+            if (isset($constraints[$tag])) {
+                $constraint = $constraints[$tag];
+                if ($type !== $constraint['type']) {
+                    throw new ParseError(
+                        sprintf(
+                            'MPF tag 0x%04X has type %d, expected %d',
+                            $tag,
+                            $type,
+                            $constraint['type'],
+                        ),
+                        1407,
+                    );
+                }
+
+                if (!($constraint['countFn'])($componentCount)) {
+                    throw new ParseError(
+                        sprintf(
+                            'MPF tag 0x%04X has invalid count %d',
+                            $tag,
+                            $componentCount,
+                        ),
+                        1408,
+                    );
+                }
             }
 
             $valueOrOffset = $this->readU32($buffer, $endian);
@@ -378,6 +449,25 @@ final class MpfParser
             $offset     = $endian === Endian::Little ? $buffer->readU32LE() : $buffer->readU32BE();
             $dep1       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
             $dep2       = $endian === Endian::Little ? $buffer->readU16LE() : $buffer->readU16BE();
+
+            // GH-900: validate Individual Image Attribute bitfield per MPF spec
+            // Bits 27..29 must be zero (reserved)
+            $reservedBits = ($attributes >> 27) & 0x07;
+            if ($reservedBits !== 0) {
+                throw new ParseError(
+                    sprintf('MPEntry %d has non-zero reserved bits 27..29: 0x%08X', $i, $attributes),
+                    1409,
+                );
+            }
+
+            // Bits 24..26 encode image type; value 7 is reserved and must not be used
+            $imageType = ($attributes >> 24) & 0x07;
+            if ($imageType === 7) {
+                throw new ParseError(
+                    sprintf('MPEntry %d has reserved image type value 7: 0x%08X', $i, $attributes),
+                    1410,
+                );
+            }
 
             // The MP Entry tuple mirrors the Attribute, Size, Offset, and Dependent image fields mandated by EXIF 3.0 §4.6.3.
             $entries[] = new MpfEntry($attributes, $size, $offset, $dep1, $dep2);

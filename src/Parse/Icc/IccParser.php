@@ -94,6 +94,18 @@ final class IccParser
     ];
 
     /**
+     * ICC.1:2022 Table 20: Allowed primary platform signatures.
+     *
+     * @var list<string>
+     */
+    private const array ALLOWED_PLATFORMS = [
+        'APPL', // Apple Computer, Inc.
+        'MSFT', // Microsoft Corporation
+        'SGI ', // Silicon Graphics, Inc.
+        'SUNW', // Sun Microsystems, Inc.
+    ];
+
+    /**
      * Decodes the ICC profile payload by extracting header fields and well known tags.
      *
      * ICC.1:2022 §7 defines the profile header structure and §9 defines common tags.
@@ -215,7 +227,65 @@ final class IccParser
         $deviceModel        = $this->extractSignature(substr($data, IccTag::DEVICE_MODEL, 4));
         $deviceAttributes   = $this->extractHexField($data, IccTag::DEVICE_ATTRIBUTES, 8, true);
         $profileCreator     = $this->extractSignature(substr($data, IccTag::PROFILE_CREATOR, 4));
-        $illuminant         = $this->extractIlluminant($data);
+
+        // GH-908: validate primary platform against ICC.1:2022 Table 20
+        if ($primaryPlatform !== null && !in_array($primaryPlatform, self::ALLOWED_PLATFORMS, true)) {
+            throw new ParseError(
+                sprintf('ICC primary platform signature "%s" is not in the allowed set', $primaryPlatform),
+                1143,
+            );
+        }
+
+        // GH-909: validate profile creator as printable ASCII signature
+        if ($profileCreator !== null && !$this->isPrintableAsciiSignature($profileCreator)) {
+            throw new ParseError(
+                sprintf(
+                    'ICC profile creator signature contains non-printable bytes: %s',
+                    strtoupper(bin2hex($profileCreator)),
+                ),
+                1144,
+            );
+        }
+
+        // GH-911: validate CMM type as printable ASCII signature
+        if ($cmmType !== null && !$this->isPrintableAsciiSignature($cmmType)) {
+            throw new ParseError(
+                sprintf(
+                    'ICC CMM type signature contains non-printable bytes: %s',
+                    strtoupper(bin2hex($cmmType)),
+                ),
+                1145,
+            );
+        }
+
+        // GH-911: validate device manufacturer as printable ASCII signature
+        if ($deviceManufacturer !== null && !$this->isPrintableAsciiSignature($deviceManufacturer)) {
+            throw new ParseError(
+                sprintf(
+                    'ICC device manufacturer signature contains non-printable bytes: %s',
+                    strtoupper(bin2hex($deviceManufacturer)),
+                ),
+                1146,
+            );
+        }
+
+        // GH-911: validate device model as printable ASCII signature
+        if ($deviceModel !== null && !$this->isPrintableAsciiSignature($deviceModel)) {
+            throw new ParseError(
+                sprintf(
+                    'ICC device model signature contains non-printable bytes: %s',
+                    strtoupper(bin2hex($deviceModel)),
+                ),
+                1147,
+            );
+        }
+
+        // GH-919: validate profileFlags per ICC.1:2022 §7.2.11 / Table 21
+        $this->validateProfileFlags($data);
+
+        // GH-920: validate deviceAttributes per ICC.1:2022 §7.2.14 / Table 22
+        $this->validateDeviceAttributes($data);
+        $illuminant = $this->extractIlluminant($data);
 
         return [
             'description'        => $description,
@@ -378,6 +448,23 @@ final class IccParser
         }
 
         return $signature;
+    }
+
+    /**
+     * Validates that a 4-byte signature consists of printable ASCII characters (0x20..0x7E).
+     *
+     * @param string $signature Raw 4-byte signature bytes.
+     */
+    private function isPrintableAsciiSignature(string $signature): bool
+    {
+        for ($i = 0; $i < 4; ++$i) {
+            $byte = ord($signature[$i]);
+            if ($byte < 0x20 || $byte > 0x7E) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -550,6 +637,58 @@ final class IccParser
             'y' => $y,
             'z' => $z,
         ];
+    }
+
+    /**
+     * Validates profile flags per ICC.1:2022 §7.2.11 / Table 21.
+     *
+     * Bits 0-2 are defined (embedded profile, profile cannot be used independently,
+     * MCS). Bits 3-15 (ICC-reserved) must be zero.
+     *
+     * @param string $data Raw ICC profile payload.
+     */
+    private function validateProfileFlags(string $data): void
+    {
+        $flagsRaw = $this->uInt32Be(substr($data, IccTag::PROFILE_FLAGS, 4));
+
+        // Bits 3..15 must be zero per ICC.1:2022 Table 21
+        $reservedMask = 0xFFF8;
+        if (($flagsRaw & $reservedMask) !== 0) {
+            throw new ParseError(
+                sprintf(
+                    'ICC profileFlags reserved bits 3..15 are non-zero: 0x%08X',
+                    $flagsRaw,
+                ),
+                1148,
+            );
+        }
+    }
+
+    /**
+     * Validates device attributes per ICC.1:2022 §7.2.14 / Table 22.
+     *
+     * Bits 0-3 are defined (reflective/transparency, glossy/matte, positive/negative,
+     * colour/B&W). Bits 4-31 must be zero. Upper 32 bits are vendor-specific and not
+     * validated.
+     *
+     * @param string $data Raw ICC profile payload.
+     */
+    private function validateDeviceAttributes(string $data): void
+    {
+        // Read the lower 32 bits (bytes 60..63 in big-endian layout)
+        $lower32 = $this->uInt32Be(substr($data, IccTag::DEVICE_ATTRIBUTES + 4, 4));
+
+        // Bits 4..31 of the lower 32-bit word must be zero per ICC.1:2022 Table 22
+        $reservedMask = 0xFFFFFFF0;
+        if (($lower32 & $reservedMask) !== 0) {
+            throw new ParseError(
+                sprintf(
+                    'ICC deviceAttributes reserved bits 4..31 are non-zero: 0x%08X',
+                    $lower32,
+                ),
+                1149,
+            );
+        }
     }
 
     /**

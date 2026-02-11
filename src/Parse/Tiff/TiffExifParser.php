@@ -63,6 +63,11 @@ use function substr;
 final class TiffExifParser
 {
     /**
+     * GH-898: Maximum number of IFD entries to prevent DoS via pathologically large payloads.
+     */
+    private const int MAX_IFD_ENTRIES = 10_000;
+
+    /**
      * Tag identifiers that store counted image data such as strips or tiles.
      *
      * EXIF 3.0 §4.6.4 (Table 3) describes these TIFF attributes for thumbnail and
@@ -1301,6 +1306,14 @@ final class TiffExifParser
 
         if ($entryCount === 0) {
             throw new ParseError('IFD must contain at least one entry per TIFF 6.0.', 1307);
+        }
+
+        // GH-898: enforce maximum IFD entry count to prevent DoS
+        if ($entryCount > self::MAX_IFD_ENTRIES) {
+            throw new ParseError(
+                sprintf('IFD entry count %d exceeds maximum allowed %d', $entryCount, self::MAX_IFD_ENTRIES),
+                1360,
+            );
         }
 
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
@@ -2844,13 +2857,20 @@ final class TiffExifParser
 
         $required  = $this->bigTiffOffsetSize;
         $remaining = $this->buffer->size() - $this->buffer->tell();
-        $length    = $required <= $remaining ? $required : $remaining;
 
-        $raw = $this->buffer->read($length);
-
-        if (strlen($raw) < $required) {
-            $raw = str_pad($raw, $required, "\0", STR_PAD_RIGHT);
+        // GH-907: reject truncated BigTIFF offset fields instead of zero-padding
+        if ($remaining < $required) {
+            throw new ParseError(
+                sprintf(
+                    'Truncated BigTIFF offset field: need %d bytes, only %d available',
+                    $required,
+                    $remaining,
+                ),
+                1361,
+            );
         }
+
+        $raw = $this->buffer->read($required);
 
         $little = $this->bo === Endian::Little;
 

@@ -227,7 +227,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Declares an IFD entry count that would overflow a classic TIFF.
-     * Verifies the parser rejects the header with a BoundsError.
+     * Verifies the parser rejects the header with a ParseError.
      *
      * @return void
      */
@@ -242,7 +242,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
         $reader = new TiffExifParser();
 
-        $this->expectException(BoundsError::class);
+        $this->expectException(ParseError::class);
 
         $reader->parseFromBlob($blob);
     }

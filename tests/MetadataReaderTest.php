@@ -651,9 +651,14 @@ final class MetadataReaderTest extends TestCase
         $url  = $this->fullBox('url ', '', 0, 1);
         $dref = $this->fullBox('dref', pack('N', 1) . $url);
         $dinf = $this->box('dinf', $dref);
+        $vmhd = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
         $stsd = $this->fullBox('stsd', pack('N', 0));
-        $stbl = $this->box('stbl', $stsd);
-        $minf = $this->box('minf', $dinf . $stbl);
+        $stts = $this->fullBox('stts', pack('N', 0));
+        $stsc = $this->fullBox('stsc', pack('N', 0));
+        $stsz = $this->fullBox('stsz', pack('NN', 0, 0));
+        $stco = $this->fullBox('stco', pack('N', 0));
+        $stbl = $this->box('stbl', $stsd . $stts . $stsc . $stsz . $stco);
+        $minf = $this->box('minf', $vmhd . $dinf . $stbl);
         $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
 
         return $this->box('trak', $tkhd . $mdia);

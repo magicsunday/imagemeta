@@ -386,7 +386,7 @@ final class TiffExifParserBigTiffTest extends TestCase
 
         $reader = new TiffExifParser();
 
-        $this->expectException(BoundsError::class);
+        $this->expectException(ParseError::class);
 
         $reader->parseFromBlob($blob);
     }
