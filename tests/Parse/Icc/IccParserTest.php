@@ -330,13 +330,14 @@ final class IccParserTest extends TestCase
     }
 
     /**
-     * Modifies the version bytes to an older ICC encoding.
-     * This verifies legacy version parsing uses the correct byte layout.
+     * Parses an ICC profile with version 2.1.3 encoding.
+     * This verifies version parsing uses the correct byte layout:
+     * byte 8 = major, byte 9 high nibble = minor, low nibble = bugfix.
      *
      * @return void
      */
     #[Test]
-    public function decodeExtractsLegacyVersionEncoding(): void
+    public function decodeExtractsVersionEncoding(): void
     {
         $profile = IccFixtures::minimalProfile();
         $profile = substr_replace($profile, chr(0x02), 8, 1);
@@ -538,6 +539,179 @@ final class IccParserTest extends TestCase
             . pack('N', $paddedSize);    // Tag size (4-byte aligned)
 
         $profile = $header . $tagTable . $mlucTag;
+
+        // Patch profile size
+        return pack('N', strlen($profile)) . substr($profile, 4);
+    }
+
+    /**
+     * GH-824: Rejects profiles with non-zero reserved bytes in version field.
+     * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsNonZeroVersionReservedBytes(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Set byte 10 to non-zero
+        $profile = substr_replace($profile, chr(0x01), 10, 1);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * GH-824: Rejects profiles with non-zero reserved byte 11 in version field.
+     * ICC.1:2022 §7.2.4: bytes 10-11 must be 0x00.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsNonZeroVersionReservedByte11(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Set byte 11 to non-zero
+        $profile = substr_replace($profile, chr(0xFF), 11, 1);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * GH-825: Rejects textType tags without trailing NUL byte.
+     * ICC.1:2022 §10.24: textType must be NUL-terminated.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsTextTypeWithoutTrailingNul(): void
+    {
+        // Use text of exactly 4 bytes so 4-byte alignment padding doesn't inadvertently add a NUL
+        $profile = $this->buildTextTypeProfile('Hell');
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['copyright']); // text tag is invalid
+    }
+
+    /**
+     * GH-825: Rejects textType tags with non-ASCII bytes.
+     * ICC.1:2022 §10.24: textType must contain only 7-bit ASCII (bytes <= 0x7F).
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsTextTypeWithNonAsciiBytes(): void
+    {
+        // String with byte 0x80 (non-7-bit-ASCII)
+        $profile = $this->buildTextTypeProfile("Test\x80Text\0");
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['copyright']); // text tag is invalid
+    }
+
+    /**
+     * GH-825: Accepts valid textType tags with 7-bit ASCII and NUL termination.
+     * ICC.1:2022 §10.24: textType with valid 7-bit ASCII.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeAcceptsValidTextType(): void
+    {
+        $profile = $this->buildTextTypeProfile("Valid ASCII Text\0");
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('Valid ASCII Text', $result['copyright']);
+    }
+
+    /**
+     * GH-831: Rejects profiles with non-zero reserved header bytes.
+     * ICC.1:2022 §7.2.19: bytes 100-127 must be zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsNonZeroHeaderReservedBytes(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Set byte 100 to non-zero
+        $profile = substr_replace($profile, chr(0x01), 100, 1);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * GH-831: Rejects profiles with non-zero reserved header byte at position 127.
+     * ICC.1:2022 §7.2.19: bytes 100-127 must be zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsNonZeroHeaderReservedByte127(): void
+    {
+        $profile = IccFixtures::minimalProfile();
+        // Set byte 127 (last reserved byte) to non-zero
+        $profile = substr_replace($profile, chr(0xFF), 127, 1);
+
+        $decoder = new IccParser();
+
+        self::assertNull($decoder->decode($profile));
+    }
+
+    /**
+     * Builds a minimal ICC profile with a textType copyright tag.
+     */
+    private function buildTextTypeProfile(string $text): string
+    {
+        // ICC header (128 bytes)
+        $header = pack('N', 0)           // Profile size (placeholder, patched below)
+            . str_repeat("\0", 4)        // Preferred CMM type
+            . pack('N', 0x04210000)      // Version 4.2.1
+            . str_repeat("\0", 4)        // Device class
+            . 'RGB '                     // Color space
+            . 'XYZ '                     // PCS
+            . str_repeat("\0", 12)       // Date/time (year=0 → null)
+            . 'acsp'                     // Profile signature
+            . str_repeat("\0", 28)       // Primary platform + flags + device mfg + etc.
+            . pack('N', 1)              // Rendering intent
+            . str_repeat("\0", 12)       // PCS illuminant
+            . str_repeat("\0", 16)       // Profile ID
+            . str_repeat("\0", 28);      // Reserved
+
+        // Pad header to exactly 128 bytes
+        $header = str_pad($header, 128, "\0");
+
+        // textType tag data: signature + reserved + ASCII text
+        $textTag = 'text'
+            . pack('N', 0)               // Reserved
+            . $text;
+
+        // ICC.1:2022 §7.3: tag size must be 4-byte aligned
+        $paddedSize = (int) (ceil(strlen($textTag) / 4) * 4);
+        $textTag    = str_pad($textTag, $paddedSize, "\0");
+
+        // Tag table: 1 entry (cprt)
+        $tagOffset = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
+        $tagTable  = pack('N', 1)        // Tag count
+            . 'cprt'                     // Tag signature
+            . pack('N', $tagOffset)      // Offset to tag data
+            . pack('N', $paddedSize);    // Tag size (4-byte aligned)
+
+        $profile = $header . $tagTable . $textTag;
 
         // Patch profile size
         return pack('N', strlen($profile)) . substr($profile, 4);

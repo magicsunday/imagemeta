@@ -121,12 +121,23 @@ final class IccParser
             return null; // invalid ICC profile
         }
 
+        // ICC.1:2022 §7.2.19: Reserved field (bytes 100-127) must be zero.
+        $reserved = substr($data, IccTag::RESERVED, 28);
+        if ($reserved !== str_repeat("\0", 28)) {
+            return null;
+        }
+
         // ICC.1:2022 §7.1: Tag data must follow the tag table with NULL padding.
         if (!$this->validateTagTable($data, $profileSize)) {
             return null;
         }
 
-        $version            = $this->extractVersion($data);
+        // ICC.1:2022 §7.2.4: Validate version field including reserved bytes
+        $version = $this->extractVersion($data);
+        if ($version === null) {
+            return null;
+        }
+
         $pcs                = $this->extractSignature(substr($data, IccTag::PCS, 4));
         $renderingIntent    = $this->extractRenderingIntent($data);
         $profileId          = $this->extractProfileId($data);
@@ -228,23 +239,27 @@ final class IccParser
     /**
      * Extracts the ICC specification version string from the profile header.
      *
+     * ICC.1:2022 §7.2.4: Version field structure:
+     * - byte 8: major version (full byte)
+     * - byte 9 high nibble: minor version
+     * - byte 9 low nibble: bugfix version
+     * - bytes 10-11: reserved, must be 0x00
+     *
      * @param string $data Raw ICC profile payload.
      *
-     * @return string|null Human readable version or null when unavailable.
+     * @return string|null Human readable version or null when unavailable or invalid.
      */
     private function extractVersion(string $data): ?string
     {
-        $majorByte     = ord($data[8]);
+        // ICC.1:2022 §7.2.4: bytes 10-11 (reserved) must be zero
+        if (ord($data[10]) !== 0 || ord($data[11]) !== 0) {
+            return null;
+        }
+
+        $major         = ord($data[8]);
         $minorBugfix   = ord($data[9]);
-        $major         = $majorByte;
         $minor         = $minorBugfix >> 4;
         $bugfixVersion = $minorBugfix & BitMask::LOW_NIBBLE;
-
-        if ($majorByte >= BitMask::BIT_4) {
-            $major         = $majorByte >> 4;
-            $minor         = $majorByte & BitMask::LOW_NIBBLE;
-            $bugfixVersion = $minorBugfix >> 4;
-        }
 
         if ($major === 0 && $minor === 0 && $bugfixVersion === 0) {
             return null;
@@ -667,6 +682,7 @@ final class IccParser
      * Parses an ICC 'text' tag (textType) to retrieve its ASCII text.
      *
      * ICC.1:2022 §10.24: textType structure is signature (4) + reserved (4) + ASCII text.
+     * Text must be 7-bit ASCII (all bytes <= 0x7F) and terminated with a NUL byte.
      *
      * @param string $data Raw tag payload beginning with the type signature.
      *
@@ -679,6 +695,19 @@ final class IccParser
         }
 
         $text = substr($data, 8);
+
+        // ICC.1:2022 §10.24: textType must end with a NUL byte
+        if ($text === '' || $text[-1] !== "\0") {
+            return null;
+        }
+
+        // ICC.1:2022 §10.24: textType must contain only 7-bit ASCII (bytes <= 0x7F)
+        // Validate all non-NUL bytes are 7-bit ASCII
+        for ($i = 0, $len = strlen($text) - 1; $i < $len; ++$i) {
+            if (ord($text[$i]) > 0x7F) {
+                return null;
+            }
+        }
 
         return rtrim($text, "\0");
     }
