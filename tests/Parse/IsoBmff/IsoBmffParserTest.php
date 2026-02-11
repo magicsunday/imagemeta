@@ -2805,6 +2805,95 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses a valid counted-string component name from hdlr box.
+     */
+    #[Test]
+    public function parsesHdlrCountedStringName(): void
+    {
+        $name        = 'VideoHandler';
+        $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12)
+            . chr(strlen($name)) . $name;
+        $hdlr = $this->box('hdlr', $hdlrPayload);
+        $mdia = $this->box('mdia', $hdlr);
+        $trak = $this->box('trak', $mdia);
+        $moov = $this->box('moov', $trak);
+        $ftyp = $this->box('ftyp', 'qt  ');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('VideoHandler', $qtMeta->stringValue('HandlerDescription'));
+    }
+
+    /**
+     * Counted-string length 0 yields no handler name.
+     */
+    #[Test]
+    public function parsesHdlrCountedStringLengthZero(): void
+    {
+        // Use mdta handler in meta context so parsing doesn't depend on track structure
+        $hdlrPayload = "\0\0\0\0\0\0\0\0mdta" . str_repeat("\0", 12) . "\0";
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+        $dataBox  = $this->box('data', pack('N', 1) . pack('N', 0) . 'test');
+        $ilst     = $this->box('ilst', $this->box(pack('N', 1), $dataBox));
+
+        $meta = $this->box('meta', "\0\0\0\0" . $hdlr . $keys . $ilst);
+        $moov = $this->box('moov', $meta);
+        $ftyp = $this->box('ftyp', 'qt  ');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('test', $qtMeta->stringValue($key));
+    }
+
+    /**
+     * Counted-string length exceeding remaining bytes triggers ParseError.
+     */
+    #[Test]
+    public function rejectHdlrCountedStringExceedsRemaining(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('hdlr component name counted length 20 exceeds remaining 2 bytes');
+
+        // Length byte says 20 but only 2 bytes follow, and no NUL → not ISO fallback
+        $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12) . chr(20) . 'AB';
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+        $meta        = $this->box('meta', "\0\0\0\0" . $hdlr);
+        $moov        = $this->box('moov', $meta);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    /**
+     * ISO-style NUL-terminated handler name is parsed as fallback.
+     */
+    #[Test]
+    public function parsesHdlrIsoStyleNulTerminatedName(): void
+    {
+        $name        = "VideoHandler\0";
+        $hdlrPayload = "\0\0\0\0\0\0\0\0vide" . str_repeat("\0", 12) . $name;
+        $hdlr        = $this->box('hdlr', $hdlrPayload);
+        $mdia        = $this->box('mdia', $hdlr);
+        $trak        = $this->box('trak', $mdia);
+        $moov        = $this->box('moov', $trak);
+        $ftyp        = $this->box('ftyp', 'qt  ');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('VideoHandler', $qtMeta->stringValue('HandlerDescription'));
+    }
+
+    /**
      * Builds a QuickTime file with optional ctry/lang atoms and a custom locale indicator.
      *
      * @param string|null $ctryPayload Raw ctry atom payload (after version/flags), or null to omit.

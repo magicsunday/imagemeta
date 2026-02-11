@@ -765,15 +765,32 @@ final readonly class IsoBmffParser
             throw new ParseError('hdlr reserved fields must be 0');
         }
 
-        $nameBytes = '';
-        if ($win->tell() < $hdlr->contentSize) {
-            $nameBytes = $win->read($hdlr->contentSize - $win->tell());
+        $handlerType = $this->normaliseFourcc($handler);
+        $remaining   = $hdlr->contentSize - $win->tell();
+        $name        = null;
+
+        if ($remaining > 0) {
+            $nameBytes  = $win->read($remaining);
+            $countedLen = ord($nameBytes[0]);
+
+            if ($countedLen <= $remaining - 1) {
+                // QuickTime File Format 2012, "Handler Reference Atom" (p. 85):
+                // component name is a counted string (first byte = length).
+                $name = $countedLen > 0 ? substr($nameBytes, 1, $countedLen) : null;
+            } elseif (str_contains($nameBytes, "\0")) {
+                // ISO/IEC 14496-12 §8.4.3: NUL-terminated UTF-8 handler name.
+                $trimmed = trim($nameBytes, "\0");
+                $name    = $trimmed !== '' ? $trimmed : null;
+            } else {
+                throw new ParseError(sprintf(
+                    'hdlr component name counted length %d exceeds remaining %d bytes',
+                    $countedLen,
+                    $remaining - 1,
+                ));
+            }
         }
 
-        $handlerType = $this->normaliseFourcc($handler);
-        $name        = trim($nameBytes, "\0");
-
-        return [$handlerType === '' ? null : $handlerType, $name === '' ? null : $name];
+        return [$handlerType === '' ? null : $handlerType, $name];
     }
 
     /**
