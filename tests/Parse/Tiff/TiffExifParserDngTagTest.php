@@ -68,13 +68,17 @@ final class TiffExifParserDngTagTest extends TestCase
     public function returnsNullWhenCoreDngTagsAreMissing(): void
     {
         $parser = new TiffExifParser();
-        // IFD0 with a single non-DNG tag (ImageWidth=1)
+        // IFD0 with non-DNG tags (ImageWidth + ImageLength)
         $parsed = $parser->parseFromBlob(
             'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
-            . pack('v', 1)
+            . pack('v', 2)
             . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', 1)
+            . pack('v', ExifTag::IMAGE_LENGTH)
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 1)
             . pack('V', 1)
@@ -96,15 +100,26 @@ final class TiffExifParserDngTagTest extends TestCase
     #[Test]
     public function decodesLocalizedCameraModelByteAsUtf8String(): void
     {
-        $model     = "Camera Model\0";
-        $ifdOffset = 8;
-        $ifdSize   = 2 + 12 + 4;
-        $valOffset = $ifdOffset + $ifdSize;
+        $model      = "Camera Model\0";
+        $ifdOffset  = 8;
+        $entryCount = 3;
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $valOffset  = $ifdOffset + $ifdSize;
 
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
-            . pack('v', 1)
+            . pack('v', $entryCount)
+            // ImageWidth SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            // ImageLength SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
             . pack('v', DngTag::LOCALIZED_CAMERA_MODEL)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', strlen($model))
@@ -228,7 +243,7 @@ final class TiffExifParserDngTagTest extends TestCase
     private function buildClassicDngTiff(): string
     {
         $ifdOffset         = 8;
-        $entryCount        = 3;
+        $entryCount        = 5;
         $ifdSize           = 2 + (12 * $entryCount) + 4;
         $uniqueCameraModel = pack('Z*', 'MagicSunday Camera');
         $modelOffset       = $ifdOffset + $ifdSize;
@@ -237,6 +252,16 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . pack('v', $entryCount)
+            // ImageWidth SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            // ImageLength SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
             . pack('v', DngTag::DNG_VERSION)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', 4)
@@ -258,14 +283,25 @@ final class TiffExifParserDngTagTest extends TestCase
      */
     private function buildTiffWithDngPrivateData(string $privateData): string
     {
-        $ifdOffset = 8;
-        $ifdSize   = 2 + 12 + 4;
-        $valOffset = $ifdOffset + $ifdSize;
+        $ifdOffset  = 8;
+        $entryCount = 3;
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $valOffset  = $ifdOffset + $ifdSize;
 
         return 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
-            . pack('v', 1)
+            . pack('v', $entryCount)
+            // ImageWidth SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            // ImageLength SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
             . pack('v', DngTag::DNG_PRIVATE_DATA)
             . pack('v', TiffConst::TYPE_BYTE)
             . pack('V', strlen($privateData))
@@ -323,16 +359,28 @@ final class TiffExifParserDngTagTest extends TestCase
     private function buildTiffWithEnhancedIfd(?string $enhanceParams): string
     {
         $ifdOffset  = 8;
-        $entryCount = $enhanceParams !== null ? 2 : 1;
+        $baseCount  = $enhanceParams !== null ? 2 : 1;
+        $entryCount = $baseCount + 2; // + ImageWidth + ImageLength
         $ifdSize    = 2 + (12 * $entryCount) + 4;
         $valOffset  = $ifdOffset + $ifdSize;
 
-        // NewSubfileType: LONG, count=1, value=16 (enhanced) — fits inline
+        // Tags sorted ascending: NEW_SUBFILE_TYPE(0xFE) < IMAGE_WIDTH(0x100) < IMAGE_LENGTH(0x101) < ENHANCE_PARAMS(0xC7EE)
         $ifdData = pack('v', $entryCount)
+            // NewSubfileType: LONG, count=1, value=16 (enhanced) — fits inline
             . pack('v', TiffTag::NEW_SUBFILE_TYPE)
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 1)
-            . pack('V', 16);
+            . pack('V', 16)
+            // ImageWidth SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            // ImageLength SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
 
         $outOfLine = '';
 
@@ -363,14 +411,23 @@ final class TiffExifParserDngTagTest extends TestCase
 
     private function buildTiffWithMakerNoteSafety(int $safetyValue): string
     {
-        // Layout: header(8) + IFD0(2 + 2*12 + 4 = 30) + EXIF IFD(2 + 12 + 4 = 18)
+        // Layout: header(8) + IFD0(2 + 4*12 + 4 = 54) + EXIF IFD(2 + 12 + 4 = 18)
         $ifd0Offset     = 8;
-        $ifd0EntryCount = 2;
+        $ifd0EntryCount = 4;
         $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
         $exifIfdOffset  = $ifd0Offset + $ifd0Size;
 
-        // IFD0: ExifIfdPointer (0x8769) < MakerNoteSafety (0xC635) — ascending tag order
         $ifd0 = pack('v', $ifd0EntryCount)
+            // ImageWidth SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            // ImageLength SHORT[1] = 100
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
             // ExifIfdPointer: LONG, count=1, value=offset to EXIF IFD
             . pack('v', ExifTag::EXIF_IFD_POINTER)
             . pack('v', TiffConst::TYPE_LONG)

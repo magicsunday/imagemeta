@@ -93,16 +93,25 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         $header = $endian->value
             . pack($packShort, TiffConst::MAGIC_CLASSIC)
             . pack($packLong, 8);
-        $gpsIfdOffset  = 26;
-        $gpsDataOffset = $gpsIfdOffset + 2 + (6 * 12) + 4;
 
-        $ifd0EntryCount = pack($packShort, 1);
+        $ifd0EntryCount = pack($packShort, 3);
         $ifd0NextOffset = pack($packLong, 0);
 
-        $ifd0Length   = strlen($ifd0EntryCount) + 12 + strlen($ifd0NextOffset);
+        $ifd0Length   = strlen($ifd0EntryCount) + (3 * 12) + strlen($ifd0NextOffset);
         $gpsIfdOffset = strlen($header) + $ifd0Length;
 
         $ifd0 = $ifd0EntryCount
+            // ImageWidth SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_WIDTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, 100) . pack($packShort, 0)
+            // ImageLength SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_LENGTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, 100) . pack($packShort, 0)
+            // GPS IFD pointer
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 1)
@@ -172,13 +181,24 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack($packShort, 0)
             . pack($packLong8, 16);
 
-        $ifd0EntryCount = pack($packLong8, 1);
+        $ifd0EntryCount = pack($packLong8, 3);
         $ifd0NextOffset = pack($packLong8, 0);
 
-        $ifd0Length   = strlen($ifd0EntryCount) + 20 + strlen($ifd0NextOffset);
+        $ifd0Length   = strlen($ifd0EntryCount) + (3 * 20) + strlen($ifd0NextOffset);
         $gpsIfdOffset = 16 + $ifd0Length;
 
         $ifd0 = $ifd0EntryCount
+            // ImageWidth SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_WIDTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong8, 1)
+            . pack($packShort, 100) . pack($packShort, 0) . pack('V', 0)
+            // ImageLength SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_LENGTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong8, 1)
+            . pack($packShort, 100) . pack($packShort, 0) . pack('V', 0)
+            // GPS IFD pointer
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_IFD8)
             . pack($packLong8, 1)

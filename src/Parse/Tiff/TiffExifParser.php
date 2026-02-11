@@ -1203,6 +1203,10 @@ final class TiffExifParser
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
 
+        if (!$jpegContext) {
+            $this->validateImageDimensions($ifd0);
+        }
+
         if ($jpegContext) {
             $this->validateJpegContextProhibitions($ifd0);
         }
@@ -1642,6 +1646,45 @@ final class TiffExifParser
                 'YCbCrSubSampling shall not be present in IFD0 for JPEG-compressed primary image per EXIF 3.0 §4.6.5.1.14.',
                 1354,
             );
+        }
+    }
+
+    /**
+     * Validates that ImageWidth and ImageLength tags exist with valid positive values.
+     *
+     * EXIF 3.0 §4.6.4 requires both tags in IFD0 for non-JPEG primary images.
+     */
+    private function validateImageDimensions(Ifd $ifd0): void
+    {
+        $widthEntry  = $ifd0->get(ExifTag::IMAGE_WIDTH);
+        $lengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
+
+        if (!$widthEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'ImageWidth tag is required in IFD0 for non-JPEG primary image per EXIF 3.0 §4.6.4.',
+                1355,
+            );
+        }
+
+        if (is_int($widthEntry->value) && $widthEntry->value <= 0) {
+            throw new ParseError(sprintf(
+                'ImageWidth value %d is invalid; must be a positive integer per EXIF 3.0 §4.6.4.',
+                $widthEntry->value,
+            ), 1355);
+        }
+
+        if (!$lengthEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'ImageLength tag is required in IFD0 for non-JPEG primary image per EXIF 3.0 §4.6.4.',
+                1356,
+            );
+        }
+
+        if (is_int($lengthEntry->value) && $lengthEntry->value <= 0) {
+            throw new ParseError(sprintf(
+                'ImageLength value %d is invalid; must be a positive integer per EXIF 3.0 §4.6.4.',
+                $lengthEntry->value,
+            ), 1356);
         }
     }
 

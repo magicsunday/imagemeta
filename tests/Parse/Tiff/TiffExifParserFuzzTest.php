@@ -191,7 +191,19 @@ final class TiffExifParserFuzzTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        $blob .= pack('v', 2);  // 2 entries
+        $blob .= pack('v', 4);  // 4 entries
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
 
         // Both entries point to same offset (overlapping)
         $blob .= pack('v', 0x010F)                 // Tag: Manufacturer
@@ -312,19 +324,33 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesDeepIfdChain(): void
     {
-        // Create a chain of 5 IFDs, each with 1 dummy entry (tag increments to stay sorted)
+        // Create a chain of 5 IFDs; IFD0 gets ImageWidth+ImageLength+dummy, rest have 1 dummy
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);  // First IFD at 8
 
-        $ifdSize = 2 + 12 + 4; // entryCount(2) + 1 entry(12) + nextIfd(4)
-        $offset  = 8;
-        for ($i = 0; $i < 5; ++$i) {
-            $blob .= pack('v', 1);  // 1 entry
-            // Use high tag IDs (0xFF00+) to avoid triggering any tag-specific validation
+        // IFD0: 3 entries
+        $ifd0Size = 2 + (3 * 12) + 4;
+        $offset   = 8;
+
+        $blob .= pack('v', 3);
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH) . pack('v', TiffConst::TYPE_SHORT) . pack('V', 1) . pack('v', 100) . pack('v', 0);
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH) . pack('v', TiffConst::TYPE_SHORT) . pack('V', 1) . pack('v', 100) . pack('v', 0);
+        // Dummy tag
+        $blob .= pack('v', 0xFF00) . pack('v', TiffConst::TYPE_LONG) . pack('V', 1) . pack('V', 1);
+
+        $nextOffset = $offset + $ifd0Size;
+        $blob .= pack('V', $nextOffset);
+        $offset = $nextOffset;
+
+        $ifdSize = 2 + 12 + 4;
+        for ($i = 1; $i < 5; ++$i) {
+            $blob .= pack('v', 1);
             $blob .= pack('v', 0xFF00 + $i) . pack('v', TiffConst::TYPE_LONG) . pack('V', 1) . pack('V', 1);
             $nextOffset = $offset + $ifdSize;
-            $blob .= pack('V', $i < 4 ? $nextOffset : 0);  // Next IFD or 0
+            $blob .= pack('V', $i < 4 ? $nextOffset : 0);
             $offset = $nextOffset;
         }
 
@@ -345,18 +371,34 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesAsciiWithEmbeddedNulls(): void
     {
+        $entryCount = 3;
+        $ifdOffset  = 8;
+        $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
+
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', 8);
+            . pack('V', $ifdOffset);
 
-        $blob .= pack('v', 1);
+        $blob .= pack('v', $entryCount);
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
 
         $asciiData = "Test\x00String\x00";
 
         $blob .= pack('v', 0x010F)                 // Manufacturer
             . pack('v', TiffConst::TYPE_ASCII)
             . pack('V', strlen($asciiData))
-            . pack('V', 26);
+            . pack('V', $valOffset);
 
         $blob .= pack('V', 0);
         $blob .= $asciiData;
@@ -380,9 +422,22 @@ final class TiffExifParserFuzzTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        $blob .= pack('v', 1);
+        $blob .= pack('v', 3);
 
-        $blob .= pack('v', 0x0100)             // ImageWidth
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // Dummy entry with count=0
+        $blob .= pack('v', 0xFF00)
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 0)                     // Count: 0
             . pack('V', 0);
@@ -408,13 +463,19 @@ final class TiffExifParserFuzzTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        $blob .= pack('v', 1);
+        $blob .= pack('v', 2);
 
         // Entry with value that looks like big-endian but should be parsed as little-endian
-        $blob .= pack('v', 0x0100)
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 1)
             . pack('V', 0x01020304);  // Will be read as little-endian
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
 
         $blob .= pack('V', 0);
 
@@ -431,11 +492,21 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function parsesBigEndianInlineShortValue(): void
     {
-        // Big-endian TIFF with one SHORT entry (Orientation=6)
+        // Big-endian TIFF with ImageWidth + ImageLength + Orientation
         $blob = 'MM'
             . pack('n', TiffConst::MAGIC_CLASSIC)
             . pack('N', 8)
-            . pack('n', 1)
+            . pack('n', 3)
+            // ImageWidth SHORT[1] = 100
+            . pack('n', ExifTag::IMAGE_WIDTH)
+            . pack('n', TiffConst::TYPE_SHORT)
+            . pack('N', 1)
+            . "\x00\x64\x00\x00"
+            // ImageLength SHORT[1] = 100
+            . pack('n', ExifTag::IMAGE_LENGTH)
+            . pack('n', TiffConst::TYPE_SHORT)
+            . pack('N', 1)
+            . "\x00\x64\x00\x00"
             // tag=Orientation(0x0112), type=SHORT(3), count=1
             . pack('n', ExifTag::ORIENTATION)
             . pack('n', TiffConst::TYPE_SHORT)
@@ -461,18 +532,34 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesUndefinedTypeWithRandomBytes(): void
     {
+        $entryCount = 3;
+        $ifdOffset  = 8;
+        $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
+
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', 8);
+            . pack('V', $ifdOffset);
 
-        $blob .= pack('v', 1);
+        $blob .= pack('v', $entryCount);
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
 
         $undefinedData = "\x00\xFF\x01\xFE\x02\xFD\x03\xFC";
 
         $blob .= pack('v', ExifTag::MAKER_NOTE)       // MakerNote (no fixed-length rule)
             . pack('v', TiffConst::TYPE_UNDEFINED)
             . pack('V', strlen($undefinedData))
-            . pack('V', 26);
+            . pack('V', $valOffset);
 
         $blob .= pack('V', 0);
         $blob .= $undefinedData;
@@ -494,16 +581,32 @@ final class TiffExifParserFuzzTest extends TestCase
      */
     private function buildTiffWithRational(int $numerator, int $denominator): string
     {
+        $entryCount = 3;
+        $ifdOffset  = 8;
+        $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
+
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', 8);
+            . pack('V', $ifdOffset);
 
-        $blob .= pack('v', 1);
+        $blob .= pack('v', $entryCount);
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
 
         $blob .= pack('v', 0x011A)                    // XResolution
             . pack('v', TiffConst::TYPE_RATIONAL)
             . pack('V', 1)
-            . pack('V', 26);
+            . pack('V', $valOffset);
 
         $blob .= pack('V', 0);
 
@@ -521,16 +624,32 @@ final class TiffExifParserFuzzTest extends TestCase
      */
     private function buildTiffWithSRational(int $numerator, int $denominator): string
     {
+        $entryCount = 3;
+        $ifdOffset  = 8;
+        $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
+
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', 8);
+            . pack('V', $ifdOffset);
 
-        $blob .= pack('v', 1);
+        $blob .= pack('v', $entryCount);
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
 
         $blob .= pack('v', 0x9201)                    // ShutterSpeedValue
             . pack('v', TiffConst::TYPE_SRATIONAL)
             . pack('V', 1)
-            . pack('V', 26);
+            . pack('V', $valOffset);
 
         $blob .= pack('V', 0);
 

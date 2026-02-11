@@ -253,13 +253,8 @@ final class TiffExifParserFixedLengthTest extends TestCase
 
     private function buildClassicTiffWithEntry(int $tag, int $type, int $count, string $valueBytes): string
     {
-        $ifdOffset = 8;
-        $blob      = 'II'
-            . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', $ifdOffset);
-
-        $blob .= pack('v', 1);
-
+        $ifdOffset     = 8;
+        $entryCount    = 3; // ImageWidth + ImageLength + the requested tag
         $componentSize = $this->bytesPerComponent($type);
         $dataSize      = $componentSize * $count;
 
@@ -267,21 +262,49 @@ final class TiffExifParserFixedLengthTest extends TestCase
             $valueBytes = str_pad($valueBytes, $dataSize, "\0");
         }
 
-        if ($dataSize <= 4) {
-            $inlineBytes = str_pad(substr($valueBytes, 0, $dataSize), 4, "\0");
+        // Build entries as [tag => binary] sorted ascending by tag ID
+        $entries = [];
 
-            return $blob . (pack('v', $tag) . pack('v', $type) . pack('V', $count) . $inlineBytes . pack('V', 0));
+        // ImageWidth SHORT[1] = 100
+        $entries[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $entries[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // Requested tag — offset placeholder if out-of-line
+        $outOfLine = $dataSize > 4;
+        if ($outOfLine) {
+            $valueOffset   = $ifdOffset + 2 + ($entryCount * 12) + 4;
+            $entries[$tag] = pack('v', $tag) . pack('v', $type) . pack('V', $count) . pack('V', $valueOffset);
+        } else {
+            $inlineBytes   = str_pad(substr($valueBytes, 0, $dataSize), 4, "\0");
+            $entries[$tag] = pack('v', $tag) . pack('v', $type) . pack('V', $count) . $inlineBytes;
         }
 
-        $valueOffset = $ifdOffset + 2 + 12 + 4;
+        ksort($entries);
 
-        $blob .= pack('v', $tag)
-            . pack('v', $type)
-            . pack('V', $count)
-            . pack('V', $valueOffset)
-            . pack('V', 0);
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount);
 
-        return $blob . substr($valueBytes, 0, $dataSize);
+        foreach ($entries as $entry) {
+            $blob .= $entry;
+        }
+
+        $blob .= pack('V', 0); // next IFD
+
+        if ($outOfLine) {
+            $blob .= substr($valueBytes, 0, $dataSize);
+        }
+
+        return $blob;
     }
 
     private function bytesPerComponent(int $type): int

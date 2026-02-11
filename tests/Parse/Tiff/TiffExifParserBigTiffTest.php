@@ -19,6 +19,7 @@ use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -67,7 +68,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertCount(1, $result->ifd0->entries);
+        self::assertCount(3, $result->ifd0->entries);
     }
 
     /**
@@ -123,16 +124,28 @@ final class TiffExifParserBigTiffTest extends TestCase
             . pack('v', 0)      // Reserved
             . pack('P', 16);    // First IFD at offset 16
 
-        // IFD with 64-bit entry count (2 entries)
-        $blob .= pack('P', 2);  // Entry count (64-bit)
+        // IFD with 64-bit entry count (4 entries)
+        $blob .= pack('P', 4);  // Entry count (64-bit)
 
-        // Entry 1: Manufacturer (ASCII string "Test")
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '');
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '');
+
+        // Entry 3: Manufacturer (ASCII string "Test")
         $blob .= pack('v', 0x010F)               // Tag
             . pack('v', TiffConst::TYPE_ASCII)   // Type
             . pack('P', 5)                       // Count (64-bit): "Test\0"
             . pack('a8', "Test\0");              // Inline value (8 bytes max in BigTIFF)
 
-        // Entry 2: Model (ASCII string "ABC")
+        // Entry 4: Model (ASCII string "ABC")
         $blob .= pack('v', 0x0110)
             . pack('v', TiffConst::TYPE_ASCII)
             . pack('P', 4)
@@ -144,7 +157,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertCount(2, $result->ifd0->entries);
+        self::assertCount(4, $result->ifd0->entries);
     }
 
     /**
@@ -163,8 +176,8 @@ final class TiffExifParserBigTiffTest extends TestCase
             . pack('v', 0)
             . pack('P', 16);
 
-        // IFD with LONG8 entry
-        $blob .= pack('P', 1);  // 1 entry
+        // IFD with 2 entries
+        $blob .= pack('P', 2);
 
         // Entry: ImageWidth as LONG8
         $blob .= pack('v', 0x0100)               // Tag: ImageWidth
@@ -172,12 +185,18 @@ final class TiffExifParserBigTiffTest extends TestCase
             . pack('P', 1)                       // Count: 1
             . pack('P', 1920);                   // Inline value: 1920 (fits in 8 bytes)
 
+        // ImageLength SHORT[1] = 1080
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 1080) . pack('a6', '');
+
         $blob .= pack('P', 0);  // Next IFD
 
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertCount(1, $result->ifd0->entries);
+        self::assertCount(2, $result->ifd0->entries);
     }
 
     /**
@@ -195,10 +214,22 @@ final class TiffExifParserBigTiffTest extends TestCase
             . pack('v', 0)
             . pack('P', 16);
 
-        $blob .= pack('P', 1);  // 1 entry
+        $blob .= pack('P', 3);  // 3 entries
 
-        // Entry with SLONG8 (signed 64-bit value: -42)
-        $blob .= pack('v', 0x0100)                // Tag: ImageWidth (non-pointer tag)
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '');
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '');
+
+        // Entry with SLONG8 (signed 64-bit value: -42) on a non-dimension tag
+        $blob .= pack('v', 0xFF00)                // Tag: dummy (non-pointer tag)
             . pack('v', TiffConst::TYPE_SLONG8)   // Type: SLONG8
             . pack('P', 1)                        // Count
             . pack('q', -42);                     // Inline signed value
@@ -208,7 +239,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertCount(1, $result->ifd0->entries);
+        self::assertCount(3, $result->ifd0->entries);
     }
 
     /**
@@ -226,7 +257,19 @@ final class TiffExifParserBigTiffTest extends TestCase
             . pack('v', 0)
             . pack('P', 16);
 
-        $blob .= pack('P', 1);
+        $blob .= pack('P', 3);
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '');
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('P', 1)
+            . pack('v', 100) . pack('a6', '');
 
         // Entry: SubIFDs pointer using IFD8 type pointing to offset 0 (no sub-IFD)
         $blob .= pack('v', 0x014A)              // Tag: SubIFDs
@@ -239,7 +282,7 @@ final class TiffExifParserBigTiffTest extends TestCase
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertCount(1, $result->ifd0->entries);
+        self::assertCount(3, $result->ifd0->entries);
     }
 
     /**
@@ -369,12 +412,23 @@ final class TiffExifParserBigTiffTest extends TestCase
 
         $headerSize = strlen($blob);
 
-        // Add minimal IFD with one dummy entry if firstIfd points right after header
+        // Add minimal IFD with ImageWidth + ImageLength + dummy entry if firstIfd points right after header
         if ($firstIfd === $headerSize) {
             // entryCount: 8 bytes (readU64), entry: tag(2)+type(2)+count(8)+value($offsetSize)
             // nextIfd: $offsetSize bytes
-            $blob .= pack('P', 1)                                // 1 entry (always 8-byte U64)
-                . pack('v', 0xFF00)                               // dummy tag
+            $blob .= pack('P', 3)                                // 3 entries (always 8-byte U64)
+                // ImageWidth SHORT[1] = 100
+                . pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('P', 1)
+                . str_pad(pack('v', 100), $offsetSize, "\0")
+                // ImageLength SHORT[1] = 100
+                . pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('P', 1)
+                . str_pad(pack('v', 100), $offsetSize, "\0")
+                // dummy tag
+                . pack('v', 0xFF00)
                 . pack('v', TiffConst::TYPE_LONG)
                 . pack('P', 1)                                    // count (always 8 bytes)
                 . str_pad(pack('P', 1), $offsetSize, "\0")       // value (padded to offset size)

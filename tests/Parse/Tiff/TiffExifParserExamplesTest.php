@@ -158,30 +158,40 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, TiffConst::MAGIC_CLASSIC)
             . pack($packLong, 8);
 
-        // IFD0 with pointers to ExifIFD and GPSIFD.
-        $ifd0 = pack($packShort, 2)
+        // IFD0 with ImageWidth, ImageLength, and pointers to ExifIFD and GPSIFD.
+        $ifd0 = pack($packShort, 4)
+            // ImageWidth SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_WIDTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, 100) . pack($packShort, 0)
+            // ImageLength SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_LENGTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, 100) . pack($packShort, 0)
             . pack($packShort, ExifTag::EXIF_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 1)
-            . pack($packLong, 38)
+            . pack($packLong, 62)
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 1)
-            . pack($packLong, 204)
+            . pack($packLong, 228)
             . pack($packLong, 0);
 
-        // ExifIFD entries (7 entries => data region starts at offset 128).
+        // ExifIFD entries (7 entries => data region starts at offset 152).
         $exifIfd = pack($packShort, 7)
             // ExposureTime = 1/60
             . pack($packShort, ExifTag::EXPOSURE_TIME)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 1)
-            . pack($packLong, 128)
+            . pack($packLong, 152)
             // FNumber = 2.8 (28/10)
             . pack($packShort, ExifTag::F_NUMBER)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 1)
-            . pack($packLong, 136)
+            . pack($packLong, 160)
             // ISOSpeed = 200
             . pack($packShort, ExifTag::ISO_SPEED)
             . pack($packShort, TiffConst::TYPE_LONG)
@@ -191,22 +201,22 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::DATETIME_ORIGINAL)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 20)
-            . pack($packLong, 144)
+            . pack($packLong, 168)
             // FocalLength = 50 mm
             . pack($packShort, ExifTag::FOCAL_LENGTH)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 1)
-            . pack($packLong, 164)
+            . pack($packLong, 188)
             // UserComment with ASCII prefix
             . pack($packShort, ExifTag::USER_COMMENT)
             . pack($packShort, TiffConst::TYPE_UNDEFINED)
             . pack($packLong, 24)
-            . pack($packLong, 172)
+            . pack($packLong, 196)
             // FlashEnergy = 6.5 BCPS (65/10)
             . pack($packShort, ExifTag::FLASH_ENERGY)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 1)
-            . pack($packLong, 196)
+            . pack($packLong, 220)
             . pack($packLong, 0);
 
         $exifData = pack($packRational, 1, 60)
@@ -216,7 +226,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . 'ASCII' . "\0\0\0" . 'Sample EXIF 3.0' . "\0"
             . pack($packRational, 65, 10);
 
-        // GPS IFD entries (6 entries => data region starts at offset 282).
+        // GPS IFD entries (6 entries => data region starts at offset 306).
         $gpsIfd = pack($packShort, 6)
             // GPSLatitudeRef = "N"
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
@@ -227,7 +237,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
-            . pack($packLong, 282)
+            . pack($packLong, 306)
             // GPSLongitudeRef = "E"
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
@@ -237,7 +247,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
-            . pack($packLong, 306)
+            . pack($packLong, 330)
             // GPSAltitudeRef = 0 (above sea level)
             . pack($packShort, ExifTag::GPS_ALTITUDE_REF)
             . pack($packShort, TiffConst::TYPE_BYTE)
@@ -247,7 +257,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_ALTITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 1)
-            . pack($packLong, 330)
+            . pack($packLong, 354)
             . pack($packLong, 0);
 
         $gpsData = pack($packRational, 35, 1)
@@ -276,7 +286,7 @@ final class TiffExifParserExamplesTest extends TestCase
         $packShort = $endian === Endian::Little ? 'v' : 'n';
         $packLong  = $endian === Endian::Little ? 'V' : 'N';
 
-        $ifd0EntryCount       = 1;
+        $ifd0EntryCount       = 3;
         $exifIfdEntryCount    = 1;
         $interopIfdEntryCount = 1;
         $ifd1EntryCount       = 7;
@@ -302,6 +312,16 @@ final class TiffExifParserExamplesTest extends TestCase
         $jpegLength       = 10;
 
         $ifd0 = pack($packShort, $ifd0EntryCount)
+            // ImageWidth SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_WIDTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, 100) . pack($packShort, 0)
+            // ImageLength SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_LENGTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . pack($packLong, 1)
+            . pack($packShort, 100) . pack($packShort, 0)
             . pack($packShort, ExifTag::EXIF_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_LONG)
             . pack($packLong, 1)
@@ -385,18 +405,28 @@ final class TiffExifParserExamplesTest extends TestCase
             . $this->packUint64(16, $endian);
 
         // IFD0 with 64-bit entry count and offsets.
-        $ifd0 = $this->packUint64(2, $endian)
+        $ifd0 = $this->packUint64(4, $endian)
+            // ImageWidth SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_WIDTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . $this->packUint64(1, $endian)
+            . pack($packShort, 100) . pack('a6', '')
+            // ImageLength SHORT[1] = 100
+            . pack($packShort, ExifTag::IMAGE_LENGTH)
+            . pack($packShort, TiffConst::TYPE_SHORT)
+            . $this->packUint64(1, $endian)
+            . pack($packShort, 100) . pack('a6', '')
             . pack($packShort, ExifTag::EXIF_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_IFD8)
             . $this->packUint64(1, $endian)
-            . $this->packUint64(72, $endian)
+            . $this->packUint64(112, $endian)
             . pack($packShort, ExifTag::GPS_IFD_POINTER)
             . pack($packShort, TiffConst::TYPE_IFD8)
             . $this->packUint64(1, $endian)
-            . $this->packUint64(272, $endian)
+            . $this->packUint64(312, $endian)
             . $this->packUint64(0, $endian);
 
-        // ExifIFD entries (7 entries => data region starts at offset 228).
+        // ExifIFD entries (7 entries => data region starts at offset 268).
         $exifIfd = $this->packUint64(7, $endian)
             // ExposureTime = 1/60
             . pack($packShort, ExifTag::EXPOSURE_TIME)
@@ -417,7 +447,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::DATETIME_ORIGINAL)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . $this->packUint64(20, $endian)
-            . $this->packUint64(228, $endian)
+            . $this->packUint64(268, $endian)
             // FocalLength = 50 mm
             . pack($packShort, ExifTag::FOCAL_LENGTH)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -427,7 +457,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::USER_COMMENT)
             . pack($packShort, TiffConst::TYPE_UNDEFINED)
             . $this->packUint64(24, $endian)
-            . $this->packUint64(248, $endian)
+            . $this->packUint64(288, $endian)
             // FlashEnergy = 6.5 BCPS (65/10)
             . pack($packShort, ExifTag::FLASH_ENERGY)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
@@ -442,7 +472,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . 'Sample EXIF 3.0'
             . "\0";
 
-        // GPS IFD entries (6 entries => data region starts at offset 408).
+        // GPS IFD entries (6 entries => data region starts at offset 448).
         $gpsIfd = $this->packUint64(6, $endian)
             // GPSLatitudeRef = "N"
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
@@ -453,7 +483,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . $this->packUint64(3, $endian)
-            . $this->packUint64(408, $endian)
+            . $this->packUint64(448, $endian)
             // GPSLongitudeRef = "E"
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
@@ -463,7 +493,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . $this->packUint64(3, $endian)
-            . $this->packUint64(432, $endian)
+            . $this->packUint64(472, $endian)
             // GPSAltitudeRef = 0 (above sea level)
             . pack($packShort, ExifTag::GPS_ALTITUDE_REF)
             . pack($packShort, TiffConst::TYPE_BYTE)

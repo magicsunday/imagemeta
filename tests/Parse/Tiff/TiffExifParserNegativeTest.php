@@ -260,8 +260,9 @@ final class TiffExifParserNegativeTest extends TestCase
         $blob      = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)  // First IFD at offset 8
-            . pack('v', 1)           // 1 entry in IFD
-            . pack('v', 0x0100) . pack('v', TiffConst::TYPE_LONG) . pack('V', 1) . pack('V', 1)
+            . pack('v', 2)           // 2 entries in IFD
+            . pack('v', ExifTag::IMAGE_WIDTH) . pack('v', TiffConst::TYPE_SHORT) . pack('V', 1) . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH) . pack('v', TiffConst::TYPE_SHORT) . pack('V', 1) . pack('v', 100) . pack('v', 0)
             . pack('V', $ifdOffset); // Next IFD points back to offset 8 (cycle)
 
         $reader = new TiffExifParser();
@@ -560,24 +561,40 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     private function buildMinimalTiffWithRational(int $numerator, int $denominator): string
     {
+        $entryCount = 3;
+        $ifdOffset  = 8;
+        $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
+
         // TIFF header
         $blob = 'II'  // Little-endian
             . pack('v', TiffConst::MAGIC_CLASSIC)  // Classic TIFF magic
-            . pack('V', 8);  // First IFD at offset 8
+            . pack('V', $ifdOffset);  // First IFD at offset 8
 
-        // IFD0 with 1 entry (XResolution as RATIONAL)
-        $blob .= pack('v', 1);  // Entry count
+        // IFD0 with 3 entries
+        $blob .= pack('v', $entryCount);
 
-        // Entry: Tag=0x011A (XResolution), Type=RATIONAL(5), Count=1, Value/Offset=26
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // Entry: Tag=0x011A (XResolution), Type=RATIONAL(5), Count=1
         $blob .= pack('v', 0x011A)       // Tag
             . pack('v', TiffConst::TYPE_RATIONAL)  // Type
             . pack('V', 1)               // Count
-            . pack('V', 26);             // Offset to rational data
+            . pack('V', $valOffset);     // Offset to rational data
 
         // Next IFD offset (none)
         $blob .= pack('V', 0);
 
-        // Rational data at offset 26: numerator and denominator
+        // Rational data: numerator and denominator
         $blob .= pack('V', $numerator)
             . pack('V', $denominator);
 
@@ -657,19 +674,35 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     private function buildMinimalTiffWithSRational(int $numerator, int $denominator): string
     {
+        $entryCount = 3;
+        $ifdOffset  = 8;
+        $valOffset  = $ifdOffset + 2 + (12 * $entryCount) + 4;
+
         // TIFF header
         $blob = 'II'  // Little-endian
             . pack('v', TiffConst::MAGIC_CLASSIC)
-            . pack('V', 8);
+            . pack('V', $ifdOffset);
 
-        // IFD0 with 1 entry (ShutterSpeedValue as SRATIONAL)
-        $blob .= pack('v', 1);
+        // IFD0 with 3 entries
+        $blob .= pack('v', $entryCount);
 
-        // Entry: Tag=0x9201 (ShutterSpeedValue), Type=SRATIONAL(10), Count=1, Offset=26
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // Entry: Tag=0x9201 (ShutterSpeedValue), Type=SRATIONAL(10), Count=1
         $blob .= pack('v', 0x9201)
             . pack('v', TiffConst::TYPE_SRATIONAL)
             . pack('V', 1)
-            . pack('V', 26);
+            . pack('V', $valOffset);
 
         $blob .= pack('V', 0);  // Next IFD
 
@@ -1143,6 +1176,29 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Builds a minimal classic TIFF with multiple SHORT[1] tags in IFD0.
+     *
+     * @param list<array{int, int}> $tags Tag/value pairs (SHORT[1])
+     */
+    private function buildTiffWithShortTags(array $tags): string
+    {
+        $count = count($tags);
+        $blob  = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', $count);
+
+        foreach ($tags as [$tag, $value]) {
+            $blob .= pack('v', $tag)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $value) . pack('v', 0);
+        }
+
+        return $blob . pack('V', 0);
+    }
+
+    /**
      * Builds a minimal TIFF with IFD0 containing given entries plus IFD1 with given entries.
      *
      * @param list<array{int, int}> $ifd0Tags Tag/value pairs (SHORT[1])
@@ -1206,7 +1262,11 @@ final class TiffExifParserNegativeTest extends TestCase
     public function acceptIfd0CompressionUncompressed(): void
     {
         $result = (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 1),
+            $this->buildTiffWithShortTags([
+                [ExifTag::IMAGE_WIDTH, 100],
+                [ExifTag::IMAGE_LENGTH, 100],
+                [ExifTag::COMPRESSION, 1],
+            ]),
         );
 
         self::assertSame(Compression::UNCOMPRESSED, $result->compression());
@@ -1220,7 +1280,7 @@ final class TiffExifParserNegativeTest extends TestCase
     {
         $result = (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTwoIfds(
-                [[ExifTag::IMAGE_WIDTH, 100]],
+                [[ExifTag::IMAGE_WIDTH, 100], [ExifTag::IMAGE_LENGTH, 100]],
                 [[ExifTag::COMPRESSION, 6]],
             ),
         );
@@ -1239,7 +1299,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithTwoIfds(
-                [[ExifTag::IMAGE_WIDTH, 100]],
+                [[ExifTag::IMAGE_WIDTH, 100], [ExifTag::IMAGE_LENGTH, 100]],
                 [[ExifTag::COMPRESSION, 3]],
             ),
         );
@@ -1403,9 +1463,76 @@ final class TiffExifParserNegativeTest extends TestCase
     public function acceptBitsPerSampleOutsideJpegContext(): void
     {
         $result = (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithShortTag(ExifTag::BITS_PER_SAMPLE, 8),
+            $this->buildTiffWithShortTags([
+                [ExifTag::IMAGE_WIDTH, 100],
+                [ExifTag::IMAGE_LENGTH, 100],
+                [ExifTag::BITS_PER_SAMPLE, 8],
+            ]),
         );
 
         self::assertSame(8, $result->ifd0->get(ExifTag::BITS_PER_SAMPLE)?->value);
+    }
+
+    /**
+     * Missing ImageWidth in IFD0 must be rejected for non-JPEG images.
+     */
+    #[Test]
+    public function rejectMissingImageWidth(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1355);
+        $this->expectExceptionMessage('ImageWidth tag is required');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::IMAGE_LENGTH, 100),
+        );
+    }
+
+    /**
+     * Missing ImageLength in IFD0 must be rejected for non-JPEG images.
+     */
+    #[Test]
+    public function rejectMissingImageLength(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1356);
+        $this->expectExceptionMessage('ImageLength tag is required');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::IMAGE_WIDTH, 100),
+        );
+    }
+
+    /**
+     * ImageWidth with value 0 must be rejected for non-JPEG images.
+     */
+    #[Test]
+    public function rejectZeroImageWidth(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1355);
+        $this->expectExceptionMessage('ImageWidth value 0 is invalid');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTags([
+                [ExifTag::IMAGE_WIDTH, 0],
+                [ExifTag::IMAGE_LENGTH, 100],
+            ]),
+        );
+    }
+
+    /**
+     * JPEG context skips ImageWidth/ImageLength validation.
+     */
+    #[Test]
+    public function acceptMissingDimensionsInJpegContext(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::YCBCR_POSITIONING, 1),
+            jpegContext: true,
+        );
+
+        self::assertNull($result->ifd0->get(ExifTag::IMAGE_WIDTH));
+        self::assertNull($result->ifd0->get(ExifTag::IMAGE_LENGTH));
     }
 }

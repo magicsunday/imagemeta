@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\MemoryBuffer;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
+use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
@@ -278,17 +279,31 @@ final class TiffExifParserUserCommentTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);  // IFD0 at offset 8
 
-        // IFD0 with ExifIFDPointer
-        $blob .= pack('v', 1);  // 1 entry
+        // IFD0: ImageWidth + ImageLength + ExifIFDPointer
+        $blob .= pack('v', 3);  // 3 entries
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $exifIfdOffset = 8 + 2 + (3 * 12) + 4;  // header + count + entries + next
 
         $blob .= pack('v', 0x8769)                    // ExifIFDPointer
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 1)
-            . pack('V', 26);                          // ExifIFD at offset 26
+            . pack('V', $exifIfdOffset);
 
         $blob .= pack('V', 0);  // Next IFD
 
-        // ExifIFD at offset 26
+        // ExifIFD
         $exifIfdStart = strlen($blob);
         $blob .= pack('v', 1);  // 1 entry
 
@@ -322,17 +337,31 @@ final class TiffExifParserUserCommentTest extends TestCase
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);
 
-        // IFD0 with ExifIFDPointer
-        $blob .= pack('v', 1);
+        // IFD0: ImageWidth + ImageLength + ExifIFDPointer
+        $blob .= pack('v', 3);
+
+        // ImageWidth SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // ImageLength SHORT[1] = 100
+        $blob .= pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $exifIfdOffset = 8 + 2 + (3 * 12) + 4;
 
         $blob .= pack('v', 0x8769)
             . pack('v', TiffConst::TYPE_LONG)
             . pack('V', 1)
-            . pack('V', 26);
+            . pack('V', $exifIfdOffset);
 
         $blob .= pack('V', 0);
 
-        // ExifIFD at offset 26
+        // ExifIFD
         $exifIfdStart = strlen($blob);
         $blob .= pack('v', 1);
 
