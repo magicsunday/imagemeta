@@ -26,6 +26,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
@@ -1042,6 +1043,19 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Predictor value 3 is rejected per TIFF 6.0 §14.
+     */
+    #[Test]
+    public function rejectInvalidPredictor(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1358);
+        $this->expectExceptionMessage('Predictor value 3 is outside the valid domain {1, 2} per TIFF 6.0 §14.');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(TiffTag::PREDICTOR, 3));
+    }
+
+    /**
      * Orientation value 0 is rejected per EXIF 3.0 §4.6.5.1.6.
      */
     #[Test]
@@ -1534,5 +1548,35 @@ final class TiffExifParserNegativeTest extends TestCase
 
         self::assertNull($result->ifd0->get(ExifTag::IMAGE_WIDTH));
         self::assertNull($result->ifd0->get(ExifTag::IMAGE_LENGTH));
+    }
+
+    /**
+     * Duplicate tag IDs within a single IFD must be rejected per TIFF 6.0 §2.
+     */
+    #[Test]
+    public function rejectsDuplicateTagIdInIfd(): void
+    {
+        // Build a TIFF with two entries having the same tag ID (0x0100 = ImageWidth)
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)          // First IFD at offset 8
+            . pack('v', 2)          // 2 entries in IFD
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_WIDTH)  // Duplicate tag ID
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 200) . pack('v', 0)
+            . pack('V', 0);         // Next IFD offset
+
+        $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1357);
+        $this->expectExceptionMessage('Duplicate tag ID');
+
+        $reader->parseFromBlob($blob);
     }
 }

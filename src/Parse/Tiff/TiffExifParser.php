@@ -1316,6 +1316,11 @@ final class TiffExifParser
                 throw new ParseError('IFD entries must be sorted in ascending order by tag per TIFF 6.0 §2.', 1308);
             }
 
+            // Reject duplicate tag IDs within a single IFD
+            if (isset($entries[$entry->tag])) {
+                throw new ParseError('Duplicate tag ID ' . $entry->tag . ' in IFD per TIFF 6.0 §2.', 1357);
+            }
+
             $lastTagId            = $entry->tag;
             $entries[$entry->tag] = $entry;
         }
@@ -1441,6 +1446,13 @@ final class TiffExifParser
                 'PlanarConfiguration value %d is outside the valid domain {1, 2} per EXIF 3.0 §4.6.5.1.10.',
                 $value,
             ), 1316);
+        }
+
+        if ($tag === TiffTag::PREDICTOR && is_int($value) && $value !== 1 && $value !== 2) {
+            throw new ParseError(sprintf(
+                'Predictor value %d is outside the valid domain {1, 2} per TIFF 6.0 §14.',
+                $value,
+            ), 1358);
         }
 
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
