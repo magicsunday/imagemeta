@@ -183,6 +183,84 @@ XML;
     }
 
     /**
+     * Preserves empty element text with separate open and close tags.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesEmptyElementText(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title></dc:title>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame('', $document->get(self::DC_NS, 'title'));
+    }
+
+    /**
+     * Preserves empty attribute property values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesEmptyAttributeValues(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description dc:title="" />
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        self::assertSame('', $document->get(self::DC_NS, 'title'));
+    }
+
+    /**
+     * Verifies that empty values do not interfere with non-empty values or structural filtering.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseHandlesEmptyAndNonEmptyValuesMixed(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/"
+         xmlns:xmp="http://ns.adobe.com/xap/1.0/">
+  <rdf:Description rdf:about="" dc:title="" xmp:Rating="5">
+    <dc:description></dc:description>
+    <xmp:Label>Red</xmp:Label>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser   = new XmpParser();
+        $document = $parser->parse($xml);
+
+        // Empty values are preserved
+        self::assertSame('', $document->get(self::DC_NS, 'title'));
+        self::assertSame('', $document->get(self::DC_NS, 'description'));
+
+        // Non-empty values are captured
+        self::assertSame('5', $document->get(self::XMP_NS, 'Rating'));
+        self::assertSame('Red', $document->get(self::XMP_NS, 'Label'));
+
+        // RDF structural attributes are still ignored
+        self::assertNull($document->find('about'));
+    }
+
+    /**
      * Preserves explicit empty list items in RDF containers.
      *
      * @return void
