@@ -909,6 +909,66 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * YCbCrPositioning value 3 is rejected per EXIF 3.0 §4.6.5.1.13.
+     */
+    #[Test]
+    public function rejectInvalidYCbCrPositioning(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('YCbCrPositioning value 3 is outside the valid domain {1, 2}');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::YCBCR_POSITIONING, 3));
+    }
+
+    /**
+     * ColorSpace value 2 is rejected per EXIF 3.0 §4.6.6.2.1.
+     */
+    #[Test]
+    public function rejectInvalidColorSpace(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ColorSpace value 2 is outside the valid domain {1, 65535}');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::COLOR_SPACE, 2));
+    }
+
+    /**
+     * ResolutionUnit value 1 is rejected per EXIF 3.0 §4.6.5.1.11.
+     */
+    #[Test]
+    public function rejectInvalidResolutionUnit(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ResolutionUnit value 1 is outside the valid domain {2, 3}');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::RESOLUTION_UNIT, 1));
+    }
+
+    /**
+     * FocalPlaneResolutionUnit value 4 is rejected per EXIF 3.0 §4.6.6.7.28.
+     */
+    #[Test]
+    public function rejectInvalidFocalPlaneResolutionUnit(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('FocalPlaneResolutionUnit value 4 is outside the valid domain {2, 3}');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::FOCAL_PLANE_RESOLUTION_UNIT, 4));
+    }
+
+    /**
+     * PlanarConfiguration value 3 is rejected per EXIF 3.0 §4.6.5.1.10.
+     */
+    #[Test]
+    public function rejectInvalidPlanarConfiguration(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('PlanarConfiguration value 3 is outside the valid domain {1, 2}');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithShortTag(ExifTag::PLANAR_CONFIGURATION, 3));
+    }
+
+    /**
      * Orientation value 0 is rejected per EXIF 3.0 §4.6.5.1.6.
      */
     #[Test]
@@ -1024,5 +1084,21 @@ final class TiffExifParserNegativeTest extends TestCase
             TiffConst::TYPE_UNDEFINED => 1,
             default                   => 1,
         };
+    }
+
+    /**
+     * Builds a minimal classic TIFF with a single SHORT[1] tag.
+     */
+    private function buildTiffWithShortTag(int $tag, int $value): string
+    {
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 1)
+            . pack('v', $tag)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $value) . pack('v', 0)
+            . pack('V', 0);
     }
 }

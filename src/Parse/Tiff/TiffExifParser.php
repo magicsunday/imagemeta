@@ -1396,6 +1396,41 @@ final class TiffExifParser
             ));
         }
 
+        if ($tag === ExifTag::YCBCR_POSITIONING && is_int($value) && $value !== 1 && $value !== 2) {
+            throw new ParseError(sprintf(
+                'YCbCrPositioning value %d is outside the valid domain {1, 2} per EXIF 3.0 §4.6.5.1.13.',
+                $value,
+            ));
+        }
+
+        if ($tag === ExifTag::COLOR_SPACE && is_int($value) && $value !== 1 && $value !== 0xFFFF) {
+            throw new ParseError(sprintf(
+                'ColorSpace value %d is outside the valid domain {1, 65535} per EXIF 3.0 §4.6.6.2.1.',
+                $value,
+            ));
+        }
+
+        if ($tag === ExifTag::RESOLUTION_UNIT && is_int($value) && $value !== 2 && $value !== 3) {
+            throw new ParseError(sprintf(
+                'ResolutionUnit value %d is outside the valid domain {2, 3} per EXIF 3.0 §4.6.5.1.11.',
+                $value,
+            ));
+        }
+
+        if ($tag === ExifTag::FOCAL_PLANE_RESOLUTION_UNIT && is_int($value) && $value !== 2 && $value !== 3) {
+            throw new ParseError(sprintf(
+                'FocalPlaneResolutionUnit value %d is outside the valid domain {2, 3} per EXIF 3.0 §4.6.6.7.28.',
+                $value,
+            ));
+        }
+
+        if ($tag === ExifTag::PLANAR_CONFIGURATION && is_int($value) && $value !== 1 && $value !== 2) {
+            throw new ParseError(sprintf(
+                'PlanarConfiguration value %d is outside the valid domain {1, 2} per EXIF 3.0 §4.6.5.1.10.',
+                $value,
+            ));
+        }
+
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
             $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
         }
