@@ -678,11 +678,17 @@ final readonly class ParsedExif
      *
      * EXIF 3.0 §4.6.5.1.6 describes the JPEG thumbnail tags and requires both
      * offset and length to be populated for a valid embedded thumbnail.
+     * EXIF 3.0 §4.6.5.1.4 requires Compression value 6 (JPEG) for JPEG thumbnails.
      */
     public function hasThumbnail(): bool
     {
-        $offset = $this->thumbnailJpegInterchangeFormat();
-        $length = $this->thumbnailJpegInterchangeFormatLength();
+        $compression = $this->thumbnailCompression();
+        $offset      = $this->thumbnailJpegInterchangeFormat();
+        $length      = $this->thumbnailJpegInterchangeFormatLength();
+
+        if ($compression !== Compression::JPEG) {
+            return false;
+        }
 
         if ($offset === null || $length === null) {
             return false;
