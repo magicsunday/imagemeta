@@ -1286,6 +1286,11 @@ final class TiffExifParser
 
         $this->buffer->seek($offsetInt);
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
+
+        if ($entryCount === 0) {
+            throw new ParseError('IFD must contain at least one entry per TIFF 6.0.');
+        }
+
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
         // (BigTIFF) directory entries and the unsigned entry count preceding them.
         $entries   = [];

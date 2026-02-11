@@ -258,7 +258,8 @@ final class TiffExifParserNegativeTest extends TestCase
         $blob      = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)  // First IFD at offset 8
-            . pack('v', 0)           // 0 entries in IFD
+            . pack('v', 1)           // 1 entry in IFD
+            . pack('v', 0x0100) . pack('v', TiffConst::TYPE_LONG) . pack('V', 1) . pack('V', 1)
             . pack('V', $ifdOffset); // Next IFD points back to offset 8 (cycle)
 
         $reader = new TiffExifParser();
@@ -905,6 +906,24 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 0);
 
         return $blob . substr($valueBytes, 0, $dataSize);
+    }
+
+    /**
+     * IFD with entryCount=0 is rejected per TIFF 6.0.
+     */
+    #[Test]
+    public function rejectEmptyIfd(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('IFD must contain at least one entry per TIFF 6.0.');
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 0)
+            . pack('V', 0);
+
+        (new TiffExifParser())->parseFromBlob($blob);
     }
 
     private function bytesPerComponent(int $type): int

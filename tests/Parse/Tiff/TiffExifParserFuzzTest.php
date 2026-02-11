@@ -312,15 +312,18 @@ final class TiffExifParserFuzzTest extends TestCase
     #[Test]
     public function handlesDeepIfdChain(): void
     {
-        // Create a chain of 5 IFDs
+        // Create a chain of 5 IFDs, each with 1 dummy entry (tag increments to stay sorted)
         $blob = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8);  // First IFD at 8
 
-        $offset = 8;
+        $ifdSize = 2 + 12 + 4; // entryCount(2) + 1 entry(12) + nextIfd(4)
+        $offset  = 8;
         for ($i = 0; $i < 5; ++$i) {
-            $blob .= pack('v', 0);  // 0 entries
-            $nextOffset = $offset + 6;
+            $blob .= pack('v', 1);  // 1 entry
+            // Use high tag IDs (0xFF00+) to avoid triggering any tag-specific validation
+            $blob .= pack('v', 0xFF00 + $i) . pack('v', TiffConst::TYPE_LONG) . pack('V', 1) . pack('V', 1);
+            $nextOffset = $offset + $ifdSize;
             $blob .= pack('V', $i < 4 ? $nextOffset : 0);  // Next IFD or 0
             $offset = $nextOffset;
         }

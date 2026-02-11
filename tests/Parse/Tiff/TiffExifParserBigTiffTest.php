@@ -61,12 +61,13 @@ final class TiffExifParserBigTiffTest extends TestCase
     #[Test]
     public function acceptsBigTiffWithOffsetSize16(): void
     {
-        $blob = $this->buildBigTiffHeader(16, 0, 16);
+        // Header: II(2) + magic(2) + offSize(2) + reserved(2) + firstIfd(16) = 24 bytes
+        $blob = $this->buildBigTiffHeader(16, 0, 24);
 
         $reader = new TiffExifParser();
         $result = $reader->parseFromBlob($blob);
 
-        self::assertSame([], $result->ifd0->entries);
+        self::assertCount(1, $result->ifd0->entries);
     }
 
     /**
@@ -359,16 +360,25 @@ final class TiffExifParserBigTiffTest extends TestCase
      */
     private function buildBigTiffHeader(int $offsetSize, int $reserved, int $firstIfd): string
     {
-        $blob = 'II'  // Little-endian
+        // BigTIFF header: byte-order(2) + magic(2) + offsetSize(2) + reserved(2) + firstIfd($offsetSize)
+        $blob = 'II'
             . pack('v', TiffConst::MAGIC_BIG)
             . pack('v', $offsetSize)
             . pack('v', $reserved)
-            . pack('P', $firstIfd);
+            . str_pad(pack('P', $firstIfd), $offsetSize, "\0");
 
-        // Add minimal IFD if firstIfd is non-zero and within blob
-        if ($firstIfd === 16) {
-            $blob .= pack('P', 0)   // 0 entries
-                . pack('P', 0);     // Next IFD offset
+        $headerSize = strlen($blob);
+
+        // Add minimal IFD with one dummy entry if firstIfd points right after header
+        if ($firstIfd === $headerSize) {
+            // entryCount: 8 bytes (readU64), entry: tag(2)+type(2)+count(8)+value($offsetSize)
+            // nextIfd: $offsetSize bytes
+            $blob .= pack('P', 1)                                // 1 entry (always 8-byte U64)
+                . pack('v', 0xFF00)                               // dummy tag
+                . pack('v', TiffConst::TYPE_LONG)
+                . pack('P', 1)                                    // count (always 8 bytes)
+                . str_pad(pack('P', 1), $offsetSize, "\0")       // value (padded to offset size)
+                . str_pad(pack('P', 0), $offsetSize, "\0");      // Next IFD offset
         }
 
         return $blob;

@@ -68,11 +68,16 @@ final class TiffExifParserDngTagTest extends TestCase
     public function returnsNullWhenCoreDngTagsAreMissing(): void
     {
         $parser = new TiffExifParser();
+        // IFD0 with a single non-DNG tag (ImageWidth=1)
         $parsed = $parser->parseFromBlob(
             'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', 8)
-            . pack('v', 0)
+            . pack('v', 1)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', 1)
             . pack('V', 0),
         );
 
