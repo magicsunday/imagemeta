@@ -11,9 +11,12 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\Xmp;
 
+use MagicSunday\ImageMeta\Core\ParseError;
+
 use function array_key_exists;
 use function array_merge;
 use function is_string;
+use function sprintf;
 
 /**
  * Represents an XMP LanguageAlternative container (rdf:Alt).
@@ -164,12 +167,25 @@ final readonly class XmpLanguageAlternative
             return [];
         }
 
+        $seen         = [];
         $defaultIndex = null;
 
         foreach ($entries as $index => $entry) {
-            if ($entry['lang'] === 'x-default') {
+            $lang = $entry['lang'];
+
+            if ($lang !== '' && array_key_exists($lang, $seen)) {
+                throw new ParseError(sprintf(
+                    'Duplicate xml:lang "%s" in rdf:Alt per XMP spec LanguageAlternative',
+                    $lang,
+                ));
+            }
+
+            if ($lang !== '') {
+                $seen[$lang] = true;
+            }
+
+            if ($lang === 'x-default') {
                 $defaultIndex = $index;
-                break;
             }
         }
 

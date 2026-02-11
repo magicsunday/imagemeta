@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Parse\Xmp\XmpParser;
@@ -27,6 +28,7 @@ use PHPUnit\Framework\TestCase;
  * This ensures predictable XMP extraction for both simple and structured packets.
  */
 #[CoversClass(XmpParser::class)]
+#[UsesClass(ParseError::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(XmpLanguageAlternative::class)]
 final class XmpParserTest extends TestCase
@@ -639,5 +641,35 @@ XML;
         self::assertSame('image/png', $document->get($depthNs, 'Mime'));
         self::assertSame('0.25', $document->get($depthNs, 'Near'));
         self::assertSame('10.5', $document->get($depthNs, 'Far'));
+    }
+
+    /**
+     * Rejects rdf:Alt with duplicate xml:lang values per XMP spec.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDuplicateXmlLangInAlt(): void
+    {
+        $xml = <<<XML
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title>
+      <rdf:Alt>
+        <rdf:li xml:lang="en-US">First</rdf:li>
+        <rdf:li xml:lang="en-US">Duplicate</rdf:li>
+      </rdf:Alt>
+    </dc:title>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $parser = new XmpParser();
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Duplicate xml:lang "en-US" in rdf:Alt');
+
+        $parser->parse($xml);
     }
 }
