@@ -909,6 +909,44 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Differing XResolution and YResolution values are rejected per EXIF 3.0.
+     */
+    #[Test]
+    public function rejectDifferingXAndYResolution(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('XResolution');
+
+        // IFD0 with XResolution=72/1 and YResolution=96/1
+        $ifdOffset = 8;
+        $ifdCount  = 2;
+        $ifdSize   = 2 + ($ifdCount * 12) + 4;
+        $valOffset = $ifdOffset + $ifdSize;
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $ifdCount)
+            // XResolution (0x011A) RATIONAL[1]
+            . pack('v', ExifTag::X_RESOLUTION)
+            . pack('v', TiffConst::TYPE_RATIONAL)
+            . pack('V', 1)
+            . pack('V', $valOffset)
+            // YResolution (0x011B) RATIONAL[1]
+            . pack('v', ExifTag::Y_RESOLUTION)
+            . pack('v', TiffConst::TYPE_RATIONAL)
+            . pack('V', 1)
+            . pack('V', $valOffset + 8)
+            . pack('V', 0)
+            // XResolution value: 72/1
+            . pack('V', 72) . pack('V', 1)
+            // YResolution value: 96/1
+            . pack('V', 96) . pack('V', 1);
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * YCbCrPositioning value 3 is rejected per EXIF 3.0 §4.6.5.1.13.
      */
     #[Test]

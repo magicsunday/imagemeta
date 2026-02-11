@@ -1199,6 +1199,8 @@ final class TiffExifParser
             $this->validateEnhancedIfd($additionalIfd);
         }
 
+        $this->validateResolutionEquality($ifd0);
+
         if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
         }
@@ -1539,6 +1541,35 @@ final class TiffExifParser
 
         if (rtrim($enhance->value, "\0") === '') {
             throw new ParseError('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.');
+        }
+    }
+
+    /**
+     * Validates that XResolution and YResolution carry the same value when both present.
+     *
+     * EXIF 3.0 §4.6.5.1.8/§4.6.5.1.9 require identical values in both tags.
+     */
+    private function validateResolutionEquality(Ifd $ifd): void
+    {
+        $xRes = $ifd->get(ExifTag::X_RESOLUTION);
+        $yRes = $ifd->get(ExifTag::Y_RESOLUTION);
+
+        if (!$xRes instanceof IfdEntry || !$yRes instanceof IfdEntry) {
+            return;
+        }
+
+        if (!$xRes->value instanceof ExifRational || !$yRes->value instanceof ExifRational) {
+            return;
+        }
+
+        if ($xRes->value->numerator !== $yRes->value->numerator || $xRes->value->denominator !== $yRes->value->denominator) {
+            throw new ParseError(sprintf(
+                'XResolution (%d/%d) must equal YResolution (%d/%d) per EXIF 3.0 §4.6.5.1.8.',
+                $xRes->value->numerator,
+                $xRes->value->denominator,
+                $yRes->value->numerator,
+                $yRes->value->denominator,
+            ));
         }
     }
 
