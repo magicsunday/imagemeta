@@ -1090,7 +1090,7 @@ final class TiffExifParser
      *
      * @return ParsedExif
      */
-    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null): ParsedExif
+    public function parseFromBlob(string $tiffBlob, ?Registry $registry = null, bool $jpegContext = false): ParsedExif
     {
         $this->buffer = new MemoryBuffer($tiffBlob);
         $this->buffer->seek(0);
@@ -1201,6 +1201,11 @@ final class TiffExifParser
         }
 
         $this->validateResolutionEquality($ifd0);
+        $this->validateCompressionDomain($ifd0, $ifd1);
+
+        if ($jpegContext) {
+            $this->validateJpegContextProhibitions($ifd0);
+        }
 
         if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
@@ -1571,6 +1576,72 @@ final class TiffExifParser
                 $yRes->value->numerator,
                 $yRes->value->denominator,
             ), 1325);
+        }
+    }
+
+    /**
+     * Validates Compression tag values per EXIF-specific domain rules.
+     *
+     * EXIF 3.0 §4.6.5.1.4: IFD0 allows only 1 (uncompressed); IFD1 allows 1 or 6.
+     */
+    private function validateCompressionDomain(Ifd $ifd0, ?Ifd $ifd1): void
+    {
+        $entry = $ifd0->get(ExifTag::COMPRESSION);
+        if ($entry instanceof IfdEntry && is_int($entry->value) && $entry->value !== 1) {
+            throw new ParseError(sprintf(
+                'Compression value %d in IFD0 is invalid; only 1 (uncompressed) is allowed per EXIF 3.0 §4.6.5.1.4.',
+                $entry->value,
+            ), 1351);
+        }
+
+        if (!$ifd1 instanceof Ifd) {
+            return;
+        }
+
+        $thumbEntry = $ifd1->get(ExifTag::COMPRESSION);
+        if ($thumbEntry instanceof IfdEntry && is_int($thumbEntry->value) && $thumbEntry->value !== 1 && $thumbEntry->value !== 6) {
+            throw new ParseError(sprintf(
+                'Compression value %d in IFD1 is invalid; only 1 or 6 allowed per EXIF 3.0 §4.6.5.1.4.',
+                $thumbEntry->value,
+            ), 1352);
+        }
+    }
+
+    /**
+     * Validates that JPEG-prohibited tags are not present in IFD0.
+     *
+     * EXIF 3.0 §4.6.5.1 specifies several tags that shall not be used when the
+     * primary image data is JPEG-compressed (carried via JPEG markers instead).
+     *
+     * @var list<array{int, string}> JPEG_PROHIBITED_TAGS
+     */
+    private const array JPEG_PROHIBITED_TAGS = [
+        [ExifTag::BITS_PER_SAMPLE, 'BitsPerSample'],
+        [ExifTag::SAMPLES_PER_PIXEL, 'SamplesPerPixel'],
+        [ExifTag::PHOTOMETRIC_INTERPRETATION, 'PhotometricInterpretation'],
+        [ExifTag::STRIP_OFFSETS, 'StripOffsets'],
+        [ExifTag::ROWS_PER_STRIP, 'RowsPerStrip'],
+        [ExifTag::STRIP_BYTE_COUNTS, 'StripByteCounts'],
+        [ExifTag::PLANAR_CONFIGURATION, 'PlanarConfiguration'],
+        [ExifTag::COMPRESSION, 'Compression'],
+    ];
+
+    private function validateJpegContextProhibitions(Ifd $ifd0): void
+    {
+        foreach (self::JPEG_PROHIBITED_TAGS as [$tag, $name]) {
+            if ($ifd0->get($tag) instanceof IfdEntry) {
+                throw new ParseError(sprintf(
+                    '%s shall not be present in IFD0 for JPEG-compressed primary image per EXIF 3.0 §4.6.5.1.',
+                    $name,
+                ), 1353);
+            }
+        }
+
+        if ($ifd0->get(ExifTag::YCBCR_SUB_SAMPLING) instanceof IfdEntry) {
+            throw new ParseError(
+                'YCbCrSubSampling shall not be present in IFD0 for JPEG-compressed primary image per EXIF 3.0 §4.6.5.1.14.',
+                1354,
+            );
         }
     }
 

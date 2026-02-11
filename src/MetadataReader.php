@@ -131,7 +131,7 @@ final readonly class MetadataReader
         // Parse the primary EXIF blob and map vendor-specific maker notes.
         if ($exifBlobs !== []) {
             $registry   = $this->createMakerNotesRegistry();
-            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry);
+            $exifDoc    = $this->tiffReader->parseFromBlob($exifBlobs[0], $registry, jpegContext: true);
             $makerNotes = $exifDoc->makerNotes();
         }
 

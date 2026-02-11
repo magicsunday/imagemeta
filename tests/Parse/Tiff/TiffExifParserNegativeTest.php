@@ -28,6 +28,7 @@ use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
@@ -60,6 +61,7 @@ use function substr;
 #[UsesClass(IfdEntry::class)]
 #[UsesClass(ParsedExif::class)]
 #[UsesClass(TiffConst::class)]
+#[UsesClass(Compression::class)]
 final class TiffExifParserNegativeTest extends TestCase
 {
     /**
@@ -1138,5 +1140,272 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', 1)
             . pack('v', $value) . pack('v', 0)
             . pack('V', 0);
+    }
+
+    /**
+     * Builds a minimal TIFF with IFD0 containing given entries plus IFD1 with given entries.
+     *
+     * @param list<array{int, int}> $ifd0Tags Tag/value pairs (SHORT[1])
+     * @param list<array{int, int}> $ifd1Tags Tag/value pairs (SHORT[1])
+     */
+    private function buildTiffWithTwoIfds(array $ifd0Tags, array $ifd1Tags): string
+    {
+        $ifd0Count = count($ifd0Tags);
+        // IFD0 at offset 8
+        // Each entry is 12 bytes, then 4 bytes for next-IFD offset
+        $ifd0Size  = 2 + ($ifd0Count * 12) + 4;
+        $ifd1Start = 8 + $ifd0Size;
+
+        $ifd1Count = count($ifd1Tags);
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8);
+
+        // IFD0
+        $blob .= pack('v', $ifd0Count);
+        foreach ($ifd0Tags as [$tag, $value]) {
+            $blob .= pack('v', $tag)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $value) . pack('v', 0);
+        }
+
+        $blob .= pack('V', $ifd1Start);
+
+        // IFD1
+        $blob .= pack('v', $ifd1Count);
+        foreach ($ifd1Tags as [$tag, $value]) {
+            $blob .= pack('v', $tag)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $value) . pack('v', 0);
+        }
+
+        return $blob . pack('V', 0);
+    }
+
+    /**
+     * IFD0 Compression=6 must be rejected per EXIF 3.0 §4.6.5.1.4.
+     */
+    #[Test]
+    public function rejectIfd0CompressionJpeg(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Compression value 6 in IFD0');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 6),
+        );
+    }
+
+    /**
+     * IFD0 Compression=1 must be accepted.
+     */
+    #[Test]
+    public function acceptIfd0CompressionUncompressed(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 1),
+        );
+
+        self::assertSame(Compression::UNCOMPRESSED, $result->compression());
+    }
+
+    /**
+     * IFD1 Compression=6 must be accepted for thumbnails.
+     */
+    #[Test]
+    public function acceptIfd1CompressionJpeg(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [[ExifTag::IMAGE_WIDTH, 100]],
+                [[ExifTag::COMPRESSION, 6]],
+            ),
+        );
+
+        self::assertSame(6, $result->ifd1?->get(ExifTag::COMPRESSION)?->value);
+    }
+
+    /**
+     * IFD1 Compression=3 (reserved) must be rejected per EXIF 3.0.
+     */
+    #[Test]
+    public function rejectIfd1CompressionReserved(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Compression value 3 in IFD1');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithTwoIfds(
+                [[ExifTag::IMAGE_WIDTH, 100]],
+                [[ExifTag::COMPRESSION, 3]],
+            ),
+        );
+    }
+
+    /**
+     * In JPEG context, BitsPerSample shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectBitsPerSampleInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('BitsPerSample shall not be present');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::BITS_PER_SAMPLE, 8),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * In JPEG context, SamplesPerPixel shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectSamplesPerPixelInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('SamplesPerPixel shall not be present');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::SAMPLES_PER_PIXEL, 3),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * In JPEG context, PhotometricInterpretation shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectPhotometricInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('PhotometricInterpretation shall not be present');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::PHOTOMETRIC_INTERPRETATION, 2),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * In JPEG context, StripOffsets shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectStripOffsetsInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('StripOffsets shall not be present');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::STRIP_OFFSETS, 0),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * In JPEG context, RowsPerStrip shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectRowsPerStripInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('RowsPerStrip shall not be present');
+
+        // RowsPerStrip is not in FIXED_LENGTH_TAGS, need to use SHORT type directly
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 1)
+            . pack('v', ExifTag::ROWS_PER_STRIP)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', 0);
+
+        (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+    }
+
+    /**
+     * In JPEG context, StripByteCounts shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectStripByteCountsInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('StripByteCounts shall not be present');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::STRIP_BYTE_COUNTS, 0),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * In JPEG context, PlanarConfiguration shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectPlanarConfigurationInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('PlanarConfiguration shall not be present');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::PLANAR_CONFIGURATION, 1),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * In JPEG context, Compression shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectCompressionInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Compression shall not be present');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::COMPRESSION, 1),
+            jpegContext: true,
+        );
+    }
+
+    /**
+     * In JPEG context, YCbCrSubSampling shall not be present in IFD0.
+     */
+    #[Test]
+    public function rejectYCbCrSubSamplingInJpegContext(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('YCbCrSubSampling shall not be present');
+
+        // YCbCrSubSampling is SHORT[2]
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 1)
+            . pack('v', ExifTag::YCBCR_SUB_SAMPLING)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 2)
+            . pack('v', 2) . pack('v', 2)
+            . pack('V', 0);
+
+        (new TiffExifParser())->parseFromBlob($blob, jpegContext: true);
+    }
+
+    /**
+     * Without JPEG context, prohibited tags parse normally.
+     */
+    #[Test]
+    public function acceptBitsPerSampleOutsideJpegContext(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithShortTag(ExifTag::BITS_PER_SAMPLE, 8),
+        );
+
+        self::assertSame(8, $result->ifd0->get(ExifTag::BITS_PER_SAMPLE)?->value);
     }
 }
