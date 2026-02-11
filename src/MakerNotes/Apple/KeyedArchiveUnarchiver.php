@@ -199,7 +199,6 @@ final class KeyedArchiveUnarchiver
 
         unset($this->inProgress[$uid]);
 
-        /** @var ApplePlistArray|ApplePlistDictionary|ApplePlistScalar $value */
         $this->resolved[$uid] = $value;
 
         return $value;
