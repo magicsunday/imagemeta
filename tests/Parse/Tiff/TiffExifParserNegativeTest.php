@@ -909,6 +909,35 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * ASCII value containing a byte > 0x7F is rejected per TIFF 6.0 §2.2.
+     */
+    #[Test]
+    public function rejectAsciiValueWithNon7BitByte(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('ASCII value contains non-7-bit byte');
+
+        // IFD with one ASCII entry containing 0x80 (>4 bytes to force out-of-line)
+        $asciiData = "hello\x80\0\0";
+        $ifdOffset = 8;
+        $ifdSize   = 2 + 12 + 4;
+        $valOffset = $ifdOffset + $ifdSize;
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', 1)
+            . pack('v', ExifTag::IMAGE_DESCRIPTION)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($asciiData))
+            . pack('V', $valOffset)
+            . pack('V', 0)
+            . $asciiData;
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * Odd first IFD offset is rejected per TIFF 6.0 word-alignment rule.
      */
     #[Test]

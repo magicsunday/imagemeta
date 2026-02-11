@@ -1809,6 +1809,17 @@ final class TiffExifParser
                 );
             }
 
+            // TIFF 6.0 §2.2: ASCII bytes must be in the 7-bit domain (0x00–0x7F).
+            for ($i = 0; $i < $count; ++$i) {
+                if (ord($bytes[$i]) > 0x7F) {
+                    throw new ParseError(sprintf(
+                        'ASCII value contains non-7-bit byte 0x%02X at offset %d per TIFF 6.0 §2.2.',
+                        ord($bytes[$i]),
+                        $i,
+                    ));
+                }
+            }
+
             return rtrim($bytes, "\0");
         }
 
