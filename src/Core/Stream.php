@@ -48,13 +48,13 @@ final class Stream implements BinaryReadAccessInterface
         $fh = @fopen($path, 'rb');
 
         if ($fh === false) {
-            throw new ParseError('Cannot open: ' . $path);
+            throw new ParseError('Cannot open: ' . $path, 1010);
         }
 
         $stat = fstat($fh);
 
         if (!is_array($stat)) {
-            throw new ParseError('Cannot determine size of: ' . $path);
+            throw new ParseError('Cannot determine size of: ' . $path, 1011);
         }
 
         $size = $stat['size'];
@@ -120,12 +120,12 @@ final class Stream implements BinaryReadAccessInterface
         $len = $this->normaliseReadLength($length, 'stream read length out of range');
 
         if (($this->pos + $len) > $this->size) {
-            throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size);
+            throw new BoundsError('read beyond EOF: ' . $this->pos . '+' . $len . ' > ' . $this->size, 1012);
         }
 
         $data = fread($this->fh, $len);
         if ($data === false || strlen($data) !== $len) {
-            throw new ParseError('short read');
+            throw new ParseError('short read', 1013);
         }
 
         $this->pos += $len;
@@ -139,7 +139,7 @@ final class Stream implements BinaryReadAccessInterface
     public function window(int $offset, int $length): StreamWindow
     {
         if (($offset < 0) || ($length < 0) || (($offset + $length) > $this->size)) {
-            throw new BoundsError('window out of range');
+            throw new BoundsError('window out of range', 1014);
         }
 
         return new StreamWindow($this, $offset, $length);
@@ -177,7 +177,7 @@ final class Stream implements BinaryReadAccessInterface
             SEEK_SET => $this->normaliseAbsoluteOffset($offset, 'seek out of range'),
             SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'seek out of range'),
             SEEK_END => $this->normaliseRelativeOffset($offset, $this->size, 'seek out of range'),
-            default  => throw new ParseError('invalid seek whence: ' . $whence),
+            default  => throw new ParseError('invalid seek whence: ' . $whence, 1015),
         };
 
         fseek($this->fh, $target);

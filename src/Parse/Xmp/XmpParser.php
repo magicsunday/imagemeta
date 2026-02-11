@@ -146,7 +146,7 @@ final class XmpParser
                                     $lang = $languageBuffers[$depth] ?? '';
 
                                     if ($lang === '') {
-                                        throw new ParseError('rdf:li in rdf:Alt must have an xml:lang qualifier per XMP spec LanguageAlternative.');
+                                        throw new ParseError('rdf:li in rdf:Alt must have an xml:lang qualifier per XMP spec LanguageAlternative.', 1350);
                                     }
 
                                     $altBuffers[$parentDepth][] = [

@@ -177,7 +177,7 @@ final readonly class XmpLanguageAlternative
                 throw new ParseError(sprintf(
                     'Duplicate xml:lang "%s" in rdf:Alt per XMP spec LanguageAlternative',
                     $lang,
-                ));
+                ), 1121);
             }
 
             if ($lang !== '') {

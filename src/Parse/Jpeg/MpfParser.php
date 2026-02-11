@@ -88,7 +88,7 @@ final class MpfParser
     {
         $buffer = new MemoryBuffer($payload);
         if ($buffer->size() < 8) {
-            throw new ParseError('MPF payload shorter than TIFF header');
+            throw new ParseError('MPF payload shorter than TIFF header', 1288);
         }
 
         $byteOrder = $buffer->read(2);
@@ -96,18 +96,18 @@ final class MpfParser
         $endian = match ($byteOrder) {
             Endian::Little->value => Endian::Little,
             Endian::Big->value    => Endian::Big,
-            default               => throw new ParseError('MPF payload contains invalid byte order'),
+            default               => throw new ParseError('MPF payload contains invalid byte order', 1289),
         };
 
         $magic = $this->readU16($buffer, $endian);
         if ($magic !== self::TIFF_MAGIC) {
-            throw new ParseError('MPF payload missing TIFF magic');
+            throw new ParseError('MPF payload missing TIFF magic', 1290);
         }
 
         $firstIfdOffset = $this->readU32($buffer, $endian);
         // The MP Index IFD offset is stored as a 32-bit value relative to the TIFF header (EXIF 3.0 §4.6.2).
         if ($firstIfdOffset < 8 || $firstIfdOffset >= $buffer->size()) {
-            throw new ParseError('MP Index IFD offset outside payload bounds');
+            throw new ParseError('MP Index IFD offset outside payload bounds', 1291);
         }
 
         [$indexEntries, $nextIfdOffset] = $this->readIfd($buffer, $endian, $firstIfdOffset);
@@ -117,7 +117,7 @@ final class MpfParser
 
         $entriesData = $indexEntries[self::TAG_MP_ENTRY] ?? null;
         if (!is_string($entriesData)) {
-            throw new ParseError('MP Index IFD missing MPEntry data');
+            throw new ParseError('MP Index IFD missing MPEntry data', 1292);
         }
 
         $entries = $this->parseEntries($entriesData, $endian);
@@ -126,14 +126,14 @@ final class MpfParser
         }
 
         if ($imageCount !== count($entries)) {
-            throw new ParseError('MP Entry list length does not match reported image count');
+            throw new ParseError('MP Entry list length does not match reported image count', 1293);
         }
 
         $attributes = null;
         if ($nextIfdOffset !== 0) {
             // When present, the MP Attribute IFD follows the MP Index IFD and shares the same offset semantics (EXIF 3.0 §4.6.4).
             if ($nextIfdOffset >= $buffer->size()) {
-                throw new ParseError('MP Attribute IFD offset outside payload bounds');
+                throw new ParseError('MP Attribute IFD offset outside payload bounds', 1294);
             }
 
             [$attributeEntries] = $this->readIfd($buffer, $endian, $nextIfdOffset);
@@ -161,7 +161,7 @@ final class MpfParser
 
         $entryCount = $this->readU16($buffer, $endian);
         if ($entryCount < 0 || $entryCount > 512) {
-            throw new ParseError('MPF IFD entry count outside supported range');
+            throw new ParseError('MPF IFD entry count outside supported range', 1295);
         }
 
         $entries = [];
@@ -171,7 +171,7 @@ final class MpfParser
             $componentCount = $this->readU32($buffer, $endian);
 
             if ($componentCount < 0 || $componentCount > 1_048_576) {
-                throw new ParseError('MPF entry reports unreasonable component count');
+                throw new ParseError('MPF entry reports unreasonable component count', 1296);
             }
 
             $valueOrOffset = $this->readU32($buffer, $endian);
@@ -197,7 +197,7 @@ final class MpfParser
     ): string {
         $typeSize = $this->typeSize($type);
         if ($typeSize === null) {
-            throw new ParseError('Unsupported MPF field type ' . $type);
+            throw new ParseError('Unsupported MPF field type ' . $type, 1297);
         }
 
         $byteCount = $componentCount * $typeSize;
@@ -215,7 +215,7 @@ final class MpfParser
 
         // EXIF 3.0 §4.6.2 stores larger MPF values out of line at offsets relative to the MPF TIFF header.
         if (($valueOrOffset < 8) || (($valueOrOffset + $byteCount) > $buffer->size())) {
-            throw new ParseError('MPF value offset outside payload bounds');
+            throw new ParseError('MPF value offset outside payload bounds', 1298);
         }
 
         $current = $buffer->tell();
@@ -299,7 +299,7 @@ final class MpfParser
                 break;
 
             default:
-                throw new ParseError('Unsupported MPF field type ' . $type);
+                throw new ParseError('Unsupported MPF field type ' . $type, 1299);
         }
 
         if ($componentCount === 1) {
@@ -334,7 +334,7 @@ final class MpfParser
         $entrySize = 16;
         $length    = strlen($data);
         if (($length === 0) || (($length % $entrySize) !== 0)) {
-            throw new ParseError('MPEntry data length is not a multiple of 16 bytes');
+            throw new ParseError('MPEntry data length is not a multiple of 16 bytes', 1300);
         }
 
         $buffer = new MemoryBuffer($data);

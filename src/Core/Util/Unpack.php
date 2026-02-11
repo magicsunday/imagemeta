@@ -78,14 +78,14 @@ final class Unpack
         $parts  = @unpack($format, $bytes);
 
         if ($parts === false || !isset($parts[1], $parts[2])) {
-            throw new ParseError('Failed to unpack ' . $context . '.');
+            throw new ParseError('Failed to unpack ' . $context . '.', 1027);
         }
 
         $first  = $parts[1];
         $second = $parts[2];
 
         if ((!is_int($first) && !is_float($first)) || (!is_int($second) && !is_float($second))) {
-            throw new ParseError('Unpacked ' . $context . ' is not numeric.');
+            throw new ParseError('Unpacked ' . $context . ' is not numeric.', 1028);
         }
 
         if ($littleEndian) {
@@ -113,12 +113,12 @@ final class Unpack
         $result = @unpack($format, $bytes);
 
         if ($result === false || !isset($result[1])) {
-            throw new ParseError('Failed to unpack ' . $context . '.');
+            throw new ParseError('Failed to unpack ' . $context . '.', 1029);
         }
 
         $value = $result[1];
         if (!is_int($value) && !is_float($value)) {
-            throw new ParseError('Unpacked ' . $context . ' is not numeric.');
+            throw new ParseError('Unpacked ' . $context . ' is not numeric.', 1030);
         }
 
         return $value;

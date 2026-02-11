@@ -185,7 +185,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function parseDictionary(string $raw, int &$offset, int $length): array
     {
         if ($raw[$offset] !== '{') {
-            throw new ParseError('Expected dictionary opening brace.');
+            throw new ParseError('Expected dictionary opening brace.', 1104);
         }
 
         ++$offset;
@@ -194,7 +194,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         while (true) {
             $this->skipWhitespace($raw, $offset, $length);
             if ($offset >= $length) {
-                throw new ParseError('Unterminated dictionary payload.');
+                throw new ParseError('Unterminated dictionary payload.', 1105);
             }
 
             $char = $raw[$offset];
@@ -208,12 +208,12 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
             $this->skipWhitespace($raw, $offset, $length);
             if ($offset >= $length) {
-                throw new ParseError('Dictionary entry without value.');
+                throw new ParseError('Dictionary entry without value.', 1106);
             }
 
             $delimiter = $raw[$offset];
             if ($delimiter !== '=' && $delimiter !== ':') {
-                throw new ParseError('Dictionary entry is missing a separator.');
+                throw new ParseError('Dictionary entry is missing a separator.', 1107);
             }
 
             ++$offset;
@@ -223,7 +223,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
             $this->skipWhitespace($raw, $offset, $length);
             if ($offset >= $length) {
-                throw new ParseError('Unexpected end of dictionary payload.');
+                throw new ParseError('Unexpected end of dictionary payload.', 1108);
             }
 
             $terminator = $raw[$offset];
@@ -252,7 +252,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     {
         $this->skipWhitespace($raw, $offset, $length);
         if ($offset >= $length) {
-            throw new ParseError('Missing value for dictionary entry.');
+            throw new ParseError('Missing value for dictionary entry.', 1109);
         }
 
         $char = $raw[$offset];
@@ -315,7 +315,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function parseArray(string $raw, int &$offset, int $length): array
     {
         if ($raw[$offset] !== '(') {
-            throw new ParseError('Expected array opening parenthesis.');
+            throw new ParseError('Expected array opening parenthesis.', 1110);
         }
 
         ++$offset;
@@ -325,7 +325,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         while (true) {
             $this->skipWhitespace($raw, $offset, $length);
             if ($offset >= $length) {
-                throw new ParseError('Unterminated array payload.');
+                throw new ParseError('Unterminated array payload.', 1111);
             }
 
             if ($raw[$offset] === ')') {
@@ -338,7 +338,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
             $this->skipWhitespace($raw, $offset, $length);
             if ($offset >= $length) {
-                throw new ParseError('Unexpected end of array payload.');
+                throw new ParseError('Unexpected end of array payload.', 1112);
             }
 
             $terminator = $raw[$offset];
@@ -367,7 +367,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     private function parseQuotedString(string $raw, int &$offset, int $length): string
     {
         if ($raw[$offset] !== '"') {
-            throw new ParseError('Expected quoted string.');
+            throw new ParseError('Expected quoted string.', 1113);
         }
 
         ++$offset;
@@ -378,7 +378,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             $char = $raw[$offset];
             if ($char === '\\') {
                 if ($offset + 1 >= $length) {
-                    throw new ParseError('Invalid escape sequence in string.');
+                    throw new ParseError('Invalid escape sequence in string.', 1114);
                 }
 
                 $next = $raw[$offset + 1];
@@ -400,7 +400,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             ++$offset;
         }
 
-        throw new ParseError('Unterminated quoted string.');
+        throw new ParseError('Unterminated quoted string.', 1115);
     }
 
     /**
@@ -444,7 +444,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
     {
         $this->skipWhitespace($raw, $offset, $length);
         if ($offset >= $length) {
-            throw new ParseError('Missing dictionary key.');
+            throw new ParseError('Missing dictionary key.', 1116);
         }
 
         if ($raw[$offset] === '"') {
@@ -453,7 +453,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
 
         $key = $this->parseWord($raw, $offset, $length);
         if ($key === '') {
-            throw new ParseError('Dictionary key is empty.');
+            throw new ParseError('Dictionary key is empty.', 1117);
         }
 
         return $key;
@@ -697,7 +697,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
             return $entries;
         }
 
-        throw new ParseError('Unsupported property list value.');
+        throw new ParseError('Unsupported property list value.', 1118);
     }
 
     /**
@@ -723,7 +723,7 @@ final class AppleDecoder implements MakerNotesDecoderInterface
         $entries = [];
         foreach ($value as $key => $entry) {
             if (!is_string($key)) {
-                throw new ParseError('Property list dictionaries must use string keys.');
+                throw new ParseError('Property list dictionaries must use string keys.', 1119);
             }
 
             $entries[$key] = $this->nativeToPlistValue($entry);

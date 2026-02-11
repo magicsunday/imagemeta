@@ -141,12 +141,12 @@ final class BinaryPlistDecoder
     public function decode(string $data): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
         if ($data === '') {
-            throw new ParseError('The property list data must not be empty.');
+            throw new ParseError('The property list data must not be empty.', 1034);
         }
 
         $signatureOffset = strpos($data, 'bplist00');
         if ($signatureOffset === false) {
-            throw new ParseError('Unsupported property list format.');
+            throw new ParseError('Unsupported property list format.', 1035);
         }
 
         // Some maker notes prepend arbitrary bytes before the actual bplist,
@@ -155,7 +155,7 @@ final class BinaryPlistDecoder
 
         if (strlen($data) < 40) {
             // 8 bytes header + minimal object + 1 entry offset table + 32 bytes trailer
-            throw new ParseError('The property list payload is too small.');
+            throw new ParseError('The property list payload is too small.', 1036);
         }
 
         $this->data          = $data;
@@ -166,12 +166,12 @@ final class BinaryPlistDecoder
         $this->decodeTrailer();
 
         if ($this->offsetTable === []) {
-            throw new ParseError('The property list does not contain any objects.');
+            throw new ParseError('The property list does not contain any objects.', 1037);
         }
 
         $topIndex = $this->topObjectIndex;
         if ($topIndex < 0 || $topIndex >= $this->objectCount) {
-            throw new ParseError('Top level object index is out of range.');
+            throw new ParseError('Top level object index is out of range.', 1038);
         }
 
         return $this->parseObject($topIndex);
@@ -186,7 +186,7 @@ final class BinaryPlistDecoder
     {
         $trailer = substr($this->data, -32);
         if (strlen($trailer) !== 32) {
-            throw new ParseError('Invalid property list trailer.');
+            throw new ParseError('Invalid property list trailer.', 1039);
         }
 
         $offsetIntSize    = ord($trailer[6]);
@@ -196,62 +196,62 @@ final class BinaryPlistDecoder
         $offsetTableStart = $this->readUint64($trailer, 24);
 
         if ($offsetIntSize < 1 || $objectRefSize < 1) {
-            throw new ParseError('Invalid property list integer sizing.');
+            throw new ParseError('Invalid property list integer sizing.', 1040);
         }
 
         if ($numObjects < 1) {
-            throw new ParseError('The property list does not contain any objects.');
+            throw new ParseError('The property list does not contain any objects.', 1041);
         }
 
         if ($numObjects > PHP_INT_MAX) {
-            throw new ParseError('The property list contains too many objects.');
+            throw new ParseError('The property list contains too many objects.', 1042);
         }
 
         if ($offsetTableStart >= $this->length) {
-            throw new ParseError('The offset table is located outside of the payload.');
+            throw new ParseError('The offset table is located outside of the payload.', 1043);
         }
 
         if ($topObject > PHP_INT_MAX) {
-            throw new ParseError('The top level object index exceeds platform limits.');
+            throw new ParseError('The top level object index exceeds platform limits.', 1044);
         }
 
         $trailerStart = $this->length - 32;
 
         if ($offsetTableStart < 8) {
-            throw new ParseError('The offset table offset is invalid.');
+            throw new ParseError('The offset table offset is invalid.', 1045);
         }
 
         if ($numObjects > intdiv(PHP_INT_MAX, $offsetIntSize)) {
-            throw new ParseError('The offset table size exceeds platform limits.');
+            throw new ParseError('The offset table size exceeds platform limits.', 1046);
         }
 
         $offsetTableBytes = $numObjects * $offsetIntSize;
         $offsetTableEnd   = $offsetTableStart + $offsetTableBytes;
 
         if ($offsetTableEnd > $trailerStart) {
-            throw new ParseError('The offset table exceeds payload bounds.');
+            throw new ParseError('The offset table exceeds payload bounds.', 1047);
         }
 
         if ($offsetTableEnd !== $trailerStart) {
-            throw new ParseError('The property list payload contains unexpected padding.');
+            throw new ParseError('The property list payload contains unexpected padding.', 1048);
         }
 
         if ($objectRefSize < 8) {
             $maxReferences = 1 << ($objectRefSize * 8);
             if ($maxReferences <= $numObjects) {
-                throw new ParseError('Object reference size is insufficient for object count.');
+                throw new ParseError('Object reference size is insufficient for object count.', 1049);
             }
         }
 
         if ($offsetIntSize < 8) {
             $maxOffset = 1 << ($offsetIntSize * 8);
             if ($maxOffset <= $offsetTableStart) {
-                throw new ParseError('Offset integer size cannot represent object positions.');
+                throw new ParseError('Offset integer size cannot represent object positions.', 1050);
             }
         }
 
         if ($topObject >= $numObjects) {
-            throw new ParseError('Top level object index is out of range.');
+            throw new ParseError('Top level object index is out of range.', 1051);
         }
 
         $this->objectRefSize = $objectRefSize;
@@ -264,7 +264,7 @@ final class BinaryPlistDecoder
         for ($idx = 0; $idx < $numObjects; ++$idx) {
             $offset = $this->readUint($cursor, $offsetIntSize);
             if ($offset < 8 || $offset > $maxObjectOffset) {
-                throw new ParseError('Object offset is outside of the object table range.');
+                throw new ParseError('Object offset is outside of the object table range.', 1052);
             }
 
             $entries[] = $offset;
@@ -287,16 +287,16 @@ final class BinaryPlistDecoder
     private function parseObject(int $index): ApplePlistArray|ApplePlistDictionary|ApplePlistScalar
     {
         if ($index < 0 || $index >= $this->objectCount) {
-            throw new ParseError('The property list object reference is invalid.');
+            throw new ParseError('The property list object reference is invalid.', 1053);
         }
 
         if (!array_key_exists($index, $this->offsetTable)) {
-            throw new ParseError('The property list object reference is invalid.');
+            throw new ParseError('The property list object reference is invalid.', 1054);
         }
 
         $offset = $this->offsetTable[$index];
         if ($offset >= $this->length) {
-            throw new ParseError('The property list object offset is invalid.');
+            throw new ParseError('The property list object offset is invalid.', 1055);
         }
 
         $marker = ord($this->data[$offset]);
@@ -316,7 +316,7 @@ final class BinaryPlistDecoder
             self::MARKER_TYPE_ARRAY      => $this->parseArray($offset, $info),
             self::MARKER_TYPE_SET        => $this->parseSet($offset, $info),
             self::MARKER_TYPE_DICTIONARY => $this->parseDictionary($offset, $info),
-            default                      => throw new ParseError('Unsupported property list object type.'),
+            default                      => throw new ParseError('Unsupported property list object type.', 1056),
         };
     }
 
@@ -353,7 +353,7 @@ final class BinaryPlistDecoder
             self::MARKER_SIMPLE_URL,
             self::MARKER_SIMPLE_BASE_URL,
             self::MARKER_SIMPLE_UUID => null,
-            default                  => throw new ParseError('Unsupported simple property list object.'),
+            default                  => throw new ParseError('Unsupported simple property list object.', 1057),
         };
 
         return $this->wrapScalar($value);
@@ -373,7 +373,7 @@ final class BinaryPlistDecoder
     {
         $size = 1 << $info;
         if ($size === 0) {
-            throw new ParseError('Integer object without payload.');
+            throw new ParseError('Integer object without payload.', 1058);
         }
 
         return $this->readUint($offset + 1, $size);
@@ -396,17 +396,17 @@ final class BinaryPlistDecoder
         if ($size === 4) {
             $bytes = substr($this->data, $offset + 1, 4);
             if (strlen($bytes) !== 4) {
-                throw new ParseError('Incomplete real payload.');
+                throw new ParseError('Incomplete real payload.', 1059);
             }
 
             $value = @unpack('Gfloat', $bytes);
             if ($value === false || !array_key_exists('float', $value)) {
-                throw new ParseError('Failed to decode floating point value.');
+                throw new ParseError('Failed to decode floating point value.', 1060);
             }
 
             $float = $value['float'];
             if (!is_float($float) && !is_int($float)) {
-                throw new ParseError('Failed to decode floating point value.');
+                throw new ParseError('Failed to decode floating point value.', 1061);
             }
 
             return (float) $float;
@@ -415,23 +415,23 @@ final class BinaryPlistDecoder
         if ($size === 8) {
             $bytes = substr($this->data, $offset + 1, 8);
             if (strlen($bytes) !== 8) {
-                throw new ParseError('Incomplete double payload.');
+                throw new ParseError('Incomplete double payload.', 1062);
             }
 
             $value = @unpack('Efloat', $bytes);
             if ($value === false || !array_key_exists('float', $value)) {
-                throw new ParseError('Failed to decode floating point value.');
+                throw new ParseError('Failed to decode floating point value.', 1063);
             }
 
             $float = $value['float'];
             if (!is_float($float) && !is_int($float)) {
-                throw new ParseError('Failed to decode floating point value.');
+                throw new ParseError('Failed to decode floating point value.', 1064);
             }
 
             return (float) $float;
         }
 
-        throw new ParseError('Unsupported floating point width.');
+        throw new ParseError('Unsupported floating point width.', 1065);
     }
 
     /**
@@ -448,22 +448,22 @@ final class BinaryPlistDecoder
     {
         $size = 1 << $info;
         if ($size !== 8) {
-            throw new ParseError('Date objects must use eight byte payloads.');
+            throw new ParseError('Date objects must use eight byte payloads.', 1066);
         }
 
         $payload = substr($this->data, $offset + 1, $size);
         if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete date payload.');
+            throw new ParseError('Incomplete date payload.', 1067);
         }
 
         $value = @unpack('Eseconds', $payload);
         if ($value === false || !array_key_exists('seconds', $value)) {
-            throw new ParseError('Failed to decode date payload.');
+            throw new ParseError('Failed to decode date payload.', 1068);
         }
 
         $seconds = $value['seconds'];
         if (!is_float($seconds) && !is_int($seconds)) {
-            throw new ParseError('Failed to decode date payload.');
+            throw new ParseError('Failed to decode date payload.', 1069);
         }
 
         // Seconds since 2001-01-01T00:00:00Z
@@ -476,7 +476,7 @@ final class BinaryPlistDecoder
         );
 
         if (!$timestamp instanceof DateTimeImmutable) {
-            throw new ParseError('Failed to decode date payload.');
+            throw new ParseError('Failed to decode date payload.', 1070);
         }
 
         $formatted = $timestamp->format('Y-m-d\TH:i:s.uP');
@@ -519,7 +519,7 @@ final class BinaryPlistDecoder
 
         $payload = substr($this->data, $offset + $header, $size);
         if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete data payload.');
+            throw new ParseError('Incomplete data payload.', 1071);
         }
 
         return $payload;
@@ -541,7 +541,7 @@ final class BinaryPlistDecoder
 
         $payload = substr($this->data, $offset + $header, $size);
         if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete ASCII string payload.');
+            throw new ParseError('Incomplete ASCII string payload.', 1072);
         }
 
         return $payload;
@@ -564,12 +564,12 @@ final class BinaryPlistDecoder
         $byteLength = $size * 2;
         $payload    = substr($this->data, $offset + $header, $byteLength);
         if (strlen($payload) !== $byteLength) {
-            throw new ParseError('Incomplete Unicode string payload.');
+            throw new ParseError('Incomplete Unicode string payload.', 1073);
         }
 
         $decoded = iconv('UTF-16BE', 'UTF-8', $payload);
         if ($decoded === false) {
-            throw new ParseError('Failed to decode Unicode string payload.');
+            throw new ParseError('Failed to decode Unicode string payload.', 1074);
         }
 
         return $decoded;
@@ -591,13 +591,13 @@ final class BinaryPlistDecoder
 
         $payload = substr($this->data, $offset + $header, $size);
         if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete UTF-8 string payload.');
+            throw new ParseError('Incomplete UTF-8 string payload.', 1075);
         }
 
         // Normalizes/validates UTF-8 input
         $decoded = iconv('UTF-8', 'UTF-8', $payload);
         if ($decoded === false) {
-            throw new ParseError('Failed to decode UTF-8 string payload.');
+            throw new ParseError('Failed to decode UTF-8 string payload.', 1076);
         }
 
         return $decoded;
@@ -626,12 +626,12 @@ final class BinaryPlistDecoder
         }
 
         if ($size < 1) {
-            throw new ParseError('UID objects must contain at least one byte.');
+            throw new ParseError('UID objects must contain at least one byte.', 1077);
         }
 
         $payloadOffset = $offset + $header;
         if (($payloadOffset + $size) > $this->length) {
-            throw new ParseError('Incomplete UID payload.');
+            throw new ParseError('Incomplete UID payload.', 1078);
         }
 
         if ($size <= PHP_INT_SIZE) {
@@ -647,7 +647,7 @@ final class BinaryPlistDecoder
 
         $payload = substr($this->data, $payloadOffset, $size);
         if (strlen($payload) !== $size) {
-            throw new ParseError('Incomplete UID payload.');
+            throw new ParseError('Incomplete UID payload.', 1079);
         }
 
         return $this->convertUidPayloadToDecimalString($payload);
@@ -724,7 +724,7 @@ final class BinaryPlistDecoder
         $refsOffset = $offset + $header;
         $bytes      = $count * $this->objectRefSize;
         if (($refsOffset + $bytes) > $this->length) {
-            throw new ParseError('Array references exceed payload bounds.');
+            throw new ParseError('Array references exceed payload bounds.', 1080);
         }
 
         /** @var BinaryPlistArray $result */
@@ -757,7 +757,7 @@ final class BinaryPlistDecoder
         $refsOffset = $offset + $header;
         $bytes      = $count * $this->objectRefSize * 2;
         if (($refsOffset + $bytes) > $this->length) {
-            throw new ParseError('Dictionary references exceed payload bounds.');
+            throw new ParseError('Dictionary references exceed payload bounds.', 1081);
         }
 
         /** @var list<ApplePlistValueInterface> $keys */
@@ -783,7 +783,7 @@ final class BinaryPlistDecoder
         );
 
         if ($hasInvalidKey) {
-            throw new ParseError('Dictionary keys must be strings.');
+            throw new ParseError('Dictionary keys must be strings.', 1082);
         }
 
         /** @var array<string, ApplePlistValueInterface> $entries */
@@ -794,7 +794,7 @@ final class BinaryPlistDecoder
             $keyValue = $key->value();
 
             if (!is_string($keyValue)) {
-                throw new ParseError('Dictionary key must be a string value.');
+                throw new ParseError('Dictionary key must be a string value.', 1083);
             }
 
             $entries[$keyValue] = $values[$idx];
@@ -821,14 +821,14 @@ final class BinaryPlistDecoder
 
         $sizeMarkerOffset = $offset + 1;
         if ($sizeMarkerOffset >= $this->length) {
-            throw new ParseError('The property list size marker exceeds the payload.');
+            throw new ParseError('The property list size marker exceeds the payload.', 1084);
         }
 
         $marker    = ord($this->data[$sizeMarkerOffset]);
         $type      = $marker >> 4;
         $innerInfo = $marker & self::MARKER_INFO_MASK;
         if ($type !== self::MARKER_TYPE_INTEGER) {
-            throw new ParseError('Size marker does not encode an integer.');
+            throw new ParseError('Size marker does not encode an integer.', 1085);
         }
 
         $sizeBytes = 1 << $innerInfo;
@@ -850,11 +850,11 @@ final class BinaryPlistDecoder
     private function readUint(int $offset, int $length): int
     {
         if ($length < 1) {
-            throw new ParseError('Cannot read zero length integers.');
+            throw new ParseError('Cannot read zero length integers.', 1086);
         }
 
         if (($offset < 0) || (($offset + $length) > $this->length)) {
-            throw new ParseError('Attempted to read outside of the payload.');
+            throw new ParseError('Attempted to read outside of the payload.', 1087);
         }
 
         $value = 0;
@@ -879,19 +879,19 @@ final class BinaryPlistDecoder
     {
         $slice = substr($data, $offset, 8);
         if (strlen($slice) !== 8) {
-            throw new ParseError('Failed to read 64-bit integer.');
+            throw new ParseError('Failed to read 64-bit integer.', 1088);
         }
 
         $parts = @unpack('Nhigh/Nlow', $slice);
         if ($parts === false || !array_key_exists('high', $parts) || !array_key_exists('low', $parts)) {
-            throw new ParseError('Failed to unpack 64-bit integer.');
+            throw new ParseError('Failed to unpack 64-bit integer.', 1089);
         }
 
         $rawHigh = $parts['high'];
         $rawLow  = $parts['low'];
 
         if (!is_int($rawHigh) || !is_int($rawLow)) {
-            throw new ParseError('Unexpected 64-bit integer components.');
+            throw new ParseError('Unexpected 64-bit integer components.', 1090);
         }
 
         return ($rawHigh << 32) | $rawLow;

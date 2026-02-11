@@ -56,7 +56,7 @@ final readonly class UInt64
     public static function fromInt(int $value): self
     {
         if ($value < 0) {
-            throw new ParseError('Cannot create UInt64 from a negative integer.');
+            throw new ParseError('Cannot create UInt64 from a negative integer.', 1023);
         }
 
         $hi = intdiv($value, self::UINT32_BASE);
@@ -139,7 +139,7 @@ final readonly class UInt64
     public function addSmall(int $value): self
     {
         if ($value < 0) {
-            throw new ParseError('Cannot add a negative value to UInt64.');
+            throw new ParseError('Cannot add a negative value to UInt64.', 1024);
         }
 
         $lo = $this->lo + $value;
@@ -179,7 +179,7 @@ final readonly class UInt64
     public function toInt(string $context): int
     {
         if (!$this->fitsSignedInt()) {
-            throw new ParseError(sprintf('%s exceeds supported integer range.', $context));
+            throw new ParseError(sprintf('%s exceeds supported integer range.', $context), 1025);
         }
 
         return ($this->hi * self::UINT32_BASE) + $this->lo;
@@ -205,7 +205,7 @@ final readonly class UInt64
     private function assertUint32(int $value): void
     {
         if ($value < 0 || $value > self::UINT32_MASK) {
-            throw new ParseError('UInt64 components must be unsigned 32-bit integers.');
+            throw new ParseError('UInt64 components must be unsigned 32-bit integers.', 1026);
         }
     }
 }

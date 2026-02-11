@@ -1109,7 +1109,7 @@ final class TiffExifParser
         $this->bo = match ($boSig) {
             'II'    => Endian::Little,
             'MM'    => Endian::Big,
-            default => throw new ParseError('Bad TIFF byte order'),
+            default => throw new ParseError('Bad TIFF byte order', 1301),
         };
 
         $magic = $this->readU16();
@@ -1122,7 +1122,7 @@ final class TiffExifParser
 
             // EXIF 3.0 §4.5.1: the 0th IFD offset must point past the header.
             if (($firstIfd instanceof UInt64) && $firstIfd->isZero()) {
-                throw new ParseError('missing 0th IFD offset');
+                throw new ParseError('missing 0th IFD offset', 1302);
             }
 
             $ifd0 = $this->readIfd($firstIfd);
@@ -1136,7 +1136,7 @@ final class TiffExifParser
             // EXIF 3.0 §4.5.1: the 0th IFD offset must be non-zero and point
             // past the classic TIFF header.
             if ($firstIfd < TiffConst::HEADER_SIZE_CLASSIC) {
-                throw new ParseError('missing 0th IFD offset');
+                throw new ParseError('missing 0th IFD offset', 1303);
             }
 
             $ifd0 = $this->readIfd($firstIfd);
@@ -1147,6 +1147,7 @@ final class TiffExifParser
                     TiffConst::MAGIC_CLASSIC,
                     TiffConst::MAGIC_BIG,
                 ),
+                1304,
             );
         }
 
@@ -1233,12 +1234,12 @@ final class TiffExifParser
 
         // EXIF 3.0 §4.5.1 restricts BigTIFF offset sizes to 8 or 16 bytes.
         if ($offSize !== 8 && $offSize !== 16) {
-            throw new ParseError('Unsupported BigTIFF offset size (expected 8 or 16)');
+            throw new ParseError('Unsupported BigTIFF offset size (expected 8 or 16)', 1305);
         }
 
         // The reserved field must remain zero (EXIF 3.0 §4.5.1; TIFF 6.0 §8 legacy rule).
         if ($reserved !== 0) {
-            throw new ParseError('Bad BigTIFF header (reserved != 0)');
+            throw new ParseError('Bad BigTIFF header (reserved != 0)', 1306);
         }
 
         $this->bigTiffOffsetSize = $offSize;
@@ -1290,7 +1291,7 @@ final class TiffExifParser
         $entryCount = $this->bigTiff ? $this->readU64()->toInt('IFD entry count') : $this->readU16();
 
         if ($entryCount === 0) {
-            throw new ParseError('IFD must contain at least one entry per TIFF 6.0.');
+            throw new ParseError('IFD must contain at least one entry per TIFF 6.0.', 1307);
         }
 
         // EXIF 3.0 §4.5.2 and TIFF 6.0 §8 prescribe 12-byte (classic) and 20-byte
@@ -1303,7 +1304,7 @@ final class TiffExifParser
             // TIFF 6.0 §2 requires IFD entries to be sorted by tag identifier in
             // ascending order so readers can apply deterministic directory traversal.
             if (($lastTagId !== null) && ($entry->tag < $lastTagId)) {
-                throw new ParseError('IFD entries must be sorted in ascending order by tag per TIFF 6.0 §2.');
+                throw new ParseError('IFD entries must be sorted in ascending order by tag per TIFF 6.0 §2.', 1308);
             }
 
             $lastTagId            = $entry->tag;
@@ -1345,7 +1346,7 @@ final class TiffExifParser
             !$this->bigTiff
             && in_array($type, [TiffConst::TYPE_LONG8, TiffConst::TYPE_SLONG8, TiffConst::TYPE_IFD8], true)
         ) {
-            throw new ParseError('BigTIFF-only field type ' . $type . ' in classic TIFF');
+            throw new ParseError('BigTIFF-only field type ' . $type . ' in classic TIFF', 1309);
         }
 
         $cnt = $this->bigTiff ? $this->readU64()->toInt('directory entry value count') : $this->readU32();
@@ -1388,49 +1389,49 @@ final class TiffExifParser
             throw new ParseError(sprintf(
                 'MakerNoteSafety value %d is outside the valid domain {0, 1} per DNG 1.7.1.0.',
                 $value,
-            ));
+            ), 1310);
         }
 
         if ($tag === ExifTag::ORIENTATION && is_int($value) && ($value < 1 || $value > 8)) {
             throw new ParseError(sprintf(
                 'Orientation value %d is outside the valid domain 1..8 per EXIF 3.0 §4.6.5.1.6.',
                 $value,
-            ));
+            ), 1311);
         }
 
         if ($tag === ExifTag::YCBCR_POSITIONING && is_int($value) && $value !== 1 && $value !== 2) {
             throw new ParseError(sprintf(
                 'YCbCrPositioning value %d is outside the valid domain {1, 2} per EXIF 3.0 §4.6.5.1.13.',
                 $value,
-            ));
+            ), 1312);
         }
 
         if ($tag === ExifTag::COLOR_SPACE && is_int($value) && $value !== 1 && $value !== 0xFFFF) {
             throw new ParseError(sprintf(
                 'ColorSpace value %d is outside the valid domain {1, 65535} per EXIF 3.0 §4.6.6.2.1.',
                 $value,
-            ));
+            ), 1313);
         }
 
         if ($tag === ExifTag::RESOLUTION_UNIT && is_int($value) && $value !== 2 && $value !== 3) {
             throw new ParseError(sprintf(
                 'ResolutionUnit value %d is outside the valid domain {2, 3} per EXIF 3.0 §4.6.5.1.11.',
                 $value,
-            ));
+            ), 1314);
         }
 
         if ($tag === ExifTag::FOCAL_PLANE_RESOLUTION_UNIT && is_int($value) && $value !== 2 && $value !== 3) {
             throw new ParseError(sprintf(
                 'FocalPlaneResolutionUnit value %d is outside the valid domain {2, 3} per EXIF 3.0 §4.6.6.7.28.',
                 $value,
-            ));
+            ), 1315);
         }
 
         if ($tag === ExifTag::PLANAR_CONFIGURATION && is_int($value) && $value !== 1 && $value !== 2) {
             throw new ParseError(sprintf(
                 'PlanarConfiguration value %d is outside the valid domain {1, 2} per EXIF 3.0 §4.6.5.1.10.',
                 $value,
-            ));
+            ), 1316);
         }
 
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
@@ -1466,7 +1467,7 @@ final class TiffExifParser
                 $rule['name'],
                 $rule['typeName'],
                 $rule['spec'],
-            ));
+            ), 1317);
         }
 
         if ($count !== $rule['count']) {
@@ -1475,7 +1476,7 @@ final class TiffExifParser
                 $rule['name'],
                 $rule['count'],
                 $rule['spec'],
-            ));
+            ), 1318);
         }
     }
 
@@ -1494,17 +1495,17 @@ final class TiffExifParser
         $length = strlen($rawBytes);
 
         if ($length < 2) {
-            throw new ParseError('DNGPrivateData block must be at least 2 bytes per DNG 1.7.1.0.');
+            throw new ParseError('DNGPrivateData block must be at least 2 bytes per DNG 1.7.1.0.', 1319);
         }
 
         $nulPos = strpos($rawBytes, "\0");
 
         if ($nulPos === false) {
-            throw new ParseError('DNGPrivateData block must start with a NUL-terminated ASCII string per DNG 1.7.1.0.');
+            throw new ParseError('DNGPrivateData block must start with a NUL-terminated ASCII string per DNG 1.7.1.0.', 1320);
         }
 
         if ($nulPos === 0) {
-            throw new ParseError('DNGPrivateData manufacturer name must not be empty per DNG 1.7.1.0.');
+            throw new ParseError('DNGPrivateData manufacturer name must not be empty per DNG 1.7.1.0.', 1321);
         }
 
         $prefix    = substr($rawBytes, 0, $nulPos);
@@ -1515,7 +1516,7 @@ final class TiffExifParser
                 'DNGPrivateData manufacturer name contains non-ASCII byte 0x%02X at offset %d per DNG 1.7.1.0.',
                 ord($prefix[$asciiSpan]),
                 $asciiSpan,
-            ));
+            ), 1322);
         }
     }
 
@@ -1536,11 +1537,11 @@ final class TiffExifParser
 
         $enhance = $ifd->get(DngTag::ENHANCE_PARAMS);
         if (!$enhance instanceof IfdEntry || !is_string($enhance->value)) {
-            throw new ParseError('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.');
+            throw new ParseError('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.', 1323);
         }
 
         if (rtrim($enhance->value, "\0") === '') {
-            throw new ParseError('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.');
+            throw new ParseError('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.', 1324);
         }
     }
 
@@ -1569,7 +1570,7 @@ final class TiffExifParser
                 $xRes->value->denominator,
                 $yRes->value->numerator,
                 $yRes->value->denominator,
-            ));
+            ), 1325);
         }
     }
 
@@ -1674,7 +1675,7 @@ final class TiffExifParser
         $availableLength = strlen($rawBytes);
 
         if ($availableLength < $expectedLength) {
-            throw new ParseError('Truncated numeric components for TIFF entry.');
+            throw new ParseError('Truncated numeric components for TIFF entry.', 1326);
         }
 
         $components = [];
@@ -1691,7 +1692,7 @@ final class TiffExifParser
                 TiffConst::TYPE_LONG8,
                 TiffConst::TYPE_IFD8   => $this->unpackU64($chunk),
                 TiffConst::TYPE_SLONG8 => $this->unpackS64($chunk),
-                default                => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type),
+                default                => throw new ParseError('Unsupported numeric type for strip/tile field: ' . $type, 1327),
             };
 
             if ($value instanceof UInt64) {
@@ -1869,6 +1870,7 @@ final class TiffExifParser
                     $expectedBytes,
                     $bytesLength,
                 ),
+                1328,
             );
         }
 
@@ -1879,6 +1881,7 @@ final class TiffExifParser
             if (($count > 0) && ($bytes[$count - 1] !== "\0")) {
                 throw new ParseError(
                     'ASCII values must be NUL-terminated and include the terminator in count per EXIF 3.0 §4.6.2; TIFF 6.0 §2.',
+                    1329,
                 );
             }
 
@@ -1889,7 +1892,7 @@ final class TiffExifParser
                         'ASCII value contains non-7-bit byte 0x%02X at offset %d per TIFF 6.0 §2.2.',
                         ord($bytes[$i]),
                         $i,
-                    ));
+                    ), 1330);
                 }
             }
 
@@ -1945,7 +1948,7 @@ final class TiffExifParser
                 // DOUBLE
                 TiffConst::TYPE_DOUBLE => $this->unpackDouble(substr($bytes, $cursor, 8)),
 
-                default => throw new ParseError('Unsupported type in decodeBytes: ' . $type),
+                default => throw new ParseError('Unsupported type in decodeBytes: ' . $type, 1331),
             };
             $cursor += $componentSize;
         }
@@ -2063,7 +2066,7 @@ final class TiffExifParser
 
         // TIFF 6.0 §2: offsets must begin on a word boundary (even byte offset).
         if ($result % 2 !== 0) {
-            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result));
+            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result), 1332);
         }
 
         return $result;
@@ -2111,19 +2114,19 @@ final class TiffExifParser
     private function assertOffsetRange(UInt64 $offset, int $length, string $context): void
     {
         if ($offset->compare($this->blobSize) > 0) {
-            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
+            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1333);
         }
 
         $size = $this->buffer->size();
 
         if ($length > $size) {
-            throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length));
+            throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length), 1334);
         }
 
         $offsetInt = $offset->toInt($context);
 
         if (($length > 0) && ($offsetInt > ($size - $length))) {
-            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
+            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1335);
         }
     }
 
@@ -2156,6 +2159,7 @@ final class TiffExifParser
                         $dataSize,
                         strlen($inlineBytes),
                     ),
+                    1336,
                 );
             }
 
@@ -2172,6 +2176,7 @@ final class TiffExifParser
                             $dataSize,
                             strlen($valueOrOffset),
                         ),
+                        1337,
                     );
                 }
 
@@ -2317,7 +2322,7 @@ final class TiffExifParser
             TiffConst::TYPE_SLONG8,
             TiffConst::TYPE_IFD8 => 8,
 
-            default => throw new ParseError('Unsupported TIFF type: ' . $type),
+            default => throw new ParseError('Unsupported TIFF type: ' . $type, 1338),
         };
     }
 
@@ -2596,7 +2601,7 @@ final class TiffExifParser
             }
         }
 
-        throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $entry->tag));
+        throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain a numeric offset.', $entry->tag), 1339);
     }
 
     /**
@@ -2622,6 +2627,7 @@ final class TiffExifParser
         if ($entry->count !== 1) {
             throw new ParseError(
                 sprintf('IFD pointer tag 0x%04X must contain exactly one offset per %s.', $entry->tag, $specRef),
+                1340,
             );
         }
 
@@ -2640,6 +2646,7 @@ final class TiffExifParser
         if (!in_array($entry->type, $allowedTypes, true)) {
             throw new ParseError(
                 sprintf('IFD pointer tag 0x%04X must use a LONG/IFD field type per %s.', $entry->tag, $specRef),
+                1341,
             );
         }
     }
@@ -2672,7 +2679,7 @@ final class TiffExifParser
     private function pointerOffsetFromFloat(float $value, int $tag): ?int
     {
         if (!is_finite($value) || (float) (int) $value !== $value) {
-            throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain an integer offset.', $tag));
+            throw new ParseError(sprintf('IFD pointer tag 0x%04X must contain an integer offset.', $tag), 1342);
         }
 
         if ($value <= 0.0) {
@@ -2697,7 +2704,7 @@ final class TiffExifParser
         }
 
         if ($this->bigTiffOffsetSize !== 16) {
-            throw new ParseError('Unsupported BigTIFF offset size.');
+            throw new ParseError('Unsupported BigTIFF offset size.', 1343);
         }
 
         $required  = $this->bigTiffOffsetSize;
@@ -2840,17 +2847,17 @@ final class TiffExifParser
         $size       = $this->buffer->size();
 
         if ($this->compareDecimalStringToInt($normalised, $size) > 0) {
-            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
+            throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1344);
         }
 
         if ($length > $size) {
-            throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length));
+            throw new BoundsError(sprintf('%s length %d exceeds TIFF data length.', $context, $length), 1345);
         }
 
         if ($length > 0) {
             $limit = $size - $length;
             if ($this->compareDecimalStringToInt($normalised, $limit) > 0) {
-                throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context));
+                throw new BoundsError(sprintf('%s exceeds TIFF data length.', $context), 1346);
             }
         }
 
@@ -2858,7 +2865,7 @@ final class TiffExifParser
 
         // TIFF 6.0 §2: offsets must begin on a word boundary (even byte offset).
         if ($result % 2 !== 0) {
-            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result));
+            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result), 1347);
         }
 
         return $result;
@@ -2870,11 +2877,11 @@ final class TiffExifParser
     private function normaliseDecimalString(string $value): string
     {
         if ($value === '') {
-            throw new ParseError('Decimal offset must not be empty.');
+            throw new ParseError('Decimal offset must not be empty.', 1348);
         }
 
         if (strspn($value, '0123456789') !== strlen($value)) {
-            throw new ParseError('Decimal offset contains invalid characters.');
+            throw new ParseError('Decimal offset contains invalid characters.', 1349);
         }
 
         $trimmed = ltrim($value, '0');

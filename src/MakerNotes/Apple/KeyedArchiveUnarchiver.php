@@ -53,17 +53,17 @@ final class KeyedArchiveUnarchiver
     {
         $objectsValue = $archive->get('$objects');
         if (!($objectsValue instanceof ApplePlistArray) || $objectsValue->isEmpty()) {
-            throw new ParseError('The keyed archive object table is malformed.');
+            throw new ParseError('The keyed archive object table is malformed.', 1091);
         }
 
         $topValue = $archive->get('$top');
         if (!$topValue instanceof ApplePlistDictionary) {
-            throw new ParseError('The keyed archive is missing the top object reference.');
+            throw new ParseError('The keyed archive is missing the top object reference.', 1092);
         }
 
         $rootValue = $topValue->get('root');
         if (!$rootValue instanceof ApplePlistDictionary) {
-            throw new ParseError('The keyed archive does not define a root object.');
+            throw new ParseError('The keyed archive does not define a root object.', 1093);
         }
 
         /** @var KeyedArchiveArray $objects */
@@ -75,7 +75,7 @@ final class KeyedArchiveUnarchiver
 
         $root = $this->resolveValue($rootValue);
         if (!$root instanceof ApplePlistDictionary) {
-            throw new ParseError('The keyed archive root object must be a dictionary.');
+            throw new ParseError('The keyed archive root object must be a dictionary.', 1094);
         }
 
         return $root;
@@ -90,12 +90,12 @@ final class KeyedArchiveUnarchiver
             if ($this->isUidReference($value)) {
                 $uidValue = $value->get('CF$UID');
                 if (!$uidValue instanceof ApplePlistScalar) {
-                    throw new ParseError('The keyed archive UID reference is invalid.');
+                    throw new ParseError('The keyed archive UID reference is invalid.', 1095);
                 }
 
                 $uid = $uidValue->value();
                 if (!is_int($uid)) {
-                    throw new ParseError('The keyed archive UID reference is invalid.');
+                    throw new ParseError('The keyed archive UID reference is invalid.', 1096);
                 }
 
                 return $this->resolveUid($uid);
@@ -139,7 +139,7 @@ final class KeyedArchiveUnarchiver
             return $value;
         }
 
-        throw new ParseError('Unsupported keyed archive value encountered.');
+        throw new ParseError('Unsupported keyed archive value encountered.', 1097);
     }
 
     /**
@@ -185,11 +185,11 @@ final class KeyedArchiveUnarchiver
         }
 
         if (array_key_exists($uid, $this->inProgress)) {
-            throw new ParseError('Recursive keyed archive reference detected.');
+            throw new ParseError('Recursive keyed archive reference detected.', 1098);
         }
 
         if (!array_key_exists($uid, $this->objects)) {
-            throw new ParseError('The keyed archive object reference is invalid.');
+            throw new ParseError('The keyed archive object reference is invalid.', 1099);
         }
 
         $this->inProgress[$uid] = true;
@@ -221,18 +221,18 @@ final class KeyedArchiveUnarchiver
         $valuesValue = $dictionary->get('NS.objects');
 
         if (!$keysValue instanceof ApplePlistArray) {
-            throw new ParseError('The keyed archive dictionary keys are invalid.');
+            throw new ParseError('The keyed archive dictionary keys are invalid.', 1100);
         }
 
         if (!$valuesValue instanceof ApplePlistArray) {
-            throw new ParseError('The keyed archive dictionary values are invalid.');
+            throw new ParseError('The keyed archive dictionary values are invalid.', 1101);
         }
 
         $keys   = $keysValue->values();
         $values = $valuesValue->values();
 
         if (count($keys) !== count($values)) {
-            throw new ParseError('The keyed archive dictionary contains mismatched entries.');
+            throw new ParseError('The keyed archive dictionary contains mismatched entries.', 1102);
         }
 
         /** @var KeyedArchiveDictionary $result */
@@ -270,7 +270,7 @@ final class KeyedArchiveUnarchiver
     {
         $objects = $array->get('NS.objects');
         if (!$objects instanceof ApplePlistArray) {
-            throw new ParseError('The keyed archive array contents are invalid.');
+            throw new ParseError('The keyed archive array contents are invalid.', 1103);
         }
 
         /** @var KeyedArchiveArray $resolved */

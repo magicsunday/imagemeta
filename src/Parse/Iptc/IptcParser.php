@@ -68,32 +68,32 @@ final class IptcParser
         while ($offset < $length) {
             $remaining = $length - $offset;
             if ($remaining < 4) {
-                throw new BoundsError('APP13 resource block header exceeds payload length.');
+                throw new BoundsError('APP13 resource block header exceeds payload length.', 1126);
             }
 
             $signature = substr($payload, $offset, 4);
             $offset += 4;
 
             if ($signature !== self::RESOURCE_SIGNATURE) {
-                throw new ParseError(sprintf('Unexpected resource signature "%s" in APP13 payload.', $signature));
+                throw new ParseError(sprintf('Unexpected resource signature "%s" in APP13 payload.', $signature), 1127);
             }
 
             if (($length - $offset) < 2) {
-                throw new BoundsError('APP13 resource ID exceeds payload length.');
+                throw new BoundsError('APP13 resource ID exceeds payload length.', 1128);
             }
 
             $resourceId = $this->readUnsignedShort($payload, $offset);
             $offset += 2;
 
             if (($length - $offset) < 1) {
-                throw new BoundsError('APP13 resource name exceeds payload length.');
+                throw new BoundsError('APP13 resource name exceeds payload length.', 1129);
             }
 
             $nameLength = ord($payload[$offset]);
             ++$offset;
 
             if (($length - $offset) < $nameLength) {
-                throw new BoundsError('APP13 resource name exceeds payload length.');
+                throw new BoundsError('APP13 resource name exceeds payload length.', 1130);
             }
 
             $offset += $nameLength;
@@ -101,21 +101,21 @@ final class IptcParser
             $nameFieldLength = 1 + $nameLength;
             if (($nameFieldLength % 2) !== 0) {
                 if (($length - $offset) < 1) {
-                    throw new BoundsError('APP13 resource name padding exceeds payload length.');
+                    throw new BoundsError('APP13 resource name padding exceeds payload length.', 1131);
                 }
 
                 ++$offset;
             }
 
             if (($length - $offset) < 4) {
-                throw new BoundsError('APP13 resource size exceeds payload length.');
+                throw new BoundsError('APP13 resource size exceeds payload length.', 1132);
             }
 
             $resourceSize = $this->readUnsignedLong($payload, $offset);
             $offset += 4;
 
             if (($length - $offset) < $resourceSize) {
-                throw new BoundsError('APP13 resource data exceeds payload length.');
+                throw new BoundsError('APP13 resource data exceeds payload length.', 1133);
             }
 
             $data = substr($payload, $offset, $resourceSize);
@@ -146,11 +146,11 @@ final class IptcParser
 
         while ($offset < $length) {
             if (($length - $offset) < 5) {
-                throw new BoundsError('IPTC IIM dataset header exceeds payload length.');
+                throw new BoundsError('IPTC IIM dataset header exceeds payload length.', 1134);
             }
 
             if (ord($data[$offset]) !== 0x1C) {
-                throw new ParseError('IPTC IIM dataset marker is missing.');
+                throw new ParseError('IPTC IIM dataset marker is missing.', 1135);
             }
 
             $recordNumber  = ord($data[$offset + 1]);
@@ -162,7 +162,7 @@ final class IptcParser
             if (($lengthField & 0x8000) !== 0) {
                 $lengthBytes = $lengthField & 0x7FFF;
                 if (($length - $offset) < $lengthBytes) {
-                    throw new BoundsError('IPTC IIM extended length exceeds payload length.');
+                    throw new BoundsError('IPTC IIM extended length exceeds payload length.', 1136);
                 }
 
                 $valueLength = 0;
@@ -174,7 +174,7 @@ final class IptcParser
             }
 
             if (($length - $offset) < $valueLength) {
-                throw new BoundsError('IPTC IIM dataset value exceeds payload length.');
+                throw new BoundsError('IPTC IIM dataset value exceeds payload length.', 1137);
             }
 
             $value = substr($data, $offset, $valueLength);
@@ -202,7 +202,7 @@ final class IptcParser
         $unpacked = @unpack('nvalue', substr($data, $offset, 2));
 
         if (!is_array($unpacked) || !isset($unpacked['value']) || !is_int($unpacked['value'])) {
-            throw new ParseError('Unable to read IPTC short value.');
+            throw new ParseError('Unable to read IPTC short value.', 1138);
         }
 
         return $unpacked['value'];
@@ -221,7 +221,7 @@ final class IptcParser
         $unpacked = @unpack('Nvalue', substr($data, $offset, 4));
 
         if (!is_array($unpacked) || !isset($unpacked['value']) || !is_int($unpacked['value'])) {
-            throw new ParseError('Unable to read IPTC long value.');
+            throw new ParseError('Unable to read IPTC long value.', 1139);
         }
 
         return $unpacked['value'];

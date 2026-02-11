@@ -344,7 +344,7 @@ final class IccParser
                 $hour,
                 $minute,
                 $second,
-            ));
+            ), 1122);
         }
 
         return sprintf('%04d:%02d:%02d %02d:%02d:%02d', $year, $month, $day, $hour, $minute, $second);
@@ -774,7 +774,7 @@ final class IccParser
 
         // ICC.1:2022 §10.13: UTF-16BE must consist of complete code units.
         if ((strlen($data) % 2) !== 0) {
-            throw new ParseError('Odd-length UTF-16BE payload in ICC mluc record');
+            throw new ParseError('Odd-length UTF-16BE payload in ICC mluc record', 1123);
         }
 
         if (function_exists('mb_convert_encoding')) {
@@ -824,7 +824,7 @@ final class IccParser
 
         $value = $unpacked['value'];
         if (!is_int($value)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.');
+            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1124);
         }
 
         return $value;
@@ -848,7 +848,7 @@ final class IccParser
 
         $value = $unpacked['value'];
         if (!is_int($value)) {
-            throw new ParseError('Unexpected integer value while decoding ICC profile.');
+            throw new ParseError('Unexpected integer value while decoding ICC profile.', 1125);
         }
 
         return $value;

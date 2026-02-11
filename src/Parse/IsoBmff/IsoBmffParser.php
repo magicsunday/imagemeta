@@ -429,7 +429,7 @@ final readonly class IsoBmffParser
         }
 
         if ($offset !== $fileSize) {
-            throw new ParseError('Top-level boxes do not align with file size');
+            throw new ParseError('Top-level boxes do not align with file size', 1140);
         }
     }
 
@@ -455,7 +455,7 @@ final readonly class IsoBmffParser
                 // QuickTime File Format 2012, "Metadata Structure": only one
                 // metadata atom is allowed per container location.
                 if ($metaSeen) {
-                    throw new ParseError('duplicate meta box in moov');
+                    throw new ParseError('duplicate meta box in moov', 1141);
                 }
 
                 $metaSeen = true;
@@ -488,7 +488,7 @@ final readonly class IsoBmffParser
         $minor      = $win->readU32BE();
 
         if (($ftyp->contentSize - 8) % 4 !== 0) {
-            throw new ParseError('ftyp compatible_brands length is not a multiple of 4');
+            throw new ParseError('ftyp compatible_brands length is not a multiple of 4', 1142);
         }
 
         $brands = [];
@@ -525,7 +525,7 @@ final readonly class IsoBmffParser
                 // QuickTime File Format 2012, "Metadata Structure": only one
                 // metadata atom is allowed per container location.
                 if ($metaSeen) {
-                    throw new ParseError('duplicate meta box in udta');
+                    throw new ParseError('duplicate meta box in udta', 1143);
                 }
 
                 $metaSeen = true;
@@ -663,20 +663,20 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($tkhd->contentSize < 84) {
-            throw new ParseError('tkhd box truncated');
+            throw new ParseError('tkhd box truncated', 1144);
         }
 
         $version = $win->readU8();
         $this->readUInt24($win); // flags
 
         if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported tkhd box version');
+            throw new ParseError('unsupported tkhd box version', 1145);
         }
 
         // ISO/IEC 14496-12 §8.3.2: version 0 uses 32-bit timestamps, version 1 uses 64-bit
         if ($version === 1) {
             if ($tkhd->contentSize < 96) {
-                throw new ParseError('tkhd version 1 box truncated');
+                throw new ParseError('tkhd version 1 box truncated', 1146);
             }
 
             $win->read(8 + 8 + 4 + 4 + 8); // creation(64), modification(64), track_id(32), reserved(32), duration(64)
@@ -737,7 +737,7 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($hdlr->contentSize < 24) {
-            throw new ParseError('hdlr box truncated');
+            throw new ParseError('hdlr box truncated', 1147);
         }
 
         $versionFlags = $win->read(4);
@@ -745,24 +745,24 @@ final readonly class IsoBmffParser
         $flags        = (ord($versionFlags[1]) << 16) | (ord($versionFlags[2]) << 8) | ord($versionFlags[3]);
 
         if ($version !== 0) {
-            throw new ParseError('unsupported hdlr box version');
+            throw new ParseError('unsupported hdlr box version', 1148);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported hdlr box flags');
+            throw new ParseError('unsupported hdlr box flags', 1149);
         }
 
         $preDefined = $win->readU32BE();
 
         if ($preDefined !== 0) {
-            throw new ParseError('hdlr pre_defined must be 0');
+            throw new ParseError('hdlr pre_defined must be 0', 1150);
         }
 
         $handler  = $win->read(4);
         $reserved = $win->read(12);
 
         if ($reserved !== "\0\0\0\0\0\0\0\0\0\0\0\0") {
-            throw new ParseError('hdlr reserved fields must be 0');
+            throw new ParseError('hdlr reserved fields must be 0', 1151);
         }
 
         $handlerType = $this->normaliseFourcc($handler);
@@ -786,7 +786,7 @@ final readonly class IsoBmffParser
                     'hdlr component name counted length %d exceeds remaining %d bytes',
                     $countedLen,
                     $remaining - 1,
-                ));
+                ), 1152);
             }
         }
 
@@ -849,7 +849,7 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($stsd->contentSize < 8) {
-            throw new ParseError('stsd box truncated');
+            throw new ParseError('stsd box truncated', 1153);
         }
 
         $versionFlags = $win->read(4);
@@ -857,17 +857,17 @@ final readonly class IsoBmffParser
         $flags        = (ord($versionFlags[1]) << 16) | (ord($versionFlags[2]) << 8) | ord($versionFlags[3]);
 
         if ($version !== 0) {
-            throw new ParseError('unsupported stsd box version');
+            throw new ParseError('unsupported stsd box version', 1154);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported stsd box flags');
+            throw new ParseError('unsupported stsd box flags', 1155);
         }
 
         $entryCount = $win->readU32BE();
 
         if ($entryCount > self::MAX_STSD_ENTRIES) {
-            throw new ParseError('stsd entry count exceeds maximum allowed');
+            throw new ParseError('stsd entry count exceeds maximum allowed', 1156);
         }
 
         $result = [];
@@ -875,7 +875,7 @@ final readonly class IsoBmffParser
 
         for ($i = 0; $i < $entryCount; ++$i) {
             if ($pos + 8 > $stsd->contentSize) {
-                throw new ParseError('stsd entry truncated');
+                throw new ParseError('stsd entry truncated', 1157);
             }
 
             $win->seek($pos);
@@ -883,7 +883,7 @@ final readonly class IsoBmffParser
             $format    = $win->read(4);
 
             if (($entrySize < 16) || (($pos + $entrySize) > $stsd->contentSize)) {
-                throw new ParseError('invalid stsd entry size');
+                throw new ParseError('invalid stsd entry size', 1158);
             }
 
             $entryStart = $win->tell();
@@ -894,7 +894,7 @@ final readonly class IsoBmffParser
 
             if ($handlerType === 'vide') {
                 if ($win->tell() + 70 > $entryEnd) {
-                    throw new ParseError('video sample entry truncated');
+                    throw new ParseError('video sample entry truncated', 1159);
                 }
 
                 $win->read(16); // pre-defined/reserved
@@ -921,7 +921,7 @@ final readonly class IsoBmffParser
                 ];
             } elseif ($handlerType === 'soun') {
                 if ($win->tell() + 20 > $entryEnd) {
-                    throw new ParseError('audio sample entry truncated');
+                    throw new ParseError('audio sample entry truncated', 1160);
                 }
 
                 $win->read(8); // reserved
@@ -943,7 +943,7 @@ final readonly class IsoBmffParser
         }
 
         if ($pos !== $stsd->contentSize) {
-            throw new ParseError('stsd entries do not fill container');
+            throw new ParseError('stsd entries do not fill container', 1161);
         }
 
         return $result;
@@ -979,7 +979,7 @@ final readonly class IsoBmffParser
     private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
         if ($meta->contentSize < 4) {
-            throw new ParseError('meta box truncated');
+            throw new ParseError('meta box truncated', 1162);
         }
 
         // EXIF 3.0 Annex A.2 describes how the `meta` box aggregates
@@ -1089,12 +1089,12 @@ final readonly class IsoBmffParser
                         throw new ParseError(sprintf(
                             'idat box at offset %d is not 8-byte aligned per ISO/IEC 14496-12 §8.11.11.2.',
                             $child->offset,
-                        ));
+                        ), 1163);
                     }
 
                     if ($idatPayload === null) {
                         if ($child->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
-                            throw new ParseError('idat payload exceeds configured limit');
+                            throw new ParseError('idat payload exceeds configured limit', 1164);
                         }
 
                         $idatPayload = $this->readAll($child->window);
@@ -1153,17 +1153,17 @@ final readonly class IsoBmffParser
         // handler type 'mdta' must contain keys and ilst subatoms.
         if ($handlerType === self::QUICKTIME_MDTA) {
             if ($keysMaps === []) {
-                throw new ParseError('mdta meta box missing required keys subatom');
+                throw new ParseError('mdta meta box missing required keys subatom', 1165);
             }
 
             if ($ilstBoxes === []) {
-                throw new ParseError('mdta meta box missing required ilst subatom');
+                throw new ParseError('mdta meta box missing required ilst subatom', 1166);
             }
         }
 
         // ISO/IEC 14496-12 §8.11.4: the primary item must reference an existing item.
         if ($primaryItemId !== null && !isset($locations[$primaryItemId]) && !isset($itemInfos[$primaryItemId])) {
-            throw new ParseError(sprintf('pitm references non-existent item %d', $primaryItemId));
+            throw new ParseError(sprintf('pitm references non-existent item %d', $primaryItemId), 1167);
         }
 
         return [
@@ -1244,11 +1244,11 @@ final readonly class IsoBmffParser
         $flags   = (ord($peek[1]) << 16) | (ord($peek[2]) << 8) | ord($peek[3]);
 
         if ($version !== 0) {
-            throw new ParseError('unsupported meta box version');
+            throw new ParseError('unsupported meta box version', 1168);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported meta box flags');
+            throw new ParseError('unsupported meta box flags', 1169);
         }
     }
 
@@ -1258,7 +1258,7 @@ final readonly class IsoBmffParser
     private function readU32FromBytes(string $bytes, int $offset, string $context): int
     {
         if ($offset < 0 || ($offset + 4) > strlen($bytes)) {
-            throw new ParseError('Insufficient bytes for ' . $context . '.');
+            throw new ParseError('Insufficient bytes for ' . $context . '.', 1170);
         }
 
         return Unpack::int('N', substr($bytes, $offset, 4), $context);
@@ -1407,7 +1407,7 @@ final readonly class IsoBmffParser
         // QuickTime File Format 2012, "Metadata Header Atom": metadata header
         // atom must exist if metadata items contain item information atoms.
         if ($hasItemIds && !$hasMhdr) {
-            throw new ParseError('metadata header atom (mhdr) required when ilst items have itif atoms');
+            throw new ParseError('metadata header atom (mhdr) required when ilst items have itif atoms', 1171);
         }
 
         return [$existing, $existingAtoms];
@@ -1511,20 +1511,20 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($dref->contentSize < 8) {
-            throw new ParseError('dref box truncated');
+            throw new ParseError('dref box truncated', 1172);
         }
 
         $version = $win->readU8();
         $this->readUInt24($win); // flags
 
         if ($version !== 0) {
-            throw new ParseError('unsupported dref box version');
+            throw new ParseError('unsupported dref box version', 1173);
         }
 
         $entryCount = $win->readU32BE();
 
         if ($entryCount > self::MAX_DREF_ENTRIES) {
-            throw new ParseError('dref entry count exceeds maximum allowed');
+            throw new ParseError('dref entry count exceeds maximum allowed', 1174);
         }
 
         $references = [];
@@ -1539,7 +1539,7 @@ final readonly class IsoBmffParser
         }
 
         if ($index !== $entryCount) {
-            throw new ParseError('dref entry count mismatch');
+            throw new ParseError('dref entry count mismatch', 1175);
         }
 
         return $references;
@@ -1557,13 +1557,13 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($entry->contentSize < 4) {
-            throw new ParseError('dref entry truncated');
+            throw new ParseError('dref entry truncated', 1176);
         }
 
         $version = $win->readU8();
 
         if ($version !== 0) {
-            throw new ParseError('unsupported dref entry version');
+            throw new ParseError('unsupported dref entry version', 1177);
         }
 
         $flags = $this->readUInt24($win);
@@ -1669,11 +1669,11 @@ final readonly class IsoBmffParser
                 }
 
                 if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
-                    throw new ParseError('iloc item payload exceeds configured limit');
+                    throw new ParseError('iloc item payload exceeds configured limit', 1178);
                 }
 
                 if (($total > $fileSize) || ($length > ($fileSize - $total))) {
-                    throw new ParseError('iloc extent length exceeds file size');
+                    throw new ParseError('iloc extent length exceeds file size', 1179);
                 }
 
                 $total += $length;
@@ -1681,16 +1681,16 @@ final readonly class IsoBmffParser
                 $baseOffset   = $location['baseOffset'];
                 $extentOffset = $extent['offset'];
                 if ($baseOffset < 0 || $extentOffset < 0) {
-                    throw new ParseError('iloc negative offset');
+                    throw new ParseError('iloc negative offset', 1180);
                 }
 
                 if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow');
+                    throw new ParseError('iloc offset overflow', 1181);
                 }
 
                 $offset = $baseOffset + $extentOffset;
                 if (($length > $fileSize) || ($offset > ($fileSize - $length))) {
-                    throw new ParseError('iloc extent outside file');
+                    throw new ParseError('iloc extent outside file', 1182);
                 }
 
                 $blob .= $this->readAll($this->stream->window($offset, $length));
@@ -1717,11 +1717,11 @@ final readonly class IsoBmffParser
                 }
 
                 if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
-                    throw new ParseError('iloc item payload exceeds configured limit');
+                    throw new ParseError('iloc item payload exceeds configured limit', 1183);
                 }
 
                 if (($total > $idatSize) || ($length > ($idatSize - $total))) {
-                    throw new ParseError('iloc extent length exceeds idat payload');
+                    throw new ParseError('iloc extent length exceeds idat payload', 1184);
                 }
 
                 $total += $length;
@@ -1729,16 +1729,16 @@ final readonly class IsoBmffParser
                 $baseOffset   = $location['baseOffset'];
                 $extentOffset = $extent['offset'];
                 if ($baseOffset < 0 || $extentOffset < 0) {
-                    throw new ParseError('iloc negative offset');
+                    throw new ParseError('iloc negative offset', 1185);
                 }
 
                 if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow');
+                    throw new ParseError('iloc offset overflow', 1186);
                 }
 
                 $offset = $baseOffset + $extentOffset;
                 if (($length > $idatSize) || ($offset > ($idatSize - $length))) {
-                    throw new ParseError('iloc extent outside idat payload');
+                    throw new ParseError('iloc extent outside idat payload', 1187);
                 }
 
                 $blob .= substr($idatPayload, $offset, $length);
@@ -1765,7 +1765,7 @@ final readonly class IsoBmffParser
                 }
 
                 if ($length > self::MAX_ITEM_PAYLOAD_SIZE - $total) {
-                    throw new ParseError('iloc item payload exceeds configured limit');
+                    throw new ParseError('iloc item payload exceeds configured limit', 1188);
                 }
 
                 // extent_index is optional; treat it as zero-based with a one-based fallback.
@@ -1800,16 +1800,16 @@ final readonly class IsoBmffParser
                 $baseOffset    = $location['baseOffset'];
                 $extentOffset  = $extent['offset'];
                 if ($baseOffset < 0 || $extentOffset < 0) {
-                    throw new ParseError('iloc negative offset');
+                    throw new ParseError('iloc negative offset', 1189);
                 }
 
                 if ($baseOffset > PHP_INT_MAX - $extentOffset) {
-                    throw new ParseError('iloc offset overflow');
+                    throw new ParseError('iloc offset overflow', 1190);
                 }
 
                 $offset = $baseOffset + $extentOffset;
                 if (($length > $referenceSize) || ($offset > ($referenceSize - $length))) {
-                    throw new ParseError('iloc extent outside referenced item');
+                    throw new ParseError('iloc extent outside referenced item', 1191);
                 }
 
                 $blob .= substr($referenceData, $offset, $length);
@@ -1867,28 +1867,28 @@ final readonly class IsoBmffParser
 
         // FullBox header (4 bytes) + entry_count (2 for v0, 4 for v1)
         if ($iinf->contentSize < 6) {
-            throw new ParseError('iinf box truncated');
+            throw new ParseError('iinf box truncated', 1192);
         }
 
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported iinf box version');
+            throw new ParseError('unsupported iinf box version', 1193);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported iinf box flags');
+            throw new ParseError('unsupported iinf box flags', 1194);
         }
 
         if ($version === 1 && $iinf->contentSize < 8) {
-            throw new ParseError('iinf box truncated');
+            throw new ParseError('iinf box truncated', 1195);
         }
 
         $entryCount = $version === 0 ? $win->readU16BE() : $win->readU32BE();
 
         if ($entryCount > self::MAX_IINF_ENTRIES) {
-            throw new ParseError('iinf entry count exceeds maximum allowed');
+            throw new ParseError('iinf entry count exceeds maximum allowed', 1196);
         }
 
         $start = $win->tell();
@@ -1907,7 +1907,7 @@ final readonly class IsoBmffParser
         }
 
         if ($index !== $entryCount) {
-            throw new ParseError('iinf entry count mismatch');
+            throw new ParseError('iinf entry count mismatch', 1197);
         }
 
         return $items;
@@ -1929,18 +1929,18 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($infe->contentSize < 8) {
-            throw new ParseError('infe box truncated');
+            throw new ParseError('infe box truncated', 1198);
         }
 
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
         if ($version > 3) {
-            throw new ParseError('unsupported infe box version');
+            throw new ParseError('unsupported infe box version', 1199);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported infe box flags');
+            throw new ParseError('unsupported infe box flags', 1200);
         }
 
         if ($version === 0 || $version === 1) {
@@ -1971,7 +1971,7 @@ final readonly class IsoBmffParser
         // v3: 4 header + 4 item_ID + 2 protection_index + 4 item_type = 14
         $minSize = $version === 3 ? 14 : 12;
         if ($infe->contentSize < $minSize) {
-            throw new ParseError('infe box truncated');
+            throw new ParseError('infe box truncated', 1201);
         }
 
         $id = $version === 3 ? $win->readU32BE() : $win->readU16BE();
@@ -2023,11 +2023,11 @@ final readonly class IsoBmffParser
 
         // ISO/IEC 14496-12 §8.11.3: only versions 0, 1 and 2 are defined
         if ($version > 2) {
-            throw new ParseError('unsupported iloc box version');
+            throw new ParseError('unsupported iloc box version', 1202);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported iloc box flags');
+            throw new ParseError('unsupported iloc box flags', 1203);
         }
 
         // ISO/IEC 14496-12 §8.11.3: offset_size and length_size are packed in 4-bit nibbles
@@ -2043,7 +2043,7 @@ final readonly class IsoBmffParser
         if ($version === 0) {
             // ISO/IEC 14496-12 §8.11.3: for version 0 the low nibble is reserved and must be 0
             if (($baseField & BitMask::LOW_NIBBLE) !== 0) {
-                throw new ParseError('iloc version 0 reserved nibble must be zero');
+                throw new ParseError('iloc version 0 reserved nibble must be zero', 1204);
             }
         } else {
             $indexSize = $this->validateSizeNibble($baseField & BitMask::LOW_NIBBLE);
@@ -2052,7 +2052,7 @@ final readonly class IsoBmffParser
         $itemCount = $version < 2 ? $win->readU16BE() : $win->readU32BE();
 
         if ($itemCount > self::MAX_ILOC_ITEMS) {
-            throw new ParseError('iloc item count exceeds maximum allowed');
+            throw new ParseError('iloc item count exceeds maximum allowed', 1205);
         }
 
         $locations = [];
@@ -2068,13 +2068,13 @@ final readonly class IsoBmffParser
                 $tmp = $win->readU16BE();
 
                 if (($tmp >> 4) !== 0) {
-                    throw new ParseError('iloc construction_method reserved bits must be zero');
+                    throw new ParseError('iloc construction_method reserved bits must be zero', 1206);
                 }
 
                 $constructionMethod = $tmp & BitMask::LOW_NIBBLE;
 
                 if (ConstructionMethod::tryFrom($constructionMethod) === null) {
-                    throw new ParseError('iloc construction_method value out of range');
+                    throw new ParseError('iloc construction_method value out of range', 1207);
                 }
             }
 
@@ -2092,7 +2092,7 @@ final readonly class IsoBmffParser
                     // ISO/IEC 14496-12 §8.11.3.2: extent_index is 1-based and 0 is
                     // reserved. This only applies to construction_method=2 (item_offset).
                     if ($constructionMethod === ConstructionMethod::ItemOffset->value && $extentIndex === 0) {
-                        throw new ParseError('iloc extent_index 0 is reserved');
+                        throw new ParseError('iloc extent_index 0 is reserved', 1208);
                     }
                 }
 
@@ -2103,7 +2103,7 @@ final readonly class IsoBmffParser
 
             // ISO/IEC 14496-12 §8.11.3: item_ID values must be unique within one iloc box.
             if (isset($locations[$itemId])) {
-                throw new ParseError(sprintf('duplicate iloc item_ID %d', $itemId));
+                throw new ParseError(sprintf('duplicate iloc item_ID %d', $itemId), 1209);
             }
 
             $locations[$itemId] = [
@@ -2135,18 +2135,18 @@ final readonly class IsoBmffParser
 
         // FullBox header (4 bytes) + item_ID (2 for v0, 4 for v1)
         if ($pitm->contentSize < 6) {
-            throw new ParseError('pitm box truncated');
+            throw new ParseError('pitm box truncated', 1210);
         }
 
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported pitm box version');
+            throw new ParseError('unsupported pitm box version', 1211);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported pitm box flags');
+            throw new ParseError('unsupported pitm box flags', 1212);
         }
 
         if ($version === 0) {
@@ -2155,7 +2155,7 @@ final readonly class IsoBmffParser
 
         // v1 requires 4-byte item_ID → 8 bytes total
         if ($pitm->contentSize < 8) {
-            throw new ParseError('pitm box truncated');
+            throw new ParseError('pitm box truncated', 1213);
         }
 
         return $win->readU32BE();
@@ -2177,18 +2177,18 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($iref->contentSize < 4) {
-            throw new ParseError('iref box truncated');
+            throw new ParseError('iref box truncated', 1214);
         }
 
         $version = $win->readU8();
         $flags   = $this->readUInt24($win);
 
         if ($version !== 0 && $version !== 1) {
-            throw new ParseError('unsupported iref box version');
+            throw new ParseError('unsupported iref box version', 1215);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('unsupported iref box flags');
+            throw new ParseError('unsupported iref box flags', 1216);
         }
 
         $references = [];
@@ -2225,20 +2225,20 @@ final readonly class IsoBmffParser
         $idSize = $irefVersion === 0 ? 2 : 4;
 
         if ($entry->contentSize < $idSize + 2) {
-            throw new ParseError('iref entry truncated');
+            throw new ParseError('iref entry truncated', 1217);
         }
 
         $fromItemId     = $idSize === 2 ? $win->readU16BE() : $win->readU32BE();
         $referenceCount = $win->readU16BE();
 
         if ($referenceCount > self::MAX_IREF_REFERENCES) {
-            throw new ParseError('iref reference count exceeds maximum allowed');
+            throw new ParseError('iref reference count exceeds maximum allowed', 1218);
         }
 
         $remaining = $entry->contentSize - $win->tell();
         $expected  = $referenceCount * $idSize;
         if ($remaining < $expected) {
-            throw new ParseError('iref entry truncated');
+            throw new ParseError('iref entry truncated', 1219);
         }
 
         $relation   = $this->normaliseFourcc($entry->type);
@@ -2249,7 +2249,7 @@ final readonly class IsoBmffParser
         }
 
         if ($win->tell() !== $entry->contentSize) {
-            throw new ParseError('iref entry size mismatch');
+            throw new ParseError('iref entry size mismatch', 1220);
         }
 
         return [
@@ -2275,7 +2275,7 @@ final readonly class IsoBmffParser
         $win->seek(0);
 
         if ($keys->contentSize < 8) {
-            throw new ParseError('keys box truncated');
+            throw new ParseError('keys box truncated', 1221);
         }
 
         // QuickTime File Format 2012, "Metadata item keys atom": the keys atom
@@ -2285,13 +2285,13 @@ final readonly class IsoBmffParser
         $flags   = $this->readUInt24($win);
 
         if (($version !== 0) || ($flags !== 0)) {
-            throw new ParseError('keys box version/flags must be 0');
+            throw new ParseError('keys box version/flags must be 0', 1222);
         }
 
         $entryCount = $win->readU32BE();
 
         if ($entryCount > self::MAX_KEYS_ENTRIES) {
-            throw new ParseError('keys entry count exceeds maximum allowed');
+            throw new ParseError('keys entry count exceeds maximum allowed', 1223);
         }
 
         $map = [];
@@ -2299,14 +2299,14 @@ final readonly class IsoBmffParser
 
         for ($i = 1; $i <= $entryCount; ++$i) {
             if ($pos + 8 > $keys->contentSize) {
-                throw new ParseError('keys entry truncated');
+                throw new ParseError('keys entry truncated', 1224);
             }
 
             $win->seek($pos);
             $size      = $win->readU32BE();
             $namespace = $win->read(4);
             if (($size < 8) || (($pos + $size) > $keys->contentSize)) {
-                throw new ParseError('invalid keys entry size');
+                throw new ParseError('invalid keys entry size', 1225);
             }
 
             $name    = $win->read($size - 8);
@@ -2318,7 +2318,7 @@ final readonly class IsoBmffParser
         }
 
         if ($pos !== $keys->contentSize) {
-            throw new ParseError('keys entries do not fill container');
+            throw new ParseError('keys entries do not fill container', 1226);
         }
 
         return $map;
@@ -2418,7 +2418,7 @@ final readonly class IsoBmffParser
     private function parseIlstNameAtom(BoxDescriptor $name, array &$seenNames): string
     {
         if ($name->contentSize < 4) {
-            throw new ParseError('ilst name atom truncated');
+            throw new ParseError('ilst name atom truncated', 1227);
         }
 
         $win = $name->window;
@@ -2428,29 +2428,29 @@ final readonly class IsoBmffParser
         $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
 
         if ($version !== 0) {
-            throw new ParseError('ilst name atom version must be 0');
+            throw new ParseError('ilst name atom version must be 0', 1228);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('ilst name atom flags must be 0');
+            throw new ParseError('ilst name atom flags must be 0', 1229);
         }
 
         $payloadSize = $name->contentSize - 4;
         if ($payloadSize < 1) {
-            throw new ParseError('ilst name atom has empty payload');
+            throw new ParseError('ilst name atom has empty payload', 1230);
         }
 
         $value = $win->read($payloadSize);
 
         if (!mb_check_encoding($value, 'UTF-8')) {
-            throw new ParseError('ilst name atom contains invalid UTF-8');
+            throw new ParseError('ilst name atom contains invalid UTF-8', 1231);
         }
 
         if (array_key_exists($value, $seenNames)) {
             throw new ParseError(sprintf(
                 'duplicate ilst name atom value "%s"',
                 $value,
-            ));
+            ), 1232);
         }
 
         $seenNames[$value] = true;
@@ -2471,7 +2471,7 @@ final readonly class IsoBmffParser
     private function parseIlstItemInfo(BoxDescriptor $itif, array &$seenItemIds): void
     {
         if ($itif->contentSize < 8) {
-            throw new ParseError('itif atom truncated');
+            throw new ParseError('itif atom truncated', 1233);
         }
 
         $win = $itif->window;
@@ -2481,11 +2481,11 @@ final readonly class IsoBmffParser
         $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
 
         if ($version !== 0) {
-            throw new ParseError('itif atom version must be 0');
+            throw new ParseError('itif atom version must be 0', 1234);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('itif atom flags must be 0');
+            throw new ParseError('itif atom flags must be 0', 1235);
         }
 
         $itemId = $win->readU32BE();
@@ -2494,7 +2494,7 @@ final readonly class IsoBmffParser
             throw new ParseError(sprintf(
                 'duplicate Item_ID %d in ilst itif atoms',
                 $itemId,
-            ));
+            ), 1236);
         }
 
         $seenItemIds[$itemId] = true;
@@ -2511,7 +2511,7 @@ final readonly class IsoBmffParser
     private function parseMhdr(BoxDescriptor $mhdr): void
     {
         if ($mhdr->contentSize < 8) {
-            throw new ParseError('mhdr atom truncated');
+            throw new ParseError('mhdr atom truncated', 1237);
         }
 
         $win = $mhdr->window;
@@ -2521,11 +2521,11 @@ final readonly class IsoBmffParser
         $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
 
         if ($version !== 0) {
-            throw new ParseError('mhdr atom version must be 0');
+            throw new ParseError('mhdr atom version must be 0', 1238);
         }
 
         if ($flags !== 0) {
-            throw new ParseError('mhdr atom flags must be 0');
+            throw new ParseError('mhdr atom flags must be 0', 1239);
         }
 
         // nextItemID — read for validation but not currently exposed
@@ -2548,7 +2548,7 @@ final readonly class IsoBmffParser
     private function parseLocaleListAtom(BoxDescriptor $box, string $label): array
     {
         if ($box->contentSize < 8) {
-            throw new ParseError(sprintf('%s atom truncated', $label));
+            throw new ParseError(sprintf('%s atom truncated', $label), 1240);
         }
 
         $win = $box->window;
@@ -2558,17 +2558,17 @@ final readonly class IsoBmffParser
         $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
 
         if ($version !== 0) {
-            throw new ParseError(sprintf('%s atom version must be 0', $label));
+            throw new ParseError(sprintf('%s atom version must be 0', $label), 1241);
         }
 
         if ($flags !== 0) {
-            throw new ParseError(sprintf('%s atom flags must be 0', $label));
+            throw new ParseError(sprintf('%s atom flags must be 0', $label), 1242);
         }
 
         $entryCount = $win->readU32BE();
 
         if ($entryCount > self::MAX_LOCALE_LIST_ENTRIES) {
-            throw new ParseError(sprintf('%s atom entry count %d exceeds maximum %d', $label, $entryCount, self::MAX_LOCALE_LIST_ENTRIES));
+            throw new ParseError(sprintf('%s atom entry count %d exceeds maximum %d', $label, $entryCount, self::MAX_LOCALE_LIST_ENTRIES), 1243);
         }
 
         $entries  = [];
@@ -2576,7 +2576,7 @@ final readonly class IsoBmffParser
 
         for ($i = 0; $i < $entryCount; ++$i) {
             if ($consumed + 2 > $box->contentSize) {
-                throw new ParseError(sprintf('%s atom entry %d truncated (missing item count)', $label, $i + 1));
+                throw new ParseError(sprintf('%s atom entry %d truncated (missing item count)', $label, $i + 1), 1244);
             }
 
             $itemCount = $win->readU16BE();
@@ -2584,7 +2584,7 @@ final readonly class IsoBmffParser
 
             $needed = $itemCount * 2;
             if ($consumed + $needed > $box->contentSize) {
-                throw new ParseError(sprintf('%s atom entry %d truncated (expected %d codes, only %d bytes remain)', $label, $i + 1, $itemCount, $box->contentSize - $consumed));
+                throw new ParseError(sprintf('%s atom entry %d truncated (expected %d codes, only %d bytes remain)', $label, $i + 1, $itemCount, $box->contentSize - $consumed), 1245);
             }
 
             $codes = [];
@@ -2597,7 +2597,7 @@ final readonly class IsoBmffParser
         }
 
         if ($consumed !== $box->contentSize) {
-            throw new ParseError(sprintf('%s atom has %d trailing bytes after entries', $label, $box->contentSize - $consumed));
+            throw new ParseError(sprintf('%s atom has %d trailing bytes after entries', $label, $box->contentSize - $consumed), 1246);
         }
 
         return $entries;
@@ -2621,21 +2621,21 @@ final readonly class IsoBmffParser
 
         if ($country >= 1 && $country <= 255) {
             if ($countryLists === []) {
-                throw new ParseError(sprintf('data atom locale country index %d requires a ctry list atom', $country));
+                throw new ParseError(sprintf('data atom locale country index %d requires a ctry list atom', $country), 1247);
             }
 
             if ($country > count($countryLists)) {
-                throw new ParseError(sprintf('data atom locale country index %d exceeds ctry list entry count %d', $country, count($countryLists)));
+                throw new ParseError(sprintf('data atom locale country index %d exceeds ctry list entry count %d', $country, count($countryLists)), 1248);
             }
         }
 
         if ($language >= 1 && $language <= 255) {
             if ($languageLists === []) {
-                throw new ParseError(sprintf('data atom locale language index %d requires a lang list atom', $language));
+                throw new ParseError(sprintf('data atom locale language index %d requires a lang list atom', $language), 1249);
             }
 
             if ($language > count($languageLists)) {
-                throw new ParseError(sprintf('data atom locale language index %d exceeds lang list entry count %d', $language, count($languageLists)));
+                throw new ParseError(sprintf('data atom locale language index %d exceeds lang list entry count %d', $language, count($languageLists)), 1250);
             }
         }
     }
@@ -2716,7 +2716,7 @@ final readonly class IsoBmffParser
         $win = $data->window;
         $win->seek(0);
         if ($data->contentSize < 8) {
-            throw new ParseError('data box too small');
+            throw new ParseError('data box too small', 1251);
         }
 
         $type = $win->readU32BE();
@@ -2725,7 +2725,7 @@ final readonly class IsoBmffParser
         // byte (bits 24–31) must be 0, meaning the type is drawn from the
         // well-known set. All other values are reserved.
         if (($type >> 24) !== 0) {
-            throw new ParseError('data box type indicator byte must be 0');
+            throw new ParseError('data box type indicator byte must be 0', 1252);
         }
 
         $locale      = $win->readU32BE();
@@ -2752,7 +2752,7 @@ final readonly class IsoBmffParser
     {
         if ($type === self::DATA_TYPE_UTF8) {
             if (!mb_check_encoding($payload, 'UTF-8')) {
-                throw new ParseError('data box UTF-8 payload contains invalid byte sequence.');
+                throw new ParseError('data box UTF-8 payload contains invalid byte sequence.', 1253);
             }
 
             // QuickTime File Format 2012, Table 3-5: UTF-8 "without NULL
@@ -2763,13 +2763,13 @@ final readonly class IsoBmffParser
 
         if ($type === self::DATA_TYPE_UTF16) {
             if ($payloadSize % 2 !== 0) {
-                throw new ParseError('data box UTF-16BE payload has odd byte count.');
+                throw new ParseError('data box UTF-16BE payload has odd byte count.', 1254);
             }
 
             $converted = iconv('UTF-16BE', 'UTF-8', $payload);
 
             if ($converted === false) {
-                throw new ParseError('data box UTF-16BE payload contains malformed sequence.');
+                throw new ParseError('data box UTF-16BE payload contains malformed sequence.', 1255);
             }
 
             return rtrim($converted, "\0");
@@ -3061,7 +3061,7 @@ final readonly class IsoBmffParser
             3       => Unpack::int('N', "\0" . $window->read(3), '24-bit integer value'),
             4       => $window->readU32BE(),
             8       => $window->readU64BE()->toInt('64-bit integer value'),
-            default => throw new ParseError('unsupported integer size ' . $bytes),
+            default => throw new ParseError('unsupported integer size ' . $bytes, 1256),
         };
     }
 
@@ -3079,7 +3079,7 @@ final readonly class IsoBmffParser
         return match ($nibble) {
             0 => 0,
             4, 8 => $nibble,
-            default => throw new ParseError('invalid length field size'),
+            default => throw new ParseError('invalid length field size', 1257),
         };
     }
 
@@ -3136,7 +3136,7 @@ final readonly class IsoBmffParser
     private function walkChildren(BoxDescriptor $parent, int $offset = 0, bool $allowTrailingTerminator = false): iterable
     {
         if ($offset < 0 || $offset > $parent->contentSize) {
-            throw new ParseError('child offset outside container');
+            throw new ParseError('child offset outside container', 1258);
         }
 
         $limit  = $parent->contentOffset + $parent->contentSize;
@@ -3159,7 +3159,7 @@ final readonly class IsoBmffParser
                 }
             }
 
-            throw new ParseError('child boxes do not align with parent');
+            throw new ParseError('child boxes do not align with parent', 1259);
         }
     }
 
@@ -3174,7 +3174,7 @@ final readonly class IsoBmffParser
     private function readBoxAt(int $offset, int $limit): BoxDescriptor
     {
         if ($offset < 0 || $offset > $limit) {
-            throw new ParseError('box offset outside container');
+            throw new ParseError('box offset outside container', 1260);
         }
 
         $this->stream->seek($offset);
@@ -3197,12 +3197,12 @@ final readonly class IsoBmffParser
         }
 
         if ($size < $headerSize) {
-            throw new ParseError('invalid box size for ' . $type);
+            throw new ParseError('invalid box size for ' . $type, 1261);
         }
 
         if ($offset + $size > $limit) {
             throw new ParseError(
-                sprintf('box %s exceeds container bounds', $type));
+                sprintf('box %s exceeds container bounds', $type), 1262);
         }
 
         $contentOffset = $offset + $headerSize;

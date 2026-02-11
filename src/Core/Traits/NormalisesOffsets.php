@@ -42,14 +42,14 @@ trait NormalisesOffsets
 
         if ($offset instanceof UInt64) {
             if ($offset->compareInt($limit) > 0) {
-                throw new BoundsError($message . ': ' . $offset->toHex());
+                throw new BoundsError($message . ': ' . $offset->toHex(), 1018);
             }
 
             $offset = $offset->toInt($message);
         }
 
         if (($offset < 0) || ($offset > $limit)) {
-            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
+            throw new BoundsError($message . ': ' . $this->formatOffset($offset), 1019);
         }
 
         return $offset;
@@ -73,7 +73,7 @@ trait NormalisesOffsets
         $target = $base + $delta;
 
         if (($target < 0) || ($target > $limit)) {
-            throw new BoundsError($message . ': ' . $this->formatOffset($offset));
+            throw new BoundsError($message . ': ' . $this->formatOffset($offset), 1020);
         }
 
         return $target;
@@ -110,14 +110,14 @@ trait NormalisesOffsets
     {
         if ($length instanceof UInt64) {
             if ($length->isZero()) {
-                throw new BoundsError($context . ': ' . $length->toHex());
+                throw new BoundsError($context . ': ' . $length->toHex(), 1021);
             }
 
             $length = $length->toInt($context);
         }
 
         if ($length <= 0) {
-            throw new BoundsError($context . ': ' . $length);
+            throw new BoundsError($context . ': ' . $length, 1022);
         }
 
         return $length;

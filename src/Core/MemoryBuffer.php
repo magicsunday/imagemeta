@@ -111,13 +111,13 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         $end = $this->pos + $len;
 
         if ($end > $this->size()) {
-            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len);
+            throw new BoundsError('MemoryBuffer read out of range: ' . $this->pos . '+' . $len, 1000);
         }
 
         $chunk = substr($this->data, $this->pos, $len);
 
         if (strlen($chunk) !== $len) {
-            throw new ParseError('MemoryBuffer short read');
+            throw new ParseError('MemoryBuffer short read', 1001);
         }
 
         $this->pos = $end;
@@ -187,7 +187,7 @@ final class MemoryBuffer implements BinaryReadAccessInterface
             SEEK_SET => $this->normaliseOffset($offset, 0, 'MemoryBuffer seek out of range'),
             SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->pos, 'MemoryBuffer seek out of range'),
             SEEK_END => $this->normaliseRelativeOffset($offset, $this->size(), 'MemoryBuffer seek out of range'),
-            default  => throw new ParseError('MemoryBuffer invalid seek whence: ' . $whence),
+            default  => throw new ParseError('MemoryBuffer invalid seek whence: ' . $whence, 1002),
         };
 
         $this->pos = $target;
@@ -211,11 +211,11 @@ final class MemoryBuffer implements BinaryReadAccessInterface
         }
 
         if ($offset < 0) {
-            throw new BoundsError($message . ': ' . $offset);
+            throw new BoundsError($message . ': ' . $offset, 1003);
         }
 
         if (($length > $this->size()) || ($offset > ($this->size() - $length))) {
-            throw new BoundsError($message . ': ' . $offset);
+            throw new BoundsError($message . ': ' . $offset, 1004);
         }
 
         return $offset;
@@ -234,19 +234,19 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     {
         if ($length instanceof UInt64) {
             if ($length->isZero()) {
-                throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex());
+                throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex(), 1005);
             }
 
             $intValue = $this->normaliseUInt64($length, 0, 'MemoryBuffer read length out of range');
             if ($intValue <= 0) {
-                throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex());
+                throw new BoundsError('MemoryBuffer read length out of range: ' . $length->toHex(), 1006);
             }
 
             return $intValue;
         }
 
         if ($length <= 0) {
-            throw new BoundsError('MemoryBuffer read length out of range: ' . $length);
+            throw new BoundsError('MemoryBuffer read length out of range: ' . $length, 1007);
         }
 
         return $length;
@@ -266,13 +266,13 @@ final class MemoryBuffer implements BinaryReadAccessInterface
     private function normaliseUInt64(UInt64 $value, int $padding, string $message): int
     {
         if ($value->compareInt($this->size()) > 0) {
-            throw new BoundsError($message . ': ' . $value->toHex());
+            throw new BoundsError($message . ': ' . $value->toHex(), 1008);
         }
 
         $intValue = $value->toInt($message);
 
         if ($intValue > ($this->size() - $padding)) {
-            throw new BoundsError($message . ': ' . $value->toHex());
+            throw new BoundsError($message . ': ' . $value->toHex(), 1009);
         }
 
         return $intValue;

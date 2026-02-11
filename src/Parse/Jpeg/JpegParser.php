@@ -309,7 +309,7 @@ final class JpegParser
 
         $this->stream->seek(0);
         if ($this->stream->read(2) !== "\xFF\xD8") {
-            throw new ParseError('Not a JPEG (missing SOI marker)');
+            throw new ParseError('Not a JPEG (missing SOI marker)', 1263);
         }
 
         $this->exifBlobs              = [];
@@ -414,7 +414,7 @@ final class JpegParser
 
                 throw new ParseError(
                     sprintf('Invalid MPF payload at offset %d', $offset),
-                    0,
+                    1264,
                     $exception,
                 );
             }
@@ -465,7 +465,8 @@ final class JpegParser
 
         if ($length < 2) {
             throw new ParseError(
-                sprintf('Segment length %d for marker 0x%02X at offset %d is invalid', $length, $marker, $offset)
+                sprintf('Segment length %d for marker 0x%02X at offset %d is invalid', $length, $marker, $offset),
+                1265,
             );
         }
 
@@ -481,7 +482,8 @@ final class JpegParser
                         $marker,
                         $offset,
                         self::MAX_APP_SEGMENT_SIZE,
-                    )
+                    ),
+                    1266,
                 );
             }
         }
@@ -509,7 +511,7 @@ final class JpegParser
         } catch (BoundsError $exception) {
             throw new ParseError(
                 sprintf('Truncated segment for marker 0x%02X at offset %d', $marker, $offset),
-                0,
+                1267,
                 $exception
             );
         }
@@ -569,7 +571,7 @@ final class JpegParser
     {
         $signatureLength = strlen(self::ICC_SIGNATURE);
         if (strlen($payload) < $signatureLength + 2) {
-            throw new ParseError(sprintf('ICC segment at offset %d is too short', $offset));
+            throw new ParseError(sprintf('ICC segment at offset %d is too short', $offset), 1268);
         }
 
         $sequenceNumber = ord($payload[$signatureLength]);
@@ -608,7 +610,7 @@ final class JpegParser
     {
         $length = strlen($payload);
         if ($length < self::AUDIO_HEADER_LENGTH) {
-            throw new ParseError(sprintf('Audio segment at offset %d is too short', $offset));
+            throw new ParseError(sprintf('Audio segment at offset %d is too short', $offset), 1269);
         }
 
         $signatureLength = strlen(self::AUDIO_SIGNATURE);
@@ -621,7 +623,7 @@ final class JpegParser
         $sampleRateUnpack = @unpack('Nrate', $sampleRateData);
 
         if (($sampleRateUnpack === false) || !isset($sampleRateUnpack['rate'])) {
-            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset));
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample rate field', $offset), 1270);
         }
 
         /** @var array{rate:int} $sampleRateUnpack */
@@ -632,7 +634,7 @@ final class JpegParser
         $sampleCountUnpack = @unpack('Ncount', $sampleCountData);
 
         if (($sampleCountUnpack === false) || !isset($sampleCountUnpack['count'])) {
-            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset));
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid sample count field', $offset), 1271);
         }
 
         /** @var array{count:int} $sampleCountUnpack */
@@ -640,16 +642,16 @@ final class JpegParser
         $data        = substr($payload, self::AUDIO_HEADER_LENGTH);
 
         if ($channels === 0 || $channels > 2) {
-            throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels));
+            throw new ParseError(sprintf('Audio segment at offset %d has unsupported channel count %d', $offset, $channels), 1272);
         }
 
         $allowedSampleRates = [8_000, 11_025, 22_050, 44_100];
         if (!in_array($sampleRate, $allowedSampleRates, true)) {
-            throw new ParseError(sprintf('Audio segment at offset %d uses unsupported sample rate %d', $offset, $sampleRate));
+            throw new ParseError(sprintf('Audio segment at offset %d uses unsupported sample rate %d', $offset, $sampleRate), 1273);
         }
 
         if ($format === self::AUDIO_FORMAT_MU_LAW && $sampleRate !== 8_000) {
-            throw new ParseError(sprintf('Audio segment at offset %d uses unsupported μ-law sample rate %d', $offset, $sampleRate));
+            throw new ParseError(sprintf('Audio segment at offset %d uses unsupported μ-law sample rate %d', $offset, $sampleRate), 1274);
         }
 
         $formatName = match ($format) {
@@ -660,19 +662,19 @@ final class JpegParser
         };
 
         if ($formatName === null) {
-            throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $format));
+            throw new ParseError(sprintf('Audio segment at offset %d uses unknown format %d', $offset, $format), 1275);
         }
 
         if ($format === self::AUDIO_FORMAT_PCM && !in_array($bitDepth, [8, 16], true)) {
-            throw new ParseError(sprintf('Audio segment at offset %d has invalid PCM bit depth %d', $offset, $bitDepth));
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid PCM bit depth %d', $offset, $bitDepth), 1276);
         }
 
         if ($format === self::AUDIO_FORMAT_MU_LAW && $bitDepth !== 8) {
-            throw new ParseError(sprintf('Audio segment at offset %d has invalid μ-law bit depth %d', $offset, $bitDepth));
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid μ-law bit depth %d', $offset, $bitDepth), 1277);
         }
 
         if ($format === self::AUDIO_FORMAT_IMA_ADPCM && $bitDepth !== 4) {
-            throw new ParseError(sprintf('Audio segment at offset %d has invalid IMA-ADPCM bit depth %d', $offset, $bitDepth));
+            throw new ParseError(sprintf('Audio segment at offset %d has invalid IMA-ADPCM bit depth %d', $offset, $bitDepth), 1278);
         }
 
         if ($sampleCount > 0 && $format !== self::AUDIO_FORMAT_IMA_ADPCM) {
@@ -680,7 +682,7 @@ final class JpegParser
             if ($bytesPerSample > 0) {
                 $expectedLength = $sampleCount * $bytesPerSample;
                 if ($expectedLength !== strlen($data)) {
-                    throw new ParseError(sprintf('Audio segment at offset %d has inconsistent data length', $offset));
+                    throw new ParseError(sprintf('Audio segment at offset %d has inconsistent data length', $offset), 1279);
                 }
             }
         }
@@ -706,7 +708,7 @@ final class JpegParser
     {
         $signatureLength = strlen(self::MPF_SIGNATURE);
         if (strlen($payload) <= $signatureLength) {
-            throw new ParseError(sprintf('MPF segment at offset %d is too short', $offset));
+            throw new ParseError(sprintf('MPF segment at offset %d is too short', $offset), 1280);
         }
 
         if ($this->mpfSegments === []) {
@@ -726,14 +728,14 @@ final class JpegParser
     {
         $signatureLength = strlen(self::FPXR_SIGNATURE);
         if (strlen($payload) < $signatureLength + 4) {
-            throw new ParseError(sprintf('FlashPix segment at offset %d is too short', $offset));
+            throw new ParseError(sprintf('FlashPix segment at offset %d is too short', $offset), 1281);
         }
 
         $header   = substr($payload, $signatureLength, 4);
         $unpacked = @unpack('nstream/Csequence/Ccount', $header);
 
         if (($unpacked === false) || !isset($unpacked['stream'], $unpacked['sequence'], $unpacked['count'])) {
-            throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset));
+            throw new ParseError(sprintf('Unable to parse FlashPix segment header at offset %d', $offset), 1282);
         }
 
         /** @var array{stream:int, sequence:int, count:int} $unpacked */
@@ -794,17 +796,17 @@ final class JpegParser
 
         $length = strlen($payload);
         if ($length < 6) {
-            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is too short', $marker, $offset));
+            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is too short', $marker, $offset), 1283);
         }
 
         $componentCount = ord($payload[5]);
         if ($componentCount === 0) {
-            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d reports zero components', $marker, $offset));
+            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d reports zero components', $marker, $offset), 1284);
         }
 
         $expectedLength = 6 + ($componentCount * 3);
         if ($length < $expectedLength) {
-            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is truncated', $marker, $offset));
+            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d is truncated', $marker, $offset), 1285);
         }
 
         $components = [];
@@ -818,7 +820,8 @@ final class JpegParser
 
             if ($horizontal === 0 || $vertical === 0) {
                 throw new ParseError(
-                    sprintf('SOF marker 0x%02X at offset %d contains zero sampling factor', $marker, $offset)
+                    sprintf('SOF marker 0x%02X at offset %d contains zero sampling factor', $marker, $offset),
+                    1286,
                 );
             }
 
@@ -833,7 +836,7 @@ final class JpegParser
         $fields = @unpack('nlines/nsamples', substr($payload, 1, 4));
 
         if (($fields === false) || !isset($fields['lines'], $fields['samples'])) {
-            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d has invalid dimensions', $marker, $offset));
+            throw new ParseError(sprintf('SOF marker 0x%02X at offset %d has invalid dimensions', $marker, $offset), 1287);
         }
 
         /** @var array{lines:int,samples:int} $fields */

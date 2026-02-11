@@ -89,7 +89,7 @@ final class StreamWindow implements BinaryReadAccessInterface
         $len = $this->normaliseReadLength($length, 'window read length out of range');
 
         if (($this->cursor + $len) > $this->length) {
-            throw new BoundsError('window read out of range');
+            throw new BoundsError('window read out of range', 1016);
         }
 
         $this->base->seek($this->offset + $this->cursor);
@@ -131,7 +131,7 @@ final class StreamWindow implements BinaryReadAccessInterface
             SEEK_SET => $this->normaliseAbsoluteOffset($offset, 'window seek out of range'),
             SEEK_CUR => $this->normaliseRelativeOffset($offset, $this->cursor, 'window seek out of range'),
             SEEK_END => $this->normaliseRelativeOffset($offset, $this->length, 'window seek out of range'),
-            default  => throw new ParseError('window invalid seek whence: ' . $whence),
+            default  => throw new ParseError('window invalid seek whence: ' . $whence, 1017),
         };
 
         $this->cursor = $target;

@@ -71,7 +71,7 @@ final readonly class MetadataReader
     public function read(string $path, bool $withDigests = false): Metadata
     {
         if (is_dir($path)) {
-            throw new ParseError(sprintf('Path is a directory, not a file: %s', $path));
+            throw new ParseError(sprintf('Path is a directory, not a file: %s', $path), 1120);
         }
 
         $mimeType  = $this->detectMimeType($path);
