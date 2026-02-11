@@ -909,6 +909,50 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Orientation value 0 is rejected per EXIF 3.0 §4.6.5.1.6.
+     */
+    #[Test]
+    public function rejectOrientationValueZero(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Orientation value 0 is outside the valid domain 1..8');
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 1)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 0) . pack('v', 0) // value=0 inline
+            . pack('V', 0);
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Orientation value 9 is rejected per EXIF 3.0 §4.6.5.1.6.
+     */
+    #[Test]
+    public function rejectOrientationValueNine(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Orientation value 9 is outside the valid domain 1..8');
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8)
+            . pack('v', 1)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 9) . pack('v', 0) // value=9 inline
+            . pack('V', 0);
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * ASCII value containing a byte > 0x7F is rejected per TIFF 6.0 §2.2.
      */
     #[Test]

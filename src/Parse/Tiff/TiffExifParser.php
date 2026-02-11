@@ -1389,6 +1389,13 @@ final class TiffExifParser
             ));
         }
 
+        if ($tag === ExifTag::ORIENTATION && is_int($value) && ($value < 1 || $value > 8)) {
+            throw new ParseError(sprintf(
+                'Orientation value %d is outside the valid domain 1..8 per EXIF 3.0 §4.6.5.1.6.',
+                $value,
+            ));
+        }
+
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {
             $value = $this->normaliseCountedImageDataField($tag, $type, $cnt, $rawBytes, $value);
         }
