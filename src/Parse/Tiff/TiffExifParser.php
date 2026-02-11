@@ -1180,7 +1180,7 @@ final class TiffExifParser
         $nextOffset = $ifd0->nextIfdOffset;
         while ($nextOffset !== null && $nextOffset > 0) {
             if (isset($visitedOffsets[$nextOffset])) {
-                break;
+                throw new ParseError('Cyclic IFD chain detected at offset ' . $nextOffset . '.', 1359);
             }
 
             $visitedOffsets[$nextOffset] = true;

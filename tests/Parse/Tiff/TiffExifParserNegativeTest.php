@@ -249,7 +249,7 @@ final class TiffExifParserNegativeTest extends TestCase
 
     /**
      * Creates an IFD chain where the next pointer loops back to the same IFD.
-     * Confirms the parser detects the cycle and stops without looping indefinitely.
+     * Confirms the parser detects the cycle and rejects it with ParseError.
      *
      * @return void
      */
@@ -267,11 +267,10 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V', $ifdOffset); // Next IFD points back to offset 8 (cycle)
 
         $reader = new TiffExifParser();
+
+        $this->expectException(ParseError::class);
+
         $reader->parseFromBlob($blob);
-
-        $this->addToAssertionCount(1);
-
-        // Parser should detect the cycle and stop (not infinite loop)
     }
 
     /**
