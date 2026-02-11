@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
+use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffExifParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -38,6 +39,7 @@ use function strlen;
 #[UsesClass(TiffConst::class)]
 #[UsesClass(DngTag::class)]
 #[UsesClass(ExifTag::class)]
+#[UsesClass(TiffTag::class)]
 #[UsesClass(MakerNotesRecord::class)]
 final class TiffExifParserDngTagTest extends TestCase
 {
@@ -271,6 +273,89 @@ final class TiffExifParserDngTagTest extends TestCase
      * Builds a TIFF with IFD0 containing EXIF_IFD_POINTER + MakerNoteSafety,
      * and an EXIF IFD containing a minimal MakerNote.
      */
+    /**
+     * Enhanced IFD with valid EnhanceParams parses without error.
+     */
+    #[Test]
+    public function parsesEnhancedIfdWithValidEnhanceParams(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($this->buildTiffWithEnhancedIfd("Adobe Enhance\0"));
+
+        $entry = $parsed->ifd0->get(DngTag::ENHANCE_PARAMS);
+        self::assertNotNull($entry);
+        self::assertSame('Adobe Enhance', $entry->value);
+    }
+
+    /**
+     * Enhanced IFD without EnhanceParams triggers a ParseError.
+     */
+    #[Test]
+    public function rejectEnhancedIfdMissingEnhanceParams(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithEnhancedIfd(null));
+    }
+
+    /**
+     * Enhanced IFD with empty EnhanceParams triggers a ParseError.
+     */
+    #[Test]
+    public function rejectEnhancedIfdWithEmptyEnhanceParams(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.');
+
+        (new TiffExifParser())->parseFromBlob($this->buildTiffWithEnhancedIfd("\0"));
+    }
+
+    /**
+     * Builds a TIFF with IFD0 containing NewSubfileType=16 (enhanced) and
+     * optionally an EnhanceParams tag.
+     */
+    private function buildTiffWithEnhancedIfd(?string $enhanceParams): string
+    {
+        $ifdOffset  = 8;
+        $entryCount = $enhanceParams !== null ? 2 : 1;
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $valOffset  = $ifdOffset + $ifdSize;
+
+        // NewSubfileType: LONG, count=1, value=16 (enhanced) — fits inline
+        $ifdData = pack('v', $entryCount)
+            . pack('v', TiffTag::NEW_SUBFILE_TYPE)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', 16);
+
+        $outOfLine = '';
+
+        if ($enhanceParams !== null) {
+            $len = strlen($enhanceParams);
+
+            $ifdData .= pack('v', DngTag::ENHANCE_PARAMS)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', $len);
+
+            if ($len <= 4) {
+                // Inline: pad value to 4 bytes
+                $ifdData .= str_pad($enhanceParams, 4, "\0");
+            } else {
+                $ifdData .= pack('V', $valOffset);
+                $outOfLine = $enhanceParams;
+            }
+        }
+
+        $ifdData .= pack('V', 0); // next IFD offset
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $outOfLine;
+    }
+
     private function buildTiffWithMakerNoteSafety(int $safetyValue): string
     {
         // Layout: header(8) + IFD0(2 + 2*12 + 4 = 30) + EXIF IFD(2 + 12 + 4 = 18)

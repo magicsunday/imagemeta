@@ -1194,6 +1194,11 @@ final class TiffExifParser
             $nextOffset = $nextIfd->nextIfdOffset;
         }
 
+        $this->validateEnhancedIfd($ifd0);
+        foreach ($additionalIfds as $additionalIfd) {
+            $this->validateEnhancedIfd($additionalIfd);
+        }
+
         if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
         }
@@ -1467,6 +1472,31 @@ final class TiffExifParser
                 ord($prefix[$asciiSpan]),
                 $asciiSpan,
             ));
+        }
+    }
+
+    /**
+     * Validates that an Enhanced Image IFD (NewSubfileType bit 4) carries a
+     * non-empty EnhanceParams tag as required by DNG 1.5+.
+     */
+    private function validateEnhancedIfd(Ifd $ifd): void
+    {
+        $entry = $ifd->get(TiffTag::NEW_SUBFILE_TYPE);
+        if (!$entry instanceof IfdEntry || !is_int($entry->value)) {
+            return;
+        }
+
+        if (($entry->value & 16) === 0) {
+            return;
+        }
+
+        $enhance = $ifd->get(DngTag::ENHANCE_PARAMS);
+        if (!$enhance instanceof IfdEntry || !is_string($enhance->value)) {
+            throw new ParseError('Enhanced IFD (NewSubfileType bit 4) requires an EnhanceParams tag per DNG 1.5.');
+        }
+
+        if (rtrim($enhance->value, "\0") === '') {
+            throw new ParseError('EnhanceParams must not be empty for an Enhanced IFD per DNG 1.5.');
         }
     }
 
