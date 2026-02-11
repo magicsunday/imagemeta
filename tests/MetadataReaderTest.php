@@ -471,8 +471,14 @@ final class MetadataReaderTest extends TestCase
      */
     private function littleEndianTiffWithMakerNote(string $make, string $model, string $makerNote): string
     {
-        $makeData   = $make . "\0";
-        $modelData  = $model . "\0";
+        $makeData  = $make . "\0";
+        $modelData = $model . "\0";
+
+        // Pad values to even length for TIFF 6.0 word-alignment
+        $makePad  = strlen($makeData) % 2 !== 0 ? "\0" : '';
+        $modelPad = strlen($modelData) % 2 !== 0 ? "\0" : '';
+        $notePad  = strlen($makerNote) % 2 !== 0 ? "\0" : '';
+
         $ifd0Offset = 8;
         $ifd0Count  = 3;
         $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
@@ -480,13 +486,12 @@ final class MetadataReaderTest extends TestCase
         $currentOffset = $ifd0Offset + $ifd0Size;
 
         $makeOffset = $currentOffset;
-        $currentOffset += strlen($makeData);
+        $currentOffset += strlen($makeData) + strlen($makePad);
 
         $modelOffset = $currentOffset;
-        $currentOffset += strlen($modelData);
+        $currentOffset += strlen($modelData) + strlen($modelPad);
 
         $exifIfdOffset = $currentOffset;
-        $exifIfdCount  = 1;
         $exifIfdSize   = 2 + 12 + 4;
 
         $makerNoteOffset = $exifIfdOffset + $exifIfdSize;
@@ -506,7 +511,7 @@ final class MetadataReaderTest extends TestCase
             . pack('V', $exifIfdOffset)
             . pack('V', 0);
 
-        $exifIfd = pack('v', $exifIfdCount)
+        $exifIfd = pack('v', 1)
             . pack('v', ExifTag::MAKER_NOTE)
             . pack('v', 7)
             . pack('V', strlen($makerNote))
@@ -517,10 +522,10 @@ final class MetadataReaderTest extends TestCase
             . pack('v', 0x2A)
             . pack('V', $ifd0Offset)
             . $ifd0
-            . $makeData
-            . $modelData
+            . $makeData . $makePad
+            . $modelData . $modelPad
             . $exifIfd
-            . $makerNote;
+            . $makerNote . $notePad;
     }
 
     /**

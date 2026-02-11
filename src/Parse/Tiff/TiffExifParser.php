@@ -1975,7 +1975,14 @@ final class TiffExifParser
 
         $this->assertOffsetRange($offset64, $length, $context);
 
-        return $offset64->toInt($context);
+        $result = $offset64->toInt($context);
+
+        // TIFF 6.0 §2: offsets must begin on a word boundary (even byte offset).
+        if ($result % 2 !== 0) {
+            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result));
+        }
+
+        return $result;
     }
 
     /**
@@ -2763,7 +2770,14 @@ final class TiffExifParser
             }
         }
 
-        return (int) $normalised;
+        $result = (int) $normalised;
+
+        // TIFF 6.0 §2: offsets must begin on a word boundary (even byte offset).
+        if ($result % 2 !== 0) {
+            throw new ParseError(sprintf('%s is not word-aligned (offset %d) per TIFF 6.0.', $context, $result));
+        }
+
+        return $result;
     }
 
     /**

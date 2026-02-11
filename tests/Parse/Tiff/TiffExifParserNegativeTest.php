@@ -909,6 +909,23 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Odd first IFD offset is rejected per TIFF 6.0 word-alignment rule.
+     */
+    #[Test]
+    public function rejectOddFirstIfdOffset(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('is not word-aligned');
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 9) // odd offset
+            . str_repeat("\0", 32); // padding so bounds check passes first
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
      * IFD with entryCount=0 is rejected per TIFF 6.0.
      */
     #[Test]
