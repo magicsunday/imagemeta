@@ -2530,6 +2530,97 @@ final class IsoBmffParserTest extends TestCase
     }
 
     #[Test]
+    public function parsesItifAtomWithValidItemId(): void
+    {
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        // itif: version=0, flags=0, Item_ID=42
+        $itif    = $this->box('itif', "\0\0\0\0" . pack('N', 42));
+        $dataBox = $this->box('data', pack('N', 1) . pack('N', 0) . 'itif-test-value');
+        // ilst entry with itif + data
+        $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('itif-test-value', $qtMeta->keys[$key]);
+    }
+
+    #[Test]
+    public function rejectDuplicateItifItemIds(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('duplicate Item_ID 7 in ilst itif atoms');
+
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 2) . $keyEntry . $keyEntry);
+
+        $itif1      = $this->box('itif', "\0\0\0\0" . pack('N', 7));
+        $dataBox1   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value1');
+        $ilstEntry1 = $this->box(pack('N', 1), $itif1 . $dataBox1);
+
+        $itif2      = $this->box('itif', "\0\0\0\0" . pack('N', 7));
+        $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value2');
+        $ilstEntry2 = $this->box(pack('N', 2), $itif2 . $dataBox2);
+
+        $ilst = $this->box('ilst', $ilstEntry1 . $ilstEntry2);
+        $meta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
+    public function rejectItifAtomWithNonZeroVersion(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('itif atom version must be 0');
+
+        $itif      = $this->box('itif', "\x01\0\0\0" . pack('N', 1));
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
+
+        $ilst = $this->box('ilst', $ilstEntry);
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
+    public function rejectItifAtomWithNonZeroFlags(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('itif atom flags must be 0');
+
+        $itif      = $this->box('itif', "\0\0\0\x01" . pack('N', 1));
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'value');
+        $ilstEntry = $this->box(pack('N', 1), $itif . $dataBox);
+
+        $ilst = $this->box('ilst', $ilstEntry);
+        $meta = $this->box('meta', "\0\0\0\0" . $ilst);
+        $udta = $this->box('udta', $meta);
+        $moov = $this->box('moov', $udta);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $this->createExtractor($ftyp . $moov)->extract();
+    }
+
+    #[Test]
     public function rejectIlstNameAtomWithInvalidUtf8(): void
     {
         $this->expectException(ParseError::class);

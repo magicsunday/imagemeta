@@ -262,6 +262,11 @@ final readonly class IsoBmffParser
     private const int DATA_TYPE_FLOAT64 = 0x18;
 
     /**
+     * FourCC for QuickTime item information atom inside metadata items.
+     */
+    private const string BOX_ITIF = 'itif';
+
+    /**
      * FourCC for QuickTime mean payload in free-form metadata.
      */
     private const string FREEFORM_MEAN = 'mean';
@@ -2255,9 +2260,10 @@ final readonly class IsoBmffParser
      */
     private function parseIlst(BoxDescriptor $ilst, array $keyIndex): array
     {
-        $result    = [];
-        $atomsList = [];
-        $seenNames = [];
+        $result      = [];
+        $atomsList   = [];
+        $seenNames   = [];
+        $seenItemIds = [];
 
         foreach ($this->walkChildren($ilst) as $entry) {
             $keyName  = null;
@@ -2303,6 +2309,8 @@ final readonly class IsoBmffParser
                     if ($keyName === null) {
                         $keyName = $itemName;
                     }
+                } elseif ($sub->type === self::BOX_ITIF) {
+                    $this->parseIlstItemInfo($sub, $seenItemIds);
                 }
             }
         }
@@ -2363,6 +2371,48 @@ final readonly class IsoBmffParser
         $seenNames[$value] = true;
 
         return $value;
+    }
+
+    /**
+     * Parses an item information atom (`itif`) inside an ilst metadata item.
+     *
+     * QuickTime File Format 2012, "Metadata Item Atom / Item Information Atom":
+     * the itif atom is a full atom with version 0 and flags 0, containing an
+     * unsigned 32-bit Item_ID that must be unique within the metadata atom.
+     *
+     * @param BoxDescriptor    $itif        Box descriptor for the itif atom.
+     * @param array<int, true> $seenItemIds Previously encountered Item_IDs for uniqueness check.
+     */
+    private function parseIlstItemInfo(BoxDescriptor $itif, array &$seenItemIds): void
+    {
+        if ($itif->contentSize < 8) {
+            throw new ParseError('itif atom truncated');
+        }
+
+        $win = $itif->window;
+        $win->seek(0);
+
+        $version = $win->readU8();
+        $flags   = ($win->readU8() << 16) | ($win->readU8() << 8) | $win->readU8();
+
+        if ($version !== 0) {
+            throw new ParseError('itif atom version must be 0');
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('itif atom flags must be 0');
+        }
+
+        $itemId = $win->readU32BE();
+
+        if (array_key_exists($itemId, $seenItemIds)) {
+            throw new ParseError(sprintf(
+                'duplicate Item_ID %d in ilst itif atoms',
+                $itemId,
+            ));
+        }
+
+        $seenItemIds[$itemId] = true;
     }
 
     /**
