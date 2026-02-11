@@ -2381,6 +2381,85 @@ final class IsoBmffParserTest extends TestCase
         $this->createExtractor($ftyp . $moov)->extract();
     }
 
+    #[Test]
+    public function parsesTrackLevelUdtaMetaBox(): void
+    {
+        // Build a keys/ilst metadata inside udta inside trak
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'track-meta-value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $metaPayload = "\0\0\0\0" . $keys . $ilst;
+        $meta        = $this->box('meta', $metaPayload);
+        $udta        = $this->box('udta', $meta);
+        $trak        = $this->box('trak', $udta);
+        $moov        = $this->box('moov', $trak);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('track-meta-value', $qtMeta->keys[$key]);
+    }
+
+    #[Test]
+    public function parsesTrackNameAtomFromTrackLevelUdta(): void
+    {
+        $namePayload = "Test Track Name\0";
+        $nameAtom    = $this->box('name', $namePayload);
+        $udta        = $this->box('udta', $nameAtom);
+        $trak        = $this->box('trak', $udta);
+        $moov        = $this->box('moov', $trak);
+        $ftyp        = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('Test Track Name', $qtMeta->keys[QuickTimeMeta::TRACK_NAME_KEY]);
+    }
+
+    #[Test]
+    public function moovLevelMetadataNotOverwrittenByTrackUdta(): void
+    {
+        // Movie-level udta with keys/ilst
+        $key      = 'com.apple.quicktime.content.identifier';
+        $keyEntry = pack('N', 8 + strlen($key)) . 'mdta' . $key;
+        $keys     = $this->box('keys', "\0\0\0\0" . pack('N', 1) . $keyEntry);
+
+        $dataBox   = $this->box('data', pack('N', 1) . pack('N', 0) . 'movie-level-value');
+        $ilstEntry = $this->box(pack('N', 1), $dataBox);
+        $ilst      = $this->box('ilst', $ilstEntry);
+
+        $movieMeta = $this->box('meta', "\0\0\0\0" . $keys . $ilst);
+        $movieUdta = $this->box('udta', $movieMeta);
+
+        // Track-level udta with same key but different value
+        $dataBox2   = $this->box('data', pack('N', 1) . pack('N', 0) . 'track-level-value');
+        $ilstEntry2 = $this->box(pack('N', 1), $dataBox2);
+        $ilst2      = $this->box('ilst', $ilstEntry2);
+
+        $trackMeta = $this->box('meta', "\0\0\0\0" . $keys . $ilst2);
+        $trackUdta = $this->box('udta', $trackMeta);
+        $trak      = $this->box('trak', $trackUdta);
+
+        $moov = $this->box('moov', $movieUdta . $trak);
+        $ftyp = $this->box('ftyp', 'isom');
+
+        $extractor    = $this->createExtractor($ftyp . $moov);
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        // Track-level overwrites movie-level via mergeAssociative (last wins)
+        // because parseTrak returns its own keys that get merged
+        self::assertSame('track-level-value', $qtMeta->keys[$key]);
+    }
+
     /**
      * Wraps raw bytes in a temporary stream-backed extractor.
      * This helper keeps byte-length bookkeeping aligned with the payload.

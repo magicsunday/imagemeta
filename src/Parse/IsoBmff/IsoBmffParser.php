@@ -167,6 +167,11 @@ final readonly class IsoBmffParser
     private const string BOX_UDTA = 'udta';
 
     /**
+     * FourCC for QuickTime track name atom inside user data.
+     */
+    private const string BOX_NAME = 'name';
+
+    /**
      * FourCC for QuickTime track container.
      */
     private const string BOX_TRAK = 'trak';
@@ -432,7 +437,7 @@ final readonly class IsoBmffParser
             } elseif ($child->type === self::BOX_UDTA) {
                 $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($child->type === self::BOX_TRAK) {
-                $qtKeys = $this->mergeAssociative($qtKeys, $this->parseTrak($child));
+                $this->parseTrak($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             }
         }
     }
@@ -499,18 +504,62 @@ final readonly class IsoBmffParser
 
                 $metaSeen = true;
                 $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+            } elseif ($child->type === self::BOX_NAME) {
+                $this->parseUdtaNameAtom($child, $qtKeys);
             }
+        }
+    }
+
+    /**
+     * Parses a track name atom (`name`) inside a user data container.
+     *
+     * QuickTime File Format 2012, "Track Name": the name atom contains
+     * a NULL-terminated UTF-8 string representing the track name.
+     *
+     * @param BoxDescriptor   $name   Box descriptor for the name atom.
+     * @param QuickTimeKeyMap $qtKeys
+     */
+    private function parseUdtaNameAtom(BoxDescriptor $name, array &$qtKeys): void
+    {
+        if ($name->contentSize < 1) {
+            return;
+        }
+
+        $win = $name->window;
+        $win->seek(0);
+
+        $raw = $win->read($name->contentSize);
+
+        // Strip NULL terminator if present
+        $value = rtrim($raw, "\0");
+
+        if ($value === '') {
+            return;
+        }
+
+        // Only set track name if not already present (movie-level takes precedence)
+        if (!array_key_exists(QuickTimeMeta::TRACK_NAME_KEY, $qtKeys)) {
+            $qtKeys[QuickTimeMeta::TRACK_NAME_KEY] = $value;
         }
     }
 
     /**
      * Parses a track box and surfaces relevant video/audio details as QuickTime keys.
      *
-     * @param BoxDescriptor $trak Box descriptor for the track container.
+     * QuickTime File Format 2012, "Track Atoms": a track atom may contain
+     * a user data atom (`udta`) carrying track-level metadata.
      *
-     * @return QuickTimeKeyMap
+     * @param BoxDescriptor                          $trak            Box descriptor for the track container.
+     * @param list<string>                           $exifBlobs
+     * @param list<string>                           $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>> $itemReferences
+     * @param array<int, IsoBmffDataReference>       $dataReferences
+     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
+     * @param array<string, bool>                    $xmpHashes
+     * @param QuickTimeKeyMap                        $qtKeys
+     * @param QuickTimeDataAtomList                  $qtDataAtoms
      */
-    private function parseTrak(BoxDescriptor $trak): array
+    private function parseTrak(BoxDescriptor $trak, array &$exifBlobs = [], array &$xmpBlobs = [], array &$qtKeys = [], array &$itemReferences = [], array &$dataReferences = [], array &$unresolvedItems = [], array &$xmpHashes = [], array &$qtDataAtoms = []): void
     {
         $tkhdWidth   = null;
         $tkhdHeight  = null;
@@ -523,17 +572,17 @@ final readonly class IsoBmffParser
                 [$tkhdWidth, $tkhdHeight] = $this->parseTkhd($child);
             } elseif ($child->type === self::BOX_MDIA) {
                 [$handler, $handlerName, $sampleInfo] = $this->parseMdia($child);
+            } elseif ($child->type === self::BOX_UDTA) {
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             }
         }
 
         if ($handler === null) {
-            return [];
+            return;
         }
 
-        $result = [];
-
         if ($handlerName !== null && $handlerName !== '') {
-            $result[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
+            $qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
         }
 
         if ($handler === 'vide') {
@@ -541,40 +590,38 @@ final readonly class IsoBmffParser
             $height = $sampleInfo['height'] ?? $tkhdHeight;
 
             if ($width !== null && $width > 0) {
-                $result[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
+                $qtKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
             }
 
             if ($height !== null && $height > 0) {
-                $result[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
+                $qtKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
             }
 
             if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
-                $result[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
+                $qtKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
             }
 
             if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
-                $result[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
+                $qtKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
             }
         } elseif ($handler === 'soun') {
             if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
-                $result[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
-                $result[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
+                $qtKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
+                $qtKeys[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
             }
 
             if (isset($sampleInfo['channels'])) {
-                $result[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
+                $qtKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
             }
 
             if (isset($sampleInfo['bitsPerSample'])) {
-                $result[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
+                $qtKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
             }
 
             if (isset($sampleInfo['sampleRate'])) {
-                $result[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
+                $qtKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
             }
         }
-
-        return $result;
     }
 
     /**

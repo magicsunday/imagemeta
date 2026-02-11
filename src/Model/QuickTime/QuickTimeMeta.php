@@ -97,6 +97,11 @@ final readonly class QuickTimeMeta
     public const string AUDIO_BITS_PER_SAMPLE_KEY = 'com.apple.quicktime.audioBitsPerSample';
 
     /**
+     * QuickTime metadata key exposing the track name from a track-level udta name atom.
+     */
+    public const string TRACK_NAME_KEY = 'com.apple.quicktime.trackName';
+
+    /**
      * Mapping of shorthand lookup keys to canonical QuickTime metadata identifiers.
      *
      * @var array<string, list<string>>
@@ -137,6 +142,8 @@ final readonly class QuickTimeMeta
         'TransferFunction'              => ['TransferFunction', 'com.apple.quicktime.transferFunction'],
         'ColorPrimaries'                => ['ColorPrimaries', 'com.apple.quicktime.colorPrimaries'],
         'AudioBitsPerChannel'           => ['AudioBitsPerChannel', self::AUDIO_BITS_PER_SAMPLE_KEY],
+        self::TRACK_NAME_KEY            => [self::TRACK_NAME_KEY, 'TrackName'],
+        'TrackName'                     => ['TrackName', self::TRACK_NAME_KEY],
     ];
 
     /**
