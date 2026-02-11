@@ -16,7 +16,6 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
-use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
@@ -80,12 +79,12 @@ final class ParsedExifDefaultValuesTest extends TestCase
      * @return void
      */
     #[Test]
-    public function compressionReturnsDefaultWhenMissing(): void
+    public function compressionReturnsNullWhenMissing(): void
     {
         $ifd0       = new Ifd([]);
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
-        self::assertSame(Compression::UNCOMPRESSED, $parsedExif->compression());
+        self::assertNull($parsedExif->compression());
     }
 
     /**

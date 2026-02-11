@@ -2637,15 +2637,13 @@ final readonly class ParsedExif
      * TIFF 6.0 §8 specifies default value 1 (no compression) when not present
      * in TIFF image data.
      *
-     * @return Compression
+     * @return Compression|null
      */
-    public function compression(): Compression
+    public function compression(): ?Compression
     {
-        $value       = $this->enumValue($this->ifd0, ExifTag::COMPRESSION);
-        $compression = Compression::fromExifValue($value);
+        $value = $this->enumValue($this->ifd0, ExifTag::COMPRESSION);
 
-        // TIFF 6.0 §8: Default is 1 (UNCOMPRESSED) when tag is not present
-        return $compression ?? Compression::UNCOMPRESSED;
+        return Compression::fromExifValue($value);
     }
 
     /**
