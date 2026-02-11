@@ -718,6 +718,134 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * GH-834: Accepts valid desc tag with NUL-terminated 7-bit ASCII.
+     * ICC spec: desc ASCII string must be NUL-terminated and 7-bit ASCII.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeAcceptsValidDescTag(): void
+    {
+        $profile = $this->buildDescTypeProfile("Valid ASCII\0");
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('Valid ASCII', $result['description']);
+    }
+
+    /**
+     * GH-834: Rejects desc tags with non-ASCII bytes.
+     * ICC spec: desc ASCII string must contain only 7-bit ASCII (bytes <= 0x7F).
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsDescTagWithNonAsciiBytes(): void
+    {
+        // String with byte 0x80 (non-7-bit-ASCII)
+        $profile = $this->buildDescTypeProfile("Test\x80Text\0");
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['description']); // desc tag is invalid
+    }
+
+    /**
+     * GH-834: Rejects desc tags without trailing NUL byte.
+     * ICC spec: desc ASCII string must be NUL-terminated.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsDescTagWithoutTrailingNul(): void
+    {
+        // Use text of exactly 12 bytes so 4-byte alignment padding doesn't inadvertently add a NUL
+        $profile = $this->buildDescTypeProfile('Hello World!');
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['description']); // desc tag is invalid
+    }
+
+    /**
+     * GH-834: Rejects desc tags with length exceeding available data.
+     * ICC spec: asciiLength must not exceed available payload.
+     *
+     * @return void
+     */
+    #[Test]
+    public function decodeRejectsDescTagWithExcessiveLength(): void
+    {
+        $profile = $this->buildDescTypeProfileWithLength("Test\0", 1000);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertNull($result['description']); // desc tag is invalid
+    }
+
+    /**
+     * Builds a minimal ICC profile with a descType description tag.
+     */
+    private function buildDescTypeProfile(string $text): string
+    {
+        return $this->buildDescTypeProfileWithLength($text, strlen($text));
+    }
+
+    /**
+     * Builds a minimal ICC profile with a descType description tag with custom length field.
+     */
+    private function buildDescTypeProfileWithLength(string $text, int $asciiLength): string
+    {
+        // ICC header (128 bytes)
+        $header = pack('N', 0)           // Profile size (placeholder, patched below)
+            . str_repeat("\0", 4)        // Preferred CMM type
+            . pack('N', 0x04210000)      // Version 4.2.1
+            . str_repeat("\0", 4)        // Device class
+            . 'RGB '                     // Color space
+            . 'XYZ '                     // PCS
+            . str_repeat("\0", 12)       // Date/time (year=0 → null)
+            . 'acsp'                     // Profile signature
+            . str_repeat("\0", 28)       // Primary platform + flags + device mfg + etc.
+            . pack('N', 1)              // Rendering intent
+            . str_repeat("\0", 12)       // PCS illuminant
+            . str_repeat("\0", 16)       // Profile ID
+            . str_repeat("\0", 28);      // Reserved
+
+        // Pad header to exactly 128 bytes
+        $header = str_pad($header, 128, "\0");
+
+        // descType tag data: signature + reserved + ASCII length + ASCII text
+        $descTag = 'desc'
+            . pack('N', 0)               // Reserved
+            . pack('N', $asciiLength)    // ASCII length (custom value)
+            . $text;
+
+        // ICC.1:2022 §7.3: tag size must be 4-byte aligned
+        $paddedSize = (int) (ceil(strlen($descTag) / 4) * 4);
+        $descTag    = str_pad($descTag, $paddedSize, "\0");
+
+        // Tag table: 1 entry (desc)
+        $tagOffset = 128 + 4 + 12; // header + tagCount(4) + 1 tag entry(12)
+        $tagTable  = pack('N', 1)        // Tag count
+            . 'desc'                     // Tag signature
+            . pack('N', $tagOffset)      // Offset to tag data
+            . pack('N', $paddedSize);    // Tag size (4-byte aligned)
+
+        $profile = $header . $tagTable . $descTag;
+
+        // Patch profile size
+        return pack('N', strlen($profile)) . substr($profile, 4);
+    }
+
+    /**
      * @param int    $sequence Sequence index of the ICC fragment.
      * @param int    $count    Total number of ICC fragments.
      * @param string $payload  Raw ICC fragment payload.

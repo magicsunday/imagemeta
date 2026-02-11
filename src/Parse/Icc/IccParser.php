@@ -715,6 +715,12 @@ final class IccParser
     /**
      * Parses an ICC 'desc' tag to retrieve its ASCII description.
      *
+     * ICC spec: desc tag format:
+     * - bytes 0-3: 'desc' signature
+     * - bytes 4-7: reserved (0)
+     * - bytes 8-11: ASCII description length (including NUL) as uint32 BE
+     * - bytes 12..12+len-1: ASCII description string (NUL-terminated)
+     *
      * @param string $data Raw tag payload beginning with the type signature.
      *
      * @return string|null Extracted description or null when invalid.
@@ -731,12 +737,24 @@ final class IccParser
         }
 
         $available = strlen($data) - 12;
-        $length    = min($asciiLength, $available);
-        if ($length <= 0) {
+        if ($asciiLength > $available) {
             return null;
         }
 
-        $text = substr($data, 12, $length);
+        $text = substr($data, 12, $asciiLength);
+
+        // ICC spec: desc ASCII string must be NUL-terminated
+        if ($text === '' || $text[-1] !== "\0") {
+            return null;
+        }
+
+        // ICC spec: desc ASCII string must contain only 7-bit ASCII (bytes <= 0x7F)
+        // Validate all non-NUL bytes are 7-bit ASCII
+        for ($i = 0, $len = strlen($text) - 1; $i < $len; ++$i) {
+            if (ord($text[$i]) > 0x7F) {
+                return null;
+            }
+        }
 
         return rtrim($text, "\0");
     }
