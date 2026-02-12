@@ -1246,8 +1246,9 @@ final class IsoBmffParserTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        // SingleItemTypeReferenceBox is a plain Box, not a FullBox
-        $irefEntry = $this->box('dimg', pack('n', 1) . pack('n', 1) . pack('n', 2));
+        // GH-910: SingleItemTypeReferenceBox must use 'iloc' relation type
+        // for construction_method=2 item-offset resolution.
+        $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
         $iref      = $this->fullBox('iref', $irefEntry);
 
         // iloc v1: base_offset_size and index_size share ONE byte
@@ -1307,8 +1308,9 @@ final class IsoBmffParserTest extends TestCase
         $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
         $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
 
-        // SingleItemTypeReferenceBox is a plain Box, not a FullBox
-        $irefEntry = $this->box('dimg', pack('n', 1) . pack('n', 1) . pack('n', 2));
+        // GH-910: SingleItemTypeReferenceBox must use 'iloc' relation type
+        // for construction_method=2 item-offset resolution.
+        $irefEntry = $this->box('iloc', pack('n', 1) . pack('n', 1) . pack('n', 2));
         $iref      = $this->fullBox('iref', $irefEntry);
 
         // iloc v1: base_offset_size and index_size share ONE byte

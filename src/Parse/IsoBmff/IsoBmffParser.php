@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeDataAtom;
 use MagicSunday\ImageMeta\Model\QuickTime\QuickTimeMeta;
 use MagicSunday\ImageMeta\Value\Enum\ConstructionMethod;
 
+use function array_filter;
 use function array_key_exists;
 use function array_unique;
 use function array_unshift;
@@ -2154,16 +2155,15 @@ final readonly class IsoBmffParser
             return null;
         }
 
-        // EXIF 3.0 Annex A.2.4 confines Exif item data to self-contained payloads.
-        // We only resolve items with local data references; other sources are tracked
-        // as unresolved for the caller to decide how to handle them.
-        if ($location['dataReferenceIndex'] !== 0) {
-            $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
-
-            return null;
-        }
-
         if ($location['constructionMethod'] === ConstructionMethod::FileOffset->value) {
+            // GH-912: data_reference_index gating applies only to file_offset (method 0).
+            // ISO/IEC 14496-12 §8.11.3.2: methods 1 and 2 do not use data_reference_index.
+            if ($location['dataReferenceIndex'] !== 0) {
+                $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
+
+                return null;
+            }
+
             $blob        = '';
             $total       = 0;
             $fileSize    = $this->stream->size();
@@ -2297,7 +2297,14 @@ final readonly class IsoBmffParser
         }
 
         if ($location['constructionMethod'] === ConstructionMethod::ItemOffset->value) {
-            $references = $itemReferences[$itemId] ?? [];
+            // GH-910: ISO/IEC 14496-12 §8.11.3.2 — only 'iloc' references are
+            // valid lookup targets for item-offset construction.
+            $allRefs    = $itemReferences[$itemId] ?? [];
+            $references = array_values(array_filter(
+                $allRefs,
+                static fn (IsoBmffItemReference $ref): bool => $ref->relation === 'iloc',
+            ));
+
             if ($references === []) {
                 $this->registerUnresolvedItem($itemId, $location, $dataReferences, $unresolvedItems);
 

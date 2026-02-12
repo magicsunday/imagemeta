@@ -42,6 +42,7 @@ use function is_float;
 use function is_int;
 use function is_string;
 use function ltrim;
+use function mb_check_encoding;
 use function ord;
 use function pack;
 use function preg_match;
@@ -1217,6 +1218,12 @@ final class TiffExifParser
             $this->validateJpegContextProhibitions($ifd0);
         }
 
+        if ($exifIfd instanceof Ifd) {
+            $this->validateCompanionArtist($ifd0, $exifIfd);
+            $this->validateCompanionSoftware($ifd0, $exifIfd);
+            $this->validateSensitivityCombinations($exifIfd);
+        }
+
         if (!($interopIfd instanceof Ifd) && ($additionalIfds !== [])) {
             $interopIfd = $this->locateInteropIfd(...$additionalIfds);
         }
@@ -1387,7 +1394,7 @@ final class TiffExifParser
         [$valOrOff, $inlineBytes] = $this->readValueOrOffset($type, $cnt);
 
         [$rawBytes] = $this->valueBytes($type, $cnt, $valOrOff, $inlineBytes);
-        $value      = $this->decodeBytes($type, $cnt, $rawBytes);
+        $value      = $this->decodeBytes($tag, $type, $cnt, $rawBytes);
         $value      = $this->convertUInt64Values($tag, $value);
 
         // DNG 1.7.1.0: LocalizedCameraModel may be stored as BYTE instead of
@@ -1732,6 +1739,99 @@ final class TiffExifParser
     }
 
     /**
+     * EXIF 3.0 §4.6.5.4.6: Artist shall be recorded when CameraOwnerName,
+     * Photographer or ImageEditor is present.
+     */
+    private function validateCompanionArtist(Ifd $ifd0, Ifd $exifIfd): void
+    {
+        $dependents = [
+            [ExifTag::CAMERA_OWNER_NAME, 'CameraOwnerName', '§4.6.6.9.2'],
+            [ExifTag::PHOTOGRAPHER, 'Photographer', '§4.6.6.9.9'],
+            [ExifTag::IMAGE_EDITOR, 'ImageEditor', '§4.6.6.9.10'],
+        ];
+
+        foreach ($dependents as [$tag, $name, $section]) {
+            if ($exifIfd->get($tag) instanceof IfdEntry && !$ifd0->get(ExifTag::ARTIST) instanceof IfdEntry) {
+                throw new ParseError(sprintf(
+                    '%s requires Artist in IFD0 per EXIF 3.0 %s; §4.6.5.4.6.',
+                    $name,
+                    $section,
+                ), 1454);
+            }
+        }
+    }
+
+    /**
+     * EXIF 3.0 §4.6.5.4.4: Software shall be recorded when CameraFirmware,
+     * RAWDevelopingSoftware, ImageEditingSoftware or MetadataEditingSoftware is present.
+     */
+    private function validateCompanionSoftware(Ifd $ifd0, Ifd $exifIfd): void
+    {
+        $dependents = [
+            [ExifTag::CAMERA_FIRMWARE, 'CameraFirmware', '§4.6.6.9.11'],
+            [ExifTag::RAW_DEVELOPING_SOFTWARE, 'RAWDevelopingSoftware', '§4.6.6.9.12'],
+            [ExifTag::IMAGE_EDITING_SOFTWARE, 'ImageEditingSoftware', '§4.6.6.9.13'],
+            [ExifTag::METADATA_EDITING_SOFTWARE, 'MetadataEditingSoftware', '§4.6.6.9.14'],
+        ];
+
+        foreach ($dependents as [$tag, $name, $section]) {
+            if ($exifIfd->get($tag) instanceof IfdEntry && !$ifd0->get(ExifTag::SOFTWARE) instanceof IfdEntry) {
+                throw new ParseError(sprintf(
+                    '%s requires Software in IFD0 per EXIF 3.0 %s; §4.6.5.4.4.',
+                    $name,
+                    $section,
+                ), 1455);
+            }
+        }
+    }
+
+    /**
+     * EXIF 3.0 sensitivity tags: enforce mandatory companion combinations.
+     *
+     * §4.6.6.7.8–§4.6.6.7.12: SOS/REI/ISOSpeed require PhotographicSensitivity
+     * and SensitivityType. ISOSpeedLatitudeyyy/zzz require ISOSpeed and each other.
+     */
+    private function validateSensitivityCombinations(Ifd $exifIfd): void
+    {
+        $hasSensitivity = $exifIfd->get(ExifTag::PHOTOGRAPHIC_SENSITIVITY) instanceof IfdEntry;
+        $hasType        = $exifIfd->get(ExifTag::SENSITIVITY_TYPE) instanceof IfdEntry;
+
+        $dependents = [
+            [ExifTag::STANDARD_OUTPUT_SENSITIVITY, 'StandardOutputSensitivity', '§4.6.6.7.8'],
+            [ExifTag::RECOMMENDED_EXPOSURE_INDEX, 'RecommendedExposureIndex', '§4.6.6.7.9'],
+            [ExifTag::ISO_SPEED, 'ISOSpeed', '§4.6.6.7.10'],
+        ];
+
+        foreach ($dependents as [$tag, $name, $section]) {
+            if ($exifIfd->get($tag) instanceof IfdEntry && (!$hasSensitivity || !$hasType)) {
+                throw new ParseError(sprintf(
+                    '%s requires PhotographicSensitivity and SensitivityType per EXIF 3.0 %s.',
+                    $name,
+                    $section,
+                ), 1456);
+            }
+        }
+
+        $hasIsoSpeed = $exifIfd->get(ExifTag::ISO_SPEED) instanceof IfdEntry;
+        $hasYyy      = $exifIfd->get(ExifTag::ISO_SPEED_LATITUDE_YYY) instanceof IfdEntry;
+        $hasZzz      = $exifIfd->get(ExifTag::ISO_SPEED_LATITUDE_ZZZ) instanceof IfdEntry;
+
+        if ($hasYyy && (!$hasIsoSpeed || !$hasZzz)) {
+            throw new ParseError(
+                'ISOSpeedLatitudeyyy requires ISOSpeed and ISOSpeedLatitudezzz per EXIF 3.0 §4.6.6.7.11.',
+                1457,
+            );
+        }
+
+        if ($hasZzz && (!$hasIsoSpeed || !$hasYyy)) {
+            throw new ParseError(
+                'ISOSpeedLatitudezzz requires ISOSpeed and ISOSpeedLatitudeyyy per EXIF 3.0 §4.6.6.7.12.',
+                1458,
+            );
+        }
+    }
+
+    /**
      * Normalises numeric list fields that describe strip or tile data.
      *
      * EXIF 3.0 §4.6.2 and §4.6.4 enumerate the strip/tile offset and byte-count
@@ -2001,19 +2101,41 @@ final class TiffExifParser
     }
 
     /**
+     * EXIF 3.0 text tags that allow UTF-8 in addition to ASCII.
+     *
+     * EXIF 3.0 §4.6.5.4.4 (Software), §4.6.5.4.6 (Artist), §4.6.6.9.2
+     * (CameraOwnerName), §4.6.6.9.9–§4.6.6.9.14 (Photographer through
+     * MetadataEditingSoftware).
+     *
+     * @var list<int>
+     */
+    private const array EXIF_30_UTF8_TAGS = [
+        ExifTag::SOFTWARE,
+        ExifTag::ARTIST,
+        ExifTag::CAMERA_OWNER_NAME,
+        ExifTag::PHOTOGRAPHER,
+        ExifTag::IMAGE_EDITOR,
+        ExifTag::CAMERA_FIRMWARE,
+        ExifTag::RAW_DEVELOPING_SOFTWARE,
+        ExifTag::IMAGE_EDITING_SOFTWARE,
+        ExifTag::METADATA_EDITING_SOFTWARE,
+    ];
+
+    /**
      * Converts raw bytes into PHP scalar values based on the TIFF type.
      *
      * TIFF 6.0 §2.2 defines the field type encodings (BYTE through DOUBLE) mapped
      * to PHP scalars in this helper. EXIF 3.0 §4.5.2 Table 3 mirrors these definitions
      * with additional context for EXIF usage.
      *
+     * @param int    $tag   Tag identifier for encoding-specific rules.
      * @param int    $type  TIFF field type code.
      * @param int    $count Number of values represented.
      * @param string $bytes Raw value bytes read from the blob.
      *
      * @return int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
      */
-    private function decodeBytes(int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
+    private function decodeBytes(int $tag, int $type, int $count, string $bytes): int|float|string|ExifRational|ExifRationalList|ExifNumericList|UInt64
     {
         $componentSize = $this->bytesPerComponent($type);
         $bytesLength   = strlen($bytes);
@@ -2042,15 +2164,36 @@ final class TiffExifParser
                 );
             }
 
-            // TIFF 6.0 §2.2: ASCII bytes must be in the 7-bit domain (0x00–0x7F).
+            // EXIF 3.0 text tags allow UTF-8; strict ASCII applies to all others.
+            $firstHighByteOffset = -1;
             for ($i = 0; $i < $count; ++$i) {
                 if (ord($bytes[$i]) > 0x7F) {
-                    throw new ParseError(sprintf(
-                        'ASCII value contains non-7-bit byte 0x%02X at offset %d per TIFF 6.0 §2.2.',
-                        ord($bytes[$i]),
-                        $i,
-                    ), 1330);
+                    $firstHighByteOffset = $i;
+
+                    break;
                 }
+            }
+
+            if ($firstHighByteOffset >= 0) {
+                if (in_array($tag, self::EXIF_30_UTF8_TAGS, true)) {
+                    // GH-927: EXIF 3.0 UTF-8-capable tag — validate well-formedness.
+                    $text = rtrim($bytes, "\0");
+                    if (!mb_check_encoding($text, 'UTF-8')) {
+                        throw new ParseError(
+                            'EXIF 3.0 text tag contains malformed UTF-8 per EXIF 3.0 §4.6.5.4.',
+                            1459,
+                        );
+                    }
+
+                    return $text;
+                }
+
+                // TIFF 6.0 §2.2: ASCII bytes must be in the 7-bit domain (0x00–0x7F).
+                throw new ParseError(sprintf(
+                    'ASCII value contains non-7-bit byte 0x%02X at offset %d per TIFF 6.0 §2.2.',
+                    ord($bytes[$firstHighByteOffset]),
+                    $firstHighByteOffset,
+                ), 1330);
             }
 
             return rtrim($bytes, "\0");
