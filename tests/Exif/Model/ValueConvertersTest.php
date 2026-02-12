@@ -667,7 +667,7 @@ final class ValueConvertersTest extends TestCase
     public function extractsExtendedGpsMetadata(): void
     {
         $gps = new Ifd([
-            ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 9, '3.0.0.0' . chr(0)),
+            ExifTag::GPS_VERSION_ID   => new IfdEntry(ExifTag::GPS_VERSION_ID, 2, 9, '2.4.0.0' . chr(0)),
             ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
             ExifTag::GPS_LATITUDE     => new IfdEntry(
                 ExifTag::GPS_LATITUDE,
@@ -751,8 +751,8 @@ final class ValueConvertersTest extends TestCase
         self::assertEqualsWithDelta(51.5, $result['lat'], 0.000001);
         self::assertEqualsWithDelta(8.5, $result['lon'], 0.000001);
         self::assertEqualsWithDelta(150.0, $result['alt'], 0.000001);
-        self::assertSame('3.0.0.0', $result['version']);
-        self::assertSame('3.0.0.0' . chr(0), $result['version_raw']);
+        self::assertSame('2.4.0.0', $result['version']);
+        self::assertSame('2.4.0.0' . chr(0), $result['version_raw']);
         self::assertSame('05', $result['satellites']);
         self::assertSame('A', $result['status']);
         self::assertSame('3', $result['measure_mode']);
@@ -859,12 +859,12 @@ final class ValueConvertersTest extends TestCase
     public function formatsGpsVersionFromNumericList(): void
     {
         $gps = new Ifd([
-            ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [2, 3, 4, 5]),
+            ExifTag::GPS_VERSION_ID => new IfdEntry(ExifTag::GPS_VERSION_ID, 1, 4, [2, 4, 0, 0]),
         ]);
 
         $result = ValueConverters::gpsFromIfd($gps);
 
-        self::assertSame('2.3.4.5', $result['version']);
+        self::assertSame('2.4.0.0', $result['version']);
         self::assertNull($result['version_raw']);
     }
 

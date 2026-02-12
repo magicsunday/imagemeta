@@ -1218,6 +1218,8 @@ final class TiffExifParser
             $this->validateJpegContextProhibitions($ifd0);
         }
 
+        $this->validateExifIfdPlacement($ifd0);
+
         if ($exifIfd instanceof Ifd) {
             $this->validateCompanionArtist($ifd0, $exifIfd);
             $this->validateCompanionSoftware($ifd0, $exifIfd);
@@ -1670,6 +1672,8 @@ final class TiffExifParser
      * @var list<array{int, string}> JPEG_PROHIBITED_TAGS
      */
     private const array JPEG_PROHIBITED_TAGS = [
+        [ExifTag::IMAGE_WIDTH, 'ImageWidth'],
+        [ExifTag::IMAGE_LENGTH, 'ImageLength'],
         [ExifTag::BITS_PER_SAMPLE, 'BitsPerSample'],
         [ExifTag::SAMPLES_PER_PIXEL, 'SamplesPerPixel'],
         [ExifTag::PHOTOMETRIC_INTERPRETATION, 'PhotometricInterpretation'],
@@ -1828,6 +1832,37 @@ final class TiffExifParser
                 'ISOSpeedLatitudezzz requires ISOSpeed and ISOSpeedLatitudeyyy per EXIF 3.0 §4.6.6.7.12.',
                 1458,
             );
+        }
+    }
+
+    /**
+     * EXIF 3.0 §4.6.6.9 tags must reside in the Exif IFD, not IFD0.
+     *
+     * @var list<array{int, string, string}>
+     */
+    private const array EXIF_IFD_ONLY_TAGS = [
+        [ExifTag::CAMERA_OWNER_NAME, 'CameraOwnerName', '§4.6.6.9.2'],
+        [ExifTag::PHOTOGRAPHER, 'Photographer', '§4.6.6.9.9'],
+        [ExifTag::IMAGE_EDITOR, 'ImageEditor', '§4.6.6.9.10'],
+        [ExifTag::CAMERA_FIRMWARE, 'CameraFirmware', '§4.6.6.9.11'],
+        [ExifTag::RAW_DEVELOPING_SOFTWARE, 'RAWDevelopingSoftware', '§4.6.6.9.12'],
+        [ExifTag::IMAGE_EDITING_SOFTWARE, 'ImageEditingSoftware', '§4.6.6.9.13'],
+        [ExifTag::METADATA_EDITING_SOFTWARE, 'MetadataEditingSoftware', '§4.6.6.9.14'],
+    ];
+
+    /**
+     * Validates that EXIF 3.0 §4.6.6.9 tags are not placed in IFD0.
+     */
+    private function validateExifIfdPlacement(Ifd $ifd0): void
+    {
+        foreach (self::EXIF_IFD_ONLY_TAGS as [$tag, $name, $section]) {
+            if ($ifd0->get($tag) instanceof IfdEntry) {
+                throw new ParseError(sprintf(
+                    '%s must reside in the Exif IFD, not IFD0, per EXIF 3.0 %s.',
+                    $name,
+                    $section,
+                ), 1463);
+            }
         }
     }
 

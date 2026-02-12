@@ -362,7 +362,7 @@ final class MetadataReaderTest extends TestCase
     public function readIsoBmffPopulatesMetadata(): void
     {
         $makerNote = 'synthetic-sony-maker-note';
-        $tiff      = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote);
+        $tiff      = $this->littleEndianTiffWithMakerNote('Sony Corporation', 'ILCE-1', $makerNote, true);
         $xmp       = '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
             . '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
             . '<rdf:Description xmlns:dc="http://purl.org/dc/elements/1.1/" dc:creator="Agent" />'
@@ -469,7 +469,7 @@ final class MetadataReaderTest extends TestCase
     /**
      * Builds a minimal little-endian TIFF containing make/model strings and maker notes.
      */
-    private function littleEndianTiffWithMakerNote(string $make, string $model, string $makerNote): string
+    private function littleEndianTiffWithMakerNote(string $make, string $model, string $makerNote, bool $includeImageDimensions = false): string
     {
         $makeData  = $make . "\0";
         $modelData = $model . "\0";
@@ -480,7 +480,7 @@ final class MetadataReaderTest extends TestCase
         $notePad  = strlen($makerNote) % 2 !== 0 ? "\0" : '';
 
         $ifd0Offset = 8;
-        $ifd0Count  = 5;
+        $ifd0Count  = $includeImageDimensions ? 5 : 3;
         $ifd0Size   = 2 + ($ifd0Count * 12) + 4;
 
         $currentOffset = $ifd0Offset + $ifd0Size;
@@ -496,15 +496,19 @@ final class MetadataReaderTest extends TestCase
 
         $makerNoteOffset = $exifIfdOffset + $exifIfdSize;
 
+        $dimensionEntries = $includeImageDimensions
+            ? pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', 3)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0)
+                . pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', 3)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0)
+            : '';
+
         $ifd0 = pack('v', $ifd0Count)
-            . pack('v', ExifTag::IMAGE_WIDTH)
-            . pack('v', 3)
-            . pack('V', 1)
-            . pack('v', 100) . pack('v', 0)
-            . pack('v', ExifTag::IMAGE_LENGTH)
-            . pack('v', 3)
-            . pack('V', 1)
-            . pack('v', 100) . pack('v', 0)
+            . $dimensionEntries
             . pack('v', ExifTag::MAKE)
             . pack('v', 2)
             . pack('V', strlen($makeData))

@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Exif\Converters;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Exif\Model\ExifNumericList;
 use MagicSunday\ImageMeta\Exif\Model\ExifRational;
@@ -299,8 +300,16 @@ final readonly class GpsConverter
         $dateEntry        = $gps->get(ExifTag::GPS_DATE_STAMP);
         $timeEntry        = $gps->get(ExifTag::GPS_TIME_STAMP);
 
-        $versionParts          = $this->formatVersion($versionEntry?->value);
-        $result['version']     = $versionParts['normalized'];
+        // GH-935: EXIF 3.0 §4.6.7.1.1 — when GPSVersionID is present, validate it.
+        $versionParts      = $this->formatVersion($versionEntry?->value);
+        $result['version'] = $versionParts['normalized'];
+        if ($versionEntry instanceof IfdEntry && $result['version'] !== self::DEFAULT_GPS_VERSION) {
+            throw new ParseError(sprintf(
+                'GPSVersionID "%s" is reserved; only "2.4.0.0" is allowed per EXIF 3.0 §4.6.7.1.1.',
+                $result['version'],
+            ), 1462);
+        }
+
         $result['version_raw'] = $versionParts['raw'];
         $result['satellites']  = $this->stringConverter->sanitize($satellitesEntry?->value);
 
@@ -319,33 +328,45 @@ final readonly class GpsConverter
         );
         $result['dop'] = $this->rationalConverter->toFloat($dopEntry?->value);
 
-        // EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K', 'M' or 'N'
+        // EXIF 3.0 §4.6.7.1.13 GPSSpeedRef: 'K', 'M' or 'N'; default 'K'
         $speedRefValue    = $speedRefEntry?->value;
         $speedOriginalRef = $this->stringConverter->sanitize($speedRefValue);
         $speedRef         = $this->validateGpsRef(
             is_string($speedRefValue) ? strtoupper(trim($speedRefValue)) : null,
             self::GPS_SPEED_REF_VALUES,
         );
+        if ($speedRef === null && !$speedRefEntry instanceof IfdEntry && $speedEntry instanceof IfdEntry) {
+            $speedRef = 'K';
+        }
+
         $result['speed_ref']          = $speedRef;
         $result['speed_ms']           = $this->speedToMs($speedRef, $speedEntry?->value);
         $result['speed_original_ref'] = $speedOriginalRef;
         $result['speed_original']     = $this->rationalConverter->toFloat($speedEntry?->value);
 
-        // EXIF 3.0 §4.6.7.1.15 GPSTrackRef: 'T' (true direction) or 'M' (magnetic direction)
+        // EXIF 3.0 §4.6.7.1.15 GPSTrackRef: 'T' or 'M'; default 'T'
         $trackRefValue       = $trackRefEntry?->value;
         $trackRefNormalized  = is_string($trackRefValue) ? strtoupper(trim($trackRefValue)) : null;
         $result['track_ref'] = $this->validateGpsRef($trackRefNormalized, self::GPS_BEARING_REF_VALUES);
         $trackRefInvalid     = ($trackRefNormalized !== null) && ($result['track_ref'] === null);
-        $trackValue          = $this->rationalConverter->toFloat($trackEntry?->value);
-        $result['track']     = $trackRefInvalid ? null : $this->normalizeBearing($trackValue);
+        if ($result['track_ref'] === null && !$trackRefEntry instanceof IfdEntry && $trackEntry instanceof IfdEntry) {
+            $result['track_ref'] = 'T';
+        }
 
-        // EXIF 3.0 §4.6.7.1.17 GPSImgDirectionRef: 'T' (true direction) or 'M' (magnetic direction)
+        $trackValue      = $this->rationalConverter->toFloat($trackEntry?->value);
+        $result['track'] = $trackRefInvalid ? null : $this->normalizeBearing($trackValue);
+
+        // EXIF 3.0 §4.6.7.1.17 GPSImgDirectionRef: 'T' or 'M'; default 'T'
         $imgDirRefValue              = $imgDirRefEntry?->value;
         $imgDirRefNormalized         = is_string($imgDirRefValue) ? strtoupper(trim($imgDirRefValue)) : null;
         $result['img_direction_ref'] = $this->validateGpsRef($imgDirRefNormalized, self::GPS_BEARING_REF_VALUES);
         $imgDirRefInvalid            = ($imgDirRefNormalized !== null) && ($result['img_direction_ref'] === null);
-        $imgDirectionValue           = $this->rationalConverter->toFloat($imgDirEntry?->value);
-        $result['img_direction']     = $imgDirRefInvalid ? null : $this->normalizeBearing($imgDirectionValue);
+        if ($result['img_direction_ref'] === null && !$imgDirRefEntry instanceof IfdEntry && $imgDirEntry instanceof IfdEntry) {
+            $result['img_direction_ref'] = 'T';
+        }
+
+        $imgDirectionValue       = $this->rationalConverter->toFloat($imgDirEntry?->value);
+        $result['img_direction'] = $imgDirRefInvalid ? null : $this->normalizeBearing($imgDirectionValue);
 
         $result['map_datum'] = $this->stringConverter->sanitize($mapDatumEntry?->value);
 
@@ -369,20 +390,28 @@ final readonly class GpsConverter
         );
         $result['dest_lon'] = $this->dmsToFloat($result['dest_lon_ref'], $destLonPairs);
 
-        // EXIF 3.0 §4.6.7.1.24 GPSDestBearingRef: 'T' (true direction) or 'M' (magnetic direction)
+        // EXIF 3.0 §4.6.7.1.24 GPSDestBearingRef: 'T' or 'M'; default 'T'
         $destBearingRefValue        = $destBearRefEntry?->value;
         $destBearingRefNormalized   = is_string($destBearingRefValue) ? strtoupper(trim($destBearingRefValue)) : null;
         $result['dest_bearing_ref'] = $this->validateGpsRef($destBearingRefNormalized, self::GPS_BEARING_REF_VALUES);
         $destBearingRefInvalid      = ($destBearingRefNormalized !== null) && ($result['dest_bearing_ref'] === null);
-        $destBearingValue           = $this->rationalConverter->toFloat($destBearEntry?->value);
-        $result['dest_bearing']     = $destBearingRefInvalid ? null : $this->normalizeBearing($destBearingValue);
+        if ($result['dest_bearing_ref'] === null && !$destBearRefEntry instanceof IfdEntry && $destBearEntry instanceof IfdEntry) {
+            $result['dest_bearing_ref'] = 'T';
+        }
 
-        // EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K', 'M' or 'N'
+        $destBearingValue       = $this->rationalConverter->toFloat($destBearEntry?->value);
+        $result['dest_bearing'] = $destBearingRefInvalid ? null : $this->normalizeBearing($destBearingValue);
+
+        // EXIF 3.0 §4.6.7.1.26 GPSDestDistanceRef: 'K', 'M' or 'N'; default 'K'
         $destDistanceRefValue        = $destDistRefEntry?->value;
         $result['dest_distance_ref'] = $this->validateGpsRef(
             is_string($destDistanceRefValue) ? strtoupper(trim($destDistanceRefValue)) : null,
             self::GPS_DISTANCE_REF_VALUES,
         );
+        if ($result['dest_distance_ref'] === null && !$destDistRefEntry instanceof IfdEntry && $destDistEntry instanceof IfdEntry) {
+            $result['dest_distance_ref'] = 'K';
+        }
+
         $result['dest_distance_original_ref'] = $this->stringConverter->sanitize($destDistanceRefValue);
         $result['dest_distance_original']     = $this->rationalConverter->toFloat($destDistEntry?->value);
         $result['dest_distance_m']            = $this->distanceToMetres($result['dest_distance_ref'], $destDistEntry?->value);
@@ -455,7 +484,9 @@ final readonly class GpsConverter
     }
 
     /**
-     * Normalises a compass bearing to the [0, 360) interval.
+     * Validates a compass bearing is within the strict [0, 360) range.
+     *
+     * EXIF 3.0 §4.6.7.1.16/§4.6.7.1.18/§4.6.7.1.25: bearings must be 0.00–359.99.
      */
     public function normalizeBearing(int|float|null $value): ?float
     {
@@ -463,18 +494,12 @@ final readonly class GpsConverter
             return null;
         }
 
-        $bearing = fmod((float) $value, 360.0);
-
-        if ($bearing < 0.0) {
-            $bearing += 360.0;
-        }
-
+        $bearing = (float) $value;
         if ($bearing < 0.0 || $bearing >= 360.0) {
-            $bearing = fmod($bearing, 360.0);
-
-            if ($bearing < 0.0) {
-                $bearing += 360.0;
-            }
+            throw new ParseError(sprintf(
+                'GPS bearing value %s is outside the valid range 0.00–359.99 per EXIF 3.0.',
+                $bearing,
+            ), 1460);
         }
 
         return $bearing;
