@@ -44,6 +44,7 @@ use function is_string;
 use function ltrim;
 use function ord;
 use function pack;
+use function preg_match;
 use function rtrim;
 use function sha1;
 use function sprintf;
@@ -1466,6 +1467,23 @@ final class TiffExifParser
                 'Predictor value %d is outside the valid domain {1, 2} per TIFF 6.0 §14.',
                 $value,
             ), 1358);
+        }
+
+        // GH-915: enforce 8.3 filename semantics for RelatedSoundFile per EXIF 3.0 §4.6.6.5.1
+        if ($tag === ExifTag::RELATED_SOUND_FILE && is_string($value)) {
+            if (preg_match('/[\\\\\\/]/', $value) === 1) {
+                throw new ParseError(
+                    'RelatedSoundFile must not contain path separators per EXIF 3.0 §4.6.6.5.1.',
+                    1450,
+                );
+            }
+
+            if (preg_match('/\A[^\\\\\\/]{1,8}\.[^\\\\\\/]{3}\z/', $value) !== 1) {
+                throw new ParseError(
+                    'RelatedSoundFile must use 8.3 filename form per EXIF 3.0 §4.6.6.5.1.',
+                    1451,
+                );
+            }
         }
 
         if (in_array($tag, self::COUNTED_IMAGE_DATA_TAGS, true)) {

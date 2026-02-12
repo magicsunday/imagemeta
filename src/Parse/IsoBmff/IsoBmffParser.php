@@ -1679,9 +1679,14 @@ final readonly class IsoBmffParser
             }
         }
 
-        $this->validateMetaFullBoxHeader($peek);
-
-        return 4;
+        // GH-945: reject ambiguous meta header layout instead of defaulting
+        throw new ParseError(
+            sprintf(
+                'meta box has ambiguous header layout (contentSize=%d)',
+                $meta->contentSize,
+            ),
+            1453,
+        );
     }
 
     /**
@@ -3318,13 +3323,13 @@ final readonly class IsoBmffParser
         $name = null;
         foreach ($this->walkChildren($entry) as $child) {
             if ($child->type === self::FREEFORM_MEAN) {
-                $mean = $this->parseDataBox($child);
+                $mean = $this->parseFreeformMean($child);
             } elseif ($child->type === self::FREEFORM_NAME) {
-                $name = $this->parseDataBox($child);
+                $name = $this->parseFreeformName($child);
             }
         }
 
-        if (!is_string($mean) || $mean === '' || !is_string($name) || $name === '') {
+        if ($mean === null || $mean === '' || $name === null || $name === '') {
             return null;
         }
 
@@ -3332,17 +3337,91 @@ final readonly class IsoBmffParser
     }
 
     /**
-     * Extracts the payload from a `data` box, normalising known text encodings.
+     * Parses a free-form metadata Mean atom as a FullAtom.
      *
-     * Delegates to {@see parseDataBoxStructured()} and returns only the decoded value.
+     * QuickTime File Format 2012: the mean atom is a FullAtom with version 0
+     * and flags 0. The remaining payload is a UTF-8 namespace string.
      *
-     * @param BoxDescriptor $data Box descriptor for the `data` box.
+     * @param BoxDescriptor $mean Box descriptor for the mean atom.
      *
-     * @return string|int|float
+     * @return string The decoded namespace string.
      */
-    private function parseDataBox(BoxDescriptor $data): string|int|float
+    private function parseFreeformMean(BoxDescriptor $mean): string
     {
-        return $this->parseDataBoxStructured($data)['value'];
+        if ($mean->contentSize < 4) {
+            throw new ParseError('mean atom truncated', 1429);
+        }
+
+        $win = $mean->window;
+        $win->seek(0);
+
+        $version = $win->readU8();
+        $flags   = $this->readUInt24($win);
+
+        if ($version !== 0) {
+            throw new ParseError('mean atom version must be 0', 1430);
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('mean atom flags must be 0', 1431);
+        }
+
+        $payloadSize = $mean->contentSize - 4;
+        if ($payloadSize < 1) {
+            throw new ParseError('mean atom has empty payload', 1432);
+        }
+
+        $value = $win->read($payloadSize);
+
+        if (!mb_check_encoding($value, 'UTF-8')) {
+            throw new ParseError('mean atom contains invalid UTF-8', 1433);
+        }
+
+        return $value;
+    }
+
+    /**
+     * Parses a free-form metadata Name atom as a FullAtom.
+     *
+     * QuickTime File Format 2012: the name atom is a FullAtom with version 0
+     * and flags 0. The remaining payload is a UTF-8 key name string.
+     *
+     * @param BoxDescriptor $name Box descriptor for the name atom.
+     *
+     * @return string The decoded key name string.
+     */
+    private function parseFreeformName(BoxDescriptor $name): string
+    {
+        if ($name->contentSize < 4) {
+            throw new ParseError('name atom truncated', 1434);
+        }
+
+        $win = $name->window;
+        $win->seek(0);
+
+        $version = $win->readU8();
+        $flags   = $this->readUInt24($win);
+
+        if ($version !== 0) {
+            throw new ParseError('name atom version must be 0', 1435);
+        }
+
+        if ($flags !== 0) {
+            throw new ParseError('name atom flags must be 0', 1436);
+        }
+
+        $payloadSize = $name->contentSize - 4;
+        if ($payloadSize < 1) {
+            throw new ParseError('name atom has empty payload', 1437);
+        }
+
+        $value = $win->read($payloadSize);
+
+        if (!mb_check_encoding($value, 'UTF-8')) {
+            throw new ParseError('name atom contains invalid UTF-8', 1438);
+        }
+
+        return $value;
     }
 
     /**

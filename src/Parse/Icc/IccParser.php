@@ -139,11 +139,27 @@ final class IccParser
     {
         $data = $profileData;
         if ($data === null || strlen($data) < self::HEADER_LENGTH) {
-            $data = $this->combineSegments($segments);
+            $combined = $this->combineSegments($segments);
+            if ($combined !== null) {
+                $data = $combined;
+            }
         }
 
-        if ($data === null || strlen($data) < self::HEADER_LENGTH) {
+        // GH-930: no ICC data at all — return null (absence, not error)
+        if ($data === null) {
             return null;
+        }
+
+        // GH-930: ICC data present but too short — malformed
+        if (strlen($data) < self::HEADER_LENGTH) {
+            throw new ParseError(
+                sprintf(
+                    'ICC profile data too short: need at least %d header bytes, got %d',
+                    self::HEADER_LENGTH,
+                    strlen($data),
+                ),
+                1442,
+            );
         }
 
         $profileSize = $this->uInt32Be(substr($data, IccTag::PROFILE_SIZE, 4));
@@ -151,40 +167,52 @@ final class IccParser
 
         // ICC.1:2022 §7.2.2: Profile size must be at least the 128-byte header.
         if ($profileSize < self::HEADER_LENGTH) {
-            return null;
+            throw new ParseError(
+                sprintf('ICC declared profile size %d is less than the minimum header length %d', $profileSize, self::HEADER_LENGTH),
+                1443,
+            );
         }
 
         // ICC.1:2022 §7.1: Profile size and tag table entries must be 4-byte aligned.
         if (($profileSize % 4) !== 0) {
-            return null;
+            throw new ParseError(
+                sprintf('ICC declared profile size %d is not 4-byte aligned', $profileSize),
+                1444,
+            );
         }
 
         // ICC.1:2022 §7.2.2: Profile size must match the actual payload length.
         if ($profileSize !== $length) {
-            return null;
+            throw new ParseError(
+                sprintf('ICC declared profile size %d does not match actual payload length %d', $profileSize, $length),
+                1445,
+            );
         }
 
         // ICC.1:2022 §7.2.9: Validate 'acsp' signature at bytes 36-39
         $signature = substr($data, 36, 4);
         if ($signature !== self::PROFILE_SIGNATURE) {
-            return null; // invalid ICC profile
+            throw new ParseError(
+                sprintf('ICC profile signature "%s" at offset 36 is not the required "acsp"', $signature),
+                1446,
+            );
         }
 
         // ICC.1:2022 §7.2.19: Reserved field (bytes 100-127) must be zero.
         $reserved = substr($data, IccTag::RESERVED, 28);
         if ($reserved !== str_repeat("\0", 28)) {
-            return null;
+            throw new ParseError('ICC reserved field (bytes 100-127) is not zero', 1447);
         }
 
         // ICC.1:2022 §7.1: Tag data must follow the tag table with NULL padding.
         if (!$this->validateTagTable($data, $profileSize)) {
-            return null;
+            throw new ParseError('ICC tag table layout or padding is invalid', 1448);
         }
 
         // ICC.1:2022 §7.2.4: Validate version field including reserved bytes
         $version = $this->extractVersion($data);
         if ($version === null) {
-            return null;
+            throw new ParseError('ICC version field is invalid or has non-zero reserved bytes', 1449);
         }
 
         $profileClass = $this->extractSignature(substr($data, IccTag::PROFILE_CLASS, 4));
@@ -383,8 +411,16 @@ final class IccParser
 
         $iccData = '';
         for ($i = 1; $i <= $expectedCount; ++$i) {
+            // GH-923: missing chunk in assembled sequence is an error, not absence
             if (!array_key_exists($i, $sequence)) {
-                return null;
+                throw new ParseError(
+                    sprintf(
+                        'ICC chunk assembly: missing sequence number %d of %d',
+                        $i,
+                        $expectedCount,
+                    ),
+                    1441,
+                );
             }
 
             $iccData .= $sequence[$i];

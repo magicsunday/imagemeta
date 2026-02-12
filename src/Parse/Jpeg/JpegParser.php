@@ -652,8 +652,17 @@ final class JpegParser
         $signatureLength = strlen(self::AUDIO_SIGNATURE);
         $major           = ord($payload[$signatureLength]);
         $minor           = ord($payload[$signatureLength + 1]);
-        $format          = ord($payload[$signatureLength + 2]);
-        $channels        = ord($payload[$signatureLength + 3]);
+
+        // GH-922: validate audio version compatibility per EXIF 3.0 §5.2
+        if ($major !== 1) {
+            throw new ParseError(
+                sprintf('Audio segment at offset %d uses unsupported major version %d', $offset, $major),
+                1452,
+            );
+        }
+
+        $format   = ord($payload[$signatureLength + 2]);
+        $channels = ord($payload[$signatureLength + 3]);
 
         $sampleRateData   = substr($payload, $signatureLength + 4, 4);
         $sampleRateUnpack = @unpack('Nrate', $sampleRateData);

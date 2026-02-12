@@ -1554,8 +1554,8 @@ final class IsoBmffParserTest extends TestCase
      */
     private function createFileWithMdtaIdentifier(string $value): string
     {
-        $mean     = $this->box('mean', pack('N', 1) . pack('N', 0) . 'com.apple.quicktime');
-        $name     = $this->box('name', pack('N', 1) . pack('N', 0) . 'content.identifier');
+        $mean     = $this->box('mean', pack('N', 0) . 'com.apple.quicktime');
+        $name     = $this->box('name', pack('N', 0) . 'content.identifier');
         $data     = $this->box('data', pack('N', 1) . pack('N', 0) . $value);
         $freeform = $this->box('----', $mean . $name . $data);
         $ilst     = $this->box('ilst', $freeform);

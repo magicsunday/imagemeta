@@ -101,8 +101,8 @@ final class IccParserTest extends TestCase
     {
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode('short'));
-        self::assertNull($decoder->decode(null, [$this->createSegment(1, 2, 'payload')]));
+        $this->expectException(ParseError::class);
+        $decoder->decode('short');
     }
 
     /**
@@ -149,7 +149,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode(null, $segments));
+        $this->expectException(ParseError::class);
+        $decoder->decode(null, $segments);
     }
 
     /**
@@ -165,7 +166,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -181,7 +183,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -197,7 +200,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -214,7 +218,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -231,7 +236,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -248,7 +254,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -265,7 +272,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -298,7 +306,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($newProfile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($newProfile);
     }
 
     /**
@@ -326,7 +335,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($newProfile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($newProfile);
     }
 
     /**
@@ -562,7 +572,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -580,7 +591,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -654,7 +666,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
@@ -672,7 +685,8 @@ final class IccParserTest extends TestCase
 
         $decoder = new IccParser();
 
-        self::assertNull($decoder->decode($profile));
+        $this->expectException(ParseError::class);
+        $decoder->decode($profile);
     }
 
     /**
