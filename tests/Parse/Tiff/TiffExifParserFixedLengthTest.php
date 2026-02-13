@@ -242,6 +242,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 16,
                 str_repeat("\xAB", 16),
             ],
+            'NoiseReductionApplied count 1' => [
+                DngTag::NOISE_REDUCTION_APPLIED,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x01\x00\x00\x00\x02",
+            ],
             'BaselineExposureOffset count 1' => [
                 DngTag::BASELINE_EXPOSURE_OFFSET,
                 TiffConst::TYPE_RATIONAL,

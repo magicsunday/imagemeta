@@ -5896,6 +5896,109 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts NoiseReductionApplied with valid RATIONAL[1] values.
+     */
+    #[Test]
+    public function acceptsValidNoiseReductionApplied(): void
+    {
+        // 0/0 sentinel (unknown)
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRational1Tag(DngTag::NOISE_REDUCTION_APPLIED, 0, 0),
+        );
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+
+        // 1/2 (0.5)
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRational1Tag(DngTag::NOISE_REDUCTION_APPLIED, 1, 2),
+        );
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+
+        // 1/1 (1.0 upper bound)
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRational1Tag(DngTag::NOISE_REDUCTION_APPLIED, 1, 1),
+        );
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects NoiseReductionApplied with value above 1.0.
+     */
+    #[Test]
+    public function rejectsNoiseReductionAppliedAboveRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1582);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRational1Tag(DngTag::NOISE_REDUCTION_APPLIED, 3, 2),
+        );
+    }
+
+    /**
+     * Rejects NoiseReductionApplied with non-sentinel zero denominator.
+     */
+    #[Test]
+    public function rejectsNoiseReductionAppliedZeroDenominator(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1581);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRational1Tag(DngTag::NOISE_REDUCTION_APPLIED, 1, 0),
+        );
+    }
+
+    /**
+     * Builds a DNG with a RATIONAL[1] tag in IFD0.
+     *
+     * @param int $tag         Tag constant (must be > 0xC614)
+     * @param int $numerator   Rational numerator
+     * @param int $denominator Rational denominator
+     */
+    private function buildDngWithRational1Tag(int $tag, int $numerator, int $denominator): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $rationalData      = pack('V', $numerator) . pack('V', $denominator);
+        $rationalOffset    = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $tag)
+            . pack('v', TiffConst::TYPE_RATIONAL)
+            . pack('V', 1)
+            . pack('V', $rationalOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $rationalData;
+    }
+
+    /**
      * Accepts valid DepthFormat enum values (0, 1, 2).
      */
     #[Test]

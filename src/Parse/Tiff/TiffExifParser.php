@@ -1052,6 +1052,13 @@ final class TiffExifParser
             'typeName' => 'BYTE',
             'spec'     => 'DNG 1.7.1.0',
         ],
+        DngTag::NOISE_REDUCTION_APPLIED => [
+            'name'     => 'NoiseReductionApplied',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
         DngTag::BASELINE_EXPOSURE_OFFSET => [
             'name'     => 'BaselineExposureOffset',
             'count'    => 1,
@@ -1388,6 +1395,7 @@ final class TiffExifParser
         $this->validateDngRgbTables($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
+        $this->validateDngNoiseReductionApplied($ifd0);
         $this->validateDngEnhanceParams($ifd0);
         $this->validateDngSubTileBlockSize($ifd0);
         $this->validateDngRowInterleaveFactor($ifd0);
@@ -6127,6 +6135,46 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('RowInterleaveFactor must be >= 1, got %d.', is_int($entry->value) ? $entry->value : -1),
                 1580,
+            );
+        }
+    }
+
+    /**
+     * Validates NoiseReductionApplied (0xC6F7) per DNG 1.7.1.0.
+     *
+     * Must be RATIONAL[1]. Special sentinel 0/0 means unknown.
+     * Otherwise the value must be in the range [0.0, 1.0].
+     */
+    private function validateDngNoiseReductionApplied(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::NOISE_REDUCTION_APPLIED);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (!$entry->value instanceof ExifRational) {
+            return;
+        }
+
+        // 0/0 sentinel means unknown
+        if ($entry->value->numerator === 0 && $entry->value->denominator === 0) {
+            return;
+        }
+
+        if ($entry->value->denominator === 0) {
+            throw new ParseError(
+                'NoiseReductionApplied has zero denominator without 0/0 sentinel.',
+                1581,
+            );
+        }
+
+        $value = $entry->value->numerator / $entry->value->denominator;
+
+        if ($value < 0.0 || $value > 1.0) {
+            throw new ParseError(
+                sprintf('NoiseReductionApplied must be in [0.0, 1.0], got %.4f.', $value),
+                1582,
             );
         }
     }
