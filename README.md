@@ -71,6 +71,7 @@ composer require magicsunday/imagemeta
 * TIFF/EXIF `UNDEFINED` values are now kept byte-exact at parser level (including trailing/embedded NUL bytes); any text decoding is handled only by explicit tag-specific converters.
 * EXIF GPS coordinate conversion now enforces geographic ranges for capture and destination coordinates (latitude `[-90,90]`, longitude `[-180,180]`) and rejects out-of-domain values.
 * EXIF `GPSDateStamp`/`GPSTimeStamp` parsing now enforces semantic UTC validity (real calendar date, hour/minute/second ranges) and rejects invalid timestamps.
+* EXIF `GPSTimeStamp` parsing now rejects fractional hour/minute components (only seconds may be fractional), preventing silent truncation/coercion of UTC clock fields.
 * EXIF GPS DMS parsing now rejects negative component magnitudes (degrees/minutes/seconds) and requires hemisphere sign handling exclusively via `GPS*Ref` tags.
 * EXIF GPS status/reference code fields now enforce strict one-code enum domains and reject reserved multi-character values for both normalized refs and exposed original ref fields.
 * EXIF `GPSAltitudeRef` normalization now rejects fractional inputs and accepts only integral enum codes (`0..3`) instead of rounding values into valid-looking references.

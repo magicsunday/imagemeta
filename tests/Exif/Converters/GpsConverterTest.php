@@ -771,6 +771,8 @@ final class GpsConverterTest extends TestCase
         yield 'minute above 59' => [[[23, 1], [60, 1], [0, 1]]];
         yield 'second equal 60' => [[[23, 1], [59, 1], [60, 1]]];
         yield 'second below 0' => [[[23, 1], [59, 1], [-1, 1]]];
+        yield 'fractional hour component' => [[[109, 10], [20, 1], [0, 1]]];
+        yield 'fractional minute component' => [[[10, 1], [205, 10], [0, 1]]];
     }
 
     /**
