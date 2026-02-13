@@ -1706,41 +1706,52 @@ final readonly class ParsedExif
                 return null;
             }
 
-            $summary[] = $this->decodeRationalFromBytes(substr($payload, $offset, self::RATIONAL_BYTE_LENGTH));
+            $summaryValue = $this->decodeRationalFromBytes(substr($payload, $offset, self::RATIONAL_BYTE_LENGTH));
+            if ($summaryValue === null) {
+                return null;
+            }
+
+            $summary[] = $summaryValue;
             $offset += self::RATIONAL_BYTE_LENGTH;
         }
 
         $sequenceCount = $this->decodeShort($payload, $offset);
-        $offset += $sequenceCount !== null ? self::SHORT_BYTE_LENGTH : 0;
+        if ($sequenceCount === null) {
+            return null;
+        }
+
+        $offset += self::SHORT_BYTE_LENGTH;
 
         $sequences = [];
 
-        if ($sequenceCount !== null) {
-            for ($i = 0; $i < $sequenceCount; ++$i) {
-                $imageCount = $this->decodeShort($payload, $offset);
-
-                if ($imageCount === null) {
-                    break;
-                }
-
-                $offset += self::SHORT_BYTE_LENGTH;
-
-                $sequence = [];
-                for ($image = 0; $image < $imageCount; ++$image) {
-                    if (($offset + self::RATIONAL_BYTE_LENGTH) > $payloadLength) {
-                        break 2;
-                    }
-
-                    $value = $this->decodeRationalFromBytes(substr($payload, $offset, self::RATIONAL_BYTE_LENGTH));
-                    $offset += self::RATIONAL_BYTE_LENGTH;
-
-                    if ($value !== null) {
-                        $sequence[] = $value;
-                    }
-                }
-
-                $sequences[] = $sequence;
+        for ($i = 0; $i < $sequenceCount; ++$i) {
+            $imageCount = $this->decodeShort($payload, $offset);
+            if ($imageCount === null) {
+                return null;
             }
+
+            $offset += self::SHORT_BYTE_LENGTH;
+
+            $sequence = [];
+            for ($image = 0; $image < $imageCount; ++$image) {
+                if (($offset + self::RATIONAL_BYTE_LENGTH) > $payloadLength) {
+                    return null;
+                }
+
+                $value = $this->decodeRationalFromBytes(substr($payload, $offset, self::RATIONAL_BYTE_LENGTH));
+                if ($value === null) {
+                    return null;
+                }
+
+                $offset += self::RATIONAL_BYTE_LENGTH;
+                $sequence[] = $value;
+            }
+
+            $sequences[] = $sequence;
+        }
+
+        if ($offset !== $payloadLength) {
+            return null;
         }
 
         return new SourceExposureTimes(

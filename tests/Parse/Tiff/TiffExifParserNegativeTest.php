@@ -809,6 +809,18 @@ final class TiffExifParserNegativeTest extends TestCase
      */
     private function buildValidCompositeExposurePayload(): string
     {
+        return $this->buildCompositeExposureSummaryBytes()
+            . pack('v', 1)
+            . pack('v', 2)
+            . pack('V2', 1, 10)
+            . pack('V2', 1, 5);
+    }
+
+    /**
+     * Builds the summary block (8 RATIONAL values) of the composite exposure payload.
+     */
+    private function buildCompositeExposureSummaryBytes(): string
+    {
         return pack('V2', 5, 1)
             . pack('V2', 3, 1)
             . pack('V2', 4, 1)
@@ -816,9 +828,28 @@ final class TiffExifParserNegativeTest extends TestCase
             . pack('V2', 2, 1)
             . pack('V2', 1, 2)
             . pack('V2', 2, 1)
-            . pack('V2', 1, 3)
+            . pack('V2', 1, 3);
+    }
+
+    /**
+     * Builds a payload where the sequence section ends in a partial RATIONAL.
+     */
+    private function buildCompositeExposurePayloadWithTruncatedSequenceSection(): string
+    {
+        return $this->buildCompositeExposureSummaryBytes()
             . pack('v', 1)
-            . pack('v', 2)
+            . pack('v', 1)
+            . pack('V', 1);
+    }
+
+    /**
+     * Builds a payload where declared image counts exceed the available payload bytes.
+     */
+    private function buildCompositeExposurePayloadWithInconsistentCounts(): string
+    {
+        return $this->buildCompositeExposureSummaryBytes()
+            . pack('v', 1)
+            . pack('v', 3)
             . pack('V2', 1, 10)
             . pack('V2', 1, 5);
     }
@@ -1884,6 +1915,68 @@ final class TiffExifParserNegativeTest extends TestCase
 
         (new TiffExifParser())->parseFromBlob(
             $this->buildTiffWithCompositeExifTags(3, [5, 3], "\x01\x00"),
+        );
+    }
+
+    /**
+     * Accepts a valid SourceExposureTimesOfCompositeImage payload unchanged.
+     */
+    #[Test]
+    public function acceptValidSourceExposureTimesPayload(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(0, null, $this->buildValidCompositeExposurePayload()),
+        );
+
+        $exposureTimes = $result->sourceExposureTimesOfCompositeImage();
+
+        self::assertNotNull($exposureTimes);
+        self::assertSame(5.0, $exposureTimes->totalExposurePeriod);
+        self::assertSame([[0.1, 0.2]], $exposureTimes->sequences);
+    }
+
+    /**
+     * Rejects truncated payloads in the summary section.
+     */
+    #[Test]
+    public function rejectSourceExposureTimesPayloadWithTruncatedSummary(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1425);
+        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is malformed or truncated');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(0, null, substr($this->buildCompositeExposureSummaryBytes(), 0, 60)),
+        );
+    }
+
+    /**
+     * Rejects payloads truncated in sequence records.
+     */
+    #[Test]
+    public function rejectSourceExposureTimesPayloadWithTruncatedSequenceSection(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1425);
+        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is malformed or truncated');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(0, null, $this->buildCompositeExposurePayloadWithTruncatedSequenceSection()),
+        );
+    }
+
+    /**
+     * Rejects payloads where sequence/image counts exceed available bytes.
+     */
+    #[Test]
+    public function rejectSourceExposureTimesPayloadWithInconsistentCounts(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1425);
+        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is malformed or truncated');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(0, null, $this->buildCompositeExposurePayloadWithInconsistentCounts()),
         );
     }
 

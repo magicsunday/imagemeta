@@ -24,6 +24,7 @@ use PHPUnit\Framework\TestCase;
 
 use function count;
 use function strlen;
+use function substr;
 
 /**
  * Exercises decoding of composite exposure metadata into SourceExposureTimes.
@@ -140,6 +141,77 @@ final class SourceExposureTimesOfCompositeImageTest extends TestCase
     public function returnsNullForTruncatedPayload(): void
     {
         $payload = "\x00\x01\x00\x00";
+        $exifIfd = new Ifd([
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
+                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($payload),
+                $payload,
+            ),
+        ]);
+
+        $parsed = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertNull($parsed->sourceExposureTimesOfCompositeImage());
+    }
+
+    /**
+     * Returns null when a sequence RATIONAL is truncated in the payload tail.
+     *
+     * @return void
+     */
+    #[Test]
+    public function returnsNullForTruncatedSequencePayload(): void
+    {
+        $summary = [
+            [5, 1],
+            [3, 1],
+            [4, 1],
+            [3, 1],
+            [2, 1],
+            [1, 2],
+            [2, 1],
+            [1, 3],
+        ];
+
+        $payload   = $this->buildPayload($summary, Endian::Little, [[0.1, 0.2]]);
+        $truncated = substr($payload, 0, strlen($payload) - 3);
+
+        $exifIfd = new Ifd([
+            ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
+                ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
+                TiffConst::TYPE_UNDEFINED,
+                strlen($truncated),
+                $truncated,
+            ),
+        ]);
+
+        $parsed = new ParsedExif(new Ifd([]), $exifIfd, null, null, null);
+
+        self::assertNull($parsed->sourceExposureTimesOfCompositeImage());
+    }
+
+    /**
+     * Returns null when trailing bytes remain after decoding all declared fields.
+     *
+     * @return void
+     */
+    #[Test]
+    public function returnsNullForPayloadWithTrailingBytes(): void
+    {
+        $summary = [
+            [5, 1],
+            [3, 1],
+            [4, 1],
+            [3, 1],
+            [2, 1],
+            [1, 2],
+            [2, 1],
+            [1, 3],
+        ];
+
+        $payload = $this->buildPayload($summary, Endian::Little, [[0.1, 0.2]]) . "\x00";
+
         $exifIfd = new Ifd([
             ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE => new IfdEntry(
                 ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,

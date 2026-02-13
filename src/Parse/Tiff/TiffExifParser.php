@@ -1319,6 +1319,7 @@ final class TiffExifParser
         );
 
         $this->validateCompositeImageDependencies($exifIfd, $parsedExif);
+        $this->validateSourceExposureTimesPayload($exifIfd, $parsedExif);
 
         return $parsedExif;
     }
@@ -1779,6 +1780,31 @@ final class TiffExifParser
                     );
                 }
             }
+        }
+    }
+
+    /**
+     * Validates strict structural decoding for SourceExposureTimesOfCompositeImage.
+     *
+     * EXIF 3.0 §4.6.6.7.49 Figure 25 defines a complete binary layout. Partial,
+     * truncated, or trailing payload bytes are non-conformant and rejected.
+     */
+    private function validateSourceExposureTimesPayload(?Ifd $exifIfd, ParsedExif $parsedExif): void
+    {
+        if (!$exifIfd instanceof Ifd) {
+            return;
+        }
+
+        $entry = $exifIfd->get(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (!$parsedExif->sourceExposureTimesOfCompositeImage() instanceof SourceExposureTimes) {
+            throw new ParseError(
+                'SourceExposureTimesOfCompositeImage payload is malformed or truncated per EXIF 3.0 §4.6.6.7.49 Figure 25.',
+                1425,
+            );
         }
     }
 
