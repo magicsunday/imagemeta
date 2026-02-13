@@ -1588,6 +1588,55 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts SOF payloads with unique component identifiers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsSofWithUniqueComponentIdentifiers(): void
+    {
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame(
+            [
+                1 => ['horizontal' => 2, 'vertical' => 2],
+                2 => ['horizontal' => 1, 'vertical' => 1],
+                3 => ['horizontal' => 1, 'vertical' => 1],
+            ],
+            $extractor->getFrameComponentSamplingFactors(),
+        );
+    }
+
+    /**
+     * Rejects SOF payloads that declare duplicate component identifiers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSofWithDuplicateComponentIdentifiers(): void
+    {
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x01\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF0, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1500);
+        $this->expectExceptionMessageMatches('/SOF.*duplicate component|duplicate component.*SOF/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
      * Uses sampling factors that yield illegal and reserved subsampling ratios.
      * Ensures the derived YCbCr subsampling is rejected and returns null.
      *

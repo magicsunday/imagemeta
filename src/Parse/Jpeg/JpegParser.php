@@ -2383,6 +2383,18 @@ final class JpegParser
             $horizontal      = $samplingFactors >> 4;
             $vertical        = $samplingFactors & BitMask::LOW_NIBBLE;
 
+            if (array_key_exists($componentId, $components)) {
+                throw new ParseError(
+                    sprintf(
+                        'SOF marker 0x%02X at offset %d contains duplicate component identifier %d',
+                        $marker,
+                        $offset,
+                        $componentId,
+                    ),
+                    1500,
+                );
+            }
+
             if ($horizontal === 0 || $vertical === 0) {
                 throw new ParseError(
                     sprintf('SOF marker 0x%02X at offset %d contains zero sampling factor', $marker, $offset),
