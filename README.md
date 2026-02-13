@@ -55,6 +55,7 @@ composer require magicsunday/imagemeta
 * EXIF `Flash` bitfield parsing now enforces reserved-combination rejection during TIFF/EXIF parsing and exposes typed flash details through `ParsedExif::flashInfo()` while keeping raw `flash()` access.
 * EXIF `CompositeImage` now enforces value-domain and companion-tag dependencies (`SourceImageNumberOfCompositeImage`, `SourceExposureTimesOfCompositeImage`) when `CompositeImage=3`.
 * EXIF `SourceExposureTimesOfCompositeImage` now enforces strict binary-structure decoding (summary + sequence sections) and rejects truncated/partial payloads as conformance errors.
+* TIFF/EXIF `UNDEFINED` values are now kept byte-exact at parser level (including trailing/embedded NUL bytes); any text decoding is handled only by explicit tag-specific converters.
 * EXIF GPS coordinate conversion now enforces geographic ranges for capture and destination coordinates (latitude `[-90,90]`, longitude `[-180,180]`) and rejects out-of-domain values.
 * EXIF `GPSDateStamp`/`GPSTimeStamp` parsing now enforces semantic UTC validity (real calendar date, hour/minute/second ranges) and rejects invalid timestamps.
 * EXIF GPS DMS parsing now rejects negative component magnitudes (degrees/minutes/seconds) and requires hemisphere sign handling exclusively via `GPS*Ref` tags.

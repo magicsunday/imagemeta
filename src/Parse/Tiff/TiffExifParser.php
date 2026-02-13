@@ -1130,10 +1130,6 @@ final class TiffExifParser
         ],
     ];
 
-    private const int ASCII_PRINTABLE_MIN = 0x20;
-
-    private const int ASCII_PRINTABLE_MAX = 0x7E;
-
     private MemoryBuffer $buffer;
 
     private Endian $bo;
@@ -2775,10 +2771,8 @@ final class TiffExifParser
         }
 
         if ($type === TiffConst::TYPE_UNDEFINED) {
-            if ($this->isPrintableAsciiOrNull($bytes)) {
-                return rtrim($bytes, "\0");
-            }
-
+            // TIFF 6.0 §2.2 defines UNDEFINED as uninterpreted bytes. Any
+            // textual interpretation must happen in tag-specific converters.
             return $bytes;
         }
 
@@ -2863,28 +2857,6 @@ final class TiffExifParser
         }
 
         return new ExifNumericList($components);
-    }
-
-    /**
-     * Determines whether the given byte sequence consists only of printable ASCII or NUL bytes.
-     */
-    private function isPrintableAsciiOrNull(string $bytes): bool
-    {
-        $length = strlen($bytes);
-
-        for ($i = 0; $i < $length; ++$i) {
-            $value = ord($bytes[$i]);
-
-            if ($value === 0) {
-                continue;
-            }
-
-            if ($value < self::ASCII_PRINTABLE_MIN || $value > self::ASCII_PRINTABLE_MAX) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**
