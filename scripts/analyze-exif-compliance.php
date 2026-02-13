@@ -38,9 +38,9 @@ foreach ($autoloadPaths as $autoloadPath) {
 final class ComplianceAnalyzer
 {
     private const string SPEC_FILE         = __DIR__ . '/../resources/exif-spec-tags.yaml';
-    private const string EXIF_TAG_CLASS    = __DIR__ . '/../src/Model/Exif/ExifTag.php';
+    private const string EXIF_TAG_CLASS    = __DIR__ . '/../src/Exif/Model/ExifTag.php';
     private const string TIFF_TAG_CLASS    = __DIR__ . '/../src/Model/Tiff/TiffTag.php';
-    private const string PARSED_EXIF_CLASS = __DIR__ . '/../src/Model/Exif/ParsedExif.php';
+    private const string PARSED_EXIF_CLASS = __DIR__ . '/../src/Exif/Model/ParsedExif.php';
     private const string OUTPUT_JSON       = __DIR__ . '/../docs/compliance-report.json';
     private const string OUTPUT_YAML       = __DIR__ . '/../docs/compliance-report.yaml';
 
@@ -147,19 +147,27 @@ final class ComplianceAnalyzer
      */
     private function loadImplementation(): void
     {
-        // Parse ExifTag.php for constants
-        if (file_exists(self::EXIF_TAG_CLASS)) {
-            $this->parseExifTagConstants();
-        }
+        $this->assertRequiredSourceFiles();
+        $this->parseExifTagConstants();
+        $this->parseTiffTagConstants();
+        $this->parseParsedExifMethods();
+    }
 
-        // Parse TiffTag.php for constants
-        if (file_exists(self::TIFF_TAG_CLASS)) {
-            $this->parseTiffTagConstants();
-        }
+    /**
+     * Ensures all required source files exist before analysis starts.
+     */
+    private function assertRequiredSourceFiles(): void
+    {
+        $requiredFiles = [
+            self::EXIF_TAG_CLASS,
+            self::TIFF_TAG_CLASS,
+            self::PARSED_EXIF_CLASS,
+        ];
 
-        // Parse ParsedExif.php for public getter methods
-        if (file_exists(self::PARSED_EXIF_CLASS)) {
-            $this->parseParsedExifMethods();
+        foreach ($requiredFiles as $requiredFile) {
+            if (!file_exists($requiredFile)) {
+                throw new RuntimeException('Required source file not found: ' . $requiredFile);
+            }
         }
     }
 
@@ -170,7 +178,7 @@ final class ComplianceAnalyzer
     {
         $content = file_get_contents(self::EXIF_TAG_CLASS);
         if ($content === false) {
-            return;
+            throw new RuntimeException('Failed to read ExifTag source: ' . self::EXIF_TAG_CLASS);
         }
 
         // Match: public const int TAG_NAME = 0xHEX;
@@ -194,7 +202,7 @@ final class ComplianceAnalyzer
     {
         $content = file_get_contents(self::TIFF_TAG_CLASS);
         if ($content === false) {
-            return;
+            throw new RuntimeException('Failed to read TiffTag source: ' . self::TIFF_TAG_CLASS);
         }
 
         // Match: public const int TAG_NAME = 0xHEX;
@@ -220,7 +228,7 @@ final class ComplianceAnalyzer
     {
         $content = file_get_contents(self::PARSED_EXIF_CLASS);
         if ($content === false) {
-            return;
+            throw new RuntimeException('Failed to read ParsedExif source: ' . self::PARSED_EXIF_CLASS);
         }
 
         // Match: public function methodName(): type

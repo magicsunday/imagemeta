@@ -29,8 +29,8 @@ Each tag includes:
 
 PHP script that:
 1. Loads specification tags from `resources/exif-spec-tags.yaml`
-2. Parses implementation from `src/Model/Exif/ExifTag.php` (constant definitions)
-3. Scans `src/Model/Exif/ParsedExif.php` for public getter methods (actual implementation)
+2. Parses implementation from `src/Exif/Model/ExifTag.php` (constant definitions)
+3. Scans `src/Exif/Model/ParsedExif.php` for public getter methods (actual implementation)
 4. Determines status for each tag
 5. Generates compliance reports in JSON and YAML formats
 
@@ -180,10 +180,10 @@ To improve compliance coverage, see **[TAGS_TO_IMPLEMENT.md](TAGS_TO_IMPLEMENT.m
 
 **Quick steps**:
 
-1. **Add missing constants** to `src/Model/Exif/ExifTag.php` (if needed)
-2. **Implement getter methods** in `src/Model/Exif/ParsedExif.php`
+1. **Add missing constants** to `src/Exif/Model/ExifTag.php` (if needed)
+2. **Implement getter methods** in `src/Exif/Model/ParsedExif.php`
 3. **Add tests** for new tag support
-4. **Re-run analyzer** to verify improvement: `composer ci:compliance`
+4. **Re-run analyzer** to verify improvement: `composer ci:test:php:compliance`
 
 **Note**: The analyzer scans ParsedExif directly for public getter methods, not `exif-map.yaml`. Focus on implementing actual functionality in ParsedExif.
 
@@ -214,8 +214,8 @@ Planned improvements to the compliance system:
 When adding support for new EXIF/TIFF tags:
 
 1. Verify tag is in `resources/exif-spec-tags.yaml` (add if missing)
-2. Add constant to `src/Model/Exif/ExifTag.php`
-3. Implement public getter method in `src/Model/Exif/ParsedExif.php`
+2. Add constant to `src/Exif/Model/ExifTag.php`
+3. Implement public getter method in `src/Exif/Model/ParsedExif.php`
 4. Add unit tests
 5. Run compliance analyzer
 6. Update this documentation if needed

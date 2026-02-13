@@ -47,6 +47,7 @@ composer require magicsunday/imagemeta
 * Parsed EXIF datetime assembly now validates raw `OffsetTime*` values through the same EXIF offset parser, so identifier/malformed offsets are rejected instead of silently defaulting to UTC.
 * Parsed EXIF DateTime* parsing no longer assumes UTC when OffsetTime* is missing; absolute timestamps are emitted only when a valid EXIF offset is present.
 * Parsed EXIF DateTime* parsing now rejects calendar/time overflow warnings from PHP datetime normalization (for example month/day/hour overflow) instead of accepting normalized outputs.
+* EXIF/TIFF compliance analysis now reads current `src/Exif/Model/*` source paths, hard-fails when required source files are missing, and runs in CI through `ci:test:php:compliance`.
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
 * Strict EXIF-JPEG marker profile now rejects progressive `SOF2`; only baseline `SOF0` is accepted for conformant parsing.
 * Strict EXIF-JPEG SOF validation now enforces 8-bit precision, exactly three YCbCr component IDs (`1/2/3`), and legal YCbCr subsampling (`4:2:2`/`4:2:0`).
@@ -256,7 +257,7 @@ This library tracks compliance with official EXIF 3.0, EXIF 2.32, and TIFF 6.0 s
 | ➕ Extra (not in spec)    |           0 |     -      |
 | **Overall Coverage**     | **227/227** | **100.0%** |
 
-*Last updated: 2025-11-10 20:00:18 UTC*
+*Last updated: 2026-02-13 15:22:38 UTC*
 
 ### Coverage by Category
 
