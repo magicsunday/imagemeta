@@ -30,6 +30,7 @@ use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
+use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
 use function array_any;
 use function array_slice;
@@ -1307,7 +1308,7 @@ final class TiffExifParser
 
         $makerNotes = $this->resolveMakerNotes($registry, $ifd0, $exifIfd);
 
-        return new ParsedExif(
+        $parsedExif = new ParsedExif(
             $ifd0,
             $exifIfd,
             $gpsIfd,
@@ -1316,6 +1317,10 @@ final class TiffExifParser
             $makerNotes,
             $additionalIfds,
         );
+
+        $this->validateCompositeImageDependencies($exifIfd, $parsedExif);
+
+        return $parsedExif;
     }
 
     /**
@@ -1774,6 +1779,67 @@ final class TiffExifParser
                     );
                 }
             }
+        }
+    }
+
+    /**
+     * Validates CompositeImage value domain and required companion tags.
+     *
+     * EXIF 3.0 §4.6.6.7.47 defines CompositeImage values 0..3 and reserves
+     * all other codes. When value 3 is present, §4.6.6.7.48 and §4.6.6.7.49
+     * require both companion tags with valid payload structures.
+     */
+    private function validateCompositeImageDependencies(?Ifd $exifIfd, ParsedExif $parsedExif): void
+    {
+        if (!$exifIfd instanceof Ifd) {
+            return;
+        }
+
+        $compositeImage = $exifIfd->get(ExifTag::COMPOSITE_IMAGE);
+        if (!($compositeImage instanceof IfdEntry) || !is_int($compositeImage->value)) {
+            return;
+        }
+
+        $compositeValue = $compositeImage->value;
+        if (($compositeValue < 0) || ($compositeValue > 3)) {
+            throw new ParseError(
+                sprintf('CompositeImage value %d is outside the valid domain {0,1,2,3} per EXIF 3.0 §4.6.6.7.47.', $compositeValue),
+                1420,
+            );
+        }
+
+        if ($compositeValue !== 3) {
+            return;
+        }
+
+        $sourceImageNumber = $exifIfd->get(ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE);
+        if (!$sourceImageNumber instanceof IfdEntry) {
+            throw new ParseError(
+                'CompositeImage value 3 requires SourceImageNumberOfCompositeImage per EXIF 3.0 §4.6.6.7.48.',
+                1421,
+            );
+        }
+
+        if ($parsedExif->sourceImageNumberOfCompositeImage() === null) {
+            throw new ParseError(
+                'SourceImageNumberOfCompositeImage payload is invalid for CompositeImage value 3 per EXIF 3.0 §4.6.6.7.48.',
+                1422,
+            );
+        }
+
+        $sourceExposureTimes = $exifIfd->get(ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE);
+        if (!$sourceExposureTimes instanceof IfdEntry) {
+            throw new ParseError(
+                'CompositeImage value 3 requires SourceExposureTimesOfCompositeImage per EXIF 3.0 §4.6.6.7.49.',
+                1423,
+            );
+        }
+
+        if (!$parsedExif->sourceExposureTimesOfCompositeImage() instanceof SourceExposureTimes) {
+            throw new ParseError(
+                'SourceExposureTimesOfCompositeImage payload is invalid for CompositeImage value 3 per EXIF 3.0 §4.6.6.7.49.',
+                1424,
+            );
         }
     }
 

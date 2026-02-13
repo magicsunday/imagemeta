@@ -702,6 +702,128 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Builds a classic TIFF with CompositeImage and optional companion tags in Exif IFD.
+     *
+     * @param int                     $compositeImageValue CompositeImage SHORT[1] value.
+     * @param array{0:int,1:int}|null $sourceImageNumber   SourceImageNumberOfCompositeImage SHORT[2] pair.
+     * @param string|null             $sourceExposureTimes SourceExposureTimesOfCompositeImage UNDEFINED payload.
+     */
+    private function buildTiffWithCompositeExifTags(
+        int $compositeImageValue,
+        ?array $sourceImageNumber,
+        ?string $sourceExposureTimes,
+    ): string {
+        $ifd0Offset     = 8;
+        $ifd0EntryCount = 3;
+        $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
+        $exifIfdOffset  = $ifd0Offset + $ifd0Size;
+
+        $entries = [
+            [
+                'tag'   => ExifTag::COMPOSITE_IMAGE,
+                'type'  => TiffConst::TYPE_SHORT,
+                'count' => 1,
+                'value' => pack('v', $compositeImageValue),
+            ],
+        ];
+
+        if ($sourceImageNumber !== null) {
+            $entries[] = [
+                'tag'   => ExifTag::SOURCE_IMAGE_NUMBER_OF_COMPOSITE_IMAGE,
+                'type'  => TiffConst::TYPE_SHORT,
+                'count' => 2,
+                'value' => pack('v', $sourceImageNumber[0]) . pack('v', $sourceImageNumber[1]),
+            ];
+        }
+
+        if ($sourceExposureTimes !== null) {
+            $entries[] = [
+                'tag'   => ExifTag::SOURCE_EXPOSURE_TIMES_OF_COMPOSITE_IMAGE,
+                'type'  => TiffConst::TYPE_UNDEFINED,
+                'count' => strlen($sourceExposureTimes),
+                'value' => $sourceExposureTimes,
+            ];
+        }
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifd0Offset);
+
+        $blob .= pack('v', $ifd0EntryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::EXIF_IFD_POINTER)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $exifIfdOffset)
+            . pack('V', 0);
+
+        $exifIfdEntryCount = count($entries);
+        $exifIfdSize       = 2 + ($exifIfdEntryCount * 12) + 4;
+        $dataOffset        = $exifIfdOffset + $exifIfdSize;
+        $exifIfdBlob       = pack('v', $exifIfdEntryCount);
+        $payloadBlob       = '';
+
+        foreach ($entries as $entry) {
+            $tag   = $entry['tag'];
+            $type  = $entry['type'];
+            $count = $entry['count'];
+            $value = $entry['value'];
+            $size  = $this->bytesPerCompositeComponent($type) * $count;
+
+            if ($size <= 4) {
+                $exifIfdBlob .= pack('v', $tag)
+                    . pack('v', $type)
+                    . pack('V', $count)
+                    . str_pad(substr($value, 0, $size), 4, "\0");
+                continue;
+            }
+
+            $exifIfdBlob .= pack('v', $tag)
+                . pack('v', $type)
+                . pack('V', $count)
+                . pack('V', $dataOffset);
+
+            $payloadBlob .= substr($value, 0, $size);
+            $dataOffset += $size;
+
+            if (($dataOffset % 2) !== 0) {
+                $payloadBlob .= "\0";
+                ++$dataOffset;
+            }
+        }
+
+        $exifIfdBlob .= pack('V', 0);
+
+        return $blob . $exifIfdBlob . $payloadBlob;
+    }
+
+    /**
+     * Builds a valid little-endian SourceExposureTimesOfCompositeImage payload.
+     */
+    private function buildValidCompositeExposurePayload(): string
+    {
+        return pack('V2', 5, 1)
+            . pack('V2', 3, 1)
+            . pack('V2', 4, 1)
+            . pack('V2', 3, 1)
+            . pack('V2', 2, 1)
+            . pack('V2', 1, 2)
+            . pack('V2', 2, 1)
+            . pack('V2', 1, 3)
+            . pack('v', 1)
+            . pack('v', 2)
+            . pack('V2', 1, 10)
+            . pack('V2', 1, 5);
+    }
+
+    /**
      * Builds a minimal valid TIFF blob with an SRATIONAL value.
      * This checks the behavior for the specific inputs used in the test.
      *
@@ -1210,6 +1332,14 @@ final class TiffExifParserNegativeTest extends TestCase
         };
     }
 
+    private function bytesPerCompositeComponent(int $type): int
+    {
+        return match ($type) {
+            TiffConst::TYPE_SHORT => 2,
+            default               => 1,
+        };
+    }
+
     /**
      * Builds a minimal classic TIFF with a single SHORT[1] tag.
      */
@@ -1639,6 +1769,132 @@ final class TiffExifParserNegativeTest extends TestCase
         yield 'reserved return-status combination' => [0x02, 1418];
         yield 'return-not-detected without fired bit' => [0x04, 1419];
         yield 'return-detected without fired bit' => [0x06, 1419];
+    }
+
+    /**
+     * Accepts CompositeImage values 0..2 without requiring companion tags.
+     *
+     * @param int $compositeImageValue CompositeImage tag value in the non-captured range.
+     */
+    #[Test]
+    #[DataProvider('provideCompositeImageValuesWithoutCompanionRequirements')]
+    public function acceptCompositeImageValuesWithoutCompanionRequirements(int $compositeImageValue): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags($compositeImageValue, null, null),
+        );
+
+        self::assertSame($compositeImageValue, $result->compositeImage()?->value);
+        self::assertNull($result->sourceImageNumberOfCompositeImage());
+        self::assertNull($result->sourceExposureTimesOfCompositeImage());
+    }
+
+    /**
+     * Accepts CompositeImage value 3 when both companion tags are present and valid.
+     */
+    #[Test]
+    public function acceptCompositeImageCapturedWithRequiredCompanionTags(): void
+    {
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(
+                3,
+                [5, 3],
+                $this->buildValidCompositeExposurePayload(),
+            ),
+        );
+
+        $exposureTimes = $result->sourceExposureTimesOfCompositeImage();
+
+        self::assertSame(3, $result->compositeImage()?->value);
+        self::assertSame([5, 3], $result->sourceImageNumberOfCompositeImage());
+        self::assertNotNull($exposureTimes);
+        self::assertSame(5.0, $exposureTimes->totalExposurePeriod);
+        self::assertSame([[0.1, 0.2]], $exposureTimes->sequences);
+    }
+
+    /**
+     * Rejects reserved CompositeImage values outside 0..3.
+     */
+    #[Test]
+    public function rejectReservedCompositeImageValue(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1420);
+        $this->expectExceptionMessage('CompositeImage value 4 is outside the valid domain');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(4, null, null),
+        );
+    }
+
+    /**
+     * Rejects CompositeImage=3 when SourceImageNumberOfCompositeImage is missing.
+     */
+    #[Test]
+    public function rejectCompositeImageCapturedWithoutSourceImageCountTag(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1421);
+        $this->expectExceptionMessage('CompositeImage value 3 requires SourceImageNumberOfCompositeImage');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(3, null, $this->buildValidCompositeExposurePayload()),
+        );
+    }
+
+    /**
+     * Rejects CompositeImage=3 when SourceExposureTimesOfCompositeImage is missing.
+     */
+    #[Test]
+    public function rejectCompositeImageCapturedWithoutSourceExposureTimesTag(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1423);
+        $this->expectExceptionMessage('CompositeImage value 3 requires SourceExposureTimesOfCompositeImage');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(3, [5, 3], null),
+        );
+    }
+
+    /**
+     * Rejects CompositeImage=3 when SourceImageNumberOfCompositeImage payload is invalid.
+     */
+    #[Test]
+    public function rejectCompositeImageCapturedWithInvalidSourceImageCountPayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1422);
+        $this->expectExceptionMessage('SourceImageNumberOfCompositeImage payload is invalid');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(3, [1, 1], $this->buildValidCompositeExposurePayload()),
+        );
+    }
+
+    /**
+     * Rejects CompositeImage=3 when SourceExposureTimesOfCompositeImage payload is invalid.
+     */
+    #[Test]
+    public function rejectCompositeImageCapturedWithInvalidSourceExposurePayload(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1424);
+        $this->expectExceptionMessage('SourceExposureTimesOfCompositeImage payload is invalid');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCompositeExifTags(3, [5, 3], "\x01\x00"),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{0:int}>
+     */
+    public static function provideCompositeImageValuesWithoutCompanionRequirements(): iterable
+    {
+        yield 'not composite' => [0];
+        yield 'general composite' => [1];
+        yield 'composite image created by processing' => [2];
     }
 
     /**
