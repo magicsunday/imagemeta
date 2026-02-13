@@ -32,6 +32,7 @@ use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 
 use function chr;
+use function iconv;
 use function pack;
 use function strlen;
 use function substr;
@@ -826,7 +827,10 @@ final class ValueConvertersTest extends TestCase
     public function decodesGpsUndefinedStringsWithEncodings(): void
     {
         $unicodePayload = "UNICODE\0測位方式\0";
-        $jisPayload     = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E) . "\0";
+        $jisContent     = iconv('UTF-8', 'ISO-2022-JP', '東京');
+        self::assertIsString($jisContent);
+
+        $jisPayload = "JIS\0\0\0\0\0" . $jisContent . "\0";
 
         $gps = new Ifd([
             ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(
@@ -847,6 +851,54 @@ final class ValueConvertersTest extends TestCase
 
         self::assertSame('測位方式', $result['processing_method']);
         self::assertSame('東京', $result['area_information']);
+    }
+
+    /**
+     * Rejects Shift-JIS payloads when the EXIF marker declares JIS semantics.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsGpsUndefinedJisPayloadEncodedAsShiftJis(): void
+    {
+        $shiftJisPayload = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E) . "\0";
+
+        $gps = new Ifd([
+            ExifTag::GPS_AREA_INFORMATION => new IfdEntry(
+                ExifTag::GPS_AREA_INFORMATION,
+                7,
+                strlen($shiftJisPayload),
+                $shiftJisPayload,
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertNull($result['area_information']);
+    }
+
+    /**
+     * Rejects malformed JIS payloads for GPS undefined strings.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMalformedGpsUndefinedJisPayload(): void
+    {
+        $malformedPayload = "JIS\0\0\0\0\0\x1B\x24\x42\x24";
+
+        $gps = new Ifd([
+            ExifTag::GPS_AREA_INFORMATION => new IfdEntry(
+                ExifTag::GPS_AREA_INFORMATION,
+                7,
+                strlen($malformedPayload),
+                $malformedPayload,
+            ),
+        ]);
+
+        $result = ValueConverters::gpsFromIfd($gps);
+
+        self::assertNull($result['area_information']);
     }
 
     /**

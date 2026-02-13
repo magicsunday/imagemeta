@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Text\JisTextDecoder;
 use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
@@ -4075,41 +4076,11 @@ final readonly class ParsedExif
     }
 
     /**
-     * Decodes a Shift-JIS encoded user comment.
+     * Decodes a JIS-marker user comment using ISO-2022-JP/JIS strategy.
      */
     private function decodeJisComment(string $content): ?string
     {
-        if ($content === '') {
-            return null;
-        }
-
-        $sources = ['SJIS', 'SJIS-win', 'CP932'];
-        $targets = ['UTF-8', 'UTF-8//IGNORE', 'UTF-8//TRANSLIT'];
-
-        foreach ($sources as $source) {
-            foreach ($targets as $target) {
-                $converted = @iconv($source, $target, $content);
-                if ($converted === false) {
-                    continue;
-                }
-
-                $trimmed = trim($converted);
-                if ($trimmed === '') {
-                    continue;
-                }
-
-                return $trimmed;
-            }
-        }
-
-        $stripped = preg_replace('/[^\x20-\x7E]/', '', $content);
-        if ($stripped === null) {
-            return null;
-        }
-
-        $trimmed = trim($stripped);
-
-        return $trimmed === '' ? null : $trimmed;
+        return JisTextDecoder::decode($content);
     }
 
     /**

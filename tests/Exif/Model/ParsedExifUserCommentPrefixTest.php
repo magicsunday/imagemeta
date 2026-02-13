@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function iconv;
 use function pack;
 use function strlen;
 
@@ -164,6 +165,43 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
 
         self::assertSame('測位方式', $parsedExif->userComment());
         self::assertSame('UNICODE', $parsedExif->userCommentEncoding());
+    }
+
+    /**
+     * Supplies a JIS-prefixed comment encoded as ISO-2022-JP.
+     * Confirms JIS-marker decoding follows EXIF-aligned JIS strategy.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsJisPrefixWithIso2022JpContent(): void
+    {
+        $jisContent = iconv('UTF-8', 'ISO-2022-JP', '東京');
+        self::assertIsString($jisContent);
+
+        $raw = "JIS\0\0\0\0\0" . $jisContent;
+
+        $parsedExif = $this->parsedExifWithUserComment($raw);
+
+        self::assertSame('東京', $parsedExif->userComment());
+        self::assertSame('JIS', $parsedExif->userCommentEncoding());
+    }
+
+    /**
+     * Supplies Shift-JIS bytes under a JIS marker.
+     * Confirms non-JIS payloads are rejected without silent Shift-JIS fallback.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsJisPrefixWithShiftJisContent(): void
+    {
+        $raw = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E);
+
+        $parsedExif = $this->parsedExifWithUserComment($raw);
+
+        self::assertNull($parsedExif->userComment());
+        self::assertSame('JIS', $parsedExif->userCommentEncoding());
     }
 
     private function parsedExifWithUserComment(string $raw): ParsedExif

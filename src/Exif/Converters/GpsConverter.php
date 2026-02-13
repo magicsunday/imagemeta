@@ -21,6 +21,7 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Text\JisTextDecoder;
 use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 
@@ -1166,15 +1167,6 @@ final readonly class GpsConverter
      */
     private function decodeUndefinedJis(string $payload): ?string
     {
-        if ($payload === '') {
-            return null;
-        }
-
-        $converted = @iconv('SJIS', 'UTF-8', $payload);
-        if ($converted !== false) {
-            return $this->stringConverter->sanitize($converted);
-        }
-
-        return $this->stringConverter->sanitize($payload);
+        return JisTextDecoder::decode($payload);
     }
 }
