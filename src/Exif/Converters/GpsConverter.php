@@ -21,10 +21,10 @@ use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
+use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
 use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 
 use function abs;
-use function array_find;
 use function checkdate;
 use function count;
 use function floor;
@@ -1091,29 +1091,42 @@ final readonly class GpsConverter
 
         $prefixBytes = substr($value, 0, 8);
         $payload     = substr($value, 8);
-
-        $prefixes = [
-            "ASCII\0\0\0"   => CharacterEncoding::ASCII,
-            "UNICODE\0"     => CharacterEncoding::UTF16LE,
-            "JIS\0\0\0\0\0" => CharacterEncoding::JIS,
-        ];
-
-        $encoding = array_find($prefixes, fn (CharacterEncoding $encodingEnum, string $prefix): bool => $prefixBytes === $prefix);
-
-        // EXIF 3.0 §4.6.4: all-NULL prefix denotes UNDEFINED encoding
-        if ($encoding === null && trim($prefixBytes, "\0") === '') {
-            return $this->stringConverter->sanitize($payload);
+        $marker      = UndefinedTextMarker::canonicalMarkerFromPrefix($prefixBytes);
+        if ($marker === '') {
+            return null;
         }
 
-        if ($encoding === null) {
+        $encoding = UndefinedTextMarker::encodingForMarker($marker);
+        if (!$encoding instanceof CharacterEncoding) {
             return null;
         }
 
         return match ($encoding) {
-            CharacterEncoding::UTF16LE => $this->decodeUndefinedUnicode($payload),
-            CharacterEncoding::JIS     => $this->decodeUndefinedJis($payload),
-            default                    => $this->stringConverter->sanitize($payload),
+            CharacterEncoding::UTF8 => $this->decodeUndefinedUtf8($payload),
+            CharacterEncoding::JIS  => $this->decodeUndefinedJis($payload),
+            CharacterEncoding::ASCII,
+            CharacterEncoding::UNDEFINED => $this->stringConverter->sanitize($payload),
+            default                      => null,
         };
+    }
+
+    /**
+     * Decodes EXIF 3.0 UNICODE-marker payloads as UTF-8.
+     *
+     * For compatibility with older EXIF 2.x ecosystem payloads that used UTF-16
+     * under the same marker, BOM-tagged UTF-16 payloads are accepted as fallback.
+     */
+    private function decodeUndefinedUtf8(string $payload): ?string
+    {
+        if ($payload === '') {
+            return null;
+        }
+
+        if (preg_match('//u', $payload) === 1) {
+            return $this->stringConverter->sanitize($payload);
+        }
+
+        return $this->decodeUndefinedUnicode($payload);
     }
 
     /**

@@ -19,6 +19,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
+use function pack;
 use function strlen;
 
 /**
@@ -112,6 +113,57 @@ final class ParsedExifUserCommentPrefixTest extends TestCase
 
         self::assertSame('Some content', $parsedExif->userComment());
         self::assertSame('UNDEFINED', $parsedExif->userCommentEncoding());
+    }
+
+    /**
+     * Supplies a UNICODE-prefixed UTF-8 UserComment payload.
+     * Confirms EXIF 3.0 UTF-8 semantics are applied for the UNICODE marker.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsUnicodePrefixWithUtf8Content(): void
+    {
+        $raw = "UNICODE\0測位方式";
+
+        $parsedExif = $this->parsedExifWithUserComment($raw);
+
+        self::assertSame('測位方式', $parsedExif->userComment());
+        self::assertSame('UNICODE', $parsedExif->userCommentEncoding());
+    }
+
+    /**
+     * Supplies a malformed UTF-8 payload with UNICODE marker.
+     * Confirms invalid UTF-8 is rejected under EXIF 3.0 semantics.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsUnicodePrefixWithMalformedUtf8Content(): void
+    {
+        $raw = "UNICODE\0\xC3\x28";
+
+        $parsedExif = $this->parsedExifWithUserComment($raw);
+
+        self::assertNull($parsedExif->userComment());
+        self::assertSame('UNICODE', $parsedExif->userCommentEncoding());
+    }
+
+    /**
+     * Supplies a legacy UTF-16BE-with-BOM payload under UNICODE marker.
+     * Confirms compatibility fallback keeps existing EXIF 2.x ecosystem behavior.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsUnicodePrefixWithLegacyUtf16BomContent(): void
+    {
+        $raw = "UNICODE\0\xFE\xFF" . pack('n*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F);
+
+        $parsedExif = $this->parsedExifWithUserComment($raw);
+
+        self::assertSame('測位方式', $parsedExif->userComment());
+        self::assertSame('UNICODE', $parsedExif->userCommentEncoding());
     }
 
     private function parsedExifWithUserComment(string $raw): ParsedExif

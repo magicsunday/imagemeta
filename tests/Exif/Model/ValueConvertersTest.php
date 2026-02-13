@@ -825,7 +825,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function decodesGpsUndefinedStringsWithEncodings(): void
     {
-        $unicodePayload = "UNICODE\0\xFF\xFE" . pack('v*', 0x6E2C, 0x4F4D, 0x65B9, 0x5F0F) . "\0\0";
+        $unicodePayload = "UNICODE\0測位方式\0";
         $jisPayload     = "JIS\0\0\0\0\0" . pack('C*', 0x93, 0x8C, 0x8B, 0x9E) . "\0";
 
         $gps = new Ifd([
@@ -881,7 +881,7 @@ final class ValueConvertersTest extends TestCase
     #[Test]
     public function rejectsMalformedGpsUndefinedUnicodePayload(): void
     {
-        $malformedPayload = "UNICODE\0\xFF\xFE\x61";
+        $malformedPayload = "UNICODE\0\xC3\x28";
 
         $gps = new Ifd([
             ExifTag::GPS_PROCESSING_METHOD => new IfdEntry(

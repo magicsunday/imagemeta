@@ -18,6 +18,7 @@ use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\Util\UInt64;
 use MagicSunday\ImageMeta\Core\Util\Unpack;
 use MagicSunday\ImageMeta\Exif\ExifCapabilities;
+use MagicSunday\ImageMeta\Exif\Text\UndefinedTextMarker;
 use MagicSunday\ImageMeta\Exif\ValueConverters;
 use MagicSunday\ImageMeta\MakerNotes\MakerNotesRecord;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
@@ -78,7 +79,6 @@ use function str_pad;
 use function str_replace;
 use function strlen;
 use function strpos;
-use function strtoupper;
 use function substr;
 use function substr_count;
 use function trim;
@@ -979,25 +979,7 @@ final readonly class ParsedExif
      */
     private function canonicalUserCommentMarker(string $prefix): string
     {
-        $stripped = trim(str_replace(['\\0', "\0"], '', $prefix));
-
-        if ($stripped === '') {
-            return 'UNDEFINED';
-        }
-
-        if (preg_match('/^([A-Za-z]+)/', $stripped, $matches) !== 1) {
-            return '';
-        }
-
-        $normalized = strtoupper($matches[1]);
-
-        return match ($normalized) {
-            'ASCII'   => 'ASCII',
-            'JIS'     => 'JIS',
-            'UNICODE' => 'UNICODE',
-            'UNDEFINED', 'UNDEF', 'UTF8' => 'UNDEFINED',
-            default => '',
-        };
+        return UndefinedTextMarker::canonicalMarkerFromPrefix($prefix);
     }
 
     /**
@@ -4031,10 +4013,65 @@ final readonly class ParsedExif
         }
 
         return match ($canonicalEncoding) {
-            'UNICODE' => $this->decodeUnicodeComment($content),
+            'UNICODE' => $this->decodeUnicodeUserComment($content),
             'JIS'     => $this->decodeJisComment($sanitized),
             default   => $sanitized,
         };
+    }
+
+    /**
+     * Decodes UNICODE-marker user comments using EXIF 3.0 UTF-8 semantics.
+     *
+     * Compatibility policy:
+     * - EXIF 3.0 `UNICODE\0`: decode as UTF-8.
+     * - Legacy fallback: when UTF-8 validation fails, accept BOM-tagged UTF-16
+     *   payloads for older EXIF 2.x ecosystem files.
+     */
+    private function decodeUnicodeUserComment(string $content): ?string
+    {
+        if ($content === '') {
+            return null;
+        }
+
+        if (preg_match('//u', $content) === 1) {
+            $trimmed = trim($content, "\0 ");
+
+            return $trimmed === '' ? null : $trimmed;
+        }
+
+        return $this->decodeLegacyUnicodeCommentFromBom($content);
+    }
+
+    /**
+     * Decodes legacy UTF-16 user comment payloads if they contain an explicit BOM.
+     */
+    private function decodeLegacyUnicodeCommentFromBom(string $content): ?string
+    {
+        if (strlen($content) < 2) {
+            return null;
+        }
+
+        $byteOrderMark = substr($content, 0, 2);
+        $payload       = substr($content, 2);
+
+        $encoding = match ($byteOrderMark) {
+            "\xFF\xFE" => 'UTF-16LE',
+            "\xFE\xFF" => 'UTF-16BE',
+            default    => null,
+        };
+
+        if (($encoding === null) || ($payload === '') || (strlen($payload) % 2 !== 0)) {
+            return null;
+        }
+
+        $converted = @iconv($encoding, 'UTF-8', $payload);
+        if ($converted === false) {
+            return null;
+        }
+
+        $trimmed = trim($converted, "\0 ");
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     /**
