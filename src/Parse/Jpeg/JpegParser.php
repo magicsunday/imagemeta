@@ -428,7 +428,7 @@ final class JpegParser
             }
 
             if ($marker === Marker::SOS) {
-                $this->requireEoiAfterSos($offset);
+                $this->requireEoiAfterSos($offset, $firstDriOffset);
                 break; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
             }
 
@@ -632,14 +632,17 @@ final class JpegParser
     /**
      * Validates that scan data following SOS is terminated by an EOI marker.
      *
-     * EXIF 3.0 §4.7 (Table 2) requires EOI as the JPEG stream terminator.
+     * EXIF 3.0 §4.7 (Table 2) requires EOI as the JPEG stream terminator and
+     * requires restart markers in scan data when DRI is declared.
      *
-     * @param int $sosOffset Offset where the SOS marker starts.
+     * @param int      $sosOffset Offset where the SOS marker starts.
+     * @param int|null $driOffset Offset of the DRI marker when present.
      */
-    private function requireEoiAfterSos(int $sosOffset): void
+    private function requireEoiAfterSos(int $sosOffset, ?int $driOffset): void
     {
         $scanHeaderLength = $this->readSegmentLength(Marker::SOS, $sosOffset, false);
         $this->readSegmentPayload(Marker::SOS, $sosOffset, $scanHeaderLength - 2);
+        $hasRestartMarker = false;
 
         while (true) {
             try {
@@ -655,7 +658,23 @@ final class JpegParser
                 );
             }
 
+            if (($marker >= Marker::RST_FIRST) && ($marker <= Marker::RST_LAST)) {
+                $hasRestartMarker = true;
+                continue;
+            }
+
             if ($marker === Marker::EOI) {
+                if (($driOffset !== null) && !$hasRestartMarker) {
+                    throw new ParseError(
+                        sprintf(
+                            'JPEG stream declares DRI marker at offset %d but scan data after SOS at offset %d contains no restart markers',
+                            $driOffset,
+                            $sosOffset,
+                        ),
+                        1485,
+                    );
+                }
+
                 return;
             }
         }

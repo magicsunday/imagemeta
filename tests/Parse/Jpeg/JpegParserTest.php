@@ -1571,6 +1571,60 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts scan data with DRI when at least one restart marker appears before EOI.
+     * This verifies stream-level DRI/RST conformance without changing metadata extraction.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsDriWhenScanDataContainsRestartMarker(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
+        $xmpPayload  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">DRI-RST</x:xmpmeta>';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpPayload)
+            . self::segment(self::MARKER_DRI, pack('n', 8))
+            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\x00" . 'scan'
+            . "\xFF\xD0"
+            . 'tail'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([$xmpPayload], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Rejects JPEG scan data without restart markers when DRI is declared.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDriWhenScanDataContainsNoRestartMarkers(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DRI, pack('n', 8))
+            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\x00" . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1485);
+        $this->expectExceptionMessageMatches('/DRI.*restart|restart.*DRI/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
      * Accepts scan data when SOS is followed by a valid EOI marker.
      * This verifies metadata extraction remains unchanged for conformant streams.
      *
