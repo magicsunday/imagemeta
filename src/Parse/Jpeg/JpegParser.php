@@ -26,6 +26,7 @@ use function iconv;
 use function implode;
 use function in_array;
 use function ksort;
+use function max;
 use function min;
 use function ord;
 use function range;
@@ -89,6 +90,10 @@ final class JpegParser
 
     private const int FLASHPIX_MAX_STREAM_SIZE = 16_777_216; // 16 MiB per stream
 
+    private const int APP11_TRANSPORT_HEADER_LENGTH = 10;
+
+    private const int APP11_MAX_SEQUENCE_NUMBER = 65_535;
+
     private bool $parsed = false;
 
     /** @var list<string> */
@@ -109,6 +114,15 @@ final class JpegParser
     private ?int $iccExpectedCount = null;
 
     private ?string $iccProfile = null;
+
+    /** @var array<int, array<int, string>> */
+    private array $app11Sequence = [];
+
+    /** @var array<int, string> */
+    private array $app11Identifier = [];
+
+    /** @var array<int, int> */
+    private array $app11FirstOffset = [];
 
     /** @var array<int, array{size:int, defaultByte:int, isStorage:bool}> */
     private array $flashPixContents = [];
@@ -497,6 +511,7 @@ final class JpegParser
             }
         }
 
+        $this->finaliseApp11Segments();
         $this->finaliseFlashPixStreams();
 
         if ($this->mpfSegments !== []) {
@@ -745,14 +760,150 @@ final class JpegParser
             return;
         }
 
-        $jumbfSuperbox = $this->extractApp11JumbfSuperbox($payload, $offset);
-        $this->collectApp11XmlPacketsFromBoxes($jumbfSuperbox, $offset);
+        $header         = $this->parseApp11TransportHeader($payload, $offset);
+        $identifier     = $header['identifier'];
+        $instanceNumber = $header['instance'];
+        $sequenceNumber = $header['sequence'];
+        $transportData  = $header['data'];
+
+        if (!array_key_exists($instanceNumber, $this->app11Identifier)) {
+            $this->app11Identifier[$instanceNumber]  = $identifier;
+            $this->app11FirstOffset[$instanceNumber] = $offset;
+        } elseif ($this->app11Identifier[$instanceNumber] !== $identifier) {
+            throw new ParseError(
+                sprintf(
+                    'APP11 segment at offset %d has inconsistent instance metadata for instance %d',
+                    $offset,
+                    $instanceNumber,
+                ),
+                1337,
+            );
+        }
+
+        if (!array_key_exists($instanceNumber, $this->app11Sequence)) {
+            $this->app11Sequence[$instanceNumber] = [];
+        }
+
+        if (array_key_exists($sequenceNumber, $this->app11Sequence[$instanceNumber])) {
+            throw new ParseError(
+                sprintf(
+                    'APP11 segment at offset %d has duplicate sequence number %d for instance %d',
+                    $offset,
+                    $sequenceNumber,
+                    $instanceNumber,
+                ),
+                1338,
+            );
+        }
+
+        $this->app11Sequence[$instanceNumber][$sequenceNumber] = $transportData;
     }
 
     /**
-     * Extracts the first valid JUMBF superbox from an APP11 payload.
+     * Parses the APP11 transport header and returns sequence metadata.
      *
-     * @param string $payload APP11 payload bytes.
+     * EXIF 3.0 §4.7.5.3 defines the APP11 transport wrapper as identifier, box
+     * instance number, packet sequence number, and payload bytes.
+     *
+     * @param string $payload Raw APP11 payload bytes.
+     * @param int    $offset  APP11 marker offset for diagnostics.
+     *
+     * @return array{identifier:string, instance:int, sequence:int, data:string}
+     */
+    private function parseApp11TransportHeader(string $payload, int $offset): array
+    {
+        if (strlen($payload) < self::APP11_TRANSPORT_HEADER_LENGTH) {
+            throw new ParseError(sprintf('APP11 segment at offset %d is too short', $offset), 1331);
+        }
+
+        $identifier = substr($payload, 0, 4);
+
+        $instanceUnpack = @unpack('ninstance', substr($payload, 4, 2));
+        if (($instanceUnpack === false) || !isset($instanceUnpack['instance'])) {
+            throw new ParseError(
+                sprintf('APP11 segment at offset %d has invalid instance number', $offset),
+                1335,
+            );
+        }
+
+        /** @var array{instance:int} $instanceUnpack */
+        $instanceNumber = $instanceUnpack['instance'];
+        if ($instanceNumber === 0) {
+            throw new ParseError(
+                sprintf('APP11 segment at offset %d has out-of-range instance number %d', $offset, $instanceNumber),
+                1335,
+            );
+        }
+
+        $sequenceUnpack = @unpack('Nsequence', substr($payload, 6, 4));
+        if (($sequenceUnpack === false) || !isset($sequenceUnpack['sequence'])) {
+            throw new ParseError(
+                sprintf('APP11 segment at offset %d has invalid sequence number', $offset),
+                1336,
+            );
+        }
+
+        /** @var array{sequence:int} $sequenceUnpack */
+        $sequenceNumber = $sequenceUnpack['sequence'];
+        if (
+            ($sequenceNumber === 0)
+            || ($sequenceNumber > self::APP11_MAX_SEQUENCE_NUMBER)
+        ) {
+            throw new ParseError(
+                sprintf('APP11 segment at offset %d has out-of-range sequence number %d', $offset, $sequenceNumber),
+                1336,
+            );
+        }
+
+        return [
+            'identifier' => $identifier,
+            'instance'   => $instanceNumber,
+            'sequence'   => $sequenceNumber,
+            'data'       => substr($payload, self::APP11_TRANSPORT_HEADER_LENGTH),
+        ];
+    }
+
+    /**
+     * Finalises APP11 transport streams by validating and reassembling chunks.
+     *
+     * EXIF 3.0 §4.7.5.1 and §4.7.5.3 define APP11 sequence metadata for
+     * marker-segment merging when logically identical JUMBF data is split.
+     */
+    private function finaliseApp11Segments(): void
+    {
+        foreach ($this->app11Sequence as $instanceNumber => $sequenceChunks) {
+            if ($sequenceChunks === []) {
+                continue;
+            }
+
+            $offset      = $this->app11FirstOffset[$instanceNumber] ?? 0;
+            $maxSequence = max(array_keys($sequenceChunks));
+
+            for ($expectedSequence = 1; $expectedSequence <= $maxSequence; ++$expectedSequence) {
+                if (!array_key_exists($expectedSequence, $sequenceChunks)) {
+                    throw new ParseError(
+                        sprintf(
+                            'APP11 segment sequence is missing sequence number %d for instance %d (at offset %d)',
+                            $expectedSequence,
+                            $instanceNumber,
+                            $offset,
+                        ),
+                        1339,
+                    );
+                }
+            }
+
+            ksort($sequenceChunks);
+            $transportPayload = implode('', $sequenceChunks);
+            $jumbfSuperbox    = $this->extractApp11JumbfSuperbox($transportPayload, $offset);
+            $this->collectApp11XmlPacketsFromBoxes($jumbfSuperbox, $offset);
+        }
+    }
+
+    /**
+     * Extracts the first valid JUMBF superbox from APP11 transport payload data.
+     *
+     * @param string $payload Reassembled APP11 transport payload bytes.
      * @param int    $offset  APP11 marker offset for diagnostics.
      *
      * @return string Raw bytes of the JUMBF superbox.

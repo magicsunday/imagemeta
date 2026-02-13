@@ -440,6 +440,121 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Reassembles multi-segment APP11 transport payloads by sequence order.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11TransportReassemblyMergesOrderedFragments(): void
+    {
+        $exifPayload   = self::TIFF_HEADER . 'primary-exif';
+        $xmpPacket     = '<x:xmpmeta xmlns:x="adobe:ns:meta/">APP11-SEQ</x:xmpmeta>';
+        $jumbfSuperbox = $this->app11SuperboxWithContent('xml ', $xmpPacket);
+        $fragmentA     = substr($jumbfSuperbox, 0, 12);
+        $fragmentB     = substr($jumbfSuperbox, 12, 10);
+        $fragmentC     = substr($jumbfSuperbox, 22);
+        $app11a        = $this->app11TransportPayload($fragmentA, 7, 1);
+        $app11b        = $this->app11TransportPayload($fragmentB, 7, 2);
+        $app11c        = $this->app11TransportPayload($fragmentC, 7, 3);
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_APP11, $app11a),
+            self::segment(self::MARKER_APP11, $app11b),
+            self::segment(self::MARKER_APP11, $app11c),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$xmpPacket], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Rejects APP11 transport payloads with missing sequence fragments.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11TransportMissingSequenceThrowsParseError(): void
+    {
+        $exifPayload   = self::TIFF_HEADER . 'primary-exif';
+        $jumbfSuperbox = $this->app11SuperboxWithContent('xml ', '<x:xmpmeta>missing</x:xmpmeta>');
+        $fragmentA     = substr($jumbfSuperbox, 0, 10);
+        $fragmentB     = substr($jumbfSuperbox, 10);
+        $app11a        = $this->app11TransportPayload($fragmentA, 3, 1);
+        $app11b        = $this->app11TransportPayload($fragmentB, 3, 3);
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_APP11, $app11a),
+            self::segment(self::MARKER_APP11, $app11b),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP11.*missing sequence|missing sequence.*APP11/i');
+
+        $extractor->extractXmpPackets();
+    }
+
+    /**
+     * Rejects APP11 transport payloads with duplicate sequence numbers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11TransportDuplicateSequenceThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $app11a      = $this->app11TransportPayload('first', 9, 1);
+        $app11b      = $this->app11TransportPayload('second', 9, 1);
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_APP11, $app11a),
+            self::segment(self::MARKER_APP11, $app11b),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP11.*duplicate sequence|duplicate sequence.*APP11/i');
+
+        $extractor->extractXmpPackets();
+    }
+
+    /**
+     * Rejects APP11 transport payloads when instance metadata is inconsistent.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11TransportInconsistentInstanceMetadataThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $app11a      = $this->app11TransportPayload('chunk-a', 5, 1, "JP\0\0");
+        $app11b      = $this->app11TransportPayload('chunk-b', 5, 2, "JP\0\x01");
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_APP11, $app11a),
+            self::segment(self::MARKER_APP11, $app11b),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP11.*inconsistent instance metadata|inconsistent instance metadata.*APP11/i');
+
+        $extractor->extractXmpPackets();
+    }
+
+    /**
      * Preserves APP1/APP2 metadata extraction when APP11 JUMBF metadata is present.
      *
      * @return void
@@ -1206,7 +1321,26 @@ final class JpegParserTest extends TestCase
      */
     private function app11Payload(string $jumbfSuperbox, int $instance = 1, int $sequence = 1): string
     {
-        return "JP\0\0" . pack('n', $instance) . pack('N', $sequence) . $jumbfSuperbox;
+        return $this->app11TransportPayload($jumbfSuperbox, $instance, $sequence);
+    }
+
+    /**
+     * Builds an APP11 transport payload with explicit identifier, instance, and sequence.
+     *
+     * @param string $transportData Raw APP11 transport chunk data.
+     * @param int    $instance      APP11 box-instance number.
+     * @param int    $sequence      APP11 packet sequence number.
+     * @param string $identifier    APP11 identifier field (4 bytes).
+     *
+     * @return string APP11 payload bytes.
+     */
+    private function app11TransportPayload(
+        string $transportData,
+        int $instance,
+        int $sequence,
+        string $identifier = "JP\0\0",
+    ): string {
+        return $identifier . pack('n', $instance) . pack('N', $sequence) . $transportData;
     }
 
     /**
