@@ -34,6 +34,7 @@ composer require magicsunday/imagemeta
 * Unified EXIF 3.0, XMP and QuickTime metadata mapped into immutable value objects that expose typed properties instead of raw tag identifiers.
 * XMP `rdf:parseType="Resource"` properties are preserved as structured values under their parent property key instead of flattening child fields into unrelated top-level entries, while `xml:*` qualifiers (for example `xml:lang`) are kept as qualifiers and not exported as standalone properties.
 * XMP parser output now preserves RDF container semantics (`rdf:Bag`, `rdf:Seq`, `rdf:Alt`) via explicit container-type metadata in the document model.
+* ISO BMFF item-based XMP resolution now treats `pitm` only as primary-item identity; XMP prioritization is applied only when the primary item's descriptor explicitly signals XMP content.
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
 * Strict EXIF-JPEG marker profile now rejects progressive `SOF2`; only baseline `SOF0` is accepted for conformant parsing.
 * Strict EXIF-JPEG SOF validation now enforces 8-bit precision, exactly three YCbCr component IDs (`1/2/3`), and legal YCbCr subsampling (`4:2:2`/`4:2:0`).

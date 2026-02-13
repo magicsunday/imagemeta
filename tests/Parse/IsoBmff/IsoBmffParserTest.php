@@ -606,6 +606,81 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Ensures pitm does not classify non-XMP primary items as XMP candidates.
+     *
+     * @return void
+     */
+    #[Test]
+    public function doesNotQueuePrimaryItemAsXmpWhenDescriptorIsNotXmp(): void
+    {
+        $primaryImagePayload = 'PRIMARY-IMAGE-PAYLOAD';
+        $xmpPayload          = '<x:xmpmeta xmlns:x="adobe:ns:meta/">descriptor-xmp</x:xmpmeta>';
+
+        $data = $this->createItemBasedMetaFile(
+            [
+                ['id' => 1, 'name' => 'PrimaryImage', 'contentType' => 'image/heic', 'payload' => $primaryImagePayload],
+                ['id' => 2, 'name' => 'XmpMetadata', 'contentType' => 'application/rdf+xml', 'payload' => $xmpPayload],
+            ],
+            1,
+        );
+
+        $extractor = $this->createExtractor($data);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([$xmpPayload], $xmps);
+    }
+
+    /**
+     * Prioritizes the primary item only when that item is explicitly descriptor-typed as XMP.
+     *
+     * @return void
+     */
+    #[Test]
+    public function prioritizesPrimaryItemWhenPrimaryDescriptorIsXmp(): void
+    {
+        $xmpFirst  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-first</x:xmpmeta>';
+        $xmpSecond = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-second-primary</x:xmpmeta>';
+
+        $data = $this->createItemBasedMetaFile(
+            [
+                ['id' => 1, 'name' => 'XmpOne', 'contentType' => 'application/rdf+xml', 'payload' => $xmpFirst],
+                ['id' => 2, 'name' => 'XmpTwo', 'contentType' => 'application/rdf+xml', 'payload' => $xmpSecond],
+            ],
+            2,
+        );
+
+        $extractor = $this->createExtractor($data);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([$xmpSecond, $xmpFirst], $xmps);
+    }
+
+    /**
+     * Keeps descriptor-discovered XMP extraction order stable when no primary item is declared.
+     *
+     * @return void
+     */
+    #[Test]
+    public function keepsDescriptorDiscoveredXmpOrderStableWithoutPrimaryItem(): void
+    {
+        $xmpFirst  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-order-1</x:xmpmeta>';
+        $xmpSecond = '<x:xmpmeta xmlns:x="adobe:ns:meta/">xmp-order-2</x:xmpmeta>';
+
+        $data = $this->createItemBasedMetaFile(
+            [
+                ['id' => 11, 'name' => 'XmpOne', 'contentType' => 'application/rdf+xml', 'payload' => $xmpFirst],
+                ['id' => 12, 'name' => 'XmpTwo', 'contentType' => 'application/rdf+xml', 'payload' => $xmpSecond],
+            ],
+            null,
+        );
+
+        $extractor = $this->createExtractor($data);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([$xmpFirst, $xmpSecond], $xmps);
+    }
+
+    /**
      * Reads content identifiers from both QuickTime keys and mdta free-form boxes.
      * This confirms either metadata path can populate QuickTimeMeta::contentIdentifier().
      *
@@ -3493,6 +3568,86 @@ final class IsoBmffParserTest extends TestCase
             . pack('N', 1);
 
         return $this->box($format, $payload);
+    }
+
+    /**
+     * Builds an ISO BMFF file with item-based metadata backed by one mdat payload.
+     *
+     * @param list<array{id:int,name:string,contentType:string,payload:string}> $items         Metadata items in descriptor order.
+     * @param int|null                                                          $primaryItemId Optional primary item id declared via pitm.
+     *
+     * @return string
+     */
+    private function createItemBasedMetaFile(array $items, ?int $primaryItemId): string
+    {
+        $infeBoxes = '';
+        foreach ($items as $item) {
+            $infeBoxes .= $this->buildInfeMimeBox($item['id'], $item['name'], $item['contentType']);
+        }
+
+        $iinf = $this->box('iinf', "\0\0\0\0" . pack('n', count($items)) . $infeBoxes);
+        $pitm = $primaryItemId !== null ? $this->box('pitm', "\0\0\0\0" . pack('n', $primaryItemId)) : '';
+
+        $placeholderIloc = $this->buildIlocV0ForItems($items, 0);
+        $meta            = $this->fullBox('meta', $pitm . $iinf . $placeholderIloc);
+        $ftyp            = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $offsetBase = strlen($ftyp) + strlen($meta) + 8;
+        $iloc       = $this->buildIlocV0ForItems($items, $offsetBase);
+        $meta       = $this->fullBox('meta', $pitm . $iinf . $iloc);
+
+        $mdatPayload = '';
+        foreach ($items as $item) {
+            $mdatPayload .= $item['payload'];
+        }
+
+        $mdat = $this->box('mdat', $mdatPayload);
+
+        return $ftyp . $meta . $mdat;
+    }
+
+    /**
+     * Builds an `infe` v2 MIME descriptor with explicit content type signalling.
+     */
+    private function buildInfeMimeBox(int $itemId, string $name, string $contentType): string
+    {
+        $payload = "\x02\0\0\0"
+            . pack('n', $itemId)
+            . pack('n', 0)
+            . 'mime'
+            . $name . "\0"
+            . $contentType . "\0\0";
+
+        return $this->box('infe', $payload);
+    }
+
+    /**
+     * Builds an iloc v0 box with one extent per item.
+     *
+     * @param list<array{id:int,name:string,contentType:string,payload:string}> $items      Metadata items in descriptor order.
+     * @param int                                                               $offsetBase Absolute offset where the first item payload starts.
+     */
+    private function buildIlocV0ForItems(array $items, int $offsetBase): string
+    {
+        $payload = "\0\0\0\0";
+        $payload .= "\x44";
+        $payload .= "\0";
+        $payload .= pack('n', count($items));
+
+        $cursor = 0;
+        foreach ($items as $item) {
+            $payloadLength = strlen($item['payload']);
+
+            $payload .= pack('n', $item['id']);
+            $payload .= pack('n', 0);
+            $payload .= pack('n', 1);
+            $payload .= pack('N', $offsetBase + $cursor);
+            $payload .= pack('N', $payloadLength);
+
+            $cursor += $payloadLength;
+        }
+
+        return $this->box('iloc', $payload);
     }
 
     /**

@@ -1937,8 +1937,13 @@ final readonly class IsoBmffParser
         $exifItemIds = array_values(array_unique($exifItemIds));
         $xmpItemIds  = array_values(array_unique($xmpItemIds));
 
-        if ($primaryItemId !== null) {
-            // Ensure the declared primary item is considered first for XMP resolution.
+        if (
+            ($primaryItemId !== null)
+            && isset($itemInfos[$primaryItemId])
+            && $this->isXmpItem($itemInfos[$primaryItemId])
+        ) {
+            // ISO/IEC 14496-12 §8.11.4: pitm identifies the primary item, not its metadata type.
+            // Prioritize only when item descriptors (EXIF 3.0 Annex A.2.3) explicitly mark XMP.
             array_unshift($xmpItemIds, $primaryItemId);
             $xmpItemIds = array_values(array_unique($xmpItemIds));
         }
@@ -3965,6 +3970,15 @@ final readonly class IsoBmffParser
      */
     private function isXmpItem(array $info): bool
     {
+        $itemType = $info['itemType'] ?? null;
+        if (is_string($itemType)) {
+            // EXIF 3.0 Annex A.2.3 allows explicit XMP item typing in the item_type field.
+            $normalizedType = strtolower(rtrim($itemType, " \0"));
+            if ($normalizedType === 'xmp') {
+                return true;
+            }
+        }
+
         $contentType = $info['contentType'] ?? null;
         if (!is_string($contentType)) {
             return false;
