@@ -2057,6 +2057,84 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts a conformant EXIF JPEG stream with exactly one SOF marker before SOS.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsSingleSofBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'single-sof-before-sos';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects streams that contain more than one SOF marker before SOS.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsMultipleSofMarkersBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'duplicate-sof-before-sos';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/SOF|before SOS|duplicate/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Keeps baseline EXIF-JPEG frame extraction behavior unchanged for valid streams.
+     *
+     * @return void
+     */
+    #[Test]
+    public function keepsValidBaselineExifFrameParsingUnchanged(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'baseline-sof-regression';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame(8, $extractor->getFrameSamplePrecision());
+        self::assertSame([2, 2], $extractor->getFrameYCbCrSubSampling());
+    }
+
+    /**
      * Rejects SOS headers that reference a component selector missing from SOF.
      *
      * @return void

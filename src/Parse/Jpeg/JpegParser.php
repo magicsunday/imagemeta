@@ -637,10 +637,20 @@ final class JpegParser
                     1486,
                 );
             } elseif ($marker === Marker::SOF0) {
-                if ($firstSofOffset === null) {
-                    $firstSofOffset = $offset;
+                // EXIF 3.0 §4.7 Table 2 defines one frame-header declaration in the
+                // marker flow before SOS; additional SOF markers are non-conformant.
+                if ($firstSofOffset !== null) {
+                    throw new ParseError(
+                        sprintf(
+                            'SOF marker at offset %d duplicates SOF marker at offset %d before SOS',
+                            $offset,
+                            $firstSofOffset,
+                        ),
+                        1504,
+                    );
                 }
 
+                $firstSofOffset = $offset;
                 $this->handleStartOfFrame($marker, $payload, $offset, $seenExifApp1);
             }
         }
