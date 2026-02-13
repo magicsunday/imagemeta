@@ -1278,6 +1278,7 @@ final class TiffExifParser
         $this->validateDngMatrixTags($ifd0);
         $this->validateDngIlluminantDependencies($ifd0);
         $this->validateDngTripleIlluminant($ifd0);
+        $this->validateDngWhiteBalanceExclusivity($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
@@ -4010,6 +4011,25 @@ final class TiffExifParser
             throw new ParseError(
                 'Triple-illuminant CalibrationIlluminant values must be distinct per DNG 1.7.1.0.',
                 1476,
+            );
+        }
+    }
+
+    /**
+     * Validates DNG white-balance tag mutual exclusivity.
+     *
+     * DNG 1.7.1.0 pp. 36–37: AsShotNeutral and AsShotWhiteXY are mutually
+     * exclusive; both must not be present in the same IFD.
+     */
+    private function validateDngWhiteBalanceExclusivity(Ifd $ifd): void
+    {
+        if (
+            $ifd->get(DngTag::AS_SHOT_NEUTRAL) instanceof IfdEntry
+            && $ifd->get(DngTag::AS_SHOT_WHITE_XY) instanceof IfdEntry
+        ) {
+            throw new ParseError(
+                'AsShotNeutral and AsShotWhiteXY are mutually exclusive per DNG 1.7.1.0.',
+                1477,
             );
         }
     }

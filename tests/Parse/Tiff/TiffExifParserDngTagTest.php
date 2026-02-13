@@ -1049,6 +1049,135 @@ final class TiffExifParserDngTagTest extends TestCase
             . $outOfLineData;
     }
 
+    /**
+     * Only AsShotNeutral present parses successfully.
+     */
+    #[Test]
+    public function acceptsOnlyAsShotNeutral(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceTags(true, false),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::AS_SHOT_NEUTRAL));
+    }
+
+    /**
+     * Only AsShotWhiteXY present parses successfully.
+     */
+    #[Test]
+    public function acceptsOnlyAsShotWhiteXY(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceTags(false, true),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::AS_SHOT_WHITE_XY));
+    }
+
+    /**
+     * Both AsShotNeutral and AsShotWhiteXY present triggers ParseError.
+     */
+    #[Test]
+    public function rejectsBothAsShotNeutralAndWhiteXY(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceTags(true, true),
+        );
+    }
+
+    /**
+     * Neither AsShotNeutral nor AsShotWhiteXY present is valid.
+     */
+    #[Test]
+    public function acceptsNeitherAsShotTag(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithWhiteBalanceTags(false, false),
+        );
+
+        self::assertNull($parsed->ifd0->get(DngTag::AS_SHOT_NEUTRAL));
+        self::assertNull($parsed->ifd0->get(DngTag::AS_SHOT_WHITE_XY));
+    }
+
+    /**
+     * Builds a TIFF with optional AsShotNeutral and/or AsShotWhiteXY tags.
+     */
+    private function buildTiffWithWhiteBalanceTags(
+        bool $includeNeutral,
+        bool $includeWhiteXY,
+    ): string {
+        $ifdOffset = 8;
+        $tags      = [];
+
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        $outOfLine  = '';
+        $entryCount = 2;
+
+        if ($includeNeutral) {
+            // AsShotNeutral: RATIONAL[3] — 3 × 8 = 24 bytes, out-of-line
+            $tags[DngTag::AS_SHOT_NEUTRAL] = 'PLACEHOLDER';
+            ++$entryCount;
+        }
+
+        if ($includeWhiteXY) {
+            // AsShotWhiteXY: RATIONAL[2] — 2 × 8 = 16 bytes, out-of-line
+            $tags[DngTag::AS_SHOT_WHITE_XY] = 'PLACEHOLDER_XY';
+            ++$entryCount;
+        }
+
+        ksort($tags);
+
+        $ifdSize   = 2 + (12 * $entryCount) + 4;
+        $curOffset = $ifdOffset + $ifdSize;
+
+        // Replace placeholders
+        foreach ($tags as $tag => &$data) {
+            if ($data === 'PLACEHOLDER') {
+                $ratData = pack('VV', 1, 3) . pack('VV', 1, 3) . pack('VV', 1, 3);
+                $data    = pack('v', $tag)
+                    . pack('v', TiffConst::TYPE_RATIONAL)
+                    . pack('V', 3)
+                    . pack('V', $curOffset);
+                $outOfLine .= $ratData;
+                $curOffset += strlen($ratData);
+            } elseif ($data === 'PLACEHOLDER_XY') {
+                $ratData = pack('VV', 3127, 10000) . pack('VV', 3290, 10000);
+                $data    = pack('v', $tag)
+                    . pack('v', TiffConst::TYPE_RATIONAL)
+                    . pack('V', 2)
+                    . pack('V', $curOffset);
+                $outOfLine .= $ratData;
+                $curOffset += strlen($ratData);
+            }
+        }
+
+        unset($data);
+
+        $ifdData = pack('v', $entryCount);
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $outOfLine;
+    }
+
     private function buildTiffWithMakerNoteSafety(int $safetyValue): string
     {
         // Layout: header(8) + IFD0(2 + 4*12 + 4 = 54) + EXIF IFD(2 + 12 + 4 = 18)
