@@ -1293,6 +1293,7 @@ final class TiffExifParser
         $this->validateDngColorimetricReference($ifd0);
         $this->validateDngNoiseProfile($ifd0);
         $this->validateDngHueSatMapData($ifd0);
+        $this->validateDngIlluminantData($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -4812,6 +4813,71 @@ final class TiffExifParser
                         );
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * IlluminantData tags to validate.
+     *
+     * @var list<int>
+     */
+    private const array ILLUMINANT_DATA_TAGS = [
+        DngTag::ILLUMINANT_DATA_1,
+        DngTag::ILLUMINANT_DATA_2,
+        DngTag::ILLUMINANT_DATA_3,
+    ];
+
+    /**
+     * Validates DNG IlluminantData payload structure per DNG 1.7.1.0.
+     *
+     * DataType 0 = chromaticity (x/y), DataType 1 = spectral (NumLambda >= 2).
+     */
+    private function validateDngIlluminantData(Ifd $ifd): void
+    {
+        foreach (self::ILLUMINANT_DATA_TAGS as $tag) {
+            $entry = $ifd->get($tag);
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if (!is_string($entry->value)) {
+                continue;
+            }
+
+            $payload = $entry->value;
+
+            if (strlen($payload) < 2) {
+                continue;
+            }
+
+            $dataType = $this->unpackU16(substr($payload, 0, 2));
+
+            if ($dataType === 0) {
+                continue;
+            }
+
+            if ($dataType !== 1) {
+                throw new ParseError(
+                    sprintf('IlluminantData 0x%04X has unknown DataType %d; expected 0 or 1.', $tag, $dataType),
+                    1504,
+                );
+            }
+
+            if (strlen($payload) < 6) {
+                throw new ParseError(
+                    sprintf('IlluminantData 0x%04X spectral payload too short for NumLambda field.', $tag),
+                    1503,
+                );
+            }
+
+            $numLambda = $this->unpackU32(substr($payload, 2, 4));
+
+            if ($numLambda < 2) {
+                throw new ParseError(
+                    sprintf('IlluminantData 0x%04X spectral NumLambda must be >= 2, got %d.', $tag, $numLambda),
+                    1503,
+                );
             }
         }
     }

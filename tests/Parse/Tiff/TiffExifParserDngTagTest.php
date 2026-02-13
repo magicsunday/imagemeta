@@ -795,11 +795,13 @@ final class TiffExifParserDngTagTest extends TestCase
         ];
 
         if ($dataTag !== null) {
-            // IlluminantData: UNDEFINED, minimal 4-byte payload inline
-            $tags[$dataTag] = pack('v', $dataTag)
+            // IlluminantData: UNDEFINED, DataType=0 chromaticity (18 bytes)
+            $illuminantPayload = pack('v', 0) . pack('V', 1) . pack('V', 3) . pack('V', 1) . pack('V', 3);
+            $illuminantOffset  = $ifdOffset + 2 + ($entryCount * 12) + 4;
+            $tags[$dataTag]    = pack('v', $dataTag)
                 . pack('v', TiffConst::TYPE_UNDEFINED)
-                . pack('V', 4)
-                . pack('a4', "\x01\x02\x03\x04");
+                . pack('V', strlen($illuminantPayload))
+                . pack('V', $illuminantOffset);
         }
 
         ksort($tags);
@@ -811,10 +813,16 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifdData .= pack('V', 0); // next IFD
 
-        return 'II'
+        $result = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifdData;
+
+        if (isset($illuminantPayload)) {
+            $result .= $illuminantPayload;
+        }
+
+        return $result;
     }
 
     /**
@@ -2391,6 +2399,78 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Valid IlluminantData1 DataType=0 (chromaticity) parses successfully.
+     */
+    #[Test]
+    public function acceptsIlluminantDataChromaticity(): void
+    {
+        // DataType=0: SHORT(0) + x RATIONAL(1/3) + y RATIONAL(1/3)
+        $payload = pack('v', 0) . pack('V', 1) . pack('V', 3) . pack('V', 1) . pack('V', 3);
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIlluminantData($payload),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * Valid IlluminantData1 DataType=1 (spectral) with NumLambda >= 2 parses successfully.
+     */
+    #[Test]
+    public function acceptsIlluminantDataSpectralValid(): void
+    {
+        // DataType=1: SHORT(1) + LONG(2) + MinLambda RATIONAL + LambdaSpacing RATIONAL + 2 samples
+        $payload = pack('v', 1) . pack('V', 2)
+            . pack('V', 380) . pack('V', 1)  // MinLambda
+            . pack('V', 5) . pack('V', 1)    // LambdaSpacing
+            . pack('V', 100) . pack('V', 1)  // sample 1
+            . pack('V', 200) . pack('V', 1); // sample 2
+
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIlluminantData($payload),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * IlluminantData1 DataType=1 with NumLambda < 2 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsIlluminantDataSpectralTooFewLambda(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1503);
+
+        // DataType=1 with NumLambda=1
+        $payload = pack('v', 1) . pack('V', 1)
+            . pack('V', 380) . pack('V', 1)
+            . pack('V', 5) . pack('V', 1)
+            . pack('V', 100) . pack('V', 1);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIlluminantData($payload),
+        );
+    }
+
+    /**
+     * IlluminantData1 with unknown DataType triggers ParseError.
+     */
+    #[Test]
+    public function rejectsIlluminantDataUnknownDataType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1504);
+
+        $payload = pack('v', 5) . str_repeat("\0", 16);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithIlluminantData($payload),
+        );
+    }
+
+    /**
      * ProfileHueSatMapData1 count mismatch vs dims triggers ParseError.
      */
     #[Test]
@@ -2995,5 +3075,50 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $dimsData
             . $floatData;
+    }
+
+    /**
+     * Builds a DNG TIFF with IlluminantData1 payload of given bytes.
+     */
+    private function buildDngWithIlluminantData(string $payload): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::ILLUMINANT_DATA_1)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $payload;
     }
 }
