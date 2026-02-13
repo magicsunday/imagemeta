@@ -1505,6 +1505,27 @@ final class TiffExifParser
             $value = rtrim($rawBytes, "\0");
         }
 
+        // DNG 1.7.0.0: ProfileGroupName must be ASCII or BYTE with NUL terminator.
+        if ($tag === DngTag::PROFILE_GROUP_NAME) {
+            if ($type !== TiffConst::TYPE_ASCII && $type !== TiffConst::TYPE_BYTE) {
+                throw new ParseError(
+                    sprintf('ProfileGroupName must use ASCII or BYTE type, got %d.', $type),
+                    1509,
+                );
+            }
+
+            if ($type === TiffConst::TYPE_BYTE) {
+                if ($rawBytes === '' || $rawBytes[strlen($rawBytes) - 1] !== "\0") {
+                    throw new ParseError(
+                        'ProfileGroupName BYTE payload must be NUL-terminated per DNG 1.7.0.0.',
+                        1510,
+                    );
+                }
+
+                $value = rtrim($rawBytes, "\0");
+            }
+        }
+
         if ($tag === ExifTag::CFA_PATTERN && is_string($value)) {
             $decodedPattern = $this->decodeCfaPatternPayload($rawBytes);
 

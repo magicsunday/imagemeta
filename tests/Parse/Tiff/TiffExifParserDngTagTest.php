@@ -3248,4 +3248,105 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $payload;
     }
+
+    /**
+     * Accepts a valid ASCII-typed ProfileGroupName with null terminator.
+     */
+    #[Test]
+    public function acceptsProfileGroupNameAscii(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithProfileGroupName(TiffConst::TYPE_ASCII, "MyGroup\0"),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts a valid BYTE-typed ProfileGroupName with null terminator.
+     */
+    #[Test]
+    public function acceptsProfileGroupNameByte(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithProfileGroupName(TiffConst::TYPE_BYTE, "MyGroup\0"),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects ProfileGroupName with unsupported TIFF type.
+     */
+    #[Test]
+    public function rejectsProfileGroupNameInvalidType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1509);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileGroupName(TiffConst::TYPE_SHORT, pack('v', 0)),
+        );
+    }
+
+    /**
+     * Rejects BYTE-typed ProfileGroupName missing null terminator.
+     */
+    #[Test]
+    public function rejectsProfileGroupNameByteNoNul(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1510);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfileGroupName(TiffConst::TYPE_BYTE, 'NoNul'),
+        );
+    }
+
+    /**
+     * Builds a DNG TIFF with a ProfileGroupName tag.
+     */
+    private function buildDngWithProfileGroupName(int $type, string $payload): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_GROUP_NAME)
+            . pack('v', $type)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $payload;
+    }
 }
