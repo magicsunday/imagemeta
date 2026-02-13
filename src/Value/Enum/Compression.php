@@ -37,4 +37,5 @@ enum Compression: int
     case THUNDERSCAN                = 32809;
     case JPEG_2000                  = 34712;
     case LOSSY_JPEG                 = 34892;
+    case JPEG_XL                    = 52546;
 }

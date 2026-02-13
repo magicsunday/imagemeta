@@ -16,6 +16,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Value\Enum\ColorSpace;
+use MagicSunday\ImageMeta\Value\Enum\Compression;
 use MagicSunday\ImageMeta\Value\Enum\Orientation;
 use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\Enum\PlanarConfiguration;
@@ -72,16 +73,49 @@ final class ParsedExifDefaultValuesTest extends TestCase
 
     /**
      * Skips the Compression tag to validate the TIFF default behavior.
-     * Ensures ParsedExif returns the UNCOMPRESSED enum value.
+     * Ensures ParsedExif returns UNCOMPRESSED when the Compression tag is absent.
      *
      * @see TIFF 6.0 §8: Compression default is 1 (no compression)
      *
      * @return void
      */
     #[Test]
-    public function compressionReturnsNullWhenMissing(): void
+    public function compressionReturnsUncompressedWhenMissing(): void
     {
         $ifd0       = new Ifd([]);
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(Compression::UNCOMPRESSED, $parsedExif->compression());
+    }
+
+    /**
+     * Compression tag present with JPEG XL code resolves to JPEG_XL enum case.
+     *
+     * @see DNG 1.7.1.0: Compression 52546 = JPEG XL
+     */
+    #[Test]
+    public function compressionReturnsJpegXlForCode52546(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, 52546),
+        ]);
+
+        $parsedExif = new ParsedExif($ifd0, null, null, null, null);
+
+        self::assertSame(Compression::JPEG_XL, $parsedExif->compression());
+    }
+
+    /**
+     * Compression tag present with an unsupported code returns null
+     * instead of silently falling back to UNCOMPRESSED.
+     */
+    #[Test]
+    public function compressionReturnsNullForUnsupportedPresentCode(): void
+    {
+        $ifd0 = new Ifd([
+            ExifTag::COMPRESSION => new IfdEntry(ExifTag::COMPRESSION, 3, 1, 99999),
+        ]);
+
         $parsedExif = new ParsedExif($ifd0, null, null, null, null);
 
         self::assertNull($parsedExif->compression());
