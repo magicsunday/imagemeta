@@ -564,6 +564,152 @@ final class TiffExifParserDngTagTest extends TestCase
             . $sratData;
     }
 
+    /**
+     * CalibrationIlluminant1=255 without IlluminantData1 triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsIlluminant1ValueOtherWithoutData(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCalibrationIlluminant(
+                DngTag::CALIBRATION_ILLUMINANT_1,
+                255,
+                null,
+            ),
+        );
+    }
+
+    /**
+     * CalibrationIlluminant2=255 without IlluminantData2 triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsIlluminant2ValueOtherWithoutData(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCalibrationIlluminant(
+                DngTag::CALIBRATION_ILLUMINANT_2,
+                255,
+                null,
+            ),
+        );
+    }
+
+    /**
+     * CalibrationIlluminant3=255 without IlluminantData3 triggers a ParseError per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function rejectsIlluminant3ValueOtherWithoutData(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithCalibrationIlluminant(
+                DngTag::CALIBRATION_ILLUMINANT_3,
+                255,
+                null,
+            ),
+        );
+    }
+
+    /**
+     * Non-255 calibration illuminant does not require IlluminantData.
+     */
+    #[Test]
+    public function acceptsNonOtherIlluminantWithoutData(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildTiffWithCalibrationIlluminant(
+                DngTag::CALIBRATION_ILLUMINANT_1,
+                17,
+                null,
+            ),
+        );
+
+        $entry = $parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_1);
+        self::assertNotNull($entry);
+        self::assertSame(17, $entry->value);
+    }
+
+    /**
+     * CalibrationIlluminant1=255 with IlluminantData1 present passes validation.
+     */
+    #[Test]
+    public function acceptsIlluminantValueOtherWithData(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildTiffWithCalibrationIlluminant(
+                DngTag::CALIBRATION_ILLUMINANT_1,
+                255,
+                DngTag::ILLUMINANT_DATA_1,
+            ),
+        );
+
+        $entry = $parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_1);
+        self::assertNotNull($entry);
+        self::assertSame(255, $entry->value);
+    }
+
+    /**
+     * Builds a classic TIFF with a CalibrationIlluminant tag and optionally an
+     * IlluminantData tag.
+     *
+     * @param int      $illuminantTag CalibrationIlluminant tag constant.
+     * @param int      $illuminantVal Illuminant value (255 = Other).
+     * @param int|null $dataTag       IlluminantData tag constant, or null to omit.
+     */
+    private function buildTiffWithCalibrationIlluminant(
+        int $illuminantTag,
+        int $illuminantVal,
+        ?int $dataTag,
+    ): string {
+        $ifdOffset  = 8;
+        $entryCount = $dataTag !== null ? 4 : 3;
+
+        // Collect tags in ascending order
+        $tags = [
+            ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            ExifTag::IMAGE_LENGTH => pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0),
+            $illuminantTag => pack('v', $illuminantTag)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $illuminantVal) . pack('v', 0),
+        ];
+
+        if ($dataTag !== null) {
+            // IlluminantData: UNDEFINED, minimal 4-byte payload inline
+            $tags[$dataTag] = pack('v', $dataTag)
+                . pack('v', TiffConst::TYPE_UNDEFINED)
+                . pack('V', 4)
+                . pack('a4', "\x01\x02\x03\x04");
+        }
+
+        ksort($tags);
+
+        $ifdData = pack('v', $entryCount);
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0); // next IFD
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData;
+    }
+
     private function buildTiffWithMakerNoteSafety(int $safetyValue): string
     {
         // Layout: header(8) + IFD0(2 + 4*12 + 4 = 54) + EXIF IFD(2 + 12 + 4 = 18)

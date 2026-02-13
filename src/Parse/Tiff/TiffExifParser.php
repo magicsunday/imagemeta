@@ -1276,6 +1276,7 @@ final class TiffExifParser
         }
 
         $this->validateDngMatrixTags($ifd0);
+        $this->validateDngIlluminantDependencies($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
@@ -3863,6 +3864,55 @@ final class TiffExifParser
                         $colorPlanes,
                     ),
                     1470,
+                );
+            }
+        }
+    }
+
+    /**
+     * DNG calibration illuminant → illuminant data dependency pairs.
+     *
+     * DNG 1.7.1.0 pp. 43–44, 86, 91–93: when a CalibrationIlluminant tag has value
+     * 255 (Other), the corresponding IlluminantData tag is required.
+     *
+     * @var array<int, int>
+     */
+    private const array DNG_ILLUMINANT_DATA_DEPS = [
+        DngTag::CALIBRATION_ILLUMINANT_1 => DngTag::ILLUMINANT_DATA_1,
+        DngTag::CALIBRATION_ILLUMINANT_2 => DngTag::ILLUMINANT_DATA_2,
+        DngTag::CALIBRATION_ILLUMINANT_3 => DngTag::ILLUMINANT_DATA_3,
+    ];
+
+    /**
+     * Validates DNG calibration illuminant conditional dependencies.
+     *
+     * DNG 1.7.1.0 pp. 43–44, 91–93: when CalibrationIlluminant{1,2,3} = 255 (Other),
+     * the corresponding IlluminantData{1,2,3} tag must be present.
+     */
+    private function validateDngIlluminantDependencies(Ifd $ifd): void
+    {
+        foreach (self::DNG_ILLUMINANT_DATA_DEPS as $illuminantTag => $dataTag) {
+            $entry = $ifd->get($illuminantTag);
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if (!is_int($entry->value)) {
+                continue;
+            }
+
+            if ($entry->value !== 255) {
+                continue;
+            }
+
+            if (!$ifd->get($dataTag) instanceof IfdEntry) {
+                throw new ParseError(
+                    sprintf(
+                        'CalibrationIlluminant 0x%04X = 255 (Other) requires IlluminantData 0x%04X per DNG 1.7.1.0.',
+                        $illuminantTag,
+                        $dataTag,
+                    ),
+                    1471,
                 );
             }
         }
