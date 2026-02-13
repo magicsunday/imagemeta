@@ -1312,6 +1312,7 @@ final class TiffExifParser
             DngTag::PROFILE_LOOK_TABLE_DIMS,
             'ProfileLookTableEncoding',
         );
+        $this->validateDngDigestTags($ifd0);
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
@@ -5689,6 +5690,40 @@ final class TiffExifParser
                 sprintf('%s must not be present for 2.5D tables (ValueDivisions == 1).', $name),
                 1557,
             );
+        }
+    }
+
+    /**
+     * DNG digest tags that must be BYTE[16] per DNG 1.7.1.0.
+     *
+     * @var array<int, string>
+     */
+    private const array DIGEST_TAGS = [
+        DngTag::RAW_IMAGE_DIGEST         => 'RawImageDigest',
+        DngTag::ORIGINAL_RAW_FILE_DIGEST => 'OriginalRawFileDigest',
+        DngTag::NEW_RAW_IMAGE_DIGEST     => 'NewRawImageDigest',
+    ];
+
+    /**
+     * Validates DNG digest tags (RawImageDigest, OriginalRawFileDigest, NewRawImageDigest).
+     *
+     * Each must be BYTE[16] per DNG 1.7.1.0.
+     */
+    private function validateDngDigestTags(Ifd $ifd): void
+    {
+        foreach (self::DIGEST_TAGS as $tag => $name) {
+            $entry = $ifd->get($tag);
+
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if ($entry->type !== TiffConst::TYPE_BYTE || $entry->count !== 16) {
+                throw new ParseError(
+                    sprintf('%s must be BYTE[16], got type %d count %d.', $name, $entry->type, $entry->count),
+                    1558,
+                );
+            }
         }
     }
 }

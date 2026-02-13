@@ -5040,4 +5040,95 @@ final class TiffExifParserDngTagTest extends TestCase
             . $dimsData
             . $floatData;
     }
+
+    /**
+     * Accepts a valid RawImageDigest (BYTE[16]).
+     */
+    #[Test]
+    public function acceptsValidRawImageDigest(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDigest(DngTag::RAW_IMAGE_DIGEST, TiffConst::TYPE_BYTE, 16),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects RawImageDigest with wrong count.
+     */
+    #[Test]
+    public function rejectsDigestWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1558);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDigest(DngTag::RAW_IMAGE_DIGEST, TiffConst::TYPE_BYTE, 15),
+        );
+    }
+
+    /**
+     * Rejects NewRawImageDigest with wrong type.
+     */
+    #[Test]
+    public function rejectsDigestWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1558);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithDigest(DngTag::NEW_RAW_IMAGE_DIGEST, TiffConst::TYPE_UNDEFINED, 16),
+        );
+    }
+
+    /**
+     * Builds a DNG with a digest tag in IFD0.
+     *
+     * @param int $digestTag Digest tag constant
+     * @param int $type      TIFF type code
+     * @param int $count     Component count
+     */
+    private function buildDngWithDigest(int $digestTag, int $type, int $count): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $digestOffset      = $modelOffset + strlen($uniqueCameraModel);
+        $digestData        = str_repeat("\xAB", $count);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $digestTag)
+            . pack('v', $type)
+            . pack('V', $count)
+            . pack('V', $digestOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $digestData;
+    }
 }
