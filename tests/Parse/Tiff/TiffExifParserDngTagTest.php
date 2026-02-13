@@ -812,6 +812,243 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifdData;
     }
 
+    /**
+     * CalibrationIlluminant3 without CalibrationIlluminant1/2 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsTripleIlluminantWithoutIlluminant1And2(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTripleIlluminantTiff(
+                includeIlluminant1: false,
+                includeIlluminant2: false,
+            ),
+        );
+    }
+
+    /**
+     * CalibrationIlluminant3 without ColorMatrix3 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsTripleIlluminantWithoutColorMatrix3(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTripleIlluminantTiff(includeColorMatrix3: false),
+        );
+    }
+
+    /**
+     * Partial ForwardMatrix set (1 and 2 but not 3) triggers ParseError.
+     */
+    #[Test]
+    public function rejectsPartialForwardMatrixSet(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTripleIlluminantTiff(
+                includeForwardMatrix1: true,
+                includeForwardMatrix2: true,
+                includeForwardMatrix3: false,
+            ),
+        );
+    }
+
+    /**
+     * Partial ReductionMatrix set (1 and 2 but not 3) triggers ParseError.
+     */
+    #[Test]
+    public function rejectsPartialReductionMatrixSet(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTripleIlluminantTiff(
+                includeReductionMatrix1: true,
+                includeReductionMatrix2: true,
+                includeReductionMatrix3: false,
+            ),
+        );
+    }
+
+    /**
+     * Non-distinct illuminant values triggers ParseError.
+     */
+    #[Test]
+    public function rejectsNonDistinctIlluminantValues(): void
+    {
+        $this->expectException(ParseError::class);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTripleIlluminantTiff(
+                illuminant1Val: 17,
+                illuminant2Val: 17,
+                illuminant3Val: 21,
+            ),
+        );
+    }
+
+    /**
+     * Fully conformant triple-illuminant set passes validation.
+     */
+    #[Test]
+    public function acceptsConformantTripleIlluminantProfile(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob($this->buildTripleIlluminantTiff());
+
+        self::assertNotNull($parsed->ifd0->get(DngTag::CALIBRATION_ILLUMINANT_3));
+    }
+
+    /**
+     * Builds a TIFF with triple-illuminant DNG tags for structural validation tests.
+     *
+     * By default builds a fully conformant triple-illuminant profile with distinct
+     * illuminant values.
+     */
+    private function buildTripleIlluminantTiff(
+        bool $includeIlluminant1 = true,
+        bool $includeIlluminant2 = true,
+        bool $includeColorMatrix3 = true,
+        bool $includeForwardMatrix1 = false,
+        bool $includeForwardMatrix2 = false,
+        bool $includeForwardMatrix3 = false,
+        bool $includeReductionMatrix1 = false,
+        bool $includeReductionMatrix2 = false,
+        bool $includeReductionMatrix3 = false,
+        int $illuminant1Val = 17,
+        int $illuminant2Val = 21,
+        int $illuminant3Val = 23,
+    ): string {
+        $ifdOffset   = 8;
+        $colorPlanes = 3;
+        $matCount    = $colorPlanes * 3;
+
+        // Tags keyed by tag ID for automatic ascending sort
+        $tags          = [];
+        $outOfLineData = '';
+
+        // ImageWidth + ImageLength (always present)
+        $tags[ExifTag::IMAGE_WIDTH] = pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+        $tags[ExifTag::IMAGE_LENGTH] = pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0);
+
+        // CfaPlaneColor (3 planes)
+        $tags[DngTag::CFA_PLANE_COLOR] = pack('v', DngTag::CFA_PLANE_COLOR)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', $colorPlanes)
+            . "\x00\x01\x02\x00";
+
+        // ColorMatrix1 (always present for non-monochrome)
+        $tags[DngTag::COLOR_MATRIX_1] = 'PLACEHOLDER'; // will be replaced below
+
+        if ($includeIlluminant1) {
+            $tags[DngTag::CALIBRATION_ILLUMINANT_1] = pack('v', DngTag::CALIBRATION_ILLUMINANT_1)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $illuminant1Val) . pack('v', 0);
+        }
+
+        if ($includeIlluminant2) {
+            $tags[DngTag::CALIBRATION_ILLUMINANT_2] = pack('v', DngTag::CALIBRATION_ILLUMINANT_2)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', $illuminant2Val) . pack('v', 0);
+        }
+
+        // CalibrationIlluminant3 is always present in these tests
+        $tags[DngTag::CALIBRATION_ILLUMINANT_3] = pack('v', DngTag::CALIBRATION_ILLUMINANT_3)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $illuminant3Val) . pack('v', 0);
+
+        if ($includeColorMatrix3) {
+            $tags[DngTag::COLOR_MATRIX_3] = 'PLACEHOLDER';
+        }
+
+        // Optional ForwardMatrix/ReductionMatrix tags
+        $optionalMatrixTags = [];
+
+        if ($includeForwardMatrix1) {
+            $optionalMatrixTags[] = DngTag::FORWARD_MATRIX_1;
+        }
+
+        if ($includeForwardMatrix2) {
+            $optionalMatrixTags[] = DngTag::FORWARD_MATRIX_2;
+        }
+
+        if ($includeForwardMatrix3) {
+            $optionalMatrixTags[] = DngTag::FORWARD_MATRIX_3;
+        }
+
+        if ($includeReductionMatrix1) {
+            $optionalMatrixTags[] = DngTag::REDUCTION_MATRIX_1;
+        }
+
+        if ($includeReductionMatrix2) {
+            $optionalMatrixTags[] = DngTag::REDUCTION_MATRIX_2;
+        }
+
+        if ($includeReductionMatrix3) {
+            $optionalMatrixTags[] = DngTag::REDUCTION_MATRIX_3;
+        }
+
+        foreach ($optionalMatrixTags as $tag) {
+            $tags[$tag] = 'PLACEHOLDER';
+        }
+
+        ksort($tags);
+
+        // Calculate IFD size to determine out-of-line data offsets
+        $entryCount = count($tags);
+        $ifdSize    = 2 + (12 * $entryCount) + 4;
+        $curOffset  = $ifdOffset + $ifdSize;
+
+        // Build SRATIONAL data block (all matrices use same dummy data: 1/1)
+        $sratBlock = '';
+        for ($i = 0; $i < $matCount; ++$i) {
+            $sratBlock .= pack('VV', 1, 1);
+        }
+
+        // Replace placeholders with actual matrix entries pointing to out-of-line data
+        foreach ($tags as $tag => &$data) {
+            if ($data !== 'PLACEHOLDER') {
+                continue;
+            }
+
+            $data = pack('v', $tag)
+                . pack('v', TiffConst::TYPE_SRATIONAL)
+                . pack('V', $matCount)
+                . pack('V', $curOffset);
+            $outOfLineData .= $sratBlock;
+            $curOffset += strlen($sratBlock);
+        }
+
+        unset($data);
+
+        $ifdData = pack('v', $entryCount);
+        foreach ($tags as $entry) {
+            $ifdData .= $entry;
+        }
+
+        $ifdData .= pack('V', 0); // next IFD
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifdData
+            . $outOfLineData;
+    }
+
     private function buildTiffWithMakerNoteSafety(int $safetyValue): string
     {
         // Layout: header(8) + IFD0(2 + 4*12 + 4 = 54) + EXIF IFD(2 + 12 + 4 = 18)

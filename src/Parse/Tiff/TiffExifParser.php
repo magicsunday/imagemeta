@@ -1277,6 +1277,7 @@ final class TiffExifParser
 
         $this->validateDngMatrixTags($ifd0);
         $this->validateDngIlluminantDependencies($ifd0);
+        $this->validateDngTripleIlluminant($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
         $this->validatePrimaryThumbnailStructureCompatibility($ifd0, $ifd1, $jpegContext);
@@ -3924,6 +3925,92 @@ final class TiffExifParser
                     1471,
                 );
             }
+        }
+    }
+
+    /**
+     * All-or-none DNG tag sets for triple-illuminant validation.
+     *
+     * DNG 1.7.1.0 "Requirements for three calibrations": ForwardMatrix,
+     * ReductionMatrix, and ProfileHueSatMapData must be present for all
+     * three illuminants or none.
+     *
+     * @var list<array{int, int, int}>
+     */
+    private const array DNG_TRIPLE_ALL_OR_NONE_SETS = [
+        [DngTag::FORWARD_MATRIX_1, DngTag::FORWARD_MATRIX_2, DngTag::FORWARD_MATRIX_3],
+        [DngTag::REDUCTION_MATRIX_1, DngTag::REDUCTION_MATRIX_2, DngTag::REDUCTION_MATRIX_3],
+    ];
+
+    /**
+     * Validates DNG triple-illuminant cross-tag dependencies.
+     *
+     * DNG 1.7.1.0 "Requirements for three calibrations": when CalibrationIlluminant3
+     * is present, CalibrationIlluminant1/2, ColorMatrix3, and all-or-none tag sets
+     * must be structurally complete with distinct illuminant values.
+     */
+    private function validateDngTripleIlluminant(Ifd $ifd): void
+    {
+        $illum3 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_3);
+
+        if (!$illum3 instanceof IfdEntry) {
+            return;
+        }
+
+        // CalibrationIlluminant1 and CalibrationIlluminant2 must also be present
+        if (!$ifd->get(DngTag::CALIBRATION_ILLUMINANT_1) instanceof IfdEntry
+            || !$ifd->get(DngTag::CALIBRATION_ILLUMINANT_2) instanceof IfdEntry
+        ) {
+            throw new ParseError(
+                'CalibrationIlluminant3 requires CalibrationIlluminant1 and CalibrationIlluminant2 per DNG 1.7.1.0.',
+                1473,
+            );
+        }
+
+        // ColorMatrix3 must be present
+        if (!$ifd->get(DngTag::COLOR_MATRIX_3) instanceof IfdEntry) {
+            throw new ParseError(
+                'CalibrationIlluminant3 requires ColorMatrix3 per DNG 1.7.1.0.',
+                1474,
+            );
+        }
+
+        // All-or-none tag sets
+        foreach (self::DNG_TRIPLE_ALL_OR_NONE_SETS as $set) {
+            $present = 0;
+            foreach ($set as $tag) {
+                if ($ifd->get($tag) instanceof IfdEntry) {
+                    ++$present;
+                }
+            }
+
+            if ($present !== 0 && $present !== 3) {
+                throw new ParseError(
+                    sprintf(
+                        'DNG triple-illuminant tag set 0x%04X/0x%04X/0x%04X must be all-or-none per DNG 1.7.1.0.',
+                        $set[0],
+                        $set[1],
+                        $set[2],
+                    ),
+                    1475,
+                );
+            }
+        }
+
+        // Illuminant values must be distinct (illum1/illum2 guaranteed present above)
+        /** @var IfdEntry $illum1 */
+        $illum1 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_1);
+        /** @var IfdEntry $illum2 */
+        $illum2 = $ifd->get(DngTag::CALIBRATION_ILLUMINANT_2);
+
+        if (
+            is_int($illum1->value) && is_int($illum2->value) && is_int($illum3->value)
+            && ($illum1->value === $illum2->value || $illum1->value === $illum3->value || $illum2->value === $illum3->value)
+        ) {
+            throw new ParseError(
+                'Triple-illuminant CalibrationIlluminant values must be distinct per DNG 1.7.1.0.',
+                1476,
+            );
         }
     }
 }
