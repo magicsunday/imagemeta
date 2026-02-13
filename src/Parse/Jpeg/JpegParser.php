@@ -588,7 +588,15 @@ final class JpegParser
                 $this->handleApp11($payload, $offset);
             } elseif ($marker === Marker::APP13) {
                 $this->handleApp13($payload);
-            } elseif ($marker === Marker::SOF0 || $marker === Marker::SOF2) {
+            } elseif ($marker === Marker::SOF2) {
+                throw new ParseError(
+                    sprintf(
+                        'Progressive SOF2 marker at offset %d is not allowed in strict EXIF JPEG mode per EXIF 3.0 §4.8.1.',
+                        $offset,
+                    ),
+                    1486,
+                );
+            } elseif ($marker === Marker::SOF0) {
                 $this->handleStartOfFrame($marker, $payload, $offset);
             }
         }
@@ -2150,9 +2158,9 @@ final class JpegParser
     }
 
     /**
-     * Parses baseline or progressive start of frame markers to obtain sampling information.
+     * Parses baseline start of frame markers to obtain sampling information.
      *
-     * @param int    $marker  Marker code (SOF0 or SOF2).
+     * @param int    $marker  Marker code (SOF0).
      * @param string $payload Raw SOF payload excluding the marker and length field.
      * @param int    $offset  Offset where the SOF marker begins.
      */

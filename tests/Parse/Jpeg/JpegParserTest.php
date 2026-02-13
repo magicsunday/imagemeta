@@ -1529,7 +1529,29 @@ final class JpegParserTest extends TestCase
     public static function provideSofMarkers(): iterable
     {
         yield 'baseline-dct' => [self::MARKER_SOF0];
-        yield 'progressive-dct' => [self::MARKER_SOF2];
+    }
+
+    /**
+     * Rejects progressive SOF2 markers in strict EXIF-JPEG conformance mode.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsProgressiveSof2InStrictExifMode(): void
+    {
+        $framePayload = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg      = $this->jpeg(self::segment(self::MARKER_SOF2, $framePayload));
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1486);
+        $this->expectExceptionMessageMatches('/SOF2.*strict EXIF|strict EXIF.*SOF2/i');
+
+        $extractor->extractExifBlobs();
     }
 
     /**
