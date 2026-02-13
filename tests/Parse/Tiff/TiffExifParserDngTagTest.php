@@ -4865,4 +4865,179 @@ final class TiffExifParserDngTagTest extends TestCase
             . $semanticName
             . $maskData;
     }
+
+    /**
+     * Accepts ProfileHueSatMapEncoding = 0 (Linear) with 3D dims.
+     */
+    #[Test]
+    public function acceptsHueSatMapEncodingLinear(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithEncoding(DngTag::PROFILE_HUE_SAT_MAP_ENCODING, 0, DngTag::PROFILE_HUE_SAT_MAP_DIMS, [1, 2, 2]),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts ProfileLookTableEncoding = 1 (sRGB) with 3D dims and data.
+     */
+    #[Test]
+    public function acceptsLookTableEncodingSrgb(): void
+    {
+        // dims: 1*2*2*3 = 12 FLOATs
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithLookTableAndEncoding([1, 2, 2], 12, 1),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects encoding value outside domain {0, 1}.
+     */
+    #[Test]
+    public function rejectsEncodingOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1556);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithEncoding(DngTag::PROFILE_HUE_SAT_MAP_ENCODING, 2, DngTag::PROFILE_HUE_SAT_MAP_DIMS, [1, 2, 2]),
+        );
+    }
+
+    /**
+     * Rejects encoding tag present with ValueDivisions == 1 (2.5D).
+     */
+    #[Test]
+    public function rejectsEncodingWith25dDims(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1557);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithEncoding(DngTag::PROFILE_HUE_SAT_MAP_ENCODING, 0, DngTag::PROFILE_HUE_SAT_MAP_DIMS, [1, 2, 1]),
+        );
+    }
+
+    /**
+     * Builds a DNG with an encoding tag and its associated dims tag.
+     *
+     * Tags must appear in ascending tag-ID order in the IFD. The dims tag
+     * (0xC6F9 or 0xC725) always comes before the encoding tag (0xC7A3 or 0xC7A4).
+     *
+     * @param int                           $encTag  Encoding tag constant
+     * @param int                           $encVal  Encoding value (0=Linear, 1=sRGB, or invalid)
+     * @param int                           $dimsTag Dimensions tag constant
+     * @param array{0: int, 1: int, 2: int} $dims    Hue, saturation, value divisions
+     */
+    private function buildDngWithEncoding(int $encTag, int $encVal, int $dimsTag, array $dims): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 7;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $dimsOffset        = $modelOffset + strlen($uniqueCameraModel);
+        $dimsData          = pack('V3', $dims[0], $dims[1], $dims[2]);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $dimsTag)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 3)
+            . pack('V', $dimsOffset)
+            . pack('v', $encTag)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $encVal)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $dimsData;
+    }
+
+    /**
+     * Builds a DNG with ProfileLookTableDims, ProfileLookTableData, and ProfileLookTableEncoding.
+     *
+     * @param array{0: int, 1: int, 2: int} $dims      Hue, saturation, value divisions
+     * @param int                           $dataCount Number of FLOAT values
+     * @param int                           $encVal    Encoding value
+     */
+    private function buildDngWithLookTableAndEncoding(array $dims, int $dataCount, int $encVal): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 8;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $dimsOffset        = $modelOffset + strlen($uniqueCameraModel);
+        $dimsData          = pack('V3', $dims[0], $dims[1], $dims[2]);
+        $dataOffset        = $dimsOffset + strlen($dimsData);
+        $floatData         = str_repeat(pack('g', 1.0), $dataCount);
+
+        // Tags in ascending order: 0x0100, 0x0101, 0x0112, 0xC612, 0xC614, 0xC725, 0xC726, 0xC7A4
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PROFILE_LOOK_TABLE_DIMS)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 3)
+            . pack('V', $dimsOffset)
+            . pack('v', DngTag::PROFILE_LOOK_TABLE_DATA)
+            . pack('v', TiffConst::TYPE_FLOAT)
+            . pack('V', $dataCount)
+            . pack('V', $dataOffset)
+            . pack('v', DngTag::PROFILE_LOOK_TABLE_ENCODING)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $encVal)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $dimsData
+            . $floatData;
+    }
 }

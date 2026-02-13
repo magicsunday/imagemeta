@@ -1300,6 +1300,18 @@ final class TiffExifParser
         $this->validateDngHueSatMapData($ifd0);
         $this->validateDngProfileLookTableDims($ifd0);
         $this->validateDngProfileLookTableData($ifd0);
+        $this->validateDngEncodingTag(
+            $ifd0,
+            DngTag::PROFILE_HUE_SAT_MAP_ENCODING,
+            DngTag::PROFILE_HUE_SAT_MAP_DIMS,
+            'ProfileHueSatMapEncoding',
+        );
+        $this->validateDngEncodingTag(
+            $ifd0,
+            DngTag::PROFILE_LOOK_TABLE_ENCODING,
+            DngTag::PROFILE_LOOK_TABLE_DIMS,
+            'ProfileLookTableEncoding',
+        );
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
@@ -5620,6 +5632,62 @@ final class TiffExifParser
                     $expectedCount,
                 ),
                 1554,
+            );
+        }
+    }
+
+    /**
+     * Validates a DNG encoding tag (ProfileHueSatMapEncoding or ProfileLookTableEncoding).
+     *
+     * Must be LONG[1] with value 0 (Linear) or 1 (sRGB). Not applicable when the
+     * associated dimensions tag has ValueDivisions == 1 (2.5D map/table).
+     *
+     * @param Ifd    $ifd     IFD to validate
+     * @param int    $encTag  Encoding tag constant
+     * @param int    $dimsTag Associated dimensions tag constant
+     * @param string $name    Human-readable tag name for error messages
+     */
+    private function validateDngEncodingTag(Ifd $ifd, int $encTag, int $dimsTag, string $name): void
+    {
+        $entry = $ifd->get($encTag);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 1) {
+            throw new ParseError(
+                sprintf('%s must be LONG[1], got type %d count %d.', $name, $entry->type, $entry->count),
+                1555,
+            );
+        }
+
+        if (!is_int($entry->value) || ($entry->value !== 0 && $entry->value !== 1)) {
+            throw new ParseError(
+                sprintf('%s value must be 0 (Linear) or 1 (sRGB), got %d.', $name, is_int($entry->value) ? $entry->value : -1),
+                1556,
+            );
+        }
+
+        // Not applicable to 2.5D maps (ValueDivisions == 1)
+        $dimsEntry = $ifd->get($dimsTag);
+
+        if (!$dimsEntry instanceof IfdEntry) {
+            return;
+        }
+
+        $dimsValue = $dimsEntry->value;
+
+        if (!$dimsValue instanceof ExifNumericList || count($dimsValue->values) !== 3) {
+            return;
+        }
+
+        $valDivs = $dimsValue->values[2];
+
+        if (is_int($valDivs) && $valDivs === 1) {
+            throw new ParseError(
+                sprintf('%s must not be present for 2.5D tables (ValueDivisions == 1).', $name),
+                1557,
             );
         }
     }
