@@ -123,7 +123,11 @@ final class IptcParser
             $data = substr($payload, $offset, $resourceSize);
             $offset += $resourceSize;
 
-            if ((($resourceSize % 2) !== 0) && (($length - $offset) >= 1)) {
+            if (($resourceSize % 2) !== 0) {
+                if (($length - $offset) < 1) {
+                    throw new BoundsError('APP13 resource data padding exceeds payload length.', 1142);
+                }
+
                 ++$offset;
             }
 

@@ -114,6 +114,56 @@ final class IptcParserTest extends TestCase
     }
 
     /**
+     * Accepts odd-sized resource data when mandatory alignment padding is present.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesOddSizedResourceDataWithTrailingPadByte(): void
+    {
+        $iimData = $this->iimDataset(2, 5, 'AB'); // 7 bytes (odd) including header
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame('AB', $document->first(2, 5));
+    }
+
+    /**
+     * Rejects odd-sized resource data when trailing alignment padding is missing.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOddSizedResourceDataWithoutTrailingPadByte(): void
+    {
+        $iimData      = $this->iimDataset(2, 5, 'AB');
+        $blockWithPad = $this->resourceBlock(0x0404, $iimData);
+        $payload      = self::PHOTOSHOP_SIGNATURE . substr($blockWithPad, 0, -1);
+
+        $this->expectException(BoundsError::class);
+        $this->expectExceptionMessageMatches('/padding|pad byte|resource data/i');
+
+        (new IptcParser())->parse($payload);
+    }
+
+    /**
+     * Keeps even-sized resource data parsing unchanged without requiring padding.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesEvenSizedResourceDataWithoutPaddingRequirement(): void
+    {
+        $iimData = $this->iimDataset(2, 5, 'A'); // 6 bytes (even) including header
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+
+        $document = (new IptcParser())->parse($payload);
+
+        self::assertSame('A', $document->first(2, 5));
+    }
+
+    /**
      * Truncates the Photoshop resource block to simulate corruption.
      * This asserts a BoundsError is thrown when the block length is inconsistent.
      *
