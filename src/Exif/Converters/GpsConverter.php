@@ -634,26 +634,58 @@ final readonly class GpsConverter
                 return null;
             }
 
-            foreach ($val->values as $component) {
+            foreach ($val->values as $index => $component) {
                 $numeric = $this->rationalConverter->toFloat($component);
                 if ($numeric === null) {
                     return null;
                 }
 
-                $components[] = abs($numeric);
+                if ($numeric < 0.0) {
+                    $part = match ($index) {
+                        0       => 'degrees',
+                        1       => 'minutes',
+                        default => 'seconds',
+                    };
+
+                    throw new ParseError(
+                        sprintf(
+                            'GPS %s component must be non-negative; hemisphere direction is defined by GPS reference tags per EXIF 3.0 §4.6.7.1.2-§4.6.7.1.5.',
+                            $part,
+                        ),
+                        1467,
+                    );
+                }
+
+                $components[] = $numeric;
             }
         } else {
             if (count($val->values) !== 3) {
                 return null;
             }
 
-            foreach ($val->values as $component) {
+            foreach ($val->values as $index => $component) {
                 $numeric = $this->numericConverter->normaliseComponent($component);
                 if ($numeric === null) {
                     return null;
                 }
 
-                $components[] = abs($numeric);
+                if ($numeric < 0.0) {
+                    $part = match ($index) {
+                        0       => 'degrees',
+                        1       => 'minutes',
+                        default => 'seconds',
+                    };
+
+                    throw new ParseError(
+                        sprintf(
+                            'GPS %s component must be non-negative; hemisphere direction is defined by GPS reference tags per EXIF 3.0 §4.6.7.1.2-§4.6.7.1.5.',
+                            $part,
+                        ),
+                        1467,
+                    );
+                }
+
+                $components[] = $numeric;
             }
         }
 

@@ -42,6 +42,7 @@ composer require magicsunday/imagemeta
 * EXIF `SourceExposureTimesOfCompositeImage` now enforces strict binary-structure decoding (summary + sequence sections) and rejects truncated/partial payloads as conformance errors.
 * EXIF GPS coordinate conversion now enforces geographic ranges for capture and destination coordinates (latitude `[-90,90]`, longitude `[-180,180]`) and rejects out-of-domain values.
 * EXIF `GPSDateStamp`/`GPSTimeStamp` parsing now enforces semantic UTC validity (real calendar date, hour/minute/second ranges) and rejects invalid timestamps.
+* EXIF GPS DMS parsing now rejects negative component magnitudes (degrees/minutes/seconds) and requires hemisphere sign handling exclusively via `GPS*Ref` tags.
 * JPEG APP1 parsing now supports ExtendedXMP chunk reassembly (`xmpNote:HasExtendedXMP`) with strict GUID/offset/coverage validation and deterministic merge into base packets.
 * JPEG APP2 FlashPix stream transport now validates per-stream sequence headers strictly (valid `sequence/count`, stable count, no duplicate/missing sequence slots) and fails malformed assemblies with `ParseError`.
 * Baseline DNG support for core IFD0 tags: `DNGVersion`, `DNGBackwardVersion`, and `UniqueCameraModel` via `ParsedExif` accessors.

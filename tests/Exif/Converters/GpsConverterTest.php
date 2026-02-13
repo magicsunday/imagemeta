@@ -515,6 +515,81 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Rejects negative DMS components for capture coordinates.
+     *
+     * @param int                      $refTag
+     * @param int                      $valueTag
+     * @param string                   $ref
+     * @param list<array{0:int,1:int}> $dms
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideNegativeCaptureDmsComponents')]
+    public function rejectsNegativeCaptureDmsComponents(int $refTag, int $valueTag, string $ref, array $dms): void
+    {
+        $entries = [
+            $refTag   => new IfdEntry($refTag, 2, 2, $ref),
+            $valueTag => new IfdEntry($valueTag, 10, 3, $dms),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1467);
+        $this->expectExceptionMessage('non-negative');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
+     * @return iterable<string, array{0:int, 1:int, 2:string, 3:list<array{0:int,1:int}>}>
+     */
+    public static function provideNegativeCaptureDmsComponents(): iterable
+    {
+        yield 'latitude-negative-degrees' => [
+            ExifTag::GPS_LATITUDE_REF,
+            ExifTag::GPS_LATITUDE,
+            'N',
+            [[-12, 1], [34, 1], [56, 1]],
+        ];
+
+        yield 'longitude-negative-minutes' => [
+            ExifTag::GPS_LONGITUDE_REF,
+            ExifTag::GPS_LONGITUDE,
+            'E',
+            [[12, 1], [-34, 1], [56, 1]],
+        ];
+
+        yield 'longitude-negative-seconds' => [
+            ExifTag::GPS_LONGITUDE_REF,
+            ExifTag::GPS_LONGITUDE,
+            'W',
+            [[12, 1], [34, 1], [-56, 1]],
+        ];
+    }
+
+    /**
+     * Rejects negative DMS components for destination coordinates.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsNegativeDestinationDmsComponents(): void
+    {
+        $entries = [
+            ExifTag::GPS_DEST_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 2, 'S'),
+            ExifTag::GPS_DEST_LATITUDE      => new IfdEntry(ExifTag::GPS_DEST_LATITUDE, 10, 3, [[12, 1], [-1, 1], [0, 1]]),
+            ExifTag::GPS_DEST_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE_REF, 2, 2, 'E'),
+            ExifTag::GPS_DEST_LONGITUDE     => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE, 10, 3, [[12, 1], [0, 1], [-1, 1]]),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1467);
+        $this->expectExceptionMessage('non-negative');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
      * Rejects capture latitude values above +90°.
      *
      * @return void
