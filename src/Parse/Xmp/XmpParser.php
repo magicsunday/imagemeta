@@ -299,8 +299,8 @@ final class XmpParser
                 continue;
             }
 
-            // XMP Specification Part 1 Appendix A.2.3.4: Skip xml:lang qualifiers on rdf:li.
-            if ($attrNamespace === 'http://www.w3.org/XML/1998/namespace' && $attrLocalName === 'lang') {
+            // XMP/RDF qualifiers (xml:*) describe node/value semantics and are not standalone properties.
+            if ($attrNamespace === 'http://www.w3.org/XML/1998/namespace') {
                 continue;
             }
 

@@ -131,6 +131,28 @@ XML;
     }
 
     /**
+     * Treats xml:* attributes as qualifiers and does not expose them as standalone properties.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseIgnoresXmlNamespaceAttributesAsStandaloneProperties(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description xml:lang="en-US" xml:space="preserve" dc:title="Test" />
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame('Test', $document->get(self::DC_NS, 'title'));
+        self::assertNull($document->find('lang'));
+        self::assertNull($document->find('space'));
+    }
+
+    /**
      * Preserves rdf:Alt language qualifiers and default ordering.
      *
      * @return void
@@ -161,6 +183,30 @@ XML;
         self::assertSame(['Default', 'Hello'], $alt->values());
         self::assertSame('Default', $alt->defaultValue());
         self::assertSame('Hello', $alt->valueFor('en-US'));
+        self::assertNull($document->find('lang'));
+    }
+
+    /**
+     * Preserves value text when xml:lang is used as qualifier on a simple property.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesSimpleValueWithXmlLangQualifier(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title xml:lang="en-US">Hello</dc:title>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame('Hello', $document->get(self::DC_NS, 'title'));
+        self::assertNull($document->find('lang'));
     }
 
     /**
