@@ -83,11 +83,11 @@
         ],
         "ci:test": [
             "@ci:test:php:lint",
-            "@ci:test:php:phpstan",
-            "@ci:test:php:rector",
-            "@ci:test:php:cpd",
             "@ci:test:php:cgl",
-            "@ci:test:php:unit"
+            "@ci:test:php:rector",
+            "@ci:test:php:phpstan",
+            "@ci:test:php:unit",
+            "@ci:test:php:cpd"
         ],
         "post-update-cmd": [
             "npm install jscpd"

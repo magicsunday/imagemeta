@@ -37,16 +37,14 @@ jobs:
 
             -   id: composer-cache-vars
                 name: Composer Cache Vars
-                run: |
-                    echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-                    echo "timestamp=$(date +"%s")" >> $GITHUB_OUTPUT
+                run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
             -   id: composer-cache-dependencies
                 name: Cache Composer dependencies
                 uses: actions/cache@v4
                 with:
                     path: ${{ steps.composer-cache-vars.outputs.dir }}
-                    key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ steps.composer-cache-vars.outputs.timestamp }}
+                    key: ${{ runner.os }}-composer-${{ matrix.php }}-${{ hashFiles('composer.lock') }}
                     restore-keys: |
                         ${{ runner.os }}-composer-${{ matrix.php }}-
                         ${{ runner.os }}-composer-
@@ -54,41 +52,34 @@ jobs:
             -   id: install
                 name: Install dependencies
                 run: |
-                    composer validate
                     composer install --no-progress --no-interaction --prefer-dist --optimize-autoloader
 
             -   id: lint
                 name: Lint
-                if: ${{ always() && steps.install.conclusion == 'success' }}
                 run: |
                     composer ci:test:php:lint
 
             -   id: cgl
                 name: CGL
-                if: ${{ always() && steps.install.conclusion == 'success' }}
                 run: |
                     composer ci:test:php:cgl
 
-            -   id: phpstan
-                name: PHPStan
-                if: ${{ always() && steps.install.conclusion == 'success' }}
-                run: |
-                    composer ci:test:php:phpstan
-
             -   id: rector
                 name: Rector
-                if: ${{ always() && steps.install.conclusion == 'success' }}
                 run: |
                     composer ci:test:php:rector
 
-            -   id: cpd
-                name: Copy-Paste Detection
-                if: ${{ always() && steps.install.conclusion == 'success' }}
+            -   id: phpstan
+                name: PHPStan
                 run: |
-                    composer ci:test:php:cpd
+                    composer ci:test:php:phpstan
 
             -   id: tests
                 name: PHPUnit Tests
-                if: ${{ always() && steps.install.conclusion == 'success' }}
                 run: |
                     composer ci:test:php:unit
+
+            -   id: cpd
+                name: Copy-Paste Detection
+                run: |
+                    composer ci:test:php:cpd
