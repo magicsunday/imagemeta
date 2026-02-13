@@ -95,6 +95,10 @@ final class JpegParserTest extends TestCase
 
     private const int MARKER_DQT = 0xDB;
 
+    private const int MARKER_DHT = 0xC4;
+
+    private const int MARKER_DRI = 0xDD;
+
     private const int MARKER_SOF0 = 0xC0;
 
     private const int MARKER_SOF2 = 0xC2;
@@ -305,6 +309,132 @@ final class JpegParserTest extends TestCase
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Accepts APP, DQT, DHT, SOF and SOS in EXIF-conformant order.
+     *
+     * @return void
+     */
+    #[Test]
+    public function exifConformanceAppDqtDhtSofSosOrderParses(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $sofPayload  = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+        $sosPayload = "\x03\x01\x00\x02\x11\x03\x11";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $sofPayload),
+            self::segment(self::MARKER_SOS, $sosPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects APP markers that appear after DQT or DHT structural markers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function dqtOrDhtBeforeFinalAppMarkerThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_APP2, 'late-app2'),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP marker.*after structural|after structural.*APP marker/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects duplicate DQT marker segments.
+     *
+     * @return void
+     */
+    #[Test]
+    public function duplicateDqtThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DQT, "\x00"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/DQT.*duplicate|duplicate.*DQT/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects duplicate DHT marker segments.
+     *
+     * @return void
+     */
+    #[Test]
+    public function duplicateDhtThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/DHT.*duplicate|duplicate.*DHT/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects duplicate DRI marker segments.
+     *
+     * @return void
+     */
+    #[Test]
+    public function duplicateDriThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DRI, "\x00\x01"),
+            self::segment(self::MARKER_DRI, "\x00\x02"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/DRI.*duplicate|duplicate.*DRI/i');
+
+        $extractor->extractExifBlobs();
     }
 
     /**

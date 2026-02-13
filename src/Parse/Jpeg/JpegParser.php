@@ -350,6 +350,9 @@ final class JpegParser
         $this->iccSequence             = [];
         $this->iccExpectedCount        = null;
         $this->iccProfile              = null;
+        $this->app11Sequence           = [];
+        $this->app11Identifier         = [];
+        $this->app11FirstOffset        = [];
         $this->flashPixContents        = [];
         $this->flashPixChunks          = [];
         $this->flashPixRanges          = [];
@@ -376,6 +379,9 @@ final class JpegParser
         $seenApp11                   = false;
         $firstStructuralMarker       = null;
         $firstStructuralMarkerOffset = null;
+        $firstDqtOffset              = null;
+        $firstDhtOffset              = null;
+        $firstDriOffset              = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -396,6 +402,57 @@ final class JpegParser
             $segmentLength = $this->readSegmentLength($marker, $offset, $isAppSegment);
             $payloadLength = $segmentLength - 2;
             $payload       = $this->readSegmentPayload($marker, $offset, $payloadLength);
+
+            if (
+                $isAppSegment
+                && ($marker !== Marker::APP11)
+                && ($firstStructuralMarker !== null)
+                && ($firstStructuralMarkerOffset !== null)
+            ) {
+                throw new ParseError(
+                    sprintf(
+                        'APP marker 0x%02X at offset %d appears after structural marker 0x%02X at offset %d',
+                        $marker,
+                        $offset,
+                        $firstStructuralMarker,
+                        $firstStructuralMarkerOffset,
+                    ),
+                    1340,
+                );
+            }
+
+            if ($marker === Marker::DQT) {
+                if ($firstDqtOffset !== null) {
+                    throw new ParseError(
+                        sprintf('DQT marker at offset %d duplicates DQT marker at offset %d', $offset, $firstDqtOffset),
+                        1341,
+                    );
+                }
+
+                $firstDqtOffset = $offset;
+            }
+
+            if ($marker === Marker::DHT) {
+                if ($firstDhtOffset !== null) {
+                    throw new ParseError(
+                        sprintf('DHT marker at offset %d duplicates DHT marker at offset %d', $offset, $firstDhtOffset),
+                        1342,
+                    );
+                }
+
+                $firstDhtOffset = $offset;
+            }
+
+            if ($marker === Marker::DRI) {
+                if ($firstDriOffset !== null) {
+                    throw new ParseError(
+                        sprintf('DRI marker at offset %d duplicates DRI marker at offset %d', $offset, $firstDriOffset),
+                        1343,
+                    );
+                }
+
+                $firstDriOffset = $offset;
+            }
 
             if (!$seenExifApp1) {
                 $isExifApp1 = ($marker === Marker::APP1) && str_starts_with($payload, self::EXIF_SIGNATURE);
