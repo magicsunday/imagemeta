@@ -1128,7 +1128,13 @@ final class IccParser
     }
 
     /**
-     * Parses an ICC 'mluc' tag to extract the first non-empty UTF-16 value.
+     * Parses an ICC 'mluc' tag with deterministic language-aware record selection.
+     *
+     * ICC.1:2022 §10.13: multiLocalizedUnicodeType stores locale-qualified
+     * strings. Selection policy (GH-1009):
+     * 1. Prefer 'enUS' record when present.
+     * 2. Fall back to any 'en' language record.
+     * 3. Otherwise use the first non-empty record.
      *
      * @param string $data Raw tag payload beginning with the type signature.
      *
@@ -1168,8 +1174,15 @@ final class IccParser
             throw new ParseError('ICC mluc record table exceeds payload bounds', 1139);
         }
 
+        // Decode all records with their locale tags for deterministic selection
+        $firstNonEmpty = null;
+        $enAny         = null;
+        $enUs          = null;
+
         $cursor = 16;
         for ($i = 0; $i < $recordCount; ++$i) {
+            $lang         = substr($data, $cursor, 2);
+            $country      = substr($data, $cursor + 2, 2);
             $stringLength = $this->uInt32Be(substr($data, $cursor + 4, 4));
             $stringOffset = $this->uInt32Be(substr($data, $cursor + 8, 4));
             $cursor += $recordSize;
@@ -1194,12 +1207,26 @@ final class IccParser
 
             $raw = substr($data, $stringOffset, $stringLength);
             $utf = $this->decodeUtf16Be($raw);
-            if ($utf !== null && $utf !== '') {
-                return $utf;
+            if ($utf === null) {
+                continue;
+            }
+
+            if ($utf === '') {
+                continue;
+            }
+
+            $firstNonEmpty ??= $utf;
+
+            if ($lang === 'en') {
+                $enAny ??= $utf;
+
+                if ($country === 'US' || $country === "\0\0") {
+                    $enUs ??= $utf;
+                }
             }
         }
 
-        return null;
+        return $enUs ?? $enAny ?? $firstNonEmpty;
     }
 
     /**

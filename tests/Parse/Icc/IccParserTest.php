@@ -590,6 +590,77 @@ final class IccParserTest extends TestCase
     }
 
     /**
+     * Multi-record mluc with reordered records yields same selected output.
+     *
+     * The parser must select deterministically by locale, not by record order.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mlucMultiRecordSelectsDeterministicallyRegardlessOfOrder(): void
+    {
+        // "Hallo" (deDE) first, "Hello" (enUS) second
+        $profileA = $this->buildMultiRecordMlucProfile([
+            ['lang' => 'de', 'country' => 'DE', 'text' => "\x00\x48\x00\x61\x00\x6c\x00\x6c\x00\x6f"],
+            ['lang' => 'en', 'country' => 'US', 'text' => "\x00\x48\x00\x65\x00\x6c\x00\x6c\x00\x6f"],
+        ]);
+        // Reversed: "Hello" (enUS) first, "Hallo" (deDE) second
+        $profileB = $this->buildMultiRecordMlucProfile([
+            ['lang' => 'en', 'country' => 'US', 'text' => "\x00\x48\x00\x65\x00\x6c\x00\x6c\x00\x6f"],
+            ['lang' => 'de', 'country' => 'DE', 'text' => "\x00\x48\x00\x61\x00\x6c\x00\x6c\x00\x6f"],
+        ]);
+
+        $decoder = new IccParser();
+        $resultA = $decoder->decode($profileA);
+        $resultB = $decoder->decode($profileB);
+
+        self::assertNotNull($resultA);
+        self::assertNotNull($resultB);
+        self::assertSame($resultA['description'], $resultB['description']);
+        self::assertSame('Hello', $resultA['description']);
+    }
+
+    /**
+     * Multi-record mluc with enUS locale present selects enUS.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mlucSelectsEnUsWhenPresent(): void
+    {
+        $profile = $this->buildMultiRecordMlucProfile([
+            ['lang' => 'fr', 'country' => 'FR', 'text' => "\x00\x42\x00\x6f\x00\x6e\x00\x6a\x00\x6f\x00\x75\x00\x72"],
+            ['lang' => 'en', 'country' => 'US', 'text' => "\x00\x48\x00\x65\x00\x6c\x00\x6c\x00\x6f"],
+        ]);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('Hello', $result['description']);
+    }
+
+    /**
+     * Multi-record mluc without enUS falls back to first non-empty record deterministically.
+     *
+     * @return void
+     */
+    #[Test]
+    public function mlucFallsBackToFirstRecordWithoutEnUs(): void
+    {
+        $profile = $this->buildMultiRecordMlucProfile([
+            ['lang' => 'de', 'country' => 'DE', 'text' => "\x00\x48\x00\x61\x00\x6c\x00\x6c\x00\x6f"],
+            ['lang' => 'fr', 'country' => 'FR', 'text' => "\x00\x42\x00\x6f\x00\x6e\x00\x6a\x00\x6f\x00\x75\x00\x72"],
+        ]);
+
+        $decoder = new IccParser();
+        $result  = $decoder->decode($profile);
+
+        self::assertNotNull($result);
+        self::assertSame('Hallo', $result['description']);
+    }
+
+    /**
      * Builds a minimal ICC profile with an mluc description tag containing the given UTF-16BE string.
      */
     private function buildMlucProfile(string $utf16String): string
@@ -640,6 +711,70 @@ final class IccParserTest extends TestCase
         $profile = $header . $tagTable . $mlucTag;
 
         // Patch profile size
+        return pack('N', strlen($profile)) . substr($profile, 4);
+    }
+
+    /**
+     * Builds a minimal ICC v4 profile with a multi-record mluc description tag.
+     *
+     * @param list<array{lang: string, country: string, text: string}> $records
+     */
+    private function buildMultiRecordMlucProfile(array $records): string
+    {
+        $header = pack('N', 0)
+            . str_repeat("\0", 4)
+            . pack('N', 0x04200000)      // Version 4.2.0
+            . str_repeat("\0", 4)
+            . 'RGB '
+            . 'XYZ '
+            . str_repeat("\0", 12)
+            . 'acsp'
+            . str_repeat("\0", 24)
+            . pack('N', 0)
+            . pack('N', 0x0000F6D6)
+            . pack('N', 0x00010000)
+            . pack('N', 0x0000D32D)
+            . str_repeat("\0", 4)
+            . str_repeat("\0", 16)
+            . str_repeat("\0", 28);
+
+        $header = str_pad($header, 128, "\0");
+
+        $recordCount    = count($records);
+        $recordSize     = 12;
+        $stringAreaBase = 16 + ($recordCount * $recordSize);
+
+        $recordBytes = '';
+        $stringBytes = '';
+        $stringPos   = $stringAreaBase;
+
+        foreach ($records as $record) {
+            $recordBytes .= $record['lang']
+                . $record['country']
+                . pack('N', strlen($record['text']))
+                . pack('N', $stringPos);
+            $stringBytes .= $record['text'];
+            $stringPos += strlen($record['text']);
+        }
+
+        $mlucTag = 'mluc'
+            . pack('N', 0)
+            . pack('N', $recordCount)
+            . pack('N', $recordSize)
+            . $recordBytes
+            . $stringBytes;
+
+        $paddedSize = (int) (ceil(strlen($mlucTag) / 4) * 4);
+        $mlucTag    = str_pad($mlucTag, $paddedSize, "\0");
+
+        $tagOffset = 128 + 4 + 12;
+        $tagTable  = pack('N', 1)
+            . 'desc'
+            . pack('N', $tagOffset)
+            . pack('N', $paddedSize);
+
+        $profile = $header . $tagTable . $mlucTag;
+
         return pack('N', strlen($profile)) . substr($profile, 4);
     }
 
