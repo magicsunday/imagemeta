@@ -1444,9 +1444,9 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
-     * Builds an ilst entry with two data boxes (different locales) under one key.
-     * This confirms $keys has the first value and allValues() returns both atoms
-     * with correct type and locale indicators.
+     * Builds an ilst entry with ordered data boxes for one key.
+     * This confirms the parser preserves order and allows deterministic fallback
+     * selection by accepted locale/type values.
      *
      * @return void
      */
@@ -1461,13 +1461,13 @@ final class IsoBmffParserTest extends TestCase
         $keysPayload .= $keyName;
         $keys = $this->fullBox('keys', $keysPayload);
 
-        // Two data boxes with different locales (direct ISO codes, value > 255)
-        $locale1  = 0x00000000; // default locale
-        $locale2  = 0x555315C7; // country='US' (ISO 3166), language='eng' (packed ISO 639-2/T)
-        $dataBox1 = $this->box('data', pack('N', 1) . pack('N', $locale1) . 'first-value');
-        $dataBox2 = $this->box('data', pack('N', 1) . pack('N', $locale2) . 'second-value');
-        $entry    = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
-        $ilst     = $this->box('ilst', $entry);
+        // Ordered from specific locale to generic locale.
+        $localeSpecific = 0x555315C7; // country='US', language='eng'
+        $localeDefault  = 0x00000000; // default locale
+        $dataBox1       = $this->box('data', pack('N', 1) . pack('N', $localeSpecific) . 'localized-value');
+        $dataBox2       = $this->box('data', pack('N', 1) . pack('N', $localeDefault) . 'fallback-value');
+        $entry          = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
+        $ilst           = $this->box('ilst', $entry);
 
         $meta = $this->fullBox('meta', $keys . $ilst);
         $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
@@ -1477,22 +1477,60 @@ final class IsoBmffParserTest extends TestCase
 
         self::assertNotNull($quickTime);
 
-        // Backward compat: $keys has the first value
-        self::assertSame('first-value', $quickTime->keys[$keyName]);
+        // Backward compat: keys map stores first item in source order.
+        self::assertSame('localized-value', $quickTime->keys[$keyName]);
 
-        // allValues() returns both atoms
         $atoms = $quickTime->allValues($keyName);
         self::assertCount(2, $atoms);
 
         self::assertSame(1, $atoms[0]->typeIndicator);
-        self::assertSame(0, $atoms[0]->locale);
-        self::assertSame('first-value', $atoms[0]->value);
+        self::assertSame($localeSpecific, $atoms[0]->locale);
+        self::assertSame('localized-value', $atoms[0]->value);
+        self::assertSame(0x5553, $atoms[0]->countryIndicator());
+        self::assertSame(0x15C7, $atoms[0]->languageIndicator());
 
         self::assertSame(1, $atoms[1]->typeIndicator);
-        self::assertSame(0x555315C7, $atoms[1]->locale);
-        self::assertSame('second-value', $atoms[1]->value);
-        self::assertSame(0x5553, $atoms[1]->countryIndicator());
-        self::assertSame(0x15C7, $atoms[1]->languageIndicator());
+        self::assertSame($localeDefault, $atoms[1]->locale);
+        self::assertSame('fallback-value', $atoms[1]->value);
+
+        self::assertSame(
+            'localized-value',
+            $quickTime->firstAcceptableValue($keyName, [0, $localeSpecific], [1]),
+        );
+        self::assertSame('fallback-value', $quickTime->firstAcceptableValue($keyName, [0], [1]));
+    }
+
+    /**
+     * Rejects metadata data atoms that are not ordered from specific to generic.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsInvalidDataOrderingInIlstEntry(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('must be ordered from most-specific to most-general');
+
+        $keyName = 'com.apple.quicktime.content.identifier';
+
+        $keysPayload = pack('N', 1);
+        $keysPayload .= pack('N', 8 + strlen($keyName));
+        $keysPayload .= 'mdta';
+        $keysPayload .= $keyName;
+        $keys = $this->fullBox('keys', $keysPayload);
+
+        // Invalid ordering: default locale first, specific locale second.
+        $localeDefault  = 0x00000000;
+        $localeSpecific = 0x555315C7;
+        $dataBox1       = $this->box('data', pack('N', 1) . pack('N', $localeDefault) . 'fallback-value');
+        $dataBox2       = $this->box('data', pack('N', 1) . pack('N', $localeSpecific) . 'localized-value');
+        $entry          = $this->box(pack('N', 1), $dataBox1 . $dataBox2);
+        $ilst           = $this->box('ilst', $entry);
+
+        $meta = $this->fullBox('meta', $keys . $ilst);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        $this->createExtractor($ftyp . $meta)->extract();
     }
 
     /**

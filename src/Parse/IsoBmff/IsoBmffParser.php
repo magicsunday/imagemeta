@@ -3024,11 +3024,13 @@ final readonly class IsoBmffParser
             // Freeform entries ('----') handle 'name' children in parseFreeformKey()
             // as data boxes; only non-freeform entries use the spec Name atom.
             $isFreeform = ($entry->type === self::BOX_FREEFORM);
+            $entryAtoms = [];
 
             foreach ($this->walkChildren($entry) as $sub) {
                 if ($sub->type === self::BOX_DATA) {
                     $structured = $this->parseDataBoxStructured($sub);
                     $this->validateLocaleIndicator($structured['locale'], $countryLists, $languageLists);
+                    $entryAtoms[] = $structured;
 
                     $effectiveKey = $keyName ?? $itemName;
                     if ($effectiveKey === null) {
@@ -3057,6 +3059,8 @@ final readonly class IsoBmffParser
                     $this->parseIlstItemInfo($sub, $seenItemIds);
                 }
             }
+
+            $this->validateDataOrdering($entry->type, $entryAtoms);
         }
 
         return [$result, $atomsList, $seenItemIds !== []];
@@ -3297,6 +3301,59 @@ final readonly class IsoBmffParser
                 throw new ParseError(sprintf('data atom locale language index %d exceeds lang list entry count %d', $language, count($languageLists)), 1250);
             }
         }
+    }
+
+    /**
+     * Validates that metadata item data atoms are ordered from most-specific to most-general.
+     *
+     * QuickTime File Format 2012, "Data Ordering" (p. 142): applications may
+     * stop searching once they encounter an acceptable locale/type pair, which
+     * requires deterministic ordering from specific locale variants to defaults.
+     *
+     * @param string                     $entryType  Item entry type for diagnostics.
+     * @param list<QuickTimeRawDataAtom> $entryAtoms Parsed data atoms in encounter order.
+     */
+    private function validateDataOrdering(string $entryType, array $entryAtoms): void
+    {
+        $previousSpecificity = null;
+
+        foreach ($entryAtoms as $atom) {
+            $specificity = $this->localeSpecificityScore($atom['locale']);
+
+            if (($previousSpecificity !== null) && ($specificity > $previousSpecificity)) {
+                throw new ParseError(sprintf(
+                    'metadata item "%s" data values must be ordered from most-specific to most-general per QuickTime File Format 2012 Data Ordering (p. 142)',
+                    $entryType,
+                ), 1420);
+            }
+
+            $previousSpecificity = $specificity;
+        }
+    }
+
+    /**
+     * Computes the locale specificity score for ordering checks.
+     *
+     * Country and language indicators contribute one specificity point each.
+     * A default locale (country=0, language=0) therefore ranks lowest.
+     *
+     * @param int $locale 32-bit locale indicator (country << 16 | language).
+     */
+    private function localeSpecificityScore(int $locale): int
+    {
+        $country  = ($locale >> 16) & 0xFFFF;
+        $language = $locale & 0xFFFF;
+        $score    = 0;
+
+        if ($country !== 0) {
+            ++$score;
+        }
+
+        if ($language !== 0) {
+            ++$score;
+        }
+
+        return $score;
     }
 
     /**

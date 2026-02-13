@@ -13,6 +13,7 @@ namespace MagicSunday\ImageMeta\Model\QuickTime;
 
 use function array_find;
 use function array_key_exists;
+use function in_array;
 use function is_bool;
 use function is_float;
 use function is_int;
@@ -247,6 +248,49 @@ final readonly class QuickTimeMeta
         );
 
         return $resolvedKey !== null ? $this->dataAtoms[$resolvedKey] : [];
+    }
+
+    /**
+     * Returns the first atom acceptable for locale/type constraints in source order.
+     *
+     * QuickTime File Format 2012, "Data Ordering" (p. 142): values are ordered
+     * from most-specific to most-general, so the first acceptable atom is the
+     * deterministic selection for a given locale/type acceptance set.
+     *
+     * @param string    $key                    QuickTime metadata key or alias.
+     * @param list<int> $acceptedLocales        Accepted locale indicators; empty means any.
+     * @param list<int> $acceptedTypeIndicators Accepted type indicators; empty means any.
+     */
+    public function firstAcceptableAtom(string $key, array $acceptedLocales = [], array $acceptedTypeIndicators = []): ?QuickTimeDataAtom
+    {
+        $atoms = $this->allValues($key);
+
+        foreach ($atoms as $atom) {
+            $localeAccepted = ($acceptedLocales === []) || in_array($atom->locale, $acceptedLocales, true);
+            $typeAccepted   = ($acceptedTypeIndicators === []) || in_array($atom->typeIndicator, $acceptedTypeIndicators, true);
+
+            if ($localeAccepted && $typeAccepted) {
+                return $atom;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the value of the first acceptable atom for locale/type constraints.
+     *
+     * @param string    $key                    QuickTime metadata key or alias.
+     * @param list<int> $acceptedLocales        Accepted locale indicators; empty means any.
+     * @param list<int> $acceptedTypeIndicators Accepted type indicators; empty means any.
+     *
+     * @return string|int|float|bool|null
+     */
+    public function firstAcceptableValue(string $key, array $acceptedLocales = [], array $acceptedTypeIndicators = []): string|int|float|bool|null
+    {
+        $atom = $this->firstAcceptableAtom($key, $acceptedLocales, $acceptedTypeIndicators);
+
+        return $atom?->value;
     }
 
     /**

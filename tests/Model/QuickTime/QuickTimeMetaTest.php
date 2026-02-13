@@ -161,4 +161,47 @@ final class QuickTimeMetaTest extends TestCase
 
         self::assertSame([], $meta->allValues('NonExistentKey'));
     }
+
+    /**
+     * Selects the first acceptable atom in encounter order for deterministic fallback.
+     *
+     * @return void
+     */
+    #[Test]
+    public function firstAcceptableValueUsesEncounterOrder(): void
+    {
+        $key      = QuickTimeMeta::CONTENT_IDENTIFIER_KEY;
+        $specific = new QuickTimeDataAtom(1, 0x555315C7, 'specific');
+        $general  = new QuickTimeDataAtom(1, 0, 'general');
+        $altType  = new QuickTimeDataAtom(7, 0, 'alt');
+        $meta     = new QuickTimeMeta(
+            [$key => 'specific'],
+            [$key => [$specific, $general, $altType]],
+        );
+
+        self::assertSame(
+            'specific',
+            $meta->firstAcceptableValue($key, [0, 0x555315C7], [1]),
+        );
+        self::assertSame('general', $meta->firstAcceptableValue($key, [0], [1]));
+        self::assertSame('alt', $meta->firstAcceptableValue($key, [0], [7]));
+    }
+
+    /**
+     * Returns null when no data atom matches accepted locale/type values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function firstAcceptableValueReturnsNullWhenNoAtomMatches(): void
+    {
+        $key  = QuickTimeMeta::CONTENT_IDENTIFIER_KEY;
+        $meta = new QuickTimeMeta(
+            [$key => 'fallback'],
+            [$key => [new QuickTimeDataAtom(1, 0, 'fallback')]],
+        );
+
+        self::assertNull($meta->firstAcceptableAtom($key, [0x555315C7], [1]));
+        self::assertNull($meta->firstAcceptableValue($key, [0x555315C7], [1]));
+    }
 }

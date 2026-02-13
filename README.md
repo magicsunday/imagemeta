@@ -76,6 +76,12 @@ $metadata->mimeType;                          // Detected MIME type
 $metadata->digestSha1;                         // Optional SHA-1 digest
 $metadata->exifDoc?->makerNotes();             // Vendor maker notes
 $metadata->quickTime?->stringValue(QuickTimeMeta::MAJOR_BRAND_KEY);
+$metadata->quickTime?->allValues(QuickTimeMeta::CONTENT_IDENTIFIER_KEY); // Ordered data atoms
+$metadata->quickTime?->firstAcceptableValue(
+    QuickTimeMeta::CONTENT_IDENTIFIER_KEY,
+    [0x555315C7, 0], // accepted locales (specific to generic)
+    [1],             // accepted type indicators (e.g. UTF-8)
+);
 $metadata->mpfDocument?->entries;              // MP Index entries
 $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 $metadata->structured()->derived->fieldOfViewDiagonalDeg;
