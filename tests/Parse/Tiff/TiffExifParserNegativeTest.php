@@ -1255,6 +1255,78 @@ final class TiffExifParserNegativeTest extends TestCase
     }
 
     /**
+     * Builds a classic TIFF with IFD1 JPEG thumbnail tags and appended thumbnail bytes.
+     *
+     * @param string $thumbnailStream Raw JPEG thumbnail bytes.
+     */
+    private function buildTiffWithJpegThumbnailStream(string $thumbnailStream): string
+    {
+        $ifd0EntryCount = 2;
+        $ifd1EntryCount = 3;
+        $ifd0Size       = 2 + ($ifd0EntryCount * 12) + 4;
+        $ifd1Offset     = 8 + $ifd0Size;
+        $ifd1Size       = 2 + ($ifd1EntryCount * 12) + 4;
+        $thumbOffset    = $ifd1Offset + $ifd1Size;
+        $thumbLength    = strlen($thumbnailStream);
+
+        $blob = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8);
+
+        $blob .= pack('v', $ifd0EntryCount)
+            . $this->buildIfdShortEntry(ExifTag::IMAGE_WIDTH, 100)
+            . $this->buildIfdShortEntry(ExifTag::IMAGE_LENGTH, 100)
+            . pack('V', $ifd1Offset);
+
+        $blob .= pack('v', $ifd1EntryCount)
+            . $this->buildIfdShortEntry(ExifTag::COMPRESSION, Compression::JPEG->value)
+            . $this->buildIfdLongEntry(ExifTag::JPEG_INTERCHANGE_FORMAT, $thumbOffset)
+            . $this->buildIfdLongEntry(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH, $thumbLength)
+            . pack('V', 0);
+
+        return $blob . $thumbnailStream;
+    }
+
+    /**
+     * Builds a SHORT[1] IFD entry payload.
+     */
+    private function buildIfdShortEntry(int $tag, int $value): string
+    {
+        return pack('v', $tag)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $value)
+            . pack('v', 0);
+    }
+
+    /**
+     * Builds a LONG[1] IFD entry payload.
+     */
+    private function buildIfdLongEntry(int $tag, int $value): string
+    {
+        return pack('v', $tag)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $value);
+    }
+
+    /**
+     * @return iterable<string, array{0:string, 1:string}>
+     */
+    public static function provideInvalidThumbnailBoundaryStreams(): iterable
+    {
+        yield 'missing-soi' => [
+            "\x00\xD8\xFF\xD9",
+            '/thumbnail stream.*missing SOI|missing SOI.*thumbnail stream/i',
+        ];
+
+        yield 'missing-eoi' => [
+            "\xFF\xD8\xFF\xDB\x00\x04\x00\x00\xFF\x00",
+            '/thumbnail stream.*missing EOI|missing EOI.*thumbnail stream/i',
+        ];
+    }
+
+    /**
      * IFD0 Compression=6 must be rejected per EXIF 3.0 §4.6.5.1.4.
      */
     #[Test]
@@ -1299,6 +1371,95 @@ final class TiffExifParserNegativeTest extends TestCase
         );
 
         self::assertSame(6, $result->ifd1?->get(ExifTag::COMPRESSION)?->value);
+    }
+
+    /**
+     * Accepts a valid SOI..EOI JPEG thumbnail stream referenced by IFD1 tags.
+     */
+    #[Test]
+    public function acceptValidIfd1JpegThumbnailStream(): void
+    {
+        $thumbnailStream = "\xFF\xD8"
+            . "\xFF\xDB\x00\x04\x00\x00"
+            . "\xFF\xD9";
+
+        $result = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
+        );
+
+        self::assertSame(Compression::JPEG, $result->thumbnailCompression());
+    }
+
+    /**
+     * Rejects thumbnail streams with missing SOI or missing EOI.
+     *
+     * @param string $thumbnailStream
+     * @param string $expectedMessage
+     */
+    #[Test]
+    #[DataProvider('provideInvalidThumbnailBoundaryStreams')]
+    public function rejectIfd1JpegThumbnailMissingSoiOrEoi(string $thumbnailStream, string $expectedMessage): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches($expectedMessage);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
+        );
+    }
+
+    /**
+     * Rejects APPn markers in strict JPEG thumbnail validation.
+     */
+    #[Test]
+    public function rejectIfd1JpegThumbnailWithAppMarker(): void
+    {
+        $thumbnailStream = "\xFF\xD8"
+            . "\xFF\xE1\x00\x04\x00\x00"
+            . "\xFF\xD9";
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/thumbnail stream.*APP marker|APP marker.*thumbnail stream/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
+        );
+    }
+
+    /**
+     * Rejects COM markers in strict JPEG thumbnail validation.
+     */
+    #[Test]
+    public function rejectIfd1JpegThumbnailWithComMarker(): void
+    {
+        $thumbnailStream = "\xFF\xD8"
+            . "\xFF\xFE\x00\x04\x00\x00"
+            . "\xFF\xD9";
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/thumbnail stream.*COM marker|COM marker.*thumbnail stream/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
+        );
+    }
+
+    /**
+     * Rejects restart markers in strict JPEG thumbnail validation.
+     */
+    #[Test]
+    public function rejectIfd1JpegThumbnailWithRestartMarker(): void
+    {
+        $thumbnailStream = "\xFF\xD8"
+            . "\x11\x22\xFF\xD0\x33\x44"
+            . "\xFF\xD9";
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/thumbnail stream.*restart marker|restart marker.*thumbnail stream/i');
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithJpegThumbnailStream($thumbnailStream),
+        );
     }
 
     /**

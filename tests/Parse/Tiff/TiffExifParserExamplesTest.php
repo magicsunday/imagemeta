@@ -319,7 +319,7 @@ final class TiffExifParserExamplesTest extends TestCase
         $tileOffsetsStart = $ifd1DataStart;
         $tileCountsStart  = $tileOffsetsStart + 8;
         $jpegOffset       = $tileCountsStart + 8;
-        $jpegLength       = 10;
+        $jpegLength       = 12;
 
         $ifd0 = pack($packShort, $ifd0EntryCount)
             // ImageWidth SHORT[1] = 100
@@ -393,7 +393,7 @@ final class TiffExifParserExamplesTest extends TestCase
             . pack($packLong, $tileByteCounts[0])
             . pack($packLong, $tileByteCounts[1]);
 
-        $jpegData = str_repeat('J', $jpegLength);
+        $jpegData = "\xFF\xD8\x00\x11\x22\x33\x44\x55\x66\x77\xFF\xD9";
 
         return [
             'blob'           => $header . $ifd0 . $exifIfd . $interopIfd . $ifd1 . $ifd1Data . $jpegData,

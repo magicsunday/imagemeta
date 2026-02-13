@@ -1209,6 +1209,7 @@ final class TiffExifParser
 
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
+        $this->validateJpegThumbnailStream($ifd1);
 
         if (!$jpegContext) {
             $this->validateImageDimensions($ifd0);
@@ -1661,6 +1662,157 @@ final class TiffExifParser
                 'Compression value %d in IFD1 is invalid; only 1 or 6 allowed per EXIF 3.0 §4.6.5.1.4.',
                 $thumbEntry->value,
             ), 1352);
+        }
+    }
+
+    /**
+     * Validates strict JPEG thumbnail stream conformance for IFD1 Compression=6.
+     *
+     * EXIF 3.0 §4.6.5.1.6 defines JPEGInterchangeFormat/JPEGInterchangeFormatLength as
+     * an SOI..EOI JPEG stream, and EXIF 3.0 §4.7 marker guidance excludes APPn/COM markers
+     * in this embedded thumbnail stream representation.
+     */
+    private function validateJpegThumbnailStream(?Ifd $ifd1): void
+    {
+        if (!$ifd1 instanceof Ifd) {
+            return;
+        }
+
+        $compression = $ifd1->get(ExifTag::COMPRESSION);
+        if (!($compression instanceof IfdEntry) || !is_int($compression->value) || ($compression->value !== 6)) {
+            return;
+        }
+
+        $offsetEntry = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT);
+        $lengthEntry = $ifd1->get(ExifTag::JPEG_INTERCHANGE_FORMAT_LENGTH);
+        if (!($offsetEntry instanceof IfdEntry) || !($lengthEntry instanceof IfdEntry)) {
+            return;
+        }
+
+        if (!is_int($offsetEntry->value) || !is_int($lengthEntry->value)) {
+            return;
+        }
+
+        $thumbnailOffset = $offsetEntry->value;
+        $thumbnailLength = $lengthEntry->value;
+        if ($thumbnailLength <= 0) {
+            return;
+        }
+
+        $blobSize = $this->buffer->size();
+        if (
+            ($thumbnailOffset < 0)
+            || ($thumbnailOffset > $blobSize)
+            || ($thumbnailLength > $blobSize)
+            || ($thumbnailOffset > ($blobSize - $thumbnailLength))
+        ) {
+            throw new ParseError(
+                sprintf(
+                    'JPEG thumbnail stream at offset %d with length %d exceeds TIFF data bounds',
+                    $thumbnailOffset,
+                    $thumbnailLength,
+                ),
+                1410,
+            );
+        }
+
+        $cursor = $this->buffer->tell();
+
+        try {
+            $this->buffer->seek($thumbnailOffset);
+            $thumbnailBytes = $this->buffer->read($thumbnailLength);
+        } catch (BoundsError $exception) {
+            throw new ParseError(
+                sprintf(
+                    'JPEG thumbnail stream at offset %d with length %d is truncated',
+                    $thumbnailOffset,
+                    $thumbnailLength,
+                ),
+                1411,
+                $exception,
+            );
+        } finally {
+            $this->buffer->seek($cursor);
+        }
+
+        if (strlen($thumbnailBytes) < 4 || !str_starts_with($thumbnailBytes, "\xFF\xD8")) {
+            throw new ParseError(
+                sprintf('JPEG thumbnail stream at offset %d is missing SOI marker', $thumbnailOffset),
+                1412,
+            );
+        }
+
+        if (!str_ends_with($thumbnailBytes, "\xFF\xD9")) {
+            throw new ParseError(
+                sprintf('JPEG thumbnail stream at offset %d is missing EOI marker', $thumbnailOffset),
+                1413,
+            );
+        }
+
+        $this->validateJpegThumbnailDisallowedMarkers($thumbnailBytes, $thumbnailOffset);
+    }
+
+    /**
+     * Validates that disallowed markers are absent from JPEG thumbnail stream bytes.
+     *
+     * EXIF 3.0 §4.6.5.1.6 and §4.7 disallow APPn/COM marker usage for this embedded
+     * thumbnail stream profile; restart markers are rejected in strict conformance mode.
+     *
+     * @param string $thumbnailBytes  Raw JPEG thumbnail stream bytes.
+     * @param int    $thumbnailOffset Absolute TIFF offset of the thumbnail stream.
+     */
+    private function validateJpegThumbnailDisallowedMarkers(string $thumbnailBytes, int $thumbnailOffset): void
+    {
+        $lastIndex = strlen($thumbnailBytes) - 1;
+
+        for ($index = 0; $index < $lastIndex; ++$index) {
+            if ($thumbnailBytes[$index] !== "\xFF") {
+                continue;
+            }
+
+            $marker = ord($thumbnailBytes[$index + 1]);
+            if ($marker === 0x00) {
+                continue;
+            }
+
+            if ($marker === 0xFF) {
+                continue;
+            }
+
+            if ($marker >= 0xE0 && $marker <= 0xEF) {
+                throw new ParseError(
+                    sprintf(
+                        'JPEG thumbnail stream at offset %d contains disallowed APP marker 0x%02X at offset %d',
+                        $thumbnailOffset,
+                        $marker,
+                        $thumbnailOffset + $index,
+                    ),
+                    1414,
+                );
+            }
+
+            if ($marker === 0xFE) {
+                throw new ParseError(
+                    sprintf(
+                        'JPEG thumbnail stream at offset %d contains disallowed COM marker at offset %d',
+                        $thumbnailOffset,
+                        $thumbnailOffset + $index,
+                    ),
+                    1414,
+                );
+            }
+
+            if ($marker >= 0xD0 && $marker <= 0xD7) {
+                throw new ParseError(
+                    sprintf(
+                        'JPEG thumbnail stream at offset %d contains disallowed restart marker 0x%02X at offset %d',
+                        $thumbnailOffset,
+                        $marker,
+                        $thumbnailOffset + $index,
+                    ),
+                    1415,
+                );
+            }
         }
     }
 
