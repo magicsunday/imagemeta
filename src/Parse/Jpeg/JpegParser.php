@@ -360,7 +360,8 @@ final class JpegParser
      *
      * EXIF 3.0 §4.7.1-§4.7.3 require APP1/APP2 metadata segments to reside between the
      * SOI and the first SOS marker while excluding restart and TEM markers from carrying
-     * payloads.
+     * payloads. EXIF 3.0 §4.7 (Table 2) requires an EOI marker to terminate the JPEG
+     * bitstream after scan data.
      */
     private function parseIfNeeded(): void
     {
@@ -427,6 +428,7 @@ final class JpegParser
             }
 
             if ($marker === Marker::SOS) {
+                $this->requireEoiAfterSos($offset);
                 break; // EXIF 3.0 §4.7.1 restricts metadata APP markers to precede the first SOS.
             }
 
@@ -625,6 +627,38 @@ final class JpegParser
         }
 
         $this->parsed = true;
+    }
+
+    /**
+     * Validates that scan data following SOS is terminated by an EOI marker.
+     *
+     * EXIF 3.0 §4.7 (Table 2) requires EOI as the JPEG stream terminator.
+     *
+     * @param int $sosOffset Offset where the SOS marker starts.
+     */
+    private function requireEoiAfterSos(int $sosOffset): void
+    {
+        $scanHeaderLength = $this->readSegmentLength(Marker::SOS, $sosOffset, false);
+        $this->readSegmentPayload(Marker::SOS, $sosOffset, $scanHeaderLength - 2);
+
+        while (true) {
+            try {
+                [$marker] = $this->nextMarkerWithOffset();
+            } catch (BoundsError $exception) {
+                throw new ParseError(
+                    sprintf(
+                        'JPEG stream ended after SOS marker at offset %d without EOI marker',
+                        $sosOffset,
+                    ),
+                    1484,
+                    $exception,
+                );
+            }
+
+            if ($marker === Marker::EOI) {
+                return;
+            }
+        }
     }
 
     /**

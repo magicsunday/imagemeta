@@ -34,6 +34,7 @@ composer require magicsunday/imagemeta
 * Unified EXIF 3.0, XMP and QuickTime metadata mapped into immutable value objects that expose typed properties instead of raw tag identifiers.
 * XMP `rdf:parseType="Resource"` properties are preserved as structured values under their parent property key instead of flattening child fields into unrelated top-level entries, while `xml:*` qualifiers (for example `xml:lang`) are kept as qualifiers and not exported as standalone properties.
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
+* JPEG container conformance now requires a valid `EOI` marker after `SOS` scan data and rejects truncated streams that end without `EOI`.
 * APP11/JUMBF metadata extraction now validates transport sequence metadata, reassembles multi-segment payloads per box instance, and surfaces supported XML/XMP payloads while safely skipping unsupported box types.
 * EXIF IFD1 JPEG thumbnail validation enforces SOI/EOI boundaries and rejects APPn, COM, and restart markers in strict thumbnail streams.
 * Strict EXIF camera-control enum-domain validation rejects reserved/out-of-range values for tags such as ExposureProgram, MeteringMode, LightSource, and related controls.

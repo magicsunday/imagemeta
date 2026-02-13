@@ -1571,6 +1571,52 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts scan data when SOS is followed by a valid EOI marker.
+     * This verifies metadata extraction remains unchanged for conformant streams.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsSosStreamWhenEoiMarkerIsPresent(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\x00" . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects scan data streams that end without an EOI marker after SOS.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSosStreamWithoutEoiMarker(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'pre-sos-exif';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\x00" . 'scan';
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1484);
+        $this->expectExceptionMessageMatches('/SOS.*without EOI|without EOI.*SOS/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
      * Inserts a Start of Scan marker followed by restart markers and extra APP data.
      * This confirms parsing stops at SOS and ignores metadata after scan data begins.
      *
