@@ -1212,6 +1212,7 @@ final class TiffExifParser
 
         if (!$jpegContext) {
             $this->validateImageDimensions($ifd0);
+            $this->validateStripLayoutConsistency($ifd0);
         }
 
         if ($jpegContext) {
@@ -1740,6 +1741,96 @@ final class TiffExifParser
                 $lengthEntry->value,
             ), 1356);
         }
+    }
+
+    /**
+     * Validates strip layout consistency for non-JPEG primary image data.
+     *
+     * EXIF 3.0 §4.6.5.2.2 and §4.6.5.2.3 require RowsPerStrip and tie strip tag
+     * counts to StripsPerImage, with planar-separate layout multiplying by
+     * SamplesPerPixel (EXIF 3.0 §4.6.5.1.10).
+     */
+    private function validateStripLayoutConsistency(Ifd $ifd0): void
+    {
+        $stripOffsetsEntry    = $ifd0->get(ExifTag::STRIP_OFFSETS);
+        $stripByteCountsEntry = $ifd0->get(ExifTag::STRIP_BYTE_COUNTS);
+
+        $hasStripFields = ($stripOffsetsEntry instanceof IfdEntry)
+            || ($stripByteCountsEntry instanceof IfdEntry);
+
+        if (!$hasStripFields) {
+            return;
+        }
+
+        $rowsPerStripEntry = $ifd0->get(ExifTag::ROWS_PER_STRIP);
+        if (!$rowsPerStripEntry instanceof IfdEntry || !is_int($rowsPerStripEntry->value) || $rowsPerStripEntry->value <= 0) {
+            throw new ParseError(
+                'RowsPerStrip must be a positive integer when strip tags are present per EXIF 3.0 §4.6.5.2.2.',
+                1452,
+            );
+        }
+
+        $imageLengthEntry = $ifd0->get(ExifTag::IMAGE_LENGTH);
+        if (!$imageLengthEntry instanceof IfdEntry || !is_int($imageLengthEntry->value) || $imageLengthEntry->value <= 0) {
+            return;
+        }
+
+        $stripsPerImage = intdiv($imageLengthEntry->value + $rowsPerStripEntry->value - 1, $rowsPerStripEntry->value);
+
+        $planarConfiguration = 1;
+        $planarEntry         = $ifd0->get(ExifTag::PLANAR_CONFIGURATION);
+        if ($planarEntry instanceof IfdEntry && is_int($planarEntry->value)) {
+            $planarConfiguration = $planarEntry->value;
+        }
+
+        $samplesPerPixel = 1;
+        $samplesEntry    = $ifd0->get(ExifTag::SAMPLES_PER_PIXEL);
+        if ($samplesEntry instanceof IfdEntry && is_int($samplesEntry->value) && $samplesEntry->value > 0) {
+            $samplesPerPixel = $samplesEntry->value;
+        }
+
+        $expectedCount = $stripsPerImage;
+        if ($planarConfiguration === 2) {
+            $expectedCount *= $samplesPerPixel;
+        }
+
+        if ($stripOffsetsEntry instanceof IfdEntry) {
+            $offsetCount = $this->countStripFieldValues($stripOffsetsEntry);
+            if ($offsetCount !== $expectedCount) {
+                throw new ParseError(sprintf(
+                    'StripOffsets count %d does not match expected strip count %d per EXIF 3.0 §4.6.5.2.1/§4.6.5.2.2.',
+                    $offsetCount,
+                    $expectedCount,
+                ), 1453);
+            }
+        }
+
+        if ($stripByteCountsEntry instanceof IfdEntry) {
+            $byteCountCount = $this->countStripFieldValues($stripByteCountsEntry);
+            if ($byteCountCount !== $expectedCount) {
+                throw new ParseError(sprintf(
+                    'StripByteCounts count %d does not match expected strip count %d per EXIF 3.0 §4.6.5.2.3/§4.6.5.2.2.',
+                    $byteCountCount,
+                    $expectedCount,
+                ), 1454);
+            }
+        }
+    }
+
+    /**
+     * Returns the number of values encoded in a strip offset/count field.
+     */
+    private function countStripFieldValues(IfdEntry $entry): int
+    {
+        if (is_int($entry->value)) {
+            return 1;
+        }
+
+        if ($entry->value instanceof ExifNumericList) {
+            return count($entry->value->values);
+        }
+
+        return 0;
     }
 
     /**
