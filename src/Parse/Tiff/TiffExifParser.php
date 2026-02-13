@@ -1059,6 +1059,13 @@ final class TiffExifParser
             'typeName' => 'RATIONAL',
             'spec'     => 'DNG 1.7.1.0',
         ],
+        DngTag::RAW_TO_PREVIEW_GAIN => [
+            'name'     => 'RawToPreviewGain',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_DOUBLE,
+            'typeName' => 'DOUBLE',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
         DngTag::DEFAULT_USER_CROP => [
             'name'     => 'DefaultUserCrop',
             'count'    => 4,

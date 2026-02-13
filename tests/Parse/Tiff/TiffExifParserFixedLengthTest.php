@@ -248,6 +248,12 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 1,
                 "\x00\x00\x00\x01\x00\x00\x00\x01",
             ],
+            'RawToPreviewGain count 1' => [
+                DngTag::RAW_TO_PREVIEW_GAIN,
+                TiffConst::TYPE_DOUBLE,
+                1,
+                pack('e', 1.0),
+            ],
             'DefaultUserCrop count 4' => [
                 DngTag::DEFAULT_USER_CROP,
                 TiffConst::TYPE_RATIONAL,
@@ -298,6 +304,48 @@ final class TiffExifParserFixedLengthTest extends TestCase
             TiffConst::TYPE_RATIONAL,
             2,
             str_repeat("\x00\x00\x00\x01\x00\x00\x00\x01", 2),
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects RawToPreviewGain with wrong type (RATIONAL instead of DOUBLE).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsRawToPreviewGainWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1317);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            DngTag::RAW_TO_PREVIEW_GAIN,
+            TiffConst::TYPE_RATIONAL,
+            1,
+            "\x00\x00\x00\x01\x00\x00\x00\x01",
+        );
+
+        (new TiffExifParser())->parseFromBlob($blob);
+    }
+
+    /**
+     * Rejects RawToPreviewGain with wrong count (2 instead of 1).
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsRawToPreviewGainWrongCount(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1318);
+
+        $blob = $this->buildClassicTiffWithEntry(
+            DngTag::RAW_TO_PREVIEW_GAIN,
+            TiffConst::TYPE_DOUBLE,
+            2,
+            pack('e', 1.0) . pack('e', 2.0),
         );
 
         (new TiffExifParser())->parseFromBlob($blob);
