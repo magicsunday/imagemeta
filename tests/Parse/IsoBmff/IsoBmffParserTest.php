@@ -1817,6 +1817,107 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses an audio stsd entry with sound sample description version 0.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdVersion0Entry(): void
+    {
+        $entry = $this->audioSampleEntryVersion0(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 44100,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
+        self::assertSame(2, $quickTime->intValue(QuickTimeMeta::AUDIO_CHANNELS_KEY));
+        self::assertSame(16, $quickTime->intValue(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY));
+        self::assertSame(44100, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Parses an audio stsd entry with sound sample description version 1.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdVersion1Entry(): void
+    {
+        $entry = $this->audioSampleEntryVersion1(
+            format: 'mp4a',
+            channels: 2,
+            sampleSize: 16,
+            sampleRate: 48000,
+            samplesPerPacket: 1024,
+            bytesPerPacket: 0,
+            bytesPerFrame: 0,
+            bytesPerSample: 0,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame('mp4a', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
+        self::assertSame(2, $quickTime->intValue(QuickTimeMeta::AUDIO_CHANNELS_KEY));
+        self::assertSame(16, $quickTime->intValue(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY));
+        self::assertSame(48000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Parses an audio stsd entry with sound sample description version 2.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesAudioStsdVersion2Entry(): void
+    {
+        $entry = $this->audioSampleEntryVersion2(
+            format: 'lpcm',
+            channels: 6,
+            sampleRate: 96000.0,
+            bitsPerChannel: 24,
+        );
+
+        $extractor       = $this->createExtractor($this->createFileWithAudioStsdEntry($entry));
+        [, , $quickTime] = $extractor->extract();
+
+        self::assertNotNull($quickTime);
+        self::assertSame('lpcm', $quickTime->stringValue(QuickTimeMeta::AUDIO_FORMAT_KEY));
+        self::assertSame(6, $quickTime->intValue(QuickTimeMeta::AUDIO_CHANNELS_KEY));
+        self::assertSame(24, $quickTime->intValue(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY));
+        self::assertSame(96000, $quickTime->intValue(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY));
+    }
+
+    /**
+     * Rejects a version 2 sound sample entry with invalid mandatory constants.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsAudioStsdVersion2InvalidConstants(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('audio sample entry version 2 constants are invalid');
+
+        $entry = $this->audioSampleEntryVersion2(
+            format: 'lpcm',
+            channels: 2,
+            sampleRate: 44100.0,
+            bitsPerChannel: 16,
+            always16: 15,
+        );
+
+        $this->createExtractor($this->createFileWithAudioStsdEntry($entry))->extract();
+    }
+
+    /**
      * Builds an infe box with version 4, which is not defined by ISO/IEC 14496-12.
      * Confirms the parser rejects unsupported infe versions.
      *
@@ -3146,6 +3247,114 @@ final class IsoBmffParserTest extends TestCase
         }
 
         return $payload;
+    }
+
+    /**
+     * Builds a minimal QuickTime file with one audio track using a custom stsd sample entry.
+     *
+     * @param string $sampleEntry Serialized stsd sample entry bytes.
+     */
+    private function createFileWithAudioStsdEntry(string $sampleEntry): string
+    {
+        $stsd = $this->fullBox('stsd', pack('N', 1) . $sampleEntry);
+        $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+        $smhd = $this->fullBox('smhd', pack('n', 0) . pack('n', 0));
+        $url  = $this->fullBox('url ', '', 0, 1);
+        $dref = $this->fullBox('dref', pack('N', 1) . $url);
+        $dinf = $this->box('dinf', $dref);
+        $minf = $this->box('minf', $smhd . $dinf . $stbl);
+        $hdlr = $this->fullBox('hdlr', "\0\0\0\0soun" . str_repeat("\0", 12) . "\0");
+        $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 44100) . str_repeat("\0", 8));
+        $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+        $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, 1, 0) . str_repeat("\0", 60));
+        $trak = $this->box('trak', $tkhd . $mdia);
+        $moov = $this->box('moov', $this->minimalMvhd() . $trak);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        return $ftyp . $moov;
+    }
+
+    /**
+     * Creates a version 0 audio sample entry for an stsd box.
+     */
+    private function audioSampleEntryVersion0(string $format, int $channels, int $sampleSize, int $sampleRate): string
+    {
+        $payload = str_repeat("\0", 6)
+            . pack('n', 1)
+            . pack('n', 0)
+            . pack('n', 0)
+            . pack('N', 0)
+            . pack('n', $channels)
+            . pack('n', $sampleSize)
+            . pack('n', 0)
+            . pack('n', 0)
+            . pack('N', $sampleRate << 16);
+
+        return $this->box($format, $payload);
+    }
+
+    /**
+     * Creates a version 1 audio sample entry for an stsd box.
+     */
+    private function audioSampleEntryVersion1(
+        string $format,
+        int $channels,
+        int $sampleSize,
+        int $sampleRate,
+        int $samplesPerPacket,
+        int $bytesPerPacket,
+        int $bytesPerFrame,
+        int $bytesPerSample,
+    ): string {
+        $payload = str_repeat("\0", 6)
+            . pack('n', 1)
+            . pack('n', 1)
+            . pack('n', 0)
+            . pack('N', 0)
+            . pack('n', $channels)
+            . pack('n', $sampleSize)
+            . pack('n', 0)
+            . pack('n', 0)
+            . pack('N', $sampleRate << 16)
+            . pack('N', $samplesPerPacket)
+            . pack('N', $bytesPerPacket)
+            . pack('N', $bytesPerFrame)
+            . pack('N', $bytesPerSample);
+
+        return $this->box($format, $payload);
+    }
+
+    /**
+     * Creates a version 2 audio sample entry for an stsd box.
+     */
+    private function audioSampleEntryVersion2(
+        string $format,
+        int $channels,
+        float $sampleRate,
+        int $bitsPerChannel,
+        int $always16 = 16,
+    ): string {
+        $sizeOfStructOnly = 72;
+        $payload          = str_repeat("\0", 6)
+            . pack('n', 1)
+            . pack('n', 2)
+            . pack('n', 0)
+            . pack('N', 0)
+            . pack('n', 3)
+            . pack('n', $always16)
+            . pack('n', 0xFFFE)
+            . pack('n', 0)
+            . pack('N', 65536)
+            . pack('N', $sizeOfStructOnly)
+            . pack('E', $sampleRate)
+            . pack('N', $channels)
+            . pack('N', 0x7F000000)
+            . pack('N', $bitsPerChannel)
+            . pack('N', 0)
+            . pack('N', 0)
+            . pack('N', 1);
+
+        return $this->box($format, $payload);
     }
 
     /**

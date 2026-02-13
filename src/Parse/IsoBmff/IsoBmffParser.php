@@ -1355,23 +1355,7 @@ final readonly class IsoBmffParser
                     'compressorName' => $compressor,
                 ];
             } elseif ($result === [] && $handlerType === 'soun') {
-                if ($win->tell() + 20 > $entryEnd) {
-                    throw new ParseError('audio sample entry truncated', 1160);
-                }
-
-                $win->read(8); // reserved
-                $channels   = $win->readU16BE();
-                $sampleSize = $win->readU16BE();
-                $win->readU16BE(); // pre-defined
-                $win->readU16BE(); // reserved
-                $sampleRate = $win->readU32BE();
-
-                $result = [
-                    'format'        => $this->normaliseFourcc($format),
-                    'channels'      => $channels,
-                    'bitsPerSample' => $sampleSize,
-                    'sampleRate'    => (int) round($sampleRate / 65536),
-                ];
+                $result = $this->parseSoundSampleEntry($win, $entryStart, $entryEnd, $entrySize, $format);
             }
 
             $pos += $entrySize;
@@ -1382,6 +1366,152 @@ final readonly class IsoBmffParser
         }
 
         return $result;
+    }
+
+    /**
+     * Parses an audio sample entry from `stsd`, handling sound description versions 0, 1, and 2.
+     *
+     * QuickTime File Format 2012, "Sound Sample Description" (v0/v1/v2):
+     * - v0 uses the legacy channel/sample-size/16.16 rate layout.
+     * - v1 appends four 32-bit packet/frame sizing fields.
+     * - v2 repurposes the legacy words as required constants and appends
+     *   Core Audio-style channel/rate fields.
+     *
+     * @param StreamWindow $win        Reader positioned at the beginning of sample-entry specific fields.
+     * @param int          $entryStart Absolute offset of the sample-entry specific fields.
+     * @param int          $entryEnd   Absolute offset where this sample entry ends.
+     * @param int          $entrySize  Declared sample entry size (including size+type header).
+     * @param string       $format     Raw fourcc format code.
+     *
+     * @return array{format: string, channels: int, bitsPerSample: int, sampleRate: int}
+     */
+    private function parseSoundSampleEntry(StreamWindow $win, int $entryStart, int $entryEnd, int $entrySize, string $format): array
+    {
+        if ($win->tell() + 8 > $entryEnd) {
+            throw new ParseError('audio sample entry truncated', 1160);
+        }
+
+        $version       = $win->readU16BE();
+        $revisionLevel = $win->readU16BE();
+        $vendor        = $win->readU32BE();
+
+        if ($revisionLevel !== 0) {
+            throw new ParseError('audio sample entry revision level must be 0', 1455);
+        }
+
+        if ($vendor !== 0) {
+            throw new ParseError('audio sample entry vendor must be 0', 1456);
+        }
+
+        if ($version === 2) {
+            return $this->parseSoundSampleEntryVersion2($win, $entryStart, $entryEnd, $entrySize, $format);
+        }
+
+        if ($version !== 0 && $version !== 1) {
+            throw new ParseError(sprintf('unsupported audio sample entry version %d', $version), 1457);
+        }
+
+        if ($win->tell() + 12 > $entryEnd) {
+            throw new ParseError('audio sample entry truncated', 1160);
+        }
+
+        $channels   = $win->readU16BE();
+        $sampleSize = $win->readU16BE();
+        // Compression ID and packet size are retained for container compatibility
+        // but are not currently surfaced in the extracted metadata model.
+        $win->readU16BE();
+        $win->readU16BE();
+
+        $sampleRate = $win->readU32BE();
+
+        if ($version === 1) {
+            if ($win->tell() + 16 > $entryEnd) {
+                throw new ParseError('audio sample entry version 1 extension truncated', 1458);
+            }
+
+            // QuickTime File Format 2012, "Sound Sample Description (Version 1)":
+            // samplesPerPacket, bytesPerPacket, bytesPerFrame, bytesPerSample.
+            $win->readU32BE();
+            $win->readU32BE();
+            $win->readU32BE();
+            $win->readU32BE();
+        }
+
+        return [
+            'format'        => $this->normaliseFourcc($format),
+            'channels'      => $channels,
+            'bitsPerSample' => $sampleSize,
+            'sampleRate'    => (int) round($sampleRate / 65536),
+        ];
+    }
+
+    /**
+     * Parses sound sample description version 2 and validates required constant fields.
+     *
+     * QuickTime File Format 2012, "Sound Sample Description (Version 2)":
+     * - always3 = 3
+     * - always16 = 16
+     * - alwaysMinus2 = -2
+     * - always0 = 0
+     * - always65536 = 65536
+     * - always7F000000 = 0x7F000000
+     * - sizeOfStructOnly points to the start of extension atoms.
+     *
+     * @param StreamWindow $win        Reader positioned after version/revision/vendor.
+     * @param int          $entryStart Absolute offset of sample-entry fields (after size+type).
+     * @param int          $entryEnd   Absolute offset where this sample entry ends.
+     * @param int          $entrySize  Declared sample entry size (including size+type header).
+     * @param string       $format     Raw fourcc format code.
+     *
+     * @return array{format: string, channels: int, bitsPerSample: int, sampleRate: int}
+     */
+    private function parseSoundSampleEntryVersion2(StreamWindow $win, int $entryStart, int $entryEnd, int $entrySize, string $format): array
+    {
+        if ($win->tell() + 48 > $entryEnd) {
+            throw new ParseError('audio sample entry version 2 truncated', 1459);
+        }
+
+        $always3          = $win->readU16BE();
+        $always16         = $win->readU16BE();
+        $alwaysMinus2     = $win->readU16BE();
+        $always0          = $win->readU16BE();
+        $always65536      = $win->readU32BE();
+        $sizeOfStructOnly = $win->readU32BE();
+        $audioSampleRate  = Unpack::float('E', $win->read(8), 'audio sample entry version 2 sample rate');
+        $numChannels      = $win->readU32BE();
+        $always7F000000   = $win->readU32BE();
+        $bitsPerChannel   = $win->readU32BE();
+        $win->readU32BE(); // formatSpecificFlags
+        $win->readU32BE(); // constBytesPerAudioPacket
+        $win->readU32BE(); // constLPCMFramesPerAudioPacket
+
+        if (
+            $always3 !== 3
+            || $always16 !== 16
+            || $alwaysMinus2 !== 0xFFFE
+            || $always0 !== 0
+            || $always65536 !== 65536
+            || $always7F000000 !== 0x7F000000
+        ) {
+            throw new ParseError('audio sample entry version 2 constants are invalid', 1460);
+        }
+
+        // sizeOfStructOnly points from sample entry start to extension atoms.
+        if (($sizeOfStructOnly < 72) || ($sizeOfStructOnly > $entrySize)) {
+            throw new ParseError('audio sample entry version 2 sizeOfStructOnly is invalid', 1461);
+        }
+
+        $entryBodySize = $entryEnd - $entryStart;
+        if ($sizeOfStructOnly - 8 > $entryBodySize) {
+            throw new ParseError('audio sample entry version 2 sizeOfStructOnly exceeds entry bounds', 1462);
+        }
+
+        return [
+            'format'        => $this->normaliseFourcc($format),
+            'channels'      => $numChannels,
+            'bitsPerSample' => $bitsPerChannel > 0 ? $bitsPerChannel : $always16,
+            'sampleRate'    => (int) round($audioSampleRate),
+        ];
     }
 
     /**
