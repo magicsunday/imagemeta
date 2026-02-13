@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
+use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\Endian;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
@@ -111,6 +112,67 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         $this->expectException(ParseError::class);
         $this->expectExceptionCode(1464);
         $this->expectExceptionMessage('outside the valid longitude range');
+
+        $result->gps();
+    }
+
+    /**
+     * Parses valid GPS date/time values and keeps fractional seconds in UTC output.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesValidGpsUtcDateTimeFromClassicTiff(): void
+    {
+        $reader = new TiffExifParser();
+        $result = $reader->parseFromBlob(
+            $this->buildGpsDateTimeExample("2025:03:01\0", [[12, 1], [34, 1], [251, 10]]),
+        );
+        $gpsTimestamp = $result->gpsTimestamp();
+
+        self::assertSame('2025-03-01', $result->gpsDateStamp());
+        self::assertSame('12:34:25.1', $result->gpsTimeStampString());
+        self::assertInstanceOf(DateTimeImmutable::class, $gpsTimestamp);
+        self::assertSame('2025-03-01T12:34:25+00:00', $gpsTimestamp->format('Y-m-d\TH:i:sP'));
+        self::assertSame('100000', $gpsTimestamp->format('u'));
+    }
+
+    /**
+     * Rejects invalid GPSDateStamp calendar values from classic TIFF payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsInvalidGpsDateStampFromClassicTiff(): void
+    {
+        $reader = new TiffExifParser();
+        $result = $reader->parseFromBlob(
+            $this->buildGpsDateTimeExample("2025:02:30\0", [[12, 1], [34, 1], [56, 1]]),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1465);
+        $this->expectExceptionMessage('GPSDateStamp');
+
+        $result->gps();
+    }
+
+    /**
+     * Rejects out-of-range GPSTimeStamp values from classic TIFF payloads.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsOutOfRangeGpsTimeStampFromClassicTiff(): void
+    {
+        $reader = new TiffExifParser();
+        $result = $reader->parseFromBlob(
+            $this->buildGpsDateTimeExample("2025:03:01\0", [[25, 1], [0, 1], [0, 1]]),
+        );
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1466);
+        $this->expectExceptionMessage('GPSTimeStamp');
 
         $result->gps();
     }
@@ -321,6 +383,86 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack($packRatio, 98, 1)
             . pack($packRatio, 45, 1)
             . pack($packRatio, 4321, 100);
+
+        return $header . $ifd0 . $gpsIfd . $gpsData;
+    }
+
+    /**
+     * Builds a classic TIFF with GPS coordinates and explicit GPSDateStamp/GPSTimeStamp.
+     *
+     * @param string                   $dateStamp GPSDateStamp ASCII payload (must include count bytes).
+     * @param list<array{0:int,1:int}> $timeParts GPSTimeStamp RATIONAL triplet [hour, minute, second].
+     */
+    private function buildGpsDateTimeExample(string $dateStamp, array $timeParts): string
+    {
+        $header = Endian::Little->value
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', 8);
+
+        $ifd0EntryCount = 3;
+        $ifd0Length     = 2 + ($ifd0EntryCount * 12) + 4;
+        $gpsIfdOffset   = strlen($header) + $ifd0Length;
+
+        $ifd0 = pack('v', $ifd0EntryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::GPS_IFD_POINTER)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', $gpsIfdOffset)
+            . pack('V', 0);
+
+        $gpsEntryCount = 6;
+        $gpsIfdLength  = 2 + ($gpsEntryCount * 12) + 4;
+        $gpsDataOffset = strlen($header . $ifd0) + $gpsIfdLength;
+        $latOffset     = $gpsDataOffset;
+        $lonOffset     = $latOffset + (3 * 8);
+        $timeOffset    = $lonOffset + (3 * 8);
+        $dateOffset    = $timeOffset + (3 * 8);
+
+        $gpsIfd = pack('v', $gpsEntryCount)
+            . pack('v', ExifTag::GPS_LATITUDE_REF)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 2)
+            . pack('a4', 'N')
+            . pack('v', ExifTag::GPS_LATITUDE)
+            . pack('v', TiffConst::TYPE_RATIONAL)
+            . pack('V', 3)
+            . pack('V', $latOffset)
+            . pack('v', ExifTag::GPS_LONGITUDE_REF)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 2)
+            . pack('a4', 'E')
+            . pack('v', ExifTag::GPS_LONGITUDE)
+            . pack('v', TiffConst::TYPE_RATIONAL)
+            . pack('V', 3)
+            . pack('V', $lonOffset)
+            . pack('v', ExifTag::GPS_TIME_STAMP)
+            . pack('v', TiffConst::TYPE_RATIONAL)
+            . pack('V', 3)
+            . pack('V', $timeOffset)
+            . pack('v', ExifTag::GPS_DATE_STAMP)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', 11)
+            . pack('V', $dateOffset)
+            . pack('V', 0);
+
+        $gpsData = pack('V2', 52, 1)
+            . pack('V2', 31, 1)
+            . pack('V2', 12000, 1000)
+            . pack('V2', 13, 1)
+            . pack('V2', 24, 1)
+            . pack('V2', 17820, 1000)
+            . pack('V2', $timeParts[0][0], $timeParts[0][1])
+            . pack('V2', $timeParts[1][0], $timeParts[1][1])
+            . pack('V2', $timeParts[2][0], $timeParts[2][1])
+            . $dateStamp;
 
         return $header . $ifd0 . $gpsIfd . $gpsData;
     }

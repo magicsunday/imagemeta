@@ -11,16 +11,19 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
+use DateTimeImmutable;
 use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
 use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
 use MagicSunday\ImageMeta\Exif\Converters\StringConverter;
+use MagicSunday\ImageMeta\Exif\Model\ExifRational;
 use MagicSunday\ImageMeta\Exif\Model\ExifRationalList;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
@@ -572,6 +575,88 @@ final class GpsConverterTest extends TestCase
     }
 
     /**
+     * Combines valid GPSDateStamp and GPSTimeStamp values into a UTC timestamp.
+     *
+     * @return void
+     */
+    #[Test]
+    public function combinesValidGpsDateAndTimeStamp(): void
+    {
+        $result = $this->converter->fromIfd(
+            $this->buildIfdWithDateAndTime('2025:02:28', [[23, 1], [59, 1], [15, 1]]),
+        );
+
+        self::assertSame('2025-02-28', $result['date']);
+        self::assertSame('23:59:15', $result['time']);
+        self::assertSame('2025-02-28T23:59:15+00:00', $result['timestamp']?->format('c'));
+    }
+
+    /**
+     * Rejects invalid calendar dates in GPSDateStamp.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsInvalidGpsCalendarDate(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1465);
+        $this->expectExceptionMessage('GPSDateStamp');
+
+        $this->converter->fromIfd(
+            $this->buildIfdWithDateAndTime('2025:02:30', [[12, 1], [34, 1], [56, 1]]),
+        );
+    }
+
+    /**
+     * Rejects GPSTimeStamp components outside UTC ranges.
+     *
+     * @param list<array{0:int,1:int}> $timeRationals
+     */
+    #[Test]
+    #[DataProvider('provideInvalidGpsTimeStampRanges')]
+    public function rejectsOutOfRangeGpsTimeStampComponents(array $timeRationals): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1466);
+        $this->expectExceptionMessage('GPSTimeStamp');
+
+        $this->converter->fromIfd(
+            $this->buildIfdWithDateAndTime('2025:03:01', $timeRationals),
+        );
+    }
+
+    /**
+     * Accepts fractional seconds in valid range for GPSTimeStamp.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsGpsTimeStampWithFractionalSeconds(): void
+    {
+        $result = $this->converter->fromIfd(
+            $this->buildIfdWithDateAndTime('2025:03:01', [[10, 1], [20, 1], [12345, 1000]]),
+        );
+        $timestamp = $result['timestamp'];
+
+        self::assertSame('10:20:12.345', $result['time']);
+        self::assertInstanceOf(DateTimeImmutable::class, $timestamp);
+        self::assertSame('2025-03-01T10:20:12+00:00', $timestamp->format('Y-m-d\TH:i:sP'));
+        self::assertSame('345000', $timestamp->format('u'));
+    }
+
+    /**
+     * @return iterable<string, array{0:list<array{0:int,1:int}>}>
+     */
+    public static function provideInvalidGpsTimeStampRanges(): iterable
+    {
+        yield 'hour above 23' => [[[24, 1], [0, 1], [0, 1]]];
+        yield 'minute above 59' => [[[23, 1], [60, 1], [0, 1]]];
+        yield 'second equal 60' => [[[23, 1], [59, 1], [60, 1]]];
+        yield 'second below 0' => [[[23, 1], [59, 1], [-1, 1]]];
+    }
+
+    /**
      * Provides a valid GPSDifferential value (0).
      * Verifies no-correction is accepted per EXIF 3.0 §4.6.7.1.31.
      *
@@ -644,5 +729,26 @@ final class GpsConverterTest extends TestCase
         ];
 
         return new Ifd($entries);
+    }
+
+    /**
+     * @param list<array{0:int,1:int}> $timeRationals
+     */
+    private function buildIfdWithDateAndTime(string $dateStamp, array $timeRationals): Ifd
+    {
+        $timeValues = [];
+        foreach ($timeRationals as [$numerator, $denominator]) {
+            $timeValues[] = new ExifRational($numerator, $denominator);
+        }
+
+        return new Ifd([
+            ExifTag::GPS_DATE_STAMP => new IfdEntry(ExifTag::GPS_DATE_STAMP, 2, 11, $dateStamp),
+            ExifTag::GPS_TIME_STAMP => new IfdEntry(
+                ExifTag::GPS_TIME_STAMP,
+                5,
+                3,
+                new ExifRationalList($timeValues),
+            ),
+        ]);
     }
 }

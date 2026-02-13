@@ -25,6 +25,7 @@ use MagicSunday\ImageMeta\Value\Enum\CharacterEncoding;
 
 use function abs;
 use function array_find;
+use function checkdate;
 use function count;
 use function floor;
 use function iconv;
@@ -419,12 +420,31 @@ final readonly class GpsConverter
         $result['processing_method'] = $this->decodeUndefinedString($processEntry?->value);
         $result['area_information']  = $this->decodeUndefinedString($areaEntry?->value);
 
-        $dateParts          = $this->normalizeDate($dateEntry?->value);
+        $dateParts = $this->normalizeDate($dateEntry?->value);
+        if (($dateEntry instanceof IfdEntry) && ($dateParts['normalized'] === null)) {
+            throw new ParseError(
+                sprintf(
+                    'GPSDateStamp "%s" is not a valid UTC calendar date per EXIF 3.0 §4.6.7.1.30.',
+                    $dateParts['raw'] ?? '',
+                ),
+                1465,
+            );
+        }
+
         $result['date']     = $dateParts['normalized'];
         $result['date_raw'] = $dateParts['raw'];
-        $timeParts          = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
+
+        $timeParts = $timeEntry instanceof IfdEntry && $timeEntry->value instanceof ExifRationalList
             ? $this->parseTime($timeEntry->value)
             : null;
+
+        if (($timeEntry instanceof IfdEntry) && ($timeParts === null)) {
+            throw new ParseError(
+                'GPSTimeStamp is outside valid UTC ranges (hour 0..23, minute 0..59, second >=0 and <60) per EXIF 3.0 §4.6.7.1.8.',
+                1466,
+            );
+        }
+
         $result['time']      = $this->formatTime($timeParts);
         $result['timestamp'] = $this->combineDateTime($result['date'], $timeParts);
 
@@ -821,6 +841,16 @@ final readonly class GpsConverter
             ];
         }
 
+        $year  = (int) substr($clean, 0, 4);
+        $month = (int) substr($clean, 5, 2);
+        $day   = (int) substr($clean, 8, 2);
+        if (!checkdate($month, $day, $year)) {
+            return [
+                'normalized' => null,
+                'raw'        => $raw,
+            ];
+        }
+
         return [
             'normalized' => str_replace(':', '-', $clean),
             'raw'        => $raw,
@@ -837,7 +867,7 @@ final readonly class GpsConverter
      */
     public function parseTime(ExifRationalList $value): ?array
     {
-        if (count($value->values) < 3) {
+        if (count($value->values) !== 3) {
             return null;
         }
 
@@ -849,9 +879,29 @@ final readonly class GpsConverter
             return null;
         }
 
+        if (!$this->isWholeNumber($hours) || !$this->isWholeNumber($minutes)) {
+            return null;
+        }
+
+        $hoursInt   = (int) $hours;
+        $minutesInt = (int) $minutes;
+
+        if (($hoursInt < 0) || ($hoursInt > 23)) {
+            return null;
+        }
+
+        if (($minutesInt < 0) || ($minutesInt > 59)) {
+            return null;
+        }
+
+        // Leap seconds are not accepted; EXIF GPS timestamps are restricted to [0, 60).
+        if (($seconds < 0.0) || ($seconds >= 60.0)) {
+            return null;
+        }
+
         return [
-            'hours'   => (int) floor($hours),
-            'minutes' => (int) floor($minutes),
+            'hours'   => $hoursInt,
+            'minutes' => $minutesInt,
             'seconds' => $seconds,
         ];
     }
@@ -932,6 +982,11 @@ final readonly class GpsConverter
         }
 
         return $dateTime;
+    }
+
+    private function isWholeNumber(float $value): bool
+    {
+        return abs($value - floor($value)) < 1.0e-9;
     }
 
     /**
