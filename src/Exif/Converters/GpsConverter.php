@@ -599,6 +599,12 @@ final readonly class GpsConverter
             return null;
         }
 
+        $isLatitudeRef  = ($ref === 'N') || ($ref === 'S');
+        $isLongitudeRef = ($ref === 'E') || ($ref === 'W');
+        if (!$isLatitudeRef && !$isLongitudeRef) {
+            return null;
+        }
+
         $components = [];
 
         // EXIF 3.0 §4.6.8: GPSLatitude/GPSLongitude require exactly 3 RATIONAL
@@ -635,9 +641,24 @@ final readonly class GpsConverter
         $min = $components[1];
         $sec = $components[2];
 
-        $sign = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
+        $sign  = ($ref === 'S' || $ref === 'W') ? -1.0 : 1.0;
+        $value = $sign * ($deg + $min / 60.0 + $sec / 3600.0);
 
-        return $sign * ($deg + $min / 60.0 + $sec / 3600.0);
+        if ($isLatitudeRef && (($value < -90.0) || ($value > 90.0))) {
+            throw new ParseError(sprintf(
+                'GPS coordinate %s is outside the valid latitude range [-90, 90] per EXIF 3.0 §4.6.7.1.3.',
+                $value,
+            ), 1463);
+        }
+
+        if ($isLongitudeRef && (($value < -180.0) || ($value > 180.0))) {
+            throw new ParseError(sprintf(
+                'GPS coordinate %s is outside the valid longitude range [-180, 180] per EXIF 3.0 §4.6.7.1.5.',
+                $value,
+            ), 1464);
+        }
+
+        return $value;
     }
 
     /**

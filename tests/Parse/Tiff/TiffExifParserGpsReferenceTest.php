@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Tiff;
 
 use MagicSunday\ImageMeta\Core\Endian;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Model\ExifTag;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use MagicSunday\ImageMeta\Parse\Tiff\TiffConst;
@@ -60,6 +61,61 @@ final class TiffExifParserGpsReferenceTest extends TestCase
     }
 
     /**
+     * Parses valid edge coordinates (90/180 degrees) from a classic TIFF GPS IFD.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesCoordinateEdgeValuesFromClassicTiff(): void
+    {
+        $reader = new TiffExifParser();
+        $result = $reader->parseFromBlob($this->buildGpsExample(Endian::Little, 90, 180, 'N', 'E', true));
+
+        $gps = $result->gps();
+
+        self::assertSame('N', $gps['lat_ref']);
+        self::assertSame('E', $gps['lon_ref']);
+        self::assertEqualsWithDelta(90.0, $gps['lat'], 0.000001);
+        self::assertEqualsWithDelta(180.0, $gps['lon'], 0.000001);
+    }
+
+    /**
+     * Rejects latitude values above +90 degrees from a classic TIFF GPS IFD.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLatitudeAboveNinetyFromClassicTiff(): void
+    {
+        $reader = new TiffExifParser();
+        $result = $reader->parseFromBlob($this->buildGpsExample(Endian::Little, 91, 180, 'N', 'E', true));
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1463);
+        $this->expectExceptionMessage('outside the valid latitude range');
+
+        $result->gps();
+    }
+
+    /**
+     * Rejects longitude values above +180 degrees from a classic TIFF GPS IFD.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLongitudeAboveOneHundredEightyFromClassicTiff(): void
+    {
+        $reader = new TiffExifParser();
+        $result = $reader->parseFromBlob($this->buildGpsExample(Endian::Little, 90, 181, 'N', 'E', true));
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1464);
+        $this->expectExceptionMessage('outside the valid longitude range');
+
+        $result->gps();
+    }
+
+    /**
      * Parses a BigTIFF GPS example that uses S/W references and a negative altitude.
      * Confirms BigTIFF parsing applies the same sign handling as classic TIFF.
      *
@@ -84,11 +140,24 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         self::assertEqualsWithDelta(-5.5, $gps['alt'], 0.000001);
     }
 
-    private function buildGpsExample(Endian $endian): string
-    {
+    private function buildGpsExample(
+        Endian $endian,
+        int $latitudeDegrees = 12,
+        int $longitudeDegrees = 98,
+        string $latitudeRef = 'S',
+        string $longitudeRef = 'W',
+        bool $zeroMinutesSeconds = false,
+    ): string {
         $packShort    = $endian === Endian::Little ? 'v' : 'n';
         $packLong     = $endian === Endian::Little ? 'V' : 'N';
         $packRational = $endian === Endian::Little ? 'V2' : 'N2';
+
+        $latitudeMinutes   = $zeroMinutesSeconds ? 0 : 34;
+        $latitudeSecondsN  = $zeroMinutesSeconds ? 0 : 5678;
+        $latitudeSecondsD  = $zeroMinutesSeconds ? 1 : 100;
+        $longitudeMinutes  = $zeroMinutesSeconds ? 0 : 45;
+        $longitudeSecondsN = $zeroMinutesSeconds ? 0 : 4321;
+        $longitudeSecondsD = $zeroMinutesSeconds ? 1 : 100;
 
         $header = $endian->value
             . pack($packShort, TiffConst::MAGIC_CLASSIC)
@@ -126,22 +195,22 @@ final class TiffExifParserGpsReferenceTest extends TestCase
         $gpsDataOffset = strlen($header . $ifd0) + $gpsIfdLength;
 
         $gpsIfd = $gpsEntryCount
-            // GPSLatitudeRef = "S"
+            // GPSLatitudeRef
             . pack($packShort, ExifTag::GPS_LATITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 2)
-            . pack('a4', 'S')
-            // GPSLatitude = [12, 34, 56.78]
+            . pack('a4', $latitudeRef)
+            // GPSLatitude = [deg, minutes, seconds]
             . pack($packShort, ExifTag::GPS_LATITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
             . pack($packLong, $gpsDataOffset)
-            // GPSLongitudeRef = "W"
+            // GPSLongitudeRef
             . pack($packShort, ExifTag::GPS_LONGITUDE_REF)
             . pack($packShort, TiffConst::TYPE_ASCII)
             . pack($packLong, 2)
-            . pack('a4', 'W')
-            // GPSLongitude = [98, 45, 43.21]
+            . pack('a4', $longitudeRef)
+            // GPSLongitude = [deg, minutes, seconds]
             . pack($packShort, ExifTag::GPS_LONGITUDE)
             . pack($packShort, TiffConst::TYPE_RATIONAL)
             . pack($packLong, 3)
@@ -158,12 +227,12 @@ final class TiffExifParserGpsReferenceTest extends TestCase
             . pack($packLong, $gpsDataOffset + (6 * 8))
             . $ifd0NextOffset;
 
-        $gpsData = pack($packRational, 12, 1)
-            . pack($packRational, 34, 1)
-            . pack($packRational, 5678, 100)
-            . pack($packRational, 98, 1)
-            . pack($packRational, 45, 1)
-            . pack($packRational, 4321, 100)
+        $gpsData = pack($packRational, $latitudeDegrees, 1)
+            . pack($packRational, $latitudeMinutes, 1)
+            . pack($packRational, $latitudeSecondsN, $latitudeSecondsD)
+            . pack($packRational, $longitudeDegrees, 1)
+            . pack($packRational, $longitudeMinutes, 1)
+            . pack($packRational, $longitudeSecondsN, $longitudeSecondsD)
             . pack($packRational, 11, 2);
 
         return $header . $ifd0 . $gpsIfd . $gpsData . "\0\0\0\0";

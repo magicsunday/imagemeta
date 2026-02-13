@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Tests\Exif\Converters;
 
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Exif\Converters\GpsConverter;
 use MagicSunday\ImageMeta\Exif\Converters\NumericConverter;
 use MagicSunday\ImageMeta\Exif\Converters\RationalConverter;
@@ -481,6 +482,93 @@ final class GpsConverterTest extends TestCase
         $result = $this->converter->fromIfd(new Ifd($entries));
 
         self::assertNull($result['lat']);
+    }
+
+    /**
+     * Accepts edge values for capture and destination coordinates.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsCoordinateRangeEdges(): void
+    {
+        $entries = [
+            ExifTag::GPS_LATITUDE_REF       => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE           => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 3, [[90, 1], [0, 1], [0, 1]]),
+            ExifTag::GPS_LONGITUDE_REF      => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'W'),
+            ExifTag::GPS_LONGITUDE          => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 3, [[180, 1], [0, 1], [0, 1]]),
+            ExifTag::GPS_DEST_LATITUDE_REF  => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 2, 'S'),
+            ExifTag::GPS_DEST_LATITUDE      => new IfdEntry(ExifTag::GPS_DEST_LATITUDE, 10, 3, [[90, 1], [0, 1], [0, 1]]),
+            ExifTag::GPS_DEST_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE_REF, 2, 2, 'E'),
+            ExifTag::GPS_DEST_LONGITUDE     => new IfdEntry(ExifTag::GPS_DEST_LONGITUDE, 10, 3, [[180, 1], [0, 1], [0, 1]]),
+        ];
+
+        $result = $this->converter->fromIfd(new Ifd($entries));
+
+        self::assertSame(90.0, $result['lat']);
+        self::assertSame(-180.0, $result['lon']);
+        self::assertSame(-90.0, $result['dest_lat']);
+        self::assertSame(180.0, $result['dest_lon']);
+    }
+
+    /**
+     * Rejects capture latitude values above +90°.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLatitudeAboveNinetyDegrees(): void
+    {
+        $entries = [
+            ExifTag::GPS_LATITUDE_REF => new IfdEntry(ExifTag::GPS_LATITUDE_REF, 2, 2, 'N'),
+            ExifTag::GPS_LATITUDE     => new IfdEntry(ExifTag::GPS_LATITUDE, 10, 3, [[91, 1], [0, 1], [0, 1]]),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1463);
+        $this->expectExceptionMessage('outside the valid latitude range');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
+     * Rejects capture longitude values below -180°.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsLongitudeBelowMinusOneHundredEightyDegrees(): void
+    {
+        $entries = [
+            ExifTag::GPS_LONGITUDE_REF => new IfdEntry(ExifTag::GPS_LONGITUDE_REF, 2, 2, 'W'),
+            ExifTag::GPS_LONGITUDE     => new IfdEntry(ExifTag::GPS_LONGITUDE, 10, 3, [[181, 1], [0, 1], [0, 1]]),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1464);
+        $this->expectExceptionMessage('outside the valid longitude range');
+
+        $this->converter->fromIfd(new Ifd($entries));
+    }
+
+    /**
+     * Rejects destination latitude values below -90°.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsDestinationLatitudeBelowMinusNinetyDegrees(): void
+    {
+        $entries = [
+            ExifTag::GPS_DEST_LATITUDE_REF => new IfdEntry(ExifTag::GPS_DEST_LATITUDE_REF, 2, 2, 'S'),
+            ExifTag::GPS_DEST_LATITUDE     => new IfdEntry(ExifTag::GPS_DEST_LATITUDE, 10, 3, [[91, 1], [0, 1], [0, 1]]),
+        ];
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1463);
+        $this->expectExceptionMessage('outside the valid latitude range');
+
+        $this->converter->fromIfd(new Ifd($entries));
     }
 
     /**
