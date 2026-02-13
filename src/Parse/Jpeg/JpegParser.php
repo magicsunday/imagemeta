@@ -153,6 +153,15 @@ final class JpegParser
     /** @var array<int, list<array{start:int, end:int}>> */
     private array $flashPixRanges = [];
 
+    /** @var array<int, int> */
+    private array $flashPixSequenceExpectedCount = [];
+
+    /** @var array<int, array<int, bool>> */
+    private array $flashPixSequenceSeen = [];
+
+    /** @var array<int, int> */
+    private array $flashPixSequenceFirstOffset = [];
+
     private bool $flashPixContentsSeen = false;
 
     private ?int $flashPixLastStreamIndex = null;
@@ -364,36 +373,39 @@ final class JpegParser
             throw new ParseError('Not a JPEG (missing SOI marker)', 1263);
         }
 
-        $this->exifBlobs               = [];
-        $this->xmpPackets              = [];
-        $this->extendedXmpBasePackets  = [];
-        $this->extendedXmpChunks       = [];
-        $this->extendedXmpTotalLength  = [];
-        $this->extendedXmpFirstOffset  = [];
-        $this->iccSegments             = [];
-        $this->iccSequence             = [];
-        $this->iccExpectedCount        = null;
-        $this->iccProfile              = null;
-        $this->app11Sequence           = [];
-        $this->app11Identifier         = [];
-        $this->app11FirstOffset        = [];
-        $this->flashPixContents        = [];
-        $this->flashPixChunks          = [];
-        $this->flashPixRanges          = [];
-        $this->flashPixContentsSeen    = false;
-        $this->flashPixLastStreamIndex = null;
-        $this->flashPixStreams         = [];
-        $this->mpfSegments             = [];
-        $this->mpfFirstOffset          = null;
-        $this->mpfDocument             = null;
-        $this->audioStreams            = [];
-        $this->iptcPayloads            = [];
-        $this->xmpPacketHashes         = [];
-        $this->frameBitsPerSample      = null;
-        $this->frameComponentSampling  = null;
-        $this->frameYCbCrSubSampling   = null;
-        $this->frameLines              = null;
-        $this->frameSamplesPerLine     = null;
+        $this->exifBlobs                     = [];
+        $this->xmpPackets                    = [];
+        $this->extendedXmpBasePackets        = [];
+        $this->extendedXmpChunks             = [];
+        $this->extendedXmpTotalLength        = [];
+        $this->extendedXmpFirstOffset        = [];
+        $this->iccSegments                   = [];
+        $this->iccSequence                   = [];
+        $this->iccExpectedCount              = null;
+        $this->iccProfile                    = null;
+        $this->app11Sequence                 = [];
+        $this->app11Identifier               = [];
+        $this->app11FirstOffset              = [];
+        $this->flashPixContents              = [];
+        $this->flashPixChunks                = [];
+        $this->flashPixRanges                = [];
+        $this->flashPixSequenceExpectedCount = [];
+        $this->flashPixSequenceSeen          = [];
+        $this->flashPixSequenceFirstOffset   = [];
+        $this->flashPixContentsSeen          = false;
+        $this->flashPixLastStreamIndex       = null;
+        $this->flashPixStreams               = [];
+        $this->mpfSegments                   = [];
+        $this->mpfFirstOffset                = null;
+        $this->mpfDocument                   = null;
+        $this->audioStreams                  = [];
+        $this->iptcPayloads                  = [];
+        $this->xmpPacketHashes               = [];
+        $this->frameBitsPerSample            = null;
+        $this->frameComponentSampling        = null;
+        $this->frameYCbCrSubSampling         = null;
+        $this->frameLines                    = null;
+        $this->frameSamplesPerLine           = null;
 
         $seenExifApp1                = false;
         $markersBeforeExifApp1       = 0;
@@ -1841,6 +1853,7 @@ final class JpegParser
      *
      * EXIF 3.0 §4.7.3.5:
      * - index into contents list (0-based)
+     * - sequence number / sequence count for segment assembly
      * - offset into full stream
      * - remaining bytes are stream data
      *
@@ -1853,16 +1866,18 @@ final class JpegParser
             throw new ParseError(sprintf('FlashPix stream data at offset %d appears before contents list', $offset), 1316);
         }
 
-        if (strlen($body) < 6) {
+        if (strlen($body) < 10) {
             throw new ParseError(sprintf('FlashPix stream data at offset %d is too short', $offset), 1317);
         }
 
-        $index        = (ord($body[0]) << 8) | ord($body[1]);
-        $streamOffset = (ord($body[2]) << 24)
-            | (ord($body[3]) << 16)
-            | (ord($body[4]) << 8)
-            | ord($body[5]);
-        $data = substr($body, 6);
+        $index          = (ord($body[0]) << 8) | ord($body[1]);
+        $sequenceNumber = (ord($body[2]) << 8) | ord($body[3]);
+        $sequenceCount  = (ord($body[4]) << 8) | ord($body[5]);
+        $streamOffset   = (ord($body[6]) << 24)
+            | (ord($body[7]) << 16)
+            | (ord($body[8]) << 8)
+            | ord($body[9]);
+        $data = substr($body, 10);
 
         if (!array_key_exists($index, $this->flashPixContents)) {
             throw new ParseError(
@@ -1874,6 +1889,53 @@ final class JpegParser
                 1319,
             );
         }
+
+        if (($sequenceCount === 0) || ($sequenceNumber === 0) || ($sequenceNumber > $sequenceCount)) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix stream data at offset %d has invalid sequence metadata (%d/%d) for entry %d',
+                    $offset,
+                    $sequenceNumber,
+                    $sequenceCount,
+                    $index,
+                ),
+                1480,
+            );
+        }
+
+        if (!array_key_exists($index, $this->flashPixSequenceExpectedCount)) {
+            $this->flashPixSequenceExpectedCount[$index] = $sequenceCount;
+            $this->flashPixSequenceSeen[$index]          = [];
+            $this->flashPixSequenceFirstOffset[$index]   = $offset;
+        } elseif ($this->flashPixSequenceExpectedCount[$index] !== $sequenceCount) {
+            $firstOffset = $this->flashPixSequenceFirstOffset[$index] ?? $offset;
+
+            throw new ParseError(
+                sprintf(
+                    'FlashPix stream entry %d has inconsistent sequence count %d at offset %d (expected %d from offset %d)',
+                    $index,
+                    $sequenceCount,
+                    $offset,
+                    $this->flashPixSequenceExpectedCount[$index],
+                    $firstOffset,
+                ),
+                1481,
+            );
+        }
+
+        if (array_key_exists($sequenceNumber, $this->flashPixSequenceSeen[$index])) {
+            throw new ParseError(
+                sprintf(
+                    'FlashPix stream entry %d has duplicate sequence number %d at offset %d',
+                    $index,
+                    $sequenceNumber,
+                    $offset,
+                ),
+                1482,
+            );
+        }
+
+        $this->flashPixSequenceSeen[$index][$sequenceNumber] = true;
 
         $entry = $this->flashPixContents[$index];
         if ($entry['isStorage']) {
@@ -1956,6 +2018,27 @@ final class JpegParser
     private function finaliseFlashPixStreams(): void
     {
         $this->flashPixStreams = [];
+
+        foreach ($this->flashPixSequenceExpectedCount as $index => $sequenceCount) {
+            $seen = $this->flashPixSequenceSeen[$index] ?? [];
+
+            for ($expected = 1; $expected <= $sequenceCount; ++$expected) {
+                if (!array_key_exists($expected, $seen)) {
+                    $firstOffset = $this->flashPixSequenceFirstOffset[$index] ?? 0;
+
+                    throw new ParseError(
+                        sprintf(
+                            'FlashPix stream entry %d is missing sequence number %d of %d (first seen at offset %d)',
+                            $index,
+                            $expected,
+                            $sequenceCount,
+                            $firstOffset,
+                        ),
+                        1483,
+                    );
+                }
+            }
+        }
 
         foreach ($this->flashPixContents as $index => $entry) {
             if ($entry['isStorage']) {
