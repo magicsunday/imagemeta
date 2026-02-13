@@ -36,6 +36,7 @@ composer require magicsunday/imagemeta
 * EXIF-conformant JPEG marker-order validation for APP1/APP2/APP11 placement, plus DQT/DHT/DRI/SOF structural ordering and duplicate-marker guards before SOS.
 * Strict EXIF-JPEG marker profile now rejects progressive `SOF2`; only baseline `SOF0` is accepted for conformant parsing.
 * Strict EXIF-JPEG SOF validation now enforces 8-bit precision, exactly three YCbCr component IDs (`1/2/3`), and legal YCbCr subsampling (`4:2:2`/`4:2:0`).
+* JPEG SOS conformance now validates header structure and SOF consistency (component count, duplicate selectors, and unknown selectors) before scan-data parsing.
 * JPEG container conformance now requires a valid `EOI` marker after `SOS` scan data and rejects truncated streams that end without `EOI`.
 * JPEG scan validation now enforces DRI/RST consistency by requiring restart markers (`RST0..RST7`) in scan data when a `DRI` marker is declared.
 * EXIF-bearing JPEG streams now enforce mandatory pre-scan marker groups (`DQT`, `DHT`, `SOF`, `SOS`) and fail fast when any required group is missing.

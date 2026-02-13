@@ -223,7 +223,7 @@ final class MetadataReaderTest extends TestCase
             . $this->segment(0xDB, "\x00")
             . $this->segment(0xC4, "\x00")
             . $this->segment(0xC0, $sofPayload)
-            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11")
+            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11\x00\x3F\x00")
             . 'scan-data'
             . "\xFF\xD9";
 
@@ -309,7 +309,7 @@ final class MetadataReaderTest extends TestCase
             . $this->segment(0xDB, "\x00")
             . $this->segment(0xC4, "\x00")
             . $this->segment(0xC0, $sofPayload)
-            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11")
+            . $this->segment(0xDA, "\x03\x01\x00\x02\x11\x03\x11\x00\x3F\x00")
             . 'scan-data'
             . "\xFF\xD9";
 

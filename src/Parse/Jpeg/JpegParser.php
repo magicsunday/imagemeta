@@ -720,8 +720,9 @@ final class JpegParser
      */
     private function requireEoiAfterSos(int $sosOffset, ?int $driOffset): void
     {
-        $scanHeaderLength = $this->readSegmentLength(Marker::SOS, $sosOffset, false);
-        $this->readSegmentPayload(Marker::SOS, $sosOffset, $scanHeaderLength - 2);
+        $scanHeaderLength  = $this->readSegmentLength(Marker::SOS, $sosOffset, false);
+        $scanHeaderPayload = $this->readSegmentPayload(Marker::SOS, $sosOffset, $scanHeaderLength - 2);
+        $this->validateSosHeader($scanHeaderPayload, $sosOffset);
         $hasRestartMarker = false;
 
         while (true) {
@@ -757,6 +758,96 @@ final class JpegParser
 
                 return;
             }
+        }
+    }
+
+    /**
+     * Validates SOS header structure and SOF component consistency.
+     *
+     * EXIF 3.0 §4.7 requires an SOS marker segment whose component selectors
+     * align with the previously declared SOF frame components.
+     *
+     * @param string $payload   Raw SOS header payload (without marker and length field).
+     * @param int    $sosOffset Offset where the SOS marker starts.
+     */
+    private function validateSosHeader(string $payload, int $sosOffset): void
+    {
+        $payloadLength = strlen($payload);
+        if ($payloadLength < 6) {
+            throw new ParseError(
+                sprintf('SOS marker at offset %d is too short', $sosOffset),
+                1498,
+            );
+        }
+
+        $componentCount = ord($payload[0]);
+        if ($componentCount === 0) {
+            throw new ParseError(
+                sprintf('SOS marker at offset %d declares zero components', $sosOffset),
+                1498,
+            );
+        }
+
+        $expectedLength = 1 + ($componentCount * 2) + 3;
+        if ($payloadLength !== $expectedLength) {
+            throw new ParseError(
+                sprintf(
+                    'SOS marker at offset %d declares %d components but payload length is %d bytes (expected %d)',
+                    $sosOffset,
+                    $componentCount,
+                    $payloadLength,
+                    $expectedLength,
+                ),
+                1498,
+            );
+        }
+
+        if ($this->frameComponentSampling === null) {
+            return;
+        }
+
+        $frameComponentIds = array_keys($this->frameComponentSampling);
+        if ($componentCount !== count($frameComponentIds)) {
+            throw new ParseError(
+                sprintf(
+                    'SOS marker at offset %d has component count %d but SOF declares component count %d',
+                    $sosOffset,
+                    $componentCount,
+                    count($frameComponentIds),
+                ),
+                1497,
+            );
+        }
+
+        $seenSelectors = [];
+        $index         = 1;
+
+        for ($i = 0; $i < $componentCount; ++$i) {
+            $componentSelector = ord($payload[$index]);
+            if (isset($seenSelectors[$componentSelector])) {
+                throw new ParseError(
+                    sprintf(
+                        'SOS marker at offset %d contains duplicate component selector %d',
+                        $sosOffset,
+                        $componentSelector,
+                    ),
+                    1496,
+                );
+            }
+
+            if (!array_key_exists($componentSelector, $this->frameComponentSampling)) {
+                throw new ParseError(
+                    sprintf(
+                        'SOS marker at offset %d references unknown component selector %d not declared in SOF',
+                        $sosOffset,
+                        $componentSelector,
+                    ),
+                    1495,
+                );
+            }
+
+            $seenSelectors[$componentSelector] = true;
+            $index += 2;
         }
     }
 

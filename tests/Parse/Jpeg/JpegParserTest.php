@@ -430,7 +430,7 @@ final class JpegParserTest extends TestCase
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
-        $sosPayload = "\x03\x01\x00\x02\x11\x03\x11";
+        $sosPayload = $this->defaultSosPayload();
 
         $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
@@ -461,7 +461,7 @@ final class JpegParserTest extends TestCase
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
-        $sosPayload = "\x03\x01\x00\x02\x11\x03\x11";
+        $sosPayload = $this->defaultSosPayload();
 
         $jpeg = $this->jpeg(
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
@@ -495,7 +495,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DHT, "\x00"),
             self::segment(self::MARKER_SOF0, $sofPayload),
-            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+            self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -525,7 +525,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_SOF0, $sofPayload),
-            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+            self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -551,7 +551,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
-            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+            self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -710,7 +710,7 @@ final class JpegParserTest extends TestCase
             self::segment(self::MARKER_DQT, "\x00"),
             self::segment(self::MARKER_DHT, "\x00"),
             self::segment(self::MARKER_SOF0, $sofPayload),
-            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+            self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
         );
 
         $extractor = $this->createExtractor($jpeg);
@@ -1812,6 +1812,149 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts SOS headers when selectors and component count match the declared SOF frame.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsSosHeaderThatMatchesSofComponents(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'sos-valid';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $this->defaultSofPayload()),
+            self::segment(self::MARKER_SOS, $this->defaultSosPayload()),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects truncated SOS payloads before scan-data parsing starts.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsTruncatedSosPayload(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'sos-truncated';
+        $jpeg        = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . "\xFF\xDA" . pack('n', 12) . "\x03\x01\x00\x02\x11\x03\x11"
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/Truncated segment|truncated/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects SOS headers that reference a component selector missing from SOF.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSosHeaderWithUnknownComponentSelector(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'sos-unknown-selector';
+        $sosPayload  = "\x03"
+            . "\x01\x00"
+            . "\x02\x11"
+            . "\x04\x11"
+            . "\x00\x3F\x00";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $this->defaultSofPayload()),
+            self::segment(self::MARKER_SOS, $sosPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1495);
+        $this->expectExceptionMessageMatches('/SOS.*unknown component|unknown component.*SOS/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects SOS headers containing duplicate component selectors.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSosHeaderWithDuplicateComponentSelectors(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'sos-duplicate-selector';
+        $sosPayload  = "\x03"
+            . "\x01\x00"
+            . "\x02\x11"
+            . "\x02\x11"
+            . "\x00\x3F\x00";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $this->defaultSofPayload()),
+            self::segment(self::MARKER_SOS, $sosPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1496);
+        $this->expectExceptionMessageMatches('/SOS.*duplicate|duplicate.*SOS/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects SOS headers whose component count does not match the SOF declaration.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsSosHeaderWithComponentCountMismatchToSof(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'sos-count-mismatch';
+        $sosPayload  = "\x02"
+            . "\x01\x00"
+            . "\x02\x11"
+            . "\x00\x3F\x00";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_DHT, "\x00"),
+            self::segment(self::MARKER_SOF0, $this->defaultSofPayload()),
+            self::segment(self::MARKER_SOS, $sosPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1497);
+        $this->expectExceptionMessageMatches('/SOS.*component count|component count.*SOF/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
      * Provides malformed JPEG structures expected to raise parse errors.
      * Each fixture triggers a different guardrail in segment length handling.
      *
@@ -1868,7 +2011,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_DHT, "\x00")
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . self::segment(self::MARKER_DRI, pack('n', 8))
-            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\x00" . 'scan'
             . "\xFF\xD0"
             . 'tail'
@@ -1896,7 +2039,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_DHT, "\x00")
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
             . self::segment(self::MARKER_DRI, pack('n', 8))
-            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\x00" . 'scan'
             . "\xFF\xD9";
 
@@ -1925,7 +2068,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
-            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\x00" . 'scan'
             . "\xFF\xD9";
 
@@ -1949,7 +2092,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
-            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\x00" . 'scan';
 
         $extractor = $this->createExtractor($jpeg);
@@ -1980,7 +2123,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
-            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . "\xFF\x00" . 'A'
             . "\xFF\xD0"
             . "\xFF" . chr(self::MARKER_APP1)
@@ -2015,7 +2158,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
-            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . 'scan-data'
             . "\xFF\xD9"
             . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $postExifData)
@@ -2047,7 +2190,7 @@ final class JpegParserTest extends TestCase
             . self::segment(self::MARKER_DQT, "\x00")
             . self::segment(self::MARKER_DHT, "\x00")
             . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
-            . "\xFF\xDA" . pack('n', 8) . "\x03\x01\x00\x02\x11\x03"
+            . "\xFF\xDA" . pack('n', 12) . $this->defaultSosPayload()
             . 'entropy'
             . "\xFF\xD9"
             . "\xFF\xE1\xFF\xFF" // Advertised oversized length after EOI should be ignored
@@ -2088,7 +2231,7 @@ final class JpegParserTest extends TestCase
                 $segmentList[] = self::segment(self::MARKER_SOF0, $this->defaultSofPayload());
             }
 
-            $segmentList[] = self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11");
+            $segmentList[] = self::segment(self::MARKER_SOS, $this->defaultSosPayload());
             $segmentList[] = 'scan';
         }
 
@@ -2132,6 +2275,15 @@ final class JpegParserTest extends TestCase
             . "\x01\x22\x00"
             . "\x02\x11\x01"
             . "\x03\x11\x01";
+    }
+
+    private function defaultSosPayload(): string
+    {
+        return "\x03"
+            . "\x01\x00"
+            . "\x02\x11"
+            . "\x03\x11"
+            . "\x00\x3F\x00";
     }
 
     /**
