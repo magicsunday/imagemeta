@@ -366,6 +366,9 @@ final class ValueConvertersTest extends TestCase
         yield 'decimal hours' => ['-5.5', '-05:30'];
         yield 'utc prefix' => ['UTC-4', '-04:00'];
         yield 'zulu designator' => ['Z', '+00:00'];
+        yield 'maximum offset' => ['+14:00', '+14:00'];
+        yield 'positive above maximum' => ['+14:30', null];
+        yield 'negative above maximum' => ['-14:30', null];
         yield 'invalid string' => ['abc', null];
         yield 'out of range' => ['+15:00', null];
     }
@@ -394,6 +397,9 @@ final class ValueConvertersTest extends TestCase
         yield 'positive offset' => ['+01:30', 90];
         yield 'negative compact' => ['-0330', -210];
         yield 'decimal hours' => ['2.25', 135];
+        yield 'maximum offset' => ['+14:00', 840];
+        yield 'positive above maximum' => ['+14:30', null];
+        yield 'negative above maximum' => ['-14:30', null];
         yield 'srational positive' => [new ExifRational(11, 2), 330];
         yield 'srational list negative' => [
             new ExifRationalList([

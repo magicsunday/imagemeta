@@ -238,7 +238,8 @@ final readonly class DateTimeConverter
             $minutes %= 60;
         }
 
-        if ($hours > 14) {
+        // EXIF OffsetTime domain: maximum absolute offset is 14:00.
+        if ($hours > 14 || ($hours === 14 && $minutes !== 0)) {
             return null;
         }
 
