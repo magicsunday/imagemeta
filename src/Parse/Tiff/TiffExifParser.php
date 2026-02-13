@@ -1111,6 +1111,20 @@ final class TiffExifParser
     ];
 
     /**
+     * DNG tags that use ASCII or BYTE type with NUL-terminated UTF-8 semantics.
+     *
+     * @var list<int>
+     */
+    private const array DNG_UTF8_STRING_TAGS = [
+        DngTag::CAMERA_CALIBRATION_SIGNATURE,
+        DngTag::PROFILE_CALIBRATION_SIGNATURE,
+        DngTag::AS_SHOT_PROFILE_NAME,
+        DngTag::PREVIEW_APPLICATION_NAME,
+        DngTag::PREVIEW_APPLICATION_VERSION,
+        DngTag::PREVIEW_SETTINGS_NAME,
+    ];
+
+    /**
      * EXIF camera-control tags with closed numeric value domains.
      *
      * EXIF 3.0 §4.6.6.7 defines these tags with explicit allowed values and
@@ -1608,13 +1622,11 @@ final class TiffExifParser
             }
         }
 
-        // DNG 1.7.1.0: Preview string tags must be ASCII or BYTE, NUL-terminated UTF-8.
-        if (
-            in_array($tag, [DngTag::PREVIEW_APPLICATION_NAME, DngTag::PREVIEW_APPLICATION_VERSION, DngTag::PREVIEW_SETTINGS_NAME], true)
-        ) {
+        // DNG 1.7.1.0: String tags that must be ASCII or BYTE, NUL-terminated UTF-8.
+        if (in_array($tag, self::DNG_UTF8_STRING_TAGS, true)) {
             if ($type !== TiffConst::TYPE_ASCII && $type !== TiffConst::TYPE_BYTE) {
                 throw new ParseError(
-                    sprintf('DNG preview string tag 0x%04X must use ASCII or BYTE type, got %d.', $tag, $type),
+                    sprintf('DNG string tag 0x%04X must use ASCII or BYTE type, got %d.', $tag, $type),
                     1571,
                 );
             }
@@ -1622,7 +1634,7 @@ final class TiffExifParser
             if ($type === TiffConst::TYPE_BYTE) {
                 if ($rawBytes === '' || $rawBytes[strlen($rawBytes) - 1] !== "\0") {
                     throw new ParseError(
-                        sprintf('DNG preview string tag 0x%04X BYTE payload must be NUL-terminated.', $tag),
+                        sprintf('DNG string tag 0x%04X BYTE payload must be NUL-terminated.', $tag),
                         1572,
                     );
                 }
@@ -1631,7 +1643,7 @@ final class TiffExifParser
 
                 if (!mb_check_encoding($text, 'UTF-8')) {
                     throw new ParseError(
-                        sprintf('DNG preview string tag 0x%04X contains malformed UTF-8.', $tag),
+                        sprintf('DNG string tag 0x%04X contains malformed UTF-8.', $tag),
                         1573,
                     );
                 }
@@ -2857,6 +2869,9 @@ final class TiffExifParser
         ExifTag::RAW_DEVELOPING_SOFTWARE,
         ExifTag::IMAGE_EDITING_SOFTWARE,
         ExifTag::METADATA_EDITING_SOFTWARE,
+        DngTag::CAMERA_CALIBRATION_SIGNATURE,
+        DngTag::PROFILE_CALIBRATION_SIGNATURE,
+        DngTag::AS_SHOT_PROFILE_NAME,
         DngTag::PREVIEW_APPLICATION_NAME,
         DngTag::PREVIEW_APPLICATION_VERSION,
         DngTag::PREVIEW_SETTINGS_NAME,

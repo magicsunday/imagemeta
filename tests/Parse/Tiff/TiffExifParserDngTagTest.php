@@ -5590,6 +5590,111 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts CameraCalibrationSignature as ASCII NUL-terminated UTF-8.
+     */
+    #[Test]
+    public function acceptsValidCameraCalibrationSignature(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::CAMERA_CALIBRATION_SIGNATURE,
+                TiffConst::TYPE_ASCII,
+                "com.adobe\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts ProfileCalibrationSignature as BYTE NUL-terminated UTF-8.
+     */
+    #[Test]
+    public function acceptsValidProfileCalibrationSignatureByte(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PROFILE_CALIBRATION_SIGNATURE,
+                TiffConst::TYPE_BYTE,
+                "ACR 4.4\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts AsShotProfileName as ASCII with UTF-8 content.
+     */
+    #[Test]
+    public function acceptsValidAsShotProfileNameUtf8(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::AS_SHOT_PROFILE_NAME,
+                TiffConst::TYPE_ASCII,
+                "Porträt\0",
+            ),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects profile signature tag with wrong type.
+     */
+    #[Test]
+    public function rejectsProfileSignatureWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1571);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::CAMERA_CALIBRATION_SIGNATURE,
+                TiffConst::TYPE_SHORT,
+                "\x00\x01",
+            ),
+        );
+    }
+
+    /**
+     * Rejects BYTE profile signature tag missing trailing NUL.
+     */
+    #[Test]
+    public function rejectsProfileSignatureMissingNul(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1572);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::AS_SHOT_PROFILE_NAME,
+                TiffConst::TYPE_BYTE,
+                'NoNul',
+            ),
+        );
+    }
+
+    /**
+     * Rejects BYTE profile signature tag with invalid UTF-8.
+     */
+    #[Test]
+    public function rejectsProfileSignatureInvalidUtf8(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1573);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewStringTag(
+                DngTag::PROFILE_CALIBRATION_SIGNATURE,
+                TiffConst::TYPE_BYTE,
+                "\xC0\xAF\0",
+            ),
+        );
+    }
+
+    /**
      * Accepts a valid EnhanceParams NUL-terminated ASCII string.
      */
     #[Test]
