@@ -1291,6 +1291,7 @@ final class TiffExifParser
         $this->validateDngInterleaveVersionFloors($ifd0);
         $this->validateDngBackwardVersionGate($ifd0);
         $this->validateDngColorimetricReference($ifd0);
+        $this->validateDngMultiProfileName($ifd0, $additionalIfds);
         $this->validateDngNoiseProfile($ifd0);
         $this->validateDngHueSatMapDims($ifd0);
         $this->validateDngHueSatMapData($ifd0);
@@ -4695,6 +4696,43 @@ final class TiffExifParser
                         $tag,
                     ),
                     1498,
+                );
+            }
+        }
+    }
+
+    /**
+     * Validates DNG multi-profile naming rule per DNG 1.7.1.0.
+     *
+     * When more than one camera profile exists (identified by ColorMatrix1),
+     * every profile context must include a ProfileName tag.
+     *
+     * @param Ifd       $ifd0           Primary IFD.
+     * @param list<Ifd> $additionalIfds Additional IFDs (IFD1+).
+     */
+    private function validateDngMultiProfileName(Ifd $ifd0, array $additionalIfds): void
+    {
+        $profileIfds = [];
+
+        if ($ifd0->get(DngTag::COLOR_MATRIX_1) instanceof IfdEntry) {
+            $profileIfds[] = $ifd0;
+        }
+
+        foreach ($additionalIfds as $additionalIfd) {
+            if ($additionalIfd->get(DngTag::COLOR_MATRIX_1) instanceof IfdEntry) {
+                $profileIfds[] = $additionalIfd;
+            }
+        }
+
+        if (count($profileIfds) <= 1) {
+            return;
+        }
+
+        foreach ($profileIfds as $index => $profileIfd) {
+            if (!$profileIfd->get(DngTag::PROFILE_NAME) instanceof IfdEntry) {
+                throw new ParseError(
+                    sprintf('ProfileName is required for camera profile %d when multiple profiles exist per DNG 1.7.1.0.', $index),
+                    1515,
                 );
             }
         }

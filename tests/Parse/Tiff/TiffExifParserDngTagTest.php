@@ -3453,4 +3453,168 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $dimsData;
     }
+
+    /**
+     * Accepts a single-profile DNG without ProfileName.
+     */
+    #[Test]
+    public function acceptsSingleProfileWithoutName(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithProfiles(1, false),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Accepts a multi-profile DNG with all ProfileNames present.
+     */
+    #[Test]
+    public function acceptsMultiProfileWithAllNames(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithProfiles(2, true),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects a multi-profile DNG with one missing ProfileName.
+     */
+    #[Test]
+    public function rejectsMultiProfileMissingName(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1515);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithProfiles(2, false),
+        );
+    }
+
+    /**
+     * Builds a DNG with one or more camera profiles (identified by ColorMatrix1).
+     *
+     * @param int  $profileCount Number of camera profiles (1 = IFD0 only, 2 = IFD0 + one additional)
+     * @param bool $includeNames Whether to include ProfileName in each profile IFD
+     */
+    private function buildDngWithProfiles(int $profileCount, bool $includeNames): string
+    {
+        $ifdOffset         = 8;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+
+        // ColorMatrix1: SRATIONAL[3] = 3 rationals × 8 bytes = 24 bytes
+        $matrixData  = pack('V6', 1, 1, 0, 1, 0, 1);
+        $profileName = pack('Z*', 'Profile00');
+
+        // IFD0: ImageWidth, ImageLength, Orientation, DngVersion, UniqueCameraModel,
+        //       ColorMatrix1, and optionally ProfileName
+        $ifd0EntryCount = $includeNames ? 7 : 6;
+        $ifd0Size       = 2 + (12 * $ifd0EntryCount) + 4;
+        $modelOffset    = $ifdOffset + $ifd0Size;
+        $matrixOffset   = $modelOffset + strlen($uniqueCameraModel);
+        $nameOffset     = $matrixOffset + strlen($matrixData);
+
+        $afterIfd0Data = $uniqueCameraModel . $matrixData;
+        if ($includeNames) {
+            $afterIfd0Data .= $profileName;
+        }
+
+        // Build additional profile IFD (IFD2) if needed, with IFD1 as minimal thumbnail
+        if ($profileCount > 1) {
+            $ifd1Offset     = $ifdOffset + $ifd0Size + strlen($afterIfd0Data);
+            $ifd1EntryCount = 2;
+            $ifd1Size       = 2 + (12 * $ifd1EntryCount) + 4;
+
+            $ifd2Offset    = $ifd1Offset + $ifd1Size;
+            $profile2Name  = pack('Z*', 'Profile01');
+            $matrix2Offset = $ifd2Offset + 2 + (12 * ($includeNames ? 2 : 1)) + 4;
+            $name2Offset   = $matrix2Offset + strlen($matrixData);
+        } else {
+            $ifd1Offset = 0;
+        }
+
+        $ifd0 = pack('v', $ifd0EntryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::COLOR_MATRIX_1)
+            . pack('v', TiffConst::TYPE_SRATIONAL)
+            . pack('V', 3)
+            . pack('V', $matrixOffset);
+
+        if ($includeNames) {
+            $ifd0 .= pack('v', DngTag::PROFILE_NAME)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', strlen($profileName))
+                . pack('V', $nameOffset);
+        }
+
+        $ifd0 .= pack('V', $ifd1Offset);
+
+        $result = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $afterIfd0Data;
+
+        if ($profileCount > 1) {
+            // IFD1 (minimal thumbnail)
+            $result .= pack('v', $ifd1EntryCount)
+                . pack('v', ExifTag::IMAGE_WIDTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0)
+                . pack('v', ExifTag::IMAGE_LENGTH)
+                . pack('v', TiffConst::TYPE_SHORT)
+                . pack('V', 1)
+                . pack('v', 100) . pack('v', 0)
+                . pack('V', $ifd2Offset);
+
+            // IFD2 (second profile with ColorMatrix1)
+            $ifd2EntryCount = $includeNames ? 2 : 1;
+            $result .= pack('v', $ifd2EntryCount)
+                . pack('v', DngTag::COLOR_MATRIX_1)
+                . pack('v', TiffConst::TYPE_SRATIONAL)
+                . pack('V', 3)
+                . pack('V', $matrix2Offset);
+
+            if ($includeNames) {
+                $result .= pack('v', DngTag::PROFILE_NAME)
+                    . pack('v', TiffConst::TYPE_ASCII)
+                    . pack('V', strlen($profile2Name))
+                    . pack('V', $name2Offset);
+            }
+
+            $result .= pack('V', 0)
+                . $matrixData;
+
+            if ($includeNames) {
+                $result .= $profile2Name;
+            }
+        }
+
+        return $result;
+    }
 }
