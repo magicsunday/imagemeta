@@ -17,6 +17,7 @@ use MagicSunday\ImageMeta\Exif\Model\Ifd;
 use MagicSunday\ImageMeta\Exif\Model\IfdEntry;
 use MagicSunday\ImageMeta\Exif\Model\ParsedExif;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -209,6 +210,45 @@ final class ParsedExifOffsetTimeTest extends TestCase
         $parsedExif = $this->parsedExifWithDateTimeAndOffset("2024:06:01 12:34:56\0", "+0100\0");
 
         self::assertNull($parsedExif->dateTimeOriginal());
+    }
+
+    /**
+     * Supplies a boundary-valid DateTimeOriginal with canonical offset.
+     * Confirms semantic boundary values are parsed without normalization.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsBoundaryDateTimeWithOffset(): void
+    {
+        $parsedExif = $this->parsedExifWithDateTimeAndOffset("2024:12:31 23:59:59\0", "+00:00\0");
+
+        self::assertSame('2024-12-31T23:59:59+00:00', $parsedExif->dateTimeOriginal()?->format(DateTimeInterface::ATOM));
+    }
+
+    /**
+     * Supplies calendar/time-overflow values with canonical offset.
+     * Verifies invalid datetime combinations are rejected rather than normalized.
+     *
+     * @return void
+     */
+    #[Test]
+    #[DataProvider('provideInvalidDateTimeOriginalValues')]
+    public function rejectsDateTimeOverflowValues(string $dateTime): void
+    {
+        $parsedExif = $this->parsedExifWithDateTimeAndOffset($dateTime . "\0", "+00:00\0");
+
+        self::assertNull($parsedExif->dateTimeOriginal());
+    }
+
+    /**
+     * @return iterable<string, array{0:string}>
+     */
+    public static function provideInvalidDateTimeOriginalValues(): iterable
+    {
+        yield 'month overflow' => ['2024:13:01 12:00:00'];
+        yield 'day overflow' => ['2024:04:31 12:00:00'];
+        yield 'hour overflow' => ['2024:01:01 24:00:00'];
     }
 
     private function parsedExifWithOffset(int $tag, string $value): ParsedExif

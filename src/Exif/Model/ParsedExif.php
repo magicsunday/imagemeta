@@ -4548,7 +4548,22 @@ final readonly class ParsedExif
 
         $dt = DateTimeImmutable::createFromFormat($format, $normalized, $timeZone);
 
-        return $dt !== false ? $dt : null;
+        if ($dt === false) {
+            return null;
+        }
+
+        $lastErrors = DateTimeImmutable::getLastErrors();
+        if (
+            is_array($lastErrors)
+            && (
+                $lastErrors['warning_count'] > 0
+                || $lastErrors['error_count'] > 0
+            )
+        ) {
+            return null;
+        }
+
+        return $dt;
     }
 
     // ========================================================================
