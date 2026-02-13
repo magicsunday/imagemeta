@@ -5643,6 +5643,154 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts SubTileBlockSize with valid SHORT[2] values.
+     */
+    #[Test]
+    public function acceptsValidSubTileBlockSize(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSubTileBlockSize(TiffConst::TYPE_SHORT, 2, 2),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects SubTileBlockSize with wrong type (RATIONAL).
+     */
+    #[Test]
+    public function rejectsSubTileBlockSizeWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1577);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSubTileBlockSize(TiffConst::TYPE_BYTE, 1, 1),
+        );
+    }
+
+    /**
+     * Rejects SubTileBlockSize with zero component.
+     */
+    #[Test]
+    public function rejectsSubTileBlockSizeZeroComponent(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1578);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSubTileBlockSize(TiffConst::TYPE_SHORT, 0, 1),
+        );
+    }
+
+    /**
+     * Accepts RowInterleaveFactor with valid SHORT[1] value.
+     */
+    #[Test]
+    public function acceptsValidRowInterleaveFactor(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithShort1Tag(DngTag::ROW_INTERLEAVE_FACTOR, 2),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects RowInterleaveFactor with zero value.
+     */
+    #[Test]
+    public function rejectsRowInterleaveFactorZero(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1580);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithShort1Tag(DngTag::ROW_INTERLEAVE_FACTOR, 0),
+        );
+    }
+
+    /**
+     * Builds a DNG with SubTileBlockSize in IFD0.
+     *
+     * @param int $type TIFF type code (SHORT or LONG)
+     * @param int $rows SubTileBlockRows
+     * @param int $cols SubTileBlockCols
+     */
+    private function buildDngWithSubTileBlockSize(int $type, int $rows, int $cols): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        if ($type === TiffConst::TYPE_SHORT) {
+            $valueBytes = pack('v', $rows) . pack('v', $cols);
+        } elseif ($type === TiffConst::TYPE_LONG) {
+            $valueBytes = pack('V', $rows) . pack('V', $cols);
+        } else {
+            // For wrong-type test: use 2 bytes (BYTE count=2)
+            $valueBytes = pack('C', $rows) . pack('C', $cols) . "\x00\x00";
+        }
+
+        $count     = 2;
+        $dataSize  = $this->bytesPerComponent($type) * $count;
+        $inline    = $dataSize <= 4;
+        $tagOffset = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::SUB_TILE_BLOCK_SIZE)
+            . pack('v', $type)
+            . pack('V', $count)
+            . ($inline
+                ? str_pad($valueBytes, 4, "\0")
+                : pack('V', $tagOffset))
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . ($inline ? '' : $valueBytes);
+    }
+
+    private function bytesPerComponent(int $type): int
+    {
+        return match ($type) {
+            TiffConst::TYPE_ASCII,
+            TiffConst::TYPE_BYTE,
+            TiffConst::TYPE_UNDEFINED => 1,
+            TiffConst::TYPE_SHORT     => 2,
+            TiffConst::TYPE_LONG,
+            TiffConst::TYPE_SLONG => 4,
+            TiffConst::TYPE_RATIONAL,
+            TiffConst::TYPE_SRATIONAL => 8,
+            TiffConst::TYPE_DOUBLE    => 8,
+            default                   => 1,
+        };
+    }
+
+    /**
      * Accepts valid DepthFormat enum values (0, 1, 2).
      */
     #[Test]

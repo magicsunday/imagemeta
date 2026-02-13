@@ -1375,6 +1375,8 @@ final class TiffExifParser
         $this->validateDngDefaultUserCrop($ifd0);
         $this->validateDngDepthEnums($ifd0);
         $this->validateDngEnhanceParams($ifd0);
+        $this->validateDngSubTileBlockSize($ifd0);
+        $this->validateDngRowInterleaveFactor($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -6037,6 +6039,79 @@ final class TiffExifParser
             throw new ParseError(
                 'EnhanceParams must not be empty per DNG 1.7.1.0.',
                 1576,
+            );
+        }
+    }
+
+    /**
+     * Validates SubTileBlockSize (0xC71E) per DNG 1.7.1.0.
+     *
+     * Must be (SHORT|LONG)[2] with both components >= 1.
+     */
+    private function validateDngSubTileBlockSize(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::SUB_TILE_BLOCK_SIZE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (
+            ($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG)
+            || $entry->count !== 2
+        ) {
+            throw new ParseError(
+                sprintf('SubTileBlockSize must be (SHORT|LONG)[2], got type %d count %d.', $entry->type, $entry->count),
+                1577,
+            );
+        }
+
+        if (!$entry->value instanceof ExifNumericList) {
+            return;
+        }
+
+        $rows = $entry->value->values[0];
+        $cols = $entry->value->values[1];
+
+        if (!is_int($rows) || !is_int($cols)) {
+            return;
+        }
+
+        if ($rows < 1 || $cols < 1) {
+            throw new ParseError(
+                sprintf('SubTileBlockSize components must be >= 1, got %d, %d.', $rows, $cols),
+                1578,
+            );
+        }
+    }
+
+    /**
+     * Validates RowInterleaveFactor (0xC71F) per DNG 1.7.1.0.
+     *
+     * Must be (SHORT|LONG)[1] with value >= 1.
+     */
+    private function validateDngRowInterleaveFactor(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::ROW_INTERLEAVE_FACTOR);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if (
+            ($entry->type !== TiffConst::TYPE_SHORT && $entry->type !== TiffConst::TYPE_LONG)
+            || $entry->count !== 1
+        ) {
+            throw new ParseError(
+                sprintf('RowInterleaveFactor must be (SHORT|LONG)[1], got type %d count %d.', $entry->type, $entry->count),
+                1579,
+            );
+        }
+
+        if (!is_int($entry->value) || $entry->value < 1) {
+            throw new ParseError(
+                sprintf('RowInterleaveFactor must be >= 1, got %d.', is_int($entry->value) ? $entry->value : -1),
+                1580,
             );
         }
     }
