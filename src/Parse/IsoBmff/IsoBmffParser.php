@@ -4032,6 +4032,13 @@ final readonly class IsoBmffParser
      */
     private function decodeQuickTimeUnsignedInt(string $payload, int $payloadSize): int
     {
+        if ($payloadSize < 1 || $payloadSize > 4) {
+            throw new ParseError(
+                sprintf('QuickTime integer payload must be 1–4 bytes, got %d', $payloadSize),
+                1464,
+            );
+        }
+
         $value = 0;
         for ($i = 0; $i < $payloadSize; ++$i) {
             $value = ($value << 8) | ord($payload[$i]);
