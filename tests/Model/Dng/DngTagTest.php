@@ -69,6 +69,29 @@ final class DngTagTest extends TestCase
     }
 
     /**
+     * ProfileToneCurve (0xC6FC) and ProfileHueSatMapData3 v17 (0xCD39)
+     * are correctly disambiguated per DNG 1.7.1.0.
+     */
+    #[Test]
+    public function profileToneCurveAndHueSatMapData3AreDisambiguated(): void
+    {
+        $reflection = new ReflectionClass(DngTag::class);
+        $constants  = $reflection->getConstants();
+
+        // PROFILE_TONE_CURVE must map to 0xC6FC
+        self::assertArrayHasKey('PROFILE_TONE_CURVE', $constants);
+
+        // PROFILE_HUE_SAT_MAP_DATA_3_V17 must map to 0xCD39
+        self::assertArrayHasKey('PROFILE_HUE_SAT_MAP_DATA_3_V17', $constants);
+
+        // They must have different values
+        self::assertNotSame(
+            $constants['PROFILE_TONE_CURVE'],
+            $constants['PROFILE_HUE_SAT_MAP_DATA_3_V17'],
+        );
+    }
+
+    /**
      * All public integer constants defined on DngTag have unique tag IDs.
      * This guards against accidental copy-paste collisions.
      */
