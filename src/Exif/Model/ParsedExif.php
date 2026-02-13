@@ -3997,6 +3997,7 @@ final readonly class ParsedExif
         return match ($photometric) {
             Photometric::RGB   => [0.0, 255.0, 0.0, 255.0, 0.0, 255.0],
             Photometric::YCBCR => [0.0, 255.0, 128.0, 128.0, 128.0, 128.0],
+            default            => null,
         };
     }
 

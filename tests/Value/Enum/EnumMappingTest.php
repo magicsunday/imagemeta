@@ -78,6 +78,10 @@ final class EnumMappingTest extends TestCase
         self::assertSame(Compression::JPEG, Compression::fromExifValue(6));
         self::assertSame(Compression::JPEG_NEW_STYLE, Compression::fromExifValue(7));
         self::assertSame(Photometric::YCBCR, Photometric::fromExifValue(6));
+        self::assertSame(Photometric::CFA, Photometric::fromExifValue(32803));
+        self::assertSame(Photometric::LINEAR_RAW, Photometric::fromExifValue(34892));
+        self::assertSame(Photometric::DEPTH, Photometric::fromExifValue(51177));
+        self::assertSame(Photometric::PHOTOMETRIC_MASK, Photometric::fromExifValue(52527));
         self::assertSame(PlanarConfiguration::CHUNKY, PlanarConfiguration::fromExifValue(1));
         self::assertSame(ResolutionUnit::CENTIMETER, ResolutionUnit::fromExifValue(3));
         self::assertNull(ResolutionUnit::fromExifValue(1));
