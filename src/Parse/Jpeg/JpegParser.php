@@ -425,7 +425,7 @@ final class JpegParser
         $firstSofOffset              = null;
 
         while (true) {
-            [$marker, $offset] = $this->nextMarkerWithOffset();
+            [$marker, $offset] = $this->nextMarkerWithOffset(false);
 
             if ($marker === Marker::EOI) {
                 if ($seenExifApp1) {
@@ -955,23 +955,48 @@ final class JpegParser
     /**
      * Finds the next JPEG marker and returns its code and byte offset.
      *
+     * @param bool $allowInterveningBytes Whether non-marker bytes may appear before the next marker introducer.
+     *
      * @return array{0: int, 1: int}
      */
-    private function nextMarkerWithOffset(): array
+    private function nextMarkerWithOffset(bool $allowInterveningBytes = true): array
     {
         while (true) {
-            $byte = $this->stream->read(1);
-            while ($byte !== "\xFF") {
-                $byte = $this->stream->read(1);
+            $byteOffset = $this->stream->tell();
+            $byte       = $this->stream->read(1);
+
+            if ($byte !== "\xFF") {
+                if ($allowInterveningBytes) {
+                    continue;
+                }
+
+                throw new ParseError(
+                    sprintf(
+                        'Non-marker byte 0x%02X at offset %d is not allowed before SOS marker segments',
+                        ord($byte),
+                        $byteOffset,
+                    ),
+                    1505,
+                );
             }
 
-            $markerOffset = $this->stream->tell() - 1;
+            $markerOffset = $byteOffset;
 
             do {
                 $code = $this->stream->read(1);
             } while ($code === "\xFF");
 
             if ($code === "\x00") {
+                if (!$allowInterveningBytes) {
+                    throw new ParseError(
+                        sprintf(
+                            'Marker-stuffing sequence 0xFF00 at offset %d is not allowed before SOS marker segments',
+                            $markerOffset,
+                        ),
+                        1506,
+                    );
+                }
+
                 continue; // stuffed byte inside scan data
             }
 

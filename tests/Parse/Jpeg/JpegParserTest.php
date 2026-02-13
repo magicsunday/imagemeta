@@ -2135,6 +2135,82 @@ final class JpegParserTest extends TestCase
     }
 
     /**
+     * Accepts a marker-contiguous EXIF stream without any pre-SOS gap bytes.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsMarkerContiguousStreamBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'marker-contiguous';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects non-marker garbage bytes inserted between markers in the pre-SOS area.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsNonMarkerGarbageBeforeSos(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'garbage-before-sos';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . 'X'
+            . self::segment(self::MARKER_DQT, "\x00")
+            . self::segment(self::MARKER_DHT, "\x00")
+            . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/non-marker|before SOS|marker/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Accepts legal marker fill bytes (0xFF) before the actual marker code.
+     *
+     * @return void
+     */
+    #[Test]
+    public function acceptsMarkerFillBytesBeforeSosMarkers(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'marker-fill-before-sos';
+
+        $jpeg = "\xFF\xD8"
+            . self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload)
+            . "\xFF" . self::segment(self::MARKER_DQT, "\x00")
+            . "\xFF" . self::segment(self::MARKER_DHT, "\x00")
+            . "\xFF" . self::segment(self::MARKER_SOF0, $this->defaultSofPayload())
+            . self::segment(self::MARKER_SOS, $this->defaultSosPayload())
+            . 'scan'
+            . "\xFF\xD9";
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
      * Rejects SOS headers that reference a component selector missing from SOF.
      *
      * @return void

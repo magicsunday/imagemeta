@@ -46,6 +46,7 @@ composer require magicsunday/imagemeta
 * JPEG post-`SOS` scan-data validation now rejects unexpected marker classes (for example `APPn`, `COM`, or second `SOS`) before `EOI`.
 * JPEG marker placement now rejects pre-scan restart markers (`RST0..RST7`) before the first `SOS`.
 * EXIF marker-profile validation now rejects pre-scan `TEM` markers before the first `SOS`.
+* Pre-`SOS` marker-stream parsing now rejects non-marker garbage bytes between marker segments while still accepting legal `0xFF` marker-fill bytes.
 * EXIF-bearing JPEG streams now enforce mandatory pre-scan marker groups (`DQT`, `DHT`, `SOF`, `SOS`) and fail fast when any required group is missing.
 * EXIF-JPEG cardinality checks now reject duplicate Exif `APP1` metadata blocks (single Exif APP1 only).
 * IPTC IIM parsing now validates extended-length headers with strict length-byte-count bounds to reject zero-byte and overlong length encodings.
