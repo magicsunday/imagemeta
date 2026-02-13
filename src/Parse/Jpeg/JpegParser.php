@@ -355,6 +355,10 @@ final class JpegParser
         $markersBeforeExifApp1       = 0;
         $firstMarkerBeforeExifOffset = null;
         $firstApp2BeforeExifOffset   = null;
+        $seenApp1OrApp2              = false;
+        $seenApp11                   = false;
+        $firstStructuralMarker       = null;
+        $firstStructuralMarkerOffset = null;
 
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
@@ -419,6 +423,51 @@ final class JpegParser
                 }
             }
 
+            if ($seenApp11 && ($marker === Marker::APP1 || $marker === Marker::APP2)) {
+                throw new ParseError(
+                    sprintf(
+                        'APP1/APP2 marker at offset %d appears after APP11 marker',
+                        $offset,
+                    ),
+                    1330,
+                );
+            }
+
+            if ($marker === Marker::APP11) {
+                if (!$seenApp1OrApp2) {
+                    throw new ParseError(
+                        sprintf(
+                            'APP11 marker at offset %d appears before APP1/APP2 metadata region',
+                            $offset,
+                        ),
+                        1328,
+                    );
+                }
+
+                if (($firstStructuralMarker !== null) && ($firstStructuralMarkerOffset !== null)) {
+                    throw new ParseError(
+                        sprintf(
+                            'APP11 marker at offset %d appears after structural marker 0x%02X at offset %d',
+                            $offset,
+                            $firstStructuralMarker,
+                            $firstStructuralMarkerOffset,
+                        ),
+                        1329,
+                    );
+                }
+
+                $seenApp11 = true;
+            }
+
+            if ($marker === Marker::APP1 || $marker === Marker::APP2) {
+                $seenApp1OrApp2 = true;
+            }
+
+            if (($firstStructuralMarkerOffset === null) && $this->isStructuralMarkerBeforeScan($marker)) {
+                $firstStructuralMarker       = $marker;
+                $firstStructuralMarkerOffset = $offset;
+            }
+
             if ($marker === Marker::APP1) {
                 $this->handleApp1($payload);
             } elseif ($marker === Marker::APP2) {
@@ -478,6 +527,51 @@ final class JpegParser
         return str_starts_with($payload, self::FPXR_SIGNATURE)
             || str_starts_with($payload, self::MPF_SIGNATURE)
             || str_starts_with($payload, self::AUDIO_SIGNATURE);
+    }
+
+    /**
+     * Determines whether the marker begins structural image coding segments before scan data.
+     *
+     * EXIF 3.0 §4.7.5.2 requires APP11 to be located before DQT/DHT/DRI/SOF marker segments.
+     *
+     * @param int $marker Marker code.
+     *
+     * @return bool True when the marker is a structural pre-scan marker.
+     */
+    private function isStructuralMarkerBeforeScan(int $marker): bool
+    {
+        return in_array($marker, [Marker::DQT, Marker::DHT, Marker::DRI], true)
+            || $this->isStartOfFrameMarker($marker);
+    }
+
+    /**
+     * Determines whether the marker is one of the JPEG Start Of Frame marker codes.
+     *
+     * @param int $marker Marker code.
+     *
+     * @return bool True when the marker is a SOF marker.
+     */
+    private function isStartOfFrameMarker(int $marker): bool
+    {
+        return in_array(
+            $marker,
+            [
+                Marker::SOF0,
+                Marker::SOF1,
+                Marker::SOF2,
+                Marker::SOF3,
+                Marker::SOF5,
+                Marker::SOF6,
+                Marker::SOF7,
+                Marker::SOF9,
+                Marker::SOF10,
+                Marker::SOF11,
+                Marker::SOF13,
+                Marker::SOF14,
+                Marker::SOF15,
+            ],
+            true,
+        );
     }
 
     /**

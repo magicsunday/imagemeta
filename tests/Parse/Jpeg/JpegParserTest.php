@@ -89,11 +89,17 @@ final class JpegParserTest extends TestCase
 
     private const int MARKER_APP2 = 0xE2;
 
+    private const int MARKER_APP11 = 0xEB;
+
     private const int MARKER_APP13 = 0xED;
+
+    private const int MARKER_DQT = 0xDB;
 
     private const int MARKER_SOF0 = 0xC0;
 
     private const int MARKER_SOF2 = 0xC2;
+
+    private const int MARKER_SOS = 0xDA;
 
     /**
      * Extracts EXIF and XMP from APP1 segments in EXIF-compliant order.
@@ -299,6 +305,105 @@ final class JpegParserTest extends TestCase
 
         self::assertSame([$exifPayload], $extractor->extractExifBlobs());
         self::assertSame([$xmpXml], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Accepts APP11 after APP1/APP2 and before structural markers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11AfterApp1AndApp2BeforeStructuralMarkersParses(): void
+    {
+        $exifPayload  = self::TIFF_HEADER . 'primary-exif';
+        $app2Payload  = 'dummy-app2';
+        $app11Payload = 'JP\0\0';
+        $sofPayload   = "\x08" . pack('n', 32) . pack('n', 64) . "\x03"
+            . "\x01\x22\x00"
+            . "\x02\x11\x01"
+            . "\x03\x11\x01";
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, $app2Payload),
+            self::segment(self::MARKER_APP11, $app11Payload),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_SOF0, $sofPayload),
+            self::segment(self::MARKER_SOS, "\x03\x01\x00\x02\x11\x03\x11"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+    }
+
+    /**
+     * Rejects APP11 when it appears before APP1/APP2 metadata markers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11BeforeApp1App2RegionThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP11, 'JP\0\0'),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP11.*APP1\\/APP2|APP1\\/APP2.*APP11/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Rejects APP11 when it appears after structural image markers.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app11AfterDqtThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_DQT, "\x00"),
+            self::segment(self::MARKER_APP11, 'JP\0\0'),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP11.*structural|structural.*APP11/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Keeps APP1/APP2 parsing behavior unchanged when APP11 is absent.
+     *
+     * @return void
+     */
+    #[Test]
+    public function app1App2ParsingWithoutApp11StillParses(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, 'dummy-app2'),
+            self::segment(self::MARKER_DQT, "\x00"),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
     }
 
     /**
