@@ -43,6 +43,7 @@ composer require magicsunday/imagemeta
 * JPEG marker placement now rejects pre-scan restart markers (`RST0..RST7`) before the first `SOS`.
 * EXIF-bearing JPEG streams now enforce mandatory pre-scan marker groups (`DQT`, `DHT`, `SOF`, `SOS`) and fail fast when any required group is missing.
 * EXIF-JPEG cardinality checks now reject duplicate Exif `APP1` metadata blocks (single Exif APP1 only).
+* IPTC IIM parsing now validates extended-length headers with strict length-byte-count bounds to reject zero-byte and overlong length encodings.
 * APP11/JUMBF metadata extraction now validates transport sequence metadata, reassembles multi-segment payloads per box instance, and surfaces supported XML/XMP payloads while safely skipping unsupported box types.
 * EXIF IFD1 JPEG thumbnail validation enforces SOI/EOI boundaries and rejects APPn, COM, and restart markers in strict thumbnail streams.
 * JPEG-primary EXIF validation now rejects `IFD0` usage of `JPEGInterchangeFormat` and `JPEGInterchangeFormatLength` (thumbnail-only tags).

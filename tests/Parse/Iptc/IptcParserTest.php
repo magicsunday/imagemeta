@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Iptc;
 
 use MagicSunday\ImageMeta\Core\BoundsError;
+use MagicSunday\ImageMeta\Core\ParseError;
 use MagicSunday\ImageMeta\Model\Iptc\IptcDocument;
 use MagicSunday\ImageMeta\Parse\Iptc\IptcParser;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -76,6 +77,40 @@ final class IptcParserTest extends TestCase
         $document = (new IptcParser())->parse($payload);
 
         self::assertSame($value, $document->first(2, 120));
+    }
+
+    /**
+     * Rejects extended-length datasets when length-byte-count is zero.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExtendedLengthWithZeroLengthByteCount(): void
+    {
+        $iimData = $this->iimDatasetExtended(2, 120, 'A', 0);
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/extended length|length-byte-count|zero/i');
+
+        (new IptcParser())->parse($payload);
+    }
+
+    /**
+     * Rejects extended-length datasets with excessive length-byte-count values.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectsExtendedLengthWithExcessiveLengthByteCount(): void
+    {
+        $iimData = $this->iimDatasetExtended(2, 120, 'A', 5);
+        $payload = self::PHOTOSHOP_SIGNATURE . $this->resourceBlock(0x0404, $iimData);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/extended length|length-byte-count|excessive/i');
+
+        (new IptcParser())->parse($payload);
     }
 
     /**

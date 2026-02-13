@@ -35,6 +35,8 @@ final class IptcParser
 
     private const int IPTC_RESOURCE_ID = 0x0404;
 
+    private const int IIM_EXTENDED_LENGTH_MAX_BYTES = 4;
+
     /**
      * Parses the supplied APP13 payload and returns the decoded IPTC datasets.
      *
@@ -161,6 +163,22 @@ final class IptcParser
             $valueLength = $lengthField;
             if (($lengthField & 0x8000) !== 0) {
                 $lengthBytes = $lengthField & 0x7FFF;
+
+                if ($lengthBytes === 0) {
+                    throw new ParseError('IPTC IIM extended length-byte-count must be greater than zero.', 1140);
+                }
+
+                if ($lengthBytes > self::IIM_EXTENDED_LENGTH_MAX_BYTES) {
+                    throw new ParseError(
+                        sprintf(
+                            'IPTC IIM extended length-byte-count %d exceeds maximum supported value %d.',
+                            $lengthBytes,
+                            self::IIM_EXTENDED_LENGTH_MAX_BYTES,
+                        ),
+                        1141,
+                    );
+                }
+
                 if (($length - $offset) < $lengthBytes) {
                     throw new BoundsError('IPTC IIM extended length exceeds payload length.', 1136);
                 }
