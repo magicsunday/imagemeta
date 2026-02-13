@@ -1300,6 +1300,7 @@ final class TiffExifParser
         $this->validateDngProfileGainTableMap2($ifd0);
         $this->validateDngGainMapPlacement($ifd0);
         $this->validateDngImageSequenceInfo($ifd0);
+        $this->validateDngRgbTables($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -5211,6 +5212,147 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('ImageSequenceInfo payload truncated: need 9 bytes for Index/Count/Final, got %d.', $length - $offset),
                 1526,
+            );
+        }
+    }
+
+    /**
+     * Bytes per RGB entry keyed by RGBTables PixelType.
+     *
+     * @var array<int, int>
+     */
+    private const array RGB_TABLES_PIXEL_BYTES = [
+        0 => 3,
+        1 => 6,
+        2 => 12,
+    ];
+
+    /**
+     * Validates DNG RGBTables payload structure per DNG 1.7.1.0.
+     *
+     * Top-level: NumTables (1..20), CompositeMethod ({0,1}).
+     * Per-table: Divisions (2..32), PixelType ({0,1,2}), GammaEncoding (0..4),
+     * ColorPrimaries (0..4), GamutExtension ({0,1}), then Divisions^3 entries.
+     */
+    private function validateDngRgbTables(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::RGB_TABLES);
+
+        if (!$entry instanceof IfdEntry || !is_string($entry->value)) {
+            return;
+        }
+
+        $payload = $entry->value;
+        $length  = strlen($payload);
+
+        if ($length < 8) {
+            throw new ParseError(
+                sprintf('RGBTables payload must be at least 8 bytes, got %d.', $length),
+                1527,
+            );
+        }
+
+        $numTables       = $this->unpackU32(substr($payload, 0, 4));
+        $compositeMethod = $this->unpackU32(substr($payload, 4, 4));
+
+        if ($numTables < 1 || $numTables > 20) {
+            throw new ParseError(
+                sprintf('RGBTables NumTables must be 1..20, got %d.', $numTables),
+                1528,
+            );
+        }
+
+        if ($compositeMethod !== 0 && $compositeMethod !== 1) {
+            throw new ParseError(
+                sprintf('RGBTables CompositeMethod must be 0 or 1, got %d.', $compositeMethod),
+                1529,
+            );
+        }
+
+        $offset        = 8;
+        $zeroNameCount = 0;
+
+        for ($t = 0; $t < $numTables; ++$t) {
+            if (($length - $offset) < 2) {
+                throw new ParseError(
+                    sprintf('RGBTables payload truncated at table %d header.', $t),
+                    1530,
+                );
+            }
+
+            $nameLen = $this->unpackU16(substr($payload, $offset, 2));
+            $offset += 2;
+
+            if ($nameLen === 0) {
+                ++$zeroNameCount;
+            }
+
+            $offset += $nameLen;
+
+            if (($length - $offset) < 5) {
+                throw new ParseError(
+                    sprintf('RGBTables payload truncated at table %d fields.', $t),
+                    1530,
+                );
+            }
+
+            $divisions      = ord($payload[$offset]);
+            $pixelType      = ord($payload[$offset + 1]);
+            $gammaEncoding  = ord($payload[$offset + 2]);
+            $colorPrimaries = ord($payload[$offset + 3]);
+            $gamutExtension = ord($payload[$offset + 4]);
+            $offset += 5;
+
+            if ($divisions < 2 || $divisions > 32) {
+                throw new ParseError(
+                    sprintf('RGBTables table %d Divisions must be 2..32, got %d.', $t, $divisions),
+                    1531,
+                );
+            }
+
+            if (!isset(self::RGB_TABLES_PIXEL_BYTES[$pixelType])) {
+                throw new ParseError(
+                    sprintf('RGBTables table %d PixelType must be 0..2, got %d.', $t, $pixelType),
+                    1532,
+                );
+            }
+
+            if ($gammaEncoding > 4) {
+                throw new ParseError(
+                    sprintf('RGBTables table %d GammaEncoding must be 0..4, got %d.', $t, $gammaEncoding),
+                    1533,
+                );
+            }
+
+            if ($colorPrimaries > 4) {
+                throw new ParseError(
+                    sprintf('RGBTables table %d ColorPrimaries must be 0..4, got %d.', $t, $colorPrimaries),
+                    1534,
+                );
+            }
+
+            if ($gamutExtension > 1) {
+                throw new ParseError(
+                    sprintf('RGBTables table %d GamutExtension must be 0 or 1, got %d.', $t, $gamutExtension),
+                    1535,
+                );
+            }
+
+            $tableDataSize = $divisions * $divisions * $divisions * self::RGB_TABLES_PIXEL_BYTES[$pixelType];
+            $offset += $tableDataSize;
+        }
+
+        if ($numTables > 1 && $zeroNameCount > 1) {
+            throw new ParseError(
+                sprintf('RGBTables allows at most one unnamed table when NumTables > 1, got %d.', $zeroNameCount),
+                1536,
+            );
+        }
+
+        if ($offset !== $length) {
+            throw new ParseError(
+                sprintf('RGBTables payload length mismatch: expected %d bytes, got %d.', $offset, $length),
+                1537,
             );
         }
     }

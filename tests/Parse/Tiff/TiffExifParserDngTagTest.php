@@ -4040,4 +4040,161 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $payload;
     }
+
+    /**
+     * Accepts a valid minimal RGBTables payload.
+     */
+    #[Test]
+    public function acceptsValidRgbTables(): void
+    {
+        // NumTables=1, CompositeMethod=0, nameLen=0, Div=2, PixelType=0,
+        // Gamma=0, ColorPrimaries=0, GamutExtension=0, data=2^3*3=24 bytes
+        $payload = pack('V', 1) . pack('V', 0)
+            . pack('v', 0)
+            . "\x02\x00\x00\x00\x00"
+            . str_repeat("\x80", 24);
+
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithRgbTables($payload),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects RGBTables with NumTables out of range.
+     */
+    #[Test]
+    public function rejectsRgbTablesNumTablesZero(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1528);
+
+        $payload = pack('V', 0) . pack('V', 0);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRgbTables($payload),
+        );
+    }
+
+    /**
+     * Rejects RGBTables with invalid CompositeMethod.
+     */
+    #[Test]
+    public function rejectsRgbTablesInvalidCompositeMethod(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1529);
+
+        $payload = pack('V', 1) . pack('V', 2);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRgbTables($payload),
+        );
+    }
+
+    /**
+     * Rejects RGBTables with Divisions out of range.
+     */
+    #[Test]
+    public function rejectsRgbTablesDivisionsOutOfRange(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1531);
+
+        $payload = pack('V', 1) . pack('V', 0)
+            . pack('v', 0)
+            . "\x01\x00\x00\x00\x00"
+            . str_repeat("\x00", 3);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRgbTables($payload),
+        );
+    }
+
+    /**
+     * Rejects RGBTables with invalid PixelType.
+     */
+    #[Test]
+    public function rejectsRgbTablesInvalidPixelType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1532);
+
+        $payload = pack('V', 1) . pack('V', 0)
+            . pack('v', 0)
+            . "\x02\x03\x00\x00\x00"
+            . str_repeat("\x00", 24);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRgbTables($payload),
+        );
+    }
+
+    /**
+     * Rejects RGBTables payload length mismatch.
+     */
+    #[Test]
+    public function rejectsRgbTablesLengthMismatch(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1537);
+
+        // Valid header but extra trailing bytes
+        $payload = pack('V', 1) . pack('V', 0)
+            . pack('v', 0)
+            . "\x02\x00\x00\x00\x00"
+            . str_repeat("\x80", 24)
+            . "\xFF";
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithRgbTables($payload),
+        );
+    }
+
+    /**
+     * Builds a DNG TIFF with an RGBTables payload.
+     */
+    private function buildDngWithRgbTables(string $payload): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+        $payloadOffset     = $modelOffset + strlen($uniqueCameraModel);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::RGB_TABLES)
+            . pack('v', TiffConst::TYPE_UNDEFINED)
+            . pack('V', strlen($payload))
+            . pack('V', $payloadOffset)
+            . pack('V', 0)
+            . $uniqueCameraModel
+            . $payload;
+    }
 }
