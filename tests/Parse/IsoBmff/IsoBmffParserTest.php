@@ -328,6 +328,90 @@ final class IsoBmffParserTest extends TestCase
     }
 
     /**
+     * Parses direct XMP metadata from a moof-embedded meta box.
+     * ISO/IEC 14496-12 §8.8.17 allows metadata containers in movie fragments.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsesDirectXmpFromMoofMetaBox(): void
+    {
+        $xmp  = '<x:xmpmeta xmlns:x="adobe:ns:meta/">moof-meta</x:xmpmeta>';
+        $meta = $this->fullBox('meta', $this->box('XMP ', $xmp));
+        $moof = $this->box('moof', $meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        $extractor = $this->createExtractor($ftyp . $moof);
+        [, $xmps]  = $extractor->extract();
+
+        self::assertSame([$xmp], $xmps);
+    }
+
+    /**
+     * Resolves file-offset iloc items in moof metadata using moof-relative origin.
+     * ISO/IEC 14496-12 §8.11.3 defines moof-origin resolution for fragmented metadata.
+     *
+     * @return void
+     */
+    #[Test]
+    public function resolveIlocFileOffsetInMoofMetaUsesMoofOrigin(): void
+    {
+        $exifBlob = pack('N', 0) . "MM\x00\x2Amoof-origin";
+
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0" . 'application/octet-stream' . "\0\0";
+        $infe        = $this->box('infe', $infePayload);
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $infe);
+
+        $buildIloc = function (int $offset, int $length): string {
+            $payload = "\0\0\0\0";
+            $payload .= "\x44";
+            $payload .= "\0";
+            $payload .= pack('n', 1);
+            $payload .= pack('n', 1);
+            $payload .= pack('n', 0);
+            $payload .= pack('n', 1);
+            $payload .= pack('N', $offset);
+            $payload .= pack('N', $length);
+
+            return $this->box('iloc', $payload);
+        };
+
+        $meta = $this->fullBox('meta', $iinf . $buildIloc(0, strlen($exifBlob)));
+        $moof = $this->box('moof', $meta);
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $mdat = $this->box('mdat', $exifBlob);
+
+        $moofOffset         = strlen($ftyp);
+        $absoluteDataOffset = strlen($ftyp) + strlen($moof) + 8;
+        $moofRelativeOffset = $absoluteDataOffset - $moofOffset;
+
+        $meta = $this->fullBox('meta', $iinf . $buildIloc($moofRelativeOffset, strlen($exifBlob)));
+        $moof = $this->box('moof', $meta);
+
+        $extractor = $this->createExtractor($ftyp . $moof . $mdat);
+        [$exifs]   = $extractor->extract();
+
+        self::assertSame(["MM\x00\x2Amoof-origin"], $exifs);
+    }
+
+    /**
+     * Rejects malformed moof-embedded metadata with the existing safety rules.
+     *
+     * @return void
+     */
+    #[Test]
+    public function rejectMalformedMetaInsideMoof(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessage('meta box truncated');
+
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+        $moof = $this->box('moof', $this->box('meta', "\0\0\0"));
+
+        $this->createExtractor($ftyp . $moof)->extract();
+    }
+
+    /**
      * Rejects iloc boxes that use a non-conformant offset_size nibble.
      * This ensures size nibbles are limited to 0, 4, or 8 bytes.
      *

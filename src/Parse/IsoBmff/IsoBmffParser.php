@@ -94,6 +94,11 @@ final readonly class IsoBmffParser
     private const string BOX_MOOV = 'moov';
 
     /**
+     * FourCC for movie fragment box.
+     */
+    private const string BOX_MOOF = 'moof';
+
+    /**
      * FourCC for UUID box used to store custom payloads.
      */
     private const string BOX_UUID = 'uuid';
@@ -462,6 +467,8 @@ final readonly class IsoBmffParser
                 }
 
                 $this->parseMoovBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+            } elseif ($box->type === self::BOX_MOOF) {
+                $this->parseMoofBox($box, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
             } elseif ($box->type === self::BOX_UUID && $box->userType === self::XMP_UUID) {
                 if ($box->contentSize > self::MAX_ITEM_PAYLOAD_SIZE) {
                     throw new ParseError('uuid XMP payload exceeds maximum allowed size', 1368);
@@ -566,6 +573,41 @@ final readonly class IsoBmffParser
     }
 
     /**
+     * Parses a movie fragment box and extracts nested metadata/user-data containers.
+     *
+     * ISO/IEC 14496-12:2015 §8.8.17 allows metadata in movie fragments. For
+     * `iloc` file-offset items in this context, §8.11.3 defines the origin as
+     * the first byte of the enclosing `moof` box.
+     *
+     * @param BoxDescriptor                                      $moof            Box descriptor for the movie fragment.
+     * @param list<string>                                       $exifBlobs
+     * @param list<string>                                       $xmpBlobs
+     * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
+     * @param array<int, array<int, IsoBmffDataReference>>       $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                        $unresolvedItems
+     * @param array<string, bool>                                $xmpHashes
+     * @param QuickTimeKeyMap                                    $qtKeys
+     * @param QuickTimeDataAtomList                              $qtDataAtoms
+     */
+    private function parseMoofBox(BoxDescriptor $moof, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
+    {
+        $metaSeen = false;
+
+        foreach ($this->walkChildren($moof) as $child) {
+            if ($child->type === self::BOX_META) {
+                if ($metaSeen) {
+                    throw new ParseError('duplicate meta box in moof', 1416);
+                }
+
+                $metaSeen = true;
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms, $moof->offset);
+            } elseif ($child->type === self::BOX_UDTA) {
+                $this->parseUdtaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms, $moof->offset);
+            }
+        }
+    }
+
+    /**
      * Parses the file type box (`ftyp`) and exposes container brands as metadata keys.
      *
      * @param BoxDescriptor $ftyp Box descriptor representing the file type declaration.
@@ -603,7 +645,7 @@ final readonly class IsoBmffParser
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param BoxDescriptor                                      $udta            Box descriptor for the user data box.
+     * @param BoxDescriptor                                      $udta             Box descriptor for the user data box.
      * @param list<string>                                       $exifBlobs
      * @param list<string>                                       $xmpBlobs
      * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
@@ -612,8 +654,9 @@ final readonly class IsoBmffParser
      * @param array<string, bool>                                $xmpHashes
      * @param QuickTimeKeyMap                                    $qtKeys
      * @param QuickTimeDataAtomList                              $qtDataAtoms
+     * @param int                                                $fileOffsetOrigin Absolute file-offset origin for nested iloc metadata.
      */
-    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
+    private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = [], int $fileOffsetOrigin = 0): void
     {
         $metaSeen = false;
 
@@ -626,7 +669,7 @@ final readonly class IsoBmffParser
                 }
 
                 $metaSeen = true;
-                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms);
+                $this->parseMetaBox($child, $exifBlobs, $xmpBlobs, $qtKeys, $itemReferences, $dataReferences, $unresolvedItems, $xmpHashes, $qtDataAtoms, $fileOffsetOrigin);
             } elseif ($child->type === self::BOX_NAME) {
                 $this->parseUdtaNameAtom($child, $qtKeys);
             }
@@ -1565,7 +1608,7 @@ final readonly class IsoBmffParser
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param BoxDescriptor                                      $meta            Box descriptor for the metadata box.
+     * @param BoxDescriptor                                      $meta             Box descriptor for the metadata box.
      * @param list<string>                                       $exifBlobs
      * @param list<string>                                       $xmpBlobs
      * @param array<int, array<int, list<IsoBmffItemReference>>> $itemReferences
@@ -1574,8 +1617,9 @@ final readonly class IsoBmffParser
      * @param array<string, bool>                                $xmpHashes
      * @param QuickTimeKeyMap                                    $qtKeys
      * @param QuickTimeDataAtomList                              $qtDataAtoms
+     * @param int                                                $fileOffsetOrigin Absolute file-offset origin for iloc file-offset items.
      */
-    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
+    private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = [], int $fileOffsetOrigin = 0): void
     {
         if ($meta->contentSize < 4) {
             throw new ParseError('meta box truncated', 1162);
@@ -1584,7 +1628,7 @@ final readonly class IsoBmffParser
         // EXIF 3.0 Annex A.2 describes how the `meta` box aggregates
         // direct Exif boxes, UUID-wrapped payloads and item references, so we collect each
         // channel before normalising the referenced data.
-        $payloads       = $this->collectDirectPayloads($meta);
+        $payloads       = $this->collectDirectPayloads($meta, $fileOffsetOrigin);
         $itemReferences = $this->mergeItemReferencesByContext($itemReferences, $meta->offset, $payloads['itemReferences']);
         $dataReferences = $this->mergeDataReferencesByContext($dataReferences, $meta->offset, $payloads['dataReferences']);
         $idatPayload    = $payloads['idatPayload'];
@@ -1624,7 +1668,7 @@ final readonly class IsoBmffParser
     /**
      * @return array{
      *     itemInfos: array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}>,
-     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}>,
+     *     locations: array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>,
      *     itemReferences: array<int, list<IsoBmffItemReference>>,
      *     dataReferences: array<int, IsoBmffDataReference>,
      *     primaryItemId: ?int,
@@ -1640,11 +1684,11 @@ final readonly class IsoBmffParser
      *     isMdta: bool
      * }
      */
-    private function collectDirectPayloads(BoxDescriptor $meta): array
+    private function collectDirectPayloads(BoxDescriptor $meta, int $fileOffsetOrigin = 0): array
     {
         /** @var array<int, array{id: int, itemType: ?string, name: ?string, contentType: ?string}> $itemInfos */
         $itemInfos = [];
-        /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations */
+        /** @var array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations */
         $locations = [];
         /** @var array<int, list<IsoBmffItemReference>> $itemReferences */
         $itemReferences = [];
@@ -1693,7 +1737,7 @@ final readonly class IsoBmffParser
                         throw new ParseError('meta context must contain at most one iloc box', 1413);
                     }
 
-                    $locations = $this->parseIloc($child);
+                    $locations = $this->parseIloc($child, $fileOffsetOrigin);
                     break;
                 case self::BOX_IDAT:
                     // ISO/IEC 14496-12 §8.11.11.2: aligned(8) class ItemDataBox
@@ -1968,14 +2012,14 @@ final readonly class IsoBmffParser
     /**
      * Resolves queued item IDs to their payload data.
      *
-     * @param list<int>                                                                                                                                $itemIds           Item IDs to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         Item location metadata.
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                   $itemReferences    Parsed item references for construction_method=2 extents.
-     * @param (callable(string):string)|null                                                                                                           $transform         Optional transform function.
-     * @param array<int, IsoBmffDataReference>                                                                                                         $dataReferences    Parsed data references for the current meta box.
-     * @param string|null                                                                                                                              $idatPayload       Cached idat payload for construction_method=1 extents.
-     * @param list<IsoBmffUnresolvedItem>                                                                                                              $unresolvedItems   Accumulator for unresolved item payloads.
-     * @param int                                                                                                                                      $metaContextOffset Absolute file offset of the owning meta box.
+     * @param list<int>                                                                                                                                                      $itemIds           Item IDs to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations         Item location metadata.
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                         $itemReferences    Parsed item references for construction_method=2 extents.
+     * @param (callable(string):string)|null                                                                                                                                 $transform         Optional transform function.
+     * @param array<int, IsoBmffDataReference>                                                                                                                               $dataReferences    Parsed data references for the current meta box.
+     * @param string|null                                                                                                                                                    $idatPayload       Cached idat payload for construction_method=1 extents.
+     * @param list<IsoBmffUnresolvedItem>                                                                                                                                    $unresolvedItems   Accumulator for unresolved item payloads.
+     * @param int                                                                                                                                                            $metaContextOffset Absolute file offset of the owning meta box.
      *
      * @return list<string> List of resolved item payloads.
      */
@@ -2383,14 +2427,14 @@ final readonly class IsoBmffParser
     /**
      * Resolves metadata item references described by an `iloc` box.
      *
-     * @param int                                                                                                                                      $itemId            Identifier of the item to resolve.
-     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
-     * @param array<int, list<IsoBmffItemReference>>                                                                                                   $itemReferences
-     * @param array<int, IsoBmffDataReference>                                                                                                         $dataReferences
-     * @param string|null                                                                                                                              $idatPayload
-     * @param list<IsoBmffUnresolvedItem>                                                                                                              $unresolvedItems
-     * @param int                                                                                                                                      $metaContextOffset
-     * @param list<int>                                                                                                                                $visitedItemIds
+     * @param int                                                                                                                                                            $itemId            Identifier of the item to resolve.
+     * @param array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}> $locations
+     * @param array<int, list<IsoBmffItemReference>>                                                                                                                         $itemReferences
+     * @param array<int, IsoBmffDataReference>                                                                                                                               $dataReferences
+     * @param string|null                                                                                                                                                    $idatPayload
+     * @param list<IsoBmffUnresolvedItem>                                                                                                                                    $unresolvedItems
+     * @param int                                                                                                                                                            $metaContextOffset
+     * @param list<int>                                                                                                                                                      $visitedItemIds
      *
      * @return string|null
      */
@@ -2431,7 +2475,8 @@ final readonly class IsoBmffParser
 
                     $baseOffset   = $location['baseOffset'];
                     $extentOffset = $extent['offset'];
-                    if ($baseOffset < 0 || $extentOffset < 0) {
+                    $originOffset = $location['fileOffsetOrigin'];
+                    if ($baseOffset < 0 || $extentOffset < 0 || $originOffset < 0) {
                         throw new ParseError('iloc negative offset', 1180);
                     }
 
@@ -2440,6 +2485,11 @@ final readonly class IsoBmffParser
                     }
 
                     $effectiveOffset = $baseOffset + $extentOffset;
+                    if ($originOffset > PHP_INT_MAX - $effectiveOffset) {
+                        throw new ParseError('iloc offset overflow', 1181);
+                    }
+
+                    $effectiveOffset += $originOffset;
                     if ($effectiveOffset > $fileSize) {
                         throw new ParseError('iloc extent outside file', 1182);
                     }
@@ -2459,7 +2509,8 @@ final readonly class IsoBmffParser
 
                 $baseOffset   = $location['baseOffset'];
                 $extentOffset = $extent['offset'];
-                if ($baseOffset < 0 || $extentOffset < 0) {
+                $originOffset = $location['fileOffsetOrigin'];
+                if ($baseOffset < 0 || $extentOffset < 0 || $originOffset < 0) {
                     throw new ParseError('iloc negative offset', 1180);
                 }
 
@@ -2468,6 +2519,11 @@ final readonly class IsoBmffParser
                 }
 
                 $offset = $baseOffset + $extentOffset;
+                if ($originOffset > PHP_INT_MAX - $offset) {
+                    throw new ParseError('iloc offset overflow', 1181);
+                }
+
+                $offset += $originOffset;
                 if (($length > $fileSize) || ($offset > ($fileSize - $length))) {
                     throw new ParseError('iloc extent outside file', 1182);
                 }
@@ -2651,11 +2707,11 @@ final readonly class IsoBmffParser
     /**
      * Records an unresolved item payload for external references.
      *
-     * @param int                                                                                                                          $itemId
-     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>} $location
-     * @param array<int, IsoBmffDataReference>                                                                                             $dataReferences
-     * @param list<IsoBmffUnresolvedItem>                                                                                                  $unresolvedItems
-     * @param int                                                                                                                          $metaContextOffset
+     * @param int                                                                                                                                                $itemId
+     * @param array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>} $location
+     * @param array<int, IsoBmffDataReference>                                                                                                                   $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                                                                                                                        $unresolvedItems
+     * @param int                                                                                                                                                $metaContextOffset
      */
     private function registerUnresolvedItem(int $itemId, array $location, array $dataReferences, array &$unresolvedItems, int $metaContextOffset): void
     {
@@ -2874,11 +2930,12 @@ final readonly class IsoBmffParser
      * EXIF 3.0 Annex A.2.4 mandates how `iloc` describes Exif item offsets; EXIF 3.0
      * adds version 2 support and constrains base offsets and extent sizing.
      *
-     * @param BoxDescriptor $iloc Box descriptor representing the `iloc` payload.
+     * @param BoxDescriptor $iloc             Box descriptor representing the `iloc` payload.
+     * @param int           $fileOffsetOrigin Absolute data origin for file-offset construction method.
      *
-     * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, extents:list<array{offset:int,length:int,index:?int}>}>
+     * @return array<int, array{dataReferenceIndex:int, constructionMethod:int, baseOffset:int, fileOffsetOrigin:int, extents:list<array{offset:int,length:int,index:?int}>}>
      */
-    private function parseIloc(BoxDescriptor $iloc): array
+    private function parseIloc(BoxDescriptor $iloc, int $fileOffsetOrigin = 0): array
     {
         $win = $iloc->window;
         $win->seek(0);
@@ -2981,6 +3038,7 @@ final readonly class IsoBmffParser
                 'dataReferenceIndex' => $dataReferenceIndex,
                 'constructionMethod' => $constructionMethod,
                 'baseOffset'         => $baseOffset,
+                'fileOffsetOrigin'   => $fileOffsetOrigin,
                 'extents'            => $extents,
             ];
         }
