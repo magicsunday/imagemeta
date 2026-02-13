@@ -1073,6 +1073,41 @@ final class TiffExifParser
             'typeName' => 'RATIONAL',
             'spec'     => 'DNG 1.7.1.0',
         ],
+        DngTag::DEPTH_FORMAT => [
+            'name'     => 'DepthFormat',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::DEPTH_NEAR => [
+            'name'     => 'DepthNear',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::DEPTH_FAR => [
+            'name'     => 'DepthFar',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_RATIONAL,
+            'typeName' => 'RATIONAL',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::DEPTH_UNITS => [
+            'name'     => 'DepthUnits',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
+        DngTag::DEPTH_MEASURE_TYPE => [
+            'name'     => 'DepthMeasureType',
+            'count'    => 1,
+            'type'     => TiffConst::TYPE_SHORT,
+            'typeName' => 'SHORT',
+            'spec'     => 'DNG 1.7.1.0',
+        ],
     ];
 
     /**
@@ -1338,6 +1373,7 @@ final class TiffExifParser
         $this->validateDngImageSequenceInfo($ifd0);
         $this->validateDngRgbTables($ifd0);
         $this->validateDngDefaultUserCrop($ifd0);
+        $this->validateDngDepthEnums($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -5938,6 +5974,41 @@ final class TiffExifParser
                 sprintf('DefaultBlackRender value must be 0 (Auto) or 1 (None), got %d.', is_int($entry->value) ? $entry->value : -1),
                 1570,
             );
+        }
+    }
+
+    /**
+     * Validates DNG depth enum tags per DNG 1.7.1.0.
+     *
+     * DepthFormat: SHORT[1], allowed {0,1,2}
+     * DepthUnits: SHORT[1], allowed {0,1}
+     * DepthMeasureType: SHORT[1], allowed {0,1,2}
+     */
+    private function validateDngDepthEnums(Ifd $ifd): void
+    {
+        $rules = [
+            DngTag::DEPTH_FORMAT       => ['name' => 'DepthFormat', 'allowed' => [0, 1, 2]],
+            DngTag::DEPTH_UNITS        => ['name' => 'DepthUnits', 'allowed' => [0, 1]],
+            DngTag::DEPTH_MEASURE_TYPE => ['name' => 'DepthMeasureType', 'allowed' => [0, 1, 2]],
+        ];
+
+        foreach ($rules as $tag => $config) {
+            $entry = $ifd->get($tag);
+
+            if (!$entry instanceof IfdEntry) {
+                continue;
+            }
+
+            if (!is_int($entry->value) || !in_array($entry->value, $config['allowed'], true)) {
+                throw new ParseError(
+                    sprintf(
+                        '%s value %d is out of domain per DNG 1.7.1.0.',
+                        $config['name'],
+                        is_int($entry->value) ? $entry->value : -1,
+                    ),
+                    1574,
+                );
+            }
         }
     }
 }

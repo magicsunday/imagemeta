@@ -264,6 +264,36 @@ final class TiffExifParserFixedLengthTest extends TestCase
                 . "\x00\x00\x00\x01\x00\x00\x00\x01"
                 . "\x00\x00\x00\x01\x00\x00\x00\x01",
             ],
+            'DepthFormat count 1' => [
+                DngTag::DEPTH_FORMAT,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x01\x00",
+            ],
+            'DepthNear count 1' => [
+                DngTag::DEPTH_NEAR,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x01\x00\x00\x00\x01",
+            ],
+            'DepthFar count 1' => [
+                DngTag::DEPTH_FAR,
+                TiffConst::TYPE_RATIONAL,
+                1,
+                "\x00\x00\x00\x01\x00\x00\x00\x01",
+            ],
+            'DepthUnits count 1' => [
+                DngTag::DEPTH_UNITS,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x01\x00",
+            ],
+            'DepthMeasureType count 1' => [
+                DngTag::DEPTH_MEASURE_TYPE,
+                TiffConst::TYPE_SHORT,
+                1,
+                "\x01\x00",
+            ],
         ];
     }
 

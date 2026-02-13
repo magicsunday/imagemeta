@@ -5590,6 +5590,139 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * Accepts valid DepthFormat enum values (0, 1, 2).
+     */
+    #[Test]
+    public function acceptsValidDepthFormatValues(): void
+    {
+        foreach ([0, 1, 2] as $value) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithShort1Tag(DngTag::DEPTH_FORMAT, $value),
+            );
+
+            self::assertSame('1.7.1.0', $parsed->dngVersion());
+        }
+    }
+
+    /**
+     * Rejects DepthFormat with out-of-domain value.
+     */
+    #[Test]
+    public function rejectsDepthFormatOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1574);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithShort1Tag(DngTag::DEPTH_FORMAT, 3),
+        );
+    }
+
+    /**
+     * Accepts valid DepthUnits enum values (0, 1).
+     */
+    #[Test]
+    public function acceptsValidDepthUnitsValues(): void
+    {
+        foreach ([0, 1] as $value) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithShort1Tag(DngTag::DEPTH_UNITS, $value),
+            );
+
+            self::assertSame('1.7.1.0', $parsed->dngVersion());
+        }
+    }
+
+    /**
+     * Rejects DepthUnits with out-of-domain value.
+     */
+    #[Test]
+    public function rejectsDepthUnitsOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1574);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithShort1Tag(DngTag::DEPTH_UNITS, 2),
+        );
+    }
+
+    /**
+     * Accepts valid DepthMeasureType enum values (0, 1, 2).
+     */
+    #[Test]
+    public function acceptsValidDepthMeasureTypeValues(): void
+    {
+        foreach ([0, 1, 2] as $value) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithShort1Tag(DngTag::DEPTH_MEASURE_TYPE, $value),
+            );
+
+            self::assertSame('1.7.1.0', $parsed->dngVersion());
+        }
+    }
+
+    /**
+     * Rejects DepthMeasureType with out-of-domain value.
+     */
+    #[Test]
+    public function rejectsDepthMeasureTypeOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1574);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithShort1Tag(DngTag::DEPTH_MEASURE_TYPE, 3),
+        );
+    }
+
+    /**
+     * Builds a DNG with a SHORT[1] tag inline in IFD0.
+     *
+     * @param int $tag   Tag constant (must be > 0xC614)
+     * @param int $value Tag value
+     */
+    private function buildDngWithShort1Tag(int $tag, int $value): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', $tag)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $value) . pack('v', 0)
+            . pack('V', 0)
+            . $uniqueCameraModel;
+    }
+
+    /**
      * Builds a DNG with a preview string tag in IFD0.
      *
      * @param int    $tag     Preview tag constant
