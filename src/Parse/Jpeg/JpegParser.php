@@ -351,6 +351,11 @@ final class JpegParser
         $this->frameLines              = null;
         $this->frameSamplesPerLine     = null;
 
+        $seenExifApp1                = false;
+        $markersBeforeExifApp1       = 0;
+        $firstMarkerBeforeExifOffset = null;
+        $firstApp2BeforeExifOffset   = null;
+
         while (true) {
             [$marker, $offset] = $this->nextMarkerWithOffset();
 
@@ -370,6 +375,49 @@ final class JpegParser
             $segmentLength = $this->readSegmentLength($marker, $offset, $isAppSegment);
             $payloadLength = $segmentLength - 2;
             $payload       = $this->readSegmentPayload($marker, $offset, $payloadLength);
+
+            if (!$seenExifApp1) {
+                $isExifApp1 = ($marker === Marker::APP1) && str_starts_with($payload, self::EXIF_SIGNATURE);
+
+                if ($isExifApp1) {
+                    if ($firstApp2BeforeExifOffset !== null) {
+                        throw new ParseError(
+                            sprintf(
+                                'EXIF APP2 marker at offset %d appears before APP1 Exif marker',
+                                $firstApp2BeforeExifOffset,
+                            ),
+                            1326,
+                        );
+                    }
+
+                    if (($markersBeforeExifApp1 > 0) && ($firstMarkerBeforeExifOffset !== null)) {
+                        throw new ParseError(
+                            sprintf(
+                                'APP1 Exif marker at offset %d must be the first metadata marker after SOI (first marker seen at offset %d)',
+                                $offset,
+                                $firstMarkerBeforeExifOffset,
+                            ),
+                            1327,
+                        );
+                    }
+
+                    $seenExifApp1 = true;
+                } else {
+                    ++$markersBeforeExifApp1;
+
+                    if ($firstMarkerBeforeExifOffset === null) {
+                        $firstMarkerBeforeExifOffset = $offset;
+                    }
+
+                    if (
+                        ($firstApp2BeforeExifOffset === null)
+                        && ($marker === Marker::APP2)
+                        && $this->isExifApp2ExtensionPayload($payload)
+                    ) {
+                        $firstApp2BeforeExifOffset = $offset;
+                    }
+                }
+            }
 
             if ($marker === Marker::APP1) {
                 $this->handleApp1($payload);
@@ -414,6 +462,22 @@ final class JpegParser
         }
 
         $this->parsed = true;
+    }
+
+    /**
+     * Determines whether an APP2 payload contains EXIF-defined extension data.
+     *
+     * EXIF 3.0 §4.7.3 applies ordering constraints to FlashPix, MPF, and EXIF audio APP2 segments.
+     *
+     * @param string $payload Raw APP2 payload.
+     *
+     * @return bool
+     */
+    private function isExifApp2ExtensionPayload(string $payload): bool
+    {
+        return str_starts_with($payload, self::FPXR_SIGNATURE)
+            || str_starts_with($payload, self::MPF_SIGNATURE)
+            || str_starts_with($payload, self::AUDIO_SIGNATURE);
     }
 
     /**

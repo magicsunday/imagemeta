@@ -96,8 +96,8 @@ final class JpegParserTest extends TestCase
     private const int MARKER_SOF2 = 0xC2;
 
     /**
-     * Extracts EXIF and XMP from APP1 segments in different orders.
-     * This verifies both payload types are found regardless of segment ordering.
+     * Extracts EXIF and XMP from APP1 segments in EXIF-compliant order.
+     * This verifies payload extraction while preserving APP1 Exif placement rules.
      *
      * @param list<string> $segments
      * @param list<string> $expectedExif
@@ -137,15 +137,6 @@ final class JpegParserTest extends TestCase
         yield 'only-xmp' => [
             [self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml)],
             [],
-            [$xmpXml],
-        ];
-
-        yield 'xmp-before-exif' => [
-            [
-                self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
-                self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
-            ],
-            [$exifPayload],
             [$xmpXml],
         ];
 
@@ -194,8 +185,8 @@ final class JpegParserTest extends TestCase
         $exifBlob = self::TIFF_HEADER . 'primary-exif';
 
         $jpeg = $this->jpeg(
-            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
             self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifBlob),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpOne),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpTwo),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpTwo)
@@ -220,12 +211,88 @@ final class JpegParserTest extends TestCase
         $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Meta</x:xmpmeta>';
 
         $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(0xE3, 'vendor-one'),
             self::segment(0xE4, 'vendor-two'),
-            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
             self::segment(0xE5, 'vendor-three'),
             self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
             self::segment(0xE6, 'vendor-four')
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        self::assertSame([$exifPayload], $extractor->extractExifBlobs());
+        self::assertSame([$xmpXml], $extractor->extractXmpPackets());
+    }
+
+    /**
+     * Places EXIF APP2 before APP1 Exif.
+     * This verifies APP2 ordering constraints relative to APP1 Exif.
+     *
+     * @return void
+     */
+    #[Test]
+    public function exifApp2BeforeApp1ThrowsParseError(): void
+    {
+        $mpfPayload  = self::MPF_SIGNATURE . 'x';
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP2, $mpfPayload),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP2|APP1/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Places APP1 Exif after a preceding marker.
+     * This verifies APP1 Exif must be first metadata marker after SOI.
+     *
+     * @return void
+     */
+    #[Test]
+    public function exifApp1AfterOtherMarkerThrowsParseError(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+
+        $jpeg = $this->jpeg(
+            self::segment(0xE3, 'vendor'),
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+        );
+
+        $extractor = $this->createExtractor($jpeg);
+
+        $this->expectException(ParseError::class);
+        $this->expectExceptionMessageMatches('/APP1 Exif.*first metadata marker/i');
+
+        $extractor->extractExifBlobs();
+    }
+
+    /**
+     * Uses compliant EXIF marker ordering for APP1 and APP2.
+     * This protects regression behaviour for valid APP marker order.
+     *
+     * @return void
+     */
+    #[Test]
+    public function compliantExifAppMarkerOrderParses(): void
+    {
+        $exifPayload = self::TIFF_HEADER . 'primary-exif';
+        $xmpXml      = '<x:xmpmeta xmlns:x="adobe:ns:meta/">Meta</x:xmpmeta>';
+        $fpxrPayload = $this->fpxrContentsListPayload([
+            ['size' => 0, 'default' => 0x00, 'name' => '/Root/Stream0'],
+        ]);
+
+        $jpeg = $this->jpeg(
+            self::segment(self::MARKER_APP1, self::EXIF_SIGNATURE . $exifPayload),
+            self::segment(self::MARKER_APP2, $fpxrPayload),
+            self::segment(self::MARKER_APP1, self::XMP_SIGNATURE . $xmpXml),
         );
 
         $extractor = $this->createExtractor($jpeg);
