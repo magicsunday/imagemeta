@@ -5131,4 +5131,94 @@ final class TiffExifParserDngTagTest extends TestCase
             . $uniqueCameraModel
             . $digestData;
     }
+
+    /**
+     * Accepts valid PreviewColorSpace values 0..4.
+     */
+    #[Test]
+    public function acceptsValidPreviewColorSpace(): void
+    {
+        foreach (range(0, 4) as $value) {
+            $parsed = (new TiffExifParser())->parseFromBlob(
+                $this->buildDngWithPreviewColorSpace(TiffConst::TYPE_LONG, $value),
+            );
+
+            self::assertSame('1.7.1.0', $parsed->dngVersion());
+        }
+    }
+
+    /**
+     * Rejects PreviewColorSpace with out-of-domain value.
+     */
+    #[Test]
+    public function rejectsPreviewColorSpaceOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1560);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewColorSpace(TiffConst::TYPE_LONG, 5),
+        );
+    }
+
+    /**
+     * Rejects PreviewColorSpace with wrong type.
+     */
+    #[Test]
+    public function rejectsPreviewColorSpaceWrongType(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1559);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithPreviewColorSpace(TiffConst::TYPE_SHORT, 0),
+        );
+    }
+
+    /**
+     * Builds a DNG with a PreviewColorSpace tag in IFD0.
+     *
+     * @param int $type  TIFF type code
+     * @param int $value PreviewColorSpace value
+     */
+    private function buildDngWithPreviewColorSpace(int $type, int $value): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 6;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        // PreviewColorSpace 0xC71A > UniqueCameraModel 0xC614 → correct order
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::PREVIEW_COLOR_SPACE)
+            . pack('v', $type)
+            . pack('V', 1)
+            . pack('V', $value)
+            . pack('V', 0)
+            . $uniqueCameraModel;
+    }
 }

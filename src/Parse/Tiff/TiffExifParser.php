@@ -1313,6 +1313,7 @@ final class TiffExifParser
             'ProfileLookTableEncoding',
         );
         $this->validateDngDigestTags($ifd0);
+        $this->validateDngPreviewColorSpace($ifd0);
         $this->validateDngIlluminantData($ifd0);
         $this->validateDngProfileDynamicRange($ifd0);
         $this->validateDngProfileGainTableMap2($ifd0);
@@ -5724,6 +5725,34 @@ final class TiffExifParser
                     1558,
                 );
             }
+        }
+    }
+
+    /**
+     * Validates PreviewColorSpace (0xC71A) per DNG 1.7.1.0.
+     *
+     * Must be LONG[1] with value in 0..4 (Unknown, Gray Gamma 2.2, sRGB, Adobe RGB, ProPhoto RGB).
+     */
+    private function validateDngPreviewColorSpace(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::PREVIEW_COLOR_SPACE);
+
+        if (!$entry instanceof IfdEntry) {
+            return;
+        }
+
+        if ($entry->type !== TiffConst::TYPE_LONG || $entry->count !== 1) {
+            throw new ParseError(
+                sprintf('PreviewColorSpace must be LONG[1], got type %d count %d.', $entry->type, $entry->count),
+                1559,
+            );
+        }
+
+        if (!is_int($entry->value) || $entry->value < 0 || $entry->value > 4) {
+            throw new ParseError(
+                sprintf('PreviewColorSpace value must be 0..4, got %d.', is_int($entry->value) ? $entry->value : -1),
+                1560,
+            );
         }
     }
 }
