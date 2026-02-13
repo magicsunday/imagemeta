@@ -1746,7 +1746,7 @@ final class TiffExifParserDngTagTest extends TestCase
     public function acceptsSemanticMaskIfdWithCorrectPhotometric(): void
     {
         $parsed = (new TiffExifParser())->parseFromBlob(
-            $this->buildTiffWithRoleIfd(65540, 52527),
+            $this->buildTiffWithRoleIfd(65540, 52527, includeSemanticName: true),
         );
 
         self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
@@ -1772,23 +1772,12 @@ final class TiffExifParserDngTagTest extends TestCase
     private function buildTiffWithRoleIfd(
         int $newSubFileType,
         int $photometric,
+        bool $includeSemanticName = false,
     ): string {
         $ifdOffset   = 8;
         $ifd0Entries = 2;
         $ifd0Size    = 2 + ($ifd0Entries * 12) + 4;
         $ifd1Offset  = $ifdOffset + $ifd0Size;
-        $ifd1Entries = 4;
-
-        $ifd0 = pack('v', $ifd0Entries)
-            . pack('v', ExifTag::IMAGE_WIDTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('V', 1)
-            . pack('v', 100) . pack('v', 0)
-            . pack('v', ExifTag::IMAGE_LENGTH)
-            . pack('v', TiffConst::TYPE_SHORT)
-            . pack('V', 1)
-            . pack('v', 100) . pack('v', 0)
-            . pack('V', $ifd1Offset);
 
         $tags = [
             ExifTag::IMAGE_WIDTH => pack('v', ExifTag::IMAGE_WIDTH)
@@ -1809,7 +1798,35 @@ final class TiffExifParserDngTagTest extends TestCase
                 . pack('V', $newSubFileType),
         ];
 
+        $semanticName = pack('Z*', 'MaskName0');
+        $ifd1Entries  = count($tags);
+
+        if ($includeSemanticName) {
+            ++$ifd1Entries;
+        }
+
+        $ifd1Size       = 2 + ($ifd1Entries * 12) + 4;
+        $nameDataOffset = $ifd1Offset + $ifd1Size;
+
+        if ($includeSemanticName) {
+            $tags[DngTag::SEMANTIC_NAME] = pack('v', DngTag::SEMANTIC_NAME)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', strlen($semanticName))
+                . pack('V', $nameDataOffset);
+        }
+
         ksort($tags);
+
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd1Offset);
 
         $ifd1 = pack('v', $ifd1Entries);
 
@@ -1819,11 +1836,17 @@ final class TiffExifParserDngTagTest extends TestCase
 
         $ifd1 .= pack('V', 0);
 
-        return 'II'
+        $result = 'II'
             . pack('v', TiffConst::MAGIC_CLASSIC)
             . pack('V', $ifdOffset)
             . $ifd0
             . $ifd1;
+
+        if ($includeSemanticName) {
+            $result .= $semanticName;
+        }
+
+        return $result;
     }
 
     /**
@@ -4196,5 +4219,142 @@ final class TiffExifParserDngTagTest extends TestCase
             . pack('V', 0)
             . $uniqueCameraModel
             . $payload;
+    }
+
+    /**
+     * Accepts a semantic mask IFD with valid SemanticName.
+     */
+    #[Test]
+    public function acceptsSemanticMaskWithName(): void
+    {
+        $parser = new TiffExifParser();
+        $parsed = $parser->parseFromBlob(
+            $this->buildDngWithSemanticMask(true),
+        );
+
+        self::assertSame('1.7.1.0', $parsed->dngVersion());
+    }
+
+    /**
+     * Rejects a semantic mask IFD missing SemanticName.
+     */
+    #[Test]
+    public function rejectsSemanticMaskMissingName(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1538);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildDngWithSemanticMask(false),
+        );
+    }
+
+    /**
+     * Builds a 3-IFD DNG where IFD2 is a semantic mask IFD.
+     *
+     * @param bool $includeSemanticName Whether to include SemanticName in IFD2
+     */
+    private function buildDngWithSemanticMask(bool $includeSemanticName): string
+    {
+        $ifdOffset         = 8;
+        $ifd0Entries       = 5;
+        $ifd0Size          = 2 + ($ifd0Entries * 12) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera0');
+        $modelOffset       = $ifdOffset + $ifd0Size;
+
+        $ifd1Offset  = $modelOffset + strlen($uniqueCameraModel);
+        $ifd1Entries = 2;
+        $ifd1Size    = 2 + ($ifd1Entries * 12) + 4;
+
+        $ifd2Offset  = $ifd1Offset + $ifd1Size;
+        $ifd2Entries = $includeSemanticName ? 5 : 4;
+        $ifd2Size    = 2 + ($ifd2Entries * 12) + 4;
+
+        $semanticName   = pack('Z*', 'SkinMask');
+        $nameDataOffset = $ifd2Offset + $ifd2Size;
+
+        // IFD0
+        $ifd0 = pack('v', $ifd0Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('V', $ifd1Offset);
+
+        // IFD1 (minimal thumbnail)
+        $ifd1 = pack('v', $ifd1Entries)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('V', $ifd2Offset);
+
+        // IFD2 (semantic mask): NewSubfileType=65540, Photometric=52527,
+        // ImageWidth, ImageLength, and optionally SemanticName
+        // Tags must be in ascending order:
+        // NewSubfileType=0x00FE, PhotometricInterpretation=0x0106,
+        // ImageWidth=0x0100, ImageLength=0x0101
+        // Order: 0x00FE, 0x0100, 0x0101, 0x0106, 0xCD2E
+
+        $ifd2 = pack('v', $ifd2Entries)
+            . pack('v', TiffTag::NEW_SUBFILE_TYPE)
+            . pack('v', TiffConst::TYPE_LONG)
+            . pack('V', 1)
+            . pack('V', 65540)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::PHOTOMETRIC_INTERPRETATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 52527) . pack('v', 0);
+
+        if ($includeSemanticName) {
+            $ifd2 .= pack('v', DngTag::SEMANTIC_NAME)
+                . pack('v', TiffConst::TYPE_ASCII)
+                . pack('V', strlen($semanticName))
+                . pack('V', $nameDataOffset);
+        }
+
+        $ifd2 .= pack('V', 0);
+
+        $result = 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . $ifd0
+            . $uniqueCameraModel
+            . $ifd1
+            . $ifd2;
+
+        if ($includeSemanticName) {
+            $result .= $semanticName;
+        }
+
+        return $result;
     }
 }

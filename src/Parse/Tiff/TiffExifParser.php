@@ -31,6 +31,7 @@ use MagicSunday\ImageMeta\MakerNotes\Registry;
 use MagicSunday\ImageMeta\Model\Dng\DngTag;
 use MagicSunday\ImageMeta\Model\Tiff\TiffTag;
 use MagicSunday\ImageMeta\Value\Enum\Compression;
+use MagicSunday\ImageMeta\Value\Enum\Photometric;
 use MagicSunday\ImageMeta\Value\SourceExposureTimes;
 
 use function array_any;
@@ -1279,6 +1280,7 @@ final class TiffExifParser
             $this->validateDngIfd0OnlyTags($additionalIfd);
             $this->validateDngJxlTags($additionalIfd);
             $this->validateDngCfaPhotometric($additionalIfd);
+            $this->validateDngSemanticMaskIdentity($additionalIfd);
         }
 
         $this->validateDngMatrixTags($ifd0);
@@ -5353,6 +5355,44 @@ final class TiffExifParser
             throw new ParseError(
                 sprintf('RGBTables payload length mismatch: expected %d bytes, got %d.', $offset, $length),
                 1537,
+            );
+        }
+    }
+
+    /**
+     * Validates SemanticName/SemanticInstanceID conformance in Semantic Mask IFDs.
+     *
+     * A Semantic Mask IFD is identified by PhotometricInterpretation = 52527.
+     * SemanticName is required in that context per DNG 1.6+.
+     */
+    private function validateDngSemanticMaskIdentity(Ifd $ifd): void
+    {
+        $photo = $ifd->get(ExifTag::PHOTOMETRIC_INTERPRETATION);
+
+        if (!$photo instanceof IfdEntry || !is_int($photo->value) || $photo->value !== Photometric::PHOTOMETRIC_MASK->value) {
+            return;
+        }
+
+        $nameEntry = $ifd->get(DngTag::SEMANTIC_NAME);
+
+        if (!$nameEntry instanceof IfdEntry) {
+            throw new ParseError(
+                'SemanticName is required in Semantic Mask IFD per DNG 1.6+.',
+                1538,
+            );
+        }
+
+        if ($nameEntry->type !== TiffConst::TYPE_ASCII) {
+            throw new ParseError(
+                sprintf('SemanticName must use ASCII type, got %d.', $nameEntry->type),
+                1539,
+            );
+        }
+
+        if (!is_string($nameEntry->value) || $nameEntry->value === '') {
+            throw new ParseError(
+                'SemanticName must not be empty in Semantic Mask IFD.',
+                1540,
             );
         }
     }
