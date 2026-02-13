@@ -74,38 +74,15 @@ final readonly class DateTimeConverter
             return null;
         }
 
-        if ($trimmed === 'Z') {
-            $trimmed = '+00:00';
+        if (preg_match('/^[+-]\d{2}:\d{2}$/', $trimmed) !== 1) {
+            return null;
         }
 
-        if ($trimmed[0] === '+' || $trimmed[0] === '-') {
-            $sign = $trimmed[0];
-            $body = substr($trimmed, 1);
-            $body = str_replace(':', '', $body);
+        $hours   = (int) substr($trimmed, 1, 2);
+        $minutes = (int) substr($trimmed, 4, 2);
 
-            if ($body === '' || !ctype_digit($body)) {
-                return null;
-            }
-
-            $length = strlen($body);
-            if ($length <= 2) {
-                $hours   = (int) $body;
-                $minutes = 0;
-            } elseif ($length === 3) {
-                $hours   = (int) $body[0];
-                $minutes = (int) substr($body, 1, 2);
-            } elseif ($length === 4) {
-                $hours   = (int) substr($body, 0, 2);
-                $minutes = (int) substr($body, 2, 2);
-            } else {
-                return null;
-            }
-
-            if ($hours > 14 || $minutes >= 60 || ($hours === 14 && $minutes !== 0)) {
-                return null;
-            }
-
-            $trimmed = sprintf('%s%02d:%02d', $sign, $hours, $minutes);
+        if ($hours > 14 || $minutes >= 60 || ($hours === 14 && $minutes !== 0)) {
+            return null;
         }
 
         try {

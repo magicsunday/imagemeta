@@ -1027,9 +1027,16 @@ final class ValueConvertersTest extends TestCase
     public function normalisesOffsetsAndSubjectAreas(): void
     {
         self::assertSame('+01:00', ValueConverters::parseOffset('+01:00')?->getName());
-        self::assertSame('+01:00', ValueConverters::parseOffset('+0100')?->getName());
-        self::assertSame('+01:00', ValueConverters::parseOffset('+1')?->getName());
-        self::assertSame('UTC', ValueConverters::parseOffset('UTC')?->getName());
+        self::assertSame('-05:30', ValueConverters::parseOffset('-05:30')?->getName());
+        self::assertSame('+14:00', ValueConverters::parseOffset('+14:00')?->getName());
+        self::assertNull(ValueConverters::parseOffset('UTC'));
+        self::assertNull(ValueConverters::parseOffset('GMT'));
+        self::assertNull(ValueConverters::parseOffset('Europe/Berlin'));
+        self::assertNull(ValueConverters::parseOffset('Z'));
+        self::assertNull(ValueConverters::parseOffset('+0100'));
+        self::assertNull(ValueConverters::parseOffset('+1'));
+        self::assertNull(ValueConverters::parseOffset('+9:00'));
+        self::assertNull(ValueConverters::parseOffset('+1401'));
         self::assertNull(ValueConverters::parseOffset('+15:00'));
         self::assertNull(ValueConverters::parseOffset('+01:61'));
 
