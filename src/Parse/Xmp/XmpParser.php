@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
@@ -52,6 +53,8 @@ final class XmpParser
         $data = [];
         /** @var array<string, XmpStructuredValue> $structuredData */
         $structuredData = [];
+        /** @var array<string, XmpContainer> $containerKinds */
+        $containerKinds = [];
         /** @var array<string, string> $namespacePrefixes Maps namespace URI to prefix */
         $namespacePrefixes = [];
         /** @var array<int, array{string, string}> $elementPath */
@@ -116,6 +119,7 @@ final class XmpParser
                             $this->storeFinalizedElementValue(
                                 $data,
                                 $structuredData,
+                                $containerKinds,
                                 $listBuffers,
                                 $altBuffers,
                                 $listKinds,
@@ -204,6 +208,7 @@ final class XmpParser
                         $this->storeFinalizedElementValue(
                             $data,
                             $structuredData,
+                            $containerKinds,
                             $listBuffers,
                             $altBuffers,
                             $listKinds,
@@ -230,7 +235,7 @@ final class XmpParser
 
         $reader->close();
 
-        return new XmpDocument($data, $namespacePrefixes, $structuredData);
+        return new XmpDocument($data, $namespacePrefixes, $structuredData, $containerKinds);
     }
 
     /**
@@ -360,6 +365,7 @@ final class XmpParser
      *
      * @param array<string, array<int, string>|string|XmpLanguageAlternative>                                $data
      * @param array<string, XmpStructuredValue>                                                              $structuredData
+     * @param array<string, XmpContainer>                                                                    $containerKinds
      * @param array<int, list<string>>                                                                       $listBuffers
      * @param array<int, list<array{lang: string, value: string}>>                                           $altBuffers
      * @param array<int, string>                                                                             $listKinds
@@ -369,6 +375,7 @@ final class XmpParser
     private function storeFinalizedElementValue(
         array &$data,
         array &$structuredData,
+        array &$containerKinds,
         array $listBuffers,
         array $altBuffers,
         array $listKinds,
@@ -378,14 +385,19 @@ final class XmpParser
         string $namespace,
         string $localName,
     ): void {
-        $value = $this->finalizeElementValue($listBuffers, $altBuffers, $listKinds, $textBuffers, $structuredBuffers, $depth);
-        $key   = $this->buildClarkName($namespace, $localName);
+        $value         = $this->finalizeElementValue($listBuffers, $altBuffers, $listKinds, $textBuffers, $structuredBuffers, $depth);
+        $key           = $this->buildClarkName($namespace, $localName);
+        $containerKind = XmpContainer::fromRdfContainerName($listKinds[$depth] ?? '');
 
         $parentStructuredDepth = $this->findStructuredParentDepth($depth - 1, $structuredBuffers);
         if ($parentStructuredDepth !== null) {
             $this->appendStructuredFieldValue($structuredBuffers[$parentStructuredDepth], $key, $value);
 
             return;
+        }
+
+        if (($containerKind instanceof XmpContainer) && !isset($containerKinds[$key])) {
+            $containerKinds[$key] = $containerKind;
         }
 
         if ($value instanceof XmpStructuredValue) {

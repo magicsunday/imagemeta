@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace MagicSunday\ImageMeta\Tests\Parse\Xmp;
 
 use MagicSunday\ImageMeta\Core\ParseError;
+use MagicSunday\ImageMeta\Model\Xmp\XmpContainer;
 use MagicSunday\ImageMeta\Model\Xmp\XmpDocument;
 use MagicSunday\ImageMeta\Model\Xmp\XmpLanguageAlternative;
 use MagicSunday\ImageMeta\Model\Xmp\XmpStructuredValue;
@@ -30,6 +31,7 @@ use PHPUnit\Framework\TestCase;
  */
 #[CoversClass(XmpParser::class)]
 #[UsesClass(ParseError::class)]
+#[UsesClass(XmpContainer::class)]
 #[UsesClass(XmpDocument::class)]
 #[UsesClass(XmpLanguageAlternative::class)]
 #[UsesClass(XmpStructuredValue::class)]
@@ -184,6 +186,110 @@ XML;
         self::assertSame('Default', $alt->defaultValue());
         self::assertSame('Hello', $alt->valueFor('en-US'));
         self::assertNull($document->find('lang'));
+    }
+
+    /**
+     * Preserves rdf:Bag container semantics in the parsed document model.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesBagContainerKind(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:subject>
+      <rdf:Bag>
+        <rdf:li>sunset</rdf:li>
+        <rdf:li>vacation</rdf:li>
+      </rdf:Bag>
+    </dc:subject>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame(XmpContainer::Bag, $document->containerType(self::DC_NS, 'subject'));
+    }
+
+    /**
+     * Preserves rdf:Seq container semantics in the parsed document model.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesSeqContainerKind(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:creator>
+      <rdf:Seq>
+        <rdf:li>Alice</rdf:li>
+        <rdf:li>Bob</rdf:li>
+      </rdf:Seq>
+    </dc:creator>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame(XmpContainer::Seq, $document->containerType(self::DC_NS, 'creator'));
+    }
+
+    /**
+     * Preserves rdf:Alt container semantics in the parsed document model.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parsePreservesAltContainerKind(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <rdf:Description>
+    <dc:title>
+      <rdf:Alt>
+        <rdf:li xml:lang="x-default">Default</rdf:li>
+        <rdf:li xml:lang="en-US">Hello</rdf:li>
+      </rdf:Alt>
+    </dc:title>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame(XmpContainer::Alt, $document->containerType(self::DC_NS, 'title'));
+    }
+
+    /**
+     * Keeps simple text-property extraction unchanged with no container kind assigned.
+     *
+     * @return void
+     */
+    #[Test]
+    public function parseSimpleTextPropertyHasNoContainerKind(): void
+    {
+        $xml = <<<'XML'
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:xmp="http://ns.adobe.com/xap/1.0/">
+  <rdf:Description>
+    <xmp:CreateDate>2024-02-18T12:34:56Z</xmp:CreateDate>
+  </rdf:Description>
+</rdf:RDF>
+XML;
+
+        $document = (new XmpParser())->parse($xml);
+
+        self::assertSame('2024-02-18T12:34:56Z', $document->get(self::XMP_NS, 'CreateDate'));
+        self::assertNull($document->containerType(self::XMP_NS, 'CreateDate'));
     }
 
     /**

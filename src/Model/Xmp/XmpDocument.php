@@ -36,6 +36,7 @@ final readonly class XmpDocument
      * @param array<string, string|array<int, string>|XmpLanguageAlternative> $data              Map of Clark notation => scalar/container value.
      * @param array<string, string>                                           $namespacePrefixes Map of namespace URI => prefix.
      * @param array<string, XmpStructuredValue>                               $structuredData    Map of Clark notation => structured property value.
+     * @param array<string, XmpContainer>                                     $containerKinds    Map of Clark notation => RDF container kind.
      */
     public function __construct(
         /**
@@ -50,6 +51,10 @@ final readonly class XmpDocument
          * @var array<string, XmpStructuredValue> Map of Clark notation => structured value.
          */
         public array $structuredData = [],
+        /**
+         * @var array<string, XmpContainer> Map of Clark notation => RDF container kind.
+         */
+        public array $containerKinds = [],
     ) {
     }
 
@@ -70,6 +75,8 @@ final readonly class XmpDocument
         $namespacePrefixes = [];
         /** @var array<string, XmpStructuredValue> $structuredData */
         $structuredData = [];
+        /** @var array<string, XmpContainer> $containerKinds */
+        $containerKinds = [];
 
         foreach ($documents as $document) {
             foreach ($document->data as $key => $value) {
@@ -89,9 +96,15 @@ final readonly class XmpDocument
                     $structuredData[$key] = $value;
                 }
             }
+
+            foreach ($document->containerKinds as $key => $containerKind) {
+                if (!isset($containerKinds[$key])) {
+                    $containerKinds[$key] = $containerKind;
+                }
+            }
         }
 
-        return new self($data, $namespacePrefixes, $structuredData);
+        return new self($data, $namespacePrefixes, $structuredData, $containerKinds);
     }
 
     /**
@@ -278,6 +291,16 @@ final readonly class XmpDocument
         $value = $this->get($namespaceUri, $localName);
 
         return $value instanceof XmpStructuredValue ? $value : null;
+    }
+
+    /**
+     * Returns the RDF container kind for the specified property when present.
+     */
+    public function containerType(string $namespaceUri, string $localName): ?XmpContainer
+    {
+        $key = $this->buildClarkName($namespaceUri, $localName);
+
+        return $this->containerKinds[$key] ?? null;
     }
 
     /**
