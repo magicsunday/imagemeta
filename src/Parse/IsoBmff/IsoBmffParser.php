@@ -726,7 +726,11 @@ final readonly class IsoBmffParser
             return;
         }
 
-        if ($handlerName !== null && $handlerName !== '') {
+        if (
+            $handlerName !== null
+            && $handlerName !== ''
+            && !array_key_exists(QuickTimeMeta::HANDLER_DESCRIPTION_KEY, $qtKeys)
+        ) {
             $qtKeys[QuickTimeMeta::HANDLER_DESCRIPTION_KEY] = $handlerName;
         }
 
@@ -734,36 +738,66 @@ final readonly class IsoBmffParser
             $width  = $sampleInfo['width'] ?? $tkhdWidth;
             $height = $sampleInfo['height'] ?? $tkhdHeight;
 
-            if ($width !== null && $width > 0) {
+            if (
+                $width !== null
+                && $width > 0
+                && !array_key_exists(QuickTimeMeta::VIDEO_WIDTH_KEY, $qtKeys)
+            ) {
                 $qtKeys[QuickTimeMeta::VIDEO_WIDTH_KEY] = $width;
             }
 
-            if ($height !== null && $height > 0) {
+            if (
+                $height !== null
+                && $height > 0
+                && !array_key_exists(QuickTimeMeta::VIDEO_HEIGHT_KEY, $qtKeys)
+            ) {
                 $qtKeys[QuickTimeMeta::VIDEO_HEIGHT_KEY] = $height;
             }
 
-            if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
+            if (
+                isset($sampleInfo['format'])
+                && $sampleInfo['format'] !== ''
+                && !array_key_exists(QuickTimeMeta::VIDEO_CODEC_KEY, $qtKeys)
+            ) {
                 $qtKeys[QuickTimeMeta::VIDEO_CODEC_KEY] = $sampleInfo['format'];
             }
 
-            if (isset($sampleInfo['compressorName']) && $sampleInfo['compressorName'] !== '') {
+            if (
+                isset($sampleInfo['compressorName'])
+                && $sampleInfo['compressorName'] !== ''
+                && !array_key_exists(QuickTimeMeta::COMPRESSOR_NAME_KEY, $qtKeys)
+            ) {
                 $qtKeys[QuickTimeMeta::COMPRESSOR_NAME_KEY] = $sampleInfo['compressorName'];
             }
         } elseif ($handler === 'soun') {
             if (isset($sampleInfo['format']) && $sampleInfo['format'] !== '') {
-                $qtKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
-                $qtKeys[QuickTimeMeta::AUDIO_CODEC_KEY]  = $sampleInfo['format'];
+                if (!array_key_exists(QuickTimeMeta::AUDIO_FORMAT_KEY, $qtKeys)) {
+                    $qtKeys[QuickTimeMeta::AUDIO_FORMAT_KEY] = $sampleInfo['format'];
+                }
+
+                if (!array_key_exists(QuickTimeMeta::AUDIO_CODEC_KEY, $qtKeys)) {
+                    $qtKeys[QuickTimeMeta::AUDIO_CODEC_KEY] = $sampleInfo['format'];
+                }
             }
 
-            if (isset($sampleInfo['channels'])) {
+            if (
+                isset($sampleInfo['channels'])
+                && !array_key_exists(QuickTimeMeta::AUDIO_CHANNELS_KEY, $qtKeys)
+            ) {
                 $qtKeys[QuickTimeMeta::AUDIO_CHANNELS_KEY] = $sampleInfo['channels'];
             }
 
-            if (isset($sampleInfo['bitsPerSample'])) {
+            if (
+                isset($sampleInfo['bitsPerSample'])
+                && !array_key_exists(QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY, $qtKeys)
+            ) {
                 $qtKeys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY] = $sampleInfo['bitsPerSample'];
             }
 
-            if (isset($sampleInfo['sampleRate'])) {
+            if (
+                isset($sampleInfo['sampleRate'])
+                && !array_key_exists(QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY, $qtKeys)
+            ) {
                 $qtKeys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY] = $sampleInfo['sampleRate'];
             }
         }

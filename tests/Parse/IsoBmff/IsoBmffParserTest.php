@@ -2648,6 +2648,58 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame('track-level-value', $qtMeta->keys[$key]);
     }
 
+    /**
+     * Uses two video tracks with different dimensions and codecs.
+     * This verifies track-derived video keys are selected deterministically.
+     *
+     * @return void
+     */
+    #[Test]
+    public function multiTrackVideoUsesFirstTrackDeterministically(): void
+    {
+        $videoOne = [
+            'format' => 'avc1',
+            'width'  => 1920,
+            'height' => 1080,
+        ];
+        $videoTwo = [
+            'format' => 'hvc1',
+            'width'  => 3840,
+            'height' => 2160,
+        ];
+
+        $extractor    = $this->createExtractor($this->createFileWithVideoTracks($videoOne, $videoTwo));
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame(1920, $qtMeta->keys[QuickTimeMeta::VIDEO_WIDTH_KEY]);
+        self::assertSame(1080, $qtMeta->keys[QuickTimeMeta::VIDEO_HEIGHT_KEY]);
+        self::assertSame('avc1', $qtMeta->keys[QuickTimeMeta::VIDEO_CODEC_KEY]);
+    }
+
+    /**
+     * Uses two audio tracks with different formats and sample properties.
+     * This verifies track-derived audio keys are selected deterministically.
+     *
+     * @return void
+     */
+    #[Test]
+    public function multiTrackAudioUsesFirstTrackDeterministically(): void
+    {
+        $audioOne = $this->audioSampleEntryVersion0('mp4a', 2, 16, 44_100);
+        $audioTwo = $this->audioSampleEntryVersion0('sowt', 1, 8, 8_000);
+
+        $extractor    = $this->createExtractor($this->createFileWithAudioTracks($audioOne, $audioTwo));
+        [, , $qtMeta] = $extractor->extract();
+
+        self::assertInstanceOf(QuickTimeMeta::class, $qtMeta);
+        self::assertSame('mp4a', $qtMeta->keys[QuickTimeMeta::AUDIO_FORMAT_KEY]);
+        self::assertSame('mp4a', $qtMeta->keys[QuickTimeMeta::AUDIO_CODEC_KEY]);
+        self::assertSame(2, $qtMeta->keys[QuickTimeMeta::AUDIO_CHANNELS_KEY]);
+        self::assertSame(16, $qtMeta->keys[QuickTimeMeta::AUDIO_BITS_PER_SAMPLE_KEY]);
+        self::assertSame(44_100, $qtMeta->keys[QuickTimeMeta::AUDIO_SAMPLE_RATE_KEY]);
+    }
+
     #[Test]
     public function ilstNameAtomUsedAsFallbackKey(): void
     {
@@ -3247,6 +3299,92 @@ final class IsoBmffParserTest extends TestCase
         }
 
         return $payload;
+    }
+
+    /**
+     * Builds a minimal QuickTime file with one or more video tracks.
+     *
+     * @param array{format:string, width:int, height:int} ...$tracks
+     */
+    private function createFileWithVideoTracks(array ...$tracks): string
+    {
+        $trakBoxes = '';
+        $trackId   = 1;
+
+        foreach ($tracks as $track) {
+            $sampleEntry = $this->videoSampleEntry($track['format'], $track['width'], $track['height']);
+            $stsd        = $this->fullBox('stsd', pack('N', 1) . $sampleEntry);
+            $stbl        = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+            $vmhd        = $this->fullBox('vmhd', str_repeat("\0", 8), 0, 1);
+            $url         = $this->fullBox('url ', '', 0, 1);
+            $dref        = $this->fullBox('dref', pack('N', 1) . $url);
+            $dinf        = $this->box('dinf', $dref);
+            $minf        = $this->box('minf', $vmhd . $dinf . $stbl);
+            $hdlr        = $this->fullBox('hdlr', "\0\0\0\0vide" . str_repeat("\0", 12) . "\0");
+            $mdhd        = $this->fullBox('mdhd', pack('NNN', 0, 0, 1) . str_repeat("\0", 8));
+            $mdia        = $this->box('mdia', $hdlr . $mdhd . $minf);
+            $tkhd        = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, $trackId, 0) . str_repeat("\0", 60));
+            $trakBoxes .= $this->box('trak', $tkhd . $mdia);
+            ++$trackId;
+        }
+
+        $moov = $this->box('moov', $this->minimalMvhd() . $trakBoxes);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        return $ftyp . $moov;
+    }
+
+    /**
+     * Builds a minimal QuickTime file with one or more audio tracks.
+     *
+     * @param string ...$sampleEntries Serialized stsd sample entry bytes (one per track).
+     */
+    private function createFileWithAudioTracks(string ...$sampleEntries): string
+    {
+        $trakBoxes = '';
+        $trackId   = 1;
+
+        foreach ($sampleEntries as $sampleEntry) {
+            $stsd = $this->fullBox('stsd', pack('N', 1) . $sampleEntry);
+            $stbl = $this->box('stbl', $stsd . $this->minimalStblAtoms());
+            $smhd = $this->fullBox('smhd', pack('n', 0) . pack('n', 0));
+            $url  = $this->fullBox('url ', '', 0, 1);
+            $dref = $this->fullBox('dref', pack('N', 1) . $url);
+            $dinf = $this->box('dinf', $dref);
+            $minf = $this->box('minf', $smhd . $dinf . $stbl);
+            $hdlr = $this->fullBox('hdlr', "\0\0\0\0soun" . str_repeat("\0", 12) . "\0");
+            $mdhd = $this->fullBox('mdhd', pack('NNN', 0, 0, 44_100) . str_repeat("\0", 8));
+            $mdia = $this->box('mdia', $hdlr . $mdhd . $minf);
+            $tkhd = $this->fullBox('tkhd', pack('NNNx4N', 0, 0, $trackId, 0) . str_repeat("\0", 60));
+            $trakBoxes .= $this->box('trak', $tkhd . $mdia);
+            ++$trackId;
+        }
+
+        $moov = $this->box('moov', $this->minimalMvhd() . $trakBoxes);
+        $ftyp = $this->box('ftyp', 'qt  ' . pack('N', 0));
+
+        return $ftyp . $moov;
+    }
+
+    private function videoSampleEntry(string $format, int $width, int $height): string
+    {
+        $compressor = str_pad('', 31, "\0");
+
+        $payload = str_repeat("\0", 6)
+            . pack('n', 1)
+            . str_repeat("\0", 16)
+            . pack('n', $width)
+            . pack('n', $height)
+            . pack('N', 0x00480000)
+            . pack('N', 0x00480000)
+            . pack('N', 0)
+            . pack('n', 1)
+            . "\0"
+            . $compressor
+            . pack('n', 24)
+            . pack('n', 0xFFFF);
+
+        return $this->box($format, $payload);
     }
 
     /**

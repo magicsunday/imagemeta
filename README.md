@@ -89,6 +89,8 @@ $metadata->xmpDoc ?? $metadata->selectiveXmpDocument();
 $metadata->structured()->derived->fieldOfViewDiagonalDeg;
 ```
 
+For multi-track QuickTime/MP4 files, track-derived video/audio keys are taken from the first matching track to avoid order-dependent overwrites.
+
 ### Reading EXIF only
 
 If you only need EXIF metadata without the structured aggregate, use the EXIF reader facade:
