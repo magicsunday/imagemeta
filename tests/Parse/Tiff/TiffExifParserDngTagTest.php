@@ -2269,6 +2269,73 @@ final class TiffExifParserDngTagTest extends TestCase
     }
 
     /**
+     * ColorimetricReference value 0 with DNG 1.2+ parses successfully.
+     */
+    #[Test]
+    public function acceptsColorimetricReferenceZero(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithColorimetricReference(0, [1, 2, 0, 0]),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * ColorimetricReference value 1 with DNG 1.2+ parses successfully.
+     */
+    #[Test]
+    public function acceptsColorimetricReferenceOne(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithColorimetricReference(1, [1, 2, 0, 0]),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * ColorimetricReference value 2 with DNG backward version < 1.7 triggers ParseError.
+     */
+    #[Test]
+    public function rejectsColorimetricReference2BelowDng17(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1495);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithColorimetricReference(2, [1, 6, 0, 0]),
+        );
+    }
+
+    /**
+     * ColorimetricReference value 2 with DNG 1.7+ parses successfully.
+     */
+    #[Test]
+    public function acceptsColorimetricReference2WithDng17(): void
+    {
+        $parsed = (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithColorimetricReference(2, [1, 7, 0, 0]),
+        );
+
+        self::assertNotNull($parsed->ifd0->get(ExifTag::IMAGE_WIDTH));
+    }
+
+    /**
+     * ColorimetricReference out-of-domain value triggers ParseError.
+     */
+    #[Test]
+    public function rejectsColorimetricReferenceOutOfDomain(): void
+    {
+        $this->expectException(ParseError::class);
+        $this->expectExceptionCode(1494);
+
+        (new TiffExifParser())->parseFromBlob(
+            $this->buildTiffWithColorimetricReference(3, [1, 7, 0, 0]),
+        );
+    }
+
+    /**
      * Builds a two-IFD TIFF where the second IFD contains Compression
      * and JXL tuning tags.
      */
@@ -2453,5 +2520,57 @@ final class TiffExifParserDngTagTest extends TestCase
             . $ifd0
             . $ifd1
             . $ifd2;
+    }
+
+    /**
+     * Builds a DNG TIFF with ColorimetricReference and configurable backward version.
+     *
+     * @param int       $colorimetricRef Colorimetric reference value
+     * @param list<int> $bwVer           Four-byte backward version
+     */
+    private function buildTiffWithColorimetricReference(int $colorimetricRef, array $bwVer): string
+    {
+        $ifdOffset         = 8;
+        $entryCount        = 7;
+        $ifdSize           = 2 + (12 * $entryCount) + 4;
+        $uniqueCameraModel = pack('Z*', 'TestCamera');
+        $modelOffset       = $ifdOffset + $ifdSize;
+
+        $bwVersionPacked = pack('C4', $bwVer[0], $bwVer[1], $bwVer[2], $bwVer[3]);
+
+        return 'II'
+            . pack('v', TiffConst::MAGIC_CLASSIC)
+            . pack('V', $ifdOffset)
+            . pack('v', $entryCount)
+            . pack('v', ExifTag::IMAGE_WIDTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::IMAGE_LENGTH)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 100) . pack('v', 0)
+            . pack('v', ExifTag::ORIENTATION)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', 1) . pack('v', 0)
+            . pack('v', DngTag::DNG_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . pack('C4', 1, 7, 1, 0)
+            . pack('v', DngTag::DNG_BACKWARD_VERSION)
+            . pack('v', TiffConst::TYPE_BYTE)
+            . pack('V', 4)
+            . $bwVersionPacked
+            . pack('v', DngTag::UNIQUE_CAMERA_MODEL)
+            . pack('v', TiffConst::TYPE_ASCII)
+            . pack('V', strlen($uniqueCameraModel))
+            . pack('V', $modelOffset)
+            . pack('v', DngTag::COLORIMETRIC_REFERENCE)
+            . pack('v', TiffConst::TYPE_SHORT)
+            . pack('V', 1)
+            . pack('v', $colorimetricRef) . pack('v', 0)
+            . pack('V', 0)
+            . $uniqueCameraModel;
     }
 }

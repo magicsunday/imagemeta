@@ -1288,6 +1288,7 @@ final class TiffExifParser
         $this->validateDngCalibrationIlluminantPairZero($ifd0);
         $this->validateDngProfileToneCurve($ifd0);
         $this->validateDngInterleaveVersionFloors($ifd0);
+        $this->validateDngColorimetricReference($ifd0);
         $this->validateDngRequiredOrientation($ifd0);
         $this->validateResolutionEquality($ifd0);
         $this->validateCompressionDomain($ifd0, $ifd1);
@@ -4506,6 +4507,66 @@ final class TiffExifParser
             throw new ParseError(
                 'CFA photometric (32803) requires CFAPattern in the same IFD.',
                 1491,
+            );
+        }
+    }
+
+    /**
+     * Validates DNG ColorimetricReference value domain and version gating.
+     *
+     * Allowed values are 0, 1, 2. Value 2 requires DNGBackwardVersion >= 1.7.0.0.
+     */
+    private function validateDngColorimetricReference(Ifd $ifd): void
+    {
+        $entry = $ifd->get(DngTag::COLORIMETRIC_REFERENCE);
+
+        if (!$entry instanceof IfdEntry || !is_int($entry->value)) {
+            return;
+        }
+
+        if (!in_array($entry->value, [0, 1, 2], true)) {
+            throw new ParseError(
+                sprintf('ColorimetricReference value %d is outside the allowed domain {0,1,2}.', $entry->value),
+                1494,
+            );
+        }
+
+        if ($entry->value !== 2) {
+            return;
+        }
+
+        $bwEntry = $ifd->get(DngTag::DNG_BACKWARD_VERSION);
+
+        if (!$bwEntry instanceof IfdEntry) {
+            return;
+        }
+
+        $bwValue = $bwEntry->value;
+
+        if (!$bwValue instanceof ExifNumericList || count($bwValue->values) !== 4) {
+            return;
+        }
+
+        $bwVer = [];
+
+        foreach ($bwValue->values as $c) {
+            if (!is_int($c)) {
+                return;
+            }
+
+            $bwVer[] = $c;
+        }
+
+        if ($this->dngVersionLessThan($bwVer, [1, 7, 0, 0])) {
+            throw new ParseError(
+                sprintf(
+                    'ColorimetricReference value 2 requires DNGBackwardVersion >= 1.7.0.0, got %d.%d.%d.%d.',
+                    $bwVer[0],
+                    $bwVer[1],
+                    $bwVer[2],
+                    $bwVer[3],
+                ),
+                1495,
             );
         }
     }
