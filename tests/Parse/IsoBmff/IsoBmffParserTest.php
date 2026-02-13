@@ -39,6 +39,7 @@ use function hex2bin;
 use function iconv;
 use function pack;
 use function rewind;
+use function sort;
 use function strlen;
 use function substr;
 
@@ -1547,6 +1548,70 @@ final class IsoBmffParserTest extends TestCase
         self::assertSame(1, $unresolved->dataReferenceIndex);
         self::assertSame(ConstructionMethod::FileOffset, $unresolved->constructionMethod);
         self::assertSame($reference, $unresolved->dataReference);
+    }
+
+    /**
+     * Builds two independent meta contexts that both use data_reference_index=1.
+     * This verifies exported data references remain context-scoped and are not overwritten globally.
+     */
+    #[Test]
+    public function preserveDataReferencesPerMetaContextWithoutGlobalOverwrite(): void
+    {
+        $extractor = $this->createExtractor($this->createFileWithTwoMetaExternalDataReferences(
+            'https://example.test/meta-a',
+            'https://example.test/meta-b',
+        ));
+
+        [, , , , $dataReferences] = $extractor->extract();
+
+        self::assertInstanceOf(IsoBmffDataReferenceMap::class, $dataReferences);
+        self::assertCount(2, $dataReferences->contextOffsets());
+        self::assertNull($dataReferences->referenceForIndex(1));
+
+        $uris = [];
+        foreach ($dataReferences->contextOffsets() as $contextOffset) {
+            $reference = $dataReferences->referenceForContextIndex($contextOffset, 1);
+            self::assertNotNull($reference);
+            $uris[] = $reference->uri;
+        }
+
+        sort($uris);
+        self::assertSame(
+            ['https://example.test/meta-a', 'https://example.test/meta-b'],
+            $uris,
+        );
+    }
+
+    /**
+     * Uses two meta contexts that each expose one unresolved external item.
+     * This confirms unresolved entries still keep the data reference from their own context.
+     */
+    #[Test]
+    public function unresolvedExternalItemsRetainTheirOwnContextDataReference(): void
+    {
+        $extractor = $this->createExtractor($this->createFileWithTwoMetaExternalDataReferences(
+            'https://example.test/meta-a',
+            'https://example.test/meta-b',
+        ));
+
+        [, , , , , $unresolvedItems] = $extractor->extract();
+
+        self::assertCount(2, $unresolvedItems);
+
+        $uris = [];
+        foreach ($unresolvedItems as $unresolvedItem) {
+            self::assertSame(1, $unresolvedItem->itemId);
+            self::assertSame(1, $unresolvedItem->dataReferenceIndex);
+            self::assertSame(ConstructionMethod::FileOffset, $unresolvedItem->constructionMethod);
+            self::assertNotNull($unresolvedItem->dataReference);
+            $uris[] = $unresolvedItem->dataReference->uri;
+        }
+
+        sort($uris);
+        self::assertSame(
+            ['https://example.test/meta-a', 'https://example.test/meta-b'],
+            $uris,
+        );
     }
 
     /**
@@ -3710,6 +3775,45 @@ final class IsoBmffParserTest extends TestCase
         $mdat       = $this->box('mdat', $itemExif);
 
         return $ftyp . $meta . $mdat;
+    }
+
+    /**
+     * Builds an ISO BMFF file with two independent meta boxes containing external dref entries.
+     */
+    private function createFileWithTwoMetaExternalDataReferences(string $firstUri, string $secondUri): string
+    {
+        $ftyp = $this->box('ftyp', 'isom' . pack('N', 0));
+
+        return $ftyp
+            . $this->createMetaBoxWithExternalDataReference($firstUri)
+            . $this->createMetaBoxWithExternalDataReference($secondUri);
+    }
+
+    /**
+     * Builds one full `meta` box with an unresolved Exif item and one external URL data reference.
+     */
+    private function createMetaBoxWithExternalDataReference(string $uri): string
+    {
+        $infePayload = "\x02\0\0\0" . pack('n', 1) . pack('n', 0) . 'Exif' . "\0\0\0";
+        $iinf        = $this->box('iinf', "\0\0\0\0" . pack('n', 1) . $this->box('infe', $infePayload));
+
+        // iloc v1: unresolved file-offset item that points at data_reference_index=1.
+        $ilocPayload = "\x44";
+        $ilocPayload .= "\0";
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('n', 0x0000);
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('n', 1);
+        $ilocPayload .= pack('N', 0);
+        $ilocPayload .= pack('N', 4);
+        $iloc = $this->fullBox('iloc', $ilocPayload, 1, 0);
+
+        $drefEntry = $this->fullBox('url ', $uri . "\0");
+        $dref      = $this->fullBox('dref', pack('N', 1) . $drefEntry);
+        $dinf      = $this->box('dinf', $dref);
+
+        return $this->fullBox('meta', $iinf . $iloc . $dinf);
     }
 
     /**

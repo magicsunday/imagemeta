@@ -514,15 +514,15 @@ final readonly class IsoBmffParser
     /**
      * Parses the `moov` box, collecting nested metadata boxes of interest.
      *
-     * @param BoxDescriptor                          $moov            Box descriptor for the movie box.
-     * @param list<string>                           $exifBlobs
-     * @param list<string>                           $xmpBlobs
-     * @param array<int, list<IsoBmffItemReference>> $itemReferences
-     * @param array<int, IsoBmffDataReference>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
-     * @param array<string, bool>                    $xmpHashes
-     * @param QuickTimeKeyMap                        $qtKeys
-     * @param QuickTimeDataAtomList                  $qtDataAtoms
+     * @param BoxDescriptor                                $moov            Box descriptor for the movie box.
+     * @param list<string>                                 $exifBlobs
+     * @param list<string>                                 $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>>       $itemReferences
+     * @param array<int, array<int, IsoBmffDataReference>> $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                  $unresolvedItems
+     * @param array<string, bool>                          $xmpHashes
+     * @param QuickTimeKeyMap                              $qtKeys
+     * @param QuickTimeDataAtomList                        $qtDataAtoms
      */
     private function parseMoovBox(BoxDescriptor $moov, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
@@ -603,15 +603,15 @@ final readonly class IsoBmffParser
     /**
      * Parses the `udta` user data box for embedded metadata containers.
      *
-     * @param BoxDescriptor                          $udta            Box descriptor for the user data box.
-     * @param list<string>                           $exifBlobs
-     * @param list<string>                           $xmpBlobs
-     * @param array<int, list<IsoBmffItemReference>> $itemReferences
-     * @param array<int, IsoBmffDataReference>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
-     * @param array<string, bool>                    $xmpHashes
-     * @param QuickTimeKeyMap                        $qtKeys
-     * @param QuickTimeDataAtomList                  $qtDataAtoms
+     * @param BoxDescriptor                                $udta            Box descriptor for the user data box.
+     * @param list<string>                                 $exifBlobs
+     * @param list<string>                                 $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>>       $itemReferences
+     * @param array<int, array<int, IsoBmffDataReference>> $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                  $unresolvedItems
+     * @param array<string, bool>                          $xmpHashes
+     * @param QuickTimeKeyMap                              $qtKeys
+     * @param QuickTimeDataAtomList                        $qtDataAtoms
      */
     private function parseUdtaBox(BoxDescriptor $udta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
@@ -672,15 +672,15 @@ final readonly class IsoBmffParser
      * QuickTime File Format 2012, "Track Atoms": a track atom may contain
      * a user data atom (`udta`) carrying track-level metadata.
      *
-     * @param BoxDescriptor                          $trak            Box descriptor for the track container.
-     * @param list<string>                           $exifBlobs
-     * @param list<string>                           $xmpBlobs
-     * @param array<int, list<IsoBmffItemReference>> $itemReferences
-     * @param array<int, IsoBmffDataReference>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
-     * @param array<string, bool>                    $xmpHashes
-     * @param QuickTimeKeyMap                        $qtKeys
-     * @param QuickTimeDataAtomList                  $qtDataAtoms
+     * @param BoxDescriptor                                $trak            Box descriptor for the track container.
+     * @param list<string>                                 $exifBlobs
+     * @param list<string>                                 $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>>       $itemReferences
+     * @param array<int, array<int, IsoBmffDataReference>> $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                  $unresolvedItems
+     * @param array<string, bool>                          $xmpHashes
+     * @param QuickTimeKeyMap                              $qtKeys
+     * @param QuickTimeDataAtomList                        $qtDataAtoms
      */
     private function parseTrak(BoxDescriptor $trak, array &$exifBlobs = [], array &$xmpBlobs = [], array &$qtKeys = [], array &$itemReferences = [], array &$dataReferences = [], array &$unresolvedItems = [], array &$xmpHashes = [], array &$qtDataAtoms = []): void
     {
@@ -1565,15 +1565,15 @@ final readonly class IsoBmffParser
     /**
      * Parses the ISO BMFF metadata box and resolves payload references.
      *
-     * @param BoxDescriptor                          $meta            Box descriptor for the metadata box.
-     * @param list<string>                           $exifBlobs
-     * @param list<string>                           $xmpBlobs
-     * @param array<int, list<IsoBmffItemReference>> $itemReferences
-     * @param array<int, IsoBmffDataReference>       $dataReferences
-     * @param list<IsoBmffUnresolvedItem>            $unresolvedItems
-     * @param array<string, bool>                    $xmpHashes
-     * @param QuickTimeKeyMap                        $qtKeys
-     * @param QuickTimeDataAtomList                  $qtDataAtoms
+     * @param BoxDescriptor                                $meta            Box descriptor for the metadata box.
+     * @param list<string>                                 $exifBlobs
+     * @param list<string>                                 $xmpBlobs
+     * @param array<int, list<IsoBmffItemReference>>       $itemReferences
+     * @param array<int, array<int, IsoBmffDataReference>> $dataReferences
+     * @param list<IsoBmffUnresolvedItem>                  $unresolvedItems
+     * @param array<string, bool>                          $xmpHashes
+     * @param QuickTimeKeyMap                              $qtKeys
+     * @param QuickTimeDataAtomList                        $qtDataAtoms
      */
     private function parseMetaBox(BoxDescriptor $meta, array &$exifBlobs, array &$xmpBlobs, array &$qtKeys, array &$itemReferences, array &$dataReferences, array &$unresolvedItems, array &$xmpHashes, array &$qtDataAtoms = []): void
     {
@@ -1586,7 +1586,7 @@ final readonly class IsoBmffParser
         // channel before normalising the referenced data.
         $payloads       = $this->collectDirectPayloads($meta);
         $itemReferences = $this->mergeItemReferences($itemReferences, $payloads['itemReferences']);
-        $dataReferences = $this->mergeDataReferences($dataReferences, $payloads['dataReferences']);
+        $dataReferences = $this->mergeDataReferencesByContext($dataReferences, $meta->offset, $payloads['dataReferences']);
         $idatPayload    = $payloads['idatPayload'];
 
         [$exifItemIds, $xmpItemIds] = $this->gatherItemIds($payloads['itemInfos'], $payloads['primaryItemId']);
@@ -2097,6 +2097,36 @@ final readonly class IsoBmffParser
             foreach ($references as $reference) {
                 $existing[$fromId][] = $reference;
             }
+        }
+
+        return $existing;
+    }
+
+    /**
+     * Merges ISO BMFF data references while preserving their metadata context scope.
+     *
+     * ISO/IEC 14496-12 §8.7.2 defines dref entry indexing within the owning
+     * metadata context, so identical numeric indexes from different meta boxes
+     * must remain separate.
+     *
+     * @param array<int, array<int, IsoBmffDataReference>> $existing
+     * @param int                                          $contextOffset
+     * @param array<int, IsoBmffDataReference>             $incoming
+     *
+     * @return array<int, array<int, IsoBmffDataReference>>
+     */
+    private function mergeDataReferencesByContext(array $existing, int $contextOffset, array $incoming): array
+    {
+        if ($incoming === []) {
+            return $existing;
+        }
+
+        if (!isset($existing[$contextOffset])) {
+            $existing[$contextOffset] = [];
+        }
+
+        foreach ($incoming as $index => $reference) {
+            $existing[$contextOffset][$index] = $reference;
         }
 
         return $existing;

@@ -11,18 +11,30 @@ declare(strict_types=1);
 
 namespace MagicSunday\ImageMeta\Model\IsoBmff;
 
+use function array_key_exists;
 use function array_keys;
 
 /**
- * Holds ISO BMFF data references keyed by index.
+ * Holds ISO BMFF data references keyed by metadata context and index.
  */
 final readonly class IsoBmffDataReferenceMap
 {
     /**
-     * @param array<int, IsoBmffDataReference> $references
+     * Legacy unambiguous lookup table keyed by index.
+     *
+     * If the same index exists in multiple contexts, it is omitted here to avoid
+     * ambiguous cross-context lookup results.
+     *
+     * @var array<int, IsoBmffDataReference>
      */
-    public function __construct(public array $references)
+    public array $references;
+
+    /**
+     * @param array<int, array<int, IsoBmffDataReference>> $referencesByContext
+     */
+    public function __construct(public array $referencesByContext)
     {
+        $this->references = $this->buildUnambiguousReferenceIndex($referencesByContext);
     }
 
     /**
@@ -32,11 +44,51 @@ final readonly class IsoBmffDataReferenceMap
      */
     public function indexes(): array
     {
-        return array_keys($this->references);
+        $indexes = [];
+
+        foreach ($this->referencesByContext as $contextReferences) {
+            foreach ($contextReferences as $index => $_reference) {
+                if (!array_key_exists($index, $indexes)) {
+                    $indexes[$index] = true;
+                }
+            }
+        }
+
+        return array_keys($indexes);
     }
 
     /**
-     * Returns the data reference for the provided index.
+     * Returns all metadata context offsets that expose data references.
+     *
+     * @return list<int>
+     */
+    public function contextOffsets(): array
+    {
+        return array_keys($this->referencesByContext);
+    }
+
+    /**
+     * Returns data references declared in the given metadata context.
+     *
+     * @return array<int, IsoBmffDataReference>
+     */
+    public function referencesForContext(int $contextOffset): array
+    {
+        return $this->referencesByContext[$contextOffset] ?? [];
+    }
+
+    /**
+     * Returns the data reference for the provided metadata context and index.
+     */
+    public function referenceForContextIndex(int $contextOffset, int $index): ?IsoBmffDataReference
+    {
+        return $this->referencesByContext[$contextOffset][$index] ?? null;
+    }
+
+    /**
+     * Returns the unambiguous data reference for the provided index.
+     *
+     * If multiple metadata contexts declare the same index, the lookup returns null.
      */
     public function referenceForIndex(int $index): ?IsoBmffDataReference
     {
@@ -48,6 +100,37 @@ final readonly class IsoBmffDataReferenceMap
      */
     public function isEmpty(): bool
     {
-        return $this->references === [];
+        return $this->referencesByContext === [];
+    }
+
+    /**
+     * Flattens references into a legacy index map where each index is unique across contexts.
+     *
+     * @param array<int, array<int, IsoBmffDataReference>> $referencesByContext
+     *
+     * @return array<int, IsoBmffDataReference>
+     */
+    private function buildUnambiguousReferenceIndex(array $referencesByContext): array
+    {
+        $resolvedReferences = [];
+        $ambiguousIndexes   = [];
+
+        foreach ($referencesByContext as $contextReferences) {
+            foreach ($contextReferences as $index => $reference) {
+                if (array_key_exists($index, $ambiguousIndexes)) {
+                    continue;
+                }
+
+                if (array_key_exists($index, $resolvedReferences)) {
+                    unset($resolvedReferences[$index]);
+                    $ambiguousIndexes[$index] = true;
+                    continue;
+                }
+
+                $resolvedReferences[$index] = $reference;
+            }
+        }
+
+        return $resolvedReferences;
     }
 }
